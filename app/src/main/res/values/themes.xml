@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Motyw "Polska Skrzynka Dokumentowa": kremowe papierowe tlo, karmazynowe akcenty,
+     typografia szeryfowa w naglowkach. Zadania Z-20..Z-26 (README) rozbuduja ten jezyk wizualny. -->
+<resources>
+
+    <color name="paper">#FBF7EF</color>
+    <color name="paper_deep">#F3EAD8</color>
+    <color name="ink">#1B1B1B</color>
+    <color name="ink_soft">#5A5346</color>
+    <color name="crimson">#7A1F2B</color>
+    <color name="crimson_dark">#571319</color>
+    <color name="gold">#C9A227</color>
+    <color name="seal_red">#B3261E</color>
+    <color name="white">#FFFFFF</color>
+    <color name="divider">#D8CBB4</color>
+
+    <style name="Theme.Dokumentownia" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">@color/crimson</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/paper_deep</item>
+        <item name="colorOnPrimaryContainer">@color/crimson_dark</item>
+        <item name="colorSecondary">@color/gold</item>
+        <item name="colorSurface">@color/paper</item>
+        <item name="colorOnSurface">@color/ink</item>
+        <item name="colorSurfaceVariant">@color/paper_deep</item>
+        <item name="android:colorBackground">@color/paper</item>
+        <item name="android:statusBarColor">@color/crimson_dark</item>
+        <item name="android:navigationBarColor">@color/crimson_dark</item>
+        <item name="materialAlertDialogTheme">@style/Theme.Dokumentownia.Dialog</item>
+    </style>
+
+    <style name="Theme.Dokumentownia.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/crimson</item>
+    </style>
+
+    <style name="Badge.DocType">
+        <item name="android:background">@drawable/bg_badge</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
+    </style>
+
+    <style name="Title.Ornament">
+        <item name="android:textColor">@color/crimson</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Meta.Small">
+        <item name="android:textColor">@color/ink_soft</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+</resources>

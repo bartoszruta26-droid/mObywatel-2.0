@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="paper">#17150F</color>
+    <color name="paper_deep">#221E15</color>
+    <color name="ink">#EDE6D6</color>
+    <color name="ink_soft">#B9AE97</color>
+    <color name="crimson">#E0A6AE</color>
+    <color name="crimson_dark">#3A0F14</color>
+    <color name="gold">#D8B65B</color>
+    <color name="divider">#3A352A</color>
+</resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Znaki towarowe / nazwy instytucji panstwowych celowo NIE sa uzywane.
+         Aplikacja jest prywatna i offline - patrz README, zasada A1 i zadanie Z-30. -->
+    <string name="app_name">Dokumentownia</string>
+    <string name="app_tagline">Twoja prywatna skrzynka dokumentów — bez internetu, bez serwerów.</string>
+
+    <string name="action_import">Wczytaj dokument</string>
+    <string name="action_search">Szukaj</string>
+    <string name="action_about">O aplikacji</string>
+    <string name="action_star">Oznacz / odznacz gwiazdką</string>
+    <string name="action_delete">Usuń z Dokumentowni</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Anuluj</string>
+
+    <string name="empty_state">Tu jeszcze pusto.\nStuknij „Wczytaj dokument”, aby dodać PDF, zdjęcie, DOCX, XLSX, HTML lub plik tekstowy.</string>
+    <string name="import_ok">Wczytano: %1$s</string>
+    <string name="import_multi_ok">Wczytano dokumentów: %1$d</string>
+    <string name="import_fail">Nie udało się wczytać: %1$s</string>
+    <string name="import_no_data">Brak danych do wczytania — wybierz plik.</string>
+    <string name="doc_missing">Dokument już nie istnieje.</string>
+
+    <string name="viewer_meta">Rodzaj: %1$s · Rozmiar: %2$s · Strony: %3$s · Kategoria: %4$s</string>
+    <string name="viewer_unsupported">Tego typu pliku (%1$s) nie wyświetlę jeszcze offline. Docelowe wsparcie opisuje README.</string>
+    <string name="viewer_pdf_fail">Podgląd PDF nieudany: %1$s</string>
+
+    <string name="about_text">Dokumentownia 0.1.0-szkielet\n\nDokumenty są przechowywane wyłącznie w pamięci tej aplikacji. Nie ma tu żadnego kodu sieciowego — manifest nie zawiera uprawnień INTERNET, więc połączenie z serwerami państwowymi ani innymi jest architektonicznie niemożliwe.\n\nPlan rozwoju: plik README.md w repozytorium.</string>
+</resources>
