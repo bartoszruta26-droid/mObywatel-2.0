@@ -15,7 +15,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Wzór urzędowy: godło małe w nagłówku listy -->
+    <!-- Wzór urzędowy: małe godło w nagłówku listy -->
     <ImageView
         android:layout_width="40dp"
         android:layout_height="47dp"
@@ -25,14 +25,33 @@
         app:layout_constraintBottom_toBottomOf="@id/headerPortfolio"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Wyszukiwarka dokumentów (tytuł / numer seryjny / typ) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/searchBox"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:hint="@string/portfolio_search_hint"
+        app:startIconDrawable="@drawable/ic_viewer"
+        app:layout_constraintTop_toBottomOf="@id/headerPortfolio">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/searchDocuments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerDocuments"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="10dp"
         android:clipToPadding="false"
         android:paddingBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/headerPortfolio"
+        app:layout_constraintTop_toBottomOf="@id/searchBox"
         app:layout_constraintBottom_toTopOf="@id/buttonAddDocument" />
 
     <com.google.android.material.button.MaterialButton

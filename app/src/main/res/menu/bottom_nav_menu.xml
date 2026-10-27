@@ -5,10 +5,6 @@
         android:icon="@drawable/ic_portfolio"
         android:title="@string/nav_portfolio" />
     <item
-        android:id="@+id/documentViewerFragment"
-        android:icon="@drawable/ic_viewer"
-        android:title="@string/nav_viewer" />
-    <item
         android:id="@+id/registerFragment"
         android:icon="@drawable/ic_register"
         android:title="@string/nav_register" />

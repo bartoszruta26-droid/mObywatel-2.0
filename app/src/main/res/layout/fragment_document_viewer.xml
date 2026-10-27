@@ -1,60 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:padding="12dp">
 
+    <!-- Nagłówek urzędowy z godłem -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <!-- Nagłówek urzędowy z godłem -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="44dp"
-                android:layout_height="52dp"
-                android:contentDescription="@string/app_name"
-                android:src="@drawable/godlo_orla" />
-
-            <TextView
-                android:id="@+id/textDocTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:textAppearance="@style/TextAppearance.MojeDokumenty.Header" />
-        </LinearLayout>
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="47dp"
+            android:contentDescription="@string/app_name"
+            android:src="@drawable/godlo_orla" />
 
         <TextView
-            android:id="@+id/textDocMeta"
-            android:layout_width="match_parent"
+            android:id="@+id/textDocTitle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="13sp" />
-
-        <!-- Ramka na właściwy podgląd dokumentu (PDF / obraz) — renderer w planie (README) -->
-        <FrameLayout
-            android:id="@+id/documentFrame"
-            android:layout_width="match_parent"
-            android:layout_height="420dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_document_card">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:padding="24dp"
-                android:text="@string/viewer_no_preview"
-                android:textColor="#8A8A8A" />
-        </FrameLayout>
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:textAppearance="@style/TextAppearance.MojeDokumenty.Header"
+            android:textSize="18sp" />
     </LinearLayout>
-</ScrollView>
+
+    <TextView
+        android:id="@+id/textDocMeta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textSize="12sp" />
+
+    <!-- Właściwy podgląd dokumentu: strony PDF (PdfRenderer) lub obraz -->
+    <FrameLayout
+        android:id="@+id/documentFrame"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_document_card">
+
+        <pl.gov.mojedokumenty.ui.ScaleImageView
+            android:id="@+id/imagePage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="8dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/viewer_title" />
+
+        <TextView
+            android:id="@+id/textPlaceholder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/viewer_no_preview"
+            android:textColor="#8A8A8A" />
+    </FrameLayout>
+
+    <!-- Sterowanie stronami -->
+    <LinearLayout
+        android:id="@+id/pageChrome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonPrevPage"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_chevron_left" />
+
+        <TextView
+            android:id="@+id/textPageCounter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:textAppearance="@style/TextAppearance.MojeDokumenty.Serial" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderPage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:stepSize="1"
+            android:valueFrom="0"
+            android:valueTo="0" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonNextPage"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:icon="@drawable/ic_chevron_right" />
+    </LinearLayout>
+</LinearLayout>

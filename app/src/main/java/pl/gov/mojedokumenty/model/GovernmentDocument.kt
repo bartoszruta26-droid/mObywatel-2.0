@@ -1,5 +1,7 @@
 package pl.gov.mojedokumenty.model
 
+import android.net.Uri
+
 /** Typ dokumentu — odwzorowanie na wzory urzędowe RP. */
 enum class DocumentType(val displayName: String) {
     DOWOD_OSOBISTY("Dowód osobisty"),
@@ -19,9 +21,21 @@ enum class DocumentStatus(val displayName: String) {
     DO_ODNOWIENIA("Do odnowienia")
 }
 
+/** Źródło pliku dokumentu. */
+enum class DocumentSource {
+    /** Plik z `assets/docs/` (np. „docs/dowod_wzor.pdf”). */
+    ASSET,
+
+    /** Plik zaimportowany przez użytkownika (SAF / udostępniony intentem). */
+    USER_FILE,
+
+    /** Brak pliku — karta demonstracyjna. */
+    NONE
+}
+
 /**
  * Reprezentacja dokumentu w portfelu.
- * Na razie dane lokalne (asset / plik podany przez użytkownika).
+ * Dane wyłącznie lokalne — aplikacja celowo NIE łączy się z serwerami państwowymi.
  */
 data class GovernmentDocument(
     val id: String,
@@ -29,11 +43,17 @@ data class GovernmentDocument(
     val title: String,
     val serialNumber: String,
     val issuedBy: String,
-    val issueDate: String,      // TODO: zamienić na LocalDate (zadanie w README)
+    val issueDate: String,      // TODO: zamienić na LocalDate (zadanie M3 w README)
     val validUntil: String,     // TODO: jak wyżej
     val status: DocumentStatus,
-    /** Ścieżka do pliku dokumentu: asset ("docs/xxx.pdf") lub content:// URI. */
-    val fileUri: Uri? = null,
-    /** Kolor akcentu karty — styl „państwowy” (np. bordowy herbowy). */
+    /** Ścieżka do pliku: asset („docs/xxx.pdf”) albo content:// URI (USER_FILE). */
+    val fileLocation: String? = null,
+    val source: DocumentSource = DocumentSource.NONE,
+    /** Kolor akcentu karty — styl „państwowy” (bordowy herbowy). */
     val accentColorHex: String = "#7A0026"
-)
+) {
+    val hasFile: Boolean get() = !fileLocation.isNullOrBlank() && source != DocumentSource.NONE
+
+    fun contentUriOrNull(): Uri? =
+        if (source == DocumentSource.USER_FILE) fileLocation?.let { Uri.parse(it) } else null
+}

@@ -12,12 +12,24 @@
     <!-- Portfel -->
     <string name="portfolio_header">Portfel dokumentów</string>
     <string name="portfolio_empty">Brak dokumentów. Dodaj plik PDF lub obraz z urządzenia.</string>
-    <string name="portfolio_add">Dodaj dokument</string>
+    <string name="portfolio_no_results">Brak dokumentów pasujących do wyszukiwania.</string>
+    <string name="portfolio_search_hint">Szukaj: tytuł, numer seryjny, typ…</string>
+    <string name="portfolio_add">Dodaj dokument (PDF / obraz)</string>
+    <string name="portfolio_validity">Wydany: %1$s • Ważny do: %2$s</string>
+
+    <!-- Import -->
+    <string name="import_success">Dodano do portfela: %1$s</string>
+    <string name="import_error">Nie udało się dodać dokumentu: %1$s</string>
 
     <!-- Podgląd -->
     <string name="viewer_title">Podgląd dokumentu</string>
     <string name="viewer_from_intent">Dokument otwarty z innej aplikacji</string>
-    <string name="viewer_no_preview">Brak osadzonego podglądu — renderer PDF w realizacji (zob. README).</string>
+    <string name="viewer_external_file">Plik zewnętrzny — metadaty niedostępne</string>
+    <string name="viewer_no_preview">Wybierz dokument z portfela lub dodaj plik PDF/obraz.</string>
+    <string name="viewer_no_file">Ten dokument nie ma jeszcze powiązanego pliku. Wgraj PDF do assets/docs lub zaimportuj go przez „Dodaj dokument”.</string>
+    <string name="viewer_loading">Wczytywanie dokumentu…</string>
+    <string name="viewer_error">Błąd odczytu dokumentu: %1$s</string>
+    <string name="viewer_page_counter">Strona %1$d / %2$d</string>
 
     <!-- Rejestr / Profil (placeholdery) -->
     <string name="placeholder_register">Rejestr wyświetleń dokumentów — ekran w budowie.</string>
