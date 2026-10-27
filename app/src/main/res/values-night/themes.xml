@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tryb nocny: ciemna „tarcza herbowa” -->
+    <style name="Theme.MojeDokumenty" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/zloty_korona</item>
+        <item name="colorSecondary">@color/czerwien_herbowa</item>
+        <item name="android:colorBackground">@color/surface_dark</item>
+        <item name="android:statusBarColor">@color/surface_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

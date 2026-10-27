@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="czerwien_herbowa">#D4212D</color>
+    <color name="bordowy_gov">#7A0026</color>
+    <color name="zloty_korona">#FFD23F</color>
+    <color name="bialy_orzel">#FFFFFF</color>
+    <color name="granat_ue">#003399</color>
+
+    <color name="surface_light">#FAF7F2</color>
+    <color name="surface_dark">#17131B</color>
+    <color name="on_surface_light">#1C1B1F</color>
+    <color name="on_surface_dark">#ECE6E0</color>
+    <color name="primary_light">@bordowy_gov</color>
+    <color name="secondary_light">@czerwien_herbowa</color>
+</resources>

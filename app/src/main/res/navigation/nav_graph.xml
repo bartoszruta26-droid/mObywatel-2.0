@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/portfolioFragment">
+
+    <fragment
+        android:id="@+id/portfolioFragment"
+        android:name="pl.gov.mojedokumenty.ui.PortfolioFragment"
+        android:label="@string/nav_portfolio">
+        <action
+            android:id="@+id/action_portfolio_to_viewer"
+            app:destination="@id/documentViewerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/documentViewerFragment"
+        android:name="pl.gov.mojedokumenty.ui.DocumentViewerFragment"
+        android:label="@string/viewer_title">
+        <argument
+            android:name="id"
+            app:argType="string"
+            android:defaultValue="@null" />
+        <argument
+            android:name="uri"
+            app:argType="string"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="pl.gov.mojedokumenty.ui.RegisterFragment"
+        android:label="@string/nav_register" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="pl.gov.mojedokumenty.ui.ProfileFragment"
+        android:label="@string/nav_profile" />
+
+    <!-- Globalna akcja: otwarcie dokumentu z intent ACTION_VIEW -->
+    <action
+        android:id="@+id/action_global_documentViewer"
+        app:destination="@id/documentViewerFragment" />
+
+</navigation>

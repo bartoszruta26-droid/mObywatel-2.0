@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Flaga Unii Europejskiej (uproszczona: 12 gwiazd w okręgu). Oficjalny plik — patrz README. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="40dp"
+    android:viewportWidth="64"
+    android:viewportHeight="40">
+    <path android:fillColor="#003399" android:pathData="M0,0 H64 V40 H0 Z" />
+    <!-- Gwiazdy zastąpione kółkami dla szkieleatu; docelowo wektory ★ 12° co -->
+    <group>
+        <path android:fillColor="#FFCC00" android:pathData="M32,7 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M38.5,8.8 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M43.2,13.5 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M45,20 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M43.2,26.5 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M38.5,31.2 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M32,33 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M25.5,31.2 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M20.8,26.5 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M19,20 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M20.8,13.5 a1.6,1.6 0 1,0 0.01,0 Z"/>
+        <path android:fillColor="#FFCC00" android:pathData="M25.5,8.8 a1.6,1.6 0 1,0 0.01,0 Z"/>
+    </group>
+</vector>

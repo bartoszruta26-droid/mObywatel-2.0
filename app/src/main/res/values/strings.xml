@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Moje Dokumenty</string>
+    <string name="app_tagline">Rządowy portfel dokumentów — wersja demonstracyjna (dane lokalne)</string>
+
+    <!-- Nawigacja -->
+    <string name="nav_portfolio">Portfel</string>
+    <string name="nav_viewer">Podgląd</string>
+    <string name="nav_register">Rejestr</string>
+    <string name="nav_profile">Profil</string>
+
+    <!-- Portfel -->
+    <string name="portfolio_header">Portfel dokumentów</string>
+    <string name="portfolio_empty">Brak dokumentów. Dodaj plik PDF lub obraz z urządzenia.</string>
+    <string name="portfolio_add">Dodaj dokument</string>
+
+    <!-- Podgląd -->
+    <string name="viewer_title">Podgląd dokumentu</string>
+    <string name="viewer_from_intent">Dokument otwarty z innej aplikacji</string>
+    <string name="viewer_no_preview">Brak osadzonego podglądu — renderer PDF w realizacji (zob. README).</string>
+
+    <!-- Rejestr / Profil (placeholdery) -->
+    <string name="placeholder_register">Rejestr wyświetleń dokumentów — ekran w budowie.</string>
+    <string name="placeholder_profile">Profil obywatela — ekran w budowie.</string>
+
+    <!-- Stopka urzędowa -->
+    <string name="official_footer">Aplikacja demonstracyjna. Nie łączy się z rejestrami państwowymi.</string>
+</resources>
