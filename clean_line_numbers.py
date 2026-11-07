@@ -47,31 +47,27 @@ def _numbered_prefixes(content: str) -> tuple[list[str], int] | None:
         return None
 
     bodies = [line.rstrip("\r\n") for line in lines]
-    widths: list[int] = []
+    separator_widths: list[int] = []
     for expected, body in enumerate(bodies, start=1):
         match = PREFIX_RE.match(body)
         if match:
             number, separator, _ = match.groups()
-            if int(number) != expected:
+            if int(number) != expected or len(separator) < 2:
                 return None
-            widths.append(len(number) + len(separator))
+            separator_widths.append(len(separator))
             continue
 
         # A numbered blank line may contain only its line number.
         if body == str(expected):
-            widths.append(len(body))
             continue
         return None
 
-    # Non-empty source text must begin at one consistent column. This avoids
-    # stripping arbitrary numeric code and preserves indentation after the prefix.
-    nonempty_widths = [
-        len(PREFIX_RE.match(body).group(1)) + len(PREFIX_RE.match(body).group(2))
-        for body in bodies if PREFIX_RE.match(body)
-    ]
-    if len(nonempty_widths) < 5 or len(set(nonempty_widths)) != 1:
+    # Numbered exports use at least two separator spaces. Use the minimum
+    # separator width as the line-number field and preserve any additional
+    # indentation present in the source text.
+    if len(separator_widths) < 5:
         return None
-    return bodies, nonempty_widths[0]
+    return bodies, min(separator_widths)
 
 
 def has_line_numbers(content: str) -> bool:
@@ -89,7 +85,12 @@ def remove_line_numbers(content: str) -> str:
     original_lines = content.splitlines(keepends=True)
     for body, original in zip(bodies, original_lines):
         ending = original[len(original.rstrip("\r\n")):]
-        output.append(body[prefix_width:] if len(body) >= prefix_width else "")
+        match = PREFIX_RE.match(body)
+        if match:
+            number = match.group(1)
+            output.append(body[len(number) + prefix_width:])
+        else:
+            output.append("")
         output[-1] += ending
     return "".join(output)
 
