@@ -371,10 +371,25 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                         ) { Text("Następna") }
                     }
                 }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            scale = 1f
+                            offsetX = 0f
+                            offsetY = 0f
+                        },
+                        enabled = scale != 1f || offsetX != 0f || offsetY != 0f
+                    ) {
+                        Text("Przywróć widok")
+                    }
+                }
                 Text(
                     "Uszczypnij, aby powiększyć; przeciągnij, aby przesunąć.",
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
         }
