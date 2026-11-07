@@ -41,6 +41,7 @@ class HomeScreenTest {
         composeRule.onNodeWithText("Moje dane").assertIsNotEnabled()
         composeRule.onNodeWithText("Płatności").assertIsNotEnabled()
     }
+
     @Test
     fun selectingDocumentsInvokesNavigation() {
         var openCount = 0
