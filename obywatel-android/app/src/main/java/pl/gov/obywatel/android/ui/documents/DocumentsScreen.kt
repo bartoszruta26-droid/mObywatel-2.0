@@ -47,6 +47,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -312,6 +313,17 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                     1,
                     it.message ?: "Błąd podglądu."
                 )
+            }
+        }
+    }
+
+    // Bitmapa należy do bieżącego podglądu; zwolnij ją po zmianie strony
+    // lub dokumentu oraz po opuszczeniu ekranu.
+    DisposableEffect(preview?.bitmap) {
+        val bitmap = preview?.bitmap
+        onDispose {
+            if (bitmap != null && !bitmap.isRecycled) {
+                bitmap.recycle()
             }
         }
     }
