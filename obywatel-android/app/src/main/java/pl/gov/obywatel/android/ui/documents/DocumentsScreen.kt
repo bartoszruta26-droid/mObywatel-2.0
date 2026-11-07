@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -68,6 +70,7 @@ import pl.gov.obywatel.android.ui.theme.White
 
 private const val MAX_IMAGE_PREVIEW_DIMENSION = 2048
 private const val MAX_PDF_PREVIEW_DIMENSION = 1800
+private const val DOCX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 private data class DocumentPreview(
     val bitmap: Bitmap,
@@ -136,12 +139,12 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Button(
-                    onClick = { importLauncher.launch(arrayOf("application/pdf", "image/*")) },
+                    onClick = { importLauncher.launch(arrayOf("application/pdf", DOCX_MIME_TYPE, "image/*")) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoadingDocuments
                 ) {
                     Icon(Icons.Filled.FileOpen, contentDescription = null)
-                    Text("  Dodaj PDF lub obraz")
+                    Text("  Dodaj PDF, DOCX lub obraz")
                 }
                 errorMessage?.let {
                     Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
@@ -175,8 +178,11 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        if (document.mimeType == "application/pdf") Icons.Filled.PictureAsPdf
-                                        else Icons.Filled.Image,
+                                        when (document.mimeType) {
+                                            "application/pdf" -> Icons.Filled.PictureAsPdf
+                                            DOCX_MIME_TYPE -> Icons.Filled.Description
+                                            else -> Icons.Filled.Image
+                                        },
                                         contentDescription = null,
                                         tint = Navy,
                                         modifier = Modifier.size(28.dp)
@@ -184,7 +190,11 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                                         Text(document.title, fontWeight = FontWeight.SemiBold)
                                         Text(
-                                            if (document.mimeType == "application/pdf") "PDF" else document.mimeType,
+                                            when (document.mimeType) {
+                                                "application/pdf" -> "PDF"
+                                                DOCX_MIME_TYPE -> "Dokument Word"
+                                                else -> document.mimeType
+                                            },
                                             style = MaterialTheme.typography.bodySmall
                                         )
                                     }
@@ -205,8 +215,52 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     }
                 }
             } else {
-                DocumentPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
+                if (selected!!.mimeType == DOCX_MIME_TYPE) {
+                    DocxPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
+                } else {
+                    DocumentPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
+                }
             }
+        }
+    }
+}
+
+private data class DocxPreview(val text: String = "", val error: String? = null)
+
+@Composable
+private fun DocxPreviewPane(document: ImportedDocument, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val preview by produceState<DocxPreview?>(initialValue = null, document.uri) {
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                val input = checkNotNull(context.contentResolver.openInputStream(document.uri)) {
+                    "Nie można otworzyć dokumentu DOCX."
+                }
+                input.use { DocxTextExtractor.extract(it) }
+            }.fold(
+                onSuccess = { DocxPreview(text = it) },
+                onFailure = { DocxPreview(error = it.message ?: "Nie udało się odczytać dokumentu DOCX.") }
+            )
+        }
+    }
+
+    when {
+        preview == null -> Box(modifier, contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        preview?.error != null -> Box(modifier.padding(20.dp), contentAlignment = Alignment.Center) {
+            Text(preview?.error.orEmpty(), color = MaterialTheme.colorScheme.error)
+        }
+        else -> Column(
+            modifier = modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Text("Podgląd tekstu DOCX", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Układ, tabele, obrazy i formatowanie mogą różnić się od oryginału.",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+            )
+            Text(preview?.text.orEmpty(), style = MaterialTheme.typography.bodyLarge)
         }
     }
 }
