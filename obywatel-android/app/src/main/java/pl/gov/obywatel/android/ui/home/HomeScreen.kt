@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.NotificationsNone
@@ -43,23 +42,23 @@ import pl.gov.obywatel.android.ui.theme.Blue
 import pl.gov.obywatel.android.ui.theme.BlueLight
 import pl.gov.obywatel.android.ui.theme.Muted
 import pl.gov.obywatel.android.ui.theme.Navy
-import pl.gov.obywatel.android.ui.theme.ObywatelTheme
 import pl.gov.obywatel.android.ui.theme.Surface as AppSurface
 import pl.gov.obywatel.android.ui.theme.White
 
 private data class ServiceItem(
     val title: String,
     val subtitle: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val isAvailable: Boolean = false
 )
 
 private val services = listOf(
-    ServiceItem("Dokumenty", "Podgląd dokumentów (demo)", Icons.Filled.Description),
-    ServiceItem("Moje dane", "Profil demonstracyjny", Icons.Filled.AccountCircle),
-    ServiceItem("Bezpieczeństwo", "Ustawienia prywatności", Icons.Filled.Security),
-    ServiceItem("Płatności", "Miejsce na przyszłą usługę", Icons.Filled.CreditCard),
-    ServiceItem("Zdrowie", "Sekcja demonstracyjna", Icons.Filled.HealthAndSafety),
-    ServiceItem("Więcej", "Pozostałe moduły", Icons.Filled.MoreHoriz)
+    ServiceItem("Dokumenty", "Podgląd dokumentów (demo)", Icons.Filled.Description, isAvailable = true),
+    ServiceItem("Moje dane", "W przygotowaniu", Icons.Filled.AccountCircle),
+    ServiceItem("Bezpieczeństwo", "W przygotowaniu", Icons.Filled.Security),
+    ServiceItem("Płatności", "W przygotowaniu", Icons.Filled.CreditCard),
+    ServiceItem("Zdrowie", "W przygotowaniu", Icons.Filled.HealthAndSafety),
+    ServiceItem("Więcej", "W przygotowaniu", Icons.Filled.MoreHoriz)
 )
 
 @Composable
@@ -151,24 +150,12 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                 ) {
                     items(services) { service ->
                         ServiceCard(service) {
-                            if (service.title == "Dokumenty") onOpenDocuments()
+                            if (service.isAvailable) onOpenDocuments()
                         }
                     }
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(White)
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BottomItem(Icons.Filled.Badge, "Start", true)
-                BottomItem(Icons.Filled.Fingerprint, "Usługi", false)
-                BottomItem(Icons.Filled.AccountCircle, "Profil", false)
-            }
         }
     }
 }
@@ -178,6 +165,7 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().height(142.dp),
         onClick = onClick,
+        enabled = item.isAvailable,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
