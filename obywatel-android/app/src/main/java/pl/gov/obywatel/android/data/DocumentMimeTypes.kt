@@ -6,7 +6,7 @@ package pl.gov.obywatel.android.data
  * Formats accepted by the current preview implementation.
  *
  * BitmapFactory does not decode every image MIME type (notably SVG), so
- * accepting image/* here would persist documents that the preview cannot show.
+ * accepting wildcard image MIME types would persist documents that the preview cannot show.
  */
 internal fun isSupportedDocumentMimeType(mimeType: String): Boolean {
     val normalized = mimeType.trim().lowercase()
