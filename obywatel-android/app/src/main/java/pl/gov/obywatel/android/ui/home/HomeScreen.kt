@@ -204,23 +204,3 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun BottomItem(icon: ImageVector, label: String, selected: Boolean) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = if (selected) Blue else Muted,
-            modifier = Modifier.size(22.dp)
-        )
-        Text(
-            label,
-            color = if (selected) Blue else Muted,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
-    }
-}
