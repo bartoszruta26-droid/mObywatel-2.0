@@ -108,13 +108,13 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                         Column(Modifier.padding(start = 14.dp)) {
                             Text(
                                 "Witaj!",
-                                color = White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 "To prototyp interfejsu. Brak prawdziwych dokumentów i usług.",
-                                color = White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
