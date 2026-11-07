@@ -10,7 +10,7 @@ class PdfPreviewSizingTest {
     @Test
     fun boundsLandscapePageByLongestSideWithoutFloatRounding() {
         assertEquals(
-            PreviewDimensions(1800, 1272),
+            PreviewDimensions(1800, 1273),
             calculatePreviewDimensions(2480, 1754, 1800)
         )
     }
@@ -18,7 +18,7 @@ class PdfPreviewSizingTest {
     @Test
     fun boundsPortraitPageByLongestSideWithoutFloatRounding() {
         assertEquals(
-            PreviewDimensions(1272, 1800),
+            PreviewDimensions(1273, 1800),
             calculatePreviewDimensions(1754, 2480, 1800)
         )
     }
