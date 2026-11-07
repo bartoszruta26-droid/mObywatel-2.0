@@ -38,7 +38,8 @@ private val DarkAppColors = darkColorScheme(
     onSurface = Color(0xFFE5EDF4),
     surfaceVariant = Color(0xFF293945),
     onSurfaceVariant = Color(0xFFB8C7D3),
-    outline = Color(0xFF536675)
+    // Widoczny obrys kontrolek w ciemnym motywie (kontrast powyżej 3:1).
+    outline = Color(0xFF71879A)
 )
 
 @Composable
