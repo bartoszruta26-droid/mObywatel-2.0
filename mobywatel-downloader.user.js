@@ -191,7 +191,7 @@
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
         console.log(`Downloaded: ${filename} (${mimeType})`);
     }
 
@@ -404,7 +404,8 @@
             
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                progressDiv.innerHTML = `<strong>Downloading...</strong><br><br>File ${i + 1} of ${files.length}<br><br><small>${file.fullPath}</small>`;
+                progressDiv.textContent = `Downloading...\n\nFile ${i + 1} of ${files.length}\n\n${file.fullPath}`;
+                progressDiv.style.whiteSpace = 'pre-line';
                 
                 try {
                     // Click on the file button to load it
@@ -510,7 +511,7 @@
         document.body.appendChild(button);
     }
 
-    // Create info panel
+    // Create info panel without interpreting page-derived values as HTML.
     function createInfoPanel() {
         const panel = document.createElement('div');
         panel.style.cssText = `
@@ -526,24 +527,40 @@
             max-width: 300px;
             font-family: monospace;
         `;
-        
+
         const filename = getCurrentFileName();
         const fileLinks = getAllFileLinks();
         const content = getFileContent();
-        
-        const treeFilesInfo = fileLinks.length > 0 ? 
-            `<br><small>First: ${fileLinks[0].fullPath}</small>` : '';
-        
-        panel.innerHTML = `
-            <strong>mObywatel Downloader</strong><br>
-            Current file: ${filename || 'N/A'}<br>
-            Files in tree: ${fileLinks.length}${treeFilesInfo}<br>
-            Content: ${content ? content.length + ' chars' : 'No iframe content'}<br>
-            <button onclick="console.log('=== DEBUG INFO ==='); console.log('Filename:', '${filename}'); console.log('Content length:', ${content ? content.length : 0}); console.log('Files found:', ${fileLinks.length}); console.log('Files:', JSON.parse('${JSON.stringify(fileLinks).replace(/'/g, "\\'")}'));">Debug Info</button>
-        `;
+
+        const title = document.createElement('strong');
+        title.textContent = 'mObywatel Downloader';
+        panel.appendChild(title);
+
+        const details = document.createElement('div');
+        details.style.whiteSpace = 'pre-line';
+        details.textContent =
+            `Current file: ${filename || 'N/A'}\n` +
+            `Files in tree: ${fileLinks.length}\n` +
+            `First: ${fileLinks.length ? fileLinks[0].fullPath : 'N/A'}\n` +
+            `Content: ${content ? content.length + ' chars' : 'No iframe content'}`;
+        panel.appendChild(details);
+
+        const debugButton = document.createElement('button');
+        debugButton.type = 'button';
+        debugButton.textContent = 'Debug Info';
+        debugButton.addEventListener('click', () => {
+            console.log('=== DEBUG INFO ===');
+            console.log('Filename:', filename);
+            console.log('Content length:', content ? content.length : 0);
+            console.log('Files found:', fileLinks.length);
+            console.log('Files:', fileLinks);
+        });
+        panel.appendChild(debugButton);
+
         panel.className = 'mobywatel-downloader';
         document.body.appendChild(panel);
     }
+
     function init() {
         // Wait for page to be fully loaded
         if (document.readyState === 'loading') {

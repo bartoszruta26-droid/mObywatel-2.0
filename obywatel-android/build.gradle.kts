@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+// SPDX-License-Identifier: EUPL-1.2
 plugins {
     id("com.android.application") version "8.7.3" apply false
     id("org.jetbrains.kotlin.android") version "2.0.21" apply false

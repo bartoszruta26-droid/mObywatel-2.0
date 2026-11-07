@@ -1,0 +1,71 @@
+# SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+# SPDX-License-Identifier: CC0-1.0
+name: Project validation
+
+on:
+  push:
+    branches: [main, master, audit/p0-hardening-2026-11]
+    paths:
+      - "organize_files.py"
+      - "clean_line_numbers.py"
+      - "tests/**"
+      - "obywatel-android/**"
+      - ".github/workflows/project-validation.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "organize_files.py"
+      - "clean_line_numbers.py"
+      - "tests/**"
+      - "obywatel-android/**"
+      - ".github/workflows/project-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-tests:
+    name: Python regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Python regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Compile Python sources
+        run: python -m py_compile organize_files.py clean_line_numbers.py
+
+  android-build:
+    name: Android debug build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Assemble Android debug APK
+        working-directory: obywatel-android
+        run: gradle --no-daemon :app:assembleDebug
+      - name: Archive debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: obywatel-android-debug-apk
+          path: obywatel-android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
