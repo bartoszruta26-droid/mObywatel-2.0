@@ -50,6 +50,15 @@ jobs:
         working-directory: obywatel-android
         run: gradle --no-daemon :app:testDebugUnitTest
 
+      - name: Enable KVM access for Android emulator
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo "KVM device is unavailable on this runner; emulator will use software acceleration."
+          fi
+
       - name: Run Compose UI tests on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -58,8 +67,9 @@ jobs:
           arch: x86_64
           profile: pixel_2
           emulator-boot-timeout: 600
+          disable-linux-hw-accel: false
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save
           script: |
             cd obywatel-android && gradle --no-daemon :app:connectedDebugAndroidTest || { echo "Android instrumentation failed; collecting emulator diagnostics."; adb devices -l || true; adb logcat -d -v threadtime | tail -n 500 || true; exit 1; }
 
