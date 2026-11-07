@@ -75,11 +75,18 @@ object ImportedDocumentStore {
     }
 
     private fun fromUri(context: Context, uri: Uri): ImportedDocument {
-        val title = context.contentResolver.query(
+        require(uri.scheme == "content" && !uri.authority.isNullOrBlank()) {
+            "Dokument musi pochodzić z dostawcy plików systemu Android."
+        }
+
+        val queriedTitle = context.contentResolver.query(
             uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null
         )?.use { cursor ->
             if (cursor.moveToFirst()) cursor.getString(0) else null
-        } ?: uri.lastPathSegment ?: "Dokument"
+        }
+        val title = queriedTitle?.trim()?.takeIf { it.isNotEmpty() }
+            ?: uri.lastPathSegment?.trim()?.takeIf { it.isNotEmpty() }
+            ?: "Dokument"
         val mime = context.contentResolver.getType(uri).orEmpty()
         require(
             mime == "application/pdf" ||
