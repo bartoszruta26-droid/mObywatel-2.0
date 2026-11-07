@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # Audyt GUI/TUI: TUI, Desktop GUI, Web UI i Android GUI
 
 **Repozytorium:** `bartoszruta26-droid/mObywatel-2.0`  
