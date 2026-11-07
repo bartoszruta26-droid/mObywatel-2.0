@@ -30,7 +30,7 @@ class OrganizeFilesTests(unittest.TestCase):
         )
 
     def test_rejects_parent_traversal(self):
-        (self.source / "..__outside.txt").write_text("must not escape", encoding="utf-8")
+        (self.source / "safe__..__outside.txt").write_text("must not escape", encoding="utf-8")
         with self.assertRaises(ValueError):
             organize_files(str(self.source), str(self.output))
         self.assertFalse((self.root / "outside.txt").exists())
@@ -42,6 +42,17 @@ class OrganizeFilesTests(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             organize_files(str(self.source), str(self.output))
         self.assertEqual((self.output / "file.txt").read_text(encoding="utf-8"), "existing")
+
+    def test_skips_symlinks(self):
+        target = self.root / "external.txt"
+        target.write_text("external", encoding="utf-8")
+        try:
+            (self.source / "linked.txt").symlink_to(target)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlinks are unavailable on this platform")
+        result = organize_files(str(self.source), str(self.output))
+        self.assertEqual(result["processed"], 0)
+        self.assertEqual(result["skipped"], 1)
 
     def test_skips_hidden_and_manifest_files(self):
         (self.source / ".hidden").write_text("hidden", encoding="utf-8")
