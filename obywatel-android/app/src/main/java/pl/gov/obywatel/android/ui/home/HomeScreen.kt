@@ -143,7 +143,7 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
 
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                    columns = GridCells.Adaptive(minSize = 156.dp),
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
