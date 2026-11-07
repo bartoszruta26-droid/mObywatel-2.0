@@ -77,7 +77,7 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                     Spacer(Modifier.height(4.dp))
                     Text(
                         "Twoje sprawy w jednym miejscu",
-                        color = White,
+                        color = MaterialTheme.colorScheme.inverseOnSurface,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -180,7 +180,7 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
                     item.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = Navy
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     item.subtitle,
