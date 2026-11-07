@@ -63,7 +63,7 @@ private val services = listOf(
 )
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onOpenDocuments: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize(), color = AppSurface) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
@@ -149,7 +149,11 @@ fun HomeScreen() {
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(services) { service -> ServiceCard(service) }
+                    items(services) { service ->
+                        ServiceCard(service) {
+                            if (service.title == "Dokumenty") onOpenDocuments()
+                        }
+                    }
                 }
             }
 
@@ -170,9 +174,10 @@ fun HomeScreen() {
 }
 
 @Composable
-private fun ServiceCard(item: ServiceItem) {
+private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().height(142.dp),
+        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
