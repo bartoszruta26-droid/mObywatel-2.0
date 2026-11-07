@@ -38,12 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import pl.gov.obywatel.android.ui.theme.Blue
-import pl.gov.obywatel.android.ui.theme.BlueLight
-import pl.gov.obywatel.android.ui.theme.Muted
-import pl.gov.obywatel.android.ui.theme.Navy
-import pl.gov.obywatel.android.ui.theme.Surface as AppSurface
-import pl.gov.obywatel.android.ui.theme.White
 
 private data class ServiceItem(
     val title: String,
@@ -63,12 +57,12 @@ private val services = listOf(
 
 @Composable
 fun HomeScreen(onOpenDocuments: () -> Unit) {
-    Surface(modifier = Modifier.fillMaxSize(), color = AppSurface) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Navy)
+                    .background(MaterialTheme.colorScheme.inverseSurface)
                     .padding(horizontal = 20.dp, vertical = 22.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -76,7 +70,7 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                 Column {
                     Text(
                         "OBYWATEL",
-                        color = White,
+                        color = MaterialTheme.colorScheme.inverseOnSurface,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -98,7 +92,7 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                 Spacer(Modifier.height(18.dp))
                 Card(
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Blue),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -108,7 +102,7 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                         Icon(
                             Icons.Filled.Badge,
                             contentDescription = null,
-                            tint = White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(42.dp)
                         )
                         Column(Modifier.padding(start = 14.dp)) {
@@ -132,7 +126,7 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                     "Usługi",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Navy
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(12.dp))
 
@@ -161,7 +155,7 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
         onClick = onClick,
         enabled = item.isAvailable,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
@@ -171,13 +165,13 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
             Box(
                 modifier = Modifier
                     .size(42.dp)
-                    .background(BlueLight, RoundedCornerShape(12.dp)),
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     item.icon,
                     contentDescription = null,
-                    tint = Blue,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(23.dp)
                 )
             }
@@ -191,7 +185,7 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
                 Text(
                     item.subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Muted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
