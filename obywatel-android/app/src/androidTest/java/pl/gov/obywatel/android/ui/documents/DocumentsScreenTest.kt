@@ -53,7 +53,7 @@ class DocumentsScreenTest {
             }
         }
 
-        composeRule.onNodeWithContentDescription("Wróć").performClick()
+        composeRule.onNodeWithContentDescription("Wróć do ekranu głównego").performClick()
         org.junit.Assert.assertEquals(1, backCount)
     }
 }
