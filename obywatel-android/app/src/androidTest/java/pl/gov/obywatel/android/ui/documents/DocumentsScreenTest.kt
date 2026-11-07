@@ -1,0 +1,44 @@
+// SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+// SPDX-License-Identifier: EUPL-1.2
+package pl.gov.obywatel.android.ui.documents
+
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.test.core.app.ApplicationProvider
+import android.content.Context
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import pl.gov.obywatel.android.ui.theme.ObywatelTheme
+
+class DocumentsScreenTest {
+    @get:Rule
+    val composeRule = createComposeRule()
+
+    @Before
+    fun clearImportedDocuments() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.getSharedPreferences("imported_documents", Context.MODE_PRIVATE)
+            .edit().clear().commit()
+    }
+
+    @Test
+    fun showsLocalPrototypeNoticeAndEmptyState() {
+        composeRule.setContent {
+            ObywatelTheme {
+                DocumentsScreen(onBack = {})
+            }
+        }
+
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodes(androidx.compose.ui.test.hasText("Brak dokumentów. Dodaj plik, aby rozpocząć.")).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("To lokalny prototyp — dokumenty nie są weryfikowane przez administrację.", substring = true)
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("Brak dokumentów. Dodaj plik, aby rozpocząć.").assertIsDisplayed()
+        composeRule.onNodeWithText("Dodaj PDF, DOCX lub obraz").assertIsEnabled()
+    }
+}
