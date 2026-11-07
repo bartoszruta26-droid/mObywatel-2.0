@@ -6,11 +6,9 @@ package pl.gov.obywatel.android.ui.documents
 internal data class PreviewDimensions(val width: Int, val height: Int)
 
 /**
- * Keeps PDF previews within [maxDimension] on the longest side and avoids
- * enlarging small pages beyond 2x their source dimensions.
- *
- * Integer arithmetic is intentional: Float rounding can push the shorter
- * side one pixel beyond its expected floor (for example, 1754 × 1800 / 2480).
+ * Bounds the longest side by [maxDimension] and never enlarges a page by
+ * more than 2x. Integer arithmetic avoids Float rounding that could make the
+ * shorter side one pixel larger than its exact floor.
  */
 internal fun calculatePreviewDimensions(
     width: Int,
@@ -22,22 +20,19 @@ internal fun calculatePreviewDimensions(
     require(maxDimension > 0) { "Maximum dimension must be positive." }
 
     val longestSide = maxOf(width, height)
-    if (longestSide <= maxDimension) {
-        return PreviewDimensions(
-            width = (width.toLong() * 2L).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-            height = (height.toLong() * 2L).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        )
+    if (longestSide.toLong() * 2L <= maxDimension.toLong()) {
+        return PreviewDimensions(width * 2, height * 2)
     }
 
     return if (width >= height) {
         PreviewDimensions(
-            width = maxDimension,
+            width = minOf(width, maxDimension),
             height = (height.toLong() * maxDimension / width).coerceAtLeast(1L).toInt()
         )
     } else {
         PreviewDimensions(
             width = (width.toLong() * maxDimension / height).coerceAtLeast(1L).toInt(),
-            height = maxDimension
+            height = minOf(height, maxDimension)
         )
     }
 }
