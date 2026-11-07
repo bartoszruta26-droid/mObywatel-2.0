@@ -96,9 +96,8 @@ fun DocumentsScreen(onBack: () -> Unit) {
             scope.launch {
                 val result = withContext(Dispatchers.IO) {
                     runCatching {
-                        context.contentResolver.takePersistableUriPermission(
-                            uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
+                        // Magazyn najpierw waliduje MIME, a następnie atomowo
+                        // utrwala uprawnienie SAF razem z wpisem na liście.
                         val document = ImportedDocumentStore.add(context, uri)
                         document to ImportedDocumentStore.list(context)
                     }
