@@ -68,8 +68,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.gov.obywatel.android.data.ImportedDocument
 import pl.gov.obywatel.android.data.ImportedDocumentStore
-import pl.gov.obywatel.android.ui.theme.Navy
-import pl.gov.obywatel.android.ui.theme.White
 
 private const val MAX_IMAGE_PREVIEW_DIMENSION = 2048
 private const val MAX_PDF_PREVIEW_DIMENSION = 1800
@@ -132,7 +130,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
                 Text(
                     selected?.title ?: "Moje dokumenty",
                     style = MaterialTheme.typography.titleLarge,
-                    color = Navy,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
@@ -178,7 +176,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
                             Card(
                                 modifier = Modifier.fillMaxWidth().clickable { selected = document },
                                 shape = RoundedCornerShape(14.dp),
-                                colors = CardDefaults.cardColors(containerColor = White)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
                                 Row(
                                     Modifier.fillMaxWidth().padding(14.dp),
@@ -191,7 +189,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                             else -> Icons.Filled.Image
                                         },
                                         contentDescription = null,
-                                        tint = Navy,
+                                        tint = MaterialTheme.colorScheme.primary
                                         modifier = Modifier.size(28.dp)
                                     )
                                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
