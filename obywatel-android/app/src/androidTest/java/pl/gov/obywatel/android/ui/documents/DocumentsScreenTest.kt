@@ -23,7 +23,7 @@ class DocumentsScreenTest {
     fun clearImportedDocuments() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         context.getSharedPreferences("imported_documents", Context.MODE_PRIVATE)
-            .edit().clear().commit()
+            .edit().remove("document_uris").commit()
     }
 
     @Test
