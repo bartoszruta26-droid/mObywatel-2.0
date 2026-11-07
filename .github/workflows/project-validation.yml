@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: CC0-1.0
+name: Project validation
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "organize_files.py"
+      - "tests/**"
+      - "obywatel-android/**"
+      - ".github/workflows/project-validation.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "organize_files.py"
+      - "tests/**"
+      - "obywatel-android/**"
+      - ".github/workflows/project-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-tests:
+    name: Python regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run organizer tests
+        run: python -m unittest discover -s tests -v
+      - name: Compile Python sources
+        run: python -m py_compile organize_files.py clean_line_numbers.py
+
+  android-build:
+    name: Android debug build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Build with Gradle 8.9
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: "8.9"
+          arguments: --no-daemon :app:assembleDebug
+          build-root-directory: obywatel-android
