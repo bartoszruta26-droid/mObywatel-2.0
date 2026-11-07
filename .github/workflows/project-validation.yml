@@ -4,7 +4,7 @@ name: Project validation
 
 on:
   push:
-    branches: [master]
+    branches: [main, master]
     paths:
       - "organize_files.py"
       - "clean_line_numbers.py"
