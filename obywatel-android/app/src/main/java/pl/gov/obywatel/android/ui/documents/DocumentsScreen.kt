@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -87,6 +88,10 @@ fun DocumentsScreen(onBack: () -> Unit) {
     var selected by remember { mutableStateOf<ImportedDocument?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoadingDocuments by remember { mutableStateOf(true) }
+
+    // Wstecz najpierw zamyka podgląd dokumentu; dopiero kolejny powrót
+    // opuszcza ekran dokumentów (obsługiwany przez MainActivity).
+    BackHandler(enabled = selected != null) { selected = null }
 
     LaunchedEffect(Unit) {
         documents = withContext(Dispatchers.IO) { ImportedDocumentStore.list(context) }
