@@ -81,8 +81,12 @@ object ImportedDocumentStore {
             if (cursor.moveToFirst()) cursor.getString(0) else null
         } ?: uri.lastPathSegment ?: "Dokument"
         val mime = context.contentResolver.getType(uri).orEmpty()
-        require(mime == "application/pdf" || mime.startsWith("image/")) {
-            "Obsługiwane są pliki PDF oraz obrazy."
+        require(
+            mime == "application/pdf" ||
+                mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                mime.startsWith("image/")
+        ) {
+            "Obsługiwane są pliki PDF, DOCX oraz obrazy."
         }
         return ImportedDocument(uri, title, mime)
     }
