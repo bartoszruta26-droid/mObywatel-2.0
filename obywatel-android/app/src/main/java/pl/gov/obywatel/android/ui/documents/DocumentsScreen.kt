@@ -428,6 +428,8 @@ private fun decodeSampledImage(
         inPreferredConfig = Bitmap.Config.ARGB_8888
     }
     return resolver.openInputStream(document.uri)?.use { input ->
-        BitmapFactory.decodeStream(input, null, options)
-    } ?: error("Nie można zdekodować obrazu.")
+        checkNotNull(BitmapFactory.decodeStream(input, null, options)) {
+            "Nie można zdekodować obrazu."
+        }
+    } ?: error("Nie można ponownie otworzyć obrazu.")
 }
