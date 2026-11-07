@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+// SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android
 
 import android.os.Bundle
