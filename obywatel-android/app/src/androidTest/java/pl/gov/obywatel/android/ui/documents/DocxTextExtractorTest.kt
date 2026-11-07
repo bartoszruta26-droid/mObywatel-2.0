@@ -52,6 +52,23 @@ class DocxTextExtractorTest {
     }
 
     @Test
+    fun rejectsDocumentTextBeyondDisplayLimit() {
+        val oversizedText = "x".repeat(200_001)
+        val xml = """<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>$oversizedText</w:t></w:r></w:p></w:body></w:document>"""
+        assertThrows(IllegalArgumentException::class.java) {
+            DocxTextExtractor.extract(docx("word/document.xml" to xml.toByteArray()))
+        }
+    }
+
+    @Test
+    fun doesNotProcessDocumentTypeDeclarationsOrEntities() {
+        val xml = """<?xml version="1.0"?><!DOCTYPE w:document [<!ENTITY payload "expanded">]><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>&payload;</w:t></w:r></w:p></w:body></w:document>"""
+        assertThrows(Exception::class.java) {
+            DocxTextExtractor.extract(docx("word/document.xml" to xml.toByteArray()))
+        }
+    }
+
+    @Test
     fun rejectsMalformedDocumentXml() {
         val archive = docx("word/document.xml" to "<document><".toByteArray())
         assertThrows(Exception::class.java) {
