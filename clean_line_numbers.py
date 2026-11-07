@@ -1,281 +1,182 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: EUPL-1.2
 # SPDX-FileCopyrightText: 2025-2026 Damian Fajfer <damian@fajfer.org>
-#
-# AI generated Mon Dec 29 19:13:14 CET 2025 using Claude Sonnet 4.5
 
-"""
-Script to remove line numbers from files in the repository.
-This script will:
-1. Find all text files in the repository
-2. Remove line numbers at the beginning of each line (pattern: "1    content")
-3. Remove trailing whitespace from each line
-4. Remove excessive blank lines (more than 2 consecutive)
-5. Optionally rename .html files to their proper extensions
+"""Safely remove sequential line-number prefixes from text files.
+
+The default mode is a read-only preview. Use --write to apply changes.
+Changed files receive a sibling .bak copy before replacement.
 """
 
+from __future__ import annotations
+
+import argparse
 import os
 import re
-import sys
+import shutil
+import tempfile
 from pathlib import Path
 
-
-# Directories to skip
-SKIP_DIRS = {'.git', '__pycache__', 'node_modules', '.venv', 'venv', 'build', 'dist'}
-
-# Binary file extensions to skip
+SKIP_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv", "build", "dist"}
 BINARY_EXTENSIONS = {
-    '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.ico', '.svg',
-    '.pdf', '.zip', '.tar', '.gz', '.bz2', '.xz',
-    '.exe', '.dll', '.so', '.dylib', '.a',
-    '.mp3', '.mp4', '.avi', '.mov', '.wav',
-    '.ttf', '.otf', '.woff', '.woff2', '.eot',
-    '.class', '.jar', '.war', '.ear',
-    '.pyc', '.pyo', '.pyd',
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg", ".pdf",
+    ".zip", ".tar", ".gz", ".bz2", ".xz", ".exe", ".dll", ".so",
+    ".dylib", ".a", ".mp3", ".mp4", ".avi", ".mov", ".wav",
+    ".ttf", ".otf", ".woff", ".woff2", ".eot", ".class", ".jar",
+    ".war", ".ear", ".pyc", ".pyo", ".pyd",
 }
+PREFIX_RE = re.compile(r"^(\d+)([ \t]+)(.*)$")
 
 
-def is_text_file(file_path):
-    """Check if a file is likely a text file."""
-    # Skip files with binary extensions
-    if file_path.suffix.lower() in BINARY_EXTENSIONS:
+def is_text_file(file_path: Path) -> bool:
+    """Return whether a file can be decoded as UTF-8 and is not a known binary."""
+    if file_path.suffix.lower() in BINARY_EXTENSIONS or file_path.is_symlink():
         return False
-    
-    # Try to read the file as text
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            f.read(1024)  # Read first 1KB
+        with file_path.open("r", encoding="utf-8") as stream:
+            stream.read(1024)
         return True
-    except (UnicodeDecodeError, PermissionError):
+    except (UnicodeDecodeError, PermissionError, OSError):
         return False
 
 
-def has_line_numbers(content):
-    """Check if content has line numbers at the beginning of lines."""
-    lines = content.split('\n')
-    if len(lines) < 2:
-        return False
-    
-    # Check if first few lines match the pattern "number    content"
-    matches = 0
-    for i, line in enumerate(lines[:min(10, len(lines))]):
-        # Pattern: one or more digits, followed by whitespace
-        if re.match(r'^\d+\s+', line) or (line.strip() == str(i + 1)):
-            matches += 1
-    
-    # If more than 50% of checked lines have numbers, consider it numbered
-    return matches >= min(5, len(lines) * 0.5)
+def _numbered_prefixes(content: str) -> tuple[list[str], int] | None:
+    """Return content lines and common prefix width only for strict 1..N numbering."""
+    lines = content.splitlines(keepends=True)
+    if len(lines) < 5:
+        return None
 
-
-def get_line_number_format(content):
-    """
-    Analyze the line number format in the content.
-    Returns (max_line_number, spacing_after_max) tuple.
-    """
-    lines = content.split('\n')
-    max_num = 0
-    max_line_idx = -1
-    
-    # Find the maximum line number and its position
-    for idx, line in enumerate(lines):
-        match = re.match(r'^(\d+)\s+', line)
+    bodies = [line.rstrip("\r\n") for line in lines]
+    widths: list[int] = []
+    for expected, body in enumerate(bodies, start=1):
+        match = PREFIX_RE.match(body)
         if match:
-            num = int(match.group(1))
-            if num > max_num:
-                max_num = num
-                max_line_idx = idx
-    
-    if max_num == 0:
-        return 0, 0
-    
-    # Analyze the line with the maximum line number to determine spacing
-    max_line = lines[max_line_idx]
-    # Match: line number, then count the spaces after it
-    match = re.match(r'^(\d+)(\s+)', max_line)
-    if match:
-        spaces_after = len(match.group(2))
-        return max_num, spaces_after
-    
-    return max_num, 3  # Default to 3 if we can't determine
+            number, separator, _ = match.groups()
+            if int(number) != expected:
+                return None
+            widths.append(len(number) + len(separator))
+            continue
+
+        # A numbered blank line may contain only its line number.
+        if body == str(expected):
+            widths.append(len(body))
+            continue
+        return None
+
+    # Non-empty source text must begin at one consistent column. This avoids
+    # stripping arbitrary numeric code and preserves indentation after the prefix.
+    nonempty_widths = [
+        len(PREFIX_RE.match(body).group(1)) + len(PREFIX_RE.match(body).group(2))
+        for body in bodies if PREFIX_RE.match(body)
+    ]
+    if len(nonempty_widths) < 5 or len(set(nonempty_widths)) != 1:
+        return None
+    return bodies, nonempty_widths[0]
 
 
-def remove_line_numbers(content):
-    """
-    Remove line numbers from the beginning of each line, preserving original indentation.
-    
-    The format is: line numbers are aligned with padding, followed by N spaces (detected).
-    For example, if max line is 10 (2 digits) and spacing is 3:
-    - Line 1:  "1    " (1 digit + 4 spaces = 5 chars total)
-    - Line 10: "10   " (2 digits + 3 spaces = 5 chars total)
-    
-    Total width = len(str(max_line_number)) + detected_spacing
-    """
-    lines = content.split('\n')
-    
-    # Detect the line number format
-    max_line_num, spacing = get_line_number_format(content)
-    if max_line_num == 0:
-        # No line numbers found, return as is
+def has_line_numbers(content: str) -> bool:
+    """Detect a complete, sequential numbered listing (minimum five lines)."""
+    return _numbered_prefixes(content) is not None
+
+
+def remove_line_numbers(content: str) -> str:
+    """Remove only a verified sequential line-number field; preserve all other text."""
+    detected = _numbered_prefixes(content)
+    if detected is None:
         return content
-    
-    # Calculate the total width: digits of max number + detected spacing
-    total_width = len(str(max_line_num)) + spacing
-    
-    cleaned_lines = []
-    for line in lines:
-        # Check if line starts with a number
-        match = re.match(r'^(\d+)', line)
-        if match and len(line) > total_width:
-            # Remove exactly the calculated width from the beginning
-            cleaned_line = line[total_width:].rstrip()
-        elif match and len(line) <= total_width:
-            # Line is just the line number (empty line)
-            cleaned_line = ''
-        else:
-            # No line number, keep as is but remove trailing whitespace
-            cleaned_line = line.rstrip()
-        
-        cleaned_lines.append(cleaned_line)
-    
-    return '\n'.join(cleaned_lines)
+    bodies, prefix_width = detected
+    output: list[str] = []
+    original_lines = content.splitlines(keepends=True)
+    for body, original in zip(bodies, original_lines):
+        ending = original[len(original.rstrip("\r\n")):]
+        output.append(body[prefix_width:] if len(body) >= prefix_width else "")
+        output[-1] += ending
+    return "".join(output)
 
 
-def remove_excessive_blank_lines(content):
-    """Remove more than 2 consecutive blank lines."""
-    return re.sub(r'\n{4,}', '\n\n\n', content)
-
-
-def process_file(file_path, dry_run=False):
-    """Process a single file to remove line numbers."""
+def process_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
+    """Preview or safely clean one file, preserving a backup before any write."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            original_content = f.read()
-        
-        # Check if file has line numbers
-        if not has_line_numbers(original_content):
-            return False, "No line numbers detected"
-        
-        # Clean the content
-        cleaned_content = remove_line_numbers(original_content)
-        cleaned_content = remove_excessive_blank_lines(cleaned_content)
-        
-        # Ensure file ends with a single newline
-        if cleaned_content and not cleaned_content.endswith('\n'):
-            cleaned_content += '\n'
-        
-        # Write back if not dry run
-        if not dry_run:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(cleaned_content)
-        
-        return True, "Cleaned"
-    
-    except Exception as e:
-        return False, f"Error: {str(e)}"
+        original = file_path.read_text(encoding="utf-8")
+        if not has_line_numbers(original):
+            return False, "No strict sequential line numbering detected"
+        cleaned = remove_line_numbers(original)
+        if cleaned == original:
+            return False, "No changes required"
+        if dry_run:
+            return True, "Would clean (preview only)"
+
+        backup = file_path.with_name(file_path.name + ".bak")
+        if backup.exists():
+            return False, f"Backup already exists; refusing to overwrite: {backup.name}"
+        shutil.copy2(file_path, backup)
+        fd, temporary_name = tempfile.mkstemp(prefix=f".{file_path.name}.", dir=file_path.parent)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:
+                stream.write(cleaned)
+            os.replace(temporary_name, file_path)
+        except Exception:
+            try:
+                os.unlink(temporary_name)
+            except OSError:
+                pass
+            raise
+        return True, f"Cleaned; original preserved as {backup.name}"
+    except (OSError, UnicodeError) as error:
+        return False, f"Error: {error}"
 
 
-def rename_html_files(repo_path, dry_run=False):
-    """Rename .html files to their proper extensions (e.g., Package.swift.html -> Package.swift)."""
-    renamed = []
-    for root, dirs, files in os.walk(repo_path):
-        # Skip excluded directories
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
-        
-        for file in files:
-            if file.endswith('.html') and '.' in file[:-5]:  # Has another extension before .html
-                old_path = Path(root) / file
-                new_path = Path(root) / file[:-5]  # Remove .html extension
-                
-                if not dry_run:
-                    old_path.rename(new_path)
-                
-                renamed.append((old_path, new_path))
-    
+def rename_html_files(repo_path: Path, dry_run: bool = True) -> list[tuple[Path, Path]]:
+    """Preview or rename *.ext.html files, refusing collisions and symlinks."""
+    renamed: list[tuple[Path, Path]] = []
+    for root, dirs, files in os.walk(repo_path, followlinks=False):
+        dirs[:] = [name for name in dirs if name not in SKIP_DIRS]
+        for name in files:
+            old_path = Path(root) / name
+            if old_path.is_symlink() or not name.endswith(".html") or "." not in name[:-5]:
+                continue
+            new_path = old_path.with_name(name[:-5])
+            if new_path.exists():
+                continue
+            if not dry_run:
+                old_path.rename(new_path)
+            renamed.append((old_path, new_path))
     return renamed
 
 
-def main():
-    """Main function to process all files in the repository."""
-    # Get repository root (current directory)
-    repo_path = Path(__file__).parent
-    
-    # Parse command line arguments
-    dry_run = '--dry-run' in sys.argv or '-n' in sys.argv
-    rename_files = '--rename' in sys.argv or '-r' in sys.argv
-    
-    if dry_run:
-        print("🔍 DRY RUN MODE - No files will be modified\n")
-    
-    print(f"📂 Processing repository: {repo_path}\n")
-    
-    # Rename .html files if requested
-    if rename_files:
-        print("📝 Renaming .html files...")
-        renamed_files = rename_html_files(repo_path, dry_run)
-        if renamed_files:
-            for old, new in renamed_files:
-                rel_old = old.relative_to(repo_path)
-                rel_new = new.relative_to(repo_path)
-                print(f"   {rel_old} → {rel_new}")
-        else:
-            print("   No files to rename")
-        print()
-    
-    # Process all files
-    processed_count = 0
-    cleaned_count = 0
-    error_count = 0
-    
-    for root, dirs, files in os.walk(repo_path):
-        # Skip excluded directories
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
-        
-        for file in files:
-            # Skip this script itself
-            if file == 'clean_line_numbers.py':
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--write", action="store_true", help="apply changes (default is preview only)")
+    parser.add_argument("--rename", action="store_true", help="also rename *.ext.html files")
+    args = parser.parse_args()
+    dry_run = not args.write
+    repo_path = Path(__file__).resolve().parent
+    print(f"Processing repository: {repo_path}")
+    print("PREVIEW ONLY — no files will be modified" if dry_run else "WRITE MODE — backups will be created")
+
+    if args.rename:
+        for old, new in rename_html_files(repo_path, dry_run=dry_run):
+            print(f"{old.relative_to(repo_path)} -> {new.relative_to(repo_path)}")
+
+    processed = cleaned = errors = 0
+    for root, dirs, files in os.walk(repo_path, followlinks=False):
+        dirs[:] = [name for name in dirs if name not in SKIP_DIRS]
+        for name in files:
+            path = Path(root) / name
+            if name == Path(__file__).name or not is_text_file(path):
                 continue
-            
-            file_path = Path(root) / file
-            
-            # Skip non-text files
-            if not is_text_file(file_path):
-                continue
-            
-            processed_count += 1
-            relative_path = file_path.relative_to(repo_path)
-            
-            success, message = process_file(file_path, dry_run)
-            
+            processed += 1
+            success, message = process_file(path, dry_run=dry_run)
             if success:
-                cleaned_count += 1
-                print(f"✅ {relative_path}: {message}")
-            elif "Error" in message:
-                error_count += 1
-                print(f"❌ {relative_path}: {message}")
-    
-    # Print summary
-    print(f"\n{'='*60}")
-    print(f"📊 Summary:")
-    print(f"   Files processed: {processed_count}")
-    print(f"   Files cleaned: {cleaned_count}")
-    print(f"   Errors: {error_count}")
-    print(f"{'='*60}")
-    
-    if dry_run:
-        print("\n💡 Run without --dry-run to apply changes")
-    
-    if rename_files and not dry_run:
-        print("\n💡 Files have been renamed. You may want to update imports/references.")
+                cleaned += 1
+                print(f"{path.relative_to(repo_path)}: {message}")
+            elif message.startswith("Error:") or message.startswith("Backup already exists"):
+                errors += 1
+                print(f"{path.relative_to(repo_path)}: {message}")
+
+    print(f"Summary: scanned={processed}, candidates={cleaned}, errors={errors}")
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":
-    if '--help' in sys.argv or '-h' in sys.argv:
-        print(__doc__)
-        print("\nUsage: python3 clean_line_numbers.py [OPTIONS]")
-        print("\nOptions:")
-        print("  -n, --dry-run    Preview changes without modifying files")
-        print("  -r, --rename     Rename .html files to remove .html extension")
-        print("  -h, --help       Show this help message")
-        sys.exit(0)
-    
-    main()
+    raise SystemExit(main())
