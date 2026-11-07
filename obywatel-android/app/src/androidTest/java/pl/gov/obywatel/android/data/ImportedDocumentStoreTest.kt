@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.content.Context
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,6 +15,20 @@ import org.junit.runner.RunWith
 class ImportedDocumentStoreTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
+
+    @Test
+    fun listSkipsDocumentsWhoseProviderIsUnavailable() {
+        val preferences = context.getSharedPreferences("imported_documents", Context.MODE_PRIVATE)
+        try {
+            preferences.edit()
+                .putStringSet("document_uris", setOf("content://missing.provider/document/1"))
+                .commit()
+
+            assertEquals(emptyList<ImportedDocument>(), ImportedDocumentStore.list(context))
+        } finally {
+            preferences.edit().clear().commit()
+        }
+    }
 
     @Test
     fun rejectsFileUrisBeforeAccessingDocumentProvider() {
