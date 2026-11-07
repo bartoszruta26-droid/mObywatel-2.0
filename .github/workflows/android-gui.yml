@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   android:
-    name: Android unit tests and debug APK
+    name: Android tests and debug APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -57,7 +57,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          script: gradle --no-daemon :app:connectedDebugAndroidTest
+          script: cd obywatel-android && gradle --no-daemon :app:connectedDebugAndroidTest
 
       - name: Assemble Android debug APK
         working-directory: obywatel-android
