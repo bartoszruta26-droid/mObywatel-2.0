@@ -47,14 +47,14 @@ def _numbered_prefixes(content: str) -> tuple[list[str], int] | None:
         return None
 
     bodies = [line.rstrip("\r\n") for line in lines]
-    separator_widths: list[int] = []
+    prefix_widths: list[int] = []
     for expected, body in enumerate(bodies, start=1):
         match = PREFIX_RE.match(body)
         if match:
             number, separator, _ = match.groups()
-            if int(number) != expected or len(separator) < 2:
+            if int(number) != expected:
                 return None
-            separator_widths.append(len(separator))
+            prefix_widths.append(len(number) + len(separator))
             continue
 
         # A numbered blank line may contain only its line number.
@@ -62,12 +62,15 @@ def _numbered_prefixes(content: str) -> tuple[list[str], int] | None:
             continue
         return None
 
-    # Numbered exports use at least two separator spaces. Use the minimum
-    # separator width as the line-number field and preserve any additional
-    # indentation present in the source text.
-    if len(separator_widths) < 5:
+    # Use the narrowest complete number field as the prefix boundary. This
+    # accounts for 1- vs 2-digit line numbers while retaining extra indentation
+    # on indented source lines. A one-column separator is too ambiguous.
+    if len(prefix_widths) < 5:
         return None
-    return bodies, min(separator_widths)
+    baseline_width = min(prefix_widths)
+    if baseline_width < 3:
+        return None
+    return bodies, baseline_width
 
 
 def has_line_numbers(content: str) -> bool:
@@ -87,8 +90,7 @@ def remove_line_numbers(content: str) -> str:
         ending = original[len(original.rstrip("\r\n")):]
         match = PREFIX_RE.match(body)
         if match:
-            number = match.group(1)
-            output.append(body[len(number) + prefix_width:])
+            output.append(body[prefix_width:])
         else:
             output.append("")
         output[-1] += ending
