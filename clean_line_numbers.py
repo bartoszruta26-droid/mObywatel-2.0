@@ -47,14 +47,14 @@ def _numbered_prefixes(content: str) -> tuple[list[str], int] | None:
         return None
 
     bodies = [line.rstrip("\r\n") for line in lines]
-    prefix_widths: list[int] = []
+    separator_widths: list[int] = []
     for expected, body in enumerate(bodies, start=1):
         match = PREFIX_RE.match(body)
         if match:
             number, separator, _ = match.groups()
-            if int(number) != expected:
+            if int(number) != expected or len(separator) < 2:
                 return None
-            prefix_widths.append(len(number) + len(separator))
+            separator_widths.append(len(separator))
             continue
 
         # A numbered blank line may contain only its line number.
@@ -62,15 +62,12 @@ def _numbered_prefixes(content: str) -> tuple[list[str], int] | None:
             continue
         return None
 
-    # Use the narrowest complete number field as the prefix boundary. This
-    # accounts for 1- vs 2-digit line numbers while retaining extra indentation
-    # on indented source lines. A one-column separator is too ambiguous.
-    if len(prefix_widths) < 5:
+    # The minimum separator is the number gutter; extra spaces on a line are
+    # source indentation. Add the actual digit count per line so 9 -> 10 stays
+    # aligned without consuming indentation. A single-space separator is ambiguous.
+    if len(separator_widths) < 5:
         return None
-    baseline_width = min(prefix_widths)
-    if baseline_width < 3:
-        return None
-    return bodies, baseline_width
+    return bodies, min(separator_widths)
 
 
 def has_line_numbers(content: str) -> bool:
@@ -90,7 +87,8 @@ def remove_line_numbers(content: str) -> str:
         ending = original[len(original.rstrip("\r\n")):]
         match = PREFIX_RE.match(body)
         if match:
-            output.append(body[prefix_width:])
+            number = match.group(1)
+            output.append(body[len(number) + prefix_width:])
         else:
             output.append("")
         output[-1] += ending
