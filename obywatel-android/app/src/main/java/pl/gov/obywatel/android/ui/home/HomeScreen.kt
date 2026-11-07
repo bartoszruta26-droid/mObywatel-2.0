@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -89,12 +88,6 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                Icon(
-                    Icons.Filled.NotificationsNone,
-                    contentDescription = "Powiadomienia — demonstracja",
-                    tint = White,
-                    modifier = Modifier.size(28.dp)
-                )
             }
 
             Column(
