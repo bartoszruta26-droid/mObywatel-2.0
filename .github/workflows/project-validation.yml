@@ -4,7 +4,7 @@ name: Project validation
 
 on:
   push:
-    branches: [main, master, audit/p0-hardening-2026-11]
+    branches: [main, master, audit/p0-hardening-2026-11, feature/document-preview-performance]
     paths:
       - "organize_files.py"
       - "clean_line_numbers.py"
@@ -12,7 +12,7 @@ on:
       - "obywatel-android/**"
       - ".github/workflows/project-validation.yml"
   pull_request:
-    branches: [master]
+    branches: [main, master]
     paths:
       - "organize_files.py"
       - "clean_line_numbers.py"
@@ -59,6 +59,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+      - name: Run Android unit tests
+        working-directory: obywatel-android
+        run: gradle --no-daemon :app:testDebugUnitTest
       - name: Assemble Android debug APK
         working-directory: obywatel-android
         run: gradle --no-daemon :app:assembleDebug
