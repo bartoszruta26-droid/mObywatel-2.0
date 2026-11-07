@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android.data
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 
@@ -28,15 +29,37 @@ object ImportedDocumentStore {
             .sortedBy { it.title.lowercase() }
     }
 
+    /**
+     * Waliduje typ pliku przed utrwaleniem uprawnienia URI. W razie błędu zapisu
+     * zwalnia wyłącznie uprawnienie uzyskane przez to wywołanie.
+     */
     fun add(context: Context, uri: Uri): ImportedDocument {
         val document = fromUri(context, uri)
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val updated = HashSet(prefs.getStringSet(KEY_URIS, emptySet()) ?: emptySet())
-        updated.add(uri.toString())
-        check(prefs.edit().putStringSet(KEY_URIS, updated).commit()) {
-            "Nie udało się zapisać listy dokumentów."
+        val resolver = context.contentResolver
+        val hadReadPermission = resolver.persistedUriPermissions.any {
+            it.uri == uri && it.isReadPermission
         }
-        return document
+
+        resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        try {
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val updated = HashSet(prefs.getStringSet(KEY_URIS, emptySet()) ?: emptySet())
+            updated.add(uri.toString())
+            check(prefs.edit().putStringSet(KEY_URIS, updated).commit()) {
+                "Nie udało się zapisać listy dokumentów."
+            }
+            return document
+        } catch (failure: Throwable) {
+            if (!hadReadPermission) {
+                runCatching {
+                    resolver.releasePersistableUriPermission(
+                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                }
+            }
+            throw failure
+        }
     }
 
     fun remove(context: Context, uri: Uri) {
@@ -46,7 +69,7 @@ object ImportedDocumentStore {
         prefs.edit().putStringSet(KEY_URIS, updated).apply()
         runCatching {
             context.contentResolver.releasePersistableUriPermission(
-                uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
         }
     }
