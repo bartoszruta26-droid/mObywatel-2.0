@@ -4,6 +4,8 @@ package pl.gov.obywatel.android.ui.documents
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ApplicationProvider
@@ -40,5 +42,17 @@ class DocumentsScreenTest {
             .assertIsDisplayed()
         composeRule.onNodeWithText("Brak dokumentów. Dodaj plik, aby rozpocząć.").assertIsDisplayed()
         composeRule.onNodeWithText("Dodaj PDF, DOCX lub obraz").assertIsEnabled()
+    }
+    @Test
+    fun backButtonInvokesHostNavigationWhenNoDocumentIsSelected() {
+        var backCount = 0
+        composeRule.setContent {
+            ObywatelTheme {
+                DocumentsScreen(onBack = { backCount += 1 })
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Wróć").performClick()
+        org.junit.Assert.assertEquals(1, backCount)
     }
 }
