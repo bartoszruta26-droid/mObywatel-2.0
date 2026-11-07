@@ -3,12 +3,12 @@
 package pl.gov.obywatel.android.ui.documents
 
 import org.junit.Assert.assertEquals
-import org.junit.Test
 import org.junit.Assert.assertThrows
+import org.junit.Test
 
 class PdfPreviewSizingTest {
     @Test
-    fun boundsLandscapePageByLongestSide() {
+    fun boundsLandscapePageByLongestSideWithoutFloatRounding() {
         assertEquals(
             PreviewDimensions(1800, 1272),
             calculatePreviewDimensions(2480, 1754, 1800)
@@ -16,7 +16,7 @@ class PdfPreviewSizingTest {
     }
 
     @Test
-    fun boundsPortraitPageByLongestSide() {
+    fun boundsPortraitPageByLongestSideWithoutFloatRounding() {
         assertEquals(
             PreviewDimensions(1272, 1800),
             calculatePreviewDimensions(1754, 2480, 1800)
@@ -32,10 +32,18 @@ class PdfPreviewSizingTest {
     }
 
     @Test
-    fun preservesAtLeastOnePixelForNarrowPages() {
+    fun doesNotExceedMaximumDimensionForExtremeAspectRatio() {
         assertEquals(
             PreviewDimensions(1, 1800),
             calculatePreviewDimensions(1, 5000, 1800)
+        )
+    }
+
+    @Test
+    fun keepsSmallPagesAtNativeDimensionsWhenDoublingWouldOverflow() {
+        assertEquals(
+            PreviewDimensions(Int.MAX_VALUE, 2),
+            calculatePreviewDimensions(Int.MAX_VALUE, 1, Int.MAX_VALUE)
         )
     }
 
