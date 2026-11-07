@@ -61,8 +61,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -93,8 +97,15 @@ fun DocumentsScreen(onBack: () -> Unit) {
     BackHandler(enabled = selected != null) { selected = null }
 
     LaunchedEffect(Unit) {
-        documents = withContext(Dispatchers.IO) { ImportedDocumentStore.list(context) }
-        isLoadingDocuments = false
+        try {
+            documents = withContext(Dispatchers.IO) { ImportedDocumentStore.list(context) }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            errorMessage = failure.message ?: "Nie udało się wczytać listy dokumentów."
+        } finally {
+            isLoadingDocuments = false
+        }
     }
 
     val importLauncher = rememberLauncherForActivityResult(
@@ -165,7 +176,13 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     Text("Dodaj PDF, DOCX lub obraz")
                 }
                 errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(8.dp).semantics {
+                            liveRegion = LiveRegionMode.Polite
+                        }
+                    )
                 }
                 Spacer(Modifier.height(12.dp))
                 when {
@@ -275,7 +292,11 @@ private fun DocxPreviewPane(document: ImportedDocument, modifier: Modifier = Mod
             CircularProgressIndicator()
         }
         preview?.error != null -> Box(modifier.padding(20.dp), contentAlignment = Alignment.Center) {
-            Text(preview?.error.orEmpty(), color = MaterialTheme.colorScheme.error)
+            Text(
+                preview?.error.orEmpty(),
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+            )
         }
         else -> Column(
             modifier = modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp)
@@ -373,7 +394,11 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                 Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(preview?.error.orEmpty(), color = MaterialTheme.colorScheme.error)
+                Text(
+                    preview?.error.orEmpty(),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                )
             }
 
             else -> {
