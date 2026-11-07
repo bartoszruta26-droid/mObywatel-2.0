@@ -20,6 +20,13 @@ class CleanLineNumbersTests(unittest.TestCase):
         self.assertTrue(has_line_numbers(source))
         self.assertEqual(remove_line_numbers(source), expected)
 
+    def test_handles_multi_digit_prefixes_and_indented_lines(self):
+        lines = ["fun f():"] + ["    value = 1"] * 8 + ["    return value", "class C:", "    pass"]
+        source = "".join(f"{i}   {line}\\n" for i, line in enumerate(lines, 1))
+        expected = "\\n".join(lines) + "\\n"
+        self.assertTrue(has_line_numbers(source))
+        self.assertEqual(remove_line_numbers(source), expected)
+
     def test_does_not_strip_regular_numeric_source(self):
         source = "1 + 2\n2 + 3\n3 + 4\n4 + 5\n5 + 6\n"
         self.assertFalse(has_line_numbers(source))
