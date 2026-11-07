@@ -12,4 +12,5 @@ val Surface = Color(0xFFF5F7FA)
 val Ink = Color(0xFF172B4D)
 val Muted = Color(0xFF5B6B7A)
 val White = Color(0xFFFFFFFF)
-val Border = Color(0xFFD7E0E8)
+// Kontrast co najmniej 3:1 dla istotnych obrysów na jasnych powierzchniach.
+val Border = Color(0xFF7A8B99)
