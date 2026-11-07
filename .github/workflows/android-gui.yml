@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+# SPDX-License-Identifier: EUPL-1.2
+name: Android GUI validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "obywatel-android/**"
+      - ".github/workflows/android-gui.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "obywatel-android/**"
+      - ".github/workflows/android-gui.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-gui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android unit tests and debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools platforms;android-35 build-tools;35.0.0
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Run Android unit tests
+        working-directory: obywatel-android
+        run: gradle --no-daemon :app:testDebugUnitTest
+
+      - name: Assemble Android debug APK
+        working-directory: obywatel-android
+        run: gradle --no-daemon :app:assembleDebug
+
+      - name: Archive debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: obywatel-android-debug
+          path: obywatel-android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
