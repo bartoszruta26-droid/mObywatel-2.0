@@ -43,12 +43,14 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,11 +59,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.gov.obywatel.android.data.ImportedDocument
 import pl.gov.obywatel.android.data.ImportedDocumentStore
 import pl.gov.obywatel.android.ui.theme.Navy
 import pl.gov.obywatel.android.ui.theme.White
+
+private const val MAX_IMAGE_PREVIEW_DIMENSION = 2048
+private const val MAX_PDF_PREVIEW_DIMENSION = 1800
 
 private data class DocumentPreview(
     val bitmap: Bitmap,
@@ -72,25 +78,38 @@ private data class DocumentPreview(
 @Composable
 fun DocumentsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    var documents by remember { mutableStateOf(ImportedDocumentStore.list(context)) }
+    val scope = rememberCoroutineScope()
+    var documents by remember { mutableStateOf<List<ImportedDocument>>(emptyList()) }
     var selected by remember { mutableStateOf<ImportedDocument?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoadingDocuments by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        documents = withContext(Dispatchers.IO) { ImportedDocumentStore.list(context) }
+        isLoadingDocuments = false
+    }
 
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(
-                    uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-                ImportedDocumentStore.add(context, uri)
-            }.onSuccess { document ->
-                documents = ImportedDocumentStore.list(context)
-                selected = document
-                errorMessage = null
-            }.onFailure { error ->
-                errorMessage = error.message ?: "Nie udało się dodać pliku."
+            scope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        context.contentResolver.takePersistableUriPermission(
+                            uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                        val document = ImportedDocumentStore.add(context, uri)
+                        document to ImportedDocumentStore.list(context)
+                    }
+                }
+                result.onSuccess { (document, updatedDocuments) ->
+                    documents = updatedDocuments
+                    selected = document
+                    errorMessage = null
+                }.onFailure { error ->
+                    errorMessage = error.message ?: "Nie udało się dodać pliku."
+                }
             }
         }
     }
@@ -102,7 +121,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
                 }
                 Text(
-                    if (selected == null) "Moje dokumenty" else selected!!.title,
+                    selected?.title ?: "Moje dokumenty",
                     style = MaterialTheme.typography.titleLarge,
                     color = Navy,
                     fontWeight = FontWeight.Bold,
@@ -119,7 +138,8 @@ fun DocumentsScreen(onBack: () -> Unit) {
                 )
                 Button(
                     onClick = { importLauncher.launch(arrayOf("application/pdf", "image/*")) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoadingDocuments
                 ) {
                     Icon(Icons.Filled.FileOpen, contentDescription = null)
                     Text("  Dodaj PDF lub obraz")
@@ -128,12 +148,20 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
                 }
                 Spacer(Modifier.height(12.dp))
-                if (documents.isEmpty()) {
-                    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                when {
+                    isLoadingDocuments -> Box(
+                        Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) { CircularProgressIndicator() }
+
+                    documents.isEmpty() -> Box(
+                        Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text("Brak dokumentów. Dodaj plik, aby rozpocząć.")
                     }
-                } else {
-                    LazyColumn(
+
+                    else -> LazyColumn(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -162,8 +190,13 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                         )
                                     }
                                     IconButton(onClick = {
-                                        ImportedDocumentStore.remove(context, document.uri)
-                                        documents = ImportedDocumentStore.list(context)
+                                        scope.launch {
+                                            val updated = withContext(Dispatchers.IO) {
+                                                ImportedDocumentStore.remove(context, document.uri)
+                                                ImportedDocumentStore.list(context)
+                                            }
+                                            documents = updated
+                                        }
                                     }) {
                                         Icon(Icons.Filled.DeleteOutline, contentDescription = "Usuń z listy")
                                     }
@@ -195,7 +228,8 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                             require(renderer.pageCount > 0) { "Plik PDF nie zawiera stron." }
                             val safePage = page.coerceIn(0, renderer.pageCount - 1)
                             renderer.openPage(safePage).use { pdfPage ->
-                                val scale = minOf(2f, 1600f / pdfPage.height.toFloat())
+                                val longestSide = maxOf(pdfPage.width, pdfPage.height).toFloat()
+                                val scale = minOf(2f, MAX_PDF_PREVIEW_DIMENSION / longestSide)
                                 val bitmap = Bitmap.createBitmap(
                                     (pdfPage.width * scale).toInt().coerceAtLeast(1),
                                     (pdfPage.height * scale).toInt().coerceAtLeast(1),
@@ -208,13 +242,14 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                         }
                     }
                 } else {
-                    val bitmap = context.contentResolver.openInputStream(document.uri)?.use { input ->
-                        BitmapFactory.decodeStream(input)
-                    } ?: error("Nie można odczytać obrazu.")
-                    DocumentPreview(bitmap, 1)
+                    DocumentPreview(decodeSampledImage(context, document), 1)
                 }
             }.getOrElse {
-                DocumentPreview(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), 1, it.message ?: "Błąd podglądu.")
+                DocumentPreview(
+                    Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
+                    1,
+                    it.message ?: "Błąd podglądu."
+                )
             }
         }
     }
@@ -239,10 +274,7 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                 Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    preview?.error.orEmpty(),
-                    color = MaterialTheme.colorScheme.error
-                )
+                Text(preview?.error.orEmpty(), color = MaterialTheme.colorScheme.error)
             }
 
             else -> {
@@ -284,4 +316,32 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
             }
         }
     }
+}
+
+private fun decodeSampledImage(
+    context: android.content.Context,
+    document: ImportedDocument
+): Bitmap {
+    val resolver = context.contentResolver
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    resolver.openInputStream(document.uri)?.use { input ->
+        BitmapFactory.decodeStream(input, null, bounds)
+    } ?: error("Nie można odczytać obrazu.")
+    require(bounds.outWidth > 0 && bounds.outHeight > 0) { "Nieprawidłowy plik obrazu." }
+
+    var sampleSize = 1
+    while (
+        maxOf(bounds.outWidth / sampleSize, bounds.outHeight / sampleSize) >
+        MAX_IMAGE_PREVIEW_DIMENSION
+    ) {
+        sampleSize *= 2
+    }
+
+    val options = BitmapFactory.Options().apply {
+        inSampleSize = sampleSize
+        inPreferredConfig = Bitmap.Config.ARGB_8888
+    }
+    return resolver.openInputStream(document.uri)?.use { input ->
+        BitmapFactory.decodeStream(input, null, options)
+    } ?: error("Nie można zdekodować obrazu.")
 }
