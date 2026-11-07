@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -26,15 +25,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.graphics.asImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FileOpen
-import androidx.compose.material.icons.filled.Image as ImageIcon
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,7 +49,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,12 +57,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.gov.obywatel.android.data.ImportedDocument
 import pl.gov.obywatel.android.data.ImportedDocumentStore
 import pl.gov.obywatel.android.ui.theme.Navy
-import pl.gov.obywatel.android.ui.theme.ObywatelTheme
 import pl.gov.obywatel.android.ui.theme.White
 
 private data class DocumentPreview(
@@ -135,11 +129,14 @@ fun DocumentsScreen(onBack: () -> Unit) {
                 }
                 Spacer(Modifier.height(12.dp))
                 if (documents.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Text("Brak dokumentów. Dodaj plik, aby rozpocząć.")
                     }
                 } else {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         items(documents, key = { it.uri.toString() }) { document ->
                             Card(
                                 modifier = Modifier.fillMaxWidth().clickable { selected = document },
@@ -176,45 +173,17 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     }
                 }
             } else {
-                DocumentPreviewPane(document = selected!!, onError = { errorMessage = it })
-                errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
-                }
+                DocumentPreviewPane(document = selected!!)
             }
         }
     }
 }
 
 @Composable
-private fun DocumentPreviewPane(
-    document: ImportedDocument,
-    onError: (String) -> Unit
-) {
+private fun DocumentPreviewPane(document: ImportedDocument) {
+    val context = LocalContext.current
     var page by remember(document.uri) { mutableIntStateOf(0) }
     val preview by produceState<DocumentPreview?>(initialValue = null, document.uri, page) {
-        value = withContext(Dispatchers.IO) {
-            runCatching {
-                if (document.mimeType == "application/pdf") {
-                    val descriptor: ParcelFileDescriptor = checkNotNull(
-                        document.uri.let { uri ->
-                            // SAF URI is opened read-only; descriptor and renderer are always closed.
-                            androidx.compose.ui.platform.LocalContext.current
-                        }.let { null }
-                    )
-                    @Suppress("UNREACHABLE_CODE")
-                    DocumentPreview(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), 1)
-                } else {
-                    DocumentPreview(BitmapFactory.decodeStream(
-                        androidx.compose.ui.platform.LocalContext.current.contentResolver
-                            .openInputStream(document.uri)
-                    ) ?: error("Nie można odczytać obrazu."), 1)
-                }
-            }.getOrElse { DocumentPreview(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), 1, it.message) }
-        }
-    }
-
-    val context = LocalContext.current
-    val actualPreview by produceState<DocumentPreview?>(initialValue = null, document.uri, page) {
         value = withContext(Dispatchers.IO) {
             runCatching {
                 if (document.mimeType == "application/pdf") {
@@ -259,53 +228,60 @@ private fun DocumentPreviewPane(
         offsetY += pan.y
     }
 
-    actualPreview?.let { result ->
-        if (result.error != null) {
-            onError(result.error)
-        } else {
-            errorMessageClear(onClear = { onError("") })
-            Image(
-                bitmap = result.bitmap.asImageBitmap(),
-                contentDescription = "Podgląd dokumentu",
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offsetX,
-                        translationY = offsetY
-                    )
-                    .transformable(transformState)
-            )
-            if (result.pageCount > 1) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(onClick = { page = (page - 1).coerceAtLeast(0) }, enabled = page > 0) {
-                        Text("Poprzednia")
-                    }
-                    Text("Strona ${page + 1} / ${result.pageCount}")
-                    OutlinedButton(
-                        onClick = { page = (page + 1).coerceAtMost(result.pageCount - 1) },
-                        enabled = page < result.pageCount - 1
-                    ) { Text("Następna") }
-                }
-            }
-            Text(
-                "Uszczypnij, aby powiększyć; przeciągnij, aby przesunąć.",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-    } ?: Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
-}
+    Column(Modifier.fillMaxSize()) {
+        when {
+            preview == null -> Box(
+                Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) { CircularProgressIndicator() }
 
-@Composable
-private fun errorMessageClear(onClear: () -> Unit) {
-    // Celowo pusty punkt rozszerzenia: zachowuje czystość stanu po udanym odczycie.
+            preview?.error != null -> Box(
+                Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    preview?.error.orEmpty(),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            else -> {
+                Image(
+                    bitmap = preview!!.bitmap.asImageBitmap(),
+                    contentDescription = "Podgląd dokumentu",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offsetX,
+                            translationY = offsetY
+                        )
+                        .transformable(transformState)
+                )
+                if (preview!!.pageCount > 1) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(onClick = { page = (page - 1).coerceAtLeast(0) }, enabled = page > 0) {
+                            Text("Poprzednia")
+                        }
+                        Text("Strona ${page + 1} / ${preview!!.pageCount}")
+                        OutlinedButton(
+                            onClick = { page = (page + 1).coerceAtMost(preview!!.pageCount - 1) },
+                            enabled = page < preview!!.pageCount - 1
+                        ) { Text("Następna") }
+                    }
+                }
+                Text(
+                    "Uszczypnij, aby powiększyć; przeciągnij, aby przesunąć.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
+    }
 }
