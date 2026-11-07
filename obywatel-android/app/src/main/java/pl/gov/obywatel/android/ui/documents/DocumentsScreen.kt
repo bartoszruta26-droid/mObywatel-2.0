@@ -316,9 +316,10 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
         }
     }
 
-    var scale by remember(document.uri) { mutableFloatStateOf(1f) }
-    var offsetX by remember(document.uri) { mutableFloatStateOf(0f) }
-    var offsetY by remember(document.uri) { mutableFloatStateOf(0f) }
+    // Każda strona zaczyna się z neutralnym powiększeniem i położeniem.
+    var scale by remember(document.uri, page) { mutableFloatStateOf(1f) }
+    var offsetX by remember(document.uri, page) { mutableFloatStateOf(0f) }
+    var offsetY by remember(document.uri, page) { mutableFloatStateOf(0f) }
     val transformState = rememberTransformableState { zoom, pan, _ ->
         scale = (scale * zoom).coerceIn(1f, 5f)
         offsetX += pan.x
