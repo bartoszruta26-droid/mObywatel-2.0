@@ -41,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -163,7 +164,16 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
 @Composable
 private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 142.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 142.dp)
+            .semantics(mergeDescendants = true) {
+                stateDescription = if (item.isAvailable) {
+                    "Dostępna"
+                } else {
+                    "W przygotowaniu — funkcja niedostępna"
+                }
+            },
         onClick = onClick,
         enabled = item.isAvailable,
         shape = RoundedCornerShape(16.dp),
