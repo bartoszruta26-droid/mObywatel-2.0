@@ -205,11 +205,19 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                     }
                                     IconButton(onClick = {
                                         scope.launch {
-                                            val updated = withContext(Dispatchers.IO) {
-                                                ImportedDocumentStore.remove(context, document.uri)
-                                                ImportedDocumentStore.list(context)
+                                            val result = withContext(Dispatchers.IO) {
+                                                runCatching {
+                                                    ImportedDocumentStore.remove(context, document.uri)
+                                                    ImportedDocumentStore.list(context)
+                                                }
                                             }
-                                            documents = updated
+                                            result.onSuccess { updated ->
+                                                documents = updated
+                                                errorMessage = null
+                                            }.onFailure { failure ->
+                                                errorMessage = failure.message
+                                                    ?: "Nie udało się usunąć dokumentu."
+                                            }
                                         }
                                     }) {
                                         Icon(Icons.Filled.DeleteOutline, contentDescription = "Usuń z listy")
