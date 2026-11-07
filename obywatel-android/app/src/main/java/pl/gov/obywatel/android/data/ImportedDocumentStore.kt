@@ -65,7 +65,9 @@ object ImportedDocumentStore {
     fun remove(context: Context, uri: Uri) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val updated = HashSet(prefs.getStringSet(KEY_URIS, emptySet()) ?: emptySet())
-        updated.remove(uri.toString())
+        val wasStored = updated.remove(uri.toString())
+        if (!wasStored) return
+
         check(prefs.edit().putStringSet(KEY_URIS, updated).commit()) {
             "Nie udało się usunąć dokumentu z listy."
         }
