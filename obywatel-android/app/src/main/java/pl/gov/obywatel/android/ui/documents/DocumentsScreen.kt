@@ -173,14 +173,14 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     }
                 }
             } else {
-                DocumentPreviewPane(document = selected!!)
+                DocumentPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
             }
         }
     }
 }
 
 @Composable
-private fun DocumentPreviewPane(document: ImportedDocument) {
+private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var page by remember(document.uri) { mutableIntStateOf(0) }
     val preview by produceState<DocumentPreview?>(initialValue = null, document.uri, page) {
