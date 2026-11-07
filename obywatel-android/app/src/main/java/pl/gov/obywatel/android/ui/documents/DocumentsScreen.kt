@@ -343,7 +343,7 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
             else -> {
                 Image(
                     bitmap = preview!!.bitmap.asImageBitmap(),
-                    contentDescription = "Podgląd dokumentu",
+                    contentDescription = "Podgląd dokumentu ${document.title}, strona ${page + 1}",
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
