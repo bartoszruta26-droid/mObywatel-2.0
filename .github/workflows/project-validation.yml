@@ -15,6 +15,7 @@ on:
     branches: [master]
     paths:
       - "organize_files.py"
+      - "clean_line_numbers.py"
       - "tests/**"
       - "obywatel-android/**"
       - ".github/workflows/project-validation.yml"
@@ -61,3 +62,10 @@ jobs:
       - name: Assemble Android debug APK
         working-directory: obywatel-android
         run: gradle --no-daemon :app:assembleDebug
+      - name: Archive debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: obywatel-android-debug-apk
+          path: obywatel-android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
