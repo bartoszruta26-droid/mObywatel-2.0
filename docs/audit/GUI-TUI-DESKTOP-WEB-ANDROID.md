@@ -130,3 +130,12 @@ To potwierdza poprawne wykonanie zadań w CI dla tego commitu, ale nie jest rów
 ## 6. Konkluzja
 
 Obecny projekt należy traktować jako repozytorium zasobów interfejsowych Android/iOS oraz rozwijany prototyp Androida. Android ma już podstawowe ekrany i lokalną obsługę wybranych plików, ale wymaga domknięcia testów UI, dostępności, nawigacji i obsługi cyklu życia URI. TUI, desktop i Web UI pozostają niezaimplementowane jako osobne klienty. Ich budowa powinna wynikać z decyzji architektonicznej, a nie z mechanicznego kopiowania widoków Androida.
+
+
+## 7. Kontrola aktualnych wyników CI na gałęzi `main`
+
+Dodatkowa kontrola historii workflow ujawniła, że na `main` commit `fb905751e9894af9deda7d18155f89c76bf4869a` miał nieudany workflow `Project validation`. Zadanie Python zakończyło się powodzeniem, natomiast zadanie Android zakończyło się błędem w `PdfPreviewSizingTest`: testy `boundsPortraitPageByLongestSide` i `boundsLandscapePageByLongestSide` nie przeszły. W konsekwencji budowa APK i archiwizacja zostały pominięte. Log: https://github.com/bartoszruta26-droid/mObywatel-2.0/actions/runs/42362113406
+
+To ustalenie jest ważne: nie należy utożsamiać zielonego CI na gałęzi audytowej z zielonym CI na `main`. Na audytowanym commicie `d40bcf1f06fe965b7a9500ecfd572763d29d4f8e` pełny workflow Android i Python zakończył się sukcesem. Różne SHA oznaczają różne zestawy testów i kodu.
+
+**Nowe zalecenie P1:** naprawić regresję `PdfPreviewSizingTest` na gałęzi, na której występuje, i ponownie uruchomić pełny test jednostkowy oraz debug APK; nie scalać pracy bez potwierdzonego zielonego CI.
