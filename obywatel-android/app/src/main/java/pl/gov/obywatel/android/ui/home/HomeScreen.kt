@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -163,7 +164,7 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
 @Composable
 private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().height(142.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 142.dp),
         onClick = onClick,
         enabled = item.isAvailable,
         shape = RoundedCornerShape(16.dp),
