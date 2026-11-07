@@ -61,13 +61,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
-            cd obywatel-android
-            gradle --no-daemon :app:connectedDebugAndroidTest || {
-              echo "Android instrumentation failed; collecting emulator diagnostics."
-              adb devices -l || true
-              adb logcat -d -v threadtime | tail -n 500 || true
-              exit 1
-            }
+            cd obywatel-android && gradle --no-daemon :app:connectedDebugAndroidTest || { echo "Android instrumentation failed; collecting emulator diagnostics."; adb devices -l || true; adb logcat -d -v threadtime | tail -n 500 || true; exit 1; }
 
       - name: Assemble Android debug APK
         working-directory: obywatel-android
