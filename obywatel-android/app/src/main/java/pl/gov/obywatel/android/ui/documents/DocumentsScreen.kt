@@ -329,13 +329,11 @@ private fun decodeSampledImage(
     } ?: error("Nie można odczytać obrazu.")
     require(bounds.outWidth > 0 && bounds.outHeight > 0) { "Nieprawidłowy plik obrazu." }
 
-    var sampleSize = 1
-    while (
-        maxOf(bounds.outWidth / sampleSize, bounds.outHeight / sampleSize) >
+    val sampleSize = calculateInSampleSize(
+        bounds.outWidth,
+        bounds.outHeight,
         MAX_IMAGE_PREVIEW_DIMENSION
-    ) {
-        sampleSize *= 2
-    }
+    )
 
     val options = BitmapFactory.Options().apply {
         inSampleSize = sampleSize
