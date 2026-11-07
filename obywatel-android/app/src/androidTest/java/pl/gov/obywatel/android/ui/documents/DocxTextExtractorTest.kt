@@ -37,6 +37,21 @@ class DocxTextExtractorTest {
     }
 
     @Test
+    fun rejectsDocumentWithoutDisplayableText() {
+        val xml = """<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p/></w:body></w:document>"""
+        assertThrows(IllegalArgumentException::class.java) {
+            DocxTextExtractor.extract(docx("word/document.xml" to xml.toByteArray()))
+        }
+    }
+
+    @Test
+    fun rejectsArchiveWithoutReadableZipEntries() {
+        assertThrows(IllegalArgumentException::class.java) {
+            DocxTextExtractor.extract(ByteArrayInputStream("not-a-zip-archive".toByteArray()))
+        }
+    }
+
+    @Test
     fun rejectsMalformedDocumentXml() {
         val archive = docx("word/document.xml" to "<document><".toByteArray())
         assertThrows(Exception::class.java) {
