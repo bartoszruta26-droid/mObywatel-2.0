@@ -9,8 +9,9 @@ Minimalny szkielet aplikacji Android w Kotlinie i Jetpack Compose.
 ## Zakres
 
 - Material 3 i centralne tokeny kolorów/kształtów.
-- Ekran startowy demonstracyjny z kaflami usług.\n- Lokalny portfel plików: import PDF/obrazów przez Storage Access Framework (SAF), zapamiętywanie trwałych URI, lista i usuwanie wpisów.\n- Podgląd PDF przez `PdfRenderer` z nawigacją stron oraz podgląd obrazów z gestami powiększania i przesuwania.
-- Struktura gotowa do dalszego podłączenia publicznie dostępnych zasobów design systemu.
+- Ekran startowy demonstracyjny z kaflami usług.
+- Lokalny portfel plików: import PDF/obrazów przez Storage Access Framework (SAF), zapamiętywanie trwałych URI, lista i usuwanie wpisów.
+- Podgląd PDF przez `PdfRenderer` z nawigacją stron oraz podgląd obrazów z gestami powiększania i przesuwania.
 
 ## Ważne
 
@@ -27,4 +28,5 @@ Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Proj
 1. Zweryfikować dokładne kolory, typografię, odstępy, piktogramy i licencje w opublikowanych zasobach.
 2. Wydzielić komponenty wielokrotnego użytku.
 3. Dodać testy UI i sprawdzanie dostępności.
-4. Dodać testy jednostkowe magazynu URI i testy UI importu/podglądu.\n5. Utrzymać wyraźne oznaczenie prototypu, dopóki nie zostanie zbudowana rzeczywista i uprawniona integracja z usługami.
+4. Dodać testy jednostkowe magazynu URI i testy UI importu/podglądu.
+5. Utrzymać wyraźne oznaczenie prototypu, dopóki nie zostanie zbudowana rzeczywista i uprawniona integracja z usługami.
