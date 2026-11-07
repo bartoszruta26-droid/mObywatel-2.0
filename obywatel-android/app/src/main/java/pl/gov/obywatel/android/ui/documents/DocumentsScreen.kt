@@ -144,7 +144,17 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Button(
-                    onClick = { importLauncher.launch(arrayOf("application/pdf", DOCX_MIME_TYPE, "image/*")) },
+                    onClick = { importLauncher.launch(
+                    arrayOf(
+                        "application/pdf",
+                        DOCX_MIME_TYPE,
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp",
+                        "image/gif",
+                        "image/bmp"
+                    )
+                ) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoadingDocuments
                 ) {
