@@ -228,7 +228,7 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
         offsetY += pan.y
     }
 
-    Column(Modifier.fillMaxSize()) {
+    Column(modifier) {
         when {
             preview == null -> Box(
                 Modifier.weight(1f).fillMaxWidth(),
