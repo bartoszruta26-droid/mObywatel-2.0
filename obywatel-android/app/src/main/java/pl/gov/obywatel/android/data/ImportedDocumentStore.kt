@@ -66,7 +66,9 @@ object ImportedDocumentStore {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val updated = HashSet(prefs.getStringSet(KEY_URIS, emptySet()) ?: emptySet())
         updated.remove(uri.toString())
-        prefs.edit().putStringSet(KEY_URIS, updated).apply()
+        check(prefs.edit().putStringSet(KEY_URIS, updated).commit()) {
+            "Nie udało się usunąć dokumentu z listy."
+        }
         runCatching {
             context.contentResolver.releasePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
