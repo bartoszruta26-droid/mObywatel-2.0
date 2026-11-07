@@ -36,6 +36,8 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -60,8 +62,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -132,18 +138,26 @@ fun DocumentsScreen(onBack: () -> Unit) {
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(
+        modifier = Modifier.fillMaxSize().semantics {
+            paneTitle = if (selected == null) "Moje dokumenty" else "Podgląd dokumentu"
+        },
+        color = MaterialTheme.colorScheme.background
+    ) {
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { if (selected != null) selected = null else onBack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = if (selected != null) "Wróć do listy dokumentów" else "Wróć do ekranu głównego"
+                    )
                 }
                 Text(
                     selected?.title ?: "Moje dokumenty",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).semantics { heading() }
                 )
             }
 
@@ -195,7 +209,22 @@ fun DocumentsScreen(onBack: () -> Unit) {
                         Modifier.weight(1f).fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Brak dokumentów. Dodaj plik, aby rozpocząć.")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth().padding(24.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = pl.gov.obywatel.android.R.drawable.empty_documents_illustration),
+                                contentDescription = null,
+                                modifier = Modifier.size(148.dp)
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                "Brak dokumentów. Dodaj plik, aby rozpocząć.",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
                     }
 
                     else -> LazyColumn(
@@ -204,7 +233,10 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     ) {
                         items(documents, key = { it.uri.toString() }) { document ->
                             Card(
-                                modifier = Modifier.fillMaxWidth().clickable { selected = document },
+                                modifier = Modifier.fillMaxWidth().clickable(
+                                    onClickLabel = "Otwórz dokument ${document.title}",
+                                    role = Role.Button
+                                ) { selected = document },
                                 shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
@@ -250,7 +282,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                             }
                                         }
                                     }) {
-                                        Icon(Icons.Filled.DeleteOutline, contentDescription = "Usuń z listy")
+                                        Icon(Icons.Filled.DeleteOutline, contentDescription = "Usuń dokument: ${document.title}")
                                     }
                                 }
                             }
@@ -423,19 +455,35 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedButton(onClick = { page = (page - 1).coerceAtLeast(0) }, enabled = page > 0) {
-                            Text("Poprzednia")
+                            Text("Poprzednia strona")
                         }
-                        Text("Strona ${page + 1} / ${preview!!.pageCount}")
+                        Text(
+                            "Strona ${page + 1} z ${preview!!.pageCount}",
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                        )
                         OutlinedButton(
                             onClick = { page = (page + 1).coerceAtMost(preview!!.pageCount - 1) },
                             enabled = page < preview!!.pageCount - 1
-                        ) { Text("Następna") }
+                        ) { Text("Następna strona") }
                     }
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(
+                        onClick = { scale = (scale - 0.25f).coerceAtLeast(1f) },
+                        enabled = scale > 1f
+                    ) {
+                        Icon(Icons.Filled.ZoomOut, contentDescription = "Pomniejsz podgląd")
+                    }
+                    IconButton(
+                        onClick = { scale = (scale + 0.25f).coerceAtMost(5f) },
+                        enabled = scale < 5f
+                    ) {
+                        Icon(Icons.Filled.ZoomIn, contentDescription = "Powiększ podgląd")
+                    }
                     OutlinedButton(
                         onClick = {
                             scale = 1f

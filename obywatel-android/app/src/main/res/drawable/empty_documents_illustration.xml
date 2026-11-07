@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors -->
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="144dp"
+    android:viewportWidth="160"
+    android:viewportHeight="144">
+    <path android:fillColor="#EAF3FA" android:pathData="M14,12h132a10,10 0,0 1,10 10v100a10,10 0,0 1,-10 10h-132a10,10 0,0 1,-10 -10v-100a10,10 0,0 1,10 -10z" />
+    <path android:fillColor="#FFFFFF" android:strokeColor="#1769AA" android:strokeWidth="3" android:pathData="M51,25h48l18,18v68a8,8 0,0 1,-8 8h-58a8,8 0,0 1,-8 -8v-78a8,8 0,0 1,8 -8z" />
+    <path android:fillColor="#DCEBFA" android:pathData="M99,26v17h17z" />
+    <path android:fillColor="#8AA9C4" android:pathData="M61,59h39v5h-39zM61,72h39v5h-39zM61,85h26v5h-26z" />
+    <path android:fillColor="#2F855A" android:pathData="M104,91a21,21 0,1 0,42 0a21,21 0,1 0,-42 0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M114,91l6,6 13,-15 4,4 -17,19 -10,-10z" />
+</vector>

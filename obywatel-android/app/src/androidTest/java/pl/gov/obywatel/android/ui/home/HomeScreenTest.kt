@@ -5,6 +5,7 @@ package pl.gov.obywatel.android.ui.home
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertEquals
@@ -28,6 +29,7 @@ class HomeScreenTest {
             .assertIsDisplayed()
         composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
         composeRule.onNodeWithText("Podgląd dokumentów (demo)").assertIsDisplayed()
+        composeRule.onNodeWithText("Dokumenty").assertHasClickAction()
     }
 
     @Test

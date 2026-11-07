@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.ui.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -58,7 +63,7 @@ private val services = listOf(
 @Composable
 fun HomeScreen(onOpenDocuments: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().semantics { paneTitle = "Ekran główny" }) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -67,7 +72,7 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(
                         "OBYWATEL",
                         color = MaterialTheme.colorScheme.inverseOnSurface,
@@ -79,9 +84,15 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                         "Twoje sprawy w jednym miejscu",
                         color = MaterialTheme.colorScheme.inverseOnSurface,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.semantics { heading() }
                     )
                 }
+                Image(
+                    painter = painterResource(id = pl.gov.obywatel.android.R.drawable.civic_service_illustration),
+                    contentDescription = null,
+                    modifier = Modifier.size(104.dp)
+                )
             }
 
             Column(
@@ -126,7 +137,8 @@ fun HomeScreen(onOpenDocuments: () -> Unit) {
                     "Usługi",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.semantics { heading() }
                 )
                 Spacer(Modifier.height(12.dp))
 

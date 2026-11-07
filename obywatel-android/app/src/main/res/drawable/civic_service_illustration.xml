@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors -->
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="120dp"
+    android:viewportWidth="160"
+    android:viewportHeight="120">
+    <path android:fillColor="#DCEBFA" android:pathData="M14,8h132a10,10 0,0 1,10 10v84a10,10 0,0 1,-10 10h-132a10,10 0,0 1,-10 -10v-84a10,10 0,0 1,10 -10z" />
+    <path android:fillColor="#1769AA" android:pathData="M26,25h108a9,9 0,0 1,9 9v52a9,9 0,0 1,-9 9h-108a9,9 0,0 1,-9 -9v-52a9,9 0,0 1,9 -9z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M37,36h86a5,5 0,0 1,5 5v38a5,5 0,0 1,-5 5h-86a5,5 0,0 1,-5 -5v-38a5,5 0,0 1,5 -5z" />
+    <path android:fillColor="#DCEBFA" android:pathData="M46,48a9,9 0,1 0,18 0a9,9 0,1 0,-18 0" />
+    <path android:fillColor="#1769AA" android:pathData="M43,69c2,-7 7,-10 12,-10s10,3 12,10z" />
+    <path android:fillColor="#102A43" android:pathData="M78,46h35v5h-35zM78,57h28v4h-28zM78,68h34v4h-34z" />
+    <path android:fillColor="#F2C14E" android:pathData="M129,14a9,9 0,1 0,18 0a9,9 0,1 0,-18 0" />
+    <path android:fillColor="#2F855A" android:pathData="M17,92l7,7 14,-17 5,4 -19,23 -12,-12z" />
+</vector>
