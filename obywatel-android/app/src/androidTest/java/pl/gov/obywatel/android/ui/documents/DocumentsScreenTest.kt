@@ -43,6 +43,7 @@ class DocumentsScreenTest {
         composeRule.onNodeWithText("Brak dokumentów. Dodaj plik, aby rozpocząć.").assertIsDisplayed()
         composeRule.onNodeWithText("Dodaj PDF, DOCX lub obraz").assertIsEnabled()
     }
+
     @Test
     fun backButtonInvokesHostNavigationWhenNoDocumentIsSelected() {
         var backCount = 0
