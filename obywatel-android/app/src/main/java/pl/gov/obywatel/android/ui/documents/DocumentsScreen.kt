@@ -227,11 +227,14 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                             require(renderer.pageCount > 0) { "Plik PDF nie zawiera stron." }
                             val safePage = page.coerceIn(0, renderer.pageCount - 1)
                             renderer.openPage(safePage).use { pdfPage ->
-                                val longestSide = maxOf(pdfPage.width, pdfPage.height).toFloat()
-                                val scale = minOf(2f, MAX_PDF_PREVIEW_DIMENSION / longestSide)
+                                val dimensions = calculatePreviewDimensions(
+                                    pdfPage.width,
+                                    pdfPage.height,
+                                    MAX_PDF_PREVIEW_DIMENSION
+                                )
                                 val bitmap = Bitmap.createBitmap(
-                                    (pdfPage.width * scale).toInt().coerceAtLeast(1),
-                                    (pdfPage.height * scale).toInt().coerceAtLeast(1),
+                                    dimensions.width,
+                                    dimensions.height,
                                     Bitmap.Config.ARGB_8888
                                 )
                                 bitmap.eraseColor(Color.WHITE)
