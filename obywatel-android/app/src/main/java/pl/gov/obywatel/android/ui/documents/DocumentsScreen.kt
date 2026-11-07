@@ -189,7 +189,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                             else -> Icons.Filled.Image
                                         },
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(28.dp)
                                     )
                                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
