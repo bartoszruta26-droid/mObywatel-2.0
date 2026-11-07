@@ -7,6 +7,7 @@ on:
     branches: [master]
     paths:
       - "organize_files.py"
+      - "clean_line_numbers.py"
       - "tests/**"
       - "obywatel-android/**"
       - ".github/workflows/project-validation.yml"
@@ -33,7 +34,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run organizer tests
+      - name: Run Python regression tests
         run: python -m unittest discover -s tests -v
       - name: Compile Python sources
         run: python -m py_compile organize_files.py clean_line_numbers.py
