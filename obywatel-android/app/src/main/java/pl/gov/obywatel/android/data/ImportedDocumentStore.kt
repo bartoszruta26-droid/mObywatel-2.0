@@ -50,7 +50,7 @@ object ImportedDocumentStore {
                 "Nie udało się zapisać listy dokumentów."
             }
             return document
-        } catch (failure: Throwable) {
+        } catch (failure: Exception) {
             if (!hadReadPermission) {
                 runCatching {
                     resolver.releasePersistableUriPermission(
