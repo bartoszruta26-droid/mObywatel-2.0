@@ -26,13 +26,13 @@ internal fun calculatePreviewDimensions(
 
     return if (width >= height) {
         PreviewDimensions(
-            width = minOf(width, maxDimension),
+            width = maxDimension,
             height = (height.toLong() * maxDimension / width).coerceAtLeast(1L).toInt()
         )
     } else {
         PreviewDimensions(
             width = (width.toLong() * maxDimension / height).coerceAtLeast(1L).toInt(),
-            height = minOf(height, maxDimension)
+            height = maxDimension
         )
     }
 }
