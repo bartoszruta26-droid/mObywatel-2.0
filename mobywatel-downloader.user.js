@@ -191,7 +191,7 @@
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
         console.log(`Downloaded: ${filename} (${mimeType})`);
     }
 
