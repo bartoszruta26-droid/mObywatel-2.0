@@ -296,9 +296,14 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                                     dimensions.height,
                                     Bitmap.Config.ARGB_8888
                                 )
-                                bitmap.eraseColor(Color.WHITE)
-                                pdfPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                                DocumentPreview(bitmap, renderer.pageCount)
+                                try {
+                                    bitmap.eraseColor(Color.WHITE)
+                                    pdfPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                    DocumentPreview(bitmap, renderer.pageCount)
+                                } catch (failure: Exception) {
+                                    bitmap.recycle()
+                                    throw failure
+                                }
                             }
                         }
                     }
