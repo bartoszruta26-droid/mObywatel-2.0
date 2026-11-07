@@ -32,6 +32,14 @@ class PdfPreviewSizingTest {
     }
 
     @Test
+    fun respectsMaximumDimensionWhenUpscalingWouldCrossTheBound() {
+        assertEquals(
+            PreviewDimensions(1200, 960),
+            calculatePreviewDimensions(1000, 800, 1200)
+        )
+    }
+
+    @Test
     fun doesNotExceedMaximumDimensionForExtremeAspectRatio() {
         assertEquals(
             PreviewDimensions(1, 1800),
@@ -42,7 +50,7 @@ class PdfPreviewSizingTest {
     @Test
     fun keepsSmallPagesAtNativeDimensionsWhenDoublingWouldOverflow() {
         assertEquals(
-            PreviewDimensions(Int.MAX_VALUE, 2),
+            PreviewDimensions(Int.MAX_VALUE, 1),
             calculatePreviewDimensions(Int.MAX_VALUE, 1, Int.MAX_VALUE)
         )
     }
