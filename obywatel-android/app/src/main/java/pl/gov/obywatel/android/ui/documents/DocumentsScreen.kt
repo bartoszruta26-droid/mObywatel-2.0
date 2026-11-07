@@ -161,7 +161,8 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     enabled = !isLoadingDocuments
                 ) {
                     Icon(Icons.Filled.FileOpen, contentDescription = null)
-                    Text("  Dodaj PDF, DOCX lub obraz")
+                    Spacer(Modifier.size(8.dp))
+                    Text("Dodaj PDF, DOCX lub obraz")
                 }
                 errorMessage?.let {
                     Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp))
