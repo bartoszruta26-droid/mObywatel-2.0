@@ -324,9 +324,9 @@ private fun decodeSampledImage(
 ): Bitmap {
     val resolver = context.contentResolver
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-    resolver.openInputStream(document.uri)?.use { input ->
-        BitmapFactory.decodeStream(input, null, bounds)
-    } ?: error("Nie można odczytać obrazu.")
+    val boundsStream = resolver.openInputStream(document.uri)
+        ?: error("Nie można odczytać obrazu.")
+    boundsStream.use { input -> BitmapFactory.decodeStream(input, null, bounds) }
     require(bounds.outWidth > 0 && bounds.outHeight > 0) { "Nieprawidłowy plik obrazu." }
 
     val sampleSize = calculateInSampleSize(
