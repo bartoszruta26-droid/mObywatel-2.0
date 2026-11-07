@@ -6,6 +6,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertEquals
@@ -42,6 +44,23 @@ class HomeScreenTest {
 
         composeRule.onNodeWithText("Moje dane").assertIsNotEnabled()
         composeRule.onNodeWithText("Płatności").assertIsNotEnabled()
+    }
+
+    @Test
+    fun serviceAvailabilityIsExposedAsAccessibleState() {
+        composeRule.setContent {
+            ObywatelTheme {
+                HomeScreen(onOpenDocuments = {})
+            }
+        }
+
+        composeRule.onNodeWithText("Dokumenty")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Dostępna"))
+        composeRule.onNodeWithText("Moje dane")
+            .assert(SemanticsMatcher.expectValue(
+                SemanticsProperties.StateDescription,
+                "W przygotowaniu — funkcja niedostępna"
+            ))
     }
 
     @Test
