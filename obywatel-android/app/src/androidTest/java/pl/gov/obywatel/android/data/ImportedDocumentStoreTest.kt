@@ -31,6 +31,24 @@ class ImportedDocumentStoreTest {
     }
 
     @Test
+    fun removingUnknownUriLeavesStoredEntriesUnchanged() {
+        val preferences = context.getSharedPreferences("imported_documents", Context.MODE_PRIVATE)
+        val storedUri = "content://missing.provider/document/kept"
+        try {
+            preferences.edit().putStringSet("document_uris", setOf(storedUri)).commit()
+
+            ImportedDocumentStore.remove(
+                context,
+                Uri.parse("content://missing.provider/document/other")
+            )
+
+            assertEquals(setOf(storedUri), preferences.getStringSet("document_uris", emptySet()))
+        } finally {
+            preferences.edit().remove("document_uris").commit()
+        }
+    }
+
+    @Test
     fun rejectsFileUrisBeforeAccessingDocumentProvider() {
         assertThrows(IllegalArgumentException::class.java) {
             ImportedDocumentStore.add(context, Uri.parse("file:///tmp/document.pdf"))
