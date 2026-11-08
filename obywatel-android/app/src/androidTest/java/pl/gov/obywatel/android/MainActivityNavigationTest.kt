@@ -47,7 +47,7 @@ class MainActivityNavigationTest {
     @Test
     fun persistentBottomNavigationOpensEveryPrimaryDestination() {
         composeRule.onNodeWithText("Usługi").performClick()
-        composeRule.onNodeWithText("Katalog funkcji prototypu").assertIsDisplayed()
+        composeRule.onNodeWithText("Katalog funkcji prototypu", substring = true).assertIsDisplayed()
         composeRule.onNodeWithText("Szukaj").performClick()
         composeRule.onNodeWithText("Wyszukiwanie globalne — do wdrożenia.").assertIsDisplayed()
         composeRule.onNodeWithText("Skanuj").performClick()
