@@ -120,11 +120,15 @@ fun DocumentsScreen(onBack: () -> Unit) {
         if (uri != null) {
             scope.launch {
                 val result = withContext(Dispatchers.IO) {
-                    runCatching {
+                    try {
                         // Magazyn najpierw waliduje MIME, a następnie atomowo
                         // utrwala uprawnienie SAF razem z wpisem na liście.
                         val document = ImportedDocumentStore.add(context, uri)
-                        document to ImportedDocumentStore.list(context)
+                        Result.success(document to ImportedDocumentStore.list(context))
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (failure: Exception) {
+                        Result.failure(failure)
                     }
                 }
                 result.onSuccess { (document, updatedDocuments) ->
@@ -268,9 +272,13 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                     IconButton(onClick = {
                                         scope.launch {
                                             val result = withContext(Dispatchers.IO) {
-                                                runCatching {
+                                                try {
                                                     ImportedDocumentStore.remove(context, document.uri)
-                                                    ImportedDocumentStore.list(context)
+                                                    Result.success(ImportedDocumentStore.list(context))
+                                                } catch (cancelled: CancellationException) {
+                                                    throw cancelled
+                                                } catch (failure: Exception) {
+                                                    Result.failure(failure)
                                                 }
                                             }
                                             result.onSuccess { updated ->
@@ -307,15 +315,16 @@ private fun DocxPreviewPane(document: ImportedDocument, modifier: Modifier = Mod
     val context = LocalContext.current
     val preview by produceState<DocxPreview?>(initialValue = null, document.uri) {
         value = withContext(Dispatchers.IO) {
-            runCatching {
+            try {
                 val input = checkNotNull(context.contentResolver.openInputStream(document.uri)) {
                     "Nie można otworzyć dokumentu DOCX."
                 }
-                input.use { DocxTextExtractor.extract(it) }
-            }.fold(
-                onSuccess = { DocxPreview(text = it) },
-                onFailure = { DocxPreview(error = it.message ?: "Nie udało się odczytać dokumentu DOCX.") }
-            )
+                DocxPreview(text = input.use { DocxTextExtractor.extract(it) })
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                DocxPreview(error = failure.message ?: "Nie udało się odczytać dokumentu DOCX.")
+            }
         }
     }
 
@@ -350,7 +359,7 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
     var page by remember(document.uri) { mutableIntStateOf(0) }
     val preview by produceState<DocumentPreview?>(initialValue = null, document.uri, page) {
         value = withContext(Dispatchers.IO) {
-            runCatching {
+            try {
                 if (document.mimeType == "application/pdf") {
                     val descriptor = checkNotNull(context.contentResolver.openFileDescriptor(document.uri, "r")) {
                         "Nie można otworzyć pliku PDF."
@@ -384,11 +393,13 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                 } else {
                     DocumentPreview(decodeSampledImage(context, document), 1)
                 }
-            }.getOrElse {
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
                 DocumentPreview(
                     Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
                     1,
-                    it.message ?: "Błąd podglądu."
+                    failure.message ?: "Błąd podglądu."
                 )
             }
         }
