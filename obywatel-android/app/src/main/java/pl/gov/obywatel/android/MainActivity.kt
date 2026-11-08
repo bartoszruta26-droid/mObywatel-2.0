@@ -12,19 +12,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
 import pl.gov.obywatel.android.ui.home.HomeScreen
+import pl.gov.obywatel.android.ui.registry.RegistryScreen
+import pl.gov.obywatel.android.ui.sections.SectionScreen
 import pl.gov.obywatel.android.ui.theme.ObywatelTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var showDocuments by remember { mutableStateOf(false) }
-            BackHandler(enabled = showDocuments) { showDocuments = false }
+            var route by remember { mutableStateOf("home") }
+            BackHandler(enabled = route != "home") { route = "home" }
             ObywatelTheme {
-                if (showDocuments) {
-                    DocumentsScreen(onBack = { showDocuments = false })
-                } else {
-                    HomeScreen(onOpenDocuments = { showDocuments = true })
+                when (route) {
+                    "home" -> HomeScreen(onOpenSection = { route = it })
+                    "documents" -> DocumentsScreen(onBack = { route = "home" })
+                    "registry" -> RegistryScreen(onBack = { route = "home" })
+                    else -> SectionScreen(sectionId = route, onBack = { route = "home" })
                 }
             }
         }
