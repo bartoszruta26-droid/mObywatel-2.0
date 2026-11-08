@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import pl.gov.obywatel.android.R
 
 private data class Tab(
@@ -42,7 +43,7 @@ fun ObywatelBottomNavigation(
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = androidx.compose.ui.unit.Dp(3f)
+        tonalElevation = 3.dp
     ) {
         tabs.forEach { tab ->
             val selected = selectedRoute == tab.route
