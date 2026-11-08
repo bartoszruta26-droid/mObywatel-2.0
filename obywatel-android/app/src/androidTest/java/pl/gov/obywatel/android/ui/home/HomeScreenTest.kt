@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -26,7 +27,7 @@ class HomeScreenTest {
             "Dokumenty", "Rejestr dokumentów", "Weryfikacja QR", "Moje dane",
             "Bezpieczeństwo", "Płatności", "Zdrowie", "Więcej"
         ).forEach { title ->
-            composeRule.onNodeWithText(title).assertIsDisplayed().assertHasClickAction()
+            composeRule.onNodeWithText(title).performScrollTo().assertIsDisplayed().assertHasClickAction()
         }
     }
 
@@ -46,7 +47,7 @@ class HomeScreenTest {
             "Zdrowie" to "health",
             "Więcej" to "more"
         ).forEach { (label, route) ->
-            composeRule.onNodeWithText(label).performClick()
+            composeRule.onNodeWithText(label).performScrollTo().performClick()
             composeRule.waitForIdle()
             assertEquals(route, opened.last())
         }
