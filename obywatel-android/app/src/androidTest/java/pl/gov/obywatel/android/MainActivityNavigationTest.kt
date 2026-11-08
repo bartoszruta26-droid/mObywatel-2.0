@@ -52,7 +52,7 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Wyszukiwanie globalne — do wdrożenia.").assertIsDisplayed()
         composeRule.onNodeWithText("Skanuj").performClick()
         composeRule.onNodeWithText("Skanuj kod QR").assertIsDisplayed()
-        composeRule.onNodeWithText("Więcej").performClick()
+        composeRule.onAllNodesWithText("Więcej").onLast().performClick()
         composeRule.onNodeWithText("Niezależny prototyp Android", substring = true).assertIsDisplayed()
     }
 
