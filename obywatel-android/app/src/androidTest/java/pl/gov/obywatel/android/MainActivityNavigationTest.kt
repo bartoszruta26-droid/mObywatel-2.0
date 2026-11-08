@@ -18,22 +18,39 @@ class MainActivityNavigationTest {
     fun documentsServiceOpensAndSystemBackReturnsHome() {
         composeRule.onNodeWithText("Dokumenty").performClick()
         composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
-
         composeRule.activityRule.scenario.onActivity { activity ->
             activity.onBackPressedDispatcher.onBackPressed()
         }
         composeRule.waitForIdle()
-
-        composeRule.onNodeWithText("Twoje sprawy w jednym miejscu").assertIsDisplayed()
+        composeRule.onNodeWithText("Panel dokumentów i rejestru").assertIsDisplayed()
     }
 
     @Test
     fun documentsToolbarBackReturnsToHome() {
         composeRule.onNodeWithText("Dokumenty").performClick()
         composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
-
         composeRule.onNodeWithContentDescription("Wróć do ekranu głównego").performClick()
+        composeRule.onNodeWithText("Panel dokumentów i rejestru").assertIsDisplayed()
+    }
 
-        composeRule.onNodeWithText("Twoje sprawy w jednym miejscu").assertIsDisplayed()
+    @Test
+    fun registryRouteOpensRegistryScreen() {
+        composeRule.onNodeWithText("Rejestr dokumentów").performClick()
+        composeRule.onNodeWithText("Wybierz plik i zarejestruj SHA-256").assertIsDisplayed()
+    }
+
+    @Test
+    fun everyInformationModuleCanBeOpened() {
+        val cases = listOf(
+            "Moje dane" to "Ustawienia profilu przechowywanego lokalnie na urządzeniu.",
+            "Bezpieczeństwo" to "Docelowo: blokada aplikacji",
+            "Płatności" to "Moduł informacyjny.",
+            "Zdrowie" to "Moduł informacyjny przeznaczony"
+        )
+        cases.forEach { (tile, expected) ->
+            composeRule.onNodeWithText(tile).performClick()
+            composeRule.onNodeWithText(expected, substring = true).assertIsDisplayed()
+            composeRule.onNodeWithContentDescription("Wróć").performClick()
+        }
     }
 }
