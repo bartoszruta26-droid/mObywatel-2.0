@@ -4,31 +4,36 @@ SPDX-License-Identifier: EUPL-1.2
 -->
 # obywatel-android
 
-Minimalny szkielet aplikacji Android w Kotlinie i Jetpack Compose.
+Niezależny prototyp Android w Kotlinie i Jetpack Compose, przeznaczony do lokalnego porządkowania dokumentów i identyfikatorów rejestru.
 
-## Zakres
+## Zakres obecnej wersji
 
-- Material 3 i centralne tokeny kolorów/kształtów.
-- Ekran startowy demonstracyjny z kaflami usług.
-- Lokalny portfel plików: import PDF/DOCX/obrazów przez Storage Access Framework (SAF), zapamiętywanie trwałych URI, lista i usuwanie wpisów.
-- Podgląd PDF przez `PdfRenderer` z nawigacją stron, podgląd obrazów z gestami powiększania i przesuwania oraz tekstowy podgląd DOCX.
-- Ograniczenia parsera DOCX: maksymalnie 128 wpisów ZIP, 12 MiB danych rozpakowanych, 2 MiB głównego XML i 200 000 znaków tekstu.
+- Ekran główny z działającą nawigacją do wszystkich widocznych sekcji.
+- Lokalny portfel plików: import PDF/DOCX/obrazów przez Storage Access Framework (SAF), trwałe URI, lista, usuwanie i podgląd.
+- Lokalny rejestr metadanych dokumentów zapisany w prywatnych preferencjach aplikacji.
+- Generowanie kodu QR zawierającego lokalny identyfikator wpisu w formacie `urn:rp:local-document-registry:<UUID>`.
+- Ekrany informacyjne profilu, bezpieczeństwa, płatności, zdrowia i przyszłej weryfikacji QR.
+- Dostępność: semantyczne tytuły paneli, nagłówki, opisy kontrolek i obsługa systemowego przycisku Wstecz.
 
-## Ważne
+## Ograniczenia i status prawny
 
-Repozytorium nadrzędne opisuje publiczny wycinek materiałów dotyczących mObywatela; nie zawiera logiki biznesowej, API ani modułu uwierzytelniania aplikacji. Ten katalog jest niezależnym prototypem UI, a nie oficjalną aplikacją mObywatel. Nie implementuje logowania ani usług państwowych. Portfel obsługuje wyłącznie pliki lokalne wskazane przez użytkownika; nie tworzy ani nie weryfikuje urzędowych dokumentów i nie powinien sugerować autentyczności takich funkcji.
+To niezależna aplikacja demonstracyjna. Nie jest oficjalną aplikacją mObywatel, systemem Sejmu, urzędu ani administracji państwowej. Sam napis „Rzeczpospolita Polska”, oznaczenie „Poseł”, wizerunek godła, wpis w lokalnym rejestrze ani kod QR nie potwierdzają statusu wystawcy, urzędowego pochodzenia dokumentu ani jego mocy prawnej.
 
-Kolory i komponenty w `app/src/main/java/pl/gov/obywatel/android/ui/theme/` są wstępnymi tokenami demonstracyjnymi. Docelowe odwzorowanie warstwy wizualnej będzie oparte na publicznie udostępnionych materiałach projektowych, po sprawdzeniu pochodzenia i warunków licencji każdego zasobu. Nie należy kopiować elementów służących do wizualnego potwierdzania autentyczności dokumentów ani tworzyć imitacji urzędowych dokumentów.
+Lokalny rejestr przechowuje obecnie tytuł, identyfikator i datę utworzenia wpisu. Nie jest połączony z plikiem źródłowym, nie oblicza skrótu dokumentu, nie publikuje wpisów w sieci i nie zapewnia zewnętrznej weryfikacji. Kod QR identyfikuje wpis lokalny; nie jest podpisem elektronicznym, pieczęcią elektroniczną ani urzędowym poświadczeniem. Skanowanie kodów QR i weryfikacja zdalna nie są jeszcze zaimplementowane.
+
+Ekrany profilu, bezpieczeństwa, płatności i zdrowia są informacyjne. Nie ma logowania do usług państwowych ani integracji z ich API. Nie należy używać prototypu do przedstawiania dokumentów jako wydanych lub zatwierdzonych przez organ państwowy.
+
+Wizerunek godła RP może zostać dodany dopiero po sprawdzeniu właściwego źródła pliku, zgodności z ustawowym wzorem i podstawy prawnej konkretnego sposobu użycia. Obecna wersja nie zawiera godła państwowego ani imitacji urzędowej pieczęci.
 
 ## Uruchomienie
 
-Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Projekt korzysta z Gradle Kotlin DSL i Jetpack Compose. W razie potrzeby wygeneruj wrapper Gradle z poziomu Android Studio.
+Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Projekt korzysta z Gradle Kotlin DSL, Jetpack Compose oraz ZXing Core do lokalnego generowania kodów QR.
 
-## Następne kroki
+## Następne kroki techniczne
 
-1. Zweryfikować dokładne kolory, typografię, odstępy i piktogramy w opublikowanych zasobach.
-2. Wydzielić komponenty wielokrotnego użytku i odtworzyć główny ekran zgodnie z aktualnym systemem projektowym.
-3. Rozszerzyć podgląd DOCX o tabele i obrazy, zachowując limity bezpieczeństwa.
-4. Dodać testy UI i sprawdzanie dostępności.
-5. Dodać testy jednostkowe magazynu URI i testy importu/podglądu.
-6. Utrzymać wyraźne oznaczenie prototypu, dopóki nie zostanie zbudowana rzeczywista i uprawniona integracja z usługami.
+1. Powiązać wpis rejestru z rzeczywistym plikiem i obliczać SHA-256 podczas importu lub rejestracji.
+2. Dodać skaner QR i walidację identyfikatorów w obrębie lokalnego rejestru.
+3. Zaprojektować kontrolowany eksport i kopię zapasową rejestru.
+4. Dodać testy jednostkowe magazynu rejestru, generowania identyfikatorów i kodów QR.
+5. Dodać ochronę lokalnego profilu oraz kontrolę dostępu do danych.
+6. Zweryfikować zasoby wizualne i podstawę prawną użycia oznaczeń państwowych przed ich dołączeniem.
