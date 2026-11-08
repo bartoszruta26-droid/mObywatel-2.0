@@ -2,13 +2,9 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.ui.home
 
-import androidx.compose.ui.test.assert
-import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.assertHasClickAction
-import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertEquals
@@ -21,59 +17,39 @@ class HomeScreenTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun showsPrototypeNoticeAndAvailableDocumentsService() {
+    fun showsIndependentApplicationNoticeAndAllServiceEntries() {
         composeRule.setContent {
-            ObywatelTheme {
-                HomeScreen(onOpenDocuments = {})
-            }
+            ObywatelTheme { HomeScreen(onOpenSection = {}) }
         }
-
-        composeRule.onNodeWithText("To prototyp interfejsu. Brak prawdziwych dokumentów i usług.")
-            .assertIsDisplayed()
-        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
-        composeRule.onNodeWithText("Podgląd dokumentów (demo)").assertIsDisplayed()
-        composeRule.onNodeWithText("Dokumenty").assertHasClickAction()
+        composeRule.onNodeWithText("Niezależna aplikacja").assertIsDisplayed()
+        listOf(
+            "Dokumenty", "Rejestr dokumentów", "Weryfikacja QR", "Moje dane",
+            "Bezpieczeństwo", "Płatności", "Zdrowie", "Więcej"
+        ).forEach { title ->
+            composeRule.onNodeWithText(title).assertIsDisplayed().assertHasClickAction()
+        }
     }
 
     @Test
-    fun servicesUnderPreparationAreDisabled() {
+    fun selectingEachServiceEmitsItsRoute() {
+        val opened = mutableListOf<String>()
         composeRule.setContent {
-            ObywatelTheme {
-                HomeScreen(onOpenDocuments = {})
-            }
+            ObywatelTheme { HomeScreen(onOpenSection = { opened.add(it) }) }
         }
-
-        composeRule.onNodeWithText("Moje dane").assertIsNotEnabled()
-        composeRule.onNodeWithText("Płatności").assertIsNotEnabled()
-    }
-
-    @Test
-    fun serviceAvailabilityIsExposedAsAccessibleState() {
-        composeRule.setContent {
-            ObywatelTheme {
-                HomeScreen(onOpenDocuments = {})
-            }
+        listOf(
+            "Dokumenty" to "documents",
+            "Rejestr dokumentów" to "registry",
+            "Weryfikacja QR" to "verify",
+            "Moje dane" to "profile",
+            "Bezpieczeństwo" to "security",
+            "Płatności" to "payments",
+            "Zdrowie" to "health",
+            "Więcej" to "more"
+        ).forEach { (label, route) ->
+            composeRule.onNodeWithText(label).performClick()
+            composeRule.waitForIdle()
+            assertEquals(route, opened.last())
         }
-
-        composeRule.onNodeWithText("Dokumenty")
-            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Dostępna"))
-        composeRule.onNodeWithText("Moje dane")
-            .assert(SemanticsMatcher.expectValue(
-                SemanticsProperties.StateDescription,
-                "W przygotowaniu — funkcja niedostępna"
-            ))
-    }
-
-    @Test
-    fun selectingDocumentsInvokesNavigation() {
-        var openCount = 0
-        composeRule.setContent {
-            ObywatelTheme {
-                HomeScreen(onOpenDocuments = { openCount += 1 })
-            }
-        }
-
-        composeRule.onNodeWithText("Dokumenty").performClick()
-        assertEquals(1, openCount)
+        assertEquals(8, opened.size)
     }
 }
