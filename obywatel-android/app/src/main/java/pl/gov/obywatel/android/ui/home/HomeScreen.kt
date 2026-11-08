@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.ui.home
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,47 +20,44 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import pl.gov.obywatel.android.R
+import pl.gov.obywatel.android.ui.theme.Blue
 
 private data class ServiceItem(
     val id: String,
     val title: String,
     val subtitle: String,
-    val icon: ImageVector
+    @DrawableRes val icon: Int,
+    val tint: Color = Blue
 )
 
 private val services = listOf(
-    ServiceItem("documents", "Dokumenty", "Import i podgląd plików", Icons.Filled.Description),
-    ServiceItem("registry", "Rejestr dokumentów", "Lokalny wykaz i kody QR", Icons.Filled.FactCheck),
-    ServiceItem("verify", "Weryfikacja QR", "Odczyt identyfikatora rejestru", Icons.Filled.QrCodeScanner),
-    ServiceItem("profile", "Moje dane", "Dane profilu aplikacji", Icons.Filled.AccountCircle),
-    ServiceItem("security", "Bezpieczeństwo", "Ustawienia ochrony danych", Icons.Filled.Security),
-    ServiceItem("payments", "Płatności", "Moduł informacyjny", Icons.Filled.CreditCard),
-    ServiceItem("health", "Zdrowie", "Moduł informacyjny", Icons.Filled.HealthAndSafety),
-    ServiceItem("more", "Więcej", "Informacje o aplikacji", Icons.Filled.MoreHoriz)
+    ServiceItem("documents", "Dokumenty", "Import i podgląd plików", R.drawable.nav_documents),
+    ServiceItem("registry", "Rejestr dokumentów", "Lokalny wykaz i kody QR", R.drawable.service_ticket),
+    ServiceItem("verify", "Weryfikacja QR", "Odczyt identyfikatora rejestru", R.drawable.nav_scan),
+    ServiceItem("profile", "Moje dane", "Dane profilu aplikacji", R.drawable.service_profile),
+    ServiceItem("security", "Bezpieczeństwo", "Ustawienia ochrony danych", R.drawable.service_pesel_lock),
+    ServiceItem("payments", "Płatności", "Moduł informacyjny", R.drawable.service_ticket),
+    ServiceItem("health", "Zdrowie", "Moduł informacyjny", R.drawable.service_prescription),
+    ServiceItem("more", "Więcej", "Informacje o aplikacji", R.drawable.nav_more)
 )
 
 @Composable
@@ -68,49 +66,49 @@ fun HomeScreen(onOpenSection: (String) -> Unit) {
         Column(modifier = Modifier.fillMaxSize().semantics { paneTitle = "Ekran główny" }) {
             Row(
                 modifier = Modifier.fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.inverseSurface)
-                    .padding(horizontal = 20.dp, vertical = 22.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "RZECZPOSPOLITA POLSKA",
-                        color = MaterialTheme.colorScheme.inverseOnSurface,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
+                Box(
+                    modifier = Modifier.size(48.dp)
+                        .background(Blue, RoundedCornerShape(14.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.nav_documents_selected),
+                        contentDescription = "Znak graficzny niezależnego prototypu",
+                        tint = Color.White,
+                        modifier = Modifier.size(29.dp)
                     )
-                    Spacer(Modifier.height(5.dp))
+                }
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(
-                        "Panel dokumentów i rejestru",
-                        color = MaterialTheme.colorScheme.inverseOnSurface,
+                        "Portfel dokumentów",
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.semantics { heading() }
                     )
                     Text(
-                        "POSEŁ",
-                        color = MaterialTheme.colorScheme.inverseOnSurface,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
+                        "Niezależny prototyp",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelMedium
                     )
                 }
-                Icon(
-                    Icons.Filled.Badge,
-                    contentDescription = "Oznaczenie profilu",
-                    tint = MaterialTheme.colorScheme.inverseOnSurface,
-                    modifier = Modifier.size(54.dp)
-                )
+                IconButton(onClick = { onOpenSection("more") }) {
+                    Icon(Icons.Filled.MoreHoriz, contentDescription = "Więcej informacji")
+                }
             }
 
             Column(modifier = Modifier.weight(1f).padding(horizontal = 16.dp)) {
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
                 Card(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             "Niezależna aplikacja",
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -118,7 +116,7 @@ fun HomeScreen(onOpenSection: (String) -> Unit) {
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Aplikacja nie jest systemem Sejmu ani administracji państwowej. Rejestr i kody QR mają charakter lokalny; nie stanowią urzędowego potwierdzenia dokumentu.",
+                            "To prototyp interfejsu, a nie oficjalna aplikacja administracji publicznej. Dokumenty i kody QR mają charakter lokalny.",
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -126,7 +124,7 @@ fun HomeScreen(onOpenSection: (String) -> Unit) {
                 }
                 Spacer(Modifier.height(18.dp))
                 Text(
-                    "Usługi",
+                    "Usługi i funkcje",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -153,7 +151,7 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().heightIn(min = 132.dp),
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -162,15 +160,15 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Box(
-                modifier = Modifier.size(42.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
+                modifier = Modifier.size(48.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    item.icon,
+                    painter = painterResource(item.icon),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(23.dp)
+                    tint = item.tint,
+                    modifier = Modifier.size(27.dp)
                 )
             }
             Column {
