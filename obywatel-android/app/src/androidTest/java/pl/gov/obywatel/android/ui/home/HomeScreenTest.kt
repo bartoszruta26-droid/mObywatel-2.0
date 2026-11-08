@@ -23,6 +23,7 @@ class HomeScreenTest {
             ObywatelTheme { HomeScreen(onOpenSection = {}) }
         }
         composeRule.onNodeWithText("Niezależna aplikacja").assertIsDisplayed()
+        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
         listOf(
             "Dokumenty", "Rejestr dokumentów", "Weryfikacja QR", "Moje dane",
             "Bezpieczeństwo", "Płatności", "Zdrowie", "Więcej"
