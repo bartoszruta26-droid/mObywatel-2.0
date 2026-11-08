@@ -4,6 +4,7 @@ package pl.gov.obywatel.android
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -14,29 +15,45 @@ class MainActivityNavigationTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    private fun openDocumentsTile() {
+        composeRule.onAllNodesWithText("Dokumenty").onFirst().performClick()
+    }
+
     @Test
     fun documentsServiceOpensAndSystemBackReturnsHome() {
-        composeRule.onNodeWithText("Dokumenty").performClick()
+        openDocumentsTile()
         composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
         composeRule.activityRule.scenario.onActivity { activity ->
             activity.onBackPressedDispatcher.onBackPressed()
         }
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Panel dokumentów i rejestru").assertIsDisplayed()
+        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
     }
 
     @Test
     fun documentsToolbarBackReturnsToHome() {
-        composeRule.onNodeWithText("Dokumenty").performClick()
+        openDocumentsTile()
         composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Wróć do ekranu głównego").performClick()
-        composeRule.onNodeWithText("Panel dokumentów i rejestru").assertIsDisplayed()
+        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
     }
 
     @Test
     fun registryRouteOpensRegistryScreen() {
         composeRule.onNodeWithText("Rejestr dokumentów").performClick()
         composeRule.onNodeWithText("Wybierz plik i zarejestruj SHA-256").assertIsDisplayed()
+    }
+
+    @Test
+    fun persistentBottomNavigationOpensEveryPrimaryDestination() {
+        composeRule.onNodeWithText("Usługi").performClick()
+        composeRule.onNodeWithText("Katalog funkcji prototypu").assertIsDisplayed()
+        composeRule.onNodeWithText("Szukaj").performClick()
+        composeRule.onNodeWithText("Wyszukiwanie globalne — do wdrożenia.").assertIsDisplayed()
+        composeRule.onNodeWithText("Skanuj").performClick()
+        composeRule.onNodeWithText("Skanuj kod QR").assertIsDisplayed()
+        composeRule.onNodeWithText("Więcej").performClick()
+        composeRule.onNodeWithText("Niezależny prototyp Android", substring = true).assertIsDisplayed()
     }
 
     @Test
