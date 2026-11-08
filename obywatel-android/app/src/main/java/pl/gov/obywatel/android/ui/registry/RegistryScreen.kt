@@ -60,7 +60,6 @@ import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.RGBLuminanceSource
-import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.CancellationException
@@ -148,7 +147,7 @@ fun RegistryScreen(onBack: () -> Unit) {
                     val entry = withContext(Dispatchers.IO) {
                         val name = displayName(context, uri)
                         val digest = context.contentResolver.openInputStream(uri)?.use(::sha256)
-                            ?: error("Nie można odczytać wybranego pliku.")
+                            ?: kotlin.error("Nie można odczytać wybranego pliku.")
                         RegistryEntry(
                             id = UUID.randomUUID().toString(),
                             title = title.trim().ifBlank { name },
@@ -193,7 +192,7 @@ fun RegistryScreen(onBack: () -> Unit) {
                     val result = withContext(Dispatchers.IO) {
                         val bitmap = context.contentResolver.openInputStream(uri)?.use {
                             BitmapFactory.decodeStream(it)
-                        } ?: error("Nie można odczytać obrazu.")
+                        } ?: kotlin.error("Nie można odczytać obrazu.")
                         decodeQr(bitmap)
                     }
                     val prefix = "urn:rp:local-document-registry:"
@@ -207,7 +206,7 @@ fun RegistryScreen(onBack: () -> Unit) {
                         } else {
                             val currentHash = withContext(Dispatchers.IO) {
                                 context.contentResolver.openInputStream(Uri.parse(match.uri))?.use(::sha256)
-                                    ?: error("Nie można ponownie odczytać pliku źródłowego.")
+                                    ?: kotlin.error("Nie można ponownie odczytać pliku źródłowego.")
                             }
                             if (currentHash.equals(match.sha256, ignoreCase = true)) {
                                 "Zgodność: plik ma taki sam SHA-256 jak w chwili rejestracji. To lokalne sprawdzenie integralności, a nie potwierdzenie autentyczności lub pochodzenia."
