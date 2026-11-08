@@ -31,9 +31,19 @@ private data class SectionInfo(val title: String, val description: String, val s
 
 private fun sectionInfo(id: String): SectionInfo = when (id) {
     "verify" -> SectionInfo(
-        "Weryfikacja QR",
-        "Ten ekran jest przygotowany jako punkt wejścia do skanowania identyfikatorów rejestru. Obecna wersja nie uruchamia aparatu ani nie weryfikuje dokumentów zdalnie.",
-        "Skanowanie aparatem i zdalny punkt weryfikacji — do wdrożenia."
+        "Skanuj kod QR",
+        "Ten ekran jest przygotowany jako punkt wejścia do skanowania identyfikatorów rejestru. Obecna wersja odczytuje kod QR z wybranego obrazu; nie uruchamia aparatu ani nie weryfikuje dokumentów zdalnie.",
+        "Odczyt z galerii — dostępny w module rejestru; aparat i zdalna weryfikacja — do wdrożenia."
+    )
+    "services" -> SectionInfo(
+        "Usługi",
+        "Katalog funkcji prototypu. Dostępne są lokalny portfel plików i rejestr dokumentów; pozostałe pozycje mają charakter informacyjny.",
+        "Usługi administracji publicznej nie są zintegrowane."
+    )
+    "search" -> SectionInfo(
+        "Szukaj",
+        "Wyszukiwanie w lokalnych dokumentach i usługach jest przewidziane do wdrożenia. Obecna wersja udostępnia listę zaimportowanych plików w zakładce Dokumenty.",
+        "Wyszukiwanie globalne — do wdrożenia."
     )
     "profile" -> SectionInfo("Moje dane",
         "Ustawienia profilu przechowywanego lokalnie na urządzeniu. Nie jest to konto państwowe ani profil zaufany.",
@@ -47,7 +57,7 @@ private fun sectionInfo(id: String): SectionInfo = when (id) {
     "health" -> SectionInfo("Zdrowie",
         "Moduł informacyjny przeznaczony na przyszłe funkcje związane z dokumentacją zdrowotną.",
         "Integracja usług zdrowotnych — niedostępna.")
-    else -> SectionInfo("Informacje o aplikacji",
+    else -> SectionInfo("Więcej",
         "Niezależny prototyp Android do lokalnego porządkowania dokumentów i identyfikatorów rejestru.",
         "Prototyp interfejsu.")
 }
