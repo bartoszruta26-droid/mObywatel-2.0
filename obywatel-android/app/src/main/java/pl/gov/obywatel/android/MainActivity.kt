@@ -632,6 +632,100 @@ private fun generateBrandedQr(context: Context, payload: String, branding: Strin
     return bitmap
 }
 
+
+private data class OwdDocumentGroup(
+    val id: String,
+    val title: String,
+    val fields: List<Pair<String, String>>
+)
+
+private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
+    OwdDocumentGroup("profile", "Dane osobowe profilu", listOf(
+        "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
+        "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel", "Miejsce urodzenia" to "birthPlace",
+        "Obywatelstwo" to "citizenship", "Płeć" to "sex", "Telefon" to "contactPhone",
+        "E-mail" to "contactEmail", "Organizacja" to "contactOrganization", "Stanowisko" to "contactTitle",
+        "Strona internetowa" to "contactUrl", "Adres kontaktowy" to "contactAddress",
+        "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname",
+        "Imiona matki" to "motherNames", "Nazwisko rodowe matki" to "motherSurname"
+    ) + listOf("personExtra" to "Informacje dodatkowe").flatMap { (prefix, _) ->
+        listOf("Źródło danych" to "${prefix}Source", "Podstawa prawna" to "${prefix}LegalBasis",
+            "Data weryfikacji" to "${prefix}VerifiedAt", "Podmiot weryfikujący" to "${prefix}VerifiedBy",
+            "Uwagi" to "${prefix}Notes")
+    }),
+    OwdDocumentGroup("identity", "Dowód tożsamości", listOf(
+        "Numer dokumentu" to "idNumber", "Status" to "idStatus", "Poprzedni numer" to "idPreviousNumber",
+        "Data wydania" to "idIssueDate", "Data ważności" to "idExpiryDate", "Organ wydający" to "idIssuer",
+        "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
+    ) + listOf("Źródło danych" to "idExtraSource", "Podstawa prawna" to "idExtraLegalBasis",
+        "Data weryfikacji" to "idExtraVerifiedAt", "Podmiot weryfikujący" to "idExtraVerifiedBy", "Uwagi" to "idExtraNotes")),
+    OwdDocumentGroup("passport", "Dane paszportowe", listOf(
+        "Numer paszportu" to "passportNumber", "Rodzaj dokumentu" to "passportType",
+        "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
+        "Państwo wydania" to "passportCountry", "Imiona i nazwisko" to "passportHolderNames",
+        "Miejsce urodzenia" to "passportBirthPlace", "Płeć" to "passportSex",
+        "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate",
+        "Organ wydający" to "passportIssuer", "Data utraty" to "passportLossDate"
+    ) + listOf("Źródło danych" to "passportExtraSource", "Podstawa prawna" to "passportExtraLegalBasis",
+        "Data weryfikacji" to "passportExtraVerifiedAt", "Podmiot weryfikujący" to "passportExtraVerifiedBy", "Uwagi" to "passportExtraNotes")),
+    OwdDocumentGroup("family", "Dokument rodowy — ewidencja prywatna", listOf(
+        "Numer dokumentu" to "familyDocNumber", "Nazwa rodu" to "familyName", "Linia / gałąź" to "familyLine",
+        "Miejsce w strukturze rodu" to "familyRole", "Prowadzący ewidencję" to "familyRegistry",
+        "Data sporządzenia" to "familyIssueDate", "Data aktualizacji" to "familyExpiryDate",
+        "Miejsce ewidencji" to "familyRegistryPlace", "Miejsce zamieszkania" to "familyResidence",
+        "Linia ojca" to "familyFatherLine", "Linia matki" to "familyMotherLine",
+        "Podstawa wpisu" to "familySource", "Uwagi" to "familyNotes",
+        "Podpis posiadacza" to "familyHolderSignature", "Podpis wystawcy" to "familyRegistrarSignature"
+    ) + listOf("Źródło danych" to "familyExtraSource", "Podstawa prawna" to "familyExtraLegalBasis",
+        "Data weryfikacji" to "familyExtraVerifiedAt", "Podmiot weryfikujący" to "familyExtraVerifiedBy", "Uwagi dodatkowe" to "familyExtraNotes")),
+    OwdDocumentGroup("parliament", "Legitymacja poselska — ewidencja", listOf(
+        "Numer legitymacji" to "mpCardNumber", "Kadencja" to "mpTerm", "Wystawca" to "mpIssuer",
+        "Status" to "mpStatus", "Okręg wyborczy" to "mpDistrict", "Początek mandatu" to "mpStart",
+        "Koniec mandatu" to "mpEnd", "Data wydania legitymacji" to "mpCardIssueDate",
+        "Data ślubowania" to "mpOathDate", "Miejsce ślubowania" to "mpOathPlace",
+        "Źródło potwierdzenia ślubowania" to "mpOathEvidence", "Źródło potwierdzenia mandatu" to "mpMandateSource"
+    ) + listOf("Źródło danych" to "mpExtraSource", "Podstawa prawna" to "mpExtraLegalBasis",
+        "Data weryfikacji" to "mpExtraVerifiedAt", "Podmiot weryfikujący" to "mpExtraVerifiedBy", "Uwagi" to "mpExtraNotes")),
+    OwdDocumentGroup("training", "Legitymacja uczestnika kursu", listOf(
+        "Instytucja" to "trainingInstitution", "Adres instytucji" to "trainingInstitutionAddress",
+        "Numer rejestru instytucji" to "trainingInstitutionRegistry", "Numer legitymacji" to "trainingCardNumber",
+        "Nazwa kursu" to "trainingCourseName", "Kod kursu" to "trainingCourseCode",
+        "Data rozpoczęcia" to "trainingStartDate", "Data zakończenia" to "trainingEndDate",
+        "Data wydania legitymacji" to "trainingIssueDate", "Ważna do" to "trainingValidUntil",
+        "Status uczestnictwa" to "trainingStatus", "Wystawca" to "trainingIssuer",
+        "Podpis wystawcy" to "trainingSignature", "Data ukończenia" to "trainingCompletionDate",
+        "Liczba godzin" to "trainingHours", "Wynik" to "trainingAssessment",
+        "Numer zaświadczenia" to "trainingCertificateNumber", "Forma kształcenia" to "trainingForm"
+    ) + listOf("Źródło danych" to "trainingExtraSource", "Podstawa prawna" to "trainingExtraLegalBasis",
+        "Data weryfikacji" to "trainingExtraVerifiedAt", "Podmiot weryfikujący" to "trainingExtraVerifiedBy", "Uwagi" to "trainingExtraNotes")),
+    OwdDocumentGroup("student", "Legitymacja ucznia / studenta", listOf(
+        "Numer legitymacji" to "studentCardNumber", "Uczelnia" to "studentUniversity",
+        "Kierunek" to "studentProgramme", "Rok akademicki" to "studentAcademicYear",
+        "Adres uczelni" to "studentUniversityAddress", "Identyfikator uczelni" to "studentUniversityId",
+        "Imię i nazwisko" to "studentNames", "Wydział" to "studentFaculty",
+        "Poziom studiów" to "studentLevel", "Profil / forma" to "studentProfile",
+        "Rok i semestr" to "studentYear", "Data wydania" to "studentIssueDate",
+        "Status" to "studentStatus", "Ważność" to "studentValidity", "Wystawca" to "studentIssuer"
+    ) + listOf("Źródło danych" to "studentExtraSource", "Podstawa prawna" to "studentExtraLegalBasis",
+        "Data weryfikacji" to "studentExtraVerifiedAt", "Podmiot weryfikujący" to "studentExtraVerifiedBy", "Uwagi" to "studentExtraNotes")),
+    OwdDocumentGroup("disability", "Orzeczenia i zaświadczenia", listOf(
+        "Numer dokumentu / sprawy" to "disabilityDecisionNumber", "Wystawca" to "disabilityAuthorityName",
+        "Data dokumentu" to "disabilityDecisionDate", "Stopień / kategoria" to "disabilityDegree",
+        "Okres obowiązywania" to "disabilityValidity", "Rodzaj rozstrzygnięcia" to "disabilityDecisionType",
+        "Osoba wystawiająca" to "disabilityIssuerName", "Powiat / miasto" to "disabilityCounty",
+        "Podstawa prawna" to "disabilityLegalBasis", "Przepis określający skutki" to "disabilityLegalProvision",
+        "Zakres uznania" to "disabilityEquivalentEffect", "Podmiot prowadzący" to "disabilityFoundationName",
+        "Podstawa statutowa" to "disabilityFoundationStatute", "Kwalifikacje wystawiającego" to "disabilityMedicalQualification",
+        "Ocena medyczna" to "disabilityMedicalAssessment", "Skład zespołu" to "disabilityPanelMembers",
+        "Przewodniczący" to "disabilityChairperson", "Osoba zatwierdzająca" to "disabilitySignature",
+        "Tryb odwołania" to "disabilityAppealInfo", "Data wniosku" to "disabilityApplicationDate",
+        "Numer sprawy" to "disabilityCaseNumber", "Data doręczenia" to "disabilityDeliveryDate",
+        "Wynik odwołania" to "disabilityAppealOutcome", "Duplikat / zmiana" to "disabilityDuplicateInfo",
+        "Dokument źródłowy" to "disabilitySourceAttachment"
+    ) + listOf("Źródło danych" to "disabilityExtraSource", "Podstawa prawna" to "disabilityExtraLegalBasis",
+        "Data weryfikacji" to "disabilityExtraVerifiedAt", "Podmiot weryfikujący" to "disabilityExtraVerifiedBy", "Uwagi" to "disabilityExtraNotes"))
+)
+
 @Composable
 private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     val context = LocalContext.current
@@ -641,7 +735,22 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
         .sortedBy { it.key }
         .map { it.key to it.key.replace(Regex("([a-z])([A-Z])"), "$1 $2").replaceFirstChar { ch -> ch.uppercase() } }
     val populated = shareable.filter { fields[it.first].orEmpty().isNotBlank() }
-    var selected by remember { mutableStateOf(populated.map { it.first }.toSet()) }
+    val documentGroups = remember { owdDocumentGroups() }
+    val populatedByDocument = remember(populated, documentGroups) {
+        documentGroups.associate { group ->
+            group.id to group.fields.map { it.second }.filter { key -> fields[key].orEmpty().isNotBlank() && populated.any { it.first == key } }.toSet()
+        }
+    }
+    val allPopulatedKeys = populated.map { it.first }.toSet()
+    var selectionMode by remember { mutableStateOf("all") }
+    var selectedDocuments by remember { mutableStateOf(documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }.map { it.id }.toSet()) }
+    var selectedDocumentId by remember { mutableStateOf(documentGroups.firstOrNull { populatedByDocument[it.id].orEmpty().isNotEmpty() }?.id ?: "profile") }
+    var selectedDocumentFields by remember { mutableStateOf(populatedByDocument[selectedDocumentId].orEmpty()) }
+    val selected = when (selectionMode) {
+        "documents" -> selectedDocuments.flatMap { populatedByDocument[it].orEmpty() }.toSet()
+        "document_fields" -> selectedDocumentFields.intersect(populatedByDocument[selectedDocumentId].orEmpty())
+        else -> allPopulatedKeys
+    }
     var consent by remember { mutableStateOf(false) }
     var purpose by remember { mutableStateOf("Przekazanie danych wskazanemu odbiorcy") }
     var offerQr by remember { mutableStateOf<Bitmap?>(null) }
@@ -679,35 +788,75 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
         if (populated.isEmpty()) {
             Text("Brak zapisanych danych do udostępnienia. Uzupełnij je w Ustawieniach.", color = Muted, style = MaterialTheme.typography.bodySmall)
         } else {
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                androidx.compose.material3.Checkbox(
-                    checked = selected.size == populated.size,
-                    onCheckedChange = { checked ->
-                        selected = if (checked) populated.map { it.first }.toSet() else emptySet()
-                        offerQr = null
-                        consent = false
-                    }
-                )
-                Column(Modifier.weight(1f)) {
-                    Text("Cały dokument / wszystkie zapisane dane", color = Navy, fontWeight = FontWeight.Bold)
-                    Text("Odznacz poniżej pojedyncze pola, których nie chcesz przekazywać.", color = Muted, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            populated.forEach { (key, label) ->
-                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 7.dp),
+            Text("Zakres udostępnienia", color = Navy, fontWeight = FontWeight.Bold)
+            listOf(
+                "all" to "Wszystkie dane i dokumenty",
+                "documents" to "Wybrane dokumenty",
+                "document_fields" to "Dane z wybranego dokumentu"
+            ).forEach { (mode, label) ->
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(checked = key in selected, onCheckedChange = { checked ->
-                        selected = if (checked) selected + key else selected - key
+                    RadioButton(selected = selectionMode == mode, onClick = {
+                        selectionMode = mode
                         offerQr = null
                         consent = false
+                        if (mode == "document_fields") selectedDocumentFields = populatedByDocument[selectedDocumentId].orEmpty()
                     })
-                    Column(Modifier.weight(1f)) {
-                        Text(label, color = Navy, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                        Text(fields[key].orEmpty(), color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text(label, color = Navy, fontWeight = if (selectionMode == mode) FontWeight.Bold else FontWeight.Medium)
+                }
+            }
+            when (selectionMode) {
+                "documents" -> {
+                    Text("Zaznacz dokumenty, których dane mają wejść do zakresu.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }.forEach { group ->
+                        val keys = populatedByDocument[group.id].orEmpty()
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.Checkbox(checked = group.id in selectedDocuments, onCheckedChange = { checked ->
+                                selectedDocuments = if (checked) selectedDocuments + group.id else selectedDocuments - group.id
+                                offerQr = null
+                                consent = false
+                            })
+                            Column(Modifier.weight(1f)) {
+                                Text(group.title, color = Navy, fontWeight = FontWeight.SemiBold)
+                                Text("${keys.size} dostępnych pól", color = Muted, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+                "document_fields" -> {
+                    Text("Wybierz jeden dokument, a następnie zaznacz konkretne pola.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    val availableGroups = documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }
+                    availableGroups.forEach { group ->
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = selectedDocumentId == group.id, onClick = {
+                                selectedDocumentId = group.id
+                                selectedDocumentFields = populatedByDocument[group.id].orEmpty()
+                                offerQr = null
+                                consent = false
+                            })
+                            Text(group.title, color = Navy, fontWeight = if (selectedDocumentId == group.id) FontWeight.Bold else FontWeight.Medium)
+                        }
+                    }
+                    val currentGroup = documentGroups.firstOrNull { it.id == selectedDocumentId }
+                    currentGroup?.fields?.filter { it.second in populatedByDocument[selectedDocumentId].orEmpty() }?.forEach { (label, key) ->
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.Checkbox(checked = key in selectedDocumentFields, onCheckedChange = { checked ->
+                                selectedDocumentFields = if (checked) selectedDocumentFields + key else selectedDocumentFields - key
+                                offerQr = null
+                                consent = false
+                            })
+                            Column(Modifier.weight(1f)) {
+                                Text(label, color = Navy, fontWeight = FontWeight.Medium)
+                                Text(fields[key].orEmpty(), color = Muted, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                     }
                 }
             }
+            Text("Wybrano ${selected.size} pól z ${allPopulatedKeys.size}. Zmiana zakresu unieważnia poprzednią zgodę i kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
         }
         OutlinedTextField(value = purpose, onValueChange = { purpose = it; consent = false; offerQr = null },
             modifier = Modifier.fillMaxWidth(), label = { Text("Cel udostępnienia") }, minLines = 2)
@@ -725,7 +874,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
         Button(
             onClick = {
                 runCatching {
-                    require(selected.isNotEmpty()) { "Wybierz co najmniej jedno pole." }
+                    require(selected.isNotEmpty()) { "Wybrany zakres nie zawiera żadnych uzupełnionych pól." }
                     require(purpose.isNotBlank()) { "Podaj cel udostępnienia." }
                     val (offer, _) = OwdSecurity.createOffer()
                     generateBrandedQr(context, offer.encodedQrPayload, qrBranding, qrUploadedLogo)
