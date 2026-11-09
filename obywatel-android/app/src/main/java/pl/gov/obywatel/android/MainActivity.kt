@@ -187,7 +187,8 @@ private fun HomeScreen() {
                     )
                     selectedDocumentId != null -> DocumentDetailsScreen(
                         documentId = selectedDocumentId!!,
-                        onBack = { selectedDocumentId = null }
+                        onBack = { selectedDocumentId = null },
+                        onOpenService = { title -> selectedDocumentId = null; activeService = title }
                     )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
@@ -992,7 +993,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
 @Composable
 private fun DocumentDetailsScreen(
     documentId: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenService: (String) -> Unit
 ) {
     val context = LocalContext.current
     val fields = remember { DemoIdentityStore.load(context) }
@@ -1113,6 +1115,29 @@ private fun DocumentDetailsScreen(
             }
         }
         ReadOnlyAdditionalInformationSection(fields, extraPrefix)
+        val relatedServices = when (documentId) {
+            "1" -> listOf("Zastrzeż PESEL", "Mandaty", "Sprawdź PESEL")
+            "2" -> listOf("Polak za granicą")
+            "5", "6" -> listOf("Edukacja")
+            "7" -> listOf("Zdrowie")
+            else -> listOf("Bezpieczeństwo")
+        }
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Powiązane moduły", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Skróty otwierają odpowiednie sekcje demonstracyjne prototypu.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                relatedServices.forEach { serviceTitle ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                            .clickable { onOpenService(serviceTitle) }.padding(vertical = 9.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.OpenInNew, contentDescription = null, tint = Blue, modifier = Modifier.size(19.dp))
+                        Text(serviceTitle, color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 9.dp))
+                    }
+                }
+            }
+        }
         Text("Ten ekran służy wyłącznie do przeglądania. Aby zmienić wpis, wróć do ekranu głównego i otwórz menu Ustawienia. Dane są przechowywane lokalnie i nie są sprawdzane w rejestrach publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
