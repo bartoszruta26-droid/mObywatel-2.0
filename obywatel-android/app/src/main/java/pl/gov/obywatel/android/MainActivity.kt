@@ -159,6 +159,7 @@ private fun HomeScreen() {
     var showCertificates by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
     var serviceCategory by remember { mutableStateOf("Wszystkie") }
+    val favoriteServices = remember { mutableStateMapOf("Zastrzeż PESEL" to true, "Zdrowie" to true, "Transport" to true) }
 
     fun openService(title: String) {
         when (title) {
@@ -204,10 +205,11 @@ private fun HomeScreen() {
                         onOpenDetails = { selectedDocumentId = it }
                     )
                     selectedTab == 3 -> QrToolsScreen()
-                    selectedTab == 4 -> ProfileLandingScreen(
-                        onOpenDocuments = { selectedTab = 1; showDemoDocuments = true },
+                    selectedTab == 4 -> MoreMenuScreen(
                         onOpenSettings = { showSettingsMenu = true },
-                        onOpenCertificates = { showCertificates = true }
+                        onOpenCertificates = { showCertificates = true },
+                        onOpenHelp = { activeService = "Pomoc i informacje" },
+                        onOpenHistory = { activeService = "Historia działań" }
                     )
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
@@ -222,22 +224,44 @@ private fun HomeScreen() {
                                 if (selectedTab == 0) {
                                     PrototypeNotice()
                                     Spacer(Modifier.height(12.dp))
-                                    CivicIllustrationBanner(
-                                        imageRes = R.drawable.header_main_banner,
-                                        description = "Baner główny prototypu obywatelskiego"
-                                    )
+                                    SectionHeading("Dokumenty", "Lokalny portfel dokumentów")
+                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                                        Text("Dodaj", color = Blue, fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.clickable { selectedTab = 4; showSettingsMenu = true }.padding(vertical = 8.dp))
+                                        Text("Wszystkie", color = Blue, fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.clickable { selectedTab = 1 }.padding(vertical = 8.dp))
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        listOf(
+                                            Triple("Dowód osobisty", R.drawable.documents_identity_card, "1"),
+                                            Triple("Paszport", R.drawable.documents_passport, "2"),
+                                            Triple("Dokument rodowy", R.drawable.documents_family_record, "3"),
+                                            Triple("Legitymacje", R.drawable.documents_student_legitimacy, "6")
+                                        ).forEach { (label, imageRes, id) ->
+                                            Card(modifier = Modifier.width(150.dp).clickable { selectedDocumentId = id },
+                                                colors = CardDefaults.cardColors(containerColor = White)) {
+                                                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                                    Image(painterResource(imageRes), contentDescription = label,
+                                                        modifier = Modifier.fillMaxWidth().height(88.dp), contentScale = ContentScale.Fit)
+                                                    Text(label, color = Navy, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Spacer(Modifier.height(18.dp))
+                                    SectionHeading("Usługi", "Szybki dostęp do wybranych funkcji")
+                                    Text("Wszystkie usługi", color = Blue, fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.clickable { selectedTab = 2 }.padding(vertical = 8.dp))
                                 } else {
                                     CivicIllustrationBanner(
                                         imageRes = R.drawable.header_poland_banner,
                                         description = "Baner informacyjny Polski"
                                     )
                                     Spacer(Modifier.height(12.dp))
+                                    SectionHeading("Usługi", "Katalog usług według kategorii")
+                                    Spacer(Modifier.height(12.dp))
                                 }
-                                SectionHeading(
-                                    if (selectedTab == 2) "Usługi" else "Pulpit",
-                                    if (selectedTab == 2) "Usługi uporządkowane według kategorii" else "Najczęściej używane obszary"
-                                )
-                                Spacer(Modifier.height(12.dp))
                                 if (selectedTab == 2) {
                                     OutlinedTextField(
                                         value = serviceSearch,
@@ -279,7 +303,7 @@ private fun HomeScreen() {
                                     (serviceCategory == "Wszystkie" || service.category == serviceCategory) &&
                                         (serviceSearch.isBlank() || service.title.contains(serviceSearch, ignoreCase = true) ||
                                             service.subtitle.contains(serviceSearch, ignoreCase = true))
-                                } else services.take(4)
+                                } else services.filter { favoriteServices[it.title] == true }.take(4)
                                 if (visibleServices.isEmpty()) {
                                     Text(
                                         "Nie znaleziono usług. Zmień wyszukiwaną frazę lub kategorię.",
@@ -295,7 +319,12 @@ private fun HomeScreen() {
                                         verticalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
                                         items(visibleServices) { service ->
-                                            ServiceCard(service) { openService(service.title) }
+                                            ServiceCard(
+                                                service,
+                                                isFavorite = favoriteServices[service.title] == true,
+                                                onFavorite = { favoriteServices[service.title] = favoriteServices[service.title] != true },
+                                                onClick = { openService(service.title) }
+                                            )
                                         }
                                     }
                                 }
@@ -381,6 +410,35 @@ private fun CivicIllustrationBanner(imageRes: Int, description: String) {
             .clip(RoundedCornerShape(18.dp)),
         contentScale = ContentScale.Crop
     )
+}
+
+@Composable
+private fun MoreMenuScreen(
+    onOpenSettings: () -> Unit,
+    onOpenCertificates: () -> Unit,
+    onOpenHelp: () -> Unit,
+    onOpenHistory: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Informacje, bezpieczeństwo i ustawienia prototypu", color = Muted, style = MaterialTheme.typography.bodySmall)
+        ProfileActionCard("Historia działań", "Lokalna lista czynności w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
+        ProfileActionCard("Wydane certyfikaty", "Informacje demonstracyjne o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
+        ProfileActionCard("Powiadomienia", "Ustawienia powiadomień demonstracyjnych", Icons.Filled.NotificationsNone, onOpenHelp)
+        ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z prototypu", Icons.Filled.Info, onOpenHelp)
+        ProfileActionCard("Ustawienia", "Dane lokalne, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
+        ProfileActionCard("Informacje prawne", "Charakter prototypu, prywatność i zasady korzystania", Icons.Filled.Description, onOpenHelp)
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("Prototyp obywatelski", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Aplikacja jest niezależnym projektem demonstracyjnym. Nie jest połączona z rejestrami publicznymi i nie potwierdza dokumentów ani uprawnień.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
 }
 
 @Composable
@@ -583,7 +641,7 @@ private fun SectionHeading(title: String, subtitle: String) {
 }
 
 @Composable
-private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
+private fun ServiceCard(item: ServiceItem, isFavorite: Boolean, onFavorite: () -> Unit, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().aspectRatio(1.14f).clickable(onClick = onClick),
         shape = RoundedCornerShape(17.dp),
@@ -591,15 +649,20 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Box(
-                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(BlueLight),
-                contentAlignment = Alignment.Center
-            ) {
-                if (item.icon != null) {
-                    Icon(painter = painterResource(item.icon), contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp))
-                } else {
-                    item.fallbackIcon?.let { Icon(it, contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp)) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(BlueLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (item.icon != null) {
+                        Icon(painter = painterResource(item.icon), contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp))
+                    } else {
+                        item.fallbackIcon?.let { Icon(it, contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp)) }
+                    }
                 }
+                Text(if (isFavorite) "★" else "☆", color = if (isFavorite) Color(0xFFB7791F) else Muted,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.clickable(onClick = onFavorite).padding(3.dp))
             }
             Column {
                 Text(item.title, color = Navy, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
