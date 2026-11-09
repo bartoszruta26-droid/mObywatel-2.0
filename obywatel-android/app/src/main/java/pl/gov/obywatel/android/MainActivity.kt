@@ -606,12 +606,56 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
 }
 
 @Composable
+private fun WebsiteQrScreen() {
+    val context = LocalContext.current
+    var address by remember { mutableStateOf("https://") }
+    var branding by remember { mutableStateOf(QR_BRAND_NONE) }
+    var uploadedLogo by remember { mutableStateOf<Bitmap?>(null) }
+    var message by remember { mutableStateOf("Wpisz pełny adres strony internetowej.") }
+    val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) runCatching { loadQrLogo(context, uri) }
+            .onSuccess { uploadedLogo = it; message = "Wczytano logo z pliku." }
+            .onFailure { message = "Błąd wczytywania logo: " + (it.message ?: "nieprawidłowy obraz") }
+    }
+    val normalized = address.trim()
+    val validUrl = runCatching { val parsed = Uri.parse(normalized); (parsed.scheme == "https" || parsed.scheme == "http") && !parsed.host.isNullOrBlank() }.getOrDefault(false)
+    val qrBitmap = remember(normalized, branding, uploadedLogo) {
+        if (!validUrl || (branding == QR_BRAND_FILE && uploadedLogo == null)) null
+        else runCatching { generateBrandedQr(context, normalized, branding, uploadedLogo) }.getOrNull()
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Kod QR strony internetowej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Kod zawiera adres strony. Zeskanowanie otworzy go w przeglądarce po zatwierdzeniu przez użytkownika.", color = Muted, style = MaterialTheme.typography.bodyMedium)
+        OutlinedTextField(value = address, onValueChange = { address = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Adres strony (URL)") }, placeholder = { Text("https://example.org") }, singleLine = true)
+        QrBrandingControls(branding, { branding = it }, uploadedLogo != null, { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/*")) }, { uploadedLogo = null; message = "Usunięto logo." })
+        Text(message, color = Muted, style = MaterialTheme.typography.bodySmall)
+        if (qrBitmap != null) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Kod QR strony", color = Navy, fontWeight = FontWeight.Bold)
+                    Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR strony internetowej", modifier = Modifier.size(260.dp), contentScale = ContentScale.Fit)
+                    Text(normalized, color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        } else Text(if (!validUrl) "Podaj poprawny adres rozpoczynający się od http:// lub https://." else "Wybierz logo z pliku albo ustaw opcję „Bez znaku”.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Znak jest nakładką graficzną, a nie treścią kodu. Przed publikacją sprawdź skanowanie na kilku urządzeniach.", color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+@Composable
 private fun VCardQrScreen() {
     val context = LocalContext.current
     val contactFields = remember {
         mutableStateMapOf("FN" to "", "N" to "", "ORG" to "", "TITLE" to "", "TEL" to "", "EMAIL" to "", "URL" to "", "ADR" to "")
     }
     var importMessage by remember { mutableStateOf("Zaimportuj plik .vcf lub wpisz dane ręcznie.") }
+    var branding by remember { mutableStateOf(QR_BRAND_NONE) }
+    var uploadedLogo by remember { mutableStateOf<Bitmap?>(null) }
+    var logoMessage by remember { mutableStateOf("Nie wybrano pliku logo.") }
+    val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) runCatching { loadQrLogo(context, uri) }
+            .onSuccess { uploadedLogo = it; logoMessage = "Wczytano logo z pliku." }
+            .onFailure { logoMessage = "Błąd wczytywania logo: " + (it.message ?: "nieprawidłowy obraz") }
+    }
     val vCardPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) runCatching {
             val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
@@ -625,15 +669,9 @@ private fun VCardQrScreen() {
         }.onFailure { importMessage = "Błąd importu: " + (it.message ?: "nieprawidłowy plik vCard") }
     }
     val payload = remember(contactFields.toMap()) { buildVCardPayload(contactFields.toMap()) }
-    val qrBitmap = remember(payload) {
-        if (payload.isBlank()) null else runCatching {
-            val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, 768, 768)
-            Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
-                for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
-                    bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
-                }
-            }
-        }.getOrNull()
+    val qrBitmap = remember(payload, branding, uploadedLogo) {
+        if (payload.isBlank() || (branding == QR_BRAND_FILE && uploadedLogo == null)) null
+        else runCatching { generateBrandedQr(context, payload, branding, uploadedLogo) }.getOrNull()
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text("Kod QR", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -649,6 +687,14 @@ private fun VCardQrScreen() {
             Text("Wczytaj plik vCard (.vcf)")
         }
         Text(importMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
+        QrBrandingControls(
+            branding = branding,
+            onBrandingChange = { branding = it },
+            logoLoaded = uploadedLogo != null,
+            onChooseLogo = { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/*")) },
+            onClearLogo = { uploadedLogo = null; logoMessage = "Usunięto logo." }
+        )
+        Text(logoMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
         Text("Dane kontaktowe", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
         val fields = listOf(
             "FN" to "Nazwa wyświetlana",
@@ -682,7 +728,7 @@ private fun VCardQrScreen() {
                 }
             }
         } else {
-            Text("Wpisz co najmniej nazwę kontaktu, aby wygenerować kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text(if (branding == QR_BRAND_FILE && uploadedLogo == null) "Wybierz logo z pliku albo ustaw opcję „Bez znaku”." else "Wpisz co najmniej nazwę kontaktu, aby wygenerować kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
         }
         Text("Prywatność: kod ujawnia każdej osobie skanującej wszystkie zapisane w nim dane. Nie dodawaj numeru PESEL, danych dokumentu ani informacji poufnych.", color = Muted, style = MaterialTheme.typography.bodySmall)
         Text("Prototyp obywatelski • lokalne generowanie kodu • brak połączenia z administracją publiczną", color = Muted, style = MaterialTheme.typography.labelSmall)
