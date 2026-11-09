@@ -162,7 +162,7 @@ private fun HomeScreen() {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {
-                    showDocumentsEditor -> DemoDocumentsScreen(onBack = { showDocumentsEditor = false })
+                    showDocumentsEditor -> DemoDocumentsScreen(onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showSettingsMenu -> SettingsMenuScreen(
                         onBack = { showSettingsMenu = false },
                         onEditDocuments = { showSettingsMenu = false; showDocumentsEditor = true },
@@ -176,7 +176,7 @@ private fun HomeScreen() {
                         onBack = { showDemoDocuments = false },
                         onOpenDetails = { selectedDocumentId = it }
                     )
-                    showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false })
+                    showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
                     activeService != null -> ServiceDetailScreen(
                         title = activeService!!,
