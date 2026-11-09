@@ -313,6 +313,8 @@ private fun HomeScreen() {
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
                         importStatus = importStatus
                     )
+                    selectedDocumentId == "family_children" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { selectedDocumentId = null })
+                    selectedDocumentId == "family_vaccinations" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { selectedDocumentId = null })
                     selectedDocumentId != null -> DocumentDetailsScreen(
                         documentId = selectedDocumentId!!,
                         onBack = { selectedDocumentId = null },
@@ -1683,7 +1685,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
         groups.forEachIndexed { index, (title, icon, keys) ->
             val hasData = keys.any { !fields[it].isNullOrBlank() }
             Card(
-                modifier = Modifier.fillMaxWidth().clickable { onOpenDetails(index.toString()) },
+                modifier = Modifier.fillMaxWidth().clickable { onOpenDetails(when (index) { 11 -> "family_children"; 12 -> "family_vaccinations"; else -> index.toString() }) },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
