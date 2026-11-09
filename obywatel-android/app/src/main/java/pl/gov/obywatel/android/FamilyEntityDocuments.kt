@@ -30,7 +30,7 @@ private val rodDocs = listOf(
     "Genealogia i stan Rodu" to listOf("Akt rodowy urodzenia","Akt rodowy małżeństwa","Akt rodowy zgonu","Księga Rodowa","Drzewo genealogiczne","Rejestr członków Rodu","Rejestr pokrewieństwa i powinowactwa","Księga zmian stanu rodzinnego","Kronika Rodu"),
     "Ustrój i organizacja Rodu" to listOf("Konstytucja Rodowa","Statut Rodowy","Regulamin Rodu","Akt ustanowienia Rodu","Deklaracja przynależności Rodowej","Akt przyjęcia do Rodu","Akt wystąpienia z Rodu / wykreślenia z ewidencji","Regulamin Rady Rodowej","Regulamin reprezentacji Rodu","Kodeks praw i obowiązków członków Rodu","Zasady sukcesji funkcji i odpowiedzialności"),
     "Władze i decyzje Rodowe" to listOf("Akt powołania Ojca Rodu","Akt powołania Matki Rodu","Akt ustanowienia Potomka","Uchwała Rady Rodowej","Protokół posiedzenia Rady Rodowej","Rejestr decyzji Rodowych","Pełnomocnictwo Rodowe","Upoważnienie do reprezentowania Rodu","Oświadczenie członka Rodu","Akt przekazania funkcji"),
-    "Majątek i gospodarka Rodu" to listOf("Rejestr majątku Rodowego","Ewidencja nieruchomości Rodowych","Ewidencja pojazdów Rodowych","Umowa użyczenia rodzinna","Umowa najmu rodzinna","Umowa darowizny","Umowa pożyczki rodzinnej","Rejestr zobowiązań i należności","Ewidencja wspólnych wydatków","Protokół przekazania majątku","Dokumentacja spadkowa i testamentowa"),
+    "Majątek i gospodarka Rodu" to listOf("Rejestr majątku Rodowego","Ewidencja nieruchomości Rodowych","Ewidencja pojazdów Rodowych","Umowa użyczenia rodzinna","Umowa najmu rodzinna","Umowa darowizny","Umowa pożyczki rodzinnej","Rejestr zobowiązań i należności","Ewidencja wspólnych wydatków","Protokół przekazania majątku","Dokumentacja spadkowa i testamentowa","Rejestr posiadanych rachunków bankowych (PLN i waluty obce)"),
     "Dokumenty społeczne, edukacyjne i religijne" to listOf("Legitymacja członka Rodu","Zaświadczenie o przynależności Rodowej","Świadectwo / dyplom","Akt nadania tytułu lub wyróżnienia","Dokument chrztu","Dokument bierzmowania","Dokument ślubu kościelnego","Zaświadczenie o funkcji religijnej","Dokument misji i posługi","Księga zasług i działalności społecznej")
 ).flatMap { (section, titles) -> titles.mapIndexed { index, title ->
     val fields = when {
@@ -43,14 +43,15 @@ private val rodDocs = listOf(
         title.contains("Uchwała") || title.contains("Protokół") || title.contains("Rejestr decyzji") -> listOf("Numer uchwały / protokołu","Organ podejmujący decyzję","Data posiedzenia","Lista obecności","Porządek obrad","Treść decyzji","Wynik głosowania","Data wejścia w życie") + rodBase
         else -> rodBase
     }
-    RegistryDoc("rod_${section.hashCode().toUInt().toString(16)}_${index}", title, section, fields.distinct(), "Dokument ewidencji Rodowej. Jego skutki prawne zależą od treści, formy i właściwych przepisów; sam wpis w aplikacji nie zastępuje aktu notarialnego, wpisu urzędowego ani wymaganej formy czynności.")
+    RegistryDoc(if (title.contains("rachunków bankowych")) "rod_bank_accounts" else "rod_${section.hashCode().toUInt().toString(16)}_${index}", title, section, if (title.contains("rachunków bankowych")) emptyList() else fields.distinct(), "Dokument ewidencji Rodowej. Jego skutki prawne zależą od treści, formy i właściwych przepisów; sam wpis w aplikacji nie zastępuje aktu notarialnego, wpisu urzędowego ani wymaganej formy czynności.")
 } }
 
 private val entityBase = listOf("Pełna nazwa podmiotu","Forma prawna","KRS / CEIDG / inny rejestr","NIP","REGON","Siedziba / adres","Data sporządzenia / wydania","Organ / osoba wystawiająca","Podstawa prawna / statutowa","Osoba wprowadzająca dane","Załączniki / plik źródłowy","Status dokumentu","Uwagi")
 private val entityDocs = listOf(
     "Dokumenty założycielskie i rejestrowe" to listOf("Akt założycielski","Statut","Umowa spółki","Odpis aktualny KRS","Odpis pełny KRS","Zaświadczenie o wpisie do CEIDG","Zaświadczenie o nadaniu NIP","Zaświadczenie o nadaniu REGON","Potwierdzenie statusu podatnika VAT","Akt / dokument utworzenia oddziału lub jednostki lokalnej","Zmiana statutu lub umowy","Historia zmian danych rejestrowych"),
     "Dokumenty organów i władz" to listOf("Akt powołania Prezesa","Akt powołania Członka Zarządu","Akt powołania Rady Nadzorczej","Akt odwołania z funkcji","Uchwała Zarządu","Uchwała Rady Nadzorczej","Protokół posiedzenia organu","Rejestr uchwał","Regulamin Zarządu","Regulamin Rady Nadzorczej","Pełnomocnictwo","Prokura","Wzór podpisu / zasady reprezentacji"),
-    "Dokumenty właścicielskie i kontrolne" to listOf("Rejestr wspólników","Lista udziałowców","Lista akcjonariuszy","Dokument objęcia udziałów","Dokument zbycia udziałów","Księga akcyjna","Dokumentacja beneficjentów rzeczywistych","Potwierdzenie zgłoszenia CRBR","Struktura właścicielska","Umowa inwestycyjna","Dokument wniesienia wkładu / kapitału","Oświadczenie właściciela")
+    "Dokumenty właścicielskie i kontrolne" to listOf("Rejestr wspólników","Lista udziałowców","Lista akcjonariuszy","Dokument objęcia udziałów","Dokument zbycia udziałów","Księga akcyjna","Dokumentacja beneficjentów rzeczywistych","Potwierdzenie zgłoszenia CRBR","Struktura właścicielska","Umowa inwestycyjna","Dokument wniesienia wkładu / kapitału","Oświadczenie właściciela"),
+    "Finanse i rachunki bankowe" to listOf("Rejestr rachunków bankowych podmiotu (wiele kont i walut)","Potwierdzenie prowadzenia rachunku bankowego","Dokument otwarcia / zamknięcia rachunku")
 ).flatMap { (section, titles) -> titles.mapIndexed { index, title ->
     val fields = when {
         title.contains("KRS") -> listOf("Numer KRS","Rodzaj odpisu","Data stanu danych","Sąd rejestrowy","Dział / rubryka","Treść wpisów / wzmianki") + entityBase
@@ -61,7 +62,7 @@ private val entityDocs = listOf(
         title.contains("pełnomocnictwo") || title.contains("Prokura") -> listOf("Mocodawca","Pełnomocnik / prokurent","Rodzaj i zakres umocowania","Data udzielenia","Okres obowiązywania","Sposób odwołania") + entityBase
         else -> entityBase
     }
-    RegistryDoc("entity_${section.hashCode().toUInt().toString(16)}_${index}", title, section, fields.distinct(), "Ewidencja dokumentu podmiotu. Wpisane dane nie potwierdzają samodzielnie aktualnego stanu rejestru; dokument urzędowy należy dołączyć jako źródło.")
+    RegistryDoc(if (title.contains("rachunków bankowych")) "entity_bank_accounts" else "entity_${section.hashCode().toUInt().toString(16)}_${index}", title, section, if (title.contains("rachunków bankowych")) emptyList() else fields.distinct(), "Ewidencja dokumentu podmiotu. Wpisane dane nie potwierdzają samodzielnie aktualnego stanu rejestru; dokument urzędowy należy dołączyć jako źródło.")
 } }
 
 private object FamilyEntityDocumentStore {
@@ -122,18 +123,51 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             val doc = catalog.first { it.id == selected }
             val saved = records[doc.id].orEmpty()
             var local by remember(doc.id) { mutableStateOf(saved) }
+            var accountCount by remember(doc.id) { mutableIntStateOf((saved["accountCount"]?.toIntOrNull() ?: 1).coerceIn(1, 30)) }
+            val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
+            val accountFields = listOf("Nazwa własna rachunku", "Bank / instytucja prowadząca", "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT", "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku", "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi")
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(doc.note, style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
-            doc.fields.forEachIndexed { index, label ->
+            if (isBankRegister) {
+                Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Każdy rachunek jest osobnym wpisem, a numer IBAN i dane właściciela są przechowywane w zaszyfrowanym archiwum lokalnym.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1769AA))
+                repeat(accountCount) { accountIndex ->
+                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F8FB))) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Rachunek bankowy \${accountIndex + 1}", fontWeight = FontWeight.Bold, color = Color(0xFF173B58))
+                            accountFields.forEachIndexed { fieldIndex, label ->
+                                val key = "account_\${accountIndex}_\${fieldIndex}"
+                                val value = local[key].orEmpty()
+                                if (preview) {
+                                    if (value.isNotBlank()) Column {
+                                        Text(label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788))
+                                        Text(value, style = MaterialTheme.typography.bodyLarge)
+                                    }
+                                } else OutlinedTextField(value = value, onValueChange = { local = local + (key to it) },
+                                    label = { Text(label) }, modifier = Modifier.fillMaxWidth(),
+                                    singleLine = fieldIndex in listOf(2, 3, 4, 8, 9, 10),
+                                    minLines = if (fieldIndex == 12) 2 else 1, maxLines = 4)
+                            }
+                        }
+                    }
+                }
+                if (!preview) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { if (accountCount < 30) accountCount++ }, modifier = Modifier.weight(1f), enabled = accountCount < 30) { Text("Dodaj rachunek") }
+                    OutlinedButton(onClick = { if (accountCount > 1) { accountCount--; local = local.filterKeys { key -> !key.startsWith("account_\${accountCount}_") } } }, modifier = Modifier.weight(1f), enabled = accountCount > 1) { Text("Usuń ostatni") }
+                }
+            } else doc.fields.forEachIndexed { index, label ->
                 val value = local["f$index"].orEmpty()
                 if (preview) {
                     if (value.isNotBlank()) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) { Text(label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788)); Text(value, style = MaterialTheme.typography.bodyLarge) }
                 } else OutlinedTextField(value = value, onValueChange = { local = local + ("f$index" to it) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1, maxLines = 5)
             }
+            if (isBankRegister) {
+                if (!preview) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP). Nie przechowuj PIN-ów, haseł, kodów autoryzacyjnych ani danych logowania do bankowości.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
+                if (preview) Text("Liczba zarejestrowanych pozycji: \$accountCount", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+            }
             if (preview) Text("PODGLĄD EWIDENCYJNY — dokument prywatny / roboczy. Nie stanowi samodzielnie urzędowego odpisu, wpisu rejestrowego ani poświadczenia.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj dane" else "Podgląd") }
-                if (!preview) Button(onClick = { runCatching { FamilyEntityDocumentStore.save(context, records + (doc.id to local)); records = FamilyEntityDocumentStore.load(context); message = "Zapisano formularz." }.onFailure { message = "Błąd zapisu: ${it.message}" } }, modifier = Modifier.weight(1f)) { Text("Zapisz") }
+                if (!preview) Button(onClick = { runCatching { FamilyEntityDocumentStore.save(context, records + (doc.id to (if (isBankRegister) local + ("accountCount" to accountCount.toString()) else local))); records = FamilyEntityDocumentStore.load(context); message = "Zapisano formularz." }.onFailure { message = "Błąd zapisu: ${it.message}" } }, modifier = Modifier.weight(1f)) { Text("Zapisz") }
             }
             if (message.isNotBlank()) Text(message, color = Color(0xFF1769AA), style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = { selected = null; message = "" }) { Text("Wróć do katalogu") }
