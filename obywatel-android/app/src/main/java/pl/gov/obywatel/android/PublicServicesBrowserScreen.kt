@@ -127,7 +127,7 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
     val categories = listOf("Wszystkie", "Ulubione") + publicServiceLinks.map { it.category }.distinct().sorted()
     val normalizedQuery = query.trim().lowercase()
     val filtered = publicServiceLinks.filter { service ->
-        val matchesCategory = selectedCategory == "Wszystkie" || service.category == selectedCategory
+        val matchesCategory = selectedCategory == "Wszystkie" || selectedCategory == "Ulubione" || service.category == selectedCategory
         val matchesFavorite = selectedCategory != "Ulubione" || favorites[service.title] == true
         val matchesQuery = normalizedQuery.isBlank() ||
             service.title.lowercase().contains(normalizedQuery) ||
