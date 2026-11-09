@@ -40,7 +40,9 @@ internal data class ApprovedSchemaMapping(
     val owdSchemaId: String,
     val owdSchemaVersion: Int,
     val governmentSchemaId: String,
-    val approvalReference: String
+    val approvalReference: String,
+    /** Explicit local-field -> approved target-field mapping. */
+    val fieldMappings: Map<String, String>
 )
 
 internal data class GovernmentIntegrationReadiness(
@@ -71,9 +73,16 @@ internal object GovernmentSchemaMapper {
         require(mapping.governmentSchemaId in readiness.supportedSchemas) {
             "Docelowy schemat nie znajduje się na liście schematów dopuszczonych przez operatora."
         }
-        // Field names are never guessed or silently translated. A reviewed,
-        // explicit field-level transformation is required when the target schema is known.
-        return mapping.governmentSchemaId to record.fields.toMap()
+        require(mapping.fieldMappings.keys == record.fields.keys) {
+            "Mapowanie musi jawnie obejmować dokładnie wszystkie przekazywane pola."
+        }
+        require(mapping.fieldMappings.values.toSet().size == mapping.fieldMappings.size) {
+            "Mapowanie zawiera powielone pola docelowe."
+        }
+        val mappedFields = record.fields.mapKeys { (sourceName, _) ->
+            mapping.fieldMappings.getValue(sourceName)
+        }
+        return mapping.governmentSchemaId to mappedFields
     }
 }
 
