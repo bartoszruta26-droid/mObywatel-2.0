@@ -28,3 +28,7 @@ W `iOS/Sources/Tokens/Spacings.swift` zdefiniowano skalę odstępów: 2, 4, 8, 1
 - Nie dodano dokumentów poświadczających, danych użytkowników, logowania ani mechanizmów bezpieczeństwa.
 - Piktogram sprawdzenia dowodu jest wyłącznie ikoną kafla usług, nie elementem dokumentu ani potwierdzeniem tożsamości.
 - Oficjalne znaki i godło należy wykorzystywać wyłącznie w granicach ich właściwych zasad prawnych i licencyjnych.
+
+## Formularz danych demonstracyjnych
+
+Ekran „Dokumenty” zawiera wyłącznie formularz ewidencyjny z pustymi polami na dane osobowe, dane dowodu osobistego, dane paszportowe i podstawowe dane dotyczące legitymacji poselskiej oraz neutralny obszar na zdjęcie profilowe. Wszystkie sekcje są jednoznacznie oznaczone jako DEMO — NIE JEST DOKUMENTEM. Pola nie są zapisywane ani wysyłane. Ekran nie odtwarza oficjalnych wzorów dokumentów, legitymacji, zabezpieczeń, kodów QR, kodów kreskowych ani strefy MRZ i nie potwierdza tożsamości ani statusu publicznego.
