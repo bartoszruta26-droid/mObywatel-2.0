@@ -204,7 +204,20 @@ private fun HomeScreen() {
                             })
                             Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
-                                if (selectedTab == 0) PrototypeNotice()
+                                if (selectedTab == 0) {
+                                    PrototypeNotice()
+                                    Spacer(Modifier.height(12.dp))
+                                    CivicIllustrationBanner(
+                                        imageRes = R.drawable.a_clean_vector_flat_illustration_asset_sheet_for_a,
+                                        description = "Ilustracje obywateli i usług publicznych — grafika koncepcyjna"
+                                    )
+                                } else {
+                                    CivicIllustrationBanner(
+                                        imageRes = R.drawable.a_clean_vector_illustration_asset_sheet_on_a_pale,
+                                        description = "Ilustracje instytucji, zdrowia, transportu i środowiska"
+                                    )
+                                    Spacer(Modifier.height(12.dp))
+                                }
                                 SectionHeading(
                                     if (selectedTab == 1) "Wszystkie usługi" else "Szybki dostęp",
                                     if (selectedTab == 1) "Katalog modułów prototypu obywatelskiego" else "Najczęściej używane obszary"
@@ -290,6 +303,19 @@ private fun HomeScreen() {
 }
 
 @Composable
+private fun CivicIllustrationBanner(imageRes: Int, description: String) {
+    Image(
+        painter = painterResource(imageRes),
+        contentDescription = description,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(112.dp)
+            .clip(RoundedCornerShape(18.dp)),
+        contentScale = ContentScale.Crop
+    )
+}
+
+@Composable
 private fun ProfileLandingScreen(
     onOpenDocuments: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -303,6 +329,10 @@ private fun ProfileLandingScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text("Profil", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        CivicIllustrationBanner(
+            imageRes = R.drawable.a_clean_vector_flat_gradient_illustration_asset_sh,
+            description = "Ilustracje profilu obywatela, rodziny i usług"
+        )
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Blue, modifier = Modifier.size(48.dp))
@@ -366,6 +396,15 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         Text("‹  Powrót do usług", color = Blue, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
         Text(title, color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        CivicIllustrationBanner(
+            imageRes = when (title) {
+                "Zdrowie" -> R.drawable.a_clean_vector_illustration_asset_sheet_on_a_pale
+                "Polak za granicą", "Transport", "Bilety" -> R.drawable.a_clean_vector_flat_gradient_illustration_asset_sh
+                "Środowisko" -> R.drawable.a_clean_vector_flat_illustration_asset_sheet_for_a
+                else -> R.drawable.a_clean_vector_illustration_asset_sheet_on_a_pale
+            },
+            description = "Ilustracja tematyczna modułu $title"
+        )
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text(descriptions[title] ?: "Moduł informacyjny wersji alfa.", color = Ink)
