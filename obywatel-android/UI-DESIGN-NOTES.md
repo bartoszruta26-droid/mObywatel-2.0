@@ -3,24 +3,22 @@ SPDX-FileCopyrightText: 2026 bartoszruta26-droid
 SPDX-License-Identifier: CC0-1.0
 -->
 
-# Android UI prototype — visual refresh
+# Notatki projektowe UI
 
-## Zakres
+## Zakres zmian
 
-Niezależny prototyp interfejsu Android w Kotlinie i Jetpack Compose. Odświeżenie obejmuje:
-- hierarchię nagłówka i markę demonstracyjną,
-- kafle usług z piktogramami Material,
-- komunikat jawnie określający status prototypu,
-- aktywny stan dolnej nawigacji,
-- spójną paletę i promienie kart,
-- układ elastyczny oparty na siatce.
+- Ekran startowy niezależnego prototypu Android w Jetpack Compose.
+- Piktogramy usług przeniesione z katalogu źródłowego iOS w tym repozytorium.
+- Paleta i karty są tokenami prototypu, a nie oficjalną specyfikacją design systemu.
 
-## Zasady znaków i wiarygodności
+## Pochodzenie zasobów
 
-Znak aplikacji w tym prototypie jest autorską ikoną demonstracyjną. Nie jest oficjalnym logo mObywatela. Prototyp nie używa godła RP jako znaku własnej aplikacji, nie odtwarza wzorów dokumentów ani zabezpieczeń i nie sugeruje, że prezentowane dane są urzędowo potwierdzone. Oficjalne godło może być używane wyłącznie w kontekście i na zasadach przewidzianych przepisami. Przed wykorzystaniem jakichkolwiek plików publicznego design systemu należy sprawdzić ich pochodzenie, licencję i warunki użycia.
+Zasoby DA001, DA002, DA003, DA004, DA006, DA008, DA009, DA013, DA025 i DA035 pochodzą z:
+`iOS/Sources/Assets.xcassets/Icons/Brand/Services/`.
+W nadrzędnym `REUSE.toml` źródłowe pliki są oznaczone © 2025 Centralny Ośrodek Informatyki oraz `LicenseRef-COI-MIT-PL`. Konwersje Android VectorDrawable zachowują te informacje.
 
-## Weryfikacja
+## Granice identyfikacji i bezpieczeństwa
 
-- Uruchom `./gradlew :app:assembleDebug` w katalogu `obywatel-android`.
-- Uruchom testy: `./gradlew :app:testDebugUnitTest`.
-- Sprawdź TalkBack, skalowanie czcionek, kontrast oraz zachowanie na małych ekranach.
+- Prototyp nie jest oficjalną aplikacją mObywatel.
+- Nie dodano dokumentów, poświadczeń, danych użytkowników, logowania ani mechanizmów bezpieczeństwa.
+- Oficjalne znaki i godło należy wykorzystywać wyłącznie w granicach ich właściwych zasad prawnych i licencyjnych.
