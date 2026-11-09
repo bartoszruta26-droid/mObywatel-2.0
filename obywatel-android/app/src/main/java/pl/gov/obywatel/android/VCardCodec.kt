@@ -190,9 +190,9 @@ internal object VCardCodec {
         // so literal backslash sequences inside property values are preserved.
         if (hasPhysicalSeparators) {
             val nextProperty = "(?=(?:BEGIN:VCARD|END:VCARD|[A-Za-z0-9.-]+(?:;[^:\\r\\n]*)?:))"
-            text = text.replace(Regex("\\\\\\\\r\\\\\\\n$nextProperty", RegexOption.IGNORE_CASE), "\\r\\n")
-            text = text.replace(Regex("\\\\\\\\n$nextProperty", RegexOption.IGNORE_CASE), "\\n")
-            text = text.replace(Regex("\\\\\\\\r$nextProperty", RegexOption.IGNORE_CASE), "\\r")
+            text = text.replace(Regex("""\\\\r\\\\n$nextProperty""", RegexOption.IGNORE_CASE), "\\r\\n")
+            text = text.replace(Regex("""\\\\n$nextProperty""", RegexOption.IGNORE_CASE), "\\n")
+            text = text.replace(Regex("""\\\\r$nextProperty""", RegexOption.IGNORE_CASE), "\\r")
         } else {
             text = text.replace("\\\\r\\\\n", "\\r\\n")
                 .replace("\\\\n", "\\n")
