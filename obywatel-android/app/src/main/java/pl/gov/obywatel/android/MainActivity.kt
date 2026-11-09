@@ -883,6 +883,17 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
     }
     var photoBase64 by remember { mutableStateOf(fields["photo"] ?: "") }
     var saveMessage by remember { mutableStateOf("") }
+    val editorTitle = when (categoryId) {
+        "profile" -> "Dane osobowe i zdjęcie profilowe"
+        "family" -> "Dokument rodowy — ewidencja prywatna"
+        "identity_card" -> "Dowód osobisty — ewidencja"
+        "parliament" -> "Legitymacja poselska — ewidencja"
+        "training" -> "Legitymacja kursanta — ewidencja"
+        "student" -> "Legitymacja studencka — ewidencja"
+        "disability" -> "Orzeczenia i zaświadczenia — ewidencja"
+        "passport" -> "Paszport — ewidencja"
+        else -> "Wszystkie dane i dokumenty"
+    }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             runCatching {
@@ -911,7 +922,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp)
         )
         Text(
-            "Dane i identyfikatory — demonstracja",
+            editorTitle,
             color = Navy,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
