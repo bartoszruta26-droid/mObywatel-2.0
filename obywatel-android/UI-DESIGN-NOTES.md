@@ -200,3 +200,10 @@ Edytory korzystają ze wspólnego zaszyfrowanego magazynu DemoIdentityStore. Ka�
 Portfel został nazwany konsekwentnie i pozostaje katalogiem wszystkich ośmiu kategorii dokumentów. Kafelki i szczegóły Portfela są tylko do odczytu. Żadna nowa ścieżka edycji nie została dodana do Portfela.
 
 Zmiany weryfikowano statycznie na kodzie źródłowym. Projekt pozostaje w fazie alfa; nie uruchamiano kompilacji, testów budowania ani generowania APK.
+## Rozszerzenie szczegółów Portfela — kompletność danych odczytu
+
+Rozbudowano szczegóły o pola odpowiadające formularzom ośmiu kategorii. Profil prezentuje dane osoby i rodziców; ewidencja dowodu i paszportu obejmuje dane wydania, ważności, wystawcy i statusu; ewidencja rodowa obejmuje linię, miejsce prowadzenia i podstawę wpisu; legitymacje obejmują informacje instytucji, mandatu, kursu lub uczelni; moduł orzeczeń obejmuje dane wystawcy, rozstrzygnięcia, okresu, wskazań i oceny funkcjonalnej.
+
+W szczegółach profilu wyświetlane jest zapisane zdjęcie w podglądzie o ograniczonej rozdzielczości. Każda kategoria otrzymała blok tylko do odczytu, prezentujący zapisane źródło, podstawę prawną lub regulaminową, datę weryfikacji, podmiot potwierdzający i adnotacje. Puste wartości są jawnie pomijane w bloku źródeł, a brak wpisów jest komunikowany użytkownikowi.
+
+Portfel i szczegóły pozostają ekranami tylko do odczytu. Informacje o źródłach i podstawach są wpisami użytkownika i nie stanowią niezależnej weryfikacji. Zmiany skontrolowano statycznie; nie uruchamiano kompilacji, testów budowania ani generowania APK. Projekt pozostaje w fazie alfa.
