@@ -209,10 +209,14 @@ private fun HomeScreen() {
                 output.toByteArray()
             } ?: error("Nie można otworzyć wybranego pliku.")
             require(bytes.isNotEmpty()) { "Wybrany plik jest pusty." }
-            val decoder = Charsets.UTF_8.newDecoder()
-                .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
-                .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
-            val raw = decoder.decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+            val raw = runCatching {
+                Charsets.UTF_8.newDecoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+            }.getOrElse {
+                String(bytes, java.nio.charset.Charset.forName("windows-1250"))
+            }
             val imported = VCardCodec.decodeForImport(raw)
             require(imported.isNotEmpty()) { "Archiwum nie zawiera danych." }
             imported
