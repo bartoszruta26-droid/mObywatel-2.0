@@ -1,26 +1,45 @@
 # obywatel-android
 
-Minimalny szkielet aplikacji Android w Kotlinie i Jetpack Compose.
+Minimalny niezależny prototyp Android w Kotlinie i Jetpack Compose.
 
 ## Zakres
 
 - Material 3 i centralne tokeny kolorów/kształtów.
 - Ekran startowy demonstracyjny z kaflami usług.
-- Struktura gotowa do dalszego podłączenia publicznie dostępnych zasobów design systemu.
+- Oryginalne piktogramy usług COI przekonwertowane do Android VectorDrawable, w tym piktogram sprawdzenia dowodu.
+- Oryginalne piktogramy systemu designu przeniesione z publicznego katalogu iOS w tym repozytorium do Android VectorDrawable:
+  - DA001 — punkty karne,
+  - DA002 — naruszenie środowiskowe,
+  - DA003 — Polak za granicą,
+  - DA004 — eRecepta,
+  - DA006 — Bilkom,
+  - DA008 — zastrzeż PESEL,
+  - DA009 — weryfikuj PESEL,
+  - DA013 — ePłatności,
+  - DA025 — bilet,
+  - DA035 — bezpiecznie w sieci.
+
+## Pochodzenie i licencje
+
+Powyższe piktogramy pochodzą z `iOS/Sources/Assets.xcassets/Icons/Brand/Services/` w tym repozytorium. W nadrzędnym pliku `REUSE.toml` zasoby źródłowe są oznaczone jako © 2025 Centralny Ośrodek Informatyki, `LicenseRef-COI-MIT-PL`. Wersje VectorDrawable w `app/src/main/res/drawable/mob_*.xml` zachowują to oznaczenie. Przed dystrybucją należy stosować warunki tej licencji i zachować informacje o pochodzeniu.
 
 ## Ważne
 
-Repozytorium nadrzędne opisuje publiczny wycinek materiałów dotyczących mObywatela; nie zawiera logiki biznesowej, API ani modułu uwierzytelniania aplikacji. Ten katalog jest niezależnym prototypem UI, a nie oficjalną aplikacją mObywatel. Nie implementuje logowania, dokumentów ani usług państwowych i nie powinien sugerować autentyczności takich funkcji.
+Ten katalog jest niezależnym prototypem UI, a nie oficjalną aplikacją mObywatel. Nie implementuje logowania, dokumentów ani usług państwowych i nie powinien sugerować autentyczności takich funkcji. Nie należy odtwarzać mechanizmów uwierzytelniania ani zabezpieczeń dokumentów.
 
-Kolory i komponenty w `app/src/main/java/pl/gov/obywatel/android/ui/theme/` są wstępnymi tokenami demonstracyjnymi. Po pobraniu i zweryfikowaniu właściwych plików z galerii design systemu należy je zastąpić rzeczywistymi wartościami i assetami, z zachowaniem warunków ich licencji.
+Kolory i komponenty w `app/src/main/java/pl/gov/obywatel/android/ui/theme/` pozostają wstępnymi tokenami demonstracyjnymi. Należy je zastąpić dokładnymi wartościami z legalnie udostępnionego design systemu, gdy potwierdzona zostanie licencja i aktualność wersji.
 
 ## Uruchomienie
 
-Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Projekt korzysta z Gradle Kotlin DSL i Jetpack Compose. W razie potrzeby wygeneruj wrapper Gradle z poziomu Android Studio.
+Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Projekt korzysta z Gradle Kotlin DSL i Jetpack Compose.
+
+## Źródła zasobów
+
+Piktogramy pochodzą z `iOS/Sources/Assets.xcassets/Icons/Brand/Services/` i są oznaczone licencją `LicenseRef-COI-MIT-PL` (tekst: `LICENSES/LicenseRef-COI-MIT-PL.txt`). Zweryfikowane skale odstępów i promieni znajdują się w `iOS/Sources/Tokens/Spacings.swift` oraz `iOS/Sources/Tokens/Radiuses.swift`. Szczegóły mapowania i ograniczenia opisano w `UI-DESIGN-NOTES.md`.
 
 ## Następne kroki
 
-1. Zweryfikować dokładne kolory, typografię, odstępy, piktogramy i licencje w opublikowanych zasobach.
+1. Zweryfikować dokładne kolory, typografię, odstępy i piktogramy w opublikowanych zasobach.
 2. Wydzielić komponenty wielokrotnego użytku.
 3. Dodać testy UI i sprawdzanie dostępności.
 4. Utrzymać wyraźne oznaczenie prototypu, dopóki nie zostanie zbudowana rzeczywista i uprawniona integracja z usługami.
