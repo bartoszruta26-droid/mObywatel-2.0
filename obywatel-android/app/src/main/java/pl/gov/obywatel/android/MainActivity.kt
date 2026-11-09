@@ -152,7 +152,12 @@ private fun HomeScreen() {
     fun openService(title: String) {
         when (title) {
             "Dokumenty" -> showDemoDocuments = true
-            "Ustawienia" -> showSettingsMenu = true
+            "Ustawienia" -> {
+                selectedTab = 2
+                showSettingsMenu = false
+                showDemoDocuments = false
+                selectedDocumentId = null
+            }
             "Zaświadczenia" -> showCertificates = true
             else -> activeService = title
         }
@@ -190,7 +195,12 @@ private fun HomeScreen() {
                     )
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
-                            if (selectedTab == 0) Header(onOpenSettings = { showSettingsMenu = true })
+                            if (selectedTab == 0) Header(onOpenSettings = {
+                                selectedTab = 2
+                                showSettingsMenu = false
+                                showDemoDocuments = false
+                                selectedDocumentId = null
+                            })
                             Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) PrototypeNotice()
