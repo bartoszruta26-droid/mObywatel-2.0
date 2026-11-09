@@ -618,10 +618,14 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit) {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
     }
     val groups = listOf(
-        Triple("Dane osobowe", Icons.Filled.AccountCircle, listOf("firstNames", "lastName", "birthDate", "pesel")),
-        Triple("Dokumenty tożsamości", Icons.Filled.CreditCard, listOf("idNumber", "passportNumber")),
-        Triple("Legitymacje i uprawnienia", Icons.Filled.Badge, listOf("mpCardNumber", "trainingCardNumber", "studentCardNumber")),
-        Triple("Orzeczenia i zaświadczenia", Icons.Filled.Description, listOf("disabilityDecisionNumber", "disabilityAuthorityName"))
+        Triple("Dane osobowe profilu", Icons.Filled.AccountCircle, listOf("firstNames", "lastName", "birthDate", "pesel")),
+        Triple("Dowód osobisty — ewidencja", Icons.Filled.CreditCard, listOf("idNumber", "idStatus")),
+        Triple("Paszport — ewidencja", Icons.Filled.Public, listOf("passportNumber", "passportStatus")),
+        Triple("Dokument rodowy — ewidencja prywatna", Icons.Filled.Fingerprint, listOf("familyDocNumber", "familyName")),
+        Triple("Legitymacja poselska — ewidencja", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
+        Triple("Legitymacja kursanta", Icons.Filled.Description, listOf("trainingCardNumber", "trainingInstitution")),
+        Triple("Legitymacja studencka — ewidencja", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
+        Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName"))
     )
     val populatedCount = groups.count { (_, _, keys) -> keys.any { !fields[it].isNullOrBlank() } }
     Column(
@@ -653,7 +657,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
                 Column(Modifier.padding(14.dp)) {
-                    Text("$populatedCount / 4", color = Navy, style = MaterialTheme.typography.headlineSmall,
+                    Text("$populatedCount / 8", color = Navy, style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold)
                     Text("obszary z danymi", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
@@ -683,7 +687,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit) {
                     }
                     Column(Modifier.weight(1f).padding(start = 12.dp)) {
                         Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
-                        Text(if (hasData) "Zapisano dane ewidencyjne" else "Brak zapisanych danych",
+                        Text(if (hasData) "Dane zapisane lokalnie • ewidencja prywatna" else "Brak zapisanych danych",
                             color = Muted, style = MaterialTheme.typography.bodySmall)
                     }
                     Text(if (hasData) "Dane" else "Dodaj", color = Blue,
