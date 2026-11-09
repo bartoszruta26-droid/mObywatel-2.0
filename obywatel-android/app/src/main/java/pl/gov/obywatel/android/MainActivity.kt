@@ -493,12 +493,6 @@ private fun HomeScreen() {
                     showCertificates = false
                 }
             )
-            Text(
-                "Aplikacja obywatelska • dane urzędowe wymagają potwierdzenia przez właściwy dokument lub rejestr",
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
-                color = Muted,
-                style = MaterialTheme.typography.labelSmall
-            )
         }
         pendingImport?.let { incoming ->
             AlertDialog(
