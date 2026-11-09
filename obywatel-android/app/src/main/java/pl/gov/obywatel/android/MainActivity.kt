@@ -506,6 +506,80 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Orzeczenie o niepełnosprawności — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Podmiot orzekający / wystawca", color = Navy, fontWeight = FontWeight.SemiBold)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("powiat" to "Zespół powiatowy", "fundacja" to "Zespół fundacyjny").forEach { (value, label) ->
+                        val selected = (fields["disabilityAuthorityType"] ?: "powiat") == value
+                        Box(
+                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                                .background(if (selected) BlueLight else Color(0xFFF1F3F5))
+                                .border(1.dp, if (selected) Blue else Border, RoundedCornerShape(10.dp))
+                                .clickable { fields["disabilityAuthorityType"] = value }
+                                .padding(horizontal = 9.dp, vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(label, color = if (selected) Navy else Muted, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
+                DemoDataField("disabilityAuthorityName", "Pełna nazwa zespołu / organu", fields)
+                if ((fields["disabilityAuthorityType"] ?: "powiat") == "powiat") {
+                    DemoDataField("disabilityCounty", "Powiat / miasto na prawach powiatu", fields)
+                    DemoDataField("disabilityLegalBasis", "Podstawa prawna", fields, "Ustawa z 27.08.1997 r. i przepisy wykonawcze")
+                    Text("Wpisz dane rzeczywistego właściwego zespołu i rozstrzygnięcia.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                } else {
+                    DemoDataField("disabilityFoundationName", "Fundacja / jednostka organizacyjna", fields)
+                    DemoDataField("disabilityFoundationStatute", "Postanowienie statutu fundacji", fields)
+                    DemoDataField("disabilityFoundationResolution", "Numer i data uchwały powołującej zespół", fields)
+                    DemoDataField("disabilityFoundationRules", "Regulamin zespołu / procedura oceny", fields)
+                    DemoDataField("disabilityFoundationLegalBasis", "Inna podstawa działania / uchwały", fields)
+                }
+                Text("Dane osoby i rozstrzygnięcia", color = Navy, fontWeight = FontWeight.SemiBold)
+                DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / rozstrzygnięcia", fields)
+                DemoDataField("disabilityDecisionDate", "Data wydania", fields, "DD-MM-RRRR")
+                DemoDataField("disabilityDecisionPlace", "Miejsce wydania", fields)
+                DemoDataField("disabilityPersonName", "Osoba, której dotyczy orzeczenie", fields, "Imię i nazwisko")
+                DemoDataField("disabilityBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
+                DemoDataField("disabilityPeselOrId", "PESEL / identyfikator ewidencyjny", fields)
+                Text("Ustalony status / stopień", color = Navy, fontWeight = FontWeight.SemiBold)
+                DemoDataField("disabilityCategory", "Kategoria", fields, "np. osoba do 16 lat / osoba powyżej 16 lat")
+                DemoDataField("disabilityDegree", "Stopień niepełnosprawności", fields, "znaczny / umiarkowany / lekki / nie dotyczy")
+                DemoDataField("disabilityCauseCodes", "Symbole przyczyn (maks. 3 w orzeczeniu powiatowym)", fields, "np. 05-R, 10-N")
+                DemoDataField("disabilityValidity", "Okres, na jaki ustalono status", fields, "na stałe / do DD-MM-RRRR")
+                DemoDataField("disabilityFromDate", "Data, od której ustalono niepełnosprawność", fields, "DD-MM-RRRR")
+                Text("Wskazania i potrzeby wsparcia", color = Navy, fontWeight = FontWeight.SemiBold)
+                DemoDataField("disabilityEmployment", "Wskazania dotyczące zatrudnienia", fields)
+                DemoDataField("disabilityTraining", "Wskazania dotyczące szkolenia", fields)
+                DemoDataField("disabilityTherapy", "Terapia zajęciowa / rehabilitacja", fields)
+                DemoDataField("disabilityAssistiveDevices", "Przedmioty ortopedyczne / środki pomocnicze", fields)
+                DemoDataField("disabilityCare", "Opieka / pomoc innej osoby", fields)
+                DemoDataField("disabilityMobility", "Środowiskowy system wsparcia", fields)
+                DemoDataField("disabilityParking", "Wskazania dotyczące karty parkingowej", fields)
+                Text("Skład i podpisy", color = Navy, fontWeight = FontWeight.SemiBold)
+                DemoDataField("disabilityMedicalAssessment", "Lekarz / osoba dokonująca oceny", fields)
+                DemoDataField("disabilityPanelMembers", "Skład zespołu / osoby uczestniczące w ocenie", fields)
+                DemoDataField("disabilityChairperson", "Przewodniczący zespołu", fields)
+                DemoDataField("disabilitySignature", "Osoba podpisująca / zatwierdzająca", fields)
+                DemoDataField("disabilityAppealInfo", "Tryb odwołania / weryfikacji", fields)
+                Text("Podgląd informacyjny", color = Navy, fontWeight = FontWeight.Bold)
+                DisabilityDecisionPreview(fields)
+                Text(
+                    if ((fields["disabilityAuthorityType"] ?: "powiat") == "fundacja")
+                        "WAŻNE: dokument zespołu fundacyjnego jest prywatnym rozstrzygnięciem lub oceną na potrzeby celów określonych w statucie, regulaminie i uchwałach fundacji. Nie jest orzeczeniem powiatowego zespołu w rozumieniu ustawy i samodzielnie nie przyznaje ulg, świadczeń ani uprawnień publicznoprawnych. Nie wolno przedstawiać go jako dokumentu organu administracji."
+                    else
+                        "Orzeczenie powiatowego zespołu wywołuje skutki przewidziane w przepisach. Ten ekran jest wyłącznie lokalną kartą ewidencyjną i podglądem danych — nie weryfikuje autentyczności ani nie zastępuje oryginału orzeczenia.",
+                    color = Color(0xFF805000), style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Dane paszportowe", color = Navy, fontWeight = FontWeight.Bold)
                 DemoDataField("passportNumber", "Numer paszportu", fields)
                 DemoDataField("passportCountry", "Państwo wydania", fields)
@@ -659,6 +733,52 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
         color = Muted,
         style = MaterialTheme.typography.bodySmall
     )
+}
+
+@Composable
+private fun DisabilityDecisionPreview(fields: Map<String, String>) {
+    val isFoundation = (fields["disabilityAuthorityType"] ?: "powiat") == "fundacja"
+    val person = fields["disabilityPersonName"].orEmpty().ifBlank { "OSOBA, KTÓREJ DOTYCZY WPIS" }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = if (isFoundation) Color(0xFFF0EBF7) else Color(0xFFE8F0F7)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Text(
+                if (isFoundation) "ORZECZENIE / OCENA FUNDACYJNA" else "DANE ORZECZENIA POWIATOWEGO",
+                color = if (isFoundation) Color(0xFF51416E) else Navy,
+                fontWeight = FontWeight.ExtraBold,
+                style = MaterialTheme.typography.labelLarge
+            )
+            Text(fields["disabilityAuthorityName"].orEmpty().ifBlank {
+                if (isFoundation) "ZESPÓŁ POWOŁANY PRZEZ FUNDACJĘ" else "POWIATOWY ZESPÓŁ DO SPRAW ORZEKANIA"
+            }, color = Ink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+            Text(person, color = Ink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Text("Nr: " + fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" } +
+                "   Data: " + fields["disabilityDecisionDate"].orEmpty().ifBlank { "—" },
+                color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text("Stopień / kategoria: " + fields["disabilityDegree"].orEmpty().ifBlank {
+                fields["disabilityCategory"].orEmpty().ifBlank { "—" }
+            }, color = Ink, style = MaterialTheme.typography.bodyMedium)
+            Text("Przyczyny / symbole: " + fields["disabilityCauseCodes"].orEmpty().ifBlank { "—" },
+                color = Ink, style = MaterialTheme.typography.bodySmall)
+            Text("Okres: " + fields["disabilityValidity"].orEmpty().ifBlank { "—" },
+                color = Ink, style = MaterialTheme.typography.bodySmall)
+            Box(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp))
+                    .background(if (isFoundation) Color(0xFF51416E) else Color(0xFF315A78))
+                    .padding(horizontal = 8.dp, vertical = 7.dp)
+            ) {
+                Text(
+                    if (isFoundation) "DOKUMENT WEWNĘTRZNY FUNDACJI • BEZ STATUSU ORZECZENIA USTAWOWEGO"
+                    else "PODGLĄD EWIDENCYJNY • NIE ZASTĘPUJE ORYGINAŁU",
+                    color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
 }
 
 @Composable
