@@ -23,6 +23,35 @@ class VCardCodecTest {
     }
 
     @Test
+    fun importsStandardVCardThreePointZeroIntoProfileFields() {
+        val input = """BEGIN:VCARD
+VERSION:3.0
+N:Kowalski;Jan;Adam;;
+FN:Jan Adam Kowalski
+TEL;TYPE=CELL:+48123456789
+EMAIL;TYPE=HOME:jan@example.com
+ORG:Fundacja Aria
+TITLE:Dyrektor
+URL:https://example.org
+END:VCARD
+"""
+        val imported = VCardCodec.decodeForImport(input)
+        assertEquals("Jan Adam", imported["firstNames"])
+        assertEquals("Kowalski", imported["lastName"])
+        assertEquals("+48123456789", imported["contactPhone"])
+        assertEquals("jan@example.com", imported["contactEmail"])
+        assertEquals("Fundacja Aria", imported["contactOrganization"])
+        assertEquals("Dyrektor", imported["contactTitle"])
+        assertEquals("https://example.org", imported["contactUrl"])
+    }
+
+    @Test
+    fun importsApplicationArchiveWithoutLosingCustomProfileFields() {
+        val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski", "pesel" to "123")
+        assertEquals(source, VCardCodec.decodeForImport(VCardCodec.encodeArchive(source)))
+    }
+
+    @Test
     fun owdRecordRoundTripsThroughVCardExtensions() {
         val record = ShareableRecord(
             schema = OwdSchemaRegistry.DISABILITY_STATUS,
