@@ -141,6 +141,7 @@ private fun HomeScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
+    var showDocumentsEditor by remember { mutableStateOf(false) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
@@ -159,7 +160,11 @@ private fun HomeScreen() {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {
-                    showDemoDocuments -> DemoDocumentsScreen(onBack = { showDemoDocuments = false })
+                    showDocumentsEditor -> DemoDocumentsScreen(onBack = { showDocumentsEditor = false })
+                    showDemoDocuments -> DocumentsWalletScreen(
+                        onBack = { showDemoDocuments = false },
+                        onEdit = { showDocumentsEditor = true }
+                    )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false })
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
                     activeService != null -> ServiceDetailScreen(
@@ -607,6 +612,94 @@ private fun CertificatesScreen(onBack: () -> Unit) {
 }
 
 @Composable
+private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit) {
+    val context = LocalContext.current
+    val fields = remember {
+        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
+    }
+    val groups = listOf(
+        Triple("Dane osobowe", Icons.Filled.AccountCircle, listOf("firstNames", "lastName", "birthDate", "pesel")),
+        Triple("Dokumenty tożsamości", Icons.Filled.CreditCard, listOf("idNumber", "passportNumber")),
+        Triple("Legitymacje i uprawnienia", Icons.Filled.Badge, listOf("mpCardNumber", "trainingCardNumber", "studentCardNumber")),
+        Triple("Orzeczenia i zaświadczenia", Icons.Filled.Description, listOf("disabilityDecisionNumber", "disabilityAuthorityName"))
+    )
+    val populatedCount = groups.count { (_, _, keys) -> keys.any { !fields[it].isNullOrBlank() } }
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("‹  Powrót", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Portfel dokumentów", color = Navy, style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Twoja lokalna ewidencja danych i dokumentów", color = Muted,
+            style = MaterialTheme.typography.bodyMedium)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Security, contentDescription = null, tint = Blue, modifier = Modifier.size(30.dp))
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                    Text("Dane przechowywane na urządzeniu", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Wpisy są lokalną ewidencją. Aplikacja nie weryfikuje dokumentów ani statusów w rejestrach publicznych.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.padding(14.dp)) {
+                    Text("$populatedCount / 4", color = Navy, style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold)
+                    Text("obszary z danymi", color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.padding(14.dp)) {
+                    Text("Lokalnie", color = Navy, style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold)
+                    Text("sposób przechowywania", color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        Text("Twoje dokumenty i dane", color = Navy, style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold)
+        groups.forEach { (title, icon, keys) ->
+            val hasData = keys.any { !fields[it].isNullOrBlank() }
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(BlueLight),
+                        contentAlignment = Alignment.Center) {
+                        Icon(icon, contentDescription = null, tint = Blue, modifier = Modifier.size(24.dp))
+                    }
+                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                        Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
+                        Text(if (hasData) "Zapisano dane ewidencyjne" else "Brak zapisanych danych",
+                            color = Muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                    Text(if (hasData) "Dane" else "Dodaj", color = Blue,
+                        style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        androidx.compose.material3.Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
+            Text("Edytuj dane i podgląd")
+        }
+        Text("Wersja obywatelska prototypu. Karty w tym portfelu nie są dokumentami państwowymi, nie nadają uprawnień i nie zastępują oryginałów.",
+            color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
 private fun DemoDocumentsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val fields = remember {
@@ -635,7 +728,7 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "‹  Powrót do usług",
+            text = "‹  Powrót do portfela",
             color = Blue,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
