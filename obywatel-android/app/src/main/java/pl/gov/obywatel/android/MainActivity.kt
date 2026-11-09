@@ -138,6 +138,7 @@ private data class ServiceItem(
 
 private val services = listOf(
     ServiceItem("Portfel", "Wszystkie dokumenty i ewidencje", R.drawable.mob_document_check, category = "Dokumenty"),
+    ServiceItem("Odpis z rejestru podmiotów", "Dane spółki, fundacji, kościoła i instytucji szkoleniowej", fallbackIcon = Icons.Filled.AccountBalance, category = "Rejestry"),
     ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad, category = "Transport"),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health, category = "Zdrowie"),
@@ -313,6 +314,9 @@ private fun HomeScreen() {
                     )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
+                    activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
+                        onBack = { activeService = null }
+                    )
                     activeService != null -> ServiceDetailScreen(
                         title = activeService!!,
                         onBack = { activeService = null },
@@ -395,7 +399,7 @@ private fun HomeScreen() {
                                         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        listOf("Wszystkie", "Zdrowie", "Kierowca i pojazdy", "Sprawy urzędowe", "Rodzina", "Edukacja", "Praca", "Finanse i podatki", "Transport", "Nieruchomości", "Środowisko", "Bezpieczeństwo", "Prawo i obywatel", "Kultura i dziedzictwo", "Sport", "Organizacje społeczne", "Kościół i wspólnoty", "Dokumenty", "Podróże", "Pozostałe")
+                                        listOf("Wszystkie", "Zdrowie", "Kierowca i pojazdy", "Sprawy urzędowe", "Rodzina", "Edukacja", "Praca", "Finanse i podatki", "Transport", "Nieruchomości", "Środowisko", "Bezpieczeństwo", "Prawo i obywatel", "Kultura i dziedzictwo", "Sport", "Organizacje społeczne", "Kościół i wspólnoty", "Rejestry", "Dokumenty", "Podróże", "Pozostałe")
                                             .forEach { category ->
                                                 val active = serviceCategory == category
                                                 Box(
@@ -2333,6 +2337,120 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
     }
 }
 
+
+@Composable
+private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val fields = remember {
+        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
+    }
+    var selectedEntity by remember { mutableStateOf("company") }
+    var status by remember { mutableStateOf("") }
+    val sections = listOf(
+        "company" to "Spółka z ograniczoną odpowiedzialnością — KRS",
+        "foundation" to "Fundacja — KRS",
+        "church" to "Kościół / związek wyznaniowy — rejestr poza KRS",
+        "training" to "Instytucja szkoleniowa — rejestr poza KRS"
+    )
+    val fieldSets = mapOf(
+        "company" to listOf(
+            Triple("registryCompanyName", "Pełna firma spółki", "Nazwa zgodna z odpisem"),
+            Triple("registryCompanyKrs", "Numer KRS", "0000000000"),
+            Triple("registryCompanyNip", "NIP", "0000000000"),
+            Triple("registryCompanyRegon", "REGON", "000000000"),
+            Triple("registryCompanySeat", "Siedziba", "Miejscowość"),
+            Triple("registryCompanyAddress", "Adres siedziby", "Ulica, numer, kod, miejscowość"),
+            Triple("registryCompanyCourt", "Sąd rejestrowy", "Nazwa sądu"),
+            Triple("registryCompanyDate", "Data wpisu / odpisu", "DD-MM-RRRR"),
+            Triple("registryCompanyCapital", "Kapitał zakładowy", "Kwota i waluta"),
+            Triple("registryCompanyRepresentation", "Sposób reprezentacji", "Zasady reprezentacji"),
+            Triple("registryCompanyBoard", "Zarząd", "Imiona, nazwiska, funkcje"),
+            Triple("registryCompanyActivity", "Przedmiot działalności / PKD", "Opis lub kody PKD")
+        ),
+        "foundation" to listOf(
+            Triple("registryFoundationName", "Nazwa fundacji", "Nazwa zgodna z odpisem"),
+            Triple("registryFoundationKrs", "Numer KRS", "0000000000"),
+            Triple("registryFoundationNip", "NIP", "0000000000"),
+            Triple("registryFoundationRegon", "REGON", "000000000"),
+            Triple("registryFoundationSeat", "Siedziba", "Miejscowość"),
+            Triple("registryFoundationAddress", "Adres", "Ulica, numer, kod, miejscowość"),
+            Triple("registryFoundationCourt", "Sąd rejestrowy", "Nazwa sądu"),
+            Triple("registryFoundationDate", "Data wpisu / odpisu", "DD-MM-RRRR"),
+            Triple("registryFoundationPurpose", "Cele statutowe", "Cele fundacji"),
+            Triple("registryFoundationBoard", "Zarząd fundacji", "Imiona, nazwiska, funkcje"),
+            Triple("registryFoundationRepresentation", "Sposób reprezentacji", "Zasady reprezentacji"),
+            Triple("registryFoundationPublicBenefit", "Status OPP", "Tak / nie / data")
+        ),
+        "church" to listOf(
+            Triple("registryChurchName", "Pełna nazwa kościoła / związku", "Nazwa"),
+            Triple("registryChurchRegister", "Nazwa właściwego rejestru", "Rejestr kościołów i innych związków wyznaniowych lub inny właściwy rejestr"),
+            Triple("registryChurchNumber", "Numer wpisu / pozycja rejestru", "Numer"),
+            Triple("registryChurchAuthority", "Organ prowadzący rejestr", "Nazwa organu"),
+            Triple("registryChurchDate", "Data wpisu / zaświadczenia", "DD-MM-RRRR"),
+            Triple("registryChurchSeat", "Siedziba", "Miejscowość"),
+            Triple("registryChurchAddress", "Adres", "Adres"),
+            Triple("registryChurchLegalBasis", "Podstawa prawna / status", "Podstawa"),
+            Triple("registryChurchRepresentation", "Osoby uprawnione do reprezentacji", "Imiona, nazwiska, funkcje"),
+            Triple("registryChurchDocument", "Dokument źródłowy", "Nazwa i data dokumentu")
+        ),
+        "training" to listOf(
+            Triple("registryTrainingName", "Pełna nazwa instytucji szkoleniowej", "Nazwa"),
+            Triple("registryTrainingRegister", "Rejestr / ewidencja", "Np. RIS, BUR lub inny właściwy rejestr"),
+            Triple("registryTrainingNumber", "Numer wpisu / identyfikator", "Numer"),
+            Triple("registryTrainingAuthority", "Organ / operator rejestru", "Nazwa"),
+            Triple("registryTrainingNip", "NIP", "0000000000"),
+            Triple("registryTrainingRegon", "REGON", "000000000"),
+            Triple("registryTrainingSeat", "Siedziba i adres", "Adres"),
+            Triple("registryTrainingDate", "Data wpisu / aktualizacji", "DD-MM-RRRR"),
+            Triple("registryTrainingScope", "Zakres działalności szkoleniowej", "Zakres"),
+            Triple("registryTrainingAccreditation", "Akredytacje / uprawnienia", "Nazwa, zakres, numer, data"),
+            Triple("registryTrainingDocument", "Dokument źródłowy", "Nazwa i data dokumentu")
+        )
+    )
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("‹  Menu główne", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Odpis z rejestru podmiotów", color = Navy, style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Ewidencja danych identyfikacyjnych i rejestrowych podmiotów. Wybierz rodzaj podmiotu i przepisz dane z właściwego dokumentu lub rejestru.",
+            color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+            Text("Wpisy w tym module są lokalnym zapisem danych. Nie stanowią urzędowego odpisu, nie potwierdzają aktualnego statusu i nie pobierają danych z KRS ani innych rejestrów.",
+                Modifier.padding(14.dp), color = Navy, style = MaterialTheme.typography.bodySmall)
+        }
+        sections.forEach { (key, label) ->
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable { selectedEntity = key },
+                colors = CardDefaults.cardColors(containerColor = if (selectedEntity == key) BlueLight else White)
+            ) {
+                Text(label, Modifier.fillMaxWidth().padding(13.dp),
+                    color = if (selectedEntity == key) Blue else Navy,
+                    fontWeight = FontWeight.SemiBold)
+            }
+        }
+        Text(sections.first { it.first == selectedEntity }.second, color = Navy,
+            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        fieldSets[selectedEntity].orEmpty().forEach { (key, label, placeholder) ->
+            DemoDataField(key, label, fields, placeholder)
+        }
+        Divider(color = Color(0xFFDCE3EA))
+        Text("Źródło i kontrola aktualności", color = Navy, fontWeight = FontWeight.Bold)
+        DemoDataField("registry_${selectedEntity}_source", "Źródło danych / adres rejestru", fields, "Adres strony lub nazwa dokumentu")
+        DemoDataField("registry_${selectedEntity}_checked", "Data sprawdzenia", fields, "DD-MM-RRRR")
+        DemoDataField("registry_${selectedEntity}_documentDate", "Data sporządzenia odpisu / dokumentu", fields, "DD-MM-RRRR")
+        DemoDataField("registry_${selectedEntity}_notes", "Uwagi", fields, "Informacje uzupełniające")
+        Button(onClick = {
+            runCatching { DemoIdentityStore.save(context, fields.toMap()) }
+                .onSuccess { status = "Zapisano dane lokalnie i zaszyfrowano." }
+                .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
+        }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
+        if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E),
+            style = MaterialTheme.typography.bodySmall)
+    }
+}
 
 @Composable
 private fun AdditionalInformationSection(
