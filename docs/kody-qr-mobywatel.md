@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+
 # Kody QR w aplikacji rządowej mObywatel
 
 ## Do czego służy funkcja „Kod QR”
