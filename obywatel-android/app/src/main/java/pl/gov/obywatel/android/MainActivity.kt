@@ -978,8 +978,6 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
 }
 
 @Composable
-
-@Composable
 private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
     val context = LocalContext.current
     var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
@@ -1021,6 +1019,7 @@ private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
     }
 }
 
+@Composable
 private fun WebsiteQrScreen() {
     val context = LocalContext.current
     var address by remember { mutableStateOf("https://") }
@@ -1761,13 +1760,7 @@ private fun DocumentDetailsScreen(
             listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty" to "${p}Number",
                 "Kod cyfrowy" to "${p}DigitalCode", "Treść kodu kreskowego" to "${p}Barcode",
                 "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status")
-        })),
-        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..10).flatMap { n ->
-            val p = "loyalty$n"
-            listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty" to "${p}Number",
-                "Kod cyfrowy" to "${p}DigitalCode", "Treść kodu kreskowego" to "${p}Barcode",
-                "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status")
-        })),
+        }),
         Triple("Karty biblioteczne — ewidencja", "Dane kart wydanych przez różne biblioteki", listOf(
             "Biblioteka 1 — nazwa" to "library1Name", "Biblioteka 1 — numer karty" to "library1CardNumber",
             "Biblioteka 1 — typ karty" to "library1Type", "Biblioteka 1 — data wydania" to "library1IssueDate",
