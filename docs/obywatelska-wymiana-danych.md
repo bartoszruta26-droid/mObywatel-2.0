@@ -67,24 +67,33 @@ Dodano OwdSecurity.kt z podstawowymi funkcjami:
 
 Kod QR inicjuje sesję, ale nie jest dokumentem, poświadczeniem ani dowodem tożsamości. Użytkownik zachowuje kontrolę nad zakresem danych, a aplikacja jasno pokazuje ich źródło i status weryfikacji.
 
-## Kompatybilność z rządową aplikacją mObywatel — ważne ograniczenie
+## Kompatybilność QR z rządowym mObywatelem — stan faktyczny
 
-OWD nie jest obecnie kompatybilny z rządową aplikacją mObywatel. Oficjalna funkcja QR służy do przepływu, w którym aplikacja mObywatel osoby okazującej dane skanuje kod wygenerowany przez osobę lub podmiot weryfikujący, a następnie przekazuje własne dane z aplikacji mObywatel. Nie jest to ogólny czytnik kodów QR ani mechanizm importowania dowolnych danych z aplikacji zewnętrznej.
+Oficjalna dokumentacja opisuje dwa różne scenariusze, których nie wolno utożsamiać:
 
-W konsekwencji:
-- użytkownik rządowego mObywatela nie zeskanuje kodu OWD i nie zobaczy w nim automatycznie danych o stopniu niepełnosprawności ani o mandacie poselskim;
-- kod OWD jest przeznaczony dla innej instalacji obywatelskiego prototypu, która rozumie protokół OWD;
-- zwykły, jawny QR lub dokument PDF może być otwarty przez ogólny czytnik / przeglądarkę, ale nie staje się przez to wpisem ani dokumentem w rządowym mObywatelu;
-- nie wolno oznaczać danych wpisanych przez użytkownika lub przesłanych z prototypu jako potwierdzonych przez państwo.
+1. **Weryfikacja mDowodu przez QR** — osoba weryfikująca generuje kod, a właściciel mDowodu skanuje go w rządowym mObywatelu i zatwierdza przekazanie danych. W oficjalnym procesie dane pochodzą z rządowej aplikacji i rejestrów; samo zeskanowanie dowolnego QR przez mObywatela nie importuje zewnętrznych danych.
+2. **Przekazanie offline do aplikacji mWeryfikator** — regulamin mWeryfikatora opisuje wymianę danych certyfikatu z aplikacji mObywatel do aplikacji weryfikującej, także jako serię kodów QR dla określonych kombinacji Android/iOS. Certyfikat można zweryfikować lokalnie bez aktywnego Internetu; opcjonalne potwierdzenie aktualnej ważności online wymaga łączności.
 
-Oficjalna usługa przekazywania danych działa w przeciwnym kierunku: użytkownik rządowego mObywatela przekazuje dane przechowywane w tej aplikacji do systemu podmiotu, który uzyskał zgodę Ministra Cyfryzacji, przeszedł procedurę integracji, używa certyfikatów i wymaganego zaplecza. Nie jest to interfejs, przez który zewnętrzna aplikacja może wstrzyknąć własne rekordy do mObywatela.
+Wniosek: QR i transfer offline są rzeczywiście stosowane w ekosystemie mObywatela, ale w określonym, kontrolowanym protokole certyfikatów mObywatel/mWeryfikator. Nie jest to ogólny mechanizm importowania dowolnego dokumentu z aplikacji zewnętrznej do rządowego portfela.
+
+### Co wdrażamy w OWD
+
+- **OWD QR Offline**: własny, jawnie oznaczony protokół transferu pomiędzy dwiema instalacjami OWD. Może używać pojedynczego QR dla małego ładunku albo serii QR z numeracją, kontrolą kompletności i skrótem integralności dla większego ładunku. Dane są szyfrowane, a odbiorca potwierdza odbiór.
+- **Eksport dokumentu do okazania**: użytkownik może wyeksportować czytelny dokument (np. PDF) i jego podpisane poświadczenie, jeśli istnieje podpis wystawcy. Można go przekazać przez QR/plik offline. Rządowy mObywatel nie ma jednak potwierdzonego mechanizmu importu takiego pliku.
+- **Ścieżka mWeryfikator**: przygotowujemy odrębny moduł zgodności wyłącznie po uzyskaniu oficjalnej specyfikacji, warunków użycia i testowego zestawu certyfikatów. Nie będziemy generować własnych certyfikatów udających certyfikaty mObywatela ani naśladować jego kodów QR.
+- **Adapter rządowy**: pozostaje oddzielnym adapterem, uruchamianym dopiero po formalnym dopuszczeniu podmiotu, schematów i kanału przez operatora usługi.
 
 ### Dane o niepełnosprawności i mandacie poselskim
 
-Samo zaszyfrowanie lub podpisanie danych w OWD nie potwierdza ich prawdziwości. Dla stopnia niepełnosprawności wymagany byłby dokument lub elektroniczne poświadczenie wydane przez właściwy organ albo dostęp do właściwego, autoryzowanego źródła. Dla mandatu poselskiego potrzebne byłoby aktualne, wiarygodne poświadczenie pochodzące z właściwego źródła urzędowego, np. organu prowadzącego oficjalną ewidencję mandatu. Dane wpisane ręcznie przez użytkownika mogą być przekazane jako deklaracja, ale nie jako urzędowo zweryfikowany status.
+OWD może przekazać te dane offline do drugiej instalacji OWD albo wyeksportować je do dokumentu do okazania. Status musi wskazywać, czy jest to deklaracja użytkownika, kopia dokumentu, czy poświadczenie podpisane przez właściwego wystawcę. Samo zaszyfrowanie, podpisanie przez użytkownika lub przesłanie kodem QR nie nadaje statusu urzędowego.
 
-**Wniosek implementacyjny:** OWD może przekazać te informacje do drugiej obywatelskiej aplikacji. Dla użytkownika rządowego mObywatela należy przygotować odrębny, czytelny eksport (np. PDF z danymi i informacją o źródle oraz podpisanym poświadczeniem, jeśli wystawca je zapewnia) albo uzyskać formalną integrację / oficjalną ścieżkę publikacji dokumentu. Żaden z tych wariantów nie gwarantuje importu do portfela rządowej aplikacji.
+**Nie można obecnie zagwarantować, że rządowy mObywatel zeskanuje QR OWD i zaimportuje te informacje do swojego portfela.** Oficjalny proces QR mDowodu działa według protokołu operatora i w kierunku opisanym w dokumentacji. Dla danych zewnętrznych potrzebna jest oficjalna ścieżka przyjęcia, dopuszczony schemat lub integracja.
 
+### Źródła oficjalne
+
+- Ministerstwo Cyfryzacji, „Kod QR – skuteczna metoda weryfikacji mDowodu”: https://www.gov.pl/web/cyfryzacja/kod-qr--skuteczna-metoda-weryfikacji-mdowodu
+- Regulamin mWeryfikatora, opis przekazania danych i serii QR: https://www.mobywatel.gov.pl/mweryfikator.regulamin.6.0.1.pdf
+- Ministerstwo Cyfryzacji, „Informacje o aplikacji mObywatel” — warunki usługi przekazywania danych: https://www.gov.pl/web/cyfryzacja/informacje-o-aplikacji-mobywatel
 
 ## Docelowa integracja z rządowym mObywatelem — założenie projektowe
 
