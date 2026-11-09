@@ -195,11 +195,37 @@ private fun HomeScreen() {
     }
     val importVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
-            val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-                ?: error("Nie można odczytać pliku.")
-            VCardCodec.decodeArchive(raw)
-        }.onSuccess { pendingImport = it }
-            .onFailure { importStatus = "Błąd importu: ${it.message ?: "nieprawidłowy plik"}" }
+            val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                var total = 0
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    total += count
+                    require(total <= 10 * 1024 * 1024) { "Plik przekracza limit 10 MB." }
+                    output.write(buffer, 0, count)
+                }
+                output.toByteArray()
+            } ?: error("Nie można otworzyć wybranego pliku.")
+            require(bytes.isNotEmpty()) { "Wybrany plik jest pusty." }
+            val decoder = Charsets.UTF_8.newDecoder()
+                .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+            val raw = decoder.decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+            val imported = VCardCodec.decodeArchive(raw)
+            require(imported.isNotEmpty()) { "Archiwum nie zawiera danych." }
+            imported
+        }.onSuccess {
+            pendingImport = it
+            importStatus = "Plik odczytany i poprawny. Sprawdź zakres danych przed zatwierdzeniem."
+        }.onFailure {
+            pendingImport = null
+            importStatus = "Błąd importu: ${it.message ?: "nieprawidłowy plik"}"
+        }
+        else {
+            importStatus = "Import anulowany — dane lokalne pozostają bez zmian."
+        }
     }
     var selectedTab by remember { mutableIntStateOf(0) }
     var activeService by remember { mutableStateOf<String?>(null) }
@@ -447,16 +473,34 @@ private fun HomeScreen() {
             AlertDialog(
                 onDismissRequest = { pendingImport = null },
                 title = { Text("Import danych vCard") },
-                text = { Text("Plik zawiera ${incoming.size} pól. Import połączy je z danymi lokalnymi, zastępując wartości o tych samych nazwach. Sprawdź zakres przed zatwierdzeniem.") },
+                text = {
+                    val current = remember { DemoIdentityStore.load(context) }
+                    val overwritten = incoming.keys.count { current.containsKey(it) }
+                    val added = incoming.size - overwritten
+                    Text(
+                        "Plik zawiera ${incoming.size} pól. Nowe: ${added}; zastąpią istniejące: ${overwritten}. " +
+                            "Dane zostaną połączone z lokalnymi. Po zapisie aplikacja ponownie odczyta profil i porówna wszystkie wartości."
+                    )
+                },
                 confirmButton = {
                     TextButton(onClick = {
                         runCatching {
-                            val merged = DemoIdentityStore.load(context).toMutableMap().apply { putAll(incoming) }
+                            val current = DemoIdentityStore.loadStrict(context)
+                            val merged = current.toMutableMap().apply { putAll(incoming) }
                             DemoIdentityStore.save(context, merged)
-                        }.onSuccess { importStatus = "Zaimportowano ${incoming.size} pól. Dane zapisano lokalnie." }
-                            .onFailure { importStatus = "Błąd zapisu importu: ${it.message}" }
+                            val persisted = DemoIdentityStore.loadStrict(context)
+                            require(persisted == merged) {
+                                "Weryfikacja zapisu nie powiodła się. Dane lokalne nie odpowiadają importowi."
+                            }
+                            val changed = incoming.keys.count { persisted[it] == incoming[it] }
+                            require(changed == incoming.size) {
+                                "Weryfikacja importu wykazała niezgodność części pól."
+                            }
+                            "Zaimportowano i zweryfikowano ${changed} pól. Łącznie zapisano ${persisted.size} pól."
+                        }.onSuccess { importStatus = it }
+                            .onFailure { importStatus = "Błąd importu lub weryfikacji: ${it.message ?: "nieznany błąd"}" }
                         pendingImport = null
-                    }) { Text("Importuj") }
+                    }) { Text("Importuj i zweryfikuj") }
                 },
                 dismissButton = { TextButton(onClick = { pendingImport = null }) { Text("Anuluj") } }
             )
@@ -2317,11 +2361,13 @@ private object DemoIdentityStore {
     private const val FILE_NAME = "identity_profile.enc"
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
 
-    fun load(context: Context): Map<String, String> = runCatching {
+    fun load(context: Context): Map<String, String> = runCatching { loadStrict(context) }.getOrElse { emptyMap() }
+
+    fun loadStrict(context: Context): Map<String, String> {
         val file = File(context.noBackupFilesDir, FILE_NAME)
         if (!file.exists()) return emptyMap()
         val encrypted = file.readBytes()
-        require(encrypted.size > 12) { "Nieprawidłowy zaszyfrowany plik" }
+        require(encrypted.size > 12) { "Nieprawidłowy zaszyfrowany plik profilu." }
         val iv = encrypted.copyOfRange(0, 12)
         val ciphertext = encrypted.copyOfRange(12, encrypted.size)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
@@ -2331,10 +2377,12 @@ private object DemoIdentityStore {
         val keys = json.keys()
         while (keys.hasNext()) {
             val key = keys.next()
-            result[key] = json.optString(key, "")
+            require(key.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowa nazwa pola profilu." }
+            require(!json.isNull(key)) { "Pole profilu zawiera wartość pustą typu null." }
+            result[key] = json.getString(key)
         }
         result
-    }.getOrElse { emptyMap() }
+    }
 
     fun save(context: Context, values: Map<String, String>) {
         val json = JSONObject()
