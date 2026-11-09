@@ -87,12 +87,13 @@ class MainActivity : ComponentActivity() {
 private data class ServiceItem(
     val title: String,
     val subtitle: String,
-    val icon: Int,
+    val icon: Int? = null,
+    val fallbackIcon: ImageVector? = null,
     val tint: Color = Blue
 )
 
 private val services = listOf(
-    ServiceItem("Dokumenty", "Portfel demonstracyjny", R.drawable.mob_pesel_check),
+    ServiceItem("Dokumenty", "Portfel demonstracyjny", R.drawable.mob_document_check),
     ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health),
@@ -100,8 +101,8 @@ private val services = listOf(
     ServiceItem("Bilety", "Bilety i przejazdy", R.drawable.mob_ticket),
     ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", R.drawable.mob_cyber_safety),
     ServiceItem("Środowisko", "Informacje środowiskowe", R.drawable.mob_environment),
-    ServiceItem("Ustawienia", "Preferencje aplikacji", R.drawable.mob_penalties),
-    ServiceItem("Pozostałe", "Więcej modułów", R.drawable.mob_pesel_lock)
+    ServiceItem("Ustawienia", "Preferencje aplikacji", fallbackIcon = Icons.Filled.Settings),
+    ServiceItem("Pozostałe", "Więcej modułów", fallbackIcon = Icons.Filled.MoreHoriz)
 )
 
 @Composable
@@ -225,7 +226,11 @@ private fun ServiceCard(item: ServiceItem) {
                 modifier = Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(BlueLight),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(painter = painterResource(item.icon), contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp))
+                if (item.icon != null) {
+                    Icon(painter = painterResource(item.icon), contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp))
+                } else {
+                    item.fallbackIcon?.let { Icon(it, contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp)) }
+                }
             }
             Column {
                 Text(item.title, color = Navy, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
