@@ -172,3 +172,10 @@ Kontrola wykonana statycznie na kodzie źródłowym: usunięto jedyną wykrytą 
 - Uporządkować pola dat, statusów i źródeł potwierdzenia oraz walidację formatów lokalnych.
 - Dodać osobny moduł zarządzania fotografią profilową i przygotować wymienne zasoby marki; oficjalne godło i pieczęć wdrożyć dopiero po dostarczeniu zatwierdzonych plików źródłowych.
 - Zachować wyraźne rozdzielenie ewidencji prywatnej, dokumentów wystawianych przez uprawnione podmioty i integracji urzędowych.
+
+
+## Ujednolicenie opisów nawigacji formularza
+
+Doprecyzowano opisy ekranów zgodnie z rzeczywistym przepływem: karta Ustawienia na ekranie Profil otwiera wspólne menu zarządzania danymi, a formularz dokumentów wraca do menu Ustawienia (nie do portfela). Zapobiega to mylnemu sugerowaniu alternatywnej ścieżki edycji. Portfel i szczegóły dokumentów pozostają ekranami tylko do odczytu.
+
+Przegląd wykonano statycznie na aktualnym kodzie źródłowym. Nie uruchamiano kompilacji ani testów budowania.
