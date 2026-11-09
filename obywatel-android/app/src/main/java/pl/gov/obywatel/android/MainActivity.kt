@@ -63,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -240,7 +241,7 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
     val items = listOf(
         Triple("Start", Icons.Filled.Home, 0),
         Triple("Usługi", Icons.Filled.Fingerprint, 1),
-        Triple("Profil", R.drawable.mob_pesel_check, 2)
+        Triple("Profil", Icons.Filled.AccountCircle, 2)
     )
     Row(
         modifier = Modifier.fillMaxWidth().background(White)
