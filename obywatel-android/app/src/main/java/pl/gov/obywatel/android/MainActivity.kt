@@ -1132,7 +1132,7 @@ private fun DocumentDetailsScreen(
                             .clickable { onOpenService(serviceTitle) }.padding(vertical = 9.dp, horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.OpenInNew, contentDescription = null, tint = Blue, modifier = Modifier.size(19.dp))
+                        Icon(Icons.Filled.MoreHoriz, contentDescription = null, tint = Blue, modifier = Modifier.size(19.dp))
                         Text(serviceTitle, color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 9.dp))
                     }
                 }
