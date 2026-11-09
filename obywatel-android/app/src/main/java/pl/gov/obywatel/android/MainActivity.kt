@@ -12,6 +12,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
@@ -420,6 +422,17 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit) {
     var purpose by remember { mutableStateOf("Przekazanie danych wskazanemu odbiorcy") }
     var offerQr by remember { mutableStateOf<Bitmap?>(null) }
     var sessionMessage by remember { mutableStateOf("Wybierz zakres danych i zapoznaj się z informacją o ich pochodzeniu.") }
+    val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+        val scanned = result.contents
+        if (scanned != null) {
+            sessionMessage = runCatching {
+                val offer = OwdSecurity.validateOffer(scanned)
+                "Rozpoznano ofertę OWD. Sesja: ${offer.getString("sessionId").take(12)}… Odbiorca musi jeszcze zaakceptować zakres i cel przed przyjęciem danych."
+            }.getOrElse { "Kod QR nie jest prawidłową lub aktywną ofertą OWD: ${it.message ?: "błąd walidacji"}" }
+        } else {
+            sessionMessage = "Skanowanie anulowano."
+        }
+    }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -478,6 +491,18 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit) {
             enabled = consent && selected.isNotEmpty() && purpose.isNotBlank(),
             modifier = Modifier.fillMaxWidth()
         ) { Text("Utwórz kod QR sesji OWD") }
+        OutlinedButton(
+            onClick = {
+                val options = ScanOptions().apply {
+                    setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+                    setPrompt("Zeskanuj kod sesji OWD drugiego urządzenia")
+                    setBeepEnabled(false)
+                    setOrientationLocked(false)
+                }
+                scanLauncher.launch(options)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Skanuj kod QR OWD") }
         Text(sessionMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
         offerQr?.let { bitmap ->
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
