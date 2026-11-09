@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -114,21 +115,22 @@ private data class ServiceItem(
     val subtitle: String,
     val icon: Int? = null,
     val fallbackIcon: ImageVector? = null,
-    val tint: Color = Blue
+    val tint: Color = Blue,
+    val category: String = "Pozostałe"
 )
 
 private val services = listOf(
-    ServiceItem("Dokumenty", "Portfel demonstracyjny", R.drawable.mob_document_check),
-    ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad),
-    ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments),
-    ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health),
-    ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport),
-    ServiceItem("Mandaty", "Ewidencja i informacje", R.drawable.mob_penalties),
-    ServiceItem("Sprawdź PESEL", "Informacje o numerze PESEL", R.drawable.mob_pesel_check),
-    ServiceItem("Zastrzeż PESEL", "Informacje o zastrzeżeniu", R.drawable.mob_pesel_lock),
-    ServiceItem("Bilety", "Bilety i przejazdy", R.drawable.mob_ticket),
-    ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", R.drawable.mob_cyber_safety),
-    ServiceItem("Środowisko", "Informacje środowiskowe", R.drawable.mob_environment),
+    ServiceItem("Dokumenty", "Portfel demonstracyjny", R.drawable.mob_document_check, category = "Dokumenty"),
+    ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad, category = "Podróże"),
+    ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
+    ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health, category = "Zdrowie"),
+    ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport, category = "Podróże"),
+    ServiceItem("Mandaty", "Ewidencja i informacje", R.drawable.mob_penalties, category = "Kierowca i pojazdy"),
+    ServiceItem("Sprawdź PESEL", "Informacje o numerze PESEL", R.drawable.mob_pesel_check, category = "Bezpieczeństwo"),
+    ServiceItem("Zastrzeż PESEL", "Informacje o zastrzeżeniu", R.drawable.mob_pesel_lock, category = "Bezpieczeństwo"),
+    ServiceItem("Bilety", "Bilety i przejazdy", R.drawable.mob_ticket, category = "Podróże"),
+    ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", R.drawable.mob_cyber_safety, category = "Bezpieczeństwo"),
+    ServiceItem("Środowisko", "Informacje środowiskowe", R.drawable.mob_environment, category = "Pozostałe"),
     ServiceItem("Ustawienia", "Preferencje i dane ewidencyjne", fallbackIcon = Icons.Filled.Settings),
     ServiceItem("Zaświadczenia", "Dokumenty i dane o uprawnieniach", fallbackIcon = Icons.Filled.Description),
     ServiceItem("Pozostałe", "Więcej modułów", fallbackIcon = Icons.Filled.MoreHoriz)
@@ -141,6 +143,8 @@ private fun HomeScreen() {
     var showDemoDocuments by remember { mutableStateOf(false) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
+    var serviceSearch by remember { mutableStateOf("") }
+    var serviceCategory by remember { mutableStateOf("Wszystkie") }
 
     fun openService(title: String) {
         when (title) {
@@ -176,16 +180,53 @@ private fun HomeScreen() {
                                 if (selectedTab == 0) PrototypeNotice()
                                 SectionHeading(
                                     if (selectedTab == 1) "Wszystkie usługi" else "Szybki dostęp",
-                                    if (selectedTab == 1) "Katalog dostępnych modułów" else "Najczęściej używane obszary"
+                                    if (selectedTab == 1) "Katalog modułów prototypu obywatelskiego" else "Najczęściej używane obszary"
                                 )
                                 Spacer(Modifier.height(12.dp))
+                                if (selectedTab == 1) {
+                                    OutlinedTextField(
+                                        value = serviceSearch,
+                                        onValueChange = { serviceSearch = it },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        label = { Text("Szukaj usługi") },
+                                        leadingIcon = { Icon(Icons.Filled.Info, contentDescription = null) }
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        listOf("Wszystkie", "Dokumenty", "Bezpieczeństwo", "Zdrowie", "Kierowca i pojazdy", "Sprawy urzędowe", "Podróże", "Pozostałe")
+                                            .forEach { category ->
+                                                val active = serviceCategory == category
+                                                Box(
+                                                    modifier = Modifier.clip(RoundedCornerShape(18.dp))
+                                                        .background(if (active) Blue else White)
+                                                        .border(1.dp, if (active) Blue else Border, RoundedCornerShape(18.dp))
+                                                        .clickable { serviceCategory = category }
+                                                        .padding(horizontal = 13.dp, vertical = 9.dp)
+                                                ) {
+                                                    Text(category, color = if (active) White else Navy,
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        fontWeight = if (active) FontWeight.Bold else FontWeight.Medium)
+                                                }
+                                            }
+                                    }
+                                    Spacer(Modifier.height(10.dp))
+                                }
+                                val visibleServices = if (selectedTab == 1) services.filter { service ->
+                                    (serviceCategory == "Wszystkie" || service.category == serviceCategory) &&
+                                        (serviceSearch.isBlank() || service.title.contains(serviceSearch, ignoreCase = true) ||
+                                            service.subtitle.contains(serviceSearch, ignoreCase = true))
+                                } else services.take(4)
                                 LazyVerticalGrid(
                                     columns = GridCells.Fixed(2),
                                     modifier = Modifier.weight(1f),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    items(if (selectedTab == 1) services else services.take(4)) { service ->
+                                    items(visibleServices) { service ->
                                         ServiceCard(service) { openService(service.title) }
                                     }
                                 }
