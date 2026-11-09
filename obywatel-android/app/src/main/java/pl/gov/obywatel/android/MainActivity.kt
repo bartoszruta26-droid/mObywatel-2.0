@@ -338,6 +338,7 @@ private fun HomeScreen() {
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null })
                     activeService == "Dokumenty Rodowe" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { activeService = null })
                     activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { activeService = null })
+                    activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null })
                     activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null })
                     activeService == "Podgląd dokumentów podpisanych" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false)
                     activeService == "Prawo wykonywania zawodu i kwalifikacje" -> ProfessionalQualificationsScreen(onBack = { activeService = null })
@@ -387,6 +388,10 @@ private fun HomeScreen() {
                         onOpenEntityDocuments = {
                             ActivityHistoryStore.record(context, "Nawigacja", "Otwarto dokumenty rejestru podmiotów")
                             activeService = "Dokumenty rejestru podmiotów"
+                        },
+                        onOpenChurchDocuments = {
+                            ActivityHistoryStore.record(context, "Nawigacja", "Otwarto Dokumenty Kościelne")
+                            activeService = "Dokumenty Kościelne"
                         }
                     )
                     else -> {
@@ -1328,7 +1333,8 @@ private fun MoreMenuScreen(
     onOpenProfessionalQualifications: () -> Unit,
     onOpenOfficialDocuments: () -> Unit,
     onOpenFamilyDocuments: () -> Unit,
-    onOpenEntityDocuments: () -> Unit
+    onOpenEntityDocuments: () -> Unit,
+    onOpenChurchDocuments: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1343,6 +1349,7 @@ private fun MoreMenuScreen(
         ProfileActionCard("Formularze dokumentów urzędowych i ubezpieczeniowych", "Akty stanu cywilnego, KDR, EKUZ, OC, KRK, podróże służbowe i kwalifikacje UE", Icons.Filled.Description, onOpenOfficialDocuments)
         ProfileActionCard("Dokumenty Rodowe", "Akty, księgi, ustrój Rodu, władze, majątek oraz dokumenty społeczne i religijne", Icons.Filled.FamilyRestroom, onOpenFamilyDocuments)
         ProfileActionCard("Dokumenty rejestru podmiotów", "Dokumenty założycielskie, rejestrowe, organów, władz i właścicieli", Icons.Filled.AccountBalance, onOpenEntityDocuments)
+        ProfileActionCard("Dokumenty Kościelne", "Posługa, Kościół jako osoba prawna, misje PDM/PUM oraz współpraca ekumeniczna", Icons.Filled.AccountBalance, onOpenChurchDocuments)
         ProfileActionCard("Certyfikaty i zaświadczenia", "Rejestr dokumentów, uprawnień i danych wystawcy", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia i komunikaty", "Informacje o statusach, przypomnieniach i ważności dokumentów", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Pomoc i instrukcje", "Obsługa aplikacji, import, eksport i bezpieczeństwo danych", Icons.Filled.Info, onOpenHelp)
