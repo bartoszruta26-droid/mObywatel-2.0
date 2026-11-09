@@ -36,3 +36,7 @@ Ekran „Dokumenty” zawiera wyłącznie formularz ewidencyjny z pustymi polami
 ### Konfiguracja, trwały zapis i zdjęcie
 
 Ekran demonstracyjny umożliwia wybranie fotografii przez systemowy selektor Androida (limit 5 MB), edycję pól osobowych/dowodu/paszportu/ewidencji poselskiej oraz jawne zapisanie całości. Zapis jest lokalny w `noBackupFilesDir`, szyfrowany AES-256-GCM z kluczem zarządzanym przez Android Keystore; aplikacja nie deklaruje uprawnień do Internetu ani nie wysyła danych. `allowBackup=false` pozostaje w manifeście. Dane są wrażliwe: to prototyp, nie audytowany sejf na dokumenty. Utrata/wyczyszczenie danych aplikacji lub odinstalowanie usuwa lokalny profil. Nie jest to cyfrowy dokument, dowód statusu publicznego ani kanał weryfikacji.
+
+### Informacje konstytucyjne w sekcji ewidencji poselskiej
+
+Sekcja wyświetla treść art. 104 ust. 1 Konstytucji RP (posłowie jako przedstawiciele Narodu; wolny mandat) oraz art. 104 ust. 2–3 (ślubowanie przed Sejmem przed rozpoczęciem sprawowania mandatu; odmowa oznacza zrzeczenie się mandatu). Dodatkowe pola pozwalają opisać datę, miejsce/okoliczności i źródło potwierdzenia ślubowania. Interfejs wyraźnie zaznacza, że Konstytucja mówi „przed Sejmem”, a nie „przed budynkiem Sejmu”; wpis o wypowiedzeniu roty przed budynkiem jest wyłącznie oświadczeniem opisującym okoliczność, nie dowodem mandatu. Samo szerokie, potoczne lub słownikowe rozumienie słowa „poseł” jako reprezentanta interesów nie jest równoznaczne z uzyskaniem konstytucyjnego mandatu posła na Sejm.
