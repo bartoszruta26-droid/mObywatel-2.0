@@ -62,7 +62,7 @@ internal class OwdDirectTcpTransport(
         socket.use {
             val output = DataOutputStream(it.getOutputStream())
             val input = DataInputStream(it.getInputStream())
-            val frame = transfer.toJson().toString().toByteArray(Charsets.UTF_8)
+            val frame = OwdTransferCodec.encode(transfer).toByteArray(Charsets.UTF_8)
             require(frame.size <= maxFrameBytes) { "Pakiet OWD przekracza dozwolony rozmiar." }
             output.writeInt(frame.size)
             output.write(frame)
@@ -96,9 +96,7 @@ internal class OwdDirectTcpTransport(
             require(frameSize in 1..maxFrameBytes) { "Nieprawidłowy rozmiar pakietu." }
             val bytes = ByteArray(frameSize)
             input.readFully(bytes)
-            val transfer = OwdSecurity.EncryptedTransfer.fromJson(
-                JSONObject(String(bytes, Charsets.UTF_8))
-            )
+            val transfer = OwdTransferCodec.decode(JSONObject(String(bytes, Charsets.UTF_8)))
             require(transfer.sessionId == expectedSessionId) { "Pakiet należy do innej sesji." }
             val plaintext = OwdSecurity.decrypt(sessionKey, transfer)
             onVerifiedPayload(transfer, plaintext)
@@ -181,4 +179,24 @@ internal object OwdReceiptCodec {
         .put("receivedAt", receivedAtEpochSeconds)
         .put("channel", channelName)
         .put("mac", macBase64)
+}
+
+internal object OwdTransferCodec {
+    fun encode(transfer: OwdSecurity.EncryptedTransfer): String = JSONObject()
+        .put("version", transfer.version)
+        .put("sessionId", transfer.sessionId)
+        .put("category", transfer.category)
+        .put("createdAt", transfer.createdAtEpochSeconds)
+        .put("iv", transfer.ivBase64)
+        .put("ciphertext", transfer.ciphertextBase64)
+        .toString()
+
+    fun decode(json: JSONObject) = OwdSecurity.EncryptedTransfer(
+        version = json.getInt("version"),
+        sessionId = json.getString("sessionId"),
+        category = json.getString("category"),
+        createdAtEpochSeconds = json.getLong("createdAt"),
+        ivBase64 = json.getString("iv"),
+        ciphertextBase64 = json.getString("ciphertext")
+    )
 }
