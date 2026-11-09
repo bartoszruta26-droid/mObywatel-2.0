@@ -640,12 +640,9 @@ private data class OwdDocumentGroup(
 )
 
 private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
-    OwdDocumentGroup("profile", "Dane osobowe profilu", listOf(
-        "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
-        "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel", "Miejsce urodzenia" to "birthPlace",
-        "Obywatelstwo" to "citizenship", "Płeć" to "sex", "Telefon" to "contactPhone",
-        "E-mail" to "contactEmail", "Organizacja" to "contactOrganization", "Stanowisko" to "contactTitle",
-        "Strona internetowa" to "contactUrl", "Adres kontaktowy" to "contactAddress",
+    OwdDocumentGroup("profile", "Profil kontaktowy i dane rodzinne", listOf(
+        "Telefon" to "contactPhone", "E-mail" to "contactEmail", "Organizacja" to "contactOrganization",
+        "Stanowisko" to "contactTitle", "Strona internetowa" to "contactUrl", "Adres kontaktowy" to "contactAddress",
         "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname",
         "Imiona matki" to "motherNames", "Nazwisko rodowe matki" to "motherSurname"
     ) + listOf("personExtra" to "Informacje dodatkowe").flatMap { (prefix, _) ->
@@ -654,6 +651,9 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
             "Uwagi" to "${prefix}Notes")
     }),
     OwdDocumentGroup("identity", "Dowód tożsamości", listOf(
+        "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
+        "Miejsce urodzenia" to "birthPlace", "Obywatelstwo" to "citizenship", "Płeć" to "sex",
+        "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel",
         "Numer dokumentu" to "idNumber", "Status" to "idStatus", "Poprzedni numer" to "idPreviousNumber",
         "Data wydania" to "idIssueDate", "Data ważności" to "idExpiryDate", "Organ wydający" to "idIssuer",
         "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
@@ -1589,8 +1589,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
     }
     val groups = listOf(
-        Triple("Dane osobowe profilu", Icons.Filled.AccountCircle, listOf("firstNames", "lastName", "birthDate", "pesel")),
-        Triple("Dowód tożsamości", Icons.Filled.CreditCard, listOf("idNumber", "idStatus")),
+        Triple("Dane osobowe profilu", Icons.Filled.AccountCircle, listOf("contactPhone", "contactEmail", "contactOrganization", "contactAddress")),
+        Triple("Dowód tożsamości", Icons.Filled.CreditCard, listOf("firstNames", "lastName", "birthDate", "pesel", "idNumber", "idStatus")),
         Triple("Dane paszportowe", Icons.Filled.Public, listOf("passportNumber", "passportStatus")),
         Triple("Dokument rodowy — ewidencja prywatna", Icons.Filled.Fingerprint, listOf("familyDocNumber", "familyName")),
         Triple("Legitymacja poselska — ewidencja", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
@@ -1715,11 +1715,16 @@ private fun DocumentDetailsScreen(
     val context = LocalContext.current
     val fields = remember { DemoIdentityStore.load(context) }
     val sections = listOf(
-        Triple("Dane osobowe profilu", "Profil osoby — ewidencja prywatna", listOf(
-            "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
-            "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel", "Miejsce urodzenia" to "birthPlace", "Obywatelstwo" to "citizenship", "Płeć — wpis deklarowany" to "sex", "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname", "Imiona matki" to "motherNames", "Nazwisko rodowe matki" to "motherSurname"
+        Triple("Dane osobowe profilu", "Profil kontaktowy i dane rodzinne — ewidencja prywatna", listOf(
+            "Telefon" to "contactPhone", "E-mail" to "contactEmail", "Organizacja" to "contactOrganization",
+            "Stanowisko" to "contactTitle", "Strona internetowa" to "contactUrl", "Adres kontaktowy" to "contactAddress",
+            "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname",
+            "Imiona matki" to "motherNames", "Nazwisko rodowe matki" to "motherSurname"
         )),
-        Triple("Dowód tożsamości — ewidencja", "Dane dokumentu tożsamości — wpis użytkownika", listOf(
+        Triple("Dowód tożsamości — ewidencja", "Podstawowe dane identyfikacyjne oraz dane dokumentu — wpis użytkownika", listOf(
+            "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
+            "Miejsce urodzenia" to "birthPlace", "Obywatelstwo" to "citizenship", "Płeć — wpis deklarowany" to "sex",
+            "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel",
             "Numer dokumentu" to "idNumber", "Status" to "idStatus",
             "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data wydania" to "idIssueDate", "Data ważności" to "idExpiryDate", "Organ wydający" to "idIssuer", "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
         )),
@@ -1979,24 +1984,16 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     if (photoBase64.isNotBlank()) Text("Usuń zdjęcie", color = Color(0xFF9B2C2C), fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoBase64 = "" }.padding(vertical = 8.dp))
                 }
                 Text("Dane osobowe", color = Navy, fontWeight = FontWeight.Bold)
-                DemoDataField("firstNames", "Imię / imiona", fields)
-                DemoDataField("lastName", "Nazwisko", fields)
-                DemoDataField("birthDate", "Data urodzenia", fields, "DD-MM-RRRR")
-                DemoDataField("birthPlace", "Miejsce urodzenia", fields)
                 DemoDataField("contactPhone", "Telefon kontaktowy", fields)
                 DemoDataField("contactEmail", "Adres poczty elektronicznej", fields)
                 DemoDataField("contactOrganization", "Organizacja", fields)
                 DemoDataField("contactTitle", "Stanowisko", fields)
                 DemoDataField("contactUrl", "Strona internetowa", fields)
                 DemoDataField("contactAddress", "Adres kontaktowy", fields)
-                DemoDataField("citizenship", "Obywatelstwo", fields)
-                DemoDataField("sex", "Płeć (dane deklarowane)", fields)
                 DemoDataField("fatherNames", "Imiona ojca", fields)
                 DemoDataField("fatherSurname", "Nazwisko ojca", fields)
                 DemoDataField("motherNames", "Imiona matki", fields)
                 DemoDataField("motherSurname", "Nazwisko rodowe matki", fields)
-                DemoDataField("birthSurname", "Nazwisko rodowe osoby", fields)
-                DemoDataField("pesel", "Numer PESEL", fields)
                 AdditionalInformationSection("Informacje dodatkowe — dane osobowe", fields, "personExtra", "Uzupełnij dane zgodnie z aktualnym dokumentem źródłowym.")
             }
         }
@@ -2038,7 +2035,16 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Dane dokumentu tożsamości", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Podstawowe dane identyfikacyjne", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("firstNames", "Imię / imiona", fields)
+                DemoDataField("lastName", "Nazwisko", fields)
+                DemoDataField("birthDate", "Data urodzenia", fields, "DD-MM-RRRR")
+                DemoDataField("birthPlace", "Miejsce urodzenia", fields)
+                DemoDataField("citizenship", "Obywatelstwo", fields)
+                DemoDataField("sex", "Płeć (dane deklarowane)", fields)
+                DemoDataField("birthSurname", "Nazwisko rodowe", fields)
+                DemoDataField("pesel", "Numer PESEL", fields)
+                Text("Dane samego dokumentu", color = Navy, fontWeight = FontWeight.Bold)
                 DemoDataField("idNumber", "Numer dokumentu tożsamości", fields)
                 DemoDataField("idIssueDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("idExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
@@ -2046,7 +2052,13 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("idStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
                 DemoDataField("idPreviousNumber", "Numer poprzedniego dokumentu (jeśli dotyczy)", fields)
                 DemoDataField("idLossOrInvalidationDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
-                AdditionalInformationSection("Informacje dodatkowe — dowód tożsamości", fields, "idExtra", "Formularz służy do uporządkowanego zapisu danych dokumentu.")
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9))) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Status dokumentu prywatnego", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
+                        Text("To prywatna karta danych identyfikacyjnych utworzona przez użytkownika. Nie jest dowodem osobistym wydanym przez państwo, nie potwierdza urzędowo tożsamości i nie zastępuje dokumentu z rejestru państwowego. Wiarygodność wpisów zależy od wskazanego źródła i jego niezależnej weryfikacji.", color = Ink, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                AdditionalInformationSection("Źródła i weryfikacja danych identyfikacyjnych", fields, "idExtra", "Wskaż dokument źródłowy i datę jego sprawdzenia. Sam wpis użytkownika nie stanowi potwierdzenia urzędowego.")
             }
         }
         }
