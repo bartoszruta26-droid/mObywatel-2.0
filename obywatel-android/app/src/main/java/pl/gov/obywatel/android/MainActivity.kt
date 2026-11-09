@@ -334,6 +334,7 @@ private fun HomeScreen() {
                     activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
                     activeService == "Historia chorób" -> MedicalHistoryRecordsScreen(onBack = { activeService = null })
                     activeService == "Historia działań" -> ActivityHistoryScreen(onBack = { activeService = null })
+                    activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null })
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
@@ -360,6 +361,10 @@ private fun HomeScreen() {
                         onOpenHistory = {
                             ActivityHistoryStore.record(context, "Nawigacja", "Otwarto historię działań")
                             activeService = "Historia działań"
+                        },
+                        onOpenSignedPdfs = {
+                            ActivityHistoryStore.record(context, "Nawigacja", "Otwarto dokumenty PDF i podpisy elektroniczne")
+                            activeService = "Dokumenty PDF i podpisy elektroniczne"
                         }
                     )
                     else -> {
@@ -1241,7 +1246,8 @@ private fun MoreMenuScreen(
     onOpenSettings: () -> Unit,
     onOpenCertificates: () -> Unit,
     onOpenHelp: () -> Unit,
-    onOpenHistory: () -> Unit
+    onOpenHistory: () -> Unit,
+    onOpenSignedPdfs: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1251,6 +1257,7 @@ private fun MoreMenuScreen(
         Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Informacje, bezpieczeństwo i ustawienia", color = Muted, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Historia działań", "Chronologiczny rejestr czynności wykonywanych w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
+        ProfileActionCard("Dokumenty PDF i podpisy elektroniczne", "Import, podgląd PDF i oznaczenia podpisu ePUAP lub kwalifikowanego", Icons.Filled.Description, onOpenSignedPdfs)
         ProfileActionCard("Certyfikaty i zaświadczenia", "Rejestr dokumentów, uprawnień i danych wystawcy", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia i komunikaty", "Informacje o statusach, przypomnieniach i ważności dokumentów", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Pomoc i instrukcje", "Obsługa aplikacji, import, eksport i bezpieczeństwo danych", Icons.Filled.Info, onOpenHelp)
