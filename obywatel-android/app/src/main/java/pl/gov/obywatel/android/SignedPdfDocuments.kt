@@ -215,7 +215,7 @@ private object SignedPdfStore {
 }
 
 @Composable
-internal fun SignedPdfDocumentsScreen(onBack: () -> Unit) {
+internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean = true) {
     val context = LocalContext.current
     var records by remember { mutableStateOf(SignedPdfStore.list(context)) }
     var selectedId by remember { mutableStateOf<String?>(null) }
@@ -262,8 +262,13 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit) {
             }
         }
         if (selected == null) {
-            Button(onClick = { pdfPicker.launch(arrayOf("application/pdf")) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Importuj dokument PDF")
+            if (allowImport) {
+                Button(onClick = { pdfPicker.launch(arrayOf("application/pdf")) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Importuj dokument PDF")
+                }
+            } else {
+                Text("Wybierz dokument z listy, aby wyświetlić jego treść i oznaczenie rodzaju podpisu.",
+                    color = Color(0xFF667085), style = MaterialTheme.typography.bodySmall)
             }
             if (records.isEmpty()) Text("Nie dodano jeszcze dokumentów PDF.", color = Color(0xFF667085))
             records.sortedByDescending { it.importedAt }.forEach { record ->
