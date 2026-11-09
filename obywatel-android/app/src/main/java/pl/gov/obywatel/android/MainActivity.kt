@@ -496,7 +496,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit) {
             }
         }
         OutlinedButton(onClick = onOpenVCard, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator wizytówki vCard") }
-        Text("Prywatność: dane nie są umieszczane w kodzie inicjującym. Odbiorca i cel muszą zostać zweryfikowani przed właściwym transferem. Dane rodzinne/rodowe pozostają poza zakresem OWD, dopóki użytkownik nie wybierze ich w odrębnym, wyraźnym przepływie.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Prywatność: dane nie są umieszczane w kodzie inicjującym. Odbiorca i cel muszą zostać zweryfikowani przed właściwym transferem. Dane rodzinne/rodowe są całkowicie wyłączone z obecnego zakresu OWD.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 
