@@ -931,6 +931,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 )
             }
         }
+        if (categoryId == "all" || categoryId == "profile") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -987,6 +988,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 AdditionalInformationSection("Informacje dodatkowe — dane osobowe", fields, "personExtra", "Dane profilu są ewidencyjne. Porównuj je z aktualnym dokumentem źródłowym; aplikacja nie potwierdza tożsamości.")
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "family") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -1014,6 +1017,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 RodowyDocumentPreview(fields = fields, photoBase64 = photoBase64)
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "identity_card") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -1032,6 +1037,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 AdditionalInformationSection("Informacje dodatkowe — dowód osobisty", fields, "idExtra", "Formularz prowadzi prywatną ewidencję danych. Nie generuje dowodu osobistego, nie potwierdza tożsamości i nie zastępuje usługi publicznej.")
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "parliament") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -1056,6 +1063,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja poselska", fields, "mpExtra", "Art. 104 Konstytucji RP określa wolny mandat poselski oraz obowiązek złożenia ślubowania przed Sejmem przed rozpoczęciem sprawowania mandatu. Odmowa ślubowania oznacza zrzeczenie się mandatu. Sam wpis użytkownika ani prywatna ewidencja nie potwierdzają uzyskania mandatu ani prawa do reprezentowania Sejmu.")
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "training") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -1087,6 +1096,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja kursanta", fields, "trainingExtra", "Legitymacja instytucji szkoleniowej potwierdza status w ewidencji wystawcy w granicach regulaminu i właściwej podstawy działania. Nie jest legitymacją studencką i sama nie nadaje statusu studenta uczelni.")
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "student") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -1113,6 +1124,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja studencka", fields, "studentExtra", "Ten formularz służy wyłącznie do ewidencji danych. Nie nadaje statusu studenta, nie potwierdza wpisu na listę studentów i nie zastępuje dokumentu ani certyfikatu wydanego przez uczelnię.")
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "disability") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -1225,6 +1238,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 })
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "passport") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -1247,6 +1262,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("passportLossDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
                 AdditionalInformationSection("Informacje dodatkowe — paszport", fields, "passportExtra", "Jest to ewidencja danych wpisanych przez użytkownika, a nie paszport ani jego cyfrowy odpowiednik. Nie odtwarzamy strefy MRZ, kodów ani zabezpieczeń dokumentu.")
             }
+        }
         }
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
