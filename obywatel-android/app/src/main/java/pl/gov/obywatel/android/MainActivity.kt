@@ -795,44 +795,58 @@ private fun DocumentDetailsScreen(
     val sections = listOf(
         Triple("Dane osobowe profilu", "Profil osoby — ewidencja prywatna", listOf(
             "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
-            "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel"
+            "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel", "Miejsce urodzenia" to "birthPlace", "Obywatelstwo" to "citizenship", "Płeć — wpis deklarowany" to "sex", "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname", "Imiona matki" to "motherNames", "Nazwisko rodowe matki" to "motherSurname"
         )),
         Triple("Dowód osobisty — ewidencja", "Dane dowodu — wpis użytkownika", listOf(
             "Numer dokumentu" to "idNumber", "Status" to "idStatus",
-            "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
+            "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data wydania" to "idIssueDate", "Data ważności" to "idExpiryDate", "Organ wydający" to "idIssuer", "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
         )),
         Triple("Paszport — ewidencja", "Dane dokumentu podróży — wpis użytkownika", listOf(
             "Numer paszportu" to "passportNumber", "Rodzaj dokumentu" to "passportType",
             "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
-            "Data utraty / unieważnienia" to "passportInvalidatedAt"
+            "Państwo wydania" to "passportCountry", "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace", "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate", "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
         )),
         Triple("Dokument rodowy — ewidencja prywatna", "Prywatna karta ewidencji rodowej", listOf(
             "Numer dokumentu rodowego" to "familyDocNumber", "Nazwa rodu" to "familyName",
             "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyRole",
-            "Prowadzący ewidencję" to "familyRegistry", "Data sporządzenia" to "familyIssueDate"
+            "Prowadzący ewidencję" to "familyRegistry", "Data sporządzenia" to "familyIssueDate", "Data przeglądu / aktualizacji" to "familyExpiryDate", "Miejsce prowadzenia ewidencji" to "familyRegistryPlace", "Miejsce zamieszkania — wpis dobrowolny" to "familyResidence", "Linia rodowa ojca" to "familyFatherLine", "Linia rodowa matki" to "familyMotherLine", "Podstawa wpisu" to "familySource", "Uwagi ewidencyjne" to "familyNotes"
         )),
         Triple("Legitymacja poselska — ewidencja", "Ewidencja informacji o legitymacji i mandacie", listOf(
             "Numer legitymacji" to "mpCardNumber", "Kadencja" to "mpTerm",
             "Wystawca" to "mpIssuer", "Status legitymacji" to "mpStatus",
-            "Źródło potwierdzenia" to "mpMandateSource"
+            "Okręg wyborczy" to "mpDistrict", "Data rozpoczęcia mandatu" to "mpStart", "Data zakończenia mandatu" to "mpEnd", "Data wydania legitymacji" to "mpCardIssueDate", "Data ślubowania" to "mpOathDate", "Miejsce ślubowania" to "mpOathPlace", "Źródło potwierdzenia ślubowania" to "mpOathEvidence", "Źródło potwierdzenia" to "mpMandateSource"
         )),
         Triple("Legitymacja kursanta", "Prywatna legitymacja instytucji szkoleniowej", listOf(
             "Numer legitymacji" to "trainingCardNumber", "Instytucja" to "trainingInstitution",
             "Nazwa kursu" to "trainingCourseName", "Status uczestnictwa" to "trainingStatus",
-            "Ważna do" to "trainingValidUntil"
+            "Adres instytucji" to "trainingInstitutionAddress", "Numer wpisu instytucji" to "trainingInstitutionRegistry", "Symbol kursu" to "trainingCourseCode", "Data rozpoczęcia" to "trainingStartDate", "Data zakończenia" to "trainingEndDate", "Data wydania legitymacji" to "trainingIssueDate", "Ważna do" to "trainingValidUntil", "Wystawca" to "trainingIssuer", "Podpis wystawcy" to "trainingSignature", "Data ukończenia" to "trainingCompletionDate", "Liczba godzin" to "trainingHours", "Wynik zaliczenia" to "trainingAssessment", "Numer zaświadczenia" to "trainingCertificateNumber", "Forma kształcenia" to "trainingForm"
         )),
         Triple("Legitymacja studencka — ewidencja", "Ewidencja danych podanych przez użytkownika", listOf(
             "Numer legitymacji" to "studentCardNumber", "Uczelnia" to "studentUniversity",
             "Kierunek" to "studentProgramme", "Rok akademicki" to "studentAcademicYear",
-            "Status" to "studentStatus", "Ważność" to "studentValidity"
+            "Adres uczelni" to "studentUniversityAddress", "Identyfikator uczelni" to "studentUniversityId", "Imię i nazwisko w dokumencie" to "studentNames", "Wydział" to "studentFaculty", "Kierunek" to "studentProgramme", "Poziom studiów" to "studentLevel", "Profil / forma studiów" to "studentProfile", "Rok i semestr" to "studentYear", "Rok akademicki" to "studentAcademicYear", "Data wydania" to "studentIssueDate", "Status" to "studentStatus", "Ważność" to "studentValidity", "Wystawca" to "studentIssuer"
         )),
         Triple("Orzeczenia i zaświadczenia", "Ewidencja informacji o rozstrzygnięciach i zaświadczeniach", listOf(
             "Numer dokumentu / sprawy" to "disabilityDecisionNumber", "Wystawca" to "disabilityAuthorityName",
             "Data dokumentu" to "disabilityDecisionDate", "Stopień / kategoria" to "disabilityDegree",
-            "Okres obowiązywania" to "disabilityValidity", "Rodzaj rozstrzygnięcia" to "disabilityDecisionType"
+            "Okres obowiązywania" to "disabilityValidity", "Rodzaj rozstrzygnięcia" to "disabilityDecisionType", "Osoba podpisująca / wystawca" to "disabilityIssuerName", "Powiat / miasto" to "disabilityCounty", "Podstawa prawna" to "disabilityLegalBasis", "Przepis określający skutki" to "disabilityLegalProvision", "Zakres uznania / równoważności" to "disabilityEquivalentEffect", "Fundacja / podmiot prowadzący" to "disabilityFoundationName", "Podstawa statutowa" to "disabilityFoundationStatute", "Kwalifikacje osoby wystawiającej" to "disabilityMedicalQualification", "Ocena medyczna" to "disabilityMedicalAssessment", "Skład zespołu" to "disabilityPanelMembers", "Przewodniczący zespołu" to "disabilityChairperson", "Osoba zatwierdzająca" to "disabilitySignature", "Tryb odwołania" to "disabilityAppealInfo", "Data wniosku" to "disabilityApplicationDate", "Numer sprawy" to "disabilityCaseNumber", "Data doręczenia" to "disabilityDeliveryDate", "Wynik odwołania" to "disabilityAppealOutcome", "Duplikat / zmiana dokumentu" to "disabilityDuplicateInfo", "Dokument źródłowy" to "disabilitySourceAttachment"
         ))
     )
     val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
+    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
+    val photoBase64 = fields["photo"].orEmpty()
+    val photoBitmap = remember(photoBase64) {
+        runCatching {
+            if (photoBase64.isBlank()) null else {
+                val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                var sample = 1
+                while (bounds.outWidth / sample > 500 || bounds.outHeight / sample > 500) sample *= 2
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+            }
+        }.getOrNull()
+    }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -854,6 +868,15 @@ private fun DocumentDetailsScreen(
                     color = Ink, style = MaterialTheme.typography.bodySmall)
             }
         }
+        if (documentId == "0" && photoBitmap != null) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Zdjęcie profilowe", color = Navy, fontWeight = FontWeight.Bold)
+                    Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie profilowe",
+                        modifier = Modifier.fillMaxWidth().height(190.dp).clip(RoundedCornerShape(10.dp)), contentScale = ContentScale.Fit)
+                }
+            }
+        }
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = White),
@@ -870,8 +893,37 @@ private fun DocumentDetailsScreen(
                 }
             }
         }
+        ReadOnlyAdditionalInformationSection(fields, extraPrefix)
         Text("Ten ekran służy wyłącznie do przeglądania. Aby zmienić wpis, wróć do ekranu głównego i otwórz menu Ustawienia. Dane są przechowywane lokalnie i nie są sprawdzane w rejestrach publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun ReadOnlyAdditionalInformationSection(fields: Map<String, String>, prefix: String) {
+    val rows = listOf(
+        "Źródło danych / dokument źródłowy" to prefix + "Source",
+        "Podstawa prawna / regulaminowa" to prefix + "LegalBasis",
+        "Data ostatniej weryfikacji" to prefix + "VerifiedAt",
+        "Podmiot / osoba potwierdzająca dane" to prefix + "VerifiedBy",
+        "Adnotacje i informacje uzupełniające" to prefix + "Notes"
+    )
+    val populated = rows.filter { !fields[it.second].isNullOrBlank() }
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F5F8))) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Źródła i informacje dodatkowe", color = Navy, fontWeight = FontWeight.Bold)
+            if (populated.isEmpty()) {
+                Text("Brak wpisów dotyczących źródła, podstawy, weryfikacji lub adnotacji.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            } else {
+                populated.forEach { (label, key) ->
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
+                        Text(fields[key].orEmpty(), color = Navy, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+            Text("Wpisane źródło lub podstawa nie oznaczają niezależnej weryfikacji danych przez aplikację.", color = Muted, style = MaterialTheme.typography.labelSmall)
+        }
     }
 }
 
