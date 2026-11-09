@@ -85,6 +85,9 @@ internal object OwdQrFrames {
             it.transferId == first.transferId && it.total == first.total && it.digest == first.digest
         }) { "Ramki pochodzą z różnych transferów." }
 
+        require(parsed.map { it.index }.toSet().size == parsed.size) {
+            "Transfer zawiera powtórzone numery ramek QR."
+        }
         val byIndex = parsed.associateBy { it.index }
         require(byIndex.size == first.total && (0 until first.total).all(byIndex::containsKey)) {
             "Brakuje ramek transferu OWD."
