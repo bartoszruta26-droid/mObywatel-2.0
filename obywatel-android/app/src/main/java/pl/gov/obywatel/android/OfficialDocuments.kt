@@ -153,7 +153,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                 Text(type.note,Modifier.padding(12.dp),color=Color(0xFF29445B),style=MaterialTheme.typography.bodySmall)
             }
             type.fields.forEachIndexed { index,label ->
-                OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
+                OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6,readOnly=readOnly)
             }
             if(type.id=="criminal_record") {
                 OutlinedButton(onClick={attachmentPicker.launch(arrayOf("application/pdf","text/xml","application/xml"))},modifier=Modifier.fillMaxWidth()) {
