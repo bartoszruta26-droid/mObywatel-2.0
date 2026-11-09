@@ -510,14 +510,14 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Oferta sesji OWD • ważność 180 sekund", color = Navy, fontWeight = FontWeight.Bold)
                     Image(bitmap.asImageBitmap(), contentDescription = "Kod QR oferty sesji OWD", modifier = Modifier.size(250.dp))
-                    Text("To inicjuje sesję kryptograficzną. Przekazanie danych i potwierdzenie odbioru wymagają jeszcze wdrożenia transportu oraz skanera po obu stronach.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text("To inicjuje sesję kryptograficzną. Skaner OWD potrafi rozpoznać i zweryfikować ofertę; wymiana kluczy, przesłanie rekordów i potwierdzenie odbioru wymagają jeszcze pełnego połączenia obu urządzeń.", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9))) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text("Status funkcjonalny — etap alfa", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
-                Text("Dostępne: selekcja pól, cel i zgoda, krótkotrwały QR inicjujący sesję oraz warstwa kryptograficzna. Jeszcze niedostępne: skanowanie OWD, wzajemna wymiana kluczy, kanał Wi-Fi/Bluetooth, przekaźnik internetowy, trwała ochrona przed powtórzeniem i wysłanie wybranych rekordów. Nie pokazujemy fikcyjnego potwierdzenia przesłania.", color = Ink, style = MaterialTheme.typography.bodySmall)
+                Text("Dostępne: selekcja pól, cel i zgoda, krótkotrwały QR, skaner QR z walidacją oferty, prymitywy ECDH/HKDF/AES-GCM, bezpośredni transport TCP, uwierzytelnione potwierdzenie i trwały rejestr sesji. Jeszcze niedostępne: spięcie nadawcy i odbiorcy w kompletny przepływ, adres urządzenia w QR, wzajemna wymiana kluczy w UI, uruchamianie odbiornika, podłączenie trwałego rejestru do przyjęcia sesji i działający serwer przekaźnikowy. Nie pokazujemy fikcyjnego potwierdzenia przesłania.", color = Ink, style = MaterialTheme.typography.bodySmall)
             }
         }
         OutlinedButton(onClick = onOpenVCard, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator wizytówki vCard") }
