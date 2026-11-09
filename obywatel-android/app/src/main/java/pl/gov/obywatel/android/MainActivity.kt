@@ -1265,8 +1265,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
     }
     val groups = listOf(
         Triple("Dane osobowe profilu", Icons.Filled.AccountCircle, listOf("firstNames", "lastName", "birthDate", "pesel")),
-        Triple("Dowód tożsamości — ewidencja", Icons.Filled.CreditCard, listOf("idNumber", "idStatus")),
-        Triple("Dane paszportowe — ewidencja", Icons.Filled.Public, listOf("passportNumber", "passportStatus")),
+        Triple("Dowód tożsamości", Icons.Filled.CreditCard, listOf("idNumber", "idStatus")),
+        Triple("Dane paszportowe", Icons.Filled.Public, listOf("passportNumber", "passportStatus")),
         Triple("Dokument rodowy — ewidencja prywatna", Icons.Filled.Fingerprint, listOf("familyDocNumber", "familyName")),
         Triple("Legitymacja poselska — ewidencja", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
         Triple("Legitymacja ucznia/studenta", Icons.Filled.Description, listOf("trainingCardNumber", "trainingInstitution")),
@@ -1365,7 +1365,12 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                         Text(if (hasData) "Dane zapisane lokalnie • ewidencja prywatna" else "Brak zapisanych danych",
                             color = Muted, style = MaterialTheme.typography.bodySmall)
                     }
-                    Text(if (hasData) "Dane" else "Dodaj", color = Blue,
+                    val actionLabel = when (index) {
+                        1 -> "Dowód tożsamości"
+                        2 -> "Dane paszportowe"
+                        else -> if (hasData) "Dane" else "Dodaj"
+                    }
+                    Text(actionLabel, color = Blue,
                         style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 }
             }
