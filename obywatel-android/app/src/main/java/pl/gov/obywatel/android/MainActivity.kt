@@ -1691,7 +1691,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
         Triple("Legitymacja ucznia/studenta — ewidencja", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
         Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName")),
         Triple("Prawo jazdy", Icons.Filled.CreditCard, listOf("dlNumber", "dlCategories", "dlExpiryDate", "dlStatus")),
-        Triple("Karta biblioteczna", Icons.Filled.MenuBook, listOf("library1Name", "library1CardNumber", "library1Status", "library2Name", "library2CardNumber", "library2Status"))
+        Triple("Karty lojalnościowe", Icons.Filled.CreditCard, listOf("loyalty1Store", "loyalty1Number", "loyalty1Barcode", "loyalty1Qr")),
+        Triple("Karta biblioteczna", Icons.Filled.Description, listOf("library1Name", "library1CardNumber", "library1Status", "library2Name", "library2CardNumber", "library2Status"))
     )
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1840,7 +1841,7 @@ private fun DocumentDetailsScreen(
         ))
     )
     val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
-    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra", "libraryExtra", "loyaltyExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
+    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra", "loyaltyExtra", "libraryExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
@@ -1874,7 +1875,7 @@ private fun DocumentDetailsScreen(
                 5 -> R.drawable.documents_course_legitimacy
                 6 -> R.drawable.documents_student_legitimacy
                 8 -> R.drawable.documents_identity_card
-                9 -> R.drawable.documents_course_legitimacy
+                9, 10 -> R.drawable.documents_course_legitimacy
                 else -> R.drawable.documents_medical_certificates
             }),
             contentDescription = "Ilustracja ewidencji: ${section.first}",
