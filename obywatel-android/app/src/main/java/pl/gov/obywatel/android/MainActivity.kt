@@ -415,8 +415,8 @@ private fun QrToolsScreen() {
     var activeGenerator by remember { mutableStateOf("owd") }
     BackHandler(enabled = activeGenerator != "owd") { activeGenerator = "owd" }
     when (activeGenerator) {
-        "vcard" -> { QrSubscreenHeader("Wróć do generatorów") { activeGenerator = "owd" }; VCardQrScreen() }
-        "url" -> { QrSubscreenHeader("Wróć do generatorów") { activeGenerator = "owd" }; WebsiteQrScreen() }
+        "vcard" -> Column(Modifier.fillMaxSize()) { QrSubscreenHeader("Wróć do generatorów") { activeGenerator = "owd" }; Box(Modifier.weight(1f)) { VCardQrScreen() } }
+        "url" -> Column(Modifier.fillMaxSize()) { QrSubscreenHeader("Wróć do generatorów") { activeGenerator = "owd" }; Box(Modifier.weight(1f)) { WebsiteQrScreen() } }
         else -> OwdHubScreen(onOpenVCard = { activeGenerator = "vcard" }, onOpenWebsite = { activeGenerator = "url" })
     }
 }
