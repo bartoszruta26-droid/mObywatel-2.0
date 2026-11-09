@@ -465,8 +465,9 @@ private fun generateBrandedQr(context: Context, payload: String, branding: Strin
         else -> null
     } ?: return bitmap
     val canvas = Canvas(bitmap)
-    val outer = bitmap.width * 0.235f
-    val inner = bitmap.width * 0.175f
+    // Central logo overlay: compact white quiet zone preserves more QR modules for scanning.
+    val outer = bitmap.width * 0.20f
+    val inner = bitmap.width * 0.14f
     val cx = bitmap.width / 2f
     val cy = bitmap.height / 2f
     canvas.drawRoundRect(RectF(cx-outer/2, cy-outer/2, cx+outer/2, cy+outer/2), outer*0.12f, outer*0.12f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE })
