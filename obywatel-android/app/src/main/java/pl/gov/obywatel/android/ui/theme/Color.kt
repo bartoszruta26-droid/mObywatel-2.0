@@ -2,12 +2,12 @@ package pl.gov.obywatel.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Wstępne tokeny prototypu — zastąpić wartościami zweryfikowanymi w oficjalnym pakiecie design systemu.
-val Navy = Color(0xFF102A43)
-val Blue = Color(0xFF1769AA)
-val BlueLight = Color(0xFFEAF3FA)
-val Surface = Color(0xFFF5F7FA)
-val Ink = Color(0xFF172B4D)
-val Muted = Color(0xFF5B6B7A)
+// Paleta prototypu inspirowana neutralnym, urzędowym interfejsem; do czasu walidacji assetów publicznego design systemu.
+val Navy = Color(0xFF102B46)
+val Blue = Color(0xFF075DA8)
+val BlueLight = Color(0xFFE8F2FA)
+val Surface = Color(0xFFF3F6F9)
+val Ink = Color(0xFF162B40)
+val Muted = Color(0xFF607487)
 val White = Color(0xFFFFFFFF)
-val Border = Color(0xFFD7E0E8)
+val Border = Color(0xFFDCE5EC)
