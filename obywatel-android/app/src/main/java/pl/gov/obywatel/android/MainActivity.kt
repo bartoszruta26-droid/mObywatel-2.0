@@ -3330,14 +3330,14 @@ private fun AdditionalInformationSection(
 }
 
 @Composable
-private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane") {
+private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane", singleLine: Boolean = true) {
     OutlinedTextField(
         value = fields[key] ?: "",
         onValueChange = { fields[key] = it },
         modifier = Modifier.fillMaxWidth(),
         label = { Text(label) },
         placeholder = { Text(placeholder) },
-        singleLine = true
+        singleLine = singleLine
     )
 }
 
