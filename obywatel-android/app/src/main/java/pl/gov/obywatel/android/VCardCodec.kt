@@ -65,7 +65,7 @@ internal object VCardCodec {
     }
 
     fun decode(raw: String): Card {
-        require(raw.toByteArray(Charsets.UTF_8).size <= 256 * 1024) { "Plik vCard jest zbyt duży." }
+        require(raw.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) { "Plik vCard przekracza limit 10 MB." }
         val lines = unfold(raw)
         require(lines.size >= 3 && lines.first().equals("BEGIN:VCARD", true) &&
             lines.last().equals("END:VCARD", true)) { "Nieprawidłowa struktura vCard." }
@@ -95,6 +95,43 @@ internal object VCardCodec {
         require(version == "4.0") { "OWD obsługuje vCard 4.0 (RFC 6350)." }
         require(parsed["FN"]?.isNotEmpty() == true) { "Brak wymaganej właściwości FN." }
         return Card(parsed.mapValues { it.value.toList() }, extensions.mapValues { it.value.toList() })
+    }
+
+
+    /**
+     * Application archive: one standards-compliant vCard 4.0 object with all
+     * locally stored key/value entries carried as X-OWD-FIELD properties.
+     * This is an application extension profile, not a universal vCard backup.
+     */
+    fun encodeArchive(fields: Map<String, String>): String {
+        require(fields.isNotEmpty()) { "Brak danych do eksportu." }
+        val lines = mutableListOf(
+            "BEGIN:VCARD",
+            "VERSION:4.0",
+            "FN:${escape(fields["firstNames"]?.takeIf { it.isNotBlank() }?.let { "$it ${fields["lastName"].orEmpty()}".trim() } ?: "Archiwum danych obywatelskich")}",
+            "N:${escapeStructured(fields["lastName"].orEmpty() + ";" + fields["firstNames"].orEmpty())}",
+            "X-OWD-ARCHIVE-VERSION:1"
+        )
+        fields.toSortedMap().forEach { (name, value) ->
+            require(fieldName.matches(name)) { "Nieprawidłowa nazwa pola archiwum: $name" }
+            lines += "X-OWD-FIELD;X-OWD-NAME=$name:${escape(value)}"
+        }
+        lines += "END:VCARD"
+        val result = fold(lines).joinToString("\\r\\n") + "\\r\\n"
+        require(result.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) { "Archiwum przekracza limit 10 MB." }
+        return result
+    }
+
+    fun decodeArchive(raw: String): Map<String, String> {
+        val card = decode(raw)
+        require(card.extensions["X-OWD-ARCHIVE-VERSION"]?.singleOrNull() == "1") {
+            "Plik nie jest archiwum danych tej aplikacji."
+        }
+        val values = card.extensions.filterKeys { it.startsWith("FIELD:") }
+            .mapKeys { it.key.removePrefix("FIELD:") }
+            .mapValues { (_, entries) -> entries.singleOrNull() ?: error("Pole archiwum ma wiele wartości.") }
+        require(values.isNotEmpty()) { "Archiwum nie zawiera danych." }
+        return values
     }
 
     fun decodeOwdRecord(raw: String): ShareableRecord {
