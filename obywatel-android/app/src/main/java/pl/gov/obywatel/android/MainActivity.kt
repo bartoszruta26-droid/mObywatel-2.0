@@ -317,6 +317,7 @@ private fun HomeScreen() {
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
                         importStatus = importStatus
                     )
+                    selectedDocumentId == "official_documents" -> OfficialDocumentsScreen(onBack = { selectedDocumentId = null }, readOnly = true)
                     selectedDocumentId == "family_children" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { selectedDocumentId = null })
                     selectedDocumentId == "family_vaccinations" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { selectedDocumentId = null })
                     selectedDocumentId != null -> DocumentDetailsScreen(
@@ -334,6 +335,7 @@ private fun HomeScreen() {
                     activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
                     activeService == "Historia chorób" -> MedicalHistoryRecordsScreen(onBack = { activeService = null })
                     activeService == "Historia działań" -> ActivityHistoryScreen(onBack = { activeService = null })
+                    activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null })
                     activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null })
                     activeService == "Podgląd dokumentów podpisanych" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false)
                     activeService == "Prawo wykonywania zawodu i kwalifikacje" -> ProfessionalQualificationsScreen(onBack = { activeService = null })
@@ -371,6 +373,10 @@ private fun HomeScreen() {
                         onOpenProfessionalQualifications = {
                             ActivityHistoryStore.record(context, "Nawigacja", "Otwarto rejestr prawa wykonywania zawodu i kwalifikacji")
                             activeService = "Prawo wykonywania zawodu i kwalifikacje"
+                        },
+                        onOpenOfficialDocuments = {
+                            ActivityHistoryStore.record(context, "Nawigacja", "Otwarto formularze dokumentów urzędowych i ubezpieczeniowych")
+                            activeService = "Formularze dokumentów"
                         }
                     )
                     else -> {
@@ -1259,7 +1265,8 @@ private fun MoreMenuScreen(
     onOpenHelp: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenSignedPdfs: () -> Unit,
-    onOpenProfessionalQualifications: () -> Unit
+    onOpenProfessionalQualifications: () -> Unit,
+    onOpenOfficialDocuments: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1271,6 +1278,7 @@ private fun MoreMenuScreen(
         ProfileActionCard("Historia działań", "Chronologiczny rejestr czynności wykonywanych w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
         ProfileActionCard("Dokumenty PDF i podpisy elektroniczne", "Import, podgląd PDF i oznaczenia podpisu ePUAP lub kwalifikowanego", Icons.Filled.Description, onOpenSignedPdfs)
         ProfileActionCard("Prawo wykonywania zawodu i kwalifikacje", "Numery PWZ/PWZF, dane zawodów oraz archiwum zdjęć i PDF certyfikatów", Icons.Filled.Badge, onOpenProfessionalQualifications)
+        ProfileActionCard("Formularze dokumentów urzędowych i ubezpieczeniowych", "Akty stanu cywilnego, KDR, EKUZ, OC, KRK, podróże służbowe i kwalifikacje UE", Icons.Filled.Description, onOpenOfficialDocuments)
         ProfileActionCard("Certyfikaty i zaświadczenia", "Rejestr dokumentów, uprawnień i danych wystawcy", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia i komunikaty", "Informacje o statusach, przypomnieniach i ważności dokumentów", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Pomoc i instrukcje", "Obsługa aplikacji, import, eksport i bezpieczeństwo danych", Icons.Filled.Info, onOpenHelp)
@@ -1804,6 +1812,16 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
                     Text(actionLabel, color = Blue,
                         style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 }
+            }
+        }
+        Card(modifier = Modifier.fillMaxWidth().clickable { onOpenDetails("official_documents") }, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = White)) {
+            Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Description, contentDescription = "Formularze dokumentów", tint = Blue, modifier = Modifier.size(48.dp))
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                    Text("Dokumenty urzędowe i ubezpieczeniowe", color = Navy, fontWeight = FontWeight.SemiBold)
+                    Text("Odpisy USC, KDR, EKUZ, OC, KRK, misje i kwalifikacje UE", color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+                Text("Otwórz", color = Blue, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
         }
         Text("Wybierz kartę, aby wyświetlić jej szczegóły.",
