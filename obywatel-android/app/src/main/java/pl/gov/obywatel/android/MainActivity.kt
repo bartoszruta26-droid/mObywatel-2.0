@@ -336,6 +336,8 @@ private fun HomeScreen() {
                     activeService == "Historia chorób" -> MedicalHistoryRecordsScreen(onBack = { activeService = null })
                     activeService == "Historia działań" -> ActivityHistoryScreen(onBack = { activeService = null })
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null })
+                    activeService == "Dokumenty Rodowe" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { activeService = null })
+                    activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { activeService = null })
                     activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null })
                     activeService == "Podgląd dokumentów podpisanych" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false)
                     activeService == "Prawo wykonywania zawodu i kwalifikacje" -> ProfessionalQualificationsScreen(onBack = { activeService = null })
@@ -377,6 +379,14 @@ private fun HomeScreen() {
                         onOpenOfficialDocuments = {
                             ActivityHistoryStore.record(context, "Nawigacja", "Otwarto formularze dokumentów urzędowych i ubezpieczeniowych")
                             activeService = "Formularze dokumentów"
+                        },
+                        onOpenFamilyDocuments = {
+                            ActivityHistoryStore.record(context, "Nawigacja", "Otwarto dokumenty Rodowe")
+                            activeService = "Dokumenty Rodowe"
+                        },
+                        onOpenEntityDocuments = {
+                            ActivityHistoryStore.record(context, "Nawigacja", "Otwarto dokumenty rejestru podmiotów")
+                            activeService = "Dokumenty rejestru podmiotów"
                         }
                     )
                     else -> {
@@ -1266,7 +1276,9 @@ private fun MoreMenuScreen(
     onOpenHistory: () -> Unit,
     onOpenSignedPdfs: () -> Unit,
     onOpenProfessionalQualifications: () -> Unit,
-    onOpenOfficialDocuments: () -> Unit
+    onOpenOfficialDocuments: () -> Unit,
+    onOpenFamilyDocuments: () -> Unit,
+    onOpenEntityDocuments: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1279,6 +1291,8 @@ private fun MoreMenuScreen(
         ProfileActionCard("Dokumenty PDF i podpisy elektroniczne", "Import, podgląd PDF i oznaczenia podpisu ePUAP lub kwalifikowanego", Icons.Filled.Description, onOpenSignedPdfs)
         ProfileActionCard("Prawo wykonywania zawodu i kwalifikacje", "Numery PWZ/PWZF, dane zawodów oraz archiwum zdjęć i PDF certyfikatów", Icons.Filled.Badge, onOpenProfessionalQualifications)
         ProfileActionCard("Formularze dokumentów urzędowych i ubezpieczeniowych", "Akty stanu cywilnego, KDR, EKUZ, OC, KRK, podróże służbowe i kwalifikacje UE", Icons.Filled.Description, onOpenOfficialDocuments)
+        ProfileActionCard("Dokumenty Rodowe", "Akty, księgi, ustrój Rodu, władze, majątek oraz dokumenty społeczne i religijne", Icons.Filled.FamilyRestroom, onOpenFamilyDocuments)
+        ProfileActionCard("Dokumenty rejestru podmiotów", "Dokumenty założycielskie, rejestrowe, organów, władz i właścicieli", Icons.Filled.AccountBalance, onOpenEntityDocuments)
         ProfileActionCard("Certyfikaty i zaświadczenia", "Rejestr dokumentów, uprawnień i danych wystawcy", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia i komunikaty", "Informacje o statusach, przypomnieniach i ważności dokumentów", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Pomoc i instrukcje", "Obsługa aplikacji, import, eksport i bezpieczeństwo danych", Icons.Filled.Info, onOpenHelp)
