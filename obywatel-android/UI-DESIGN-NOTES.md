@@ -115,3 +115,12 @@ Założenie robocze nie stanowi prawnej weryfikacji licencji. Godło państwowe 
 - Dodano ekrany szczegółowe dla usług, które nie mają jeszcze właściwej integracji.
 - Kafelki nie pozostają bez reakcji; brakujące funkcje są jawnie opisane jako nieaktywne lub oczekujące na integrację.
 - Nie uruchamiano kompilacji, testów budowania ani generowania APK.
+
+
+## Katalog usług — wyszukiwanie i kategorie
+
+Katalog „Usługi” otrzymał lokalne wyszukiwanie po nazwie i krótkim opisie oraz poziomy wybór kategorii. Kategorie obejmują dokumenty, bezpieczeństwo, zdrowie, kierowcę i pojazdy, sprawy urzędowe, podróże i pozostałe moduły. Filtrowanie odbywa się wyłącznie na danych wbudowanych w aplikację; nie wymaga połączenia z siecią ani nie sugeruje dostępności usług administracji publicznej.
+
+Układ nawiązuje do podejścia prezentowanego w aktualnym interfejsie mObywatela: osobna zakładka usług, kategorie oraz łatwiejsze odnajdywanie modułów. Jest to implementacja własna prototypu, a nie kopia kodu ani oficjalna aplikacja. Źródło odniesienia: https://info.mobywatel.gov.pl/uslugi oraz https://www.gov.pl/web/cyfryzacja/mobywatel--10-milionow-uzytkownikow-nowa-odslona-aplikacji-i-plany-jej-rozwoju.
+
+Wszystkie wyniki prowadzą do ekranów prototypu. Moduły bez integracji nadal nie odpytują rejestrów, nie przyjmują płatności, nie wystawiają dokumentów i nie zmieniają statusów urzędowych.
