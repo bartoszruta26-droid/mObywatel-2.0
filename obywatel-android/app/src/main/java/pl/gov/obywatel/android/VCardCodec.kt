@@ -196,19 +196,23 @@ internal object VCardCodec {
         values.mapValues { (_, value) -> repairMojibake(value) }
 
     private fun repairMojibake(value: String): String {
-        val markers = listOf("Ã", "Å", "Ä", "Â", "â€", "ðŸ")
-        if (markers.none { value.contains(it) }) return value
-        val bytes = ByteArray(value.length)
-        for (index in value.indices) {
-            val code = value[index].code
-            if (code > 0xFF) return value
-            bytes[index] = code.toByte()
-        }
-        val candidates = listOf(
-            runCatching { String(bytes, Charsets.UTF_8) }.getOrNull(),
-            runCatching { String(bytes, java.nio.charset.Charset.forName("windows-1250")) }.getOrNull()
-        ).filterNotNull()
+        val markers = listOf("Ã", "Å", "Ä", "Â", "â€", "ðŸ", "Ĺ", "Ä…", "Ä™")
         fun score(text: String): Int = markers.sumOf { marker -> marker.toRegex().findAll(text).count() }
+        if (score(value) == 0) return value
+        val candidates = listOf("windows-1250", "windows-1252", "ISO-8859-1").mapNotNull { charsetName ->
+            runCatching {
+                val encoder = java.nio.charset.Charset.forName(charsetName).newEncoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                val encoded = encoder.encode(java.nio.CharBuffer.wrap(value))
+                val bytes = ByteArray(encoded.remaining())
+                encoded.get(bytes)
+                Charsets.UTF_8.newDecoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+            }.getOrNull()
+        }
         return candidates.minByOrNull(::score)?.takeIf { score(it) < score(value) } ?: value
     }
 
