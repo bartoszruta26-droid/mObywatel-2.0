@@ -32,3 +32,7 @@ W `iOS/Sources/Tokens/Spacings.swift` zdefiniowano skalę odstępów: 2, 4, 8, 1
 ## Formularz danych demonstracyjnych
 
 Ekran „Dokumenty” zawiera wyłącznie formularz ewidencyjny z pustymi polami na dane osobowe, dane dowodu osobistego, dane paszportowe i podstawowe dane dotyczące legitymacji poselskiej oraz neutralny obszar na zdjęcie profilowe. Wszystkie sekcje są jednoznacznie oznaczone jako DEMO — NIE JEST DOKUMENTEM. Pola nie są zapisywane ani wysyłane. Ekran nie odtwarza oficjalnych wzorów dokumentów, legitymacji, zabezpieczeń, kodów QR, kodów kreskowych ani strefy MRZ i nie potwierdza tożsamości ani statusu publicznego.
+
+### Konfiguracja, trwały zapis i zdjęcie
+
+Ekran demonstracyjny umożliwia wybranie fotografii przez systemowy selektor Androida (limit 5 MB), edycję pól osobowych/dowodu/paszportu/ewidencji poselskiej oraz jawne zapisanie całości. Zapis jest lokalny w `noBackupFilesDir`, szyfrowany AES-256-GCM z kluczem zarządzanym przez Android Keystore; aplikacja nie deklaruje uprawnień do Internetu ani nie wysyła danych. `allowBackup=false` pozostaje w manifeście. Dane są wrażliwe: to prototyp, nie audytowany sejf na dokumenty. Utrata/wyczyszczenie danych aplikacji lub odinstalowanie usuwa lokalny profil. Nie jest to cyfrowy dokument, dowód statusu publicznego ani kanał weryfikacji.
