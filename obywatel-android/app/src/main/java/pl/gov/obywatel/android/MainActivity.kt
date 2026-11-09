@@ -727,7 +727,7 @@ private fun DocumentDetailsScreen(
         )),
         Triple("Dowód osobisty — ewidencja", "Dane dowodu — wpis użytkownika", listOf(
             "Numer dokumentu" to "idNumber", "Status" to "idStatus",
-            "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data utraty / unieważnienia" to "idInvalidatedAt"
+            "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
         )),
         Triple("Paszport — ewidencja", "Dane dokumentu podróży — wpis użytkownika", listOf(
             "Numer paszportu" to "passportNumber", "Rodzaj dokumentu" to "passportType",
@@ -736,12 +736,12 @@ private fun DocumentDetailsScreen(
         )),
         Triple("Dokument rodowy — ewidencja prywatna", "Prywatna karta ewidencji rodowej", listOf(
             "Numer dokumentu rodowego" to "familyDocNumber", "Nazwa rodu" to "familyName",
-            "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyPosition",
-            "Prowadzący ewidencję" to "familyRegistrar", "Data sporządzenia" to "familyIssueDate"
+            "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyRole",
+            "Prowadzący ewidencję" to "familyRegistry", "Data sporządzenia" to "familyIssueDate"
         )),
         Triple("Legitymacja poselska — ewidencja", "Ewidencja informacji o legitymacji i mandacie", listOf(
             "Numer legitymacji" to "mpCardNumber", "Kadencja" to "mpTerm",
-            "Wystawca" to "mpIssuer", "Status legitymacji" to "mpCardStatus",
+            "Wystawca" to "mpIssuer", "Status legitymacji" to "mpStatus",
             "Źródło potwierdzenia" to "mpMandateSource"
         )),
         Triple("Legitymacja kursanta", "Prywatna legitymacja instytucji szkoleniowej", listOf(
@@ -751,8 +751,8 @@ private fun DocumentDetailsScreen(
         )),
         Triple("Legitymacja studencka — ewidencja", "Ewidencja danych podanych przez użytkownika", listOf(
             "Numer legitymacji" to "studentCardNumber", "Uczelnia" to "studentUniversity",
-            "Kierunek" to "studentCourse", "Rok akademicki" to "studentAcademicYear",
-            "Status" to "studentStatus", "Ważność" to "studentValidUntil"
+            "Kierunek" to "studentProgramme", "Rok akademicki" to "studentAcademicYear",
+            "Status" to "studentStatus", "Ważność" to "studentValidity"
         )),
         Triple("Orzeczenia i zaświadczenia", "Ewidencja informacji o rozstrzygnięciach i zaświadczeniach", listOf(
             "Numer dokumentu / sprawy" to "disabilityDecisionNumber", "Wystawca" to "disabilityAuthorityName",
