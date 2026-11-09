@@ -120,6 +120,12 @@ Przyszła integracja nie może polegać na podszywaniu się pod aplikację rząd
 5. Przeprowadzić audyt bezpieczeństwa, testy zgodności i ocenę ochrony danych przed uruchomieniem produkcyjnym.
 
 
+## Aktualizacja QR offline — 9 listopada 2026
+
+Dodano `OwdQrFrames.kt` — mechanizm dzielenia już zaszyfrowanego ładunku OWD na serię kodów QR i składania ich po stronie odbiorcy. Format zawiera identyfikator transferu, indeks i liczbę ramek, skrót SHA-256 oraz fragment ładunku. Implementacja odrzuca ramki mieszane, brakujące, powielone w konflikcie, nadmiernie duże i o niezgodnym skrócie. Limit ładunku wynosi 64 KiB, a limit liczby ramek 128.
+
+To jest **format OWD**, a nie format certyfikatu rządowego mObywatela/mWeryfikatora. Nie zapewnia importu do rządowego portfela. Nie oznacza też, że pełny ekranowy przepływ OWD jest już zintegrowany — generator i skaner muszą zostać połączone z tym mechanizmem, a wynik musi przejść testy jednostkowe, kompilację i testy na dwóch urządzeniach.
+
 ## Aktualizacja implementacji — 9 listopada 2026
 
 Dodano kolejne niezależne elementy warstwy protokołu:
