@@ -1310,9 +1310,14 @@ private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) 
             .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 22.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            BrandMark()
+            Image(
+                painter = painterResource(R.drawable.institutions_eagle_emblem),
+                contentDescription = "Godło państwowe Rzeczypospolitej Polskiej",
+                modifier = Modifier.size(54.dp),
+                contentScale = ContentScale.Fit
+            )
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text("obywatel", color = White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("mObywatel 2.0", color = White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
