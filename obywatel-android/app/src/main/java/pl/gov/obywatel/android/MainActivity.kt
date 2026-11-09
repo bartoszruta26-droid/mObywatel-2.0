@@ -6,6 +6,13 @@ package pl.gov.obywatel.android
 import android.os.Bundle
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.graphics.toArgb
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
@@ -376,34 +383,116 @@ private fun categoryIconFor(category: String): Int? = when (category) {
 
 @Composable
 private fun QrToolsScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    val context = LocalContext.current
+    val contactFields = remember {
+        mutableStateMapOf("FN" to "", "N" to "", "ORG" to "", "TITLE" to "", "TEL" to "", "EMAIL" to "", "URL" to "", "ADR" to "")
+    }
+    var importMessage by remember { mutableStateOf("Zaimportuj plik .vcf lub wpisz dane ręcznie.") }
+    val vCardPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) runCatching {
+            val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+                ?: error("Nie udało się odczytać pliku.")
+            val parsed = parseVCardContact(raw)
+            parsed.forEach { (key, value) -> contactFields[key] = value }
+            require(contactFields["FN"].orEmpty().isNotBlank() || contactFields["N"].orEmpty().isNotBlank()) {
+                "Plik nie zawiera nazwy kontaktu (FN/N)."
+            }
+            importMessage = "Zaimportowano dane. Sprawdź ich zakres przed udostępnieniem."
+        }.onFailure { importMessage = "Błąd importu: " + (it.message ?: "nieprawidłowy plik vCard") }
+    }
+    val payload = remember(contactFields.toMap()) { buildVCardPayload(contactFields.toMap()) }
+    val qrBitmap = remember(payload) {
+        if (payload.isBlank()) null else runCatching {
+            val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, 768, 768)
+            Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+                    bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+            }
+        }.getOrNull()
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text("Kod QR", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Icon(Icons.Filled.QrCode2, contentDescription = "Ilustracyjna ikona kodu QR", tint = Blue, modifier = Modifier.size(112.dp))
-        Text("Narzędzia kodów QR", color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text(
-            "Ta sekcja prototypu służy do prezentacji przyszłych funkcji skanowania i udostępniania danych. Nie generuje kodów potwierdzających dokumenty ani nie weryfikuje tożsamości.",
-            color = Muted, style = MaterialTheme.typography.bodyMedium
+        Text("Generator kodu kontaktowego", color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Utwórz kod QR zawierający wizytówkę vCard. Zgodna aplikacja odbiorcy może odczytać dane i zaproponować zapis kontaktu.", color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("To nie jest kod urzędowy", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Kod vCard nie jest kodem mObywatela. Nie potwierdza tożsamości, dokumentów, uprawnień ani danych w rejestrach państwowych.", color = Ink, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        OutlinedButton(onClick = { vCardPicker.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth()) {
+            Text("Wczytaj plik vCard (.vcf)")
+        }
+        Text(importMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Dane kontaktowe", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        val fields = listOf(
+            "FN" to "Nazwa wyświetlana",
+            "N" to "Nazwisko;Imię;Drugie imię;Prefiks;Sufiks",
+            "ORG" to "Organizacja",
+            "TITLE" to "Stanowisko",
+            "TEL" to "Telefon",
+            "EMAIL" to "Adres e-mail",
+            "URL" to "Strona internetowa",
+            "ADR" to "Ulica;Miasto;Region;Kod;Kraj"
         )
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Skanowanie kodu", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Obsługa aparatu i bezpiecznego odczytu zostanie dodana po zaprojektowaniu lokalnego, demonstracyjnego formatu danych.", color = Muted, style = MaterialTheme.typography.bodySmall)
-            }
+        fields.forEach { (key, label) ->
+            OutlinedTextField(
+                value = contactFields[key].orEmpty(),
+                onValueChange = { contactFields[key] = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(label) },
+                singleLine = key != "N" && key != "ADR"
+            )
         }
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Udostępnianie danych", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Przyszła funkcja będzie wymagała świadomego wyboru zakresu danych i potwierdzenia przez użytkownika.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        OutlinedButton(onClick = {
+            contactFields.keys.toList().forEach { contactFields[it] = "" }
+            importMessage = "Wyczyszczono formularz."
+        }, modifier = Modifier.fillMaxWidth()) { Text("Wyczyść dane") }
+        if (qrBitmap != null) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Twój kod QR", color = Navy, fontWeight = FontWeight.Bold)
+                    Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR z wizytówką vCard", modifier = Modifier.size(250.dp), contentScale = ContentScale.Fit)
+                    Text("Wizytówka vCard • bez weryfikacji urzędowej", color = Muted, style = MaterialTheme.typography.labelSmall)
+                }
             }
+        } else {
+            Text("Wpisz co najmniej nazwę kontaktu, aby wygenerować kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
         }
-        Text("Prototyp obywatelski • bez połączenia z systemami administracji publicznej", color = Muted, style = MaterialTheme.typography.labelSmall)
+        Text("Prywatność: kod ujawnia każdej osobie skanującej wszystkie zapisane w nim dane. Nie dodawaj numeru PESEL, danych dokumentu ani informacji poufnych.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Prototyp obywatelski • lokalne generowanie kodu • brak połączenia z administracją publiczną", color = Muted, style = MaterialTheme.typography.labelSmall)
     }
 }
 
+private fun parseVCardContact(raw: String): Map<String, String> {
+    val unfolded = raw.replace("\r\n ", "").replace("\n ", "").replace("\r ", "")
+    val result = mutableMapOf<String, String>()
+    unfolded.lineSequence().forEach { line ->
+        val colon = line.indexOf(':')
+        if (colon <= 0) return@forEach
+        val property = line.substring(0, colon).substringBefore(';').substringBefore('.').uppercase()
+        val value = line.substring(colon + 1)
+            .replace("\\n", "\n").replace("\\,", ",").replace("\\;", ";").replace("\\\\", "\\")
+        if (property in setOf("FN", "N", "ORG", "TITLE", "TEL", "EMAIL", "URL", "ADR") && value.isNotBlank()) {
+            result[property] = if (result[property].isNullOrBlank()) value else result[property] + "; " + value
+        }
+    }
+    return result
+}
+
+private fun buildVCardPayload(fields: Map<String, String>): String {
+    if (fields["FN"].orEmpty().isBlank() && fields["N"].orEmpty().isBlank()) return ""
+    fun escape(value: String): String = value.trim().replace("\\", "\\\\").replace("\n", "\\n").replace(";", "\\;").replace(",", "\\,")
+    val lines = mutableListOf("BEGIN:VCARD", "VERSION:3.0")
+    fields["FN"].orEmpty().trim().takeIf { it.isNotBlank() }?.let { lines += "FN:" + escape(it) }
+    fields["N"].orEmpty().trim().takeIf { it.isNotBlank() }?.let { lines += "N:" + escape(it) }
+    listOf("ORG", "TITLE", "TEL", "EMAIL", "URL", "ADR").forEach { key ->
+        fields[key].orEmpty().trim().takeIf { it.isNotBlank() }?.let { lines += key + ":" + escape(it) }
+    }
+    lines += "END:VCARD"
+    return lines.joinToString("\r\n")
+}
 @Composable
 private fun CivicIllustrationBanner(imageRes: Int, description: String) {
     Image(
