@@ -20,11 +20,18 @@ Ekran główny odwołuje się do następujących zasobów VectorDrawable:
 | `mob_payments` | Płatności |
 | `mob_health` | Zdrowie |
 | `mob_transport` | Transport |
+| `mob_penalties` | Mandaty / ewidencja informacji |
+| `mob_pesel_check` | Sprawdź PESEL — ekran informacyjny |
+| `mob_pesel_lock` | Zastrzeż PESEL — ekran informacyjny |
 | `mob_ticket` | Bilety |
 | `mob_cyber_safety` | Bezpieczeństwo |
 | `mob_environment` | Środowisko |
 
 Dokumentacja pochodzenia i oznaczenia licencyjnego tych zasobów znajduje się w `UI-DESIGN-NOTES.md`. Przed kopiowaniem, modyfikacją lub publikacją należy respektować wskazane tam warunki licencji.
+
+## Robocze założenie licencyjne na etap alfa
+
+Na polecenie użytkownika przyjmuje się tymczasowo, że projekt może korzystać z godła państwowego, pieczęci Fundacji oraz pozostałych grafik mObywatela pozyskanych z oficjalnych stron rządowych. Ręczna kontrola licencji i warunków użycia zostaje odłożona na późniejszy etap; nie blokuje to implementacji alfa. W miarę możliwości każdy plik pozostaje odrębnym zasobem, z zapisanym źródłem i możliwością wymiany. Jest to założenie robocze, a nie wynik audytu prawnego. Godło państwowe musi zachować oficjalny wzór i właściwe ograniczenia ustawowe.
 
 ## Elementy istniejące, ale tymczasowe
 
@@ -74,3 +81,13 @@ Katalog należy rozdzielić na: symbole państwowe, znaki administracji rządowe
 ## Stan realizacji
 
 To jest inwentarz i plan zasobów, a nie potwierdzenie, że brakujące grafiki zostały już wykonane. Funkcjonalna alfa nadal wymaga osobnego projektu autorskiego logo oraz biblioteki ilustracji dokumentów. Nie uruchomiono kompilacji ani generowania APK.
+
+
+## Dodatkowe zasoby znalezione w katalogu Android drawable
+
+W repozytorium znajdują się także:
+- `mob_penalties.xml` — piktogram Mandaty;
+- `mob_pesel_check.xml` — piktogram Sprawdź PESEL;
+- `mob_pesel_lock.xml` — piktogram Zastrzeż PESEL.
+
+Dodano dla nich kafelki usług. Ekrany informacyjne nie wykonują połączeń z rejestrami państwowymi i nie wysyłają dyspozycji zastrzeżenia PESEL.
