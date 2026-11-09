@@ -220,14 +220,23 @@ private fun HomeScreen() {
                                         (serviceSearch.isBlank() || service.title.contains(serviceSearch, ignoreCase = true) ||
                                             service.subtitle.contains(serviceSearch, ignoreCase = true))
                                 } else services.take(4)
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
-                                    modifier = Modifier.weight(1f),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    items(visibleServices) { service ->
-                                        ServiceCard(service) { openService(service.title) }
+                                if (visibleServices.isEmpty()) {
+                                    Text(
+                                        "Nie znaleziono usług. Zmień wyszukiwaną frazę lub kategorię.",
+                                        color = Muted,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)
+                                    )
+                                } else {
+                                    LazyVerticalGrid(
+                                        columns = GridCells.Fixed(2),
+                                        modifier = Modifier.weight(1f),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        items(visibleServices) { service ->
+                                            ServiceCard(service) { openService(service.title) }
+                                        }
                                     }
                                 }
                                 Spacer(Modifier.height(10.dp))
