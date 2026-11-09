@@ -570,29 +570,55 @@ private fun loadQrLogo(context: Context, uri: Uri): Bitmap {
     return if (scale < 1f) Bitmap.createScaledBitmap(source, (source.width * scale).toInt().coerceAtLeast(1), (source.height * scale).toInt().coerceAtLeast(1), true) else source
 }
 
+/**
+ * Generates a standards-compliant QR bitmap without any graphic overlay.
+ * Branding is rendered beside the QR by QrBrandMark; no logo or emblem may
+ * cover data modules, finder patterns, timing patterns or the quiet zone.
+ */
 private fun generateBrandedQr(context: Context, payload: String, branding: String, uploadedLogo: Bitmap?): Bitmap {
     require(payload.isNotBlank()) { "Treść kodu QR jest pusta." }
-    val hints = mapOf<EncodeHintType, Any>(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H, EncodeHintType.MARGIN to 3)
-    val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, 900, 900, hints)
+    when (branding) {
+        QR_BRAND_STATE -> requireNotNull(BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)) {
+            "Nie można wczytać godła państwowego."
+        }
+        QR_BRAND_FILE -> requireNotNull(uploadedLogo) { "Wybierz plik z logo." }
+    }
+    val hints = mapOf<EncodeHintType, Any>(
+        EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H,
+        EncodeHintType.MARGIN to 4,
+        EncodeHintType.CHARACTER_SET to "UTF-8"
+    )
+    val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, 1000, 1000, hints)
     val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
-    for (y in 0 until matrix.height) for (x in 0 until matrix.width) bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
-    val logo = when (branding) {
-        QR_BRAND_STATE -> BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem) ?: error("Nie można wczytać godła państwowego.")
-        QR_BRAND_FILE -> uploadedLogo ?: error("Wybierz plik z logo.")
-        else -> null
-    } ?: return bitmap
-    val canvas = Canvas(bitmap)
-    // Central logo overlay: compact white quiet zone preserves more QR modules for scanning.
-    val outer = bitmap.width * 0.20f
-    val inner = bitmap.width * 0.14f
-    val cx = bitmap.width / 2f
-    val cy = bitmap.height / 2f
-    canvas.drawRoundRect(RectF(cx-outer/2, cy-outer/2, cx+outer/2, cy+outer/2), outer*0.12f, outer*0.12f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE })
-    val ratio = minOf(inner / logo.width, inner / logo.height)
-    val w = logo.width * ratio
-    val h = logo.height * ratio
-    canvas.drawBitmap(logo, null, RectF(cx-w/2, cy-h/2, cx+w/2, cy+h/2), Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+    for (y in 0 until matrix.height) {
+        for (x in 0 until matrix.width) {
+            bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+        }
+    }
     return bitmap
+}
+
+@Composable
+private fun QrBrandMark(branding: String, uploadedLogo: Bitmap?) {
+    val context = LocalContext.current
+    val mark = remember(branding, uploadedLogo) {
+        when (branding) {
+            QR_BRAND_STATE -> BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+            QR_BRAND_FILE -> uploadedLogo
+            else -> null
+        }
+    }
+    mark?.let {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = if (branding == QR_BRAND_STATE) "Godło państwowe — poza kodem QR" else "Logo — poza kodem QR",
+                modifier = Modifier.size(44.dp),
+                contentScale = ContentScale.Fit
+            )
+            Text("Znak poza kodem QR", color = Muted, style = MaterialTheme.typography.labelSmall)
+        }
+    }
 }
 
 @Composable
@@ -719,6 +745,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Oferta sesji OWD • ważność 180 sekund", color = Navy, fontWeight = FontWeight.Bold)
                     Image(bitmap.asImageBitmap(), contentDescription = "Kod QR oferty sesji OWD", modifier = Modifier.size(250.dp))
+                    QrBrandMark(qrBranding, qrUploadedLogo)
                     Text("To inicjuje sesję kryptograficzną. Skaner OWD potrafi rozpoznać i zweryfikować ofertę; wymiana kluczy, przesłanie rekordów i potwierdzenie odbioru wymagają jeszcze pełnego połączenia obu urządzeń.", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -764,6 +791,7 @@ private fun WebsiteQrScreen() {
                 Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Kod QR strony", color = Navy, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR strony internetowej", modifier = Modifier.size(260.dp), contentScale = ContentScale.Fit)
+                    QrBrandMark(branding, uploadedLogo)
                     Text(normalized, color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -854,6 +882,7 @@ private fun VCardQrScreen() {
                 Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Twój kod QR", color = Navy, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR z wizytówką vCard", modifier = Modifier.size(250.dp), contentScale = ContentScale.Fit)
+                    QrBrandMark(branding, uploadedLogo)
                     Text("Wizytówka vCard • bez weryfikacji urzędowej", color = Muted, style = MaterialTheme.typography.labelSmall)
                 }
             }
