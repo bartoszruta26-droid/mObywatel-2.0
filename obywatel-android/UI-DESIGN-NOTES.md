@@ -124,3 +124,12 @@ Katalog „Usługi” otrzymał lokalne wyszukiwanie po nazwie i krótkim opisie
 Układ nawiązuje do podejścia prezentowanego w aktualnym interfejsie mObywatela: osobna zakładka usług, kategorie oraz łatwiejsze odnajdywanie modułów. Jest to implementacja własna prototypu, a nie kopia kodu ani oficjalna aplikacja. Źródło odniesienia: https://info.mobywatel.gov.pl/uslugi oraz https://www.gov.pl/web/cyfryzacja/mobywatel--10-milionow-uzytkownikow-nowa-odslona-aplikacji-i-plany-jej-rozwoju.
 
 Wszystkie wyniki prowadzą do ekranów prototypu. Moduły bez integracji nadal nie odpytują rejestrów, nie przyjmują płatności, nie wystawiają dokumentów i nie zmieniają statusów urzędowych.
+
+
+## Portfel dokumentów — osobny widok i edycja
+
+Ekran „Dokumenty” otwiera teraz portfel z ośmioma odrębnymi pozycjami ewidencyjnymi: profilem danych osobowych, danymi dowodu, paszportu, prywatną ewidencją rodową, ewidencją legitymacji poselskiej, legitymacją kursanta, ewidencją legitymacji studenckiej oraz orzeczeniami i zaświadczeniami. Każda pozycja pokazuje, czy odpowiednie dane są zapisane lokalnie. Portfel udostępnia wspólne przejście do formularza edycji.
+
+Rozdzielono nawigacyjnie portfel i formularz edycji: przycisk powrotu z edycji prowadzi do portfela, a powrót z portfela prowadzi do poprzedniego ekranu. Licznik prezentuje liczbę obszarów z zapisanymi danymi, bez ujawniania danych osobowych na ekranie podsumowania.
+
+Portfel nie jest magazynem cyfrowych dokumentów państwowych. Wpisy są prywatną ewidencją użytkownika; statusy, numery i dane wystawców nie są weryfikowane w rejestrach. Karty i podglądy muszą zachować oznaczenia demonstracyjne i nie mogą odtwarzać zabezpieczeń, kodów ani oficjalnych wzorów dokumentów.
