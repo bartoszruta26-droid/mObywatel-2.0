@@ -503,7 +503,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     var qrBranding by remember { mutableStateOf(QR_BRAND_NONE) }
     var qrUploadedLogo by remember { mutableStateOf<Bitmap?>(null) }
     val qrLogoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) runCatching { loadQrLogo(context, uri) }.onSuccess { qrUploadedLogo = it; offerQr = null }.onFailure { sessionMessage = "Błąd wczytywania logo: " + (it.message ?: "nieprawidłowy obraz") }
+        if (uri != null) runCatching { loadQrLogo(context, uri) }.onSuccess { qrUploadedLogo = it; offerQr = null }.onFailure { offerQr = null }
     }
     var sessionMessage by remember { mutableStateOf("Wybierz zakres danych i zapoznaj się z informacją o ich pochodzeniu.") }
     val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
