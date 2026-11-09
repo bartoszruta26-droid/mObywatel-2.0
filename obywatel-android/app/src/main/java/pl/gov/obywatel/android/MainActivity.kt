@@ -126,7 +126,8 @@ private val services = listOf(
     ServiceItem("Bilety", "Bilety i przejazdy", R.drawable.mob_ticket),
     ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", R.drawable.mob_cyber_safety),
     ServiceItem("Środowisko", "Informacje środowiskowe", R.drawable.mob_environment),
-    ServiceItem("Ustawienia", "Preferencje aplikacji", fallbackIcon = Icons.Filled.Settings),
+    ServiceItem("Ustawienia", "Preferencje i dane ewidencyjne", fallbackIcon = Icons.Filled.Settings),
+    ServiceItem("Zaświadczenia", "Dokumenty i dane o uprawnieniach", fallbackIcon = Icons.Filled.Description),
     ServiceItem("Pozostałe", "Więcej modułów", fallbackIcon = Icons.Filled.MoreHoriz)
 )
 
@@ -134,10 +135,14 @@ private val services = listOf(
 private fun HomeScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showDemoDocuments by remember { mutableStateOf(false) }
+    var showDisabilitySettings by remember { mutableStateOf(false) }
+    var showCertificates by remember { mutableStateOf(false) }
     Surface(modifier = Modifier.fillMaxSize(), color = AppSurface) {
-        if (showDemoDocuments) {
-            DemoDocumentsScreen(onBack = { showDemoDocuments = false })
-        } else {
+        when {
+            showDemoDocuments -> DemoDocumentsScreen(onBack = { showDemoDocuments = false })
+            showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false })
+            showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
+            else -> {
             Column(modifier = Modifier.fillMaxSize()) {
                 Header()
                 Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
@@ -154,7 +159,11 @@ private fun HomeScreen() {
                     ) {
                         items(services) { service ->
                             ServiceCard(service) {
-                                if (service.title == "Dokumenty") showDemoDocuments = true
+                                when (service.title) {
+                                    "Dokumenty" -> showDemoDocuments = true
+                                    "Ustawienia" -> showDisabilitySettings = true
+                                    "Zaświadczenia" -> showCertificates = true
+                                }
                             }
                         }
                     }
@@ -275,6 +284,146 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
     }
 }
 
+
+
+@Composable
+private fun DisabilitySettingsScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val fields = remember {
+        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
+    }
+    var saveMessage by remember { mutableStateOf("") }
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("‹  Powrót", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
+        Text("Ustawienia danych o niepełnosprawności", color = Navy,
+            style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Wprowadź dane z posiadanego orzeczenia, zaświadczenia, opinii lub oświadczenia. Wpis jest przechowywany lokalnie i nie jest automatycznie weryfikowany.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Text("Źródło dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                val options = listOf(
+                    "powiat" to "Zespół powiatowy / miejski",
+                    "other_law" to "Inny organ — odrębna podstawa prawna",
+                    "foundation" to "Zespół medyczny fundacji",
+                    "medical_opinion" to "Opinia / zaświadczenie medyczne",
+                    "self_declaration" to "Własne oświadczenie"
+                )
+                options.forEach { (value, label) ->
+                    val selected = (fields["disabilityAuthorityType"] ?: "powiat") == value
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
+                            .background(if (selected) BlueLight else Color(0xFFF5F6F7))
+                            .border(1.dp, if (selected) Blue else Border, RoundedCornerShape(9.dp))
+                            .clickable { fields["disabilityAuthorityType"] = value }
+                            .padding(11.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(if (selected) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
+                            contentDescription = null, tint = if (selected) Blue else Muted)
+                        Text(label, modifier = Modifier.padding(start = 9.dp), color = Ink,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
+                    }
+                }
+                DemoDataField("disabilityAuthorityName", "Organ / podmiot / wystawca", fields)
+                DemoDataField("disabilityIssuerName", "Osoba podpisująca / wystawca", fields)
+                DemoDataField("disabilityLegalBasis", "Podstawa prawna lub regulacyjna", fields)
+                DemoDataField("disabilityFoundationStatute", "Statut / uchwała fundacji (jeśli dotyczy)", fields)
+                Text("Dane osoby i dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("disabilityPersonName", "Imię i nazwisko", fields)
+                DemoDataField("disabilityBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
+                DemoDataField("disabilityPeselOrId", "PESEL / identyfikator", fields)
+                DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / zaświadczenia", fields)
+                DemoDataField("disabilityDecisionDate", "Data wydania", fields, "DD-MM-RRRR")
+                DemoDataField("disabilityDecisionPlace", "Miejsce wydania", fields)
+                Text("Ustalony stopień i okres", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("disabilityCategory", "Kategoria", fields)
+                DemoDataField("disabilityDegree", "Stopień niepełnosprawności", fields, "znaczny / umiarkowany / lekki")
+                DemoDataField("disabilityCauseCodes", "Symbole / przyczyny", fields)
+                DemoDataField("disabilityValidity", "Okres obowiązywania", fields, "na stałe / do DD-MM-RRRR")
+                DemoDataField("disabilityFromDate", "Data ustalenia niepełnosprawności", fields, "DD-MM-RRRR")
+                Text("Wskazania i potrzeby wsparcia", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("disabilityEmployment", "Zatrudnienie", fields)
+                DemoDataField("disabilityTraining", "Szkolenie", fields)
+                DemoDataField("disabilityTherapy", "Terapia / rehabilitacja", fields)
+                DemoDataField("disabilityAssistiveDevices", "Sprzęt i środki pomocnicze", fields)
+                DemoDataField("disabilityCare", "Opieka / pomoc innej osoby", fields)
+                DemoDataField("disabilityMobility", "Wsparcie środowiskowe", fields)
+                DemoDataField("disabilityParking", "Karta parkingowa — wskazania", fields)
+                Text("Metodologia i ocena funkcjonalna (opcjonalnie)", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("disabilityAssessmentMethod", "Metoda oceny (np. ICF)", fields)
+                DemoDataField("disabilityWhodasScore", "WHODAS 2.0 — wynik / data oceny", fields)
+                DemoDataField("disabilityMedicalQualification", "Kwalifikacje osoby oceniającej", fields)
+                DemoDataField("disabilityAppealInfo", "Tryb odwołania / weryfikacji", fields)
+                androidx.compose.material3.Button(
+                    onClick = {
+                        runCatching { DemoIdentityStore.save(context, fields.toMap()) }
+                            .onSuccess { saveMessage = "Zapisano dane lokalnie i zaszyfrowano." }
+                            .onFailure { saveMessage = "Błąd zapisu: ${it.localizedMessage ?: "nieznany błąd"}" }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Zapisz dane") }
+                if (saveMessage.isNotBlank()) Text(saveMessage, color = Blue, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CertificatesScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val fields = remember {
+        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
+    }
+    val hasDisabilityData = listOf("disabilityPersonName", "disabilityDecisionNumber", "disabilityDecisionDate",
+        "disabilityDegree", "disabilityAuthorityName").any { !fields[it].isNullOrBlank() }
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("‹  Powrót", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
+        Text("Zaświadczenia", color = Navy, style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Zapisane dane dokumentów i zaświadczeń", color = Muted, style = MaterialTheme.typography.bodySmall)
+        if (hasDisabilityData) {
+            Text("Orzeczenie / zaświadczenie o niepełnosprawności", color = Navy, fontWeight = FontWeight.Bold)
+            DisabilityDecisionPreview(fields)
+            listOf(
+                "Organ / wystawca" to "disabilityAuthorityName",
+                "Numer dokumentu" to "disabilityDecisionNumber",
+                "Data wydania" to "disabilityDecisionDate",
+                "Stopień" to "disabilityDegree",
+                "Okres obowiązywania" to "disabilityValidity",
+                "Podstawa prawna / regulacyjna" to "disabilityLegalBasis"
+            ).forEach { (label, key) ->
+                val value = fields[key].orEmpty()
+                if (value.isNotBlank()) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(label, color = Muted, style = MaterialTheme.typography.bodySmall)
+                        Text(value, color = Ink, style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold, modifier = Modifier.width(190.dp))
+                    }
+                }
+            }
+        } else {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Icon(Icons.Filled.Description, contentDescription = null, tint = Blue, modifier = Modifier.size(30.dp))
+                    Text("Brak zapisanych danych", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Dodaj dane o niepełnosprawności w Ustawieniach. Po zapisaniu pojawią się tutaj.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        Text("Widok ma charakter ewidencyjny. Aplikacja prezentuje dane wpisane przez użytkownika i nie potwierdza autentyczności dokumentu ani jego skutków prawnych.", color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
 
 @Composable
 private fun DemoDocumentsScreen(onBack: () -> Unit) {
