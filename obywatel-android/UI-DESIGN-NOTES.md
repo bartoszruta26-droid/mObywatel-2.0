@@ -45,3 +45,8 @@ Sekcja wyświetla treść art. 104 ust. 1 Konstytucji RP (posłowie jako przedst
 ### Rodowy dokument tożsamości — karta i ewidencja
 
 Dodano odrębną sekcję rodowego dokumentu tożsamości z polami: numer dokumentu rodowego, nazwa rodu, linia lub gałąź, miejsce w strukturze rodu, prowadzący ewidencję, data sporządzenia oraz podstawa wpisu. Rozszerzono dane osobowe o płeć deklarowaną, imiona i nazwiska rodziców. Dodano podgląd karty w proporcji zbliżonej do karty identyfikacyjnej, z fotografią zastępczą, imieniem i nazwiskiem, datą urodzenia oraz numerem rodowym. Projekt ma odrębną nazwę, znak i kolorystykę; pasek informacyjny na karcie wskazuje, że jest to dokument prywatny, a nie dokument państwowy. Dane są objęte istniejącym lokalnym szyfrowanym zapisem.
+
+
+### Rewers i rozszerzona ewidencja rodowa
+
+Podgląd dokumentu rodowego obejmuje teraz awers i rewers. Rewers pokazuje wpisane dane rodziców, nazwę rodu, linię/gałąź, osobę prowadzącą ewidencję i miejsce jej prowadzenia. Formularz rozszerzono o datę przeglądu wpisu, miejsce ewidencji, dobrowolne miejsce zamieszkania, linie rodowe rodziców, uwagi ewidencyjne oraz pola imienia i nazwiska posiadacza i wystawcy (do podpisu poza aplikacją). Pola korzystają z istniejącego szyfrowanego zapisu lokalnego. Podgląd jest wizualizacją prywatnej karty ewidencyjnej, a nie wzorem państwowego dokumentu; nie generuje kodów ani poświadczeń urzędowych.
