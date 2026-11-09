@@ -395,6 +395,111 @@ private fun QrToolsScreen() {
     }
 }
 
+
+@Composable
+private fun OwdHubScreen(onOpenVCard: () -> Unit) {
+    val context = LocalContext.current
+    val fields = remember { DemoIdentityStore.load(context) }
+    val shareable = listOf(
+        "disabilityDegree" to "Stopień niepełnosprawności",
+        "disabilityCategory" to "Kategoria orzeczenia",
+        "disabilityDecisionNumber" to "Numer orzeczenia",
+        "disabilityDecisionDate" to "Data wydania orzeczenia",
+        "disabilityValidity" to "Okres obowiązywania",
+        "disabilityAuthorityName" to "Organ / wystawca orzeczenia",
+        "mpStatus" to "Status legitymacji poselskiej (ewidencja)",
+        "mpTerm" to "Kadencja",
+        "mpDistrict" to "Okręg wyborczy",
+        "mpStart" to "Data rozpoczęcia mandatu",
+        "mpEnd" to "Data zakończenia mandatu",
+        "mpMandateSource" to "Źródło informacji o mandacie"
+    )
+    val populated = shareable.filter { fields[it.first].orEmpty().isNotBlank() }
+    var selected by remember { mutableStateOf(populated.map { it.first }.toSet()) }
+    var consent by remember { mutableStateOf(false) }
+    var purpose by remember { mutableStateOf("Przekazanie danych wskazanemu odbiorcy") }
+    var offerQr by remember { mutableStateOf<Bitmap?>(null) }
+    var sessionMessage by remember { mutableStateOf("Wybierz zakres danych i zapoznaj się z informacją o ich pochodzeniu.") }
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("Obywatelska Wymiana Danych", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("OWD • niezależna wymiana danych między zgodnymi aplikacjami", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Dwa odrębne kanały rozwoju", color = Navy, fontWeight = FontWeight.Bold)
+                Text("1. OWD peer-to-peer: wymiana między zgodnymi instalacjami aplikacji obywatelskiej. 2. Integracja państwowa: osobny adapter do oficjalnej usługi mObywatela, uruchamiany dopiero po uzyskaniu zgody, certyfikatów i dokumentacji integracyjnej.", color = Ink, style = MaterialTheme.typography.bodySmall)
+                Text("Przyszła certyfikacja jest założeniem architektonicznym, a nie obecnym uprawnieniem. Do tego czasu aplikacja nie łączy się z rządowym mObywatelem.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Text("Wybór danych do udostępnienia", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        if (populated.isEmpty()) {
+            Text("Brak zapisanych danych o niepełnosprawności lub mandacie. Uzupełnij je w Ustawieniach. Dane rodowe i pozostałe dane prywatne nie są automatycznie dołączane.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        } else {
+            populated.forEach { (key, label) ->
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.Checkbox(checked = key in selected, onCheckedChange = { checked ->
+                        selected = if (checked) selected + key else selected - key
+                        offerQr = null
+                        consent = false
+                    })
+                    Column(Modifier.weight(1f)) {
+                        Text(label, color = Navy, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                        Text(fields[key].orEmpty(), color = Muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
+        OutlinedTextField(value = purpose, onValueChange = { purpose = it; consent = false; offerQr = null },
+            modifier = Modifier.fillMaxWidth(), label = { Text("Cel udostępnienia") }, minLines = 2)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.material3.Checkbox(checked = consent, onCheckedChange = { consent = it; offerQr = null })
+            Text("Potwierdzam świadomy wybór zakresu i celu. Rozumiem, że dane wpisane ręcznie są deklaracją, a nie potwierdzeniem urzędowym.", color = Ink, style = MaterialTheme.typography.bodySmall)
+        }
+        Button(
+            onClick = {
+                runCatching {
+                    require(selected.isNotEmpty()) { "Wybierz co najmniej jedno pole." }
+                    require(purpose.isNotBlank()) { "Podaj cel udostępnienia." }
+                    val (offer, _) = OwdSecurity.createOffer()
+                    val matrix = QRCodeWriter().encode(offer.encodedQrPayload, BarcodeFormat.QR_CODE, 768, 768)
+                    Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                        for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+                            bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                        }
+                    }
+                }.onSuccess {
+                    offerQr = it
+                    sessionMessage = "Utworzono krótkotrwałą ofertę sesji. QR nie zawiera wybranych danych osobowych."
+                }.onFailure { sessionMessage = it.message ?: "Nie udało się utworzyć sesji." }
+            },
+            enabled = consent && selected.isNotEmpty() && purpose.isNotBlank(),
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Utwórz kod QR sesji OWD") }
+        Text(sessionMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
+        offerQr?.let { bitmap ->
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Oferta sesji OWD • ważność 180 sekund", color = Navy, fontWeight = FontWeight.Bold)
+                    Image(bitmap.asImageBitmap(), contentDescription = "Kod QR oferty sesji OWD", modifier = Modifier.size(250.dp))
+                    Text("To inicjuje sesję kryptograficzną. Przekazanie danych i potwierdzenie odbioru wymagają jeszcze wdrożenia transportu oraz skanera po obu stronach.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9))) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("Status funkcjonalny — etap alfa", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
+                Text("Dostępne: selekcja pól, cel i zgoda, krótkotrwały QR inicjujący sesję oraz warstwa kryptograficzna. Jeszcze niedostępne: skanowanie OWD, wzajemna wymiana kluczy, kanał Wi-Fi/Bluetooth, przekaźnik internetowy, trwała ochrona przed powtórzeniem i wysłanie wybranych rekordów. Nie pokazujemy fikcyjnego potwierdzenia przesłania.", color = Ink, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        OutlinedButton(onClick = onOpenVCard, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator wizytówki vCard") }
+        Text("Prywatność: dane nie są umieszczane w kodzie inicjującym. Odbiorca i cel muszą zostać zweryfikowani przed właściwym transferem. Dane rodzinne/rodowe pozostają poza zakresem OWD, dopóki użytkownik nie wybierze ich w odrębnym, wyraźnym przepływie.", color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
 @Composable
 private fun VCardQrScreen() {
     val context = LocalContext.current
