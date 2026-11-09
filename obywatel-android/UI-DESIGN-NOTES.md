@@ -133,3 +133,12 @@ Ekran „Dokumenty” otwiera teraz portfel z ośmioma odrębnymi pozycjami ewid
 Rozdzielono nawigacyjnie portfel i formularz edycji: przycisk powrotu z edycji prowadzi do portfela, a powrót z portfela prowadzi do poprzedniego ekranu. Licznik prezentuje liczbę obszarów z zapisanymi danymi, bez ujawniania danych osobowych na ekranie podsumowania.
 
 Portfel nie jest magazynem cyfrowych dokumentów państwowych. Wpisy są prywatną ewidencją użytkownika; statusy, numery i dane wystawców nie są weryfikowane w rejestrach. Karty i podglądy muszą zachować oznaczenia demonstracyjne i nie mogą odtwarzać zabezpieczeń, kodów ani oficjalnych wzorów dokumentów.
+
+
+## Portfel dokumentów — ekran szczegółów pozycji
+
+Każda z ośmiu pozycji portfela otwiera osobny ekran szczegółów. Widok odczytuje lokalne dane zapisane w zaszyfrowanym magazynie i prezentuje pola właściwe dla wybranej kategorii: profil, dowód, paszport, ewidencję rodową, ewidencję poselską, legitymację kursanta, ewidencję studencką albo orzeczenia i zaświadczenia. Puste pola są jawnie oznaczane jako „Brak wpisu”.
+
+Z ekranu szczegółów można wrócić do portfela albo przejść do formularza edycji. Edycja nadal wykorzystuje wspólny formularz danych — nie wprowadzono jeszcze automatycznego przewijania do konkretnej sekcji ani osobnych formularzy dla każdej kategorii. Widok szczegółów nie ujawnia danych na ekranie zbiorczym portfela; są one prezentowane dopiero po świadomym otwarciu danej pozycji.
+
+Każdy ekran szczegółów zawiera oznaczenie „EWIDENCJA LOKALNA • DEMO” oraz informację, że dane nie są weryfikowane w rejestrach publicznych i nie potwierdzają autentyczności dokumentu ani uprawnień. Nie dodano urzędowych wzorów, kodów ani zabezpieczeń.
