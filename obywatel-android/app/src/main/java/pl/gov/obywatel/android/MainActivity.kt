@@ -10,7 +10,6 @@ import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.ui.graphics.toArgb
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import android.security.keystore.KeyGenParameterSpec
