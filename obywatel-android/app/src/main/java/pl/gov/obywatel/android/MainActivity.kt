@@ -533,12 +533,25 @@ private fun SettingsMenuScreen(
                     color = Muted, style = MaterialTheme.typography.bodySmall)
             }
         }
-        ProfileActionCard("Dane osobowe i dokumenty",
-            "Edytuj profil oraz lokalną ewidencję wszystkich kategorii dokumentów",
-            Icons.Filled.CreditCard, onEditDocuments)
-        ProfileActionCard("Dane o niepełnosprawności",
-            "Edytuj informacje o orzeczeniu, zaświadczeniu lub ocenie funkcjonalnej",
+        Text("Dane profilu i dokumenty", color = Navy, fontWeight = FontWeight.Bold)
+        ProfileActionCard("Dane osobowe", "Zdjęcie profilowe, dane osoby i rodziców",
+            Icons.Filled.AccountCircle, { onEditDocuments("profile") })
+        ProfileActionCard("Dowód osobisty", "Prywatna ewidencja danych dowodu",
+            Icons.Filled.CreditCard, { onEditDocuments("identity_card") })
+        ProfileActionCard("Paszport", "Prywatna ewidencja danych paszportowych",
+            Icons.Filled.Public, { onEditDocuments("passport") })
+        ProfileActionCard("Dokument rodowy", "Dane prywatnej ewidencji rodowej",
+            Icons.Filled.Fingerprint, { onEditDocuments("family") })
+        ProfileActionCard("Legitymacja poselska", "Ewidencja danych i źródeł potwierdzenia",
+            Icons.Filled.AccountBalance, { onEditDocuments("parliament") })
+        ProfileActionCard("Legitymacja kursanta", "Ewidencja instytucji i uczestnictwa w kursie",
+            Icons.Filled.Description, { onEditDocuments("training") })
+        ProfileActionCard("Legitymacja studencka", "Ewidencja danych uczelni i statusu",
+            Icons.Filled.Badge, { onEditDocuments("student") })
+        ProfileActionCard("Orzeczenia i zaświadczenia", "Ewidencja danych o rozstrzygnięciach",
             Icons.Filled.HealthAndSafety, onEditDisability)
+        ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
+            Icons.Filled.FolderOpen, { onEditDocuments("all") })
         Text("Zmiany są zapisywane lokalnie w zaszyfrowanym magazynie prototypu. Nie są wysyłane do rejestrów ani podmiotów publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
