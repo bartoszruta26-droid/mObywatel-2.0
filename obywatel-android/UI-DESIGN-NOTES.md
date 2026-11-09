@@ -8,17 +8,23 @@ SPDX-License-Identifier: CC0-1.0
 ## Zakres zmian
 
 - Ekran startowy niezależnego prototypu Android w Jetpack Compose.
-- Piktogramy usług przeniesione z katalogu źródłowego iOS w tym repozytorium.
-- Paleta i karty są tokenami prototypu, a nie oficjalną specyfikacją design systemu.
+- Oryginalne piktogramy usług przeniesione z katalogu źródłowego iOS w tym repozytorium do Android VectorDrawable.
+- Ustawienia i pozycja „Pozostałe” używają ikon ogólnego przeznaczenia; nie przypisują im ikon innych usług.
+- Paleta kolorów pozostaje oznaczona jako demonstracyjna do czasu pełnego odwzorowania i sprawdzenia wartości z zasobów systemu designu.
 
 ## Pochodzenie zasobów
 
-Zasoby DA001, DA002, DA003, DA004, DA006, DA008, DA009, DA013, DA025 i DA035 pochodzą z:
+Piktogramy usług pochodzą z:
 `iOS/Sources/Assets.xcassets/Icons/Brand/Services/`.
-W nadrzędnym `REUSE.toml` źródłowe pliki są oznaczone © 2025 Centralny Ośrodek Informatyki oraz `LicenseRef-COI-MIT-PL`. Konwersje Android VectorDrawable zachowują te informacje.
+Wykorzystane zasoby obejmują DA001, DA002, DA003, DA004, DA006, DA008, DA009, DA013, DA025, DA035 oraz DA043 (sprawdzenie dowodu). Źródłowe pliki są oznaczone w nadrzędnym `REUSE.toml` jako © 2025 Centralny Ośrodek Informatyki oraz `LicenseRef-COI-MIT-PL`. Tekst licencji znajduje się w `LICENSES/LicenseRef-COI-MIT-PL.txt`; konwersje Android VectorDrawable zachowują oznaczenie prawnoautorskie i identyfikator licencji.
+
+## Zweryfikowane tokeny źródłowego systemu designu
+
+W `iOS/Sources/Tokens/Spacings.swift` zdefiniowano skalę odstępów: 2, 4, 8, 12, 16, 20, 24, 32, 40, 48 i 56 punktów. W `iOS/Sources/Tokens/Radiuses.swift` zdefiniowano promienie: 4, 12, 16, 24 i 40 punktów. Nazwy tokenów kolorystycznych znajdują się w `iOS/Sources/Tokens/Colors.swift`; wartości barw należy pobrać z odpowiadających im zasobów kolorów, a nie wyprowadzać z nazw.
 
 ## Granice identyfikacji i bezpieczeństwa
 
 - Prototyp nie jest oficjalną aplikacją mObywatel.
-- Nie dodano dokumentów, poświadczeń, danych użytkowników, logowania ani mechanizmów bezpieczeństwa.
+- Nie dodano dokumentów poświadczających, danych użytkowników, logowania ani mechanizmów bezpieczeństwa.
+- Piktogram sprawdzenia dowodu jest wyłącznie ikoną kafla usług, nie elementem dokumentu ani potwierdzeniem tożsamości.
 - Oficjalne znaki i godło należy wykorzystywać wyłącznie w granicach ich właściwych zasad prawnych i licencyjnych.
