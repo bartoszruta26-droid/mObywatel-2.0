@@ -23,6 +23,26 @@ class VCardCodecTest {
     }
 
     @Test
+    fun importsLegacyArchiveWithLiteralEscapedLineSeparators() {
+        val source = mapOf("firstNames" to "Zażółć", "lastName" to "Gęślą")
+        val legacy = VCardCodec.encodeArchive(source).replace("\r\n", "\\\\r\\\\n")
+        assertEquals(source, VCardCodec.decodeForImport(legacy))
+    }
+
+    @Test
+    fun repairsPolishUtf8TextPreviouslyDecodedAsWindows1250() {
+        val input = """BEGIN:VCARD
+VERSION:3.0
+FN:ZaÅ¼Ã³Å‚Ä‡ GÄ™Å›lÄ…
+N:GÄ™Å›lÄ…;ZaÅ¼Ã³Å‚Ä‡;;;
+END:VCARD
+"""
+        val imported = VCardCodec.decodeForImport(input)
+        assertEquals("Zażółć", imported["firstNames"])
+        assertEquals("Gęślą", imported["lastName"])
+    }
+
+    @Test
     fun importsStandardVCardThreePointZeroIntoProfileFields() {
         val input = """BEGIN:VCARD
 VERSION:3.0
