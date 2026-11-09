@@ -957,7 +957,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                                     Text(if (expandedDocumentId == group.id) "Zwiń －" else "Rozwiń ＋", color = Blue, style = MaterialTheme.typography.labelMedium)
                                 }
                                 if (expandedDocumentId == group.id) {
-                                    Divider(color = Color(0xFFE5EAF0))
+                                    HorizontalDivider(color = Color(0xFFE5EAF0))
                                     group.fields.filter { it.second in keys }.forEach { (label, key) ->
                                         Text("• $label", Modifier.padding(start = 52.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
                                             color = Muted, style = MaterialTheme.typography.bodySmall)
@@ -997,7 +997,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                                     Text(if (expandedDocumentId == group.id) "Zwiń －" else "Pola ＋", color = Blue, style = MaterialTheme.typography.labelMedium)
                                 }
                                 if (expandedDocumentId == group.id) {
-                                    Divider(color = Color(0xFFE5EAF0))
+                                    HorizontalDivider(color = Color(0xFFE5EAF0))
                                     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         TextButton(onClick = { selectedDocumentId = group.id; selectedDocumentFields = keys; offerQr = null; consent = false }) { Text("Zaznacz wszystkie pola") }
                                         TextButton(onClick = { selectedDocumentId = group.id; selectedDocumentFields = emptySet(); offerQr = null; consent = false }) { Text("Wyczyść") }
