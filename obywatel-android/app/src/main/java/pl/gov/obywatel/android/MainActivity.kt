@@ -644,6 +644,32 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Legitymacja studencka — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("studentUniversity", "Nazwa uczelni", fields)
+                DemoDataField("studentUniversityAddress", "Adres uczelni", fields)
+                DemoDataField("studentUniversityId", "Identyfikator uczelni / jednostki", fields)
+                DemoDataField("studentCardNumber", "Numer legitymacji / numer albumu", fields)
+                DemoDataField("studentNames", "Imię i nazwisko studenta zapisane w dokumencie", fields)
+                DemoDataField("studentFaculty", "Wydział / jednostka organizacyjna", fields)
+                DemoDataField("studentProgramme", "Kierunek studiów", fields)
+                DemoDataField("studentLevel", "Poziom studiów", fields, "I stopnia / II stopnia / jednolite magisterskie")
+                DemoDataField("studentProfile", "Profil / forma studiów", fields, "ogólnoakademicki / praktyczny; stacjonarne / niestacjonarne")
+                DemoDataField("studentYear", "Rok i semestr studiów", fields)
+                DemoDataField("studentAcademicYear", "Rok akademicki", fields)
+                DemoDataField("studentIssueDate", "Data wydania dokumentu", fields, "DD-MM-RRRR")
+                DemoDataField("studentValidity", "Termin ważności / aktualizacji", fields, "DD-MM-RRRR")
+                DemoDataField("studentStatus", "Status studenta", fields, "aktywny / urlop / skreślony / ukończony")
+                DemoDataField("studentIssuer", "Osoba / jednostka wydająca", fields)
+                AdditionalInformationSection("Informacje dodatkowe — legitymacja studencka", fields, "studentExtra", "Ten formularz służy wyłącznie do ewidencji danych. Nie nadaje statusu studenta, nie potwierdza wpisu na listę studentów i nie zastępuje dokumentu ani certyfikatu wydanego przez uczelnię.")
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Orzeczenie o niepełnosprawności — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
                 Text("Źródło ustalenia / dokumentu", color = Navy, fontWeight = FontWeight.SemiBold)
                 val authorityOptions = listOf(
