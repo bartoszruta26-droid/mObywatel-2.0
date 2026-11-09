@@ -51,7 +51,7 @@ import java.security.MessageDigest
 import java.util.UUID
 
 private data class Org(val id:String,val name:String,val type:String,val registry:String)
-private data class BrandAsset(val id:String,val orgId:String,val name:String,val category:String,val file:String,val mime:String,val rights:String)
+private data class BrandAsset(val id:String,val orgId:String,val name:String,val category:String,val file:String,val mime:String,val rights:String,val version:Int=1,val createdAt:Long=System.currentTimeMillis())
 
 private object IdentityStore {
     private const val PREF="owd_identity_v1"
@@ -61,14 +61,14 @@ private object IdentityStore {
     }.getOrDefault(emptyList())
     fun assets(c:Context):List<BrandAsset> = runCatching {
         val a=JSONArray(c.getSharedPreferences(PREF,0).getString("assets","[]"))
-        (0 until a.length()).map { val o=a.getJSONObject(it); BrandAsset(o.getString("id"),o.getString("org"),o.getString("name"),o.getString("category"),o.getString("file"),o.getString("mime"),o.optString("rights")) }
+        (0 until a.length()).map { val o=a.getJSONObject(it); BrandAsset(o.getString("id"),o.getString("org"),o.getString("name"),o.getString("category"),o.getString("file"),o.getString("mime"),o.optString("rights"),o.optInt("version",1),o.optLong("createdAt",0L)) }
     }.getOrDefault(emptyList())
     fun saveOrgs(c:Context,items:List<Org>) {
         val a=JSONArray(); items.forEach { a.put(JSONObject().put("id",it.id).put("name",it.name).put("type",it.type).put("registry",it.registry)) }
         check(c.getSharedPreferences(PREF,0).edit().putString("orgs",a.toString()).commit())
     }
     fun saveAssets(c:Context,items:List<BrandAsset>) {
-        val a=JSONArray(); items.forEach { a.put(JSONObject().put("id",it.id).put("org",it.orgId).put("name",it.name).put("category",it.category).put("file",it.file).put("mime",it.mime).put("rights",it.rights)) }
+        val a=JSONArray(); items.forEach { a.put(JSONObject().put("id",it.id).put("org",it.orgId).put("name",it.name).put("category",it.category).put("file",it.file).put("mime",it.mime).put("rights",it.rights).put("version",it.version).put("createdAt",it.createdAt)) }
         check(c.getSharedPreferences(PREF,0).edit().putString("assets",a.toString()).commit())
     }
     fun file(c:Context,a:BrandAsset)=File(File(c.filesDir,"owd-brand-assets"),a.file)
@@ -116,11 +116,14 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     require(mime in listOf("image/png","image/jpeg","image/webp","image/svg+xml","application/pdf")) { "Dozwolone: PNG, SVG, JPG, WEBP, PDF." }
                     val bytes=c.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: error("Nie można odczytać pliku.")
                     require(bytes.isNotEmpty() && bytes.size<=20*1024*1024) { "Plik pusty lub większy niż 20 MB." }
+                    require(rights.isNotBlank()) { "Podaj podstawę prawa do używania zasobu (np. własność, licencja, zgoda)." }
                     val id=UUID.randomUUID().toString()
                     val ext=when(mime){"image/png"->"png";"image/jpeg"->"jpg";"image/webp"->"webp";"image/svg+xml"->"svg";else->"pdf"}
                     val f=id+"."+ext
                     File(File(c.filesDir,"owd-brand-assets").apply{mkdirs()},f).writeBytes(bytes)
-                    BrandAsset(id,orgId,assetName.ifBlank{"Zasób "+(assets.size+1)},category,f,mime,rights)
+                    val finalName=assetName.ifBlank{"Zasób "+(assets.size+1)}
+                    val version=assets.filter{it.orgId==orgId&&it.name.equals(finalName,true)}.maxOfOrNull{it.version}?.plus(1) ?: 1
+                    BrandAsset(id,orgId,finalName,category,f,mime,rights,version,System.currentTimeMillis())
                 }
                 IdentityStore.saveAssets(c,assets.toList()+asset); assets.add(0,asset)
                 assetName=""; rights=""; message="Zasób dodany do biblioteki podmiotu."
@@ -193,7 +196,8 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     OutlinedTextField(rights,{rights=it},label={Text("Prawa / podstawa użycia")},modifier=Modifier.fillMaxWidth())
                     Button(onClick={assetPicker.launch(arrayOf("image/png","image/jpeg","image/webp","image/svg+xml","application/pdf"))},enabled=orgId.isNotBlank(),modifier=Modifier.fillMaxWidth()){Icon(Icons.Default.Add,null);Text(" Wgraj zasób")}
                     LazyColumn(verticalArrangement=Arrangement.spacedBy(6.dp)){
-                        items(assets.filter{it.orgId==orgId},key={it.id}){a->Card(Modifier.fillMaxWidth()){Column(Modifier.padding(10.dp)){Text(a.name,fontWeight=FontWeight.SemiBold);Text(a.category+" • "+a.mime,style=MaterialTheme.typography.bodySmall);if(a.rights.isNotBlank())Text("Prawa: "+a.rights,style=MaterialTheme.typography.labelSmall)}}}
+                        items(assets.filter{it.orgId==orgId},key={it.id}){a->Card(Modifier.fillMaxWidth()){Column(Modifier.padding(10.dp)){Text(a.name,fontWeight=FontWeight.SemiBold);Text(a.category+" • "+a.mime+" • wersja "+a.version,style=MaterialTheme.typography.bodySmall)
+                        Text("Dodano: "+java.text.SimpleDateFormat("yyyy-MM-dd HH:mm",java.util.Locale.getDefault()).format(java.util.Date(a.createdAt)),style=MaterialTheme.typography.labelSmall);if(a.rights.isNotBlank())Text("Prawa: "+a.rights,style=MaterialTheme.typography.labelSmall)}}}
                     }
                     Text("Pliki przechowywane lokalnie. PNG/JPG/WEBP są osadzane w PDF; SVG i PDF są archiwizowane w bibliotece, ale nie są jeszcze rasteryzowane w eksporcie.",style=MaterialTheme.typography.labelSmall)
                 }
