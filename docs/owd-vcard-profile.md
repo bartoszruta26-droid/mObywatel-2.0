@@ -46,3 +46,16 @@ vCard opisuje dane, ale sam w sobie nie zapewnia poufności, integralności, aut
 W kodzie istnieją codec vCard 4.0, mapowanie rekordów OWD do rozszerzeń vCard oraz adapter szyfrowania/dekodowania payloadu. Nie oznacza to jeszcze kompletnego przepływu użytkowego między dwoma telefonami: ekran akceptacji zakresu i celu, uzgodnienie kluczy, uruchomienie odbiornika, trwałe zużycie sesji i zapis danych muszą zostać połączone i przetestowane na dwóch rzeczywistych urządzeniach.
 
 OWD jest niezależnym protokołem aplikacji. Rozszerzenia OWD nie są schematami rządowymi ani oficjalnym interfejsem mObywatela.
+
+
+## Archiwum wszystkich danych aplikacji
+
+Ustawienia aplikacji udostępniają eksport i import jednego pliku `.vcf`. Archiwum jest jednym obiektem `VCARD` w wersji 4.0 i przenosi zapisane lokalnie pary klucz–wartość jako powtarzane właściwości `X-OWD-FIELD;X-OWD-NAME=<nazwa>`. W ten sposób możliwe jest zachowanie pól ewidencji, także takich, które nie mają bezpośredniego odpowiednika w standardowych polach kontaktowych vCard. Jest to profil archiwizacyjny tej aplikacji, a nie uniwersalny format kopii zapasowej dowolnego programu vCard.
+
+Import wymaga potwierdzenia użytkownika. Wartości o identycznych nazwach są zastępowane, a pozostałe dane lokalne pozostają zachowane. Plik może zawierać dane wrażliwe, w tym zakodowane zdjęcie profilowe; należy chronić go jak kopię dokumentów.
+
+## Zakres udostępniania OWD
+
+Ekran wyboru danych udostępniania wyświetla wszystkie niepuste pola zapisane w lokalnym profilu. Użytkownik może zaznaczyć całość jednym wyborem albo odznaczyć pojedyncze pola. Przed transferem wymagane jest świadome potwierdzenie zakresu i celu.
+
+**Ograniczenie implementacji:** obecny ekran nadal generuje i skanuje ofertę sesji QR; nie wykonuje jeszcze kompletnego transferu wybranego zestawu vCard między urządzeniami. Wybrane pola muszą zostać w kolejnym etapie powiązane z trwałym stanem sesji, zgodą odbiorcy, szyfrowanym kanałem transportowym i potwierdzeniem odbioru. Samo utworzenie QR nie oznacza wysłania danych.
