@@ -109,3 +109,20 @@ Przyszła integracja nie może polegać na podszywaniu się pod aplikację rząd
 3. Zaimplementować serializację rekordów z pochodzeniem, podpisy wystawców i weryfikację dowodów.
 4. Zbudować testowy adapter państwowy wyłącznie na podstawie oficjalnego środowiska testowego i specyfikacji otrzymanej po formalnej akceptacji.
 5. Przeprowadzić audyt bezpieczeństwa, testy zgodności i ocenę ochrony danych przed uruchomieniem produkcyjnym.
+
+
+## Aktualizacja implementacji — 9 listopada 2026
+
+Dodano kolejne niezależne elementy warstwy protokołu:
+
+- `OwdTransport.kt`: ramkowanie i dekodowanie zaszyfrowanego pakietu, bezpośredni transport TCP w sieci lokalnej, ograniczenia rozmiaru i czasu oczekiwania oraz jednorazowy odbiornik. Odbiornik odszyfrowuje pakiet AES-GCM, przekazuje zweryfikowany ładunek do procedury zatwierdzenia i odsyła potwierdzenie HMAC-SHA-256 związane z identyfikatorem sesji i czasem odbioru.
+- `OwdAutomaticTransport`: próbuje najpierw kanału bezpośredniego, a po błędzie może wywołać skonfigurowany adapter przekaźnikowy. Adapter przekaźnikowy pozostaje punktem rozszerzenia — nie skonfigurowano serwera, adresu ani usługi przekaźnikowej.
+- `OwdCredentialVerifier.kt`: weryfikacja podpisu ECDSA/SHA-256 wobec klucza wystawcy pobranego z zaufanego katalogu. Klucz dołączony do samego poświadczenia nie jest uznawany za zaufany. Dopiero poprawna weryfikacja może nadać rekordowi pochodzenie `ISSUER_ATTESTED`.
+- `OwdReplayStore.kt`: trwały rejestr zużytych identyfikatorów sesji w prywatnych preferencjach aplikacji; identyfikatory są przechowywane jako skróty SHA-256.
+- Manifest Androida deklaruje uprawnienie sieciowe wymagane przez gniazda TCP.
+
+### Granice obecnego stanu
+
+To są elementy protokołu i transportu, a nie jeszcze kompletny, zintegrowany przepływ ekranowy. Ekran OWD nadal generuje ofertę QR bez adresu nasłuchującego urządzenia i nadal nie uruchamia odbiornika ani skanera aparatem. Nie ma jeszcze mechanizmu odkrywania urządzenia/adresu IP, pełnego powiązania klucza efemerycznego z cyklem życia serwera, integracji odbioru z trwałym rejestrem sesji i interfejsem zgody, ani rzeczywistej usługi przekaźnikowej. Adapter państwowy pozostaje wyłącznie kontraktem architektonicznym. Nie oznaczamy więc transferu jako ukończonego ani przetestowanego na dwóch telefonach.
+
+Przed testem na urządzeniach trzeba jeszcze połączyć ekran z przepływem nadawcy i odbiorcy, przekazywać adres nasłuchującego urządzenia w ofercie QR, podłączyć `OwdReplayStore` w miejscu atomowego przyjęcia sesji, wdrożyć skaner QR, obsłużyć anulowanie/wygaśnięcie i wyczyścić klucze po zakończeniu. Dla transmisji poza jedną siecią lokalną potrzebny będzie zatwierdzony, utrzymywany przekaźnik HTTPS, który przechowuje wyłącznie szyfrogramy.
