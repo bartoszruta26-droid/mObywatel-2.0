@@ -1772,7 +1772,15 @@ private fun DocumentDetailsScreen(
             "Podstawa prawna / umowa" to "passportLegalBasis", "Status dyplomatyczny potwierdzony przez państwo" to "passportDiplomaticStatus",
             "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace",
             "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate",
-            "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
+            "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate",
+            "Typ laissez-passer" to "passportLpType", "Numer laissez-passer" to "passportLpNumber",
+            "Organizacja wydająca laissez-passer" to "passportLpIssuer", "Status posiadacza w organizacji" to "passportLpHolderStatus",
+            "Stanowisko / funkcja" to "passportLpPosition", "Podstawa prawna wydania" to "passportLpLegalBasis",
+            "Dokument potwierdzający podróż służbową" to "passportLpMissionCertificate",
+            "Cel i zakres podróży służbowej" to "passportLpMissionPurpose", "Państwo / państwa docelowe" to "passportLpDestination",
+            "Państwo uznające dokument / uwagi wizowe" to "passportLpRecognition", "Data wydania laissez-passer" to "passportLpIssueDate",
+            "Data ważności laissez-passer" to "passportLpExpiryDate", "Status laissez-passer" to "passportLpStatus",
+            "Uwagi / ograniczenia dokumentu" to "passportLpNotes"
         )),
         Triple("Prawo jazdy — ewidencja", "Dane dokumentu i kategorii uprawnień — wpis użytkownika", listOf(
             "Numer prawa jazdy" to "dlNumber", "Imię i nazwisko posiadacza" to "dlHolderNames",
@@ -2751,11 +2759,26 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("passportSex", "Płeć w dokumencie", fields)
                 DemoDataField("passportStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
                 DemoDataField("passportLossDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
+                Text("Dane dokumentu laissez-passer", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("passportLpType", "Typ laissez-passer", fields, "ONZ / Unia Europejska / inna organizacja międzynarodowa")
+                DemoDataField("passportLpNumber", "Numer laissez-passer", fields)
+                DemoDataField("passportLpIssuer", "Organizacja wydająca laissez-passer", fields)
+                DemoDataField("passportLpHolderStatus", "Status posiadacza w organizacji wydającej", fields, "urzędnik / funkcjonariusz / ekspert / inny — zgodnie z dokumentem")
+                DemoDataField("passportLpPosition", "Stanowisko / funkcja", fields)
+                DemoDataField("passportLpLegalBasis", "Podstawa prawna wydania", fields, "konwencja / statut / umowa / regulamin organizacji")
+                DemoDataField("passportLpMissionCertificate", "Zaświadczenie o podróży służbowej", fields, "numer, data, wystawca lub odniesienie do zaświadczenia")
+                DemoDataField("passportLpMissionPurpose", "Cel i zakres podróży służbowej", fields)
+                DemoDataField("passportLpDestination", "Państwo / państwa docelowe", fields)
+                DemoDataField("passportLpRecognition", "Państwo uznające dokument / uwagi wizowe", fields)
+                DemoDataField("passportLpIssueDate", "Data wydania laissez-passer", fields, "DD-MM-RRRR")
+                DemoDataField("passportLpExpiryDate", "Data ważności laissez-passer", fields, "DD-MM-RRRR")
+                DemoDataField("passportLpStatus", "Status laissez-passer", fields, "ważny / wygasły / utracony / unieważniony")
+                DemoDataField("passportLpNotes", "Uwagi / ograniczenia dokumentu", fields, singleLine = false)
                 Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
                     Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Jak prawidłowo określić rodzaj paszportu?", color = Navy, fontWeight = FontWeight.Bold)
-                        Text("O rodzaju dokumentu rozstrzyga dokument wydany przez właściwe państwo lub organizację międzynarodową, a nie sama funkcja reprezentanta. W Polsce ustawa o dokumentach paszportowych wyróżnia paszport, paszport tymczasowy, paszport dyplomatyczny i paszport służbowy MSZ. Paszport dyplomatyczny wydaje minister właściwy do spraw zagranicznych osobom wskazanym w ustawie, w tym w określonych przypadkach osobom skierowanym do pracy w organizacjach międzynarodowych. Sam mandat w NGO nie daje prawa do polskiego paszportu dyplomatycznego.", color = Navy, style = MaterialTheme.typography.bodySmall)
-                        Text("Przedstawiciel NGO co do zasady podróżuje na podstawie zwykłego paszportu swojego państwa oraz dokumentu potwierdzającego mandat, zaproszenie lub akredytację. Nie istnieje powszechna kategoria „paszportu NGO”. Organizacje międzynarodowe mogą wydawać własne dokumenty podróży, np. ONZ wydaje laissez-passer swoim urzędnikom na podstawie konwencji z 1946 r.; nie jest to paszport dyplomatyczny państwa.", color = Navy, style = MaterialTheme.typography.bodySmall)
+                        Text("O rodzaju dokumentu rozstrzyga dokument wydany przez właściwe państwo lub organizację międzynarodową, a nie sama funkcja reprezentanta. W Polsce ustawa o dokumentach paszportowych wyróżnia paszport, paszport tymczasowy, paszport dyplomatyczny i paszport służbowy MSZ. Laissez-passer jest odrębnym dokumentem podróży wydawanym na podstawie przepisów właściwej organizacji międzynarodowej; nie jest polskim paszportem dyplomatycznym. Paszport dyplomatyczny wydaje minister właściwy do spraw zagranicznych osobom wskazanym w ustawie, w tym w określonych przypadkach osobom skierowanym do pracy w organizacjach międzynarodowych. Sam mandat w NGO nie daje prawa do polskiego paszportu dyplomatycznego.", color = Navy, style = MaterialTheme.typography.bodySmall)
+                        Text("Przedstawiciel NGO co do zasady podróżuje na podstawie zwykłego paszportu swojego państwa oraz dokumentu potwierdzającego mandat, zaproszenie lub akredytację. Nie istnieje powszechna kategoria „paszportu NGO”. Organizacje międzyrządowe mogą wydawać własne dokumenty podróży uprawnionym osobom. Przykładowo ONZ wydaje UN laissez-passer swoim urzędnikom na podstawie sekcji 24 Konwencji o przywilejach i immunitetach ONZ; sekcja 26 przewiduje ułatwienia wizowe i podróżne także dla ekspertów oraz innych osób podróżujących w sprawach ONZ na podstawie odpowiedniego zaświadczenia, ale nie przyznaje im automatycznie dokumentu laissez-passer. Wpisz zatem rzeczywistego wystawcę i podstawę dokumentu.", color = Navy, style = MaterialTheme.typography.bodySmall)
                         Text("Przywileje i immunitety nie wynikają z samego posiadania paszportu ani tytułu reprezentanta. Zależą od właściwej podstawy prawnej, funkcji, akredytacji i uznania przez państwo przyjmujące.", color = Navy, style = MaterialTheme.typography.bodySmall)
                     }
                 }
