@@ -5,12 +5,16 @@ package pl.gov.obywatel.android
 
 import android.os.Bundle
 import android.content.Context
-import android.graphics.BitmapFactory
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectFFactory
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
@@ -84,6 +88,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -407,22 +412,73 @@ private fun categoryIconFor(category: String): Int? = when (category) {
 
 @Composable
 private fun QrToolsScreen() {
-    var showVCard by remember { mutableStateOf(false) }
-    BackHandler(enabled = showVCard) { showVCard = false }
-    if (showVCard) {
-        Column(Modifier.fillMaxSize()) {
-            Text("‹  Wróć do wymiany danych", color = Blue, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clickable { showVCard = false }.padding(horizontal = 20.dp, vertical = 8.dp))
-            VCardQrScreen()
-        }
-    } else {
-        OwdHubScreen(onOpenVCard = { showVCard = true })
+    var activeGenerator by remember { mutableStateOf("owd") }
+    BackHandler(enabled = activeGenerator != "owd") { activeGenerator = "owd" }
+    when (activeGenerator) {
+        "vcard" -> { QrSubscreenHeader("Wróć do generatorów") { activeGenerator = "owd" }; VCardQrScreen() }
+        "url" -> { QrSubscreenHeader("Wróć do generatorów") { activeGenerator = "owd" }; WebsiteQrScreen() }
+        else -> OwdHubScreen(onOpenVCard = { activeGenerator = "vcard" }, onOpenWebsite = { activeGenerator = "url" })
     }
 }
 
+@Composable
+private fun QrSubscreenHeader(label: String, onBack: () -> Unit) {
+    Text("‹  $label", color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(horizontal = 20.dp, vertical = 8.dp))
+}
+
+private const val QR_BRAND_NONE = "none"
+private const val QR_BRAND_STATE = "state"
+private const val QR_BRAND_FILE = "file"
 
 @Composable
-private fun OwdHubScreen(onOpenVCard: () -> Unit) {
+private fun QrBrandingControls(branding: String, onBrandingChange: (String) -> Unit, logoLoaded: Boolean, onChooseLogo: () -> Unit, onClearLogo: () -> Unit) {
+    Text("Znak umieszczony w kodzie QR", color = Navy, fontWeight = FontWeight.Bold)
+    listOf(QR_BRAND_STATE to "Godło państwowe", QR_BRAND_FILE to "Logo z pliku", QR_BRAND_NONE to "Bez znaku").forEach { (value, label) ->
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { onBrandingChange(value) }) {
+            RadioButton(selected = branding == value, onClick = { onBrandingChange(value) })
+            Text(label, color = Ink, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+    if (branding == QR_BRAND_FILE) {
+        OutlinedButton(onClick = onChooseLogo, modifier = Modifier.fillMaxWidth()) { Text(if (logoLoaded) "Zmień załączone logo" else "Wybierz logo z pliku") }
+        if (logoLoaded) OutlinedButton(onClick = onClearLogo, modifier = Modifier.fillMaxWidth()) { Text("Usuń załączone logo") }
+        Text("Zalecany plik PNG z przezroczystym tłem. Logo jest elementem graficznym, a nie treścią kodu.", color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+private fun loadQrLogo(context: Context, uri: Uri): Bitmap {
+    val source = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } ?: error("Nie udało się odczytać obrazu.")
+    require(source.width > 0 && source.height > 0) { "Nieprawidłowy plik obrazu." }
+    val scale = minOf(1f, 1024f / maxOf(source.width, source.height))
+    return if (scale < 1f) Bitmap.createScaledBitmap(source, (source.width * scale).toInt().coerceAtLeast(1), (source.height * scale).toInt().coerceAtLeast(1), true) else source
+}
+
+private fun generateBrandedQr(context: Context, payload: String, branding: String, uploadedLogo: Bitmap?): Bitmap {
+    require(payload.isNotBlank()) { "Treść kodu QR jest pusta." }
+    val hints = mapOf<EncodeHintType, Any>(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H, EncodeHintType.MARGIN to 3)
+    val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, 900, 900, hints)
+    val bitmap = Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888)
+    for (y in 0 until matrix.height) for (x in 0 until matrix.width) bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+    val logo = when (branding) {
+        QR_BRAND_STATE -> BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem) ?: error("Nie można wczytać godła państwowego.")
+        QR_BRAND_FILE -> uploadedLogo ?: error("Wybierz plik z logo.")
+        else -> null
+    } ?: return bitmap
+    val canvas = Canvas(bitmap)
+    val outer = bitmap.width * 0.235f
+    val inner = bitmap.width * 0.175f
+    val cx = bitmap.width / 2f
+    val cy = bitmap.height / 2f
+    canvas.drawRoundRect(RectF(cx-outer/2, cy-outer/2, cx+outer/2, cy+outer/2), outer*0.12f, outer*0.12f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE })
+    val ratio = minOf(inner / logo.width, inner / logo.height)
+    val w = logo.width * ratio
+    val h = logo.height * ratio
+    canvas.drawBitmap(logo, null, RectF(cx-w/2, cy-h/2, cx+w/2, cy+h/2), Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+    return bitmap
+}
+
+@Composable
+private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     val context = LocalContext.current
     val fields = remember { DemoIdentityStore.load(context) }
     val shareable = listOf(
@@ -544,6 +600,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit) {
             }
         }
         OutlinedButton(onClick = onOpenVCard, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator wizytówki vCard") }
+        OutlinedButton(onClick = onOpenWebsite, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator kodu strony internetowej") }
         Text("Prywatność: dane nie są umieszczane w kodzie inicjującym. Odbiorca i cel muszą zostać zweryfikowani przed właściwym transferem. Dane rodzinne/rodowe są całkowicie wyłączone z obecnego zakresu OWD.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
