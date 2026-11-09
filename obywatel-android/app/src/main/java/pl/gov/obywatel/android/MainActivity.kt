@@ -397,8 +397,16 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("familyRole", "Miejsce w strukturze rodu", fields)
                 DemoDataField("familyRegistry", "Osoba lub organ prowadzący ewidencję", fields)
                 DemoDataField("familyIssueDate", "Data sporządzenia", fields, "DD-MM-RRRR")
+                DemoDataField("familyExpiryDate", "Data przeglądu / aktualizacji wpisu", fields, "DD-MM-RRRR")
                 DemoDataField("familySource", "Podstawa wpisu / dokument źródłowy", fields)
-                Text("Wizualizacja dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("familyRegistryPlace", "Miejsce prowadzenia ewidencji", fields)
+                DemoDataField("familyResidence", "Miejsce zamieszkania (wpis dobrowolny)", fields)
+                DemoDataField("familyFatherLine", "Linia rodowa ojca", fields)
+                DemoDataField("familyMotherLine", "Linia rodowa matki", fields)
+                DemoDataField("familyNotes", "Uwagi ewidencyjne", fields)
+                DemoDataField("familyHolderSignature", "Imię i nazwisko posiadacza / podpis", fields)
+                DemoDataField("familyRegistrarSignature", "Imię i nazwisko wystawcy / podpis", fields)
+                Text("Wizualizacja dokumentu — awers i rewers", color = Navy, fontWeight = FontWeight.Bold)
                 RodowyDocumentPreview(fields = fields, photoBase64 = photoBase64)
             }
         }
@@ -579,6 +587,40 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                     Text("DOKUMENT PRYWATNY — NIE JEST DOKUMENTEM PAŃSTWOWYM", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                     Text("Nie zastępuje dowodu osobistego ani paszportu.", color = Color(0xFFE1ECEC), style = MaterialTheme.typography.labelSmall)
                 }
+            }
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    Card(
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE7EDF0)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("DOKUMENT RODOWY • REWERS", color = Color(0xFF254B50), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.labelLarge)
+                Spacer(Modifier.weight(1f))
+                Text(fields["familyDocNumber"].orEmpty().ifBlank { "NR —" }, color = Color(0xFF254B50), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("RODZICE", color = Color(0xFF52666B), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                Text("Ojciec: " + listOf(fields["fatherNames"], fields["fatherSurname"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "—" }, color = Color(0xFF172D32), style = MaterialTheme.typography.bodySmall)
+                Text("Matka: " + listOf(fields["motherNames"], fields["motherSurname"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "—" }, color = Color(0xFF172D32), style = MaterialTheme.typography.bodySmall)
+                Text("RÓD I EWIDENCJA", color = Color(0xFF52666B), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                Text("Ród: " + fields["familyName"].orEmpty().ifBlank { "—" } + " • Linia: " + fields["familyLine"].orEmpty().ifBlank { "—" }, color = Color(0xFF172D32), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("Ewidencję prowadzi: " + fields["familyRegistry"].orEmpty().ifBlank { "—" }, color = Color(0xFF172D32), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("Miejsce: " + fields["familyRegistryPlace"].orEmpty().ifBlank { "—" }, color = Color(0xFF172D32), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
+                    .background(Color(0xFF254B50)).padding(horizontal = 7.dp, vertical = 5.dp)
+            ) {
+                Text("DOKUMENT PRYWATNY • EWIDENCJA RODOWA", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                Text("Nie stanowi państwowego dokumentu tożsamości ani dokumentu podróży.", color = Color(0xFFE1ECEC), style = MaterialTheme.typography.labelSmall)
             }
         }
     }
