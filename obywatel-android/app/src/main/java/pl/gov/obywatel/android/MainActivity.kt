@@ -16,6 +16,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedButton
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.BinaryBitmap
+import com.google.zxing.MultiFormatReader
+import com.google.zxing.RGBLuminanceSource
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
@@ -586,6 +591,45 @@ private fun QrBrandingControls(branding: String, onBrandingChange: (String) -> U
     }
 }
 
+private fun decodeLoyaltyCode(bitmap: Bitmap): String? = runCatching {
+    val width = bitmap.width
+    val height = bitmap.height
+    require(width > 0 && height > 0 && width.toLong() * height.toLong() <= 12_000_000L)
+    val pixels = IntArray(width * height)
+    bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+    MultiFormatReader().decode(BinaryBitmap(HybridBinarizer(RGBLuminanceSource(width, height, pixels)))).text
+}.getOrNull()
+
+private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bitmap? {
+    if (value.isBlank()) return null
+    return runCatching {
+        val width = if (format == BarcodeFormat.QR_CODE) 480 else 900
+        val height = if (format == BarcodeFormat.QR_CODE) 480 else 220
+        val matrix = MultiFormatWriter().encode(value, format, width, height,
+            mapOf(EncodeHintType.MARGIN to 2, EncodeHintType.CHARACTER_SET to "UTF-8"))
+        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+            for (y in 0 until height) for (x in 0 until width) {
+                bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+            }
+        }
+    }.getOrNull()
+}
+
+@Composable
+private fun LoyaltyGeneratedCodes(barcodeValue: String, qrValue: String) {
+    val barcode = remember(barcodeValue) { generateLoyaltyCodeBitmap(barcodeValue, BarcodeFormat.CODE_128) }
+    val qr = remember(qrValue) { generateLoyaltyCodeBitmap(qrValue, BarcodeFormat.QR_CODE) }
+    if (barcode != null || qr != null) {
+        Text("Wygenerowane kody", color = Navy, fontWeight = FontWeight.SemiBold)
+        if (barcode != null) Image(barcode.asImageBitmap(), contentDescription = "Wygenerowany kod kreskowy Code 128",
+            modifier = Modifier.fillMaxWidth().height(90.dp), contentScale = ContentScale.Fit)
+        if (qr != null) Image(qr.asImageBitmap(), contentDescription = "Wygenerowany kod QR",
+            modifier = Modifier.size(190.dp), contentScale = ContentScale.Fit)
+        Text("To obrazy kodów wygenerowane z wpisanej treści; nie tworzą ani nie aktywują karty w systemie sklepu.",
+            color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
 private fun loadQrLogo(context: Context, uri: Uri): Bitmap {
     val source = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } ?: error("Nie udało się odczytać obrazu.")
     require(source.width > 0 && source.height > 0) { "Nieprawidłowy plik obrazu." }
@@ -943,6 +987,7 @@ private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
     val context = LocalContext.current
     var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var saveMessage by remember { mutableStateOf("") }
+    var pendingLoyaltyImageKey by remember { mutableStateOf("") }
     val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri: Uri? ->
         val image = pendingBitmap
         pendingBitmap = null
@@ -1269,6 +1314,34 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         "Środowisko" to "Informacje środowiskowe i lokalne materiały edukacyjne.",
         "Pozostałe" to "Katalog dodatkowych modułów i informacji."
     )
+    val loyaltyImagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val targetKey = pendingLoyaltyImageKey
+        if (uri != null && targetKey.isNotBlank()) {
+            runCatching {
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    ?: error("Nie można odczytać wybranego obrazu.")
+                require(bytes.size <= 5 * 1024 * 1024) { "Obraz przekracza limit 5 MB." }
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    ?: error("Plik nie jest prawidłowym obrazem.")
+                Triple(Base64.encodeToString(bytes, Base64.NO_WRAP), decodeLoyaltyCode(bitmap), bitmap)
+            }.onSuccess { (encoded, decoded, _) ->
+                fields[targetKey] = encoded
+                val cardPrefix = targetKey.substringBeforeLast("Image")
+                if (decoded != null) {
+                    when {
+                        targetKey.endsWith("BarcodeImage") -> fields["${cardPrefix}Barcode"] = decoded
+                        targetKey.endsWith("QrImage") -> fields["${cardPrefix}Qr"] = decoded
+                        else -> {
+                            if (fields["${cardPrefix}Barcode"].isNullOrBlank()) fields["${cardPrefix}Barcode"] = decoded
+                            else if (fields["${cardPrefix}Qr"].isNullOrBlank()) fields["${cardPrefix}Qr"] = decoded
+                        }
+                    }
+                    saveMessage = "Obraz dodany. Odczytany kod zapisano w polu karty — sprawdź treść i zapisz zmiany."
+                } else saveMessage = "Obraz dodany. Nie wykryto kodu QR ani kreskowego; treść można wpisać ręcznie."
+            }.onFailure { saveMessage = "Nie udało się przetworzyć obrazu: ${it.message ?: "błąd"}" }
+        }
+        pendingLoyaltyImageKey = ""
+    }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -1714,6 +1787,18 @@ private fun DocumentDetailsScreen(
             "Ograniczenia / kody" to "dlRestrictions", "Status dokumentu" to "dlStatus",
             "Numer poprzedniego dokumentu" to "dlReplacementNumber", "Data utraty / unieważnienia" to "dlLossDate"
         )),
+        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..5).flatMap { n ->
+            val p = "loyalty$n"
+            listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty" to "${p}Number",
+                "Kod cyfrowy" to "${p}DigitalCode", "Treść kodu kreskowego" to "${p}Barcode",
+                "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status")
+        })),
+        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..5).flatMap { n ->
+            val p = "loyalty$n"
+            listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty" to "${p}Number",
+                "Kod cyfrowy" to "${p}DigitalCode", "Treść kodu kreskowego" to "${p}Barcode",
+                "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status")
+        })),
         Triple("Karty biblioteczne — ewidencja", "Dane kart wydanych przez różne biblioteki", listOf(
             "Biblioteka 1 — nazwa" to "library1Name", "Biblioteka 1 — numer karty" to "library1CardNumber",
             "Biblioteka 1 — typ karty" to "library1Type", "Biblioteka 1 — data wydania" to "library1IssueDate",
@@ -1755,7 +1840,7 @@ private fun DocumentDetailsScreen(
         ))
     )
     val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
-    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra", "libraryExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
+    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra", "libraryExtra", "loyaltyExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
@@ -1907,6 +1992,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         "disability" -> "Orzeczenia i zaświadczenia — ewidencja"
         "passport" -> "Dane paszportowe — ewidencja"
         "driving_license" -> "Prawo jazdy — ewidencja"
+        "loyalty_cards" -> "Karty lojalnościowe — ewidencja"
         else -> "Wszystkie dane i dokumenty"
     }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -2305,6 +2391,51 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 })
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "loyalty_cards") {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Karty lojalnościowe sklepów", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Zapisz maksymalnie pięć kart. Możesz importować zdjęcie całej karty, osobny kod kreskowy lub kod QR. Aplikacja spróbuje odczytać kod ze zdjęcia.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
+                    (1..5).forEach { number ->
+                        val prefix = "loyalty$number"
+                        Text("Karta $number", color = Navy, fontWeight = FontWeight.SemiBold)
+                        DemoDataField("${prefix}Store", "Sklep / marka", fields)
+                        DemoDataField("${prefix}Program", "Nazwa programu lojalnościowego", fields)
+                        DemoDataField("${prefix}Number", "Numer karty / identyfikator", fields)
+                        DemoDataField("${prefix}DigitalCode", "Kod cyfrowy", fields)
+                        DemoDataField("${prefix}Barcode", "Treść kodu kreskowego", fields)
+                        DemoDataField("${prefix}Qr", "Treść kodu QR", fields)
+                        DemoDataField("${prefix}Status", "Status karty", fields, "aktywna / nieaktywna")
+                        listOf("Card" to "zdjęcie karty", "Barcode" to "zdjęcie kodu kreskowego", "Qr" to "zdjęcie kodu QR").forEach { (kind, label) ->
+                            val imageKey = "${prefix}${kind}Image"
+                            OutlinedButton(onClick = { pendingLoyaltyImageKey = imageKey; loyaltyImagePicker.launch("image/*") },
+                                modifier = Modifier.fillMaxWidth()) {
+                                Text(if (fields[imageKey].isNullOrBlank()) "Importuj $label" else "Zmień $label")
+                            }
+                            val imageBitmap = remember(fields[imageKey]) {
+                                runCatching {
+                                    val encoded = fields[imageKey].orEmpty()
+                                    if (encoded.isBlank()) null else {
+                                        val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                                    }
+                                }.getOrNull()
+                            }
+                            if (imageBitmap != null) Image(imageBitmap.asImageBitmap(), contentDescription = label,
+                                modifier = Modifier.fillMaxWidth().height(110.dp), contentScale = ContentScale.Fit)
+                        }
+                        LoyaltyGeneratedCodes(fields["${prefix}Barcode"].orEmpty(), fields["${prefix}Qr"].orEmpty())
+                    }
+                    Text("Odczyt działa dla kodów obsługiwanych przez ZXing. Nie gwarantuje odczytu kodów dynamicznych, zaszyfrowanych ani wymagających aplikacji wystawcy.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
+                    AdditionalInformationSection("Informacje dodatkowe — karty lojalnościowe", fields, "loyaltyExtra",
+                        "Zapisz źródło danych lub datę weryfikacji. Kody mogą umożliwiać dostęp do konta lojalnościowego — chroń je jak dane dostępowe.")
+                }
+            }
         }
         if (categoryId == "all" || categoryId == "library_card") {
             Card(
