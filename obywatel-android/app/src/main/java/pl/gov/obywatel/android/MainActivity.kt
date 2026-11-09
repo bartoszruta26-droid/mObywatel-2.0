@@ -410,6 +410,26 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("mpDistrict", "Okręg wyborczy", fields)
                 DemoDataField("mpStart", "Data rozpoczęcia mandatu", fields, "DD-MM-RRRR")
                 DemoDataField("mpEnd", "Data zakończenia mandatu", fields, "DD-MM-RRRR")
+                Text("Podstawa konstytucyjna i charakter reprezentacji", color = Navy, fontWeight = FontWeight.Bold)
+                Text(
+                    "Art. 104 ust. 1 Konstytucji RP: „Posłowie są przedstawicielami Narodu. Nie wiążą ich instrukcje wyborców.” Przepis ustanawia zasadę wolnego mandatu i reprezentacji Narodu.",
+                    color = Ink,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text(
+                    "Art. 104 ust. 2 Konstytucji RP: przed rozpoczęciem sprawowania mandatu posłowie składają ślubowanie przed Sejmem. Odmowa złożenia ślubowania oznacza zrzeczenie się mandatu (art. 104 ust. 3).",
+                    color = Ink,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text("Dane dotyczące ślubowania — oświadczenie własne", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
+                DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
+                DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
+                Text(
+                    "Ważne: Konstytucja wymaga złożenia ślubowania „przed Sejmem”; nie stanowi, że ma ono nastąpić przed budynkiem Sejmu. Jeżeli osoba składająca oświadczenie wypowiedziała rotę przed budynkiem, można opisać to jako okoliczność faktyczną i wskazać źródło. Sam wpis nie potwierdza uzyskania ani trwania mandatu.",
+                    color = Muted,
+                    style = MaterialTheme.typography.bodySmall
+                )
                 Text(
                     "Formularz nie stanowi legitymacji, nie potwierdza mandatu ani prawa do reprezentowania Sejmu.",
                     color = Muted,
