@@ -128,7 +128,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                 val value = local["f$index"].orEmpty()
                 if (preview) {
                     if (value.isNotBlank()) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) { Text(label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788)); Text(value, style = MaterialTheme.typography.bodyLarge) }
-                } else OutlinedTextField(value = value, onValueChange = { local = local + ("f$index" to it) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa") else 1, maxLines = 5)
+                } else OutlinedTextField(value = value, onValueChange = { local = local + ("f$index" to it) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1, maxLines = 5)
             }
             if (preview) Text("PODGLĄD EWIDENCYJNY — dokument prywatny / roboczy. Nie stanowi samodzielnie urzędowego odpisu, wpisu rejestrowego ani poświadczenia.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
