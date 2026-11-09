@@ -306,7 +306,7 @@ private fun ProfileLandingScreen(
         }
         ProfileActionCard("Dokumenty i dane", "Przeglądaj lokalną ewidencję", Icons.Filled.CreditCard, onOpenDocuments)
         ProfileActionCard("Zaświadczenia", "Zapisane dane dokumentów i zaświadczeń", Icons.Filled.Description, onOpenCertificates)
-        ProfileActionCard("Ustawienia danych", "Uzupełnij dane dotyczące niepełnosprawności", Icons.Filled.Settings, onOpenSettings)
+        ProfileActionCard("Ustawienia", "Otwórz menu zarządzania lokalnymi danymi", Icons.Filled.Settings, onOpenSettings)
         Text(
             "Profil przechowuje dane wyłącznie lokalnie. Nie jest kontem administracji publicznej i nie zapewnia logowania do usług urzędowych.",
             color = Muted, style = MaterialTheme.typography.bodySmall
@@ -880,7 +880,7 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "‹  Powrót do portfela",
+            text = "‹  Powrót do ustawień",
             color = Blue,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
