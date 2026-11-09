@@ -10,17 +10,15 @@ import java.security.MessageDigest
 internal class OwdReplayStore(context: Context) {
     private val preferences = context.applicationContext.getSharedPreferences("owd_consumed_sessions_v1", Context.MODE_PRIVATE)
 
-    @Synchronized
     fun consume(sessionId: String, expiresAtEpochSeconds: Long,
-                nowEpochSeconds: Long = System.currentTimeMillis() / 1000): Boolean {
-        if (sessionId.isBlank() || expiresAtEpochSeconds <= nowEpochSeconds) return false
+                nowEpochSeconds: Long = System.currentTimeMillis() / 1000): Boolean = synchronized(processLock) {
+        if (sessionId.isBlank() || expiresAtEpochSeconds <= nowEpochSeconds) return@synchronized false
         val key = digest(sessionId)
-        if (preferences.contains(key)) return false
-        return preferences.edit().putLong(key, expiresAtEpochSeconds).commit()
+        if (preferences.contains(key)) return@synchronized false
+        preferences.edit().putLong(key, expiresAtEpochSeconds).commit()
     }
 
-    @Synchronized
-    fun prune(nowEpochSeconds: Long = System.currentTimeMillis() / 1000) {
+    fun prune(nowEpochSeconds: Long = System.currentTimeMillis() / 1000) = synchronized(processLock) {
         val editor = preferences.edit()
         preferences.all.forEach { (key, value) ->
             if (value is Long && value <= nowEpochSeconds) editor.remove(key)
@@ -30,5 +28,9 @@ internal class OwdReplayStore(context: Context) {
 
     private fun digest(value: String): String = MessageDigest.getInstance("SHA-256")
         .digest(value.toByteArray(Charsets.UTF_8))
-        .joinToString("") { "%02x".format(it) }
+        .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+
+    private companion object {
+        val processLock = Any()
+    }
 }
