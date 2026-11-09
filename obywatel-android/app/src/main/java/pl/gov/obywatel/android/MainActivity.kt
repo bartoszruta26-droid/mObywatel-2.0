@@ -549,7 +549,7 @@ private const val QR_BRAND_FILE = "file"
 
 @Composable
 private fun QrBrandingControls(branding: String, onBrandingChange: (String) -> Unit, logoLoaded: Boolean, onChooseLogo: () -> Unit, onClearLogo: () -> Unit) {
-    Text("Znak umieszczony w kodzie QR", color = Navy, fontWeight = FontWeight.Bold)
+    Text("Znak graficzny obok kodu QR", color = Navy, fontWeight = FontWeight.Bold)
     listOf(QR_BRAND_STATE to "Godło państwowe", QR_BRAND_FILE to "Logo z pliku", QR_BRAND_NONE to "Bez znaku").forEach { (value, label) ->
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { onBrandingChange(value) }) {
             RadioButton(selected = branding == value, onClick = { onBrandingChange(value) })
@@ -559,7 +559,7 @@ private fun QrBrandingControls(branding: String, onBrandingChange: (String) -> U
     if (branding == QR_BRAND_FILE) {
         OutlinedButton(onClick = onChooseLogo, modifier = Modifier.fillMaxWidth()) { Text(if (logoLoaded) "Zmień załączone logo" else "Wybierz logo z pliku") }
         if (logoLoaded) OutlinedButton(onClick = onClearLogo, modifier = Modifier.fillMaxWidth()) { Text("Usuń załączone logo") }
-        Text("Zalecany plik PNG z przezroczystym tłem. Logo jest elementem graficznym, a nie treścią kodu.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Logo jest wyświetlane poza kodem QR. Żaden jego fragment nie zasłania modułów kodu.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -796,7 +796,7 @@ private fun WebsiteQrScreen() {
                 }
             }
         } else Text(if (!validUrl) "Podaj poprawny adres rozpoczynający się od http:// lub https://." else "Wybierz logo z pliku albo ustaw opcję „Bez znaku”.", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Text("Znak jest nakładką graficzną, a nie treścią kodu. Przed publikacją sprawdź skanowanie na kilku urządzeniach.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Godło lub logo jest wyświetlane obok kodu. Sam kod pozostaje czysty, bez nakładek. Przed publikacją sprawdź skanowanie na kilku urządzeniach.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 @Composable
