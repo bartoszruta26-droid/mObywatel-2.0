@@ -4,8 +4,23 @@
 package pl.gov.obywatel.android
 
 import android.os.Bundle
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.Base64
+import org.json.JSONObject
+import java.io.File
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +36,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -60,6 +78,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -257,6 +276,27 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
 
 @Composable
 private fun DemoDocumentsScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val fields = remember {
+        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
+    }
+    var photoBase64 by remember { mutableStateOf(fields["photo"] ?: "") }
+    var saveMessage by remember { mutableStateOf("") }
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    ?: error("Nie można odczytać wybranego zdjęcia")
+            }.onSuccess { bytes ->
+                if (bytes.size > 5 * 1024 * 1024) {
+                    saveMessage = "Zdjęcie przekracza limit 5 MB. Wybierz mniejszy plik."
+                } else {
+                    photoBase64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                    saveMessage = "Zdjęcie dodane. Zapisz zmiany."
+                }
+            }.onFailure { saveMessage = "Nie udało się wczytać zdjęcia: ${it.localizedMessage ?: "błąd odczytu"}" }
+        }
+    }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -297,7 +337,7 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Zdjęcie profilowe (miejsce na fotografię)", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Zdjęcie profilowe", color = Navy, fontWeight = FontWeight.Bold)
                 Box(
                     modifier = Modifier.fillMaxWidth().height(150.dp)
                         .clip(RoundedCornerShape(12.dp))
@@ -305,18 +345,37 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                         .border(1.dp, Border, RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Muted, modifier = Modifier.size(42.dp))
-                        Text("MIEJSCE NA ZDJĘCIE", color = Muted, fontWeight = FontWeight.Bold)
-                        Text("Brak wczytanego zdjęcia", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    if (photoBase64.isNotBlank()) {
+                        val bytes = remember(photoBase64) { runCatching { Base64.decode(photoBase64, Base64.DEFAULT) }.getOrNull() }
+                        val bitmap = remember(bytes) {
+                            bytes?.let {
+                                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                                BitmapFactory.decodeByteArray(it, 0, it.size, bounds)
+                                var sample = 1
+                                while (bounds.outWidth / sample > 900 || bounds.outHeight / sample > 900) sample *= 2
+                                BitmapFactory.decodeByteArray(it, 0, it.size, BitmapFactory.Options().apply { inSampleSize = sample })
+                            }
+                        }
+                        if (bitmap != null) Image(bitmap.asImageBitmap(), contentDescription = "Zdjęcie profilowe", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        else Text("Nie można wyświetlić zdjęcia", color = Muted)
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Muted, modifier = Modifier.size(42.dp))
+                            Text("MIEJSCE NA ZDJĘCIE", color = Muted, fontWeight = FontWeight.Bold)
+                            Text("Nie wybrano fotografii", color = Muted, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Wybierz zdjęcie", color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoPicker.launch("image/*") }.padding(vertical = 8.dp))
+                    if (photoBase64.isNotBlank()) Text("Usuń zdjęcie", color = Color(0xFF9B2C2C), fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoBase64 = "" }.padding(vertical = 8.dp))
+                }
                 Text("Dane osobowe", color = Navy, fontWeight = FontWeight.Bold)
-                DemoDataField("Imię / imiona")
-                DemoDataField("Nazwisko")
-                DemoDataField("Data urodzenia", "DD-MM-RRRR")
-                DemoDataField("Miejsce urodzenia")
-                DemoDataField("Obywatelstwo")
+                DemoDataField("firstNames", "Imię / imiona", fields)
+                DemoDataField("lastName", "Nazwisko", fields)
+                DemoDataField("birthDate", "Data urodzenia", fields, "DD-MM-RRRR")
+                DemoDataField("birthPlace", "Miejsce urodzenia", fields)
+                DemoDataField("citizenship", "Obywatelstwo", fields)
             }
         }
         Card(
@@ -327,10 +386,10 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Dane dowodu osobistego", color = Navy, fontWeight = FontWeight.Bold)
-                DemoDataField("Numer dowodu osobistego")
-                DemoDataField("Data wydania", "DD-MM-RRRR")
-                DemoDataField("Data ważności", "DD-MM-RRRR")
-                DemoDataField("Organ wydający")
+                DemoDataField("idNumber", "Numer dowodu osobistego", fields)
+                DemoDataField("idIssueDate", "Data wydania", fields, "DD-MM-RRRR")
+                DemoDataField("idExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
+                DemoDataField("idIssuer", "Organ wydający", fields)
                 Text(
                     "Pola mają charakter przykładowy. Formularz nie generuje ani nie odwzorowuje dowodu osobistego.",
                     color = Muted,
@@ -346,11 +405,11 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Legitymacja poselska — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
-                DemoDataField("Numer ewidencyjny legitymacji")
-                DemoDataField("Kadencja")
-                DemoDataField("Okręg wyborczy")
-                DemoDataField("Data rozpoczęcia mandatu", "DD-MM-RRRR")
-                DemoDataField("Data zakończenia mandatu", "DD-MM-RRRR")
+                DemoDataField("mpCardNumber", "Numer ewidencyjny legitymacji", fields)
+                DemoDataField("mpTerm", "Kadencja", fields)
+                DemoDataField("mpDistrict", "Okręg wyborczy", fields)
+                DemoDataField("mpStart", "Data rozpoczęcia mandatu", fields, "DD-MM-RRRR")
+                DemoDataField("mpEnd", "Data zakończenia mandatu", fields, "DD-MM-RRRR")
                 Text(
                     "Formularz nie stanowi legitymacji, nie potwierdza mandatu ani prawa do reprezentowania Sejmu.",
                     color = Muted,
@@ -366,11 +425,11 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Dane paszportowe", color = Navy, fontWeight = FontWeight.Bold)
-                DemoDataField("Numer paszportu")
-                DemoDataField("Państwo wydania")
-                DemoDataField("Data wydania", "DD-MM-RRRR")
-                DemoDataField("Data ważności", "DD-MM-RRRR")
-                DemoDataField("Organ wydający")
+                DemoDataField("passportNumber", "Numer paszportu", fields)
+                DemoDataField("passportCountry", "Państwo wydania", fields)
+                DemoDataField("passportIssueDate", "Data wydania", fields, "DD-MM-RRRR")
+                DemoDataField("passportExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
+                DemoDataField("passportIssuer", "Organ wydający", fields)
                 Text(
                     "Nie jest to paszport ani jego cyfrowy odpowiednik. Nie dodano strefy MRZ, kodu QR, kodu kreskowego ani elementów zabezpieczających.",
                     color = Muted,
@@ -378,8 +437,26 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 )
             }
         }
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Konfiguracja i zapis", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Dane i zdjęcie są szyfrowane lokalnie na tym urządzeniu. Nie są wysyłane do sieci.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                androidx.compose.material3.Button(
+                    onClick = {
+                        runCatching {
+                            val snapshot = fields.toMutableMap()
+                            snapshot["photo"] = photoBase64
+                            DemoIdentityStore.save(context, snapshot)
+                        }.onSuccess { saveMessage = "Zapisano lokalnie i zaszyfrowano dane oraz zdjęcie." }
+                            .onFailure { saveMessage = "Błąd zapisu: ${it.localizedMessage ?: "nieznany błąd"}" }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Zapisz dane i zdjęcie") }
+                if (saveMessage.isNotBlank()) Text(saveMessage, color = Blue, style = MaterialTheme.typography.bodySmall)
+            }
+        }
         Text(
-            "Dane wpisane w te pola pozostają wyłącznie w stanie bieżącego ekranu demonstracyjnego; aplikacja nie zapisuje ich ani nie przesyła.",
+            "Zapis odbywa się w prywatnym katalogu aplikacji, z użyciem klucza Android Keystore. Odinstalowanie aplikacji usuwa lokalne dane. Zachowaj ostrożność: są to dane wrażliwe.",
             color = Muted,
             style = MaterialTheme.typography.bodySmall
         )
@@ -388,16 +465,72 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DemoDataField(label: String, placeholder: String = "Wpisz dane testowe") {
-    var value by remember { mutableStateOf("") }
+private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane") {
     OutlinedTextField(
-        value = value,
-        onValueChange = { value = it },
+        value = fields[key] ?: "",
+        onValueChange = { fields[key] = it },
         modifier = Modifier.fillMaxWidth(),
         label = { Text(label) },
         placeholder = { Text(placeholder) },
         singleLine = true
     )
+}
+
+private object DemoIdentityStore {
+    private const val KEY_ALIAS = "obywatel_demo_identity_aes"
+    private const val FILE_NAME = "identity_profile.enc"
+    private const val ANDROID_KEYSTORE = "AndroidKeyStore"
+
+    fun load(context: Context): Map<String, String> = runCatching {
+        val file = File(context.noBackupFilesDir, FILE_NAME)
+        if (!file.exists()) return emptyMap()
+        val encrypted = file.readBytes()
+        require(encrypted.size > 12) { "Nieprawidłowy zaszyfrowany plik" }
+        val iv = encrypted.copyOfRange(0, 12)
+        val ciphertext = encrypted.copyOfRange(12, encrypted.size)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, getOrCreateKey(), GCMParameterSpec(128, iv))
+        val json = JSONObject(String(cipher.doFinal(ciphertext), Charsets.UTF_8))
+        val result = mutableMapOf<String, String>()
+        val keys = json.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            result[key] = json.optString(key, "")
+        }
+        result
+    }.getOrElse { emptyMap() }
+
+    fun save(context: Context, values: Map<String, String>) {
+        val json = JSONObject()
+        values.forEach { (key, value) -> json.put(key, value) }
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey())
+        val encrypted = cipher.iv + cipher.doFinal(json.toString().toByteArray(Charsets.UTF_8))
+        val target = File(context.noBackupFilesDir, FILE_NAME)
+        val temporary = File(context.noBackupFilesDir, "$FILE_NAME.tmp")
+        temporary.writeBytes(encrypted)
+        if (!temporary.renameTo(target)) {
+            temporary.copyTo(target, overwrite = true)
+            temporary.delete()
+        }
+    }
+
+    private fun getOrCreateKey(): SecretKey {
+        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+        (keyStore.getKey(KEY_ALIAS, null) as? SecretKey)?.let { return it }
+        val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+        generator.init(
+            KeyGenParameterSpec.Builder(
+                KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setRandomizedEncryptionRequired(true)
+                .build()
+        )
+        return generator.generateKey()
+    }
 }
 
 @Composable
