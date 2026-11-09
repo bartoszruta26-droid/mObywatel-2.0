@@ -5,13 +5,13 @@ package pl.gov.obywatel.android
 
 import android.os.Bundle
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.RectFFactory
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedButton
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -162,6 +162,26 @@ private val services = listOf(
 
 @Composable
 private fun HomeScreen() {
+    val context = LocalContext.current
+    var pendingImport by remember { mutableStateOf<Map<String, String>?>(null) }
+    var importStatus by remember { mutableStateOf("") }
+    var exportSnapshot by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    val exportVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/vcard")) { uri ->
+        if (uri != null) runCatching {
+            val payload = VCardCodec.encodeArchive(exportSnapshot)
+            context.contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use { it.write(payload) }
+                ?: error("Nie można zapisać pliku.")
+        }.onSuccess { importStatus = "Wyeksportowano dane do pliku vCard." }
+            .onFailure { importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}" }
+    }
+    val importVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) runCatching {
+            val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+                ?: error("Nie można odczytać pliku.")
+            VCardCodec.decodeArchive(raw)
+        }.onSuccess { pendingImport = it }
+            .onFailure { importStatus = "Błąd importu: ${it.message ?: "nieprawidłowy plik"}" }
+    }
     var selectedTab by remember { mutableIntStateOf(0) }
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
@@ -218,7 +238,15 @@ private fun HomeScreen() {
                     showSettingsMenu -> SettingsMenuScreen(
                         onBack = { showSettingsMenu = false },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
-                        onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true }
+                        onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
+                        onExportAll = {
+                            exportSnapshot = DemoIdentityStore.load(context)
+                            runCatching { VCardCodec.encodeArchive(exportSnapshot) }
+                                .onSuccess { exportVCardLauncher.launch("obywatel-archiwum.vcf") }
+                                .onFailure { importStatus = "Nie można przygotować eksportu: ${it.message}" }
+                        },
+                        onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
+                        importStatus = importStatus
                     )
                     selectedDocumentId != null -> DocumentDetailsScreen(
                         documentId = selectedDocumentId!!,
@@ -1043,7 +1071,10 @@ private fun ServiceCard(item: ServiceItem, isFavorite: Boolean, onFavorite: () -
 private fun SettingsMenuScreen(
     onBack: () -> Unit,
     onEditDocuments: (String) -> Unit,
-    onEditDisability: () -> Unit
+    onEditDisability: () -> Unit,
+    onExportAll: () -> Unit,
+    onImportAll: () -> Unit,
+    importStatus: String
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1067,6 +1098,11 @@ private fun SettingsMenuScreen(
                     color = Muted, style = MaterialTheme.typography.bodySmall)
             }
         }
+        Text("Kopia danych vCard", color = Navy, fontWeight = FontWeight.Bold)
+        Text("Eksport obejmuje zapisane lokalnie pola profilu i ewidencji, w tym załączone dane tekstowe. Plik może zawierać dane wrażliwe — przechowuj go bezpiecznie.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        ProfileActionCard("Eksportuj wszystkie dane", "Zapisz jedno archiwum .vcf", Icons.Filled.Description, onExportAll)
+        ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
+        if (importStatus.isNotBlank()) Text(importStatus, color = Blue, style = MaterialTheme.typography.bodySmall)
         Text("Dane profilu i dokumenty", color = Navy, fontWeight = FontWeight.Bold)
         ProfileActionCard("Dane osobowe", "Zdjęcie profilowe, dane osoby i rodziców",
             Icons.Filled.AccountCircle, { onEditDocuments("profile") })
