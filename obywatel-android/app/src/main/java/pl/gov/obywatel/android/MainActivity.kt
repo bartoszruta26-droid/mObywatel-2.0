@@ -510,20 +510,10 @@ private fun generateBrandedQr(context: Context, payload: String, branding: Strin
 private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     val context = LocalContext.current
     val fields = remember { DemoIdentityStore.load(context) }
-    val shareable = listOf(
-        "disabilityDegree" to "Stopień niepełnosprawności",
-        "disabilityCategory" to "Kategoria orzeczenia",
-        "disabilityDecisionNumber" to "Numer orzeczenia",
-        "disabilityDecisionDate" to "Data wydania orzeczenia",
-        "disabilityValidity" to "Okres obowiązywania",
-        "disabilityAuthorityName" to "Organ / wystawca orzeczenia",
-        "mpStatus" to "Status legitymacji poselskiej (ewidencja)",
-        "mpTerm" to "Kadencja",
-        "mpDistrict" to "Okręg wyborczy",
-        "mpStart" to "Data rozpoczęcia mandatu",
-        "mpEnd" to "Data zakończenia mandatu",
-        "mpMandateSource" to "Źródło informacji o mandacie"
-    )
+    val shareable = fields.entries
+        .filter { it.value.isNotBlank() }
+        .sortedBy { it.key }
+        .map { it.key to it.key.replace(Regex("([a-z])([A-Z])"), "$1 $2").replaceFirstChar { ch -> ch.uppercase() } }
     val populated = shareable.filter { fields[it.first].orEmpty().isNotBlank() }
     var selected by remember { mutableStateOf(populated.map { it.first }.toSet()) }
     var consent by remember { mutableStateOf(false) }
@@ -561,8 +551,23 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
         }
         Text("Wybór danych do udostępnienia", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
         if (populated.isEmpty()) {
-            Text("Brak zapisanych danych o niepełnosprawności lub mandacie. Uzupełnij je w Ustawieniach. Dane rodowe i pozostałe dane prywatne nie są automatycznie dołączane.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text("Brak zapisanych danych do udostępnienia. Uzupełnij je w Ustawieniach.", color = Muted, style = MaterialTheme.typography.bodySmall)
         } else {
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.material3.Checkbox(
+                    checked = selected.size == populated.size,
+                    onCheckedChange = { checked ->
+                        selected = if (checked) populated.map { it.first }.toSet() else emptySet()
+                        offerQr = null
+                        consent = false
+                    }
+                )
+                Column(Modifier.weight(1f)) {
+                    Text("Cały dokument / wszystkie zapisane dane", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Odznacz poniżej pojedyncze pola, których nie chcesz przekazywać.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
             populated.forEach { (key, label) ->
                 Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically) {
