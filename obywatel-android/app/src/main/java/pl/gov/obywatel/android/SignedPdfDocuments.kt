@@ -41,6 +41,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -227,13 +228,22 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit) {
 
     val pdfPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching { SignedPdfStore.importPdf(context, uri) }
-            .onSuccess { pendingRecord = it; showSignatureChoice = true; records = SignedPdfStore.list(context) }
+            .onSuccess {
+                pendingRecord = it
+                showSignatureChoice = true
+                records = SignedPdfStore.list(context)
+                ActivityHistoryStore.record(context, "Dokumenty", "Zaimportowano dokument PDF", it.name)
+            }
             .onFailure { status = "Import PDF nie powiódł się: ${it.message ?: "błąd odczytu"}" }
     }
     val signaturePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val id = pendingId
         if (uri != null && id != null) runCatching { SignedPdfStore.attachSignature(context, id, uri) }
-            .onSuccess { status = "Dołączono plik podpisu: $it"; records = SignedPdfStore.list(context) }
+            .onSuccess {
+                status = "Dołączono plik podpisu: $it"
+                records = SignedPdfStore.list(context)
+                ActivityHistoryStore.record(context, "Dokumenty", "Dołączono plik podpisu do PDF", it)
+            }
             .onFailure { status = "Nie udało się dołączyć podpisu: ${it.message ?: "błąd odczytu"}" }
         pendingId = null
     }
@@ -311,6 +321,7 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit) {
                     OutlinedButton(onClick = {
                         val target = pendingRecord!!
                         SignedPdfStore.setSignatureKind(context, target.id, kind)
+                        ActivityHistoryStore.record(context, "Certyfikaty", "Oznaczono rodzaj podpisu dokumentu", target.name + " — " + kind)
                         records = SignedPdfStore.list(context)
                         selectedId = target.id
                         showSignatureChoice = false
@@ -327,6 +338,7 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit) {
         title = { Text("Usunąć dokument?") },
         text = { Text("Usunięty zostanie PDF oraz dołączony plik podpisu z lokalnego archiwum.") },
         confirmButton = { Button(onClick = {
+            ActivityHistoryStore.record(context, "Dokumenty", "Usunięto dokument PDF", selected.name)
             SignedPdfStore.delete(context, selected.id)
             records = SignedPdfStore.list(context); selectedId = null; showDelete = false
         }) { Text("Usuń") } },
@@ -369,7 +381,7 @@ private fun PdfPagePreview(context: Context, id: String, pageIndex: Int, onPageC
             count to bitmap
         }
     }
-    result.onSuccess { onPageCount(it.first) }
+    SideEffect { result.getOrNull()?.let { onPageCount(it.first) } }
     if (result.isSuccess) {
         Image(result.getOrThrow().second.asImageBitmap(), contentDescription = "Podgląd strony dokumentu PDF",
             modifier = Modifier.fillMaxWidth(), contentScale = androidx.compose.ui.layout.ContentScale.FillWidth)
