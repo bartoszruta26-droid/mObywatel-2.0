@@ -1,0 +1,174 @@
+// SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+// SPDX-License-Identifier: CC0-1.0
+package pl.gov.obywatel.android
+
+import android.content.Context
+import android.net.Uri
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+import java.util.UUID
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
+
+private data class OfficialDocType(val id:String, val title:String, val fields:List<String>, val note:String = "")
+private val officialDocTypes = listOf(
+    OfficialDocType("birth_extract","Odpis aktu urodzenia", listOf("Imiona i nazwisko osoby","Data i miejsce urodzenia","Imiona i nazwiska rodziców","Urząd stanu cywilnego","Numer aktu / rok","Rodzaj odpisu: skrócony / zupełny / wielojęzyczny","Osoba uprawniona do uzyskania","Cel uzyskania","Sposób odbioru"), "Formularz danych do wniosku do USC. Odpis wydaje kierownik USC, nie starosta."),
+    OfficialDocType("marriage_extract","Odpis aktu małżeństwa", listOf("Imiona i nazwiska małżonków","Data i miejsce zawarcia małżeństwa","Urząd stanu cywilnego","Numer aktu / rok","Rodzaj odpisu","Osoba uprawniona do uzyskania","Cel uzyskania","Sposób odbioru"), "Formularz danych do wniosku do USC. Odpis wydaje kierownik USC, nie starosta."),
+    OfficialDocType("death_extract","Odpis aktu zgonu", listOf("Imiona i nazwisko osoby zmarłej","Data i miejsce zgonu","Urząd stanu cywilnego","Numer aktu / rok","Rodzaj odpisu","Wnioskodawca i podstawa uprawnienia","Cel uzyskania","Sposób odbioru"), "Formularz danych do wniosku do USC. Odpis wydaje kierownik USC, nie starosta."),
+    OfficialDocType("large_family","Karta Dużej Rodziny", listOf("Imię i nazwisko","PESEL / data urodzenia","Numer karty","Typ: tradycyjna / elektroniczna","Data wydania","Ważna do","Organ wydający","Status")),
+    OfficialDocType("blood_donor","Legitymacja / karta Honorowego Dawcy Krwi", listOf("Imię i nazwisko","Numer legitymacji","Stopień / tytuł","Liczba oddanych litrów (jeśli wpisana)","Data przyznania","Organ / jednostka wydająca","Status")),
+    OfficialDocType("disability_card","Legitymacja osoby z niepełnosprawnością", listOf("Imię i nazwisko","Numer legitymacji","Data wydania","Data ważności","Organ wydający","Numer orzeczenia / podstawa","Stopień / wskazanie","Status"), "Legitymacja i orzeczenie to odrębne dokumenty; wpis nie zastępuje dokumentu źródłowego."),
+    OfficialDocType("vehicle_registration","Dowód rejestracyjny pojazdu", listOf("Numer rejestracyjny","VIN","Marka i model","Numer dowodu rejestracyjnego","Właściciel / współwłaściciel","Data pierwszej rejestracji","Organ rejestrujący","Termin badania technicznego","Adnotacje / ograniczenia","Status")),
+    OfficialDocType("insurance_vehicle","Ubezpieczenie OC pojazdu", listOf("Ubezpieczyciel","Numer polisy","Pojazd / numer rejestracyjny","Okres ochrony od","Okres ochrony do","Data opłacenia składki","Zakres / uwagi","Status")),
+    OfficialDocType("insurance_professional","Ubezpieczenie OC zawodowe", listOf("Ubezpieczyciel","Numer polisy","Ubezpieczony / zawód","Zakres czynności objętych ochroną","Suma gwarancyjna","Okres ochrony od","Okres ochrony do","Wyłączenia / uwagi","Status")),
+    OfficialDocType("insurance_private","Ubezpieczenie OC w życiu prywatnym", listOf("Ubezpieczyciel","Numer polisy","Ubezpieczony / gospodarstwo domowe","Zakres ochrony","Suma gwarancyjna","Okres ochrony od","Okres ochrony do","Status")),
+    OfficialDocType("insurance_business","Ubezpieczenie OC działalności / firmowe", listOf("Ubezpieczyciel","Numer polisy","Nazwa firmy / NIP","Ubezpieczony podmiot","Zakres działalności i ochrony","Suma gwarancyjna","Okres ochrony od","Okres ochrony do","Wyłączenia / uwagi","Status")),
+    OfficialDocType("criminal_record","Zaświadczenie o niekaralności — KRK", listOf("Imię i nazwisko","PESEL / data urodzenia","Numer zapytania / zaświadczenia","Data wydania","Organ / punkt informacyjny KRK","Zakres informacji","Cel uzyskania","Status weryfikacji pliku PDF/XML"), "Można dołączyć oryginalny plik PDF i/lub XML. Sama nazwa pliku nie potwierdza autentyczności ani aktualności zaświadczenia."),
+    OfficialDocType("mission_travel","Dokumenty podróży służbowej i misji międzynarodowych", listOf("Organizacja / pracodawca","Podstawa delegowania / nominacji","Imię i nazwisko delegowanego","Funkcja / rola","Cel i zakres misji","Państwo / państwa docelowe","Data rozpoczęcia","Data zakończenia","Numer decyzji / delegacji","Ubezpieczenie i osoba kontaktowa","Wizy / zgody / akredytacje","Status dokumentów")),
+    OfficialDocType("ehic","Europejska Karta Ubezpieczenia Zdrowotnego (EKUZ)", listOf("Imię i nazwisko","Numer karty","Numer identyfikacyjny / PESEL","Instytucja wydająca","Data wydania","Data ważności","Status")),
+    OfficialDocType("eu_education","Zaświadczenie o zgodności wykształcenia z wymogami UE", listOf("Imię i nazwisko","Kwalifikacja / zawód","Nazwa i kraj instytucji kształcącej","Poziom i czas kształcenia","Numer dyplomu / świadectwa","Organ wydający zaświadczenie","Podstawa prawna / dyrektywa","Państwo docelowe","Data wydania","Numer sprawy / zaświadczenia","Zakres potwierdzenia","Status"))
+)
+
+private object OfficialDocumentStore {
+    private const val ALIAS = "obywatel_official_docs_aes"
+    private const val INDEX = "official-documents.enc"
+    private const val DIR = "official-document-files"
+    private fun key(): SecretKey {
+        val ks=KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        (ks.getKey(ALIAS,null) as? SecretKey)?.let { return it }
+        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,"AndroidKeyStore").apply {
+            init(KeyGenParameterSpec.Builder(ALIAS,KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).setRandomizedEncryptionRequired(true).build())
+        }.generateKey()
+    }
+    private fun crypt(bytes:ByteArray, encrypt:Boolean):ByteArray {
+        val c=Cipher.getInstance("AES/GCM/NoPadding")
+        if(encrypt){ c.init(Cipher.ENCRYPT_MODE,key()); return c.iv+c.doFinal(bytes) }
+        require(bytes.size>12); c.init(Cipher.DECRYPT_MODE,key(),GCMParameterSpec(128,bytes.copyOfRange(0,12))); return c.doFinal(bytes.copyOfRange(12,bytes.size))
+    }
+    private fun file(context:Context)=File(context.noBackupFilesDir,INDEX)
+    fun load(context:Context):Map<String,Map<String,String>> = runCatching {
+        val f=file(context); if(!f.exists()) return emptyMap()
+        val o=JSONObject(String(crypt(f.readBytes(),false),Charsets.UTF_8)); val out=mutableMapOf<String,Map<String,String>>()
+        o.keys().forEach { id -> val item=o.getJSONObject(id); val m=mutableMapOf<String,String>(); item.keys().forEach { k->m[k]=item.getString(k) }; out[id]=m }
+        out
+    }.getOrDefault(emptyMap())
+    fun save(context:Context, data:Map<String,Map<String,String>>) {
+        val root=JSONObject(); data.forEach { (id,values)-> val item=JSONObject(); values.forEach { (k,v)->item.put(k,v) }; root.put(id,item) }
+        val target=file(context); val tmp=File(target.parentFile,target.name+".tmp"); tmp.writeBytes(crypt(root.toString().toByteArray(Charsets.UTF_8),true))
+        if(!tmp.renameTo(target)){tmp.copyTo(target,true);tmp.delete()}
+    }
+    fun addAttachment(context:Context, uri:Uri, docId:String):String {
+        val bytes=context.contentResolver.openInputStream(uri)?.use { input ->
+            val out=java.io.ByteArrayOutputStream(); val buf=ByteArray(8192); var total=0
+            while(true){val n=input.read(buf);if(n<0)break;total+=n;require(total<=25*1024*1024){"Plik przekracza limit 25 MB."};out.write(buf,0,n)}
+            out.toByteArray()
+        } ?: error("Nie można odczytać pliku.")
+        require(bytes.isNotEmpty())
+        val name=runCatching { context.contentResolver.query(uri,arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),null,null,null)?.use { if(it.moveToFirst()) it.getString(0) else null } }.getOrNull() ?: "zalacznik"
+        val lower=name.lowercase()
+        require(lower.endsWith(".pdf") || lower.endsWith(".xml")) { "Do tego formularza można dołączyć pliki PDF lub XML." }
+        if(lower.endsWith(".pdf")) require(bytes.size>=5 && String(bytes,0,5,Charsets.US_ASCII)=="%PDF-") { "Nieprawidłowy nagłówek PDF." }
+        if(lower.endsWith(".xml")) {
+            val text=String(bytes,Charsets.UTF_8)
+            require(text.trimStart().startsWith("<?xml") || text.trimStart().startsWith("<")) { "Plik XML ma nieprawidłową strukturę początkową." }
+            require(!text.contains("<!DOCTYPE",true) && !text.contains("<!ENTITY",true)) { "XML z deklaracją DTD/ENTITY jest odrzucany ze względów bezpieczeństwa." }
+        }
+        val dir=File(context.noBackupFilesDir,DIR).apply { mkdirs() }; val id=UUID.randomUUID().toString()
+        File(dir,"$id.enc").writeBytes(crypt(bytes,true))
+        val index=File(dir,"index.enc")
+        val current=runCatching { if(index.exists()) JSONArray(String(crypt(index.readBytes(),false))) else JSONArray() }.getOrDefault(JSONArray())
+        current.put(JSONObject().put("id",id).put("docId",docId).put("name",name).put("size",bytes.size))
+        val tmp=File(dir,"index.tmp"); tmp.writeBytes(crypt(current.toString().toByteArray(Charsets.UTF_8),true)); if(!tmp.renameTo(index)){tmp.copyTo(index,true);tmp.delete()}
+        return name
+    }
+    fun attachments(context:Context, docId:String):List<String> = runCatching {
+        val f=File(File(context.noBackupFilesDir,DIR),"index.enc"); if(!f.exists()) return emptyList()
+        val a=JSONArray(String(crypt(f.readBytes(),false))); (0 until a.length()).map { a.getJSONObject(it) }.filter { it.optString("docId")==docId }.map { it.optString("name") }
+    }.getOrDefault(emptyList())
+}
+
+@Composable
+internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
+    val context= LocalContext.current
+    var records by remember { mutableStateOf(OfficialDocumentStore.load(context)) }
+    var selected by remember { mutableStateOf<String?>(null) }
+    var status by remember { mutableStateOf("") }
+    var refresh by remember { mutableIntStateOf(0) }
+    val attachmentPicker= rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        val id=selected
+        if(id!=null && uris.isNotEmpty()) runCatching {
+            uris.forEach { OfficialDocumentStore.addAttachment(context,it,id) }
+        }.onSuccess { status="Dodano załączniki. Pliki zapisano w zaszyfrowanym archiwum lokalnym."; refresh++ }
+            .onFailure { status="Błąd załącznika: ${it.message}" }
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        Text("‹  Powrót", color=Color(0xFF1769AA), fontWeight=FontWeight.SemiBold, modifier=Modifier.clickable(onClick=onBack).padding(vertical=5.dp))
+        Text(if(readOnly) "Dokumenty urzędowe i ubezpieczeniowe" else "Formularze i ewidencja dokumentów", style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
+        Text("Wpisy i załączniki są prywatną ewidencją użytkownika. Nie są urzędowym dokumentem, poświadczeniem, decyzją ani potwierdzeniem ważności.", style=MaterialTheme.typography.bodySmall, color=Color(0xFF667788))
+        if(selected==null) {
+            officialDocTypes.forEach { type ->
+                val values=records[type.id].orEmpty()
+                val populated=values.values.any { it.isNotBlank() }
+                Card(Modifier.fillMaxWidth().clickable { selected=type.id }, colors=CardDefaults.cardColors(containerColor=Color.White)) {
+                    Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                        Icon(Icons.Filled.Description,contentDescription=null,tint=Color(0xFF1769AA),modifier=Modifier.size(30.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(type.title,fontWeight=FontWeight.SemiBold,color=Color(0xFF102D46))
+                            Text(if(populated) "Dane zapisane" else "Brak danych",color=Color(0xFF667788),style=MaterialTheme.typography.bodySmall)
+                        }
+                        Text("Otwórz",color=Color(0xFF1769AA),style=MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+        } else {
+            val type=officialDocTypes.first { it.id==selected }
+            val values=records[type.id].orEmpty()
+            var local by remember(type.id, records) { mutableStateOf(values) }
+            Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=Color(0xFF102D46))
+            if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=Color(0xFFEAF3FA))) {
+                Text(type.note,Modifier.padding(12.dp),color=Color(0xFF29445B),style=MaterialTheme.typography.bodySmall)
+            }
+            type.fields.forEachIndexed { index,label ->
+                OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
+            }
+            if(type.id=="criminal_record") {
+                OutlinedButton(onClick={attachmentPicker.launch(arrayOf("application/pdf","text/xml","application/xml"))},modifier=Modifier.fillMaxWidth()) {
+                    Icon(Icons.Filled.FolderOpen,contentDescription=null); Spacer(Modifier.width(8.dp)); Text("Dodaj oryginalny plik PDF lub XML")
+                }
+                OfficialDocumentStore.attachments(context,type.id).forEach { Text("Załącznik: $it",color=Color(0xFF1769AA),style=MaterialTheme.typography.bodySmall) }
+                Text("Plik PDF/XML jest przechowywany jako załącznik. Aplikacja nie weryfikuje podpisu elektronicznego, pieczęci ani statusu KRK.",color=Color(0xFF667788),style=MaterialTheme.typography.bodySmall)
+            }
+            if(!readOnly) Button(onClick={
+                runCatching { OfficialDocumentStore.save(context,records+(type.id to local)); records=OfficialDocumentStore.load(context); status="Zapisano dane lokalnie." }
+                    .onFailure { status="Błąd zapisu: ${it.message}" }
+            },modifier=Modifier.fillMaxWidth()) { Text("Zapisz dane") }
+            if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA),style=MaterialTheme.typography.bodySmall)
+            TextButton(onClick={selected=null;status=""}) { Text("Wróć do katalogu") }
+        }
+        Text("Dane są szyfrowane lokalnie w pamięci aplikacji. Aplikacja nie pobiera danych z rejestrów państwowych i nie wystawia dokumentów w imieniu organów.",color=Color(0xFF667788),style=MaterialTheme.typography.labelSmall)
+    }
+}
