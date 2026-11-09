@@ -291,8 +291,6 @@ private fun HomeScreen() {
                             Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
-                                    PrototypeNotice()
-                                    Spacer(Modifier.height(12.dp))
                                     SectionHeading("Dokumenty", "Lokalny portfel dokumentów")
                                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                                         Text("Dodaj", color = Blue, fontWeight = FontWeight.Bold,
@@ -415,6 +413,12 @@ private fun HomeScreen() {
                     showDisabilitySettings = false
                     showCertificates = false
                 }
+            )
+            Text(
+                "Niezależny projekt demonstracyjny • brak oficjalnego statusu i połączenia z rejestrami publicznymi",
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
+                color = Muted,
+                style = MaterialTheme.typography.labelSmall
             )
         }
         pendingImport?.let { incoming ->
@@ -840,19 +844,13 @@ private fun MoreMenuScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Informacje, bezpieczeństwo i ustawienia prototypu", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Informacje, bezpieczeństwo i ustawienia", color = Muted, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Historia działań", "Lokalna lista czynności w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
         ProfileActionCard("Wydane certyfikaty", "Informacje demonstracyjne o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień demonstracyjnych", Icons.Filled.NotificationsNone, onOpenHelp)
-        ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z prototypu", Icons.Filled.Info, onOpenHelp)
+        ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane lokalne, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
-        ProfileActionCard("Informacje prawne", "Charakter prototypu, prywatność i zasady korzystania", Icons.Filled.Description, onOpenHelp)
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Prototyp obywatelski", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Aplikacja jest niezależnym projektem demonstracyjnym. Nie jest połączona z rejestrami publicznymi i nie potwierdza dokumentów ani uprawnień.", color = Muted, style = MaterialTheme.typography.bodySmall)
-            }
-        }
+        ProfileActionCard("Informacje prawne", "Prywatność i zasady korzystania", Icons.Filled.Description, onOpenHelp)
     }
 }
 
@@ -949,11 +947,6 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text(descriptions[title] ?: "Moduł informacyjny wersji alfa.", color = Ink)
-                Text("MODUŁ WERSJI ALFA", color = Blue, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                Text(
-                    "Ekran jest częścią niezależnego prototypu obywatelskiego. Funkcje wymagające połączenia z rejestrami, usługami lub systemami administracji pozostają nieaktywne do czasu uzyskania odpowiednich integracji.",
-                    color = Muted, style = MaterialTheme.typography.bodySmall
-                )
             }
         }
         if (title == "Bezpieczeństwo") {
@@ -976,7 +969,6 @@ private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) 
             BrandMark()
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
                 Text("obywatel", color = White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text("PROTOTYP NIEOFICJALNY", color = Color(0xFFB9D4EA), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
@@ -997,7 +989,7 @@ private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) 
         }
         Spacer(Modifier.height(22.dp))
         Text("Wszystko w jednym miejscu", color = White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        Text("Usługi, informacje i dokumenty w wersji demonstracyjnej", color = Color(0xFFD4E3EF), style = MaterialTheme.typography.bodyMedium)
+        Text("Usługi, informacje i dokumenty w jednym miejscu", color = Color(0xFFD4E3EF), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -1015,32 +1007,6 @@ private fun BrandMark() {
             contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Filled.Public, contentDescription = "Autorski znak prototypu", tint = White, modifier = Modifier.size(30.dp))
-        }
-    }
-}
-
-@Composable
-private fun PrototypeNotice() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(Modifier.padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier.size(42.dp).clip(RoundedCornerShape(12.dp)).background(White),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(23.dp))
-            }
-            Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text("Wersja demonstracyjna", color = Navy, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text(
-                    "To niezależny prototyp. Nie zawiera oficjalnych dokumentów, logowania ani usług administracji.",
-                    color = Muted, style = MaterialTheme.typography.bodySmall
-                )
-            }
         }
     }
 }
