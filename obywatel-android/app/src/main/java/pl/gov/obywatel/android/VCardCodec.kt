@@ -30,7 +30,7 @@ internal object VCardCodec {
         lines += "N:${escapeStructured(structuredName.ifBlank { displayName })}"
         listOf("ORG", "TITLE", "TEL", "EMAIL", "URL", "ADR").forEach { key ->
             normalized[key].orEmpty().trim().takeIf { it.isNotBlank() }?.let {
-                lines += "$key:${if (key == "ORG" || key == "ADR") escapeStructured(it) else escape(it)}"
+                lines += "$key:${if (key == "ADR") escapeStructured(it) else escape(it)}"
             }
         }
         lines += "END:VCARD"
