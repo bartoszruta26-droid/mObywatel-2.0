@@ -25,6 +25,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
@@ -168,6 +169,27 @@ private fun HomeScreen() {
     var serviceSearch by remember { mutableStateOf("") }
     var serviceCategory by remember { mutableStateOf("Wszystkie") }
     val favoriteServices = remember { mutableStateMapOf("Zastrzeż PESEL" to true, "Zdrowie" to true, "Transport" to true) }
+
+    fun handleSystemBack() {
+        when {
+            showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
+            showSettingsMenu -> showSettingsMenu = false
+            selectedDocumentId != null -> selectedDocumentId = null
+            showDemoDocuments -> showDemoDocuments = false
+            showDisabilitySettings -> { showDisabilitySettings = false; showSettingsMenu = true }
+            showCertificates -> showCertificates = false
+            activeService != null -> activeService = null
+            selectedTab == 1 || selectedTab == 2 || selectedTab == 3 || selectedTab == 4 -> selectedTab = 0
+            // Na ekranie głównym pozostawiamy domyślne zachowanie Androida.
+        }
+    }
+
+    BackHandler(
+        enabled = showDocumentsEditor || showSettingsMenu || selectedDocumentId != null ||
+            showDemoDocuments || showDisabilitySettings || showCertificates ||
+            activeService != null || selectedTab != 0,
+        onBack = ::handleSystemBack
+    )
 
     fun openService(title: String) {
         when (title) {
@@ -386,6 +408,7 @@ private fun categoryIconFor(category: String): Int? = when (category) {
 @Composable
 private fun QrToolsScreen() {
     var showVCard by remember { mutableStateOf(false) }
+    BackHandler(enabled = showVCard) { showVCard = false }
     if (showVCard) {
         Column(Modifier.fillMaxSize()) {
             Text("‹  Wróć do wymiany danych", color = Blue, fontWeight = FontWeight.SemiBold,
