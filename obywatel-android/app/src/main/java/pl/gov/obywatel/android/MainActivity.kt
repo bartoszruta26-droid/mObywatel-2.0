@@ -990,7 +990,6 @@ private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
     val context = LocalContext.current
     var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var saveMessage by remember { mutableStateOf("") }
-    var pendingDocumentOcr by remember { mutableStateOf("") }
     val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri: Uri? ->
         val image = pendingBitmap
         pendingBitmap = null
@@ -1970,6 +1969,12 @@ private fun parseDocumentOcr(kind: String, rawText: String): Map<String, String>
             else -> value
         }
     }
+    fun mrzDate(value: String): String? {
+        if (!value.matches(Regex("\\d{6}"))) return null
+        val yy = value.substring(0,2).toIntOrNull() ?: return null
+        val year = if (yy <= 49) 2000 + yy else 1900 + yy
+        return "${value.substring(4,6)}-${value.substring(2,4)}-$year"
+    }
     val mrz = compactLines.filter { it.matches(Regex("[A-Z0-9<]{25,44}")) }
     when (kind) {
         "id" -> {
@@ -1988,9 +1993,9 @@ private fun parseDocumentOcr(kind: String, rawText: String): Map<String, String>
             val names = first?.let { mrz.getOrNull(mrz.indexOf(it) + 2) }
             if (first != null) put("idNumber", first.drop(5).take(9).replace("<", "").takeIf { it.isNotBlank() })
             if (second != null && second.length >= 28) {
-                put("birthDate", second.substring(0,6))
+                put("birthDate", mrzDate(second.substring(0,6)))
                 put("sex", when (second.getOrNull(7)) { 'M' -> "M"; 'F' -> "K"; else -> null })
-                put("idExpiryDate", second.substring(8,14))
+                put("idExpiryDate", mrzDate(second.substring(8,14)))
                 put("pesel", second.substring(15,24).replace("<", "").takeIf { it.any(Char::isDigit) })
             }
             if (names != null) {
@@ -2017,9 +2022,9 @@ private fun parseDocumentOcr(kind: String, rawText: String): Map<String, String>
             if (second != null && second.length >= 28) {
                 put("passportNumber", second.take(9).replace("<", "").takeIf { it.isNotBlank() })
                 put("passportCountry", second.substring(10,13))
-                put("passportBirthDate", second.substring(13,19))
+                put("passportBirthDate", mrzDate(second.substring(13,19)))
                 put("passportSex", when (second.getOrNull(20)) { 'M' -> "M"; 'F' -> "K"; else -> null })
-                put("passportExpiryDate", second.substring(21,27))
+                put("passportExpiryDate", mrzDate(second.substring(21,27)))
             }
         }
         "driving" -> {
@@ -2036,11 +2041,12 @@ private fun parseDocumentOcr(kind: String, rawText: String): Map<String, String>
                 .findAll(text).map { it.value.uppercase() }.distinct().toList()
             if (result["dlCategories"].isNullOrBlank() && categories.isNotEmpty()) put("dlCategories", categories.joinToString(", "))
         }
-        "library" -> {
-            put("library1Name", labelled("Biblioteka", "Nazwa biblioteki", "Library"))
-            put("library1CardNumber", labelled("Numer karty", "Nr karty", "Card number", "ID"))
+        else -> if (kind.startsWith("library")) {
+            val index = kind.removePrefix("library").toIntOrNull()?.coerceIn(1, 3) ?: 1
+            put("library${index}Name", labelled("Biblioteka", "Nazwa biblioteki", "Library"))
+            put("library${index}CardNumber", labelled("Numer karty", "Nr karty", "Card number", "ID"))
             val numeric = Regex("(?<!\\d)\\d{6,20}(?!\\d)").find(text)?.value
-            if (result["library1CardNumber"].isNullOrBlank()) put("library1CardNumber", numeric)
+            if (result["library${index}CardNumber"].isNullOrBlank()) put("library${index}CardNumber", numeric)
         }
     }
     return result.filterValues { it.isNotBlank() }
@@ -2054,6 +2060,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
     }
     var photoBase64 by remember { mutableStateOf(fields["photo"] ?: "") }
     var saveMessage by remember { mutableStateOf("") }
+    var pendingDocumentOcr by remember { mutableStateOf("") }
     val editorTitle = when (categoryId) {
         "profile" -> "Dane osobowe i zdjęcie profilowe"
         "family" -> "Dokument rodowy — ewidencja prywatna"
@@ -2609,12 +2616,12 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Karty biblioteczne z różnych bibliotek", color = Navy, fontWeight = FontWeight.Bold)
-                    OutlinedButton(onClick = { launchDocumentOcr("library") }, modifier = Modifier.fillMaxWidth()) { Text("Odczytaj dane ze zdjęcia karty bibliotecznej (OCR)") }
                     Text("Możesz zapisać dane maksymalnie trzech kart. Każda karta ma osobny zestaw danych biblioteki i numeru identyfikacyjnego.",
                         color = Muted, style = MaterialTheme.typography.bodySmall)
                     (1..3).forEach { number ->
                         val prefix = "library$number"
                         Text("Karta biblioteczna $number", color = Navy, fontWeight = FontWeight.SemiBold)
+                        OutlinedButton(onClick = { launchDocumentOcr("library$number") }, modifier = Modifier.fillMaxWidth()) { Text("Odczytaj dane z karty $number (OCR)") }
                         DemoDataField("${prefix}Name", "Nazwa biblioteki / filii", fields)
                         DemoDataField("${prefix}CardNumber", "Numer karty bibliotecznej", fields)
                         DemoDataField("${prefix}Type", "Rodzaj karty", fields, "np. miejska / uczelniana / szkolna / dziecięca")
