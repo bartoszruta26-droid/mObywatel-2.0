@@ -857,6 +857,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     var selectedDocuments by remember { mutableStateOf(documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }.map { it.id }.toSet()) }
     var selectedDocumentId by remember { mutableStateOf(documentGroups.firstOrNull { populatedByDocument[it.id].orEmpty().isNotEmpty() }?.id ?: "profile") }
     var selectedDocumentFields by remember { mutableStateOf(populatedByDocument[selectedDocumentId].orEmpty()) }
+    var expandedDocumentId by remember { mutableStateOf<String?>(null) }
     val selected = when (selectionMode) {
         "documents" -> selectedDocuments.flatMap { populatedByDocument[it].orEmpty() }.toSet()
         "document_fields" -> selectedDocumentFields.intersect(populatedByDocument[selectedDocumentId].orEmpty())
@@ -918,50 +919,99 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
             }
             when (selectionMode) {
                 "documents" -> {
-                    Text("Zaznacz dokumenty, których dane mają wejść do zakresu.", color = Muted, style = MaterialTheme.typography.bodySmall)
-                    documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }.forEach { group ->
+                    val availableGroups = documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }
+                    val allSelected = availableGroups.isNotEmpty() && availableGroups.all { it.id in selectedDocuments }
+                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.Checkbox(checked = allSelected, onCheckedChange = { checked ->
+                            selectedDocuments = if (checked) availableGroups.map { it.id }.toSet() else emptySet()
+                            offerQr = null
+                            consent = false
+                        })
+                        Column(Modifier.weight(1f)) {
+                            Text("Wszystkie dostępne dokumenty", color = Navy, fontWeight = FontWeight.SemiBold)
+                            Text("${availableGroups.size} dokumentów", color = Muted, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    Text("Rozwiń wybrany dokument, aby sprawdzić, jakie pola zostaną udostępnione.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    availableGroups.forEach { group ->
                         val keys = populatedByDocument[group.id].orEmpty()
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically) {
-                            androidx.compose.material3.Checkbox(checked = group.id in selectedDocuments, onCheckedChange = { checked ->
-                                selectedDocuments = if (checked) selectedDocuments + group.id else selectedDocuments - group.id
-                                offerQr = null
-                                consent = false
-                            })
-                            Column(Modifier.weight(1f)) {
-                                Text(group.title, color = Navy, fontWeight = FontWeight.SemiBold)
-                                Text("${keys.size} dostępnych pól", color = Muted, style = MaterialTheme.typography.bodySmall)
+                        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                            Column {
+                                Row(Modifier.fillMaxWidth().clickable { expandedDocumentId = if (expandedDocumentId == group.id) null else group.id }.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically) {
+                                    androidx.compose.material3.Checkbox(checked = group.id in selectedDocuments, onCheckedChange = { checked ->
+                                        selectedDocuments = if (checked) selectedDocuments + group.id else selectedDocuments - group.id
+                                        offerQr = null
+                                        consent = false
+                                    })
+                                    Column(Modifier.weight(1f)) {
+                                        Text(group.title, color = Navy, fontWeight = FontWeight.SemiBold)
+                                        Text("${keys.size} dostępnych pól", color = Muted, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text(if (expandedDocumentId == group.id) "Zwiń －" else "Rozwiń ＋", color = Blue, style = MaterialTheme.typography.labelMedium)
+                                }
+                                if (expandedDocumentId == group.id) {
+                                    Divider(color = Color(0xFFE5EAF0))
+                                    group.fields.filter { it.second in keys }.forEach { (label, key) ->
+                                        Text("• $label", Modifier.padding(start = 52.dp, end = 12.dp, top = 4.dp, bottom = 4.dp),
+                                            color = Muted, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
                             }
                         }
                     }
                 }
                 "document_fields" -> {
-                    Text("Wybierz jeden dokument, a następnie zaznacz konkretne pola.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text("Wybierz dokument z rozwijanej listy, a następnie zaznacz pola, które chcesz przekazać.", color = Muted, style = MaterialTheme.typography.bodySmall)
                     val availableGroups = documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }
                     availableGroups.forEach { group ->
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = selectedDocumentId == group.id, onClick = {
-                                selectedDocumentId = group.id
-                                selectedDocumentFields = populatedByDocument[group.id].orEmpty()
-                                offerQr = null
-                                consent = false
-                            })
-                            Text(group.title, color = Navy, fontWeight = if (selectedDocumentId == group.id) FontWeight.Bold else FontWeight.Medium)
-                        }
-                    }
-                    val currentGroup = documentGroups.firstOrNull { it.id == selectedDocumentId }
-                    currentGroup?.fields?.filter { it.second in populatedByDocument[selectedDocumentId].orEmpty() }?.forEach { (label, key) ->
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically) {
-                            androidx.compose.material3.Checkbox(checked = key in selectedDocumentFields, onCheckedChange = { checked ->
-                                selectedDocumentFields = if (checked) selectedDocumentFields + key else selectedDocumentFields - key
-                                offerQr = null
-                                consent = false
-                            })
-                            Column(Modifier.weight(1f)) {
-                                Text(label, color = Navy, fontWeight = FontWeight.Medium)
-                                Text(fields[key].orEmpty(), color = Muted, style = MaterialTheme.typography.bodySmall)
+                        val keys = populatedByDocument[group.id].orEmpty()
+                        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                            Column {
+                                Row(Modifier.fillMaxWidth().clickable {
+                                    if (selectedDocumentId != group.id) {
+                                        selectedDocumentId = group.id
+                                        selectedDocumentFields = keys
+                                    }
+                                    expandedDocumentId = if (expandedDocumentId == group.id) null else group.id
+                                    offerQr = null
+                                    consent = false
+                                }.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(selected = selectedDocumentId == group.id, onClick = {
+                                        selectedDocumentId = group.id
+                                        selectedDocumentFields = keys
+                                        expandedDocumentId = group.id
+                                        offerQr = null
+                                        consent = false
+                                    })
+                                    Column(Modifier.weight(1f)) {
+                                        Text(group.title, color = Navy, fontWeight = if (selectedDocumentId == group.id) FontWeight.Bold else FontWeight.Medium)
+                                        Text("${keys.size} zapisanych pól", color = Muted, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text(if (expandedDocumentId == group.id) "Zwiń －" else "Pola ＋", color = Blue, style = MaterialTheme.typography.labelMedium)
+                                }
+                                if (expandedDocumentId == group.id) {
+                                    Divider(color = Color(0xFFE5EAF0))
+                                    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        TextButton(onClick = { selectedDocumentId = group.id; selectedDocumentFields = keys; offerQr = null; consent = false }) { Text("Zaznacz wszystkie pola") }
+                                        TextButton(onClick = { selectedDocumentId = group.id; selectedDocumentFields = emptySet(); offerQr = null; consent = false }) { Text("Wyczyść") }
+                                    }
+                                    group.fields.filter { it.second in keys }.forEach { (label, key) ->
+                                        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            androidx.compose.material3.Checkbox(checked = selectedDocumentId == group.id && key in selectedDocumentFields, onCheckedChange = { checked ->
+                                                selectedDocumentId = group.id
+                                                selectedDocumentFields = if (checked) selectedDocumentFields + key else selectedDocumentFields - key
+                                                offerQr = null
+                                                consent = false
+                                            })
+                                            Column(Modifier.weight(1f)) {
+                                                Text(label, color = Navy, fontWeight = FontWeight.Medium)
+                                                Text(fields[key].orEmpty(), color = Muted, style = MaterialTheme.typography.bodySmall)
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
