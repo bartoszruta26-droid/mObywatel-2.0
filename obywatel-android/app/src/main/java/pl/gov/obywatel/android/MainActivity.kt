@@ -61,6 +61,8 @@ import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Security
@@ -507,33 +509,64 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Orzeczenie o niepełnosprawności — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Podmiot orzekający / wystawca", color = Navy, fontWeight = FontWeight.SemiBold)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("powiat" to "Zespół powiatowy", "fundacja" to "Zespół fundacyjny").forEach { (value, label) ->
+                Text("Źródło ustalenia / dokumentu", color = Navy, fontWeight = FontWeight.SemiBold)
+                val authorityOptions = listOf(
+                    "powiat" to "Zespół powiatowy / miejski",
+                    "other_law" to "Orzeczenie na podstawie innych przepisów",
+                    "foundation" to "Zespół medyczny fundacji",
+                    "medical_opinion" to "Opinia lub zaświadczenie medyczne",
+                    "self_declaration" to "Własne oświadczenie"
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    authorityOptions.forEach { (value, label) ->
                         val selected = (fields["disabilityAuthorityType"] ?: "powiat") == value
-                        Box(
-                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
-                                .background(if (selected) BlueLight else Color(0xFFF1F3F5))
-                                .border(1.dp, if (selected) Blue else Border, RoundedCornerShape(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
+                                .background(if (selected) BlueLight else Color(0xFFF5F6F7))
+                                .border(1.dp, if (selected) Blue else Border, RoundedCornerShape(9.dp))
                                 .clickable { fields["disabilityAuthorityType"] = value }
-                                .padding(horizontal = 9.dp, vertical = 12.dp),
-                            contentAlignment = Alignment.Center
+                                .padding(horizontal = 12.dp, vertical = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(label, color = if (selected) Navy else Muted, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, style = MaterialTheme.typography.labelMedium)
+                            Icon(
+                                if (selected) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
+                                contentDescription = null, tint = if (selected) Blue else Muted
+                            )
+                            Text(label, modifier = Modifier.padding(start = 9.dp), color = if (selected) Navy else Ink,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
-                DemoDataField("disabilityAuthorityName", "Pełna nazwa zespołu / organu", fields)
-                if ((fields["disabilityAuthorityType"] ?: "powiat") == "powiat") {
-                    DemoDataField("disabilityCounty", "Powiat / miasto na prawach powiatu", fields)
-                    DemoDataField("disabilityLegalBasis", "Podstawa prawna", fields, "Ustawa z 27.08.1997 r. i przepisy wykonawcze")
-                    Text("Wpisz dane rzeczywistego właściwego zespołu i rozstrzygnięcia.", color = Muted, style = MaterialTheme.typography.bodySmall)
-                } else {
-                    DemoDataField("disabilityFoundationName", "Fundacja / jednostka organizacyjna", fields)
-                    DemoDataField("disabilityFoundationStatute", "Postanowienie statutu fundacji", fields)
-                    DemoDataField("disabilityFoundationResolution", "Numer i data uchwały powołującej zespół", fields)
-                    DemoDataField("disabilityFoundationRules", "Regulamin zespołu / procedura oceny", fields)
-                    DemoDataField("disabilityFoundationLegalBasis", "Inna podstawa działania / uchwały", fields)
+                val authorityType = fields["disabilityAuthorityType"] ?: "powiat"
+                if (authorityType != "self_declaration") {
+                    DemoDataField("disabilityAuthorityName", "Nazwa organu / podmiotu / wystawcy", fields)
+                    DemoDataField("disabilityIssuerName", "Imię, nazwisko lub nazwa wystawcy", fields)
+                }
+                when (authorityType) {
+                    "powiat" -> {
+                        DemoDataField("disabilityCounty", "Powiat / miasto na prawach powiatu", fields)
+                        DemoDataField("disabilityLegalBasis", "Podstawa prawna", fields, "Ustawa z 27.08.1997 r. i przepisy wykonawcze")
+                    }
+                    "other_law" -> {
+                        DemoDataField("disabilityLegalBasis", "Odrębna podstawa prawna", fields)
+                        DemoDataField("disabilityLegalProvision", "Przepis określający skutki lub równoważność", fields)
+                        DemoDataField("disabilityEquivalentEffect", "Zakres uznania / równoważności", fields)
+                    }
+                    "foundation" -> {
+                        DemoDataField("disabilityFoundationName", "Fundacja / podmiot prowadzący", fields)
+                        DemoDataField("disabilityFoundationStatute", "Podstawa statutowa / uchwała fundacji", fields)
+                        DemoDataField("disabilityFoundationLegalBasis", "Podstawa prawna i regulacyjna wskazana przez wystawcę", fields)
+                    }
+                    "medical_opinion" -> {
+                        DemoDataField("disabilityMedicalQualification", "Zawód / kwalifikacje osoby wystawiającej", fields)
+                        DemoDataField("disabilityLegalBasis", "Podstawa i cel wydania opinii / zaświadczenia", fields)
+                    }
+                    "self_declaration" -> {
+                        DemoDataField("disabilitySelfDeclarationDate", "Data złożenia oświadczenia", fields, "DD-MM-RRRR")
+                        DemoDataField("disabilitySelfDeclarationBasis", "Podstawa i cel oświadczenia", fields)
+                        Text("Oświadczenie własne zapisuje deklarację osoby. Samo w sobie nie jest orzeczeniem ustawowym; jego znaczenie zależy od przepisu lub procedury, w której jest składane.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
                 Text("Dane osoby i rozstrzygnięcia", color = Navy, fontWeight = FontWeight.SemiBold)
                 DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / rozstrzygnięcia", fields)
@@ -565,10 +598,13 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 Text("Podgląd informacyjny", color = Navy, fontWeight = FontWeight.Bold)
                 DisabilityDecisionPreview(fields)
                 Text(
-                    if ((fields["disabilityAuthorityType"] ?: "powiat") == "fundacja")
-                        "WAŻNE: dokument zespołu fundacyjnego jest prywatnym rozstrzygnięciem lub oceną na potrzeby celów określonych w statucie, regulaminie i uchwałach fundacji. Nie jest orzeczeniem powiatowego zespołu w rozumieniu ustawy i samodzielnie nie przyznaje ulg, świadczeń ani uprawnień publicznoprawnych. Nie wolno przedstawiać go jako dokumentu organu administracji."
-                    else
-                        "Orzeczenie powiatowego zespołu wywołuje skutki przewidziane w przepisach. Ten ekran jest wyłącznie lokalną kartą ewidencyjną i podglądem danych — nie weryfikuje autentyczności ani nie zastępuje oryginału orzeczenia.",
+                    when (fields["disabilityAuthorityType"] ?: "powiat") {
+                        "foundation" -> "Dokument zespołu medycznego fundacji należy opisać zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem jego przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego; ewentualne uznanie zależy od właściwych przepisów i podmiotu, który ma je zastosować."
+                        "other_law" -> "Skutki dokumentu wydanego na podstawie odrębnych przepisów wynikają z konkretnego przepisu. Wskaż dokładną podstawę i zakres równoważności; samo określenie dokumentu jako orzeczenia nie przesądza o jego skutkach."
+                        "medical_opinion" -> "Opinia lub zaświadczenie medyczne dokumentuje ocenę lub stan zdrowia w granicach kompetencji wystawcy. Nie należy utożsamiać go automatycznie z orzeczeniem o stopniu niepełnosprawności."
+                        "self_declaration" -> "Oświadczenie własne jest deklaracją osoby. Może być wykorzystywane tam, gdzie dopuszcza je właściwy przepis lub procedura, ale samo nie ustanawia ustawowego stopnia niepełnosprawności."
+                        else -> "Ten ekran jest lokalną kartą ewidencyjną i podglądem danych. Nie weryfikuje autentyczności dokumentu ani nie zastępuje oryginału orzeczenia."
+                    },
                     color = Color(0xFF805000), style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -737,7 +773,15 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
 
 @Composable
 private fun DisabilityDecisionPreview(fields: Map<String, String>) {
-    val isFoundation = (fields["disabilityAuthorityType"] ?: "powiat") == "fundacja"
+    val authorityType = fields["disabilityAuthorityType"] ?: "powiat"
+    val isFoundation = authorityType == "foundation"
+    val previewTitle = when (authorityType) {
+        "other_law" -> "DOKUMENT NA PODSTAWIE ODRĘBNYCH PRZEPISÓW"
+        "foundation" -> "DOKUMENT ZESPOŁU MEDYCZNEGO FUNDACJI"
+        "medical_opinion" -> "OPINIA / ZAŚWIADCZENIE MEDYCZNE"
+        "self_declaration" -> "OŚWIADCZENIE WŁASNE"
+        else -> "DANE ORZECZENIA POWIATOWEGO"
+    }
     val person = fields["disabilityPersonName"].orEmpty().ifBlank { "OSOBA, KTÓREJ DOTYCZY WPIS" }
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -747,13 +791,13 @@ private fun DisabilityDecisionPreview(fields: Map<String, String>) {
     ) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Text(
-                if (isFoundation) "ORZECZENIE / OCENA FUNDACYJNA" else "DANE ORZECZENIA POWIATOWEGO",
+                previewTitle,
                 color = if (isFoundation) Color(0xFF51416E) else Navy,
                 fontWeight = FontWeight.ExtraBold,
                 style = MaterialTheme.typography.labelLarge
             )
             Text(fields["disabilityAuthorityName"].orEmpty().ifBlank {
-                if (isFoundation) "ZESPÓŁ POWOŁANY PRZEZ FUNDACJĘ" else "POWIATOWY ZESPÓŁ DO SPRAW ORZEKANIA"
+                when (authorityType) { "foundation" -> "ZESPÓŁ MEDYCZNY FUNDACJI"; "other_law" -> "ORGAN WSKAZANY W ODRĘBNYCH PRZEPISACH"; "medical_opinion" -> "OSOBA WYKONUJĄCA ZAWÓD MEDYCZNY"; "self_declaration" -> "OŚWIADCZENIE OSOBY"; else -> "POWIATOWY ZESPÓŁ DO SPRAW ORZEKANIA" }
             }, color = Ink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
             Text(person, color = Ink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             Text("Nr: " + fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" } +
@@ -772,8 +816,7 @@ private fun DisabilityDecisionPreview(fields: Map<String, String>) {
                     .padding(horizontal = 8.dp, vertical = 7.dp)
             ) {
                 Text(
-                    if (isFoundation) "DOKUMENT WEWNĘTRZNY FUNDACJI • BEZ STATUSU ORZECZENIA USTAWOWEGO"
-                    else "PODGLĄD EWIDENCYJNY • NIE ZASTĘPUJE ORYGINAŁU",
+                    when (authorityType) { "foundation" -> "DOKUMENT WYSTAWCY • ZAKRES SKUTKÓW WEDŁUG PODSTAWY"; "other_law" -> "PODSTAWA I SKUTKI WEDŁUG ODRĘBNYCH PRZEPISÓW"; "medical_opinion" -> "OPINIA MEDYCZNA • NIE JEST AUTOMATYCZNIE ORZECZENIEM"; "self_declaration" -> "OŚWIADCZENIE OSOBY • DEKLARACJA WŁASNA"; else -> "PODGLĄD EWIDENCYJNY • NIE ZASTĘPUJE ORYGINAŁU" },
                     color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall
                 )
             }
