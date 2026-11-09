@@ -359,10 +359,13 @@ private fun HomeScreen() {
                                         listOf(
                                             Triple("Dowód tożsamości", R.drawable.documents_identity_card, "1"),
                                             Triple("Dane paszportowe", R.drawable.documents_passport, "2"),
-                                            Triple("Dokument rodowy", R.drawable.documents_family_record, "3"),
+                                            Triple("Dane rejestru podmiotów", R.drawable.documents_family_record, "registry"),
                                             Triple("Legitymacje", R.drawable.documents_student_legitimacy, "6")
                                         ).forEach { (label, imageRes, id) ->
-                                            Card(modifier = Modifier.width(150.dp).clickable { selectedDocumentId = id },
+                                            Card(modifier = Modifier.width(150.dp).clickable {
+                                                if (id == "registry") activeService = "Odpis z rejestru podmiotów"
+                                                else selectedDocumentId = id
+                                            },
                                                 colors = CardDefaults.cardColors(containerColor = White)) {
                                                 Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                                                     Box(
@@ -373,7 +376,7 @@ private fun HomeScreen() {
                                                             imageVector = when (id) {
                                                                 "1" -> Icons.Filled.CreditCard
                                                                 "2" -> Icons.Filled.Public
-                                                                "3" -> Icons.Filled.Fingerprint
+                                                                "registry" -> Icons.Filled.AccountBalance
                                                                 else -> Icons.Filled.Badge
                                                             },
                                                             contentDescription = null,
