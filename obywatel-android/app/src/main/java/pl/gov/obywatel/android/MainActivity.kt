@@ -62,7 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,21 +86,21 @@ class MainActivity : ComponentActivity() {
 private data class ServiceItem(
     val title: String,
     val subtitle: String,
-    val icon: ImageVector,
+    val icon: Int,
     val tint: Color = Blue
 )
 
 private val services = listOf(
-    ServiceItem("Dokumenty", "Portfel demonstracyjny", Icons.Filled.Description),
-    ServiceItem("Moje dane", "Dane profilu", Icons.Filled.AccountCircle),
-    ServiceItem("Płatności", "Usługi i opłaty", Icons.Filled.Payments),
-    ServiceItem("Zdrowie", "Informacje zdrowotne", Icons.Filled.HealthAndSafety),
-    ServiceItem("Transport", "Podróże i przejazdy", Icons.Filled.Train),
-    ServiceItem("Kalendarz", "Terminy i przypomnienia", Icons.Filled.CalendarMonth),
-    ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", Icons.Filled.Shield),
-    ServiceItem("Usługi publiczne", "Informacje i sprawy", Icons.Filled.AccountBalance),
-    ServiceItem("Ustawienia", "Preferencje aplikacji", Icons.Filled.Settings),
-    ServiceItem("Pozostałe", "Więcej modułów", Icons.Filled.MoreHoriz)
+    ServiceItem("Dokumenty", "Portfel demonstracyjny", R.drawable.mob_abroad),
+    ServiceItem("Moje dane", "Dane profilu", R.drawable.mob_pesel_check),
+    ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments),
+    ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health),
+    ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport),
+    ServiceItem("Kalendarz", "Terminy i przypomnienia", R.drawable.mob_ticket),
+    ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", R.drawable.mob_cyber_safety),
+    ServiceItem("Usługi publiczne", "Informacje i sprawy", R.drawable.mob_environment),
+    ServiceItem("Ustawienia", "Preferencje aplikacji", R.drawable.mob_penalties),
+    ServiceItem("Pozostałe", "Więcej modułów", R.drawable.mob_pesel_lock)
 )
 
 @Composable
@@ -224,7 +224,7 @@ private fun ServiceCard(item: ServiceItem) {
                 modifier = Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(BlueLight),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(item.icon, contentDescription = null, tint = item.tint, modifier = Modifier.size(24.dp))
+                Icon(painter = painterResource(item.icon), contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp))
             }
             Column {
                 Text(item.title, color = Navy, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -240,7 +240,7 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
     val items = listOf(
         Triple("Start", Icons.Filled.Home, 0),
         Triple("Usługi", Icons.Filled.Fingerprint, 1),
-        Triple("Profil", Icons.Filled.AccountCircle, 2)
+        Triple("Profil", R.drawable.mob_pesel_check, 2)
     )
     Row(
         modifier = Modifier.fillMaxWidth().background(White)
