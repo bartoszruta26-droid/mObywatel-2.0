@@ -159,7 +159,9 @@ internal object VCardCodec {
         val given = nameParts.getOrNull(1).orEmpty().trim()
         val formatted = first("FN")
         val fallbackParts = formatted.split(Regex("\\s+"), limit = 2)
-        val firstNames = given.ifBlank { fallbackParts.getOrNull(0).orEmpty() }
+        val additional = nameParts.getOrNull(2).orEmpty().trim()
+        val structuredGiven = listOf(given, additional).filter { it.isNotBlank() }.joinToString(" ")
+        val firstNames = structuredGiven.ifBlank { fallbackParts.getOrNull(0).orEmpty() }
         val lastName = family.ifBlank { fallbackParts.getOrNull(1).orEmpty() }
 
         val result = linkedMapOf<String, String>()
@@ -194,9 +196,9 @@ internal object VCardCodec {
             text = text.replace(Regex("""\\n$nextProperty""", RegexOption.IGNORE_CASE), "\\n")
             text = text.replace(Regex("""\\r$nextProperty""", RegexOption.IGNORE_CASE), "\\r")
         } else {
-            text = text.replace("\\\\r\\\\n", "\\r\\n")
-                .replace("\\\\n", "\\n")
-                .replace("\\\\r", "\\r")
+            text = text.replace("\\\\r\\\\n", "\r\n")
+                .replace("\\\\n", "\n")
+                .replace("\\\\r", "\r")
         }
 
         // RFC 6350 files may use CRLF; legacy writers also emitted LF, CR,
