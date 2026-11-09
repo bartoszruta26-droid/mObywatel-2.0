@@ -1616,7 +1616,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
         Triple("Legitymacja poselska — ewidencja", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
         Triple("Legitymacja ucznia/studenta", Icons.Filled.Description, listOf("trainingCardNumber", "trainingInstitution")),
         Triple("Legitymacja ucznia/studenta — ewidencja", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
-        Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName"))
+        Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName")),
+        Triple("Prawo jazdy", Icons.Filled.CreditCard, listOf("dlNumber", "dlCategories", "dlExpiryDate", "dlStatus"))
     )
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1648,6 +1649,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
                             4 -> R.drawable.documents_deputy_legitimacy
                             5 -> R.drawable.documents_course_legitimacy
                             6 -> R.drawable.documents_student_legitimacy
+                            8 -> R.drawable.documents_identity_card
                             else -> R.drawable.documents_medical_certificates
                         }),
                         contentDescription = "Ilustracja: $title",
@@ -1702,6 +1704,14 @@ private fun DocumentDetailsScreen(
             "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
             "Państwo wydania" to "passportCountry", "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace", "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate", "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
         )),
+        Triple("Prawo jazdy — ewidencja", "Dane dokumentu i kategorii uprawnień — wpis użytkownika", listOf(
+            "Numer prawa jazdy" to "dlNumber", "Imię i nazwisko posiadacza" to "dlHolderNames",
+            "Data urodzenia" to "dlBirthDate", "Data wydania" to "dlIssueDate",
+            "Data ważności" to "dlExpiryDate", "Organ wydający" to "dlAuthority",
+            "Kategorie uprawnień" to "dlCategories", "Daty uzyskania kategorii" to "dlCategoryDates",
+            "Ograniczenia / kody" to "dlRestrictions", "Status dokumentu" to "dlStatus",
+            "Numer poprzedniego dokumentu" to "dlReplacementNumber", "Data utraty / unieważnienia" to "dlLossDate"
+        )),
         Triple("Dokument rodowy — ewidencja prywatna", "Prywatna karta ewidencji rodowej", listOf(
             "Numer dokumentu rodowego" to "familyDocNumber", "Nazwa rodu" to "familyName",
             "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyRole",
@@ -1729,7 +1739,7 @@ private fun DocumentDetailsScreen(
         ))
     )
     val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
-    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
+    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
@@ -1762,6 +1772,7 @@ private fun DocumentDetailsScreen(
                 4 -> R.drawable.documents_deputy_legitimacy
                 5 -> R.drawable.documents_course_legitimacy
                 6 -> R.drawable.documents_student_legitimacy
+                8 -> R.drawable.documents_identity_card
                 else -> R.drawable.documents_medical_certificates
             }),
             contentDescription = "Ilustracja ewidencji: ${section.first}",
@@ -1878,6 +1889,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         "student" -> "Legitymacja ucznia/studenta — ewidencja"
         "disability" -> "Orzeczenia i zaświadczenia — ewidencja"
         "passport" -> "Dane paszportowe — ewidencja"
+        "driving_license" -> "Prawo jazdy — ewidencja"
         else -> "Wszystkie dane i dokumenty"
     }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -2277,6 +2289,62 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             }
         }
         }
+        if (categoryId == "all" || categoryId == "driving_license") {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Dane prawa jazdy", color = Navy, fontWeight = FontWeight.Bold)
+                    DemoDataField("dlNumber", "Numer prawa jazdy", fields)
+                    DemoDataField("dlHolderNames", "Imię i nazwisko posiadacza", fields)
+                    DemoDataField("dlBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
+                    DemoDataField("dlIssueDate", "Data wydania", fields, "DD-MM-RRRR")
+                    DemoDataField("dlExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
+                    DemoDataField("dlAuthority", "Organ wydający", fields)
+                    DemoDataField("dlCategories", "Kategorie uprawnień", fields, "np. AM, A1, A2, A, B, BE, C, D, T")
+                    DemoDataField("dlCategoryDates", "Daty uzyskania poszczególnych kategorii", fields)
+                    DemoDataField("dlRestrictions", "Ograniczenia / kody", fields)
+                    DemoDataField("dlStatus", "Status dokumentu", fields, "ważny / zatrzymany / cofnięty / unieważniony")
+                    DemoDataField("dlReplacementNumber", "Numer poprzedniego dokumentu", fields)
+                    DemoDataField("dlLossDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
+                    Text("Fotografia", color = Navy, fontWeight = FontWeight.Bold)
+                    val drivingPhotoBytes = remember(photoBase64) {
+                        runCatching { if (photoBase64.isBlank()) null else Base64.decode(photoBase64, Base64.DEFAULT) }.getOrNull()
+                    }
+                    val drivingPhotoBitmap = remember(drivingPhotoBytes) {
+                        drivingPhotoBytes?.let { bytes ->
+                            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                            var sample = 1
+                            while (bounds.outWidth / sample > 700 || bounds.outHeight / sample > 700) sample *= 2
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size,
+                                BitmapFactory.Options().apply { inSampleSize = sample })
+                        }
+                    }
+                    if (drivingPhotoBitmap != null) {
+                        Image(drivingPhotoBitmap.asImageBitmap(), contentDescription = "Zdjęcie posiadacza prawa jazdy",
+                            modifier = Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(10.dp)),
+                            contentScale = ContentScale.Fit)
+                    } else {
+                        Text("Brak wspólnego zdjęcia. Dodaj je w sekcji zdjęcia dokumentowego powyżej.",
+                            color = Muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                    AdditionalInformationSection("Informacje dodatkowe — prawo jazdy", fields, "dlExtra",
+                        "Wpisz dane zgodnie z dokumentem źródłowym. Sama ewidencja nie potwierdza posiadania uprawnień do kierowania pojazdami.")
+                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9))) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Informacja o charakterze ewidencji", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
+                            Text("To prywatna karta danych uzupełnianych przez użytkownika. Nie jest prawem jazdy, nie potwierdza uprawnień i nie zastępuje dokumentu ani danych z rejestrów państwowych.",
+                                color = Ink, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
+
         if (categoryId == "all" || categoryId == "passport") {
         Card(
             modifier = Modifier.fillMaxWidth(),
