@@ -380,8 +380,23 @@ private fun categoryIconFor(category: String): Int? = when (category) {
     else -> null
 }
 
+
 @Composable
 private fun QrToolsScreen() {
+    var showVCard by remember { mutableStateOf(false) }
+    if (showVCard) {
+        Column(Modifier.fillMaxSize()) {
+            Text("‹  Wróć do wymiany danych", color = Blue, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable { showVCard = false }.padding(horizontal = 20.dp, vertical = 8.dp))
+            VCardQrScreen()
+        }
+    } else {
+        OwdHubScreen(onOpenVCard = { showVCard = true })
+    }
+}
+
+@Composable
+private fun VCardQrScreen() {
     val context = LocalContext.current
     val contactFields = remember {
         mutableStateMapOf("FN" to "", "N" to "", "ORG" to "", "TITLE" to "", "TEL" to "", "EMAIL" to "", "URL" to "", "ADR" to "")
