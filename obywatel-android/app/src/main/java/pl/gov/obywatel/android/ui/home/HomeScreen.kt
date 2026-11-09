@@ -51,6 +51,7 @@ private data class ServiceItem(
 
 private val services = listOf(
     ServiceItem("documents", "Dokumenty", "Import i podgląd plików", R.drawable.nav_documents),
+    ServiceItem("identity", "Zarządzanie dokumentami", "Podmioty, logo, herby, pieczęcie i PDF", R.drawable.nav_documents),
     ServiceItem("registry", "Rejestr dokumentów", "Lokalny wykaz i kody QR", R.drawable.service_ticket),
     ServiceItem("verify", "Weryfikacja QR", "Odczyt identyfikatora rejestru", R.drawable.nav_scan),
     ServiceItem("profile", "Moje dane", "Dane profilu aplikacji", R.drawable.service_profile),
