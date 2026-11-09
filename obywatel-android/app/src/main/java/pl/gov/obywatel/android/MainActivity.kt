@@ -1777,12 +1777,14 @@ private fun DocumentDetailsScreen(
                 Text("Dane dokumentu", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
             }
         }
-        if (documentId == "0" && photoBitmap != null) {
+        if (photoBitmap != null) {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Zdjęcie profilowe", color = Navy, fontWeight = FontWeight.Bold)
-                    Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie profilowe",
+                    Text("Wspólne zdjęcie dokumentowe", color = Navy, fontWeight = FontWeight.Bold)
+                    Image(photoBitmap.asImageBitmap(), contentDescription = "Wspólne zdjęcie profilowe do dokumentów",
                         modifier = Modifier.fillMaxWidth().height(190.dp).clip(RoundedCornerShape(10.dp)), contentScale = ContentScale.Fit)
+                    Text("Fotografia pochodzi ze zdjęcia profilowego zapisanego w danych osobowych.", color = Muted,
+                        style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -1911,6 +1913,49 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
+        if (categoryId != "all" && categoryId != "profile") {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Wspólne zdjęcie do dokumentów", color = Navy, fontWeight = FontWeight.Bold)
+                    val sharedPhotoBytes = remember(photoBase64) {
+                        runCatching { if (photoBase64.isBlank()) null else Base64.decode(photoBase64, Base64.DEFAULT) }.getOrNull()
+                    }
+                    val sharedPhotoBitmap = remember(sharedPhotoBytes) {
+                        sharedPhotoBytes?.let { bytes ->
+                            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                            var sample = 1
+                            while (bounds.outWidth / sample > 900 || bounds.outHeight / sample > 900) sample *= 2
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size,
+                                BitmapFactory.Options().apply { inSampleSize = sample })
+                        }
+                    }
+                    if (sharedPhotoBitmap != null) {
+                        Image(sharedPhotoBitmap.asImageBitmap(), contentDescription = "Wspólne zdjęcie do dokumentów",
+                            modifier = Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Fit)
+                    } else {
+                        Text("Nie dodano jeszcze zdjęcia. Możesz wybrać je z pliku lub galerii.",
+                            color = Muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Text("Importuj zdjęcie", color = Blue, fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { photoPicker.launch("image/*") }.padding(vertical = 8.dp))
+                        if (photoBase64.isNotBlank()) {
+                            Text("Usuń zdjęcie", color = Color(0xFF9B2C2C), fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable { photoBase64 = "" }.padding(vertical = 8.dp))
+                        }
+                    }
+                    Text("To samo zdjęcie jest wykorzystywane w podglądach dowodu tożsamości, danych paszportowych, dokumentu rodowego i innych kart, które przewidują fotografię.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
          if (categoryId == "all" || categoryId == "profile") {
         Card(
             modifier = Modifier.fillMaxWidth(),
