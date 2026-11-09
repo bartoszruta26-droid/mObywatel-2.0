@@ -269,7 +269,8 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                     color = Color(0xFF29445B), style = MaterialTheme.typography.bodySmall)
             }
         }
-        if (professions.isEmpty()) Text("Nie dodano jeszcze żadnego zawodu. Wybierz „Dodaj kolejny zawód”, aby wpisać własną nazwę i dane dokumentu.", color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)\n        professions.forEach { p ->
+        if (professions.isEmpty()) Text("Nie dodano jeszcze żadnego zawodu. Wybierz „Dodaj kolejny zawód”, aby wpisać własną nazwę i dane dokumentu.", color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
+        professions.forEach { p ->
             Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
