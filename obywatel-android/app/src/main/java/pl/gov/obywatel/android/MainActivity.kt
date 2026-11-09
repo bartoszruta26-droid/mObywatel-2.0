@@ -213,7 +213,7 @@ private fun HomeScreen() {
                 .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
                 .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
             val raw = decoder.decode(java.nio.ByteBuffer.wrap(bytes)).toString()
-            val imported = VCardCodec.decodeArchive(raw)
+            val imported = VCardCodec.decodeForImport(raw)
             require(imported.isNotEmpty()) { "Archiwum nie zawiera danych." }
             imported
         }.onSuccess {
