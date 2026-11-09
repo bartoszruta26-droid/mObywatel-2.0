@@ -2483,7 +2483,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
         fieldSets[selectedEntity].orEmpty().forEach { (key, label, placeholder) ->
             DemoDataField(key, label, fields, placeholder)
         }
-        Divider(color = Color(0xFFDCE3EA))
+        HorizontalDivider(color = Color(0xFFDCE3EA))
         Text("Źródło i kontrola aktualności", color = Navy, fontWeight = FontWeight.Bold)
         DemoDataField("registry_${selectedEntity}_source", "Źródło danych / adres rejestru", fields, "Adres strony lub nazwa dokumentu")
         DemoDataField("registry_${selectedEntity}_checked", "Data sprawdzenia", fields, "DD-MM-RRRR")
