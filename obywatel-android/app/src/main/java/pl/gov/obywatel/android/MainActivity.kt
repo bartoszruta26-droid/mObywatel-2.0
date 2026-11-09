@@ -476,6 +476,36 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Legitymacja uczestnika kursu — instytucja szkoleniowa", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("trainingInstitution", "Nazwa instytucji szkoleniowej", fields)
+                DemoDataField("trainingInstitutionAddress", "Adres instytucji", fields)
+                DemoDataField("trainingInstitutionRegistry", "Numer wpisu / rejestru instytucji (jeśli dotyczy)", fields)
+                DemoDataField("trainingCardNumber", "Numer legitymacji uczestnika", fields)
+                DemoDataField("trainingCourseName", "Nazwa kursu / kierunek kształcenia", fields)
+                DemoDataField("trainingCourseCode", "Symbol lub numer kursu", fields)
+                DemoDataField("trainingStartDate", "Data rozpoczęcia kursu", fields, "DD-MM-RRRR")
+                DemoDataField("trainingEndDate", "Planowana data zakończenia kursu", fields, "DD-MM-RRRR")
+                DemoDataField("trainingIssueDate", "Data wydania legitymacji", fields, "DD-MM-RRRR")
+                DemoDataField("trainingValidUntil", "Ważna do", fields, "DD-MM-RRRR")
+                DemoDataField("trainingStatus", "Status uczestnictwa", fields, "np. aktywny / ukończony / zawieszony")
+                DemoDataField("trainingIssuer", "Osoba upoważniona do wystawienia", fields)
+                DemoDataField("trainingSignature", "Imię i nazwisko / podpis wystawcy", fields)
+                Text("Podgląd legitymacji", color = Navy, fontWeight = FontWeight.Bold)
+                TrainingParticipantCard(fields = fields, photoBase64 = photoBase64)
+                Text(
+                    "Legitymacja prywatnej instytucji szkoleniowej potwierdza wpis w jej ewidencji uczestników, zgodnie z regulaminem instytucji. Sama w sobie nie nadaje statusu studenta uczelni ani uprawnień ustawowych legitymacji studenckiej.",
+                    color = Muted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Dane paszportowe", color = Navy, fontWeight = FontWeight.Bold)
                 DemoDataField("passportNumber", "Numer paszportu", fields)
                 DemoDataField("passportCountry", "Państwo wydania", fields)
@@ -629,6 +659,88 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
         color = Muted,
         style = MaterialTheme.typography.bodySmall
     )
+}
+
+@Composable
+private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: String) {
+    val photoBitmap = remember(photoBase64) {
+        runCatching {
+            if (photoBase64.isBlank()) null else {
+                val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                var sample = 1
+                while (bounds.outWidth / sample > 500 || bounds.outHeight / sample > 500) sample *= 2
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+            }
+        }.getOrNull()
+    }
+    val participantName = listOf(fields["firstNames"], fields["lastName"])
+        .filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO UCZESTNIKA" }
+    Card(
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8EAF4)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(Modifier.fillMaxSize().padding(11.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(29.dp).clip(RoundedCornerShape(7.dp)).background(Color(0xFF39466F)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Description, contentDescription = "Znak instytucji szkoleniowej", tint = White)
+                }
+                Column(Modifier.weight(1f).padding(start = 7.dp)) {
+                    Text(
+                        fields["trainingInstitution"].orEmpty().ifBlank { "INSTYTUCJA SZKOLENIOWA" },
+                        color = Color(0xFF26345D),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text("LEGITYMACJA UCZESTNIKA KURSU", color = Color(0xFF4C587B), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            Row(
+                modifier = Modifier.weight(1f).padding(top = 7.dp, bottom = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                Box(
+                    modifier = Modifier.width(66.dp).fillMaxSize().clip(RoundedCornerShape(6.dp)).background(Color(0xFFD5D9E8)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (photoBitmap != null) {
+                        Image(photoBitmap.asImageBitmap(), contentDescription = "Fotografia uczestnika kursu", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    } else {
+                        Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na fotografię", tint = Color(0xFF66729A), modifier = Modifier.size(40.dp))
+                    }
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("UCZESTNIK", color = Color(0xFF596487), style = MaterialTheme.typography.labelSmall)
+                    Text(participantName, color = Color(0xFF202B4C), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("KURS", color = Color(0xFF596487), style = MaterialTheme.typography.labelSmall)
+                    Text(fields["trainingCourseName"].orEmpty().ifBlank { "—" }, color = Color(0xFF202B4C), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        "NR " + fields["trainingCardNumber"].orEmpty().ifBlank { "—" } +
+                            "   WAŻNA DO " + fields["trainingValidUntil"].orEmpty().ifBlank { "—" },
+                        color = Color(0xFF35436D),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
+                    .background(Color(0xFF39466F)).padding(horizontal = 7.dp, vertical = 5.dp)
+            ) {
+                Text("DOKUMENT INSTYTUCJI SZKOLENIOWEJ • NIE JEST LEGITYMACJĄ STUDENCKĄ", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                Text("Potwierdza wyłącznie status w ewidencji wystawcy.", color = Color(0xFFE7EAF5), style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
 }
 
 @Composable
