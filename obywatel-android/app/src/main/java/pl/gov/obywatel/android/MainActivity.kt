@@ -376,6 +376,30 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("birthDate", "Data urodzenia", fields, "DD-MM-RRRR")
                 DemoDataField("birthPlace", "Miejsce urodzenia", fields)
                 DemoDataField("citizenship", "Obywatelstwo", fields)
+                DemoDataField("sex", "Płeć (dane deklarowane)", fields)
+                DemoDataField("fatherNames", "Imiona ojca", fields)
+                DemoDataField("fatherSurname", "Nazwisko ojca", fields)
+                DemoDataField("motherNames", "Imiona matki", fields)
+                DemoDataField("motherSurname", "Nazwisko rodowe matki", fields)
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Rodowy dokument tożsamości — dane dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("familyDocNumber", "Numer rodowego dokumentu", fields)
+                DemoDataField("familyName", "Nazwa rodu", fields)
+                DemoDataField("familyLine", "Linia / gałąź rodu", fields)
+                DemoDataField("familyRole", "Miejsce w strukturze rodu", fields)
+                DemoDataField("familyRegistry", "Osoba lub organ prowadzący ewidencję", fields)
+                DemoDataField("familyIssueDate", "Data sporządzenia", fields, "DD-MM-RRRR")
+                DemoDataField("familySource", "Podstawa wpisu / dokument źródłowy", fields)
+                Text("Wizualizacja dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                RodowyDocumentPreview(fields = fields)
             }
         }
         Card(
@@ -482,6 +506,71 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
         )
         Spacer(Modifier.height(12.dp))
     }
+}
+
+@Composable
+private fun RodowyDocumentPreview(fields: Map<String, String>) {
+    val displayName = listOf(fields["firstNames"], fields["lastName"])
+        .filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
+    Card(
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE7EDF0)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(12.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(30.dp).clip(RoundedCornerShape(7.dp))
+                            .background(Color(0xFF254B50)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.AccountCircle, contentDescription = "Znak ewidencji rodowej", tint = White)
+                    }
+                    Column(Modifier.padding(start = 8.dp)) {
+                        Text("DOKUMENT RODOWY", color = Color(0xFF254B50), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.labelLarge)
+                        Text("DOKUMENT TOŻSAMOŚCI • EWIDENCJA PRYWATNA", color = Color(0xFF455A64), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                Row(
+                    modifier = Modifier.weight(1f).padding(top = 8.dp, bottom = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.width(76.dp).fillMaxSize()
+                            .clip(RoundedCornerShape(7.dp)).background(Color(0xFFD2DDE0)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na fotografię", tint = Color(0xFF607D83), modifier = Modifier.size(44.dp))
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("IMIĘ I NAZWISKO", color = Color(0xFF52666B), style = MaterialTheme.typography.labelSmall)
+                        Text(displayName, color = Color(0xFF172D32), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text("DATA URODZENIA", color = Color(0xFF52666B), style = MaterialTheme.typography.labelSmall)
+                        Text(fields["birthDate"].orEmpty().ifBlank { "—" }, color = Color(0xFF172D32), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                        Text("NUMER RODOWY", color = Color(0xFF52666B), style = MaterialTheme.typography.labelSmall)
+                        Text(fields["familyDocNumber"].orEmpty().ifBlank { "—" }, color = Color(0xFF172D32), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+                    }
+                }
+                Column(
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
+                        .background(Color(0xFF254B50)).padding(horizontal = 7.dp, vertical = 5.dp)
+                ) {
+                    Text("DOKUMENT PRYWATNY — NIE JEST DOKUMENTEM PAŃSTWOWYM", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                    Text("Nie zastępuje dowodu osobistego ani paszportu.", color = Color(0xFFE1ECEC), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+    Text(
+        "Projekt wykorzystuje czytelny układ karty identyfikacyjnej, ale ma własną nazwę, znak, kolorystykę i oznaczenia. Nie zawiera państwowego godła, numeru CAN, warstwy elektronicznej ani państwowych zabezpieczeń.",
+        color = Muted,
+        style = MaterialTheme.typography.bodySmall
+    )
 }
 
 @Composable
