@@ -795,7 +795,6 @@ private fun VCardQrScreen() {
             Text(if (branding == QR_BRAND_FILE && uploadedLogo == null) "Wybierz logo z pliku albo ustaw opcję „Bez znaku”." else "Wpisz co najmniej nazwę kontaktu, aby wygenerować kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
         }
         Text("Prywatność: kod ujawnia każdej osobie skanującej wszystkie zapisane w nim dane. Nie dodawaj numeru PESEL, danych dokumentu ani informacji poufnych.", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Text("Prototyp obywatelski • lokalne generowanie kodu • brak połączenia z administracją publiczną", color = Muted, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -846,8 +845,8 @@ private fun MoreMenuScreen(
         Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Informacje, bezpieczeństwo i ustawienia", color = Muted, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Historia działań", "Lokalna lista czynności w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
-        ProfileActionCard("Wydane certyfikaty", "Informacje demonstracyjne o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
-        ProfileActionCard("Powiadomienia", "Ustawienia powiadomień demonstracyjnych", Icons.Filled.NotificationsNone, onOpenHelp)
+        ProfileActionCard("Wydane certyfikaty", "Informacje o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
+        ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane lokalne, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
         ProfileActionCard("Informacje prawne", "Prywatność i zasady korzystania", Icons.Filled.Description, onOpenHelp)
@@ -870,7 +869,7 @@ private fun ProfileLandingScreen(
         Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         CivicIllustrationBanner(
             imageRes = R.drawable.header_logo_panel,
-            description = "Panel znaku i identyfikacji prototypu"
+            description = "Panel znaku i identyfikacji aplikacji"
         )
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -880,7 +879,7 @@ private fun ProfileLandingScreen(
                         listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Użytkownik" },
                         color = Navy, fontWeight = FontWeight.Bold
                     )
-                    Text("Profil lokalny • dane demonstracyjne", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text("Profil lokalny", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -920,12 +919,12 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         "Zdrowie" to "Lokalny zestaw informacji zdrowotnych i odnośników. Dane nie są pobierane z Internetowego Konta Pacjenta.",
         "Transport" to "Informacje transportowe i ewidencja danych związanych z podróżą. Brak połączenia z rejestrami publicznymi.",
         "Mandaty" to "Miejsce na lokalną ewidencję informacji o mandatach. Brak dostępu do policyjnych i administracyjnych rejestrów mandatów.",
-        "Sprawdź PESEL" to "Ekran informacyjny dotyczący numeru PESEL. Prototyp nie odpytuje rejestru PESEL i nie potwierdza danych.",
-        "Zastrzeż PESEL" to "Ekran informacyjny dotyczący zastrzeżenia numeru PESEL. Prototyp nie wysyła dyspozycji do rejestru i nie zmienia statusu numeru.",
+        "Sprawdź PESEL" to "Ekran informacyjny dotyczący numeru PESEL. Aplikacja nie odpytuje rejestru PESEL i nie potwierdza danych.",
+        "Zastrzeż PESEL" to "Ekran informacyjny dotyczący zastrzeżenia numeru PESEL. Aplikacja nie wysyła dyspozycji do rejestru i nie zmienia statusu numeru.",
         "Bilety" to "Miejsce na prezentację własnych zapisów dotyczących biletów. Aplikacja nie sprzedaje ani nie waliduje biletów.",
         "Bezpieczeństwo" to "Ustawienia prywatności, wskazówki bezpieczeństwa i informacje o ochronie danych.",
         "Środowisko" to "Informacje środowiskowe i lokalne materiały edukacyjne.",
-        "Pozostałe" to "Dodatkowe moduły będą dodawane etapami w wersji alfa."
+        "Pozostałe" to "Katalog dodatkowych modułów i informacji."
     )
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -946,7 +945,7 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         )
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                Text(descriptions[title] ?: "Moduł informacyjny wersji alfa.", color = Ink)
+                Text(descriptions[title] ?: "Moduł informacyjny.", color = Ink)
             }
         }
         if (title == "Bezpieczeństwo") {
@@ -1006,7 +1005,7 @@ private fun BrandMark() {
                 .background(Blue),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Filled.Public, contentDescription = "Autorski znak prototypu", tint = White, modifier = Modifier.size(30.dp))
+            Icon(Icons.Filled.Public, contentDescription = "Autorski znak aplikacji", tint = White, modifier = Modifier.size(30.dp))
         }
     }
 }
@@ -1075,7 +1074,7 @@ private fun SettingsMenuScreen(
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Ustawienia", color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Zarządzanie lokalnymi danymi prototypu", color = Muted,
+        Text("Zarządzanie lokalnymi danymi", color = Muted,
             style = MaterialTheme.typography.bodyMedium)
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -1112,7 +1111,7 @@ private fun SettingsMenuScreen(
             Icons.Filled.HealthAndSafety, onEditDisability)
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
-        Text("Zmiany są zapisywane lokalnie w zaszyfrowanym magazynie prototypu. Nie są wysyłane do rejestrów ani podmiotów publicznych.",
+        Text("Zmiany są zapisywane lokalnie w zaszyfrowanym magazynie. Nie są wysyłane do rejestrów ani podmiotów publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
@@ -1509,7 +1508,7 @@ private fun DocumentDetailsScreen(
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Powiązane moduły", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Skróty otwierają odpowiednie sekcje demonstracyjne prototypu.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Skróty otwierają powiązane sekcje aplikacji.", color = Muted, style = MaterialTheme.typography.bodySmall)
                 relatedServices.forEach { serviceTitle ->
                     Row(
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
