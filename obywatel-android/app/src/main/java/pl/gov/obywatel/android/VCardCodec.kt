@@ -117,7 +117,7 @@ internal object VCardCodec {
             lines += "X-OWD-FIELD;X-OWD-NAME=$name:${escape(value)}"
         }
         lines += "END:VCARD"
-        val result = fold(lines).joinToString("\\r\\n") + "\\r\\n"
+        val result = fold(lines).joinToString("\r\n") + "\r\n"
         require(result.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) { "Archiwum przekracza limit 10 MB." }
         return result
     }
