@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -51,11 +53,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -108,26 +112,35 @@ private val services = listOf(
 @Composable
 private fun HomeScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showDemoDocuments by remember { mutableStateOf(false) }
     Surface(modifier = Modifier.fillMaxSize(), color = AppSurface) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Header()
-            Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
-                Spacer(Modifier.height(18.dp))
-                PrototypeNotice()
-                Spacer(Modifier.height(18.dp))
-                SectionHeading("Twoje usługi", "Wybierz obszar")
-                Spacer(Modifier.height(12.dp))
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(services) { service -> ServiceCard(service) }
+        if (showDemoDocuments) {
+            DemoDocumentsScreen(onBack = { showDemoDocuments = false })
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Header()
+                Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
+                    Spacer(Modifier.height(18.dp))
+                    PrototypeNotice()
+                    Spacer(Modifier.height(18.dp))
+                    SectionHeading("Twoje usługi", "Wybierz obszar")
+                    Spacer(Modifier.height(12.dp))
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(services) { service ->
+                            ServiceCard(service) {
+                                if (service.title == "Dokumenty") showDemoDocuments = true
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
                 }
-                Spacer(Modifier.height(10.dp))
+                BottomNavigation(selectedTab = selectedTab, onSelect = { selectedTab = it })
             }
-            BottomNavigation(selectedTab = selectedTab, onSelect = { selectedTab = it })
         }
     }
 }
@@ -214,9 +227,9 @@ private fun SectionHeading(title: String, subtitle: String) {
 }
 
 @Composable
-private fun ServiceCard(item: ServiceItem) {
+private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.14f).clickable { },
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.14f).clickable(onClick = onClick),
         shape = RoundedCornerShape(17.dp),
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -239,6 +252,152 @@ private fun ServiceCard(item: ServiceItem) {
             }
         }
     }
+}
+
+
+@Composable
+private fun DemoDocumentsScreen(onBack: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text(
+            text = "‹  Powrót do usług",
+            color = Blue,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp)
+        )
+        Text(
+            "Dane i identyfikatory — demonstracja",
+            color = Navy,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("DEMO • NIE JEST DOKUMENTEM", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
+                Text(
+                    "To wyłącznie formularz testowy. Nie potwierdza tożsamości, obywatelstwa, mandatu poselskiego ani uprawnień. Nie używa oficjalnych wzorów, znaków, kodów ani zabezpieczeń.",
+                    color = Ink,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Zdjęcie profilowe (miejsce na fotografię)", color = Navy, fontWeight = FontWeight.Bold)
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(150.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF0F3F6))
+                        .border(1.dp, Border, RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Muted, modifier = Modifier.size(42.dp))
+                        Text("MIEJSCE NA ZDJĘCIE", color = Muted, fontWeight = FontWeight.Bold)
+                        Text("Brak wczytanego zdjęcia", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Text("Dane osobowe", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("Imię / imiona")
+                DemoDataField("Nazwisko")
+                DemoDataField("Data urodzenia", "DD-MM-RRRR")
+                DemoDataField("Miejsce urodzenia")
+                DemoDataField("Obywatelstwo")
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Dane dowodu osobistego", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("Numer dowodu osobistego")
+                DemoDataField("Data wydania", "DD-MM-RRRR")
+                DemoDataField("Data ważności", "DD-MM-RRRR")
+                DemoDataField("Organ wydający")
+                Text(
+                    "Pola mają charakter przykładowy. Formularz nie generuje ani nie odwzorowuje dowodu osobistego.",
+                    color = Muted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Legitymacja poselska — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("Numer ewidencyjny legitymacji")
+                DemoDataField("Kadencja")
+                DemoDataField("Okręg wyborczy")
+                DemoDataField("Data rozpoczęcia mandatu", "DD-MM-RRRR")
+                DemoDataField("Data zakończenia mandatu", "DD-MM-RRRR")
+                Text(
+                    "Formularz nie stanowi legitymacji, nie potwierdza mandatu ani prawa do reprezentowania Sejmu.",
+                    color = Muted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Dane paszportowe", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("Numer paszportu")
+                DemoDataField("Państwo wydania")
+                DemoDataField("Data wydania", "DD-MM-RRRR")
+                DemoDataField("Data ważności", "DD-MM-RRRR")
+                DemoDataField("Organ wydający")
+                Text(
+                    "Nie jest to paszport ani jego cyfrowy odpowiednik. Nie dodano strefy MRZ, kodu QR, kodu kreskowego ani elementów zabezpieczających.",
+                    color = Muted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        Text(
+            "Dane wpisane w te pola pozostają wyłącznie w stanie bieżącego ekranu demonstracyjnego; aplikacja nie zapisuje ich ani nie przesyła.",
+            color = Muted,
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun DemoDataField(label: String, placeholder: String = "Wpisz dane testowe") {
+    var value by remember { mutableStateOf("") }
+    OutlinedTextField(
+        value = value,
+        onValueChange = { value = it },
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(label) },
+        placeholder = { Text(placeholder) },
+        singleLine = true
+    )
 }
 
 @Composable
