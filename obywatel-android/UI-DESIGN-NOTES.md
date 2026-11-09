@@ -179,3 +179,15 @@ Kontrola wykonana statycznie na kodzie źródłowym: usunięto jedyną wykrytą 
 Doprecyzowano opisy ekranów zgodnie z rzeczywistym przepływem: karta Ustawienia na ekranie Profil otwiera wspólne menu zarządzania danymi, a formularz dokumentów wraca do menu Ustawienia (nie do portfela). Zapobiega to mylnemu sugerowaniu alternatywnej ścieżki edycji. Portfel i szczegóły dokumentów pozostają ekranami tylko do odczytu.
 
 Przegląd wykonano statycznie na aktualnym kodzie źródłowym. Nie uruchamiano kompilacji ani testów budowania.
+
+## Obowiązujący podział nawigacji: Profil / Ustawienia / Portfel
+
+Ustalony przepływ interfejsu jest następujący:
+
+- **Menu główne → Profil → Ustawienia** — jedyne miejsce wprowadzania, poprawiania i zapisywania danych ewidencyjnych.
+- **Menu główne → Portfel** — katalog wszystkich dokumentów i ewidencji; otwarcie pozycji pokazuje zapisane dane w widoku tylko do odczytu.
+- Z ekranu Start oraz z katalogu Usługi przejście do ustawień prowadzi najpierw do zakładki Profil. Użytkownik otwiera menu Ustawienia z poziomu Profilu.
+- Portfel i szczegóły dokumentów nie udostępniają formularzy ani skrótów do edycji.
+- Każda nowa kategoria dokumentu musi mieć formularz zarządzania w Profil → Ustawienia oraz odpowiadającą mu pozycję i widok odczytu w Portfelu.
+
+Zmiana nawigacji została wprowadzona w MainActivity.kt. Nie zmienia ona magazynu danych ani sposobu prezentowania dokumentów. Kontrole wykonuje się statycznie; projekt pozostaje w fazie alfa i nie uruchamia się kompilacji, testów budowania ani generowania APK.
