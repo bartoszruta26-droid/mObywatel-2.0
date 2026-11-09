@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -359,8 +360,12 @@ private fun SignatureKindLabel(kind: String) {
         else -> "Rodzaj podpisu nieustalony" to Color(0xFF8A5A00)
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(if (kind == "unknown") Icons.Filled.Warning else Icons.Filled.Verified,
-            contentDescription = label, tint = color, modifier = Modifier.size(20.dp))
+        val signatureIcon = when (kind) {
+            "epuap" -> Icons.Filled.Shield
+            "qualified" -> Icons.Filled.Verified
+            else -> Icons.Filled.Warning
+        }
+        Icon(signatureIcon, contentDescription = label, tint = color, modifier = Modifier.size(20.dp))
         Text(label, color = color, fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 6.dp))
     }
