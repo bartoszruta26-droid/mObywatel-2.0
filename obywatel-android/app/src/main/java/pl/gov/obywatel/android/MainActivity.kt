@@ -142,6 +142,7 @@ private fun HomeScreen() {
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
     var showDocumentsEditor by remember { mutableStateOf(false) }
+    var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
@@ -161,9 +162,15 @@ private fun HomeScreen() {
             Box(modifier = Modifier.weight(1f)) {
                 when {
                     showDocumentsEditor -> DemoDocumentsScreen(onBack = { showDocumentsEditor = false })
+                    selectedDocumentId != null -> DocumentDetailsScreen(
+                        documentId = selectedDocumentId!!,
+                        onBack = { selectedDocumentId = null },
+                        onEdit = { selectedDocumentId = null; showDocumentsEditor = true }
+                    )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
-                        onEdit = { showDocumentsEditor = true }
+                        onEdit = { showDocumentsEditor = true },
+                        onOpenDetails = { selectedDocumentId = it }
                     )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false })
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
@@ -256,6 +263,8 @@ private fun HomeScreen() {
                     selectedTab = it
                     activeService = null
                     showDemoDocuments = false
+                    selectedDocumentId = null
+                    showDocumentsEditor = false
                     showDisabilitySettings = false
                     showCertificates = false
                 }
@@ -612,7 +621,7 @@ private fun CertificatesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit) {
+private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit, onOpenDetails: (String) -> Unit) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
@@ -672,10 +681,10 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit) {
         }
         Text("Twoje dokumenty i dane", color = Navy, style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold)
-        groups.forEach { (title, icon, keys) ->
+        groups.forEachIndexed { index, (title, icon, keys) ->
             val hasData = keys.any { !fields[it].isNullOrBlank() }
             Card(
-                modifier = Modifier.fillMaxWidth().clickable(onClick = onEdit),
+                modifier = Modifier.fillMaxWidth().clickable { onOpenDetails(index.toString()) },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -699,6 +708,100 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit) {
             Text("Edytuj dane i podgląd")
         }
         Text("Wersja obywatelska prototypu. Karty w tym portfelu nie są dokumentami państwowymi, nie nadają uprawnień i nie zastępują oryginałów.",
+            color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun DocumentDetailsScreen(
+    documentId: String,
+    onBack: () -> Unit,
+    onEdit: () -> Unit
+) {
+    val context = LocalContext.current
+    val fields = remember { DemoIdentityStore.load(context) }
+    val sections = listOf(
+        Triple("Dane osobowe profilu", "Profil osoby — ewidencja prywatna", listOf(
+            "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
+            "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel"
+        )),
+        Triple("Dowód osobisty — ewidencja", "Dane dowodu — wpis użytkownika", listOf(
+            "Numer dokumentu" to "idNumber", "Status" to "idStatus",
+            "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data utraty / unieważnienia" to "idInvalidatedAt"
+        )),
+        Triple("Paszport — ewidencja", "Dane dokumentu podróży — wpis użytkownika", listOf(
+            "Numer paszportu" to "passportNumber", "Rodzaj dokumentu" to "passportType",
+            "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
+            "Data utraty / unieważnienia" to "passportInvalidatedAt"
+        )),
+        Triple("Dokument rodowy — ewidencja prywatna", "Prywatna karta ewidencji rodowej", listOf(
+            "Numer dokumentu rodowego" to "familyDocNumber", "Nazwa rodu" to "familyName",
+            "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyPosition",
+            "Prowadzący ewidencję" to "familyRegistrar", "Data sporządzenia" to "familyIssueDate"
+        )),
+        Triple("Legitymacja poselska — ewidencja", "Ewidencja informacji o legitymacji i mandacie", listOf(
+            "Numer legitymacji" to "mpCardNumber", "Kadencja" to "mpTerm",
+            "Wystawca" to "mpIssuer", "Status legitymacji" to "mpCardStatus",
+            "Źródło potwierdzenia" to "mpMandateSource"
+        )),
+        Triple("Legitymacja kursanta", "Prywatna legitymacja instytucji szkoleniowej", listOf(
+            "Numer legitymacji" to "trainingCardNumber", "Instytucja" to "trainingInstitution",
+            "Nazwa kursu" to "trainingCourseName", "Status uczestnictwa" to "trainingStatus",
+            "Ważna do" to "trainingValidUntil"
+        )),
+        Triple("Legitymacja studencka — ewidencja", "Ewidencja danych podanych przez użytkownika", listOf(
+            "Numer legitymacji" to "studentCardNumber", "Uczelnia" to "studentUniversity",
+            "Kierunek" to "studentCourse", "Rok akademicki" to "studentAcademicYear",
+            "Status" to "studentStatus", "Ważność" to "studentValidUntil"
+        )),
+        Triple("Orzeczenia i zaświadczenia", "Ewidencja informacji o rozstrzygnięciach i zaświadczeniach", listOf(
+            "Numer dokumentu / sprawy" to "disabilityDecisionNumber", "Wystawca" to "disabilityAuthorityName",
+            "Data dokumentu" to "disabilityDecisionDate", "Stopień / kategoria" to "disabilityDegree",
+            "Okres obowiązywania" to "disabilityValidity", "Rodzaj rozstrzygnięcia" to "disabilityDecisionType"
+        ))
+    )
+    val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("‹  Powrót do portfela", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("EWIDENCJA LOKALNA • DEMO", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
+                Text("To widok danych zapisanych przez użytkownika. Nie potwierdza autentyczności dokumentu, statusu urzędowego ani uprawnień.",
+                    color = Ink, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                section.third.forEach { (label, key) ->
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
+                        Text(fields[key].orEmpty().ifBlank { "Brak wpisu" },
+                            color = if (fields[key].isNullOrBlank()) Muted else Navy,
+                            fontWeight = if (fields[key].isNullOrBlank()) FontWeight.Normal else FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+        androidx.compose.material3.Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
+            Text("Edytuj dane w formularzu")
+        }
+        Text("Edycja otwiera wspólny formularz ewidencyjny. Dane są przechowywane lokalnie i nie są sprawdzane w rejestrach publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
