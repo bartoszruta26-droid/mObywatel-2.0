@@ -129,6 +129,7 @@ import pl.gov.obywatel.android.ui.theme.Navy
 import pl.gov.obywatel.android.ui.theme.ObywatelTheme
 import pl.gov.obywatel.android.ui.theme.Surface as AppSurface
 import pl.gov.obywatel.android.ui.theme.White
+import pl.gov.obywatel.android.PublicServicesBrowserScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,6 +149,7 @@ private data class ServiceItem(
 
 private val services = listOf(
     ServiceItem("Portfel", "Wszystkie dokumenty i ewidencje", R.drawable.mob_document_check, category = "Dokumenty"),
+    ServiceItem("Przeglądarka usług publicznych", "Katalog usług gov.pl, mObywatel i administracji publicznej", fallbackIcon = Icons.Filled.Public, category = "Sprawy urzędowe"),
     ServiceItem("Odpis z rejestru podmiotów", "Dane spółki, fundacji, kościoła i instytucji szkoleniowej", fallbackIcon = Icons.Filled.AccountBalance, category = "Rejestry"),
     ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad, category = "Transport"),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
@@ -346,6 +348,7 @@ private fun HomeScreen() {
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
+                    activeService == "Przeglądarka usług publicznych" -> PublicServicesBrowserScreen(onBack = { activeService = null })
                     activeService != null -> ServiceDetailScreen(
                         title = activeService!!,
                         onBack = { activeService = null },
