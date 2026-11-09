@@ -85,7 +85,7 @@ internal object VCardCodec {
                 val name = tokens.drop(1).firstOrNull { it.startsWith("X-OWD-NAME=", true) }
                     ?.substringAfter('=') ?: error("Pole OWD bez nazwy.")
                 require(fieldName.matches(name)) { "Nieprawidłowa nazwa pola OWD." }
-                extensions.getOrPut(name) { mutableListOf() }.add(value)
+                extensions.getOrPut("FIELD:$name") { mutableListOf() }.add(value)
             } else if (property.startsWith("X-")) {
                 extensions.getOrPut(property) { mutableListOf() }.add(value)
             } else {
@@ -107,7 +107,8 @@ internal object VCardCodec {
         val provenance = DataProvenance.valueOf(
             card.extensions["X-OWD-PROVENANCE"]?.singleOrNull() ?: error("Brak pochodzenia danych OWD.")
         )
-        val fields = card.extensions.filterKeys { fieldName.matches(it) }
+        val fields = card.extensions.filterKeys { it.startsWith("FIELD:") }
+            .mapKeys { it.key.removePrefix("FIELD:") }
             .mapValues { (_, values) -> values.singleOrNull() ?: error("Pole OWD ma wielokrotne wartości.") }
         val record = ShareableRecord(
             schema = schema,
