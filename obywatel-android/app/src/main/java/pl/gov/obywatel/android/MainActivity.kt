@@ -856,9 +856,28 @@ private fun WebsiteQrScreen() {
 private fun VCardQrScreen() {
     val context = LocalContext.current
     val contactFields = remember {
-        mutableStateMapOf("FN" to "", "N" to "", "ORG" to "", "TITLE" to "", "TEL" to "", "EMAIL" to "", "URL" to "", "ADR" to "")
+        val profile = DemoIdentityStore.load(context)
+        val firstNames = profile["firstNames"].orEmpty().trim()
+        val lastName = profile["lastName"].orEmpty().trim()
+        val displayName = listOf(firstNames, lastName).filter { it.isNotBlank() }.joinToString(" ")
+        mutableStateMapOf(
+            "FN" to displayName,
+            "N" to listOf(lastName, firstNames, "", "", "").joinToString(";"),
+            "ORG" to profile["contactOrganization"].orEmpty(),
+            "TITLE" to profile["contactTitle"].orEmpty(),
+            "TEL" to profile["contactPhone"].orEmpty(),
+            "EMAIL" to profile["contactEmail"].orEmpty(),
+            "URL" to profile["contactUrl"].orEmpty(),
+            "ADR" to profile["contactAddress"].orEmpty()
+        )
     }
-    var importMessage by remember { mutableStateOf("Zaimportuj plik .vcf lub wpisz dane ręcznie.") }
+    var importMessage by remember {
+        val hasProfileName = contactFields["FN"].orEmpty().isNotBlank()
+        mutableStateOf(
+            if (hasProfileName) "Wstępnie uzupełniono dane z lokalnego profilu mObywatela. Sprawdź i popraw pola przed utworzeniem kodu."
+            else "Brak imienia i nazwiska w profilu. Uzupełnij dane ręcznie lub wczytaj plik .vcf."
+        )
+    }
     var branding by remember { mutableStateOf(QR_BRAND_NONE) }
     var uploadedLogo by remember { mutableStateOf<Bitmap?>(null) }
     var logoMessage by remember { mutableStateOf("Nie wybrano pliku logo.") }
@@ -914,6 +933,7 @@ private fun VCardQrScreen() {
         )
         Text(logoMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
         Text("Dane kontaktowe", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        Text("Pola są domyślnie uzupełniane z danych zapisanych lokalnie w profilu aplikacji. Możesz je edytować przed wygenerowaniem wizytówki. Dane identyfikacyjne, takie jak PESEL i numery dokumentów, nie są kopiowane do kodu QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
         val fields = listOf(
             "FN" to "Nazwa wyświetlana",
             "N" to "Nazwisko;Imię;Drugie imię;Prefiks;Sufiks",
