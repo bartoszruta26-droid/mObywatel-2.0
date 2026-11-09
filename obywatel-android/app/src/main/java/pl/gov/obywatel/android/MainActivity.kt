@@ -2350,7 +2350,10 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
         "company" to "Spółka z ograniczoną odpowiedzialnością — KRS",
         "foundation" to "Fundacja — KRS",
         "church" to "Kościół / związek wyznaniowy — rejestr poza KRS",
-        "training" to "Instytucja szkoleniowa — rejestr poza KRS"
+        "training" to "Instytucja szkoleniowa — rejestr poza KRS",
+        "legalUnit" to "Jednostka lokalna osoby prawnej — REGON",
+        "naturalUnit" to "Jednostka lokalna osoby fizycznej — REGON",
+        "soleTrader" to "Firma osoby fizycznej — CEIDG / REGON"
     )
     val fieldSets = mapOf(
         "company" to listOf(
@@ -2405,6 +2408,50 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
             Triple("registryTrainingScope", "Zakres działalności szkoleniowej", "Zakres"),
             Triple("registryTrainingAccreditation", "Akredytacje / uprawnienia", "Nazwa, zakres, numer, data"),
             Triple("registryTrainingDocument", "Dokument źródłowy", "Nazwa i data dokumentu")
+        ),
+        "legalUnit" to listOf(
+            Triple("registryLegalUnitParentName", "Nazwa osoby prawnej — jednostki nadrzędnej", "Pełna nazwa"),
+            Triple("registryLegalUnitParentKrs", "KRS jednostki nadrzędnej (jeśli dotyczy)", "0000000000"),
+            Triple("registryLegalUnitParentRegon", "REGON jednostki nadrzędnej", "000000000"),
+            Triple("registryLegalUnitName", "Nazwa jednostki lokalnej", "Nazwa oddziału / zakładu / placówki"),
+            Triple("registryLegalUnitRegon", "REGON jednostki lokalnej", "000000000"),
+            Triple("registryLegalUnitNip", "NIP jednostki lokalnej (jeśli nadany)", "0000000000"),
+            Triple("registryLegalUnitType", "Rodzaj jednostki lokalnej", "Oddział, zakład, placówka, filia"),
+            Triple("registryLegalUnitAddress", "Adres jednostki lokalnej", "Ulica, numer, kod, miejscowość"),
+            Triple("registryLegalUnitStart", "Data rozpoczęcia działalności", "DD-MM-RRRR"),
+            Triple("registryLegalUnitEnd", "Data zakończenia działalności (jeśli dotyczy)", "DD-MM-RRRR"),
+            Triple("registryLegalUnitActivity", "Przeważający rodzaj działalności / PKD", "Kod i opis"),
+            Triple("registryLegalUnitContact", "Dane kontaktowe", "Telefon, e-mail, strona")
+        ),
+        "naturalUnit" to listOf(
+            Triple("registryNaturalUnitPerson", "Imię i nazwisko osoby fizycznej", "Dane osoby prowadzącej"),
+            Triple("registryNaturalUnitParentRegon", "REGON podmiotu nadrzędnego (jeśli dotyczy)", "000000000"),
+            Triple("registryNaturalUnitName", "Nazwa jednostki lokalnej", "Nazwa placówki / zakładu"),
+            Triple("registryNaturalUnitRegon", "REGON jednostki lokalnej", "000000000"),
+            Triple("registryNaturalUnitNip", "NIP (jeśli nadany)", "0000000000"),
+            Triple("registryNaturalUnitType", "Rodzaj jednostki lokalnej", "Zakład, placówka, punkt"),
+            Triple("registryNaturalUnitAddress", "Adres jednostki lokalnej", "Ulica, numer, kod, miejscowość"),
+            Triple("registryNaturalUnitStart", "Data rozpoczęcia działalności", "DD-MM-RRRR"),
+            Triple("registryNaturalUnitEnd", "Data zakończenia działalności (jeśli dotyczy)", "DD-MM-RRRR"),
+            Triple("registryNaturalUnitActivity", "Rodzaj działalności / PKD", "Kod i opis"),
+            Triple("registryNaturalUnitContact", "Dane kontaktowe", "Telefon, e-mail, strona")
+        ),
+        "soleTrader" to listOf(
+            Triple("registrySoleTraderName", "Firma przedsiębiorcy", "Imię i nazwisko oraz ewentualne dodatki"),
+            Triple("registrySoleTraderFirstName", "Imię", "Imię"),
+            Triple("registrySoleTraderLastName", "Nazwisko", "Nazwisko"),
+            Triple("registrySoleTraderNip", "NIP", "0000000000"),
+            Triple("registrySoleTraderRegon", "REGON", "000000000"),
+            Triple("registrySoleTraderCeidg", "Identyfikator / wpis CEIDG", "Numer lub identyfikator"),
+            Triple("registrySoleTraderStatus", "Status działalności", "Aktywna, zawieszona, zakończona"),
+            Triple("registrySoleTraderAddress", "Adres do doręczeń", "Adres"),
+            Triple("registrySoleTraderPlace", "Stałe miejsce wykonywania działalności", "Adres lub informacja o braku stałego miejsca"),
+            Triple("registrySoleTraderStart", "Data rozpoczęcia działalności", "DD-MM-RRRR"),
+            Triple("registrySoleTraderSuspension", "Data zawieszenia / wznowienia", "Daty"),
+            Triple("registrySoleTraderEnd", "Data zakończenia działalności", "DD-MM-RRRR"),
+            Triple("registrySoleTraderActivity", "Przeważający rodzaj działalności / PKD", "Kod i opis"),
+            Triple("registrySoleTraderProxy", "Pełnomocnik / prokurent (jeśli wpisany)", "Imię, nazwisko, zakres umocowania"),
+            Triple("registrySoleTraderContact", "Dane kontaktowe", "Telefon, e-mail, strona")
         )
     )
     Column(
