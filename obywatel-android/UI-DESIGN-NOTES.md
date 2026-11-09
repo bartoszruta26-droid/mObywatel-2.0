@@ -84,3 +84,34 @@ Ważne ograniczenia:
 - dotychczasowy lokalny zapis szyfrowany pozostaje wspólnym magazynem danych.
 
 Zmiany są częścią funkcjonalnej wersji alfa. Nie uruchamiano kompilacji, testów budowania ani generowania APK.
+
+
+## Nawigacja i ekrany usług — kontynuacja wersji alfa
+
+Główna nawigacja dolna jest funkcjonalna:
+- **Start** wyświetla ekran główny z nagłówkiem, komunikatem o charakterze prototypu i kafelkami usług;
+- **Usługi** otwiera katalog usług;
+- **Profil** otwiera lokalny profil użytkownika z przejściami do danych i dokumentów, zaświadczeń oraz ustawień danych.
+
+Kafelki usług prowadzą do odpowiednich modułów. Dokumenty, Ustawienia i Zaświadczenia otwierają istniejące ekrany ewidencyjne. Pozostałe pozycje otwierają dedykowane ekrany informacyjne zamiast pozostawać martwymi przyciskami. Ekrany informacyjne jawnie wskazują funkcje, które wymagają przyszłej integracji i obecnie nie są wykonywane (np. płatności, walidacja biletów, pobieranie danych z rejestrów).
+
+Nawigacja dolna pozostaje widoczna także podczas przeglądania modułów. Wybór zakładki czyści bieżący ekran szczegółowy i przełącza do wybranego obszaru.
+
+## Tymczasowa polityka zasobów graficznych
+
+Na etapie alfa przyjęto robocze założenie użytkownika o posiadaniu praw/licencji do grafik przeznaczonych do wykorzystania. Weryfikacja licencji zostaje odłożona do późniejszego ręcznego przeglądu. Każdy zasób powinien być przechowywany oddzielnie i mieć odnotowane źródło, aby można go było wymienić bez zmiany logiki ekranów.
+
+Do wykorzystania przewidziano:
+- godło państwowe w oficjalnej postaci;
+- pieczęć Fundacji w zatwierdzonym wzorze;
+- oryginalne grafiki i piktogramy interfejsu mObywatel pozyskane z oficjalnych materiałów rządowych.
+
+Założenie robocze nie stanowi prawnej weryfikacji licencji. Godło państwowe zachowuje odrębne zasady ochrony i używania. Nie wolno go dowolnie przekształcać ani tworzyć jego wariantów. Nie dodano jeszcze plików godła ani pieczęci Fundacji, ponieważ ich zatwierdzone pliki źródłowe muszą zostać wskazane lub dostarczone; obecny znak globu nadal jest tymczasowym symbolem prototypu.
+
+## Zakres wykonanej kontynuacji
+
+- Naprawiono nawigację Start / Usługi / Profil — każda zakładka wyświetla odrębny ekran.
+- Dodano ekran profilu z odnośnikami do ewidencji dokumentów, zaświadczeń i ustawień.
+- Dodano ekrany szczegółowe dla usług, które nie mają jeszcze właściwej integracji.
+- Kafelki nie pozostają bez reakcji; brakujące funkcje są jawnie opisane jako nieaktywne lub oczekujące na integrację.
+- Nie uruchamiano kompilacji, testów budowania ani generowania APK.
