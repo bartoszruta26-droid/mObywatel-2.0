@@ -150,6 +150,8 @@ private val services = listOf(
     ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad, category = "Transport"),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health, category = "Zdrowie"),
+    ServiceItem("Dane dzieci", "Rodzinny rejestr danych i zdjęć dzieci", fallbackIcon = Icons.Filled.AccountCircle, category = "Rodzina"),
+    ServiceItem("eKarta Szczepień", "Prywatna karta szczepień dziecka", fallbackIcon = Icons.Filled.HealthAndSafety, category = "Zdrowie"),
     ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport, category = "Podróże"),
     ServiceItem("Mandaty", "Ewidencja i informacje", R.drawable.mob_penalties, category = "Kierowca i pojazdy"),
     ServiceItem("Sprawdź PESEL", "Informacje o numerze PESEL", R.drawable.mob_pesel_check, category = "Bezpieczeństwo"),
@@ -277,6 +279,7 @@ private fun HomeScreen() {
     fun openService(title: String) {
         when (title) {
             "Portfel" -> showDemoDocuments = true
+            "Dane dzieci", "eKarta Szczepień" -> activeService = title
             "Ustawienia" -> {
                 selectedTab = 2
                 showSettingsMenu = false
@@ -321,6 +324,8 @@ private fun HomeScreen() {
                     )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
+                    activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null })
+                    activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
@@ -1659,6 +1664,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
         Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName")),
         Triple("Prawo jazdy", Icons.Filled.CreditCard, listOf("dlNumber", "dlCategories", "dlExpiryDate", "dlStatus")),
         Triple("Karty lojalnościowe", Icons.Filled.CreditCard, listOf("loyalty1Store", "loyalty1Number", "loyalty1Barcode", "loyalty1Qr")),
+        Triple("Dane dzieci", Icons.Filled.AccountCircle, listOf("childrenRecordsCount")),
+        Triple("eKarta Szczepień", Icons.Filled.HealthAndSafety, listOf("vaccinationRecordsCount")),
         Triple("Karta biblioteczna", Icons.Filled.Description, listOf("library1Name", "library1CardNumber", "library1Status", "library2Name", "library2CardNumber", "library2Status"))
     )
     Column(
