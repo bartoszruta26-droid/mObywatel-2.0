@@ -101,6 +101,10 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     var logoId by remember { mutableStateOf("") }
     var sealId by remember { mutableStateOf("") }
     var signatureId by remember { mutableStateOf("") }
+    var backgroundId by remember { mutableStateOf("") }
+    var flagId by remember { mutableStateOf("") }
+    var emblemId by remember { mutableStateOf("") }
+    var securityId by remember { mutableStateOf("") }
     var lastPdf by remember { mutableStateOf<Uri?>(null) }
     var message by remember { mutableStateOf("") }
 
@@ -129,7 +133,8 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                 val bytes=withContext(Dispatchers.IO) {
                     renderPdf(c,title,number,recipient,body,signer,role,watermark,
                         orgs.firstOrNull{it.id==orgId},
-                        assets.firstOrNull{it.id==logoId},assets.firstOrNull{it.id==sealId},assets.firstOrNull{it.id==signatureId})
+                        assets.firstOrNull{it.id==logoId},assets.firstOrNull{it.id==sealId},assets.firstOrNull{it.id==signatureId},
+                        assets.firstOrNull{it.id==backgroundId},assets.firstOrNull{it.id==flagId},assets.firstOrNull{it.id==emblemId},assets.firstOrNull{it.id==securityId})
                 }
                 withContext(Dispatchers.IO) { c.contentResolver.openOutputStream(uri,"wt")?.use{it.write(bytes)} ?: error("Nie można zapisać PDF.") }
                 lastPdf=uri; message="PDF zapisany. Wzór podpisu i grafika pieczęci nie są podpisem elektronicznym."
@@ -204,6 +209,10 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     AssetChoice("Logo",assets.filter{it.orgId==orgId&&it.category=="Logo"},logoId){logoId=it}
                     AssetChoice("Pieczęć",assets.filter{it.orgId==orgId&&it.category=="Pieczęć"},sealId){sealId=it}
                     AssetChoice("Wzór podpisu",assets.filter{it.orgId==orgId&&it.category=="Wzór podpisu"},signatureId){signatureId=it}
+                    AssetChoice("Tło / papier firmowy",assets.filter{it.orgId==orgId&&it.category=="Tło / papier firmowy"},backgroundId){backgroundId=it}
+                    AssetChoice("Flaga",assets.filter{it.orgId==orgId&&it.category=="Flaga"},flagId){flagId=it}
+                    AssetChoice("Herb / godło",assets.filter{it.orgId==orgId&&(it.category=="Herb"||it.category=="Godło")},emblemId){emblemId=it}
+                    AssetChoice("Hologram / zabezpieczenie",assets.filter{it.orgId==orgId&&(it.category=="Hologram / zabezpieczenie"||it.category=="Znak wodny")},securityId){securityId=it}
                     Card { Column(Modifier.padding(12.dp)){Text("Podgląd",fontWeight=FontWeight.Bold);Text(orgs.firstOrNull{it.id==orgId}?.name ?: "Podmiot");Text(title,style=MaterialTheme.typography.titleLarge);Text("Nr "+number);Text(recipient);Text(body);Text(role+" "+signer);Text("Znak wodny: "+watermark)} }
                     Button(onClick={pdfSaver.launch(number.replace('/','-')+".pdf")},enabled=orgId.isNotBlank(),modifier=Modifier.fillMaxWidth()){Icon(Icons.Default.PictureAsPdf,null);Text(" Eksportuj PDF")}
                     OutlinedButton(onClick={
@@ -249,12 +258,15 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     SimpleChoice(label,items.firstOrNull{it.id==selected}?.name ?: "Brak",listOf("Brak")+items.map{it.name}){name->onPick(items.firstOrNull{it.name==name}?.id ?: "")}
 }
 
-private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?):ByteArray {
+private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?):ByteArray {
     val pdf=PdfDocument()
     val page=pdf.startPage(PdfDocument.PageInfo.Builder(595,842,1).create())
     val canvas=page.canvas
     val p=Paint(Paint.ANTI_ALIAS_FLAG)
     canvas.drawColor(android.graphics.Color.WHITE)
+    background?.let{drawImage(c,canvas,it,0f,0f,595f,842f)}
+    flag?.let{drawImage(c,canvas,it,42f,105f,82f,42f)}
+    emblem?.let{drawImage(c,canvas,it,135f,95f,54f,54f)}
     p.color=android.graphics.Color.rgb(30,70,120);p.strokeWidth=2f;canvas.drawLine(38f,38f,557f,38f,p)
     p.textSize=18f;p.typeface=Typeface.DEFAULT_BOLD
     canvas.drawText((org?.name ?: "Podmiot").take(50),42f,78f,p)
@@ -271,6 +283,7 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     drawLines(canvas,body,42f,355f,510f,p)
     canvas.drawText(role.take(70),42f,680f,p);canvas.drawText(signer.take(70),42f,700f,p)
     seal?.let{drawImage(c,canvas,it,410f,615f,90f,90f)}
+    security?.let{drawImage(c,canvas,it,485f,610f,65f,65f)}
     signature?.let{drawImage(c,canvas,it,42f,710f,140f,50f)}
     runCatching {
         val matrix=QRCodeWriter().encode("urn:owd:document:"+number,BarcodeFormat.QR_CODE,96,96)
