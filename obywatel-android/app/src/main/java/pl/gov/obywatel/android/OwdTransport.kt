@@ -101,7 +101,7 @@ internal class OwdDirectTcpTransport(
             val plaintext = OwdSecurity.decrypt(sessionKey, transfer)
             onVerifiedPayload(transfer, plaintext)
             val receipt = OwdReceiptCodec.create(expectedSessionId, System.currentTimeMillis() / 1000, sessionKey)
-            val ack = receipt.toJson().toString().toByteArray(Charsets.UTF_8)
+            val ack = OwdReceiptCodec.encode(receipt).toByteArray(Charsets.UTF_8)
             output.writeInt(ack.size)
             output.write(ack)
             output.flush()
@@ -143,6 +143,8 @@ internal class OwdAutomaticTransport(
 }
 
 internal object OwdReceiptCodec {
+    fun encode(receipt: OwdTransportReceipt): String = receipt.toJson().toString()
+
     fun create(sessionId: String, timestamp: Long, key: ByteArray): OwdTransportReceipt {
         val mac = hmac(key, message(sessionId, timestamp))
         return OwdTransportReceipt(sessionId, true, timestamp, "receiver", android.util.Base64.encodeToString(
