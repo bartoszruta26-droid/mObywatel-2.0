@@ -1764,7 +1764,13 @@ private fun DocumentDetailsScreen(
         Triple("Dane paszportowe — ewidencja", "Dane dokumentu podróży — wpis użytkownika", listOf(
             "Numer dokumentu paszportowego" to "passportNumber", "Rodzaj dokumentu" to "passportType",
             "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
-            "Państwo wydania" to "passportCountry", "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace", "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate", "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
+            "Państwo wydania" to "passportCountry", "Klasyfikacja prawna dokumentu" to "passportLegalClass",
+            "Status / funkcja reprezentanta" to "passportRepresentativeRole", "Reprezentowana organizacja" to "passportOrganizationName",
+            "Rodzaj organizacji" to "passportOrganizationType", "Akredytacja lub uznanie" to "passportAccreditation",
+            "Podstawa prawna / umowa" to "passportLegalBasis", "Status dyplomatyczny potwierdzony przez państwo" to "passportDiplomaticStatus",
+            "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace",
+            "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate",
+            "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
         )),
         Triple("Prawo jazdy — ewidencja", "Dane dokumentu i kategorii uprawnień — wpis użytkownika", listOf(
             "Numer prawa jazdy" to "dlNumber", "Imię i nazwisko posiadacza" to "dlHolderNames",
@@ -2717,7 +2723,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("passportIssueDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("passportExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
                 DemoDataField("passportIssuer", "Organ wydający", fields)
-                DemoDataField("passportType", "Rodzaj dokumentu podróży", fields, "zwykły / tymczasowy / inny")
+                DemoDataField("passportType", "Rodzaj dokumentu podróży", fields, "paszport zwykły / tymczasowy / dyplomatyczny / służbowy MSZ / laissez-passer / inny")
+                DemoDataField("passportLegalClass", "Klasyfikacja prawna dokumentu", fields, "paszport krajowy / dyplomatyczny / służbowy / dokument organizacji międzynarodowej / inny")
+                DemoDataField("passportRepresentativeRole", "Status / funkcja reprezentanta", fields, "np. delegat, przedstawiciel, obserwator, ekspert")
+                DemoDataField("passportOrganizationName", "Reprezentowana organizacja", fields)
+                DemoDataField("passportOrganizationType", "Rodzaj organizacji", fields, "IGO / NGO / organ państwa / inna")
+                DemoDataField("passportAccreditation", "Akredytacja lub uznanie przez państwo przyjmujące", fields)
+                DemoDataField("passportLegalBasis", "Podstawa prawna lub umowa międzynarodowa", fields)
+                DemoDataField("passportDiplomaticStatus", "Status dyplomatyczny potwierdzony przez państwo", fields, "tak / nie / brak danych — podaj źródło")
                 DemoDataField("passportHolderNames", "Imiona i nazwisko zapisane w paszporcie", fields)
                 DemoDataField("passportBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
                 DemoDataField("passportBirthPlace", "Miejsce urodzenia", fields)
@@ -2725,6 +2738,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("passportSex", "Płeć w dokumencie", fields)
                 DemoDataField("passportStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
                 DemoDataField("passportLossDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+                    Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Jak prawidłowo określić rodzaj paszportu?", color = Navy, fontWeight = FontWeight.Bold)
+                        Text("O rodzaju dokumentu rozstrzyga dokument wydany przez właściwe państwo lub organizację międzynarodową, a nie sama funkcja reprezentanta. W Polsce ustawa o dokumentach paszportowych wyróżnia paszport, paszport tymczasowy, paszport dyplomatyczny i paszport służbowy MSZ. Paszport dyplomatyczny wydaje minister właściwy do spraw zagranicznych osobom wskazanym w ustawie, w tym w określonych przypadkach osobom skierowanym do pracy w organizacjach międzynarodowych. Sam mandat w NGO nie daje prawa do polskiego paszportu dyplomatycznego.", color = Navy, style = MaterialTheme.typography.bodySmall)
+                        Text("Przedstawiciel NGO co do zasady podróżuje na podstawie zwykłego paszportu swojego państwa oraz dokumentu potwierdzającego mandat, zaproszenie lub akredytację. Nie istnieje powszechna kategoria „paszportu NGO”. Organizacje międzynarodowe mogą wydawać własne dokumenty podróży, np. ONZ wydaje laissez-passer swoim urzędnikom na podstawie konwencji z 1946 r.; nie jest to paszport dyplomatyczny państwa.", color = Navy, style = MaterialTheme.typography.bodySmall)
+                        Text("Przywileje i immunitety nie wynikają z samego posiadania paszportu ani tytułu reprezentanta. Zależą od właściwej podstawy prawnej, funkcji, akredytacji i uznania przez państwo przyjmujące.", color = Navy, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 AdditionalInformationSection("Informacje dodatkowe — dane paszportowe", fields, "passportExtra", "Jest to ewidencja danych wpisanych przez użytkownika, a nie dokument paszportowy ani jego cyfrowy odpowiednik. Nie odtwarzamy strefy MRZ, kodów ani zabezpieczeń dokumentu.")
             }
         }
