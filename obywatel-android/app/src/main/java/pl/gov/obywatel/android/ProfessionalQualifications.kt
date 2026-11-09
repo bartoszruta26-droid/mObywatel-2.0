@@ -232,13 +232,7 @@ private object ProfessionalCredentialStore {
 @Composable
 internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val defaults = listOf("Fizjoterapeuta", "Masażysta", "Naturopata", "Zielarz", "Misjonarz")
-    var professions by remember {
-        mutableStateOf(ProfessionalCredentialStore.professions(context).ifEmpty {
-            defaults.map { ProfessionCredential(UUID.randomUUID().toString(), it, "", if (it == "Fizjoterapeuta") "pwzf" else "other",
-                "", "", "", "", "", "", "", "Do uzupełnienia") }
-        })
-    }
+    var professions by remember { mutableStateOf(ProfessionalCredentialStore.professions(context)) }
     var files by remember { mutableStateOf(ProfessionalCredentialStore.files(context)) }
     var editing by remember { mutableStateOf<ProfessionCredential?>(null) }
     var adding by remember { mutableStateOf(false) }
@@ -264,9 +258,9 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Więcej", color = Color(0xFF1769AA), fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Prawo wykonywania zawodu", color = Color(0xFF102D46),
+        Text("Zawody i numery prawa wykonywania zawodu", color = Color(0xFF102D46),
             style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Ewidencja wielu zawodów, numerów uprawnień, dokumentów i danych rejestrowych.",
+        Text("Samodzielnie dodawaj nazwy wykonywanych zawodów oraz numery praw wykonywania zawodu i innych dokumentów.",
             color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
         Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
             Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -275,7 +269,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                     color = Color(0xFF29445B), style = MaterialTheme.typography.bodySmall)
             }
         }
-        professions.forEach { p ->
+        if (professions.isEmpty()) Text("Nie dodano jeszcze żadnego zawodu. Wybierz „Dodaj kolejny zawód”, aby wpisać własną nazwę i dane dokumentu.", color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)\n        professions.forEach { p ->
             Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -285,7 +279,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                             color = Color(0xFF102D46), fontWeight = FontWeight.Bold)
                         TextButton(onClick = { editing = p }) { Text("Edytuj") }
                     }
-                    val numberLabel = if (p.numberType == "pwzf") "Numer PWZF" else "Numer dokumentu / kwalifikacji"
+                    val numberLabel = if (p.numberType == "pwzf") "Numer prawa wykonywania zawodu" else "Numer dokumentu / kwalifikacji"
                     Text(numberLabel + ": " + p.number.ifBlank { "Nie uzupełniono" }, color = Color(0xFF263746))
                     if (p.issuer.isNotBlank()) Text("Organ / wystawca: " + p.issuer, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
                     if (p.registerName.isNotBlank()) Text("Rejestr: " + p.registerName, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
@@ -350,7 +344,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     OutlinedTextField(name, { name = it }, label = { Text("Nazwa zawodu / roli") }, singleLine = true)
-                    OutlinedTextField(number, { number = it }, label = { Text(if (numberType == "pwzf") "Numer PWZF" else "Numer dokumentu / kwalifikacji") }, singleLine = true)
+                    OutlinedTextField(number, { number = it }, label = { Text(if (numberType == "pwzf") "Numer prawa wykonywania zawodu (PWZ/PWZF)" else "Numer dokumentu / kwalifikacji") }, singleLine = true)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         TextButton(onClick = { numberType = "pwzf" }) { Text(if (numberType == "pwzf") "✓ PWZF" else "PWZF") }
                         TextButton(onClick = { numberType = "other" }) { Text(if (numberType == "other") "✓ Inny dokument" else "Inny dokument") }
