@@ -43,6 +43,23 @@ class VCardCodecTest {
         assertEquals(longName, VCardCodec.decode(encoded).first("FN"))
     }
 
+
+    @Test
+    fun archiveUsesRealCrLfAndRoundTripsEveryField() {
+        val fields = mapOf(
+            "firstNames" to "Jan",
+            "lastName" to "Kowalski",
+            "idNumber" to "ABC123",
+            "passportNumber" to "P,123;45",
+            "notes" to "Linia 1\\nLinia 2"
+        )
+        val encoded = VCardCodec.encodeArchive(fields)
+        assertTrue(encoded.startsWith("BEGIN:VCARD\\r\\nVERSION:4.0\\r\\n"))
+        assertTrue(encoded.endsWith("END:VCARD\\r\\n"))
+        assertTrue(!encoded.contains("\\\\r\\\\n"))
+        assertEquals(fields, VCardCodec.decodeArchive(encoded))
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsVCardVersionsOtherThanFour() {
         VCardCodec.decode("BEGIN:VCARD\r\nVERSION:3.0\r\nFN:Jan\r\nEND:VCARD\r\n")
