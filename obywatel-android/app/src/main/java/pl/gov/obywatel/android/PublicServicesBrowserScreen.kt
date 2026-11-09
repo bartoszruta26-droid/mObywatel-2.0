@@ -6,7 +6,6 @@ package pl.gov.obywatel.android
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,7 +53,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import pl.gov.obywatel.android.ui.theme.Blue
-import pl.gov.obywatel.android.ui.theme.Border
 import pl.gov.obywatel.android.ui.theme.Muted
 import pl.gov.obywatel.android.ui.theme.Navy
 import pl.gov.obywatel.android.ui.theme.White
@@ -117,7 +115,6 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Wszystkie") }
-    var favoritesOnly by remember { mutableStateOf(false) }
     val prefs = remember { context.getSharedPreferences("public_services_browser", 0) }
     val favorites = remember {
         mutableStateMapOf<String, Boolean>().apply {
