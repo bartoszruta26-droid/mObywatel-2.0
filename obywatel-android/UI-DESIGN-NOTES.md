@@ -89,8 +89,8 @@ Zmiany są częścią funkcjonalnej wersji alfa. Nie uruchamiano kompilacji, tes
 ## Nawigacja i ekrany usług — kontynuacja wersji alfa
 
 Główna nawigacja dolna jest funkcjonalna:
-- **Start** wyświetla ekran główny z nagłówkiem, komunikatem o charakterze prototypu i kafelkami usług;
-- **Usługi** otwiera katalog usług;
+- **Start** wyświetla ekran główny z nagłówkiem, komunikatem o charakterze prototypu i czterema kafelkami szybkiego dostępu;
+- **Usługi** otwiera pełny katalog usług, w tym dodatkowe moduły PESEL i Mandaty;
 - **Profil** otwiera lokalny profil użytkownika z przejściami do danych i dokumentów, zaświadczeń oraz ustawień danych.
 
 Kafelki usług prowadzą do odpowiednich modułów. Dokumenty, Ustawienia i Zaświadczenia otwierają istniejące ekrany ewidencyjne. Pozostałe pozycje otwierają dedykowane ekrany informacyjne zamiast pozostawać martwymi przyciskami. Ekrany informacyjne jawnie wskazują funkcje, które wymagają przyszłej integracji i obecnie nie są wykonywane (np. płatności, walidacja biletów, pobieranie danych z rejestrów).
