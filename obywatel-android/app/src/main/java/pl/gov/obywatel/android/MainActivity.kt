@@ -309,7 +309,6 @@ private fun HomeScreen() {
                     )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
-                        onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
                         onOpenDetails = { selectedDocumentId = it }
                     )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
@@ -324,7 +323,6 @@ private fun HomeScreen() {
                     )
                     selectedTab == 1 -> DocumentsWalletScreen(
                         onBack = { selectedTab = 0 },
-                        onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
                         onOpenDetails = { selectedDocumentId = it }
                     )
                     selectedTab == 3 -> QrToolsScreen()
@@ -1605,7 +1603,7 @@ private fun CertificatesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit, onOpenDetails: (String) -> Unit) {
+private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) -> Unit) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
@@ -1620,7 +1618,6 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
         Triple("Legitymacja ucznia/studenta — ewidencja", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
         Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName"))
     )
-    val populatedCount = groups.count { (_, _, keys) -> keys.any { !fields[it].isNullOrBlank() } }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -1630,57 +1627,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Dokumenty", color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Card(modifier = Modifier.weight(1f).clickable(onClick = onAddDocuments),
-                colors = CardDefaults.cardColors(containerColor = White)) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center) {
-                    Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
-                    Text("Dodaj", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
-                }
-            }
-            Card(modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = BlueLight)) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center) {
-                    Icon(Icons.Filled.CreditCard, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
-                    Text("Wszystkie", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
-                }
-            }
-        }
-        Text("Twoje dokumenty i lokalne ewidencje", color = Muted,
-            style = MaterialTheme.typography.bodyMedium)
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Security, contentDescription = null, tint = Blue, modifier = Modifier.size(30.dp))
-                Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text("Dane przechowywane na urządzeniu", color = Navy, fontWeight = FontWeight.Bold)
-                    Text("Wpisy są lokalną ewidencją. Aplikacja nie weryfikuje dokumentów ani statusów w rejestrach publicznych.",
-                        color = Muted, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
-                Column(Modifier.padding(14.dp)) {
-                    Text("$populatedCount / 8", color = Navy, style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold)
-                    Text("obszary z danymi", color = Muted, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
-                Column(Modifier.padding(14.dp)) {
-                    Text("Lokalnie", color = Navy, style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold)
-                    Text("sposób przechowywania", color = Muted, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
+        Text("Twoje dokumenty i dane", color = Muted, style = MaterialTheme.typography.bodyMedium)
         Text("Twoje dokumenty i dane", color = Navy, style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold)
         groups.forEachIndexed { index, (title, icon, keys) ->
@@ -1709,21 +1656,21 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                     )
                     Column(Modifier.weight(1f).padding(start = 12.dp)) {
                         Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
-                        Text(if (hasData) "Dane zapisane lokalnie • ewidencja prywatna" else "Brak zapisanych danych",
+                        Text(if (hasData) "Dane dostępne" else "Brak zapisanych danych",
                             color = Muted, style = MaterialTheme.typography.bodySmall)
                     }
                     val actionLabel = when (index) {
                         0 -> "Dane osobowe"
                         1 -> "Dowód tożsamości"
                         2 -> "Dane paszportowe"
-                        else -> if (hasData) "Dane ewidencyjne" else "Dodaj"
+                        else -> "Otwórz"
                     }
                     Text(actionLabel, color = Blue,
                         style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 }
             }
         }
-        Text("Portfel służy do przeglądania zapisanych kart. Zmiana danych jest dostępna w menu Ustawienia otwieranym z ekranu głównego.",
+        Text("Wybierz kartę, aby wyświetlić jej szczegóły.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
