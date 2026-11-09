@@ -36,16 +36,20 @@ Każdy rekord przekazywany przez OWD musi mieć jawne pochodzenie, np.:
 
 Nie wolno przekształcać `LOCAL_USER` ani `PEER_SHARED` w dane urzędowe przez samo przesłanie QR. Dane rodzinne/rodowe pozostają oddzielną kategorią prywatnej ewidencji.
 
-## Aktualny stan implementacji
+## Aktualny stan implementacji — wersja alfa
 
-Dodano `OwdSecurity.kt` z podstawowymi funkcjami:
+W aplikacji dodano ekran OWD w zakładce „Kod QR”: wybór wypełnionych pól dotyczących niepełnosprawności i ewidencji mandatu, określenie celu, wyraźne potwierdzenie zgody oraz krótkotrwały QR inicjujący sesję (180 sekund), który nie zawiera danych osobowych. Dotychczasowy generator vCard pozostaje osobną funkcją.
+
+Dodano OwdIntegration.kt jako granicę architektoniczną dla przyszłej integracji państwowej: model pochodzenia danych, zakres zgody, potwierdzenie transakcji, kontrolę gotowości i interfejs adaptera. Nie ma implementacji adaptera ani połączenia z systemami administracji. Sam interfejs nie oznacza certyfikacji, dostępu do API ani zgody na przekazywanie danych.
+
+Dodano OwdSecurity.kt z podstawowymi funkcjami:
 - generowanie krótkotrwałej oferty QR bez danych osobowych;
 - walidacja typu, wersji, rozmiaru, czasu ważności i parametrów oferty;
 - uzgadnianie klucza ECDH P-256 i wyprowadzanie klucza HKDF-SHA-256;
 - szyfrowanie i odszyfrowywanie AES-256-GCM z AAD;
 - procesowy rejestr jednorazowego użycia identyfikatorów sesji.
 
-**To jest warstwa kryptograficzna, a nie ukończony przepływ użytkowy.** Nie dodano jeszcze skanera OWD, widoku zgody, wymiany kluczy po obu stronach, transportu Wi-Fi/Bluetooth, serwera przekaźnikowego, trwałego rejestru zużytych sesji ani integracji z oficjalną usługą. Nie należy deklarować, że parowanie lub przesyłanie danych działa, dopóki te elementy nie zostaną wdrożone i przetestowane.
+**Przepływ użytkowy jest częściowy.** Ekran zgody i generator oferty sesji działają na poziomie interfejsu, ale kod QR inicjuje wyłącznie sesję kryptograficzną. Nie przesyła wybranych rekordów. Nie dodano jeszcze skanera OWD, wymiany kluczy po obu stronach, transportu Wi-Fi/Bluetooth, serwera przekaźnikowego, trwałego rejestru zużytych sesji ani integracji z oficjalną usługą. Nie wolno przedstawiać tej wersji jako działającego transferu danych. Nie należy deklarować, że parowanie lub przesyłanie danych działa, dopóki te elementy nie zostaną wdrożone i przetestowane.
 
 ## Wymagania przed użyciem produkcyjnym
 
@@ -80,3 +84,28 @@ Oficjalna usługa przekazywania danych działa w przeciwnym kierunku: użytkowni
 Samo zaszyfrowanie lub podpisanie danych w OWD nie potwierdza ich prawdziwości. Dla stopnia niepełnosprawności wymagany byłby dokument lub elektroniczne poświadczenie wydane przez właściwy organ albo dostęp do właściwego, autoryzowanego źródła. Dla mandatu poselskiego potrzebne byłoby aktualne, wiarygodne poświadczenie pochodzące z właściwego źródła urzędowego, np. organu prowadzącego oficjalną ewidencję mandatu. Dane wpisane ręcznie przez użytkownika mogą być przekazane jako deklaracja, ale nie jako urzędowo zweryfikowany status.
 
 **Wniosek implementacyjny:** OWD może przekazać te informacje do drugiej obywatelskiej aplikacji. Dla użytkownika rządowego mObywatela należy przygotować odrębny, czytelny eksport (np. PDF z danymi i informacją o źródle oraz podpisanym poświadczeniem, jeśli wystawca je zapewnia) albo uzyskać formalną integrację / oficjalną ścieżkę publikacji dokumentu. Żaden z tych wariantów nie gwarantuje importu do portfela rządowej aplikacji.
+
+
+## Docelowa integracja z rządowym mObywatelem — założenie projektowe
+
+Projekt zakłada, że w przyszłości podmiot odpowiedzialny za aplikację uzyska wymagane zgody, certyfikaty, rejestrację zaplecza i dokumentację integracyjną. Architektura rozdziela dwa adaptery: OWD peer-to-peer dla zgodnych aplikacji oraz osobny Government mObywatel adapter realizujący wyłącznie oficjalnie dopuszczony przepływ i formaty zaakceptowane przez operatora.
+
+Przyszła integracja nie może polegać na podszywaniu się pod aplikację rządową, imitowaniu jej QR ani obchodzeniu procesu certyfikacji. Adapter państwowy pozostaje nieaktywny, dopóki kontrola gotowości nie potwierdzi łącznie formalnej zgody, certyfikatu, rejestracji zaplecza i obsługi danego schematu danych. W alfa nie ma implementacji adaptera.
+
+### Warunki przekazywania danych w przyszłości
+
+- Każdy rekord zachowuje pochodzenie: LOCAL_USER, PEER_SHARED, ISSUER_ATTESTED albo GOVERNMENT_SERVICE.
+- Dane o stopniu niepełnosprawności muszą rozróżniać deklarację, dane z dokumentu wystawcy i dane urzędowo potwierdzone.
+- Informacja o mandacie poselskim wymaga aktualnego źródła właściwego dla mandatu; ręczny wpis lub sama legitymacja nie wystarczają.
+- Zgoda określa odbiorcę, cel, dokładne pola, kanał i termin ważności. Zmiana zakresu wymaga nowej zgody.
+- Aplikacja przechowuje potwierdzenie transakcji, listę zaakceptowanych pól i czas odbioru.
+- Dane prywatne/rodowe są wyłączone z domyślnego zakresu.
+- Operator rządowy musi dopuścić konkretny zestaw danych wprost; ogólna certyfikacja nie oznacza obsługi każdego rodzaju danych.
+
+### Plan kolejnych etapów
+
+1. Dokończyć skanowanie QR, wzajemne uwierzytelnienie i uzgadnianie kluczy na dwóch urządzeniach.
+2. Wdrożyć transport bezpośredni i pośredniczący, automatyczny wybór kanału oraz trwałą ochronę przed ponownym użyciem sesji.
+3. Zaimplementować serializację rekordów z pochodzeniem, podpisy wystawców i weryfikację dowodów.
+4. Zbudować testowy adapter państwowy wyłącznie na podstawie oficjalnego środowiska testowego i specyfikacji otrzymanej po formalnej akceptacji.
+5. Przeprowadzić audyt bezpieczeństwa, testy zgodności i ocenę ochrony danych przed uruchomieniem produkcyjnym.
