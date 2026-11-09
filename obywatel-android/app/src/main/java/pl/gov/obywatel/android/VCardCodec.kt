@@ -183,8 +183,8 @@ internal object VCardCodec {
     private fun normalizeLegacyExport(raw: String): String {
         val withoutBom = raw.removePrefix("\uFEFF")
         val hasRealLineBreak = withoutBom.contains('\n') || withoutBom.contains('\r')
-        return if (!hasRealLineBreak && withoutBom.contains("\\\\r\\\\n")) {
-            withoutBom.replace("\\\\r\\\\n", "\r\n")
+        return if (!hasRealLineBreak && withoutBom.contains("\\r\\n")) {
+            withoutBom.replace("\\r\\n", "\r\n")
         } else withoutBom
     }
 
