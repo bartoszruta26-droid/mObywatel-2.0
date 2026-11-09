@@ -181,13 +181,13 @@ internal object VCardCodec {
         var escaped = false
         value.forEach { char ->
             when {
-                escaped -> { current.append('\\\\').append(char); escaped = false }
-                char == '\\\\' -> escaped = true
+                escaped -> { current.append('\u005c').append(char); escaped = false }
+                char == '\u005c' -> escaped = true
                 char == ';' -> { parts += unescape(current.toString()); current.setLength(0) }
                 else -> current.append(char)
             }
         }
-        if (escaped) current.append('\\\\')
+        if (escaped) current.append('\u005c')
         parts += unescape(current.toString())
         return parts
     }
