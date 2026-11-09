@@ -304,7 +304,7 @@ private fun HomeScreen() {
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         listOf(
                                             Triple("Dowód tożsamości", R.drawable.documents_identity_card, "1"),
-                                            Triple("Dane dane paszportoweowe", R.drawable.documents_passport, "2"),
+                                            Triple("Dane paszportowe", R.drawable.documents_passport, "2"),
                                             Triple("Dokument rodowy", R.drawable.documents_family_record, "3"),
                                             Triple("Legitymacje", R.drawable.documents_student_legitimacy, "6")
                                         ).forEach { (label, imageRes, id) ->
@@ -1130,15 +1130,15 @@ private fun SettingsMenuScreen(
         Text("Dane profilu i dokumenty", color = Navy, fontWeight = FontWeight.Bold)
         ProfileActionCard("Dane osobowe", "Zdjęcie profilowe, dane osoby i rodziców",
             Icons.Filled.AccountCircle, { onEditDocuments("profile") })
-        ProfileActionCard("Dowód tożsamości", "Prywatna ewidencja danych dowodu",
+        ProfileActionCard("Dowód tożsamości", "Prywatna ewidencja danych dokumentu tożsamości",
             Icons.Filled.CreditCard, { onEditDocuments("identity_card") })
-        ProfileActionCard("Dane dane paszportoweowe", "Prywatna ewidencja danych dane paszportoweowych",
+        ProfileActionCard("Dane paszportowe", "Prywatna ewidencja dokumentu paszportowego",
             Icons.Filled.Public, { onEditDocuments("passport") })
         ProfileActionCard("Dokument rodowy", "Dane prywatnej ewidencji rodowej",
             Icons.Filled.Fingerprint, { onEditDocuments("family") })
         ProfileActionCard("Legitymacja poselska", "Ewidencja danych i źródeł potwierdzenia",
             Icons.Filled.AccountBalance, { onEditDocuments("parliament") })
-        ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja instytucji i uczestnictwa w kursie",
+        ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych ucznia lub studenta",
             Icons.Filled.Description, { onEditDocuments("training") })
         ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych uczelni i statusu",
             Icons.Filled.Badge, { onEditDocuments("student") })
@@ -1299,7 +1299,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
     val groups = listOf(
         Triple("Dane osobowe profilu", Icons.Filled.AccountCircle, listOf("firstNames", "lastName", "birthDate", "pesel")),
         Triple("Dowód tożsamości — ewidencja", Icons.Filled.CreditCard, listOf("idNumber", "idStatus")),
-        Triple("Dane dane paszportoweowe — ewidencja", Icons.Filled.Public, listOf("passportNumber", "passportStatus")),
+        Triple("Dane paszportowe — ewidencja", Icons.Filled.Public, listOf("passportNumber", "passportStatus")),
         Triple("Dokument rodowy — ewidencja prywatna", Icons.Filled.Fingerprint, listOf("familyDocNumber", "familyName")),
         Triple("Legitymacja poselska — ewidencja", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
         Triple("Legitymacja ucznia/studenta", Icons.Filled.Description, listOf("trainingCardNumber", "trainingInstitution")),
@@ -1421,12 +1421,12 @@ private fun DocumentDetailsScreen(
             "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
             "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel", "Miejsce urodzenia" to "birthPlace", "Obywatelstwo" to "citizenship", "Płeć — wpis deklarowany" to "sex", "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname", "Imiona matki" to "motherNames", "Nazwisko rodowe matki" to "motherSurname"
         )),
-        Triple("Dowód tożsamości — ewidencja", "Dane dowodu — wpis użytkownika", listOf(
+        Triple("Dowód tożsamości — ewidencja", "Dane dokumentu tożsamości — wpis użytkownika", listOf(
             "Numer dokumentu" to "idNumber", "Status" to "idStatus",
             "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data wydania" to "idIssueDate", "Data ważności" to "idExpiryDate", "Organ wydający" to "idIssuer", "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
         )),
-        Triple("Dane dane paszportoweowe — ewidencja", "Dane dokumentu podróży — wpis użytkownika", listOf(
-            "Numer danych dane paszportoweowych" to "passportNumber", "Rodzaj dokumentu" to "passportType",
+        Triple("Dane paszportowe — ewidencja", "Dane dokumentu podróży — wpis użytkownika", listOf(
+            "Numer dokumentu paszportowego" to "passportNumber", "Rodzaj dokumentu" to "passportType",
             "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
             "Państwo wydania" to "passportCountry", "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace", "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate", "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
         )),
@@ -1440,7 +1440,7 @@ private fun DocumentDetailsScreen(
             "Wystawca" to "mpIssuer", "Status legitymacji" to "mpStatus",
             "Okręg wyborczy" to "mpDistrict", "Data rozpoczęcia mandatu" to "mpStart", "Data zakończenia mandatu" to "mpEnd", "Data wydania legitymacji" to "mpCardIssueDate", "Data ślubowania" to "mpOathDate", "Miejsce ślubowania" to "mpOathPlace", "Źródło potwierdzenia ślubowania" to "mpOathEvidence", "Źródło potwierdzenia" to "mpMandateSource"
         )),
-        Triple("Legitymacja ucznia/studenta", "Prywatna legitymacja instytucji szkoleniowej", listOf(
+        Triple("Legitymacja ucznia/studenta", "Ewidencja danych legitymacji ucznia lub studenta", listOf(
             "Numer legitymacji" to "trainingCardNumber", "Instytucja" to "trainingInstitution",
             "Nazwa kursu" to "trainingCourseName", "Status uczestnictwa" to "trainingStatus",
             "Adres instytucji" to "trainingInstitutionAddress", "Numer wpisu instytucji" to "trainingInstitutionRegistry", "Symbol kursu" to "trainingCourseCode", "Data rozpoczęcia" to "trainingStartDate", "Data zakończenia" to "trainingEndDate", "Data wydania legitymacji" to "trainingIssueDate", "Ważna do" to "trainingValidUntil", "Wystawca" to "trainingIssuer", "Podpis wystawcy" to "trainingSignature", "Data ukończenia" to "trainingCompletionDate", "Liczba godzin" to "trainingHours", "Wynik zaliczenia" to "trainingAssessment", "Numer zaświadczenia" to "trainingCertificateNumber", "Forma kształcenia" to "trainingForm"
@@ -1605,7 +1605,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         "training" -> "Legitymacja ucznia/studenta — ewidencja"
         "student" -> "Legitymacja ucznia/studenta — ewidencja"
         "disability" -> "Orzeczenia i zaświadczenia — ewidencja"
-        "passport" -> "Dane dane paszportoweowe — ewidencja"
+        "passport" -> "Dane paszportowe — ewidencja"
         else -> "Wszystkie dane i dokumenty"
     }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -1972,8 +1972,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Dane dane paszportoweowe", color = Navy, fontWeight = FontWeight.Bold)
-                DemoDataField("passportNumber", "Numer danych dane paszportoweowych", fields)
+                Text("Dane paszportowe", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("passportNumber", "Numer dokumentu paszportowego", fields)
                 DemoDataField("passportCountry", "Państwo wydania", fields)
                 DemoDataField("passportIssueDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("passportExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
@@ -1985,7 +1985,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("passportSex", "Płeć w dokumencie", fields)
                 DemoDataField("passportStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
                 DemoDataField("passportLossDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
-                AdditionalInformationSection("Informacje dodatkowe — dane paszportowe", fields, "passportExtra", "Jest to ewidencja danych wpisanych przez użytkownika, a nie dane paszportowe ani jego cyfrowy odpowiednik. Nie odtwarzamy strefy MRZ, kodów ani zabezpieczeń dokumentu.")
+                AdditionalInformationSection("Informacje dodatkowe — dane paszportowe", fields, "passportExtra", "Jest to ewidencja danych wpisanych przez użytkownika, a nie dokument paszportowy ani jego cyfrowy odpowiednik. Nie odtwarzamy strefy MRZ, kodów ani zabezpieczeń dokumentu.")
             }
         }
         }
@@ -2085,7 +2085,7 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                         .background(Color(0xFF254B50)).padding(horizontal = 7.dp, vertical = 5.dp)
                 ) {
                     Text("DOKUMENT PRYWATNY — NIE JEST DOKUMENTEM PAŃSTWOWYM", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
-                    Text("Nie zastępuje dokumentu tożsamości ani danych dane paszportoweowych.", color = Color(0xFFE1ECEC), style = MaterialTheme.typography.labelSmall)
+                    Text("Nie zastępuje dokumentu tożsamości ani dokumentu paszportowego.", color = Color(0xFFE1ECEC), style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
