@@ -1473,9 +1473,10 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                             color = Muted, style = MaterialTheme.typography.bodySmall)
                     }
                     val actionLabel = when (index) {
+                        0 -> "Dane osobowe"
                         1 -> "Dowód tożsamości"
                         2 -> "Dane paszportowe"
-                        else -> if (hasData) "Dane" else "Dodaj"
+                        else -> if (hasData) "Dane ewidencyjne" else "Dodaj"
                     }
                     Text(actionLabel, color = Blue,
                         style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
