@@ -50,3 +50,8 @@ Dodano odrębną sekcję rodowego dokumentu tożsamości z polami: numer dokumen
 ### Rewers i rozszerzona ewidencja rodowa
 
 Podgląd dokumentu rodowego obejmuje teraz awers i rewers. Rewers pokazuje wpisane dane rodziców, nazwę rodu, linię/gałąź, osobę prowadzącą ewidencję i miejsce jej prowadzenia. Formularz rozszerzono o datę przeglądu wpisu, miejsce ewidencji, dobrowolne miejsce zamieszkania, linie rodowe rodziców, uwagi ewidencyjne oraz pola imienia i nazwiska posiadacza i wystawcy (do podpisu poza aplikacją). Pola korzystają z istniejącego szyfrowanego zapisu lokalnego. Podgląd jest wizualizacją prywatnej karty ewidencyjnej, a nie wzorem państwowego dokumentu; nie generuje kodów ani poświadczeń urzędowych.
+
+
+### Legitymacja uczestnika kursu instytucji szkoleniowej
+
+Dodano osobny formularz i podgląd legitymacji uczestnika kursu dla prywatnej instytucji szkoleniowej. Pola obejmują nazwę i adres instytucji, ewentualny numer wpisu do rejestru, numer legitymacji, nazwę i symbol kursu, daty rozpoczęcia i planowanego zakończenia, datę wydania, termin ważności, status uczestnictwa oraz dane osoby wystawiającej. Podgląd korzysta z fotografii wybranej w profilu i danych osobowych uczestnika. Dokument ma własną kolorystykę i oznaczenie „nie jest legitymacją studencką”; potwierdza wyłącznie wpis w ewidencji wystawcy i nie przypisuje uprawnień ustawowych legitymacji studenckiej. Dane wykorzystują istniejący szyfrowany zapis lokalny.
