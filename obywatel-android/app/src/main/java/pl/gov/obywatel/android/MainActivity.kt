@@ -532,6 +532,9 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("fatherSurname", "Nazwisko ojca", fields)
                 DemoDataField("motherNames", "Imiona matki", fields)
                 DemoDataField("motherSurname", "Nazwisko rodowe matki", fields)
+                DemoDataField("birthSurname", "Nazwisko rodowe osoby", fields)
+                DemoDataField("pesel", "Numer PESEL", fields)
+                AdditionalInformationSection("Informacje dodatkowe — dane osobowe", fields, "personExtra", "Dane profilu są ewidencyjne. Porównuj je z aktualnym dokumentem źródłowym; aplikacja nie potwierdza tożsamości.")
             }
         }
         Card(
@@ -573,11 +576,10 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("idIssueDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("idExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
                 DemoDataField("idIssuer", "Organ wydający", fields)
-                Text(
-                    "Pola mają charakter przykładowy. Formularz nie generuje ani nie odwzorowuje dowodu osobistego.",
-                    color = Muted,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                DemoDataField("idStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
+                DemoDataField("idPreviousNumber", "Numer poprzedniego dokumentu (jeśli dotyczy)", fields)
+                DemoDataField("idLossOrInvalidationDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
+                AdditionalInformationSection("Informacje dodatkowe — dowód osobisty", fields, "idExtra", "Formularz prowadzi prywatną ewidencję danych. Nie generuje dowodu osobistego, nie potwierdza tożsamości i nie zastępuje usługi publicznej.")
             }
         }
         Card(
@@ -593,31 +595,15 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("mpDistrict", "Okręg wyborczy", fields)
                 DemoDataField("mpStart", "Data rozpoczęcia mandatu", fields, "DD-MM-RRRR")
                 DemoDataField("mpEnd", "Data zakończenia mandatu", fields, "DD-MM-RRRR")
-                Text("Podstawa konstytucyjna i charakter reprezentacji", color = Navy, fontWeight = FontWeight.Bold)
-                Text(
-                    "Art. 104 ust. 1 Konstytucji RP: „Posłowie są przedstawicielami Narodu. Nie wiążą ich instrukcje wyborców.” Przepis ustanawia zasadę wolnego mandatu i reprezentacji Narodu.",
-                    color = Ink,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    "Art. 104 ust. 2 Konstytucji RP: przed rozpoczęciem sprawowania mandatu posłowie składają ślubowanie przed Sejmem. Odmowa złożenia ślubowania oznacza zrzeczenie się mandatu (art. 104 ust. 3).",
-                    color = Ink,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                DemoDataField("mpCardIssueDate", "Data wydania legitymacji", fields, "DD-MM-RRRR")
+                DemoDataField("mpIssuer", "Organ / osoba wystawiająca", fields)
+                DemoDataField("mpStatus", "Status legitymacji", fields, "aktywna / zwrócona / unieważniona")
+                DemoDataField("mpMandateSource", "Źródło potwierdzenia mandatu", fields)
                 Text("Dane dotyczące ślubowania — oświadczenie własne", color = Navy, fontWeight = FontWeight.Bold)
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
                 DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
-                Text(
-                    "Ważne: Konstytucja wymaga złożenia ślubowania „przed Sejmem”; nie stanowi, że ma ono nastąpić przed budynkiem Sejmu. Jeżeli osoba składająca oświadczenie wypowiedziała rotę przed budynkiem, można opisać to jako okoliczność faktyczną i wskazać źródło. Sam wpis nie potwierdza uzyskania ani trwania mandatu.",
-                    color = Muted,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    "Formularz nie stanowi legitymacji, nie potwierdza mandatu ani prawa do reprezentowania Sejmu.",
-                    color = Muted,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                AdditionalInformationSection("Informacje dodatkowe — legitymacja poselska", fields, "mpExtra", "Art. 104 Konstytucji RP określa wolny mandat poselski oraz obowiązek złożenia ślubowania przed Sejmem przed rozpoczęciem sprawowania mandatu. Odmowa ślubowania oznacza zrzeczenie się mandatu. Sam wpis użytkownika ani prywatna ewidencja nie potwierdzają uzyskania mandatu ani prawa do reprezentowania Sejmu.")
             }
         }
         Card(
@@ -641,13 +627,14 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("trainingStatus", "Status uczestnictwa", fields, "np. aktywny / ukończony / zawieszony")
                 DemoDataField("trainingIssuer", "Osoba upoważniona do wystawienia", fields)
                 DemoDataField("trainingSignature", "Imię i nazwisko / podpis wystawcy", fields)
+                DemoDataField("trainingCompletionDate", "Rzeczywista data ukończenia kursu", fields, "DD-MM-RRRR")
+                DemoDataField("trainingHours", "Liczba godzin kształcenia", fields)
+                DemoDataField("trainingAssessment", "Zaliczenie / egzamin / wynik", fields)
+                DemoDataField("trainingCertificateNumber", "Numer zaświadczenia o ukończeniu", fields)
+                DemoDataField("trainingForm", "Forma kształcenia", fields, "stacjonarna / zdalna / hybrydowa")
                 Text("Podgląd legitymacji", color = Navy, fontWeight = FontWeight.Bold)
                 TrainingParticipantCard(fields = fields, photoBase64 = photoBase64)
-                Text(
-                    "Legitymacja prywatnej instytucji szkoleniowej potwierdza wpis w jej ewidencji uczestników, zgodnie z regulaminem instytucji. Sama w sobie nie nadaje statusu studenta uczelni ani uprawnień ustawowych legitymacji studenckiej.",
-                    color = Muted,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                AdditionalInformationSection("Informacje dodatkowe — legitymacja kursanta", fields, "trainingExtra", "Legitymacja instytucji szkoleniowej potwierdza status w ewidencji wystawcy w granicach regulaminu i właściwej podstawy działania. Nie jest legitymacją studencką i sama nie nadaje statusu studenta uczelni.")
             }
         }
         Card(
@@ -744,18 +731,22 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("disabilityChairperson", "Przewodniczący zespołu", fields)
                 DemoDataField("disabilitySignature", "Osoba podpisująca / zatwierdzająca", fields)
                 DemoDataField("disabilityAppealInfo", "Tryb odwołania / weryfikacji", fields)
+                DemoDataField("disabilityApplicationDate", "Data złożenia wniosku", fields, "DD-MM-RRRR")
+                DemoDataField("disabilityCaseNumber", "Numer sprawy", fields)
+                DemoDataField("disabilityDeliveryDate", "Data doręczenia rozstrzygnięcia", fields, "DD-MM-RRRR")
+                DemoDataField("disabilityDecisionType", "Rodzaj rozstrzygnięcia", fields)
+                DemoDataField("disabilityAppealOutcome", "Wynik odwołania / sprzeciwu", fields)
+                DemoDataField("disabilityDuplicateInfo", "Duplikat / zmiana dokumentu", fields)
+                DemoDataField("disabilitySourceAttachment", "Nazwa / opis dokumentu źródłowego", fields)
                 Text("Podgląd informacyjny", color = Navy, fontWeight = FontWeight.Bold)
                 DisabilityDecisionPreview(fields)
-                Text(
-                    when (fields["disabilityAuthorityType"] ?: "powiat") {
-                        "foundation" -> "Dokument zespołu medycznego fundacji należy opisać zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem jego przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego; ewentualne uznanie zależy od właściwych przepisów i podmiotu, który ma je zastosować."
-                        "other_law" -> "Skutki dokumentu wydanego na podstawie odrębnych przepisów wynikają z konkretnego przepisu. Wskaż dokładną podstawę i zakres równoważności; samo określenie dokumentu jako orzeczenia nie przesądza o jego skutkach."
-                        "medical_opinion" -> "Opinia lub zaświadczenie medyczne dokumentuje ocenę lub stan zdrowia w granicach kompetencji wystawcy. Nie należy utożsamiać go automatycznie z orzeczeniem o stopniu niepełnosprawności."
-                        "self_declaration" -> "Oświadczenie własne jest deklaracją osoby. Może być wykorzystywane tam, gdzie dopuszcza je właściwy przepis lub procedura, ale samo nie ustanawia ustawowego stopnia niepełnosprawności."
-                        else -> "Ten ekran jest lokalną kartą ewidencyjną i podglądem danych. Nie weryfikuje autentyczności dokumentu ani nie zastępuje oryginału orzeczenia."
-                    },
-                    color = Color(0xFF805000), style = MaterialTheme.typography.bodySmall
-                )
+                AdditionalInformationSection("Informacje dodatkowe — orzeczenie / zaświadczenie", fields, "disabilityExtra", when (fields["disabilityAuthorityType"] ?: "powiat") {
+                    "foundation" -> "Dokument fundacji opisuje się zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego."
+                    "other_law" -> "Skutki dokumentu z odrębnego systemu wynikają z konkretnego przepisu. Należy wskazać podstawę i zakres równoważności."
+                    "medical_opinion" -> "Opinia lub zaświadczenie medyczne dokumentuje ocenę lub stan zdrowia w granicach kompetencji wystawcy; nie jest automatycznie orzeczeniem o stopniu niepełnosprawności."
+                    "self_declaration" -> "Oświadczenie własne jest deklaracją osoby. Jego znaczenie zależy od procedury, w której jest składane; samo nie ustanawia ustawowego stopnia niepełnosprawności."
+                    else -> "Karta ewidencyjna prezentuje dane wpisane przez użytkownika. Nie weryfikuje autentyczności dokumentu i nie zastępuje oryginału."
+                })
             }
         }
         Card(
@@ -771,11 +762,14 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("passportIssueDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("passportExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
                 DemoDataField("passportIssuer", "Organ wydający", fields)
-                Text(
-                    "Nie jest to paszport ani jego cyfrowy odpowiednik. Nie dodano strefy MRZ, kodu QR, kodu kreskowego ani elementów zabezpieczających.",
-                    color = Muted,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                DemoDataField("passportType", "Rodzaj dokumentu podróży", fields, "zwykły / tymczasowy / inny")
+                DemoDataField("passportHolderNames", "Imiona i nazwisko zapisane w paszporcie", fields)
+                DemoDataField("passportBirthPlace", "Miejsce urodzenia", fields)
+                DemoDataField("passportCitizenship", "Obywatelstwo w dokumencie", fields)
+                DemoDataField("passportSex", "Płeć w dokumencie", fields)
+                DemoDataField("passportStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
+                DemoDataField("passportLossDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
+                AdditionalInformationSection("Informacje dodatkowe — paszport", fields, "passportExtra", "Jest to ewidencja danych wpisanych przez użytkownika, a nie paszport ani jego cyfrowy odpowiednik. Nie odtwarzamy strefy MRZ, kodów ani zabezpieczeń dokumentu.")
             }
         }
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
@@ -1050,6 +1044,48 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
             ) {
                 Text("DOKUMENT INSTYTUCJI SZKOLENIOWEJ • NIE JEST LEGITYMACJĄ STUDENCKĄ", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                 Text("Potwierdza wyłącznie status w ewidencji wystawcy.", color = Color(0xFFE7EAF5), style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun AdditionalInformationSection(
+    title: String,
+    fields: MutableMap<String, String>,
+    prefix: String,
+    explanation: String
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F5F8)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Filled.Info, contentDescription = null, tint = Blue)
+                Text(title, modifier = Modifier.weight(1f).padding(start = 9.dp),
+                    color = Navy, fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleSmall)
+                Text(if (expanded) "Zwiń" else "Rozwiń", color = Blue,
+                    style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+            }
+            if (expanded) {
+                Text(explanation, color = Ink, style = MaterialTheme.typography.bodySmall)
+                DemoDataField("${prefix}Source", "Źródło danych / dokument źródłowy", fields)
+                DemoDataField("${prefix}LegalBasis", "Podstawa prawna / regulaminowa", fields)
+                DemoDataField("${prefix}VerifiedAt", "Data ostatniej weryfikacji danych", fields, "DD-MM-RRRR")
+                DemoDataField("${prefix}VerifiedBy", "Podmiot / osoba potwierdzająca dane", fields)
+                DemoDataField("${prefix}Notes", "Adnotacje i informacje uzupełniające", fields)
+                Text(
+                    "Informacje dodatkowe są ewidencją użytkownika. Aplikacja nie potwierdza autentyczności dokumentu ani kompetencji wystawcy.",
+                    color = Muted, style = MaterialTheme.typography.labelSmall
+                )
             }
         }
     }
