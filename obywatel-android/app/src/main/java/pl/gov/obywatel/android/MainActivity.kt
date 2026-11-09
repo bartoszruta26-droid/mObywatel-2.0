@@ -1762,13 +1762,13 @@ private fun DocumentDetailsScreen(
             "Ograniczenia / kody" to "dlRestrictions", "Status dokumentu" to "dlStatus",
             "Numer poprzedniego dokumentu" to "dlReplacementNumber", "Data utraty / unieważnienia" to "dlLossDate"
         )),
-        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..5).flatMap { n ->
+        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..10).flatMap { n ->
             val p = "loyalty$n"
             listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty" to "${p}Number",
                 "Kod cyfrowy" to "${p}DigitalCode", "Treść kodu kreskowego" to "${p}Barcode",
                 "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status")
         })),
-        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..5).flatMap { n ->
+        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..10).flatMap { n ->
             val p = "loyalty$n"
             listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty" to "${p}Number",
                 "Kod cyfrowy" to "${p}DigitalCode", "Treść kodu kreskowego" to "${p}Barcode",
@@ -2429,9 +2429,9 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Karty lojalnościowe sklepów", color = Navy, fontWeight = FontWeight.Bold)
-                    Text("Zapisz maksymalnie pięć kart. Możesz importować zdjęcie całej karty, osobny kod kreskowy lub kod QR. Aplikacja spróbuje odczytać kod ze zdjęcia.",
+                    Text("Zapisz maksymalnie dziesięć kart. Możesz importować zdjęcie całej karty, osobny kod kreskowy lub kod QR. Aplikacja spróbuje odczytać kod ze zdjęcia.",
                         color = Muted, style = MaterialTheme.typography.bodySmall)
-                    (1..5).forEach { number ->
+                    (1..10).forEach { number ->
                         val prefix = "loyalty$number"
                         Text("Karta $number", color = Navy, fontWeight = FontWeight.SemiBold)
                         DemoDataField("${prefix}Store", "Sklep / marka", fields)
