@@ -191,3 +191,12 @@ Ustalony przepływ interfejsu jest następujący:
 - Każda nowa kategoria dokumentu musi mieć formularz zarządzania w Profil → Ustawienia oraz odpowiadającą mu pozycję i widok odczytu w Portfelu.
 
 Zmiana nawigacji została wprowadzona w MainActivity.kt. Nie zmienia ona magazynu danych ani sposobu prezentowania dokumentów. Kontrole wykonuje się statycznie; projekt pozostaje w fazie alfa i nie uruchamia się kompilacji, testów budowania ani generowania APK.
+## Niezależne edytory kategorii — Profil → Ustawienia
+
+Menu Ustawienia w zakładce Profil udostępnia teraz osobne wejścia do edycji: danych osobowych i zdjęcia, dowodu osobistego, paszportu, dokumentu rodowego, ewidencji poselskiej, legitymacji kursanta i legitymacji studenckiej. Orzeczenia i zaświadczenia zachowują dedykowany ekran edycji. Dostępny jest także formularz zbiorczy „Wszystkie dane”.
+
+Edytory korzystają ze wspólnego zaszyfrowanego magazynu DemoIdentityStore. Każdy edytor wczytuje cały zapisany zestaw danych, pokazuje wyłącznie kartę wybranej kategorii oraz wspólną kartę zapisu. Dzięki temu zapis jednej kategorii zachowuje pozostałe dane. Zdjęcie profilowe pozostaje częścią edytora danych osobowych; fotografia nie jest usuwana przy zapisie innych kategorii.
+
+Portfel został nazwany konsekwentnie i pozostaje katalogiem wszystkich ośmiu kategorii dokumentów. Kafelki i szczegóły Portfela są tylko do odczytu. Żadna nowa ścieżka edycji nie została dodana do Portfela.
+
+Zmiany weryfikowano statycznie na kodzie źródłowym. Projekt pozostaje w fazie alfa; nie uruchamiano kompilacji, testów budowania ani generowania APK.
