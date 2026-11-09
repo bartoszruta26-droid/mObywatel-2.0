@@ -215,12 +215,14 @@ private fun HomeScreen() {
                     )
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
-                            if (selectedTab == 0) Header(onOpenSettings = {
-                                selectedTab = 2
-                                showSettingsMenu = false
-                                showDemoDocuments = false
-                                selectedDocumentId = null
-                            })
+                            if (selectedTab == 0) Header(
+                                onOpenSettings = {
+                                    showSettingsMenu = true
+                                    showDemoDocuments = false
+                                    selectedDocumentId = null
+                                },
+                                onOpenNotifications = { activeService = "Powiadomienia" }
+                            )
                             Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
@@ -554,7 +556,7 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
 }
 
 @Composable
-private fun Header(onOpenSettings: () -> Unit) {
+private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth().background(Navy)
             .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 22.dp)
@@ -574,10 +576,11 @@ private fun Header(onOpenSettings: () -> Unit) {
                     Icon(Icons.Filled.Settings, contentDescription = "Ustawienia", tint = White)
                 }
                 Box(
-                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF234665)),
+                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF234665))
+                        .clickable(onClick = onOpenNotifications),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.NotificationsNone, contentDescription = "Powiadomienia — demonstracja", tint = White)
+                    Icon(Icons.Filled.NotificationsNone, contentDescription = "Powiadomienia", tint = White)
                 }
             }
         }
