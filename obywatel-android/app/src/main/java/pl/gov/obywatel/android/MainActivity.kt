@@ -335,6 +335,7 @@ private fun HomeScreen() {
                     activeService == "Historia chorób" -> MedicalHistoryRecordsScreen(onBack = { activeService = null })
                     activeService == "Historia działań" -> ActivityHistoryScreen(onBack = { activeService = null })
                     activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null })
+                    activeService == "Prawo wykonywania zawodu i kwalifikacje" -> ProfessionalQualificationsScreen(onBack = { activeService = null })
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
@@ -365,6 +366,10 @@ private fun HomeScreen() {
                         onOpenSignedPdfs = {
                             ActivityHistoryStore.record(context, "Nawigacja", "Otwarto dokumenty PDF i podpisy elektroniczne")
                             activeService = "Dokumenty PDF i podpisy elektroniczne"
+                        },
+                        onOpenProfessionalQualifications = {
+                            ActivityHistoryStore.record(context, "Nawigacja", "Otwarto rejestr prawa wykonywania zawodu i kwalifikacji")
+                            activeService = "Prawo wykonywania zawodu i kwalifikacje"
                         }
                     )
                     else -> {
@@ -1247,7 +1252,8 @@ private fun MoreMenuScreen(
     onOpenCertificates: () -> Unit,
     onOpenHelp: () -> Unit,
     onOpenHistory: () -> Unit,
-    onOpenSignedPdfs: () -> Unit
+    onOpenSignedPdfs: () -> Unit,
+    onOpenProfessionalQualifications: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1258,6 +1264,7 @@ private fun MoreMenuScreen(
         Text("Informacje, bezpieczeństwo i ustawienia", color = Muted, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Historia działań", "Chronologiczny rejestr czynności wykonywanych w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
         ProfileActionCard("Dokumenty PDF i podpisy elektroniczne", "Import, podgląd PDF i oznaczenia podpisu ePUAP lub kwalifikowanego", Icons.Filled.Description, onOpenSignedPdfs)
+        ProfileActionCard("Prawo wykonywania zawodu i kwalifikacje", "Numery PWZ/PWZF, dane zawodów oraz archiwum zdjęć i PDF certyfikatów", Icons.Filled.Badge, onOpenProfessionalQualifications)
         ProfileActionCard("Certyfikaty i zaświadczenia", "Rejestr dokumentów, uprawnień i danych wystawcy", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia i komunikaty", "Informacje o statusach, przypomnieniach i ważności dokumentów", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Pomoc i instrukcje", "Obsługa aplikacji, import, eksport i bezpieczeństwo danych", Icons.Filled.Info, onOpenHelp)
