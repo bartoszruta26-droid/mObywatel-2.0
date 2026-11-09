@@ -142,6 +142,7 @@ private fun HomeScreen() {
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
     var showDocumentsEditor by remember { mutableStateOf(false) }
+    var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
@@ -167,10 +168,10 @@ private fun HomeScreen() {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {
-                    showDocumentsEditor -> DemoDocumentsScreen(onBack = { showDocumentsEditor = false; showSettingsMenu = true })
+                    showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showSettingsMenu -> SettingsMenuScreen(
                         onBack = { showSettingsMenu = false },
-                        onEditDocuments = { showSettingsMenu = false; showDocumentsEditor = true },
+                        onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true }
                     )
                     selectedDocumentId != null -> DocumentDetailsScreen(
@@ -507,7 +508,7 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
 @Composable
 private fun SettingsMenuScreen(
     onBack: () -> Unit,
-    onEditDocuments: () -> Unit,
+    onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit
 ) {
     Column(
@@ -862,7 +863,7 @@ private fun DocumentDetailsScreen(
 }
 
 @Composable
-private fun DemoDocumentsScreen(onBack: () -> Unit) {
+private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
