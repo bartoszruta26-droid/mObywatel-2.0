@@ -399,7 +399,7 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
                 DemoDataField("familyIssueDate", "Data sporządzenia", fields, "DD-MM-RRRR")
                 DemoDataField("familySource", "Podstawa wpisu / dokument źródłowy", fields)
                 Text("Wizualizacja dokumentu", color = Navy, fontWeight = FontWeight.Bold)
-                RodowyDocumentPreview(fields = fields)
+                RodowyDocumentPreview(fields = fields, photoBase64 = photoBase64)
             }
         }
         Card(
@@ -509,7 +509,19 @@ private fun DemoDocumentsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun RodowyDocumentPreview(fields: Map<String, String>) {
+private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: String) {
+    val photoBitmap = remember(photoBase64) {
+        runCatching {
+            if (photoBase64.isBlank()) null else {
+                val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                var sample = 1
+                while (bounds.outWidth / sample > 600 || bounds.outHeight / sample > 600) sample *= 2
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+            }
+        }.getOrNull()
+    }
     val displayName = listOf(fields["firstNames"], fields["lastName"])
         .filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
     Card(
@@ -545,7 +557,11 @@ private fun RodowyDocumentPreview(fields: Map<String, String>) {
                             .clip(RoundedCornerShape(7.dp)).background(Color(0xFFD2DDE0)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na fotografię", tint = Color(0xFF607D83), modifier = Modifier.size(44.dp))
+                        if (photoBitmap != null) {
+                            Image(photoBitmap.asImageBitmap(), contentDescription = "Fotografia w rodowym dokumencie", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        } else {
+                            Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na fotografię", tint = Color(0xFF607D83), modifier = Modifier.size(44.dp))
+                        }
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         Text("IMIĘ I NAZWISKO", color = Color(0xFF52666B), style = MaterialTheme.typography.labelSmall)
