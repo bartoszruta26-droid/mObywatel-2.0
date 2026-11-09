@@ -22,8 +22,8 @@ internal object VCardCodec {
         val normalized = fields.mapKeys { it.key.uppercase() }
         val displayName = normalized["FN"].orEmpty().trim()
         val structuredName = normalized["N"].orEmpty().trim()
-        require(displayName.isNotBlank() || structuredName.isNotBlank()) {
-            "vCard wymaga właściwości FN oraz danych N."
+        require(displayName.isNotBlank()) {
+            "vCard 4.0 wymaga właściwości FN."
         }
         val lines = mutableListOf("BEGIN:VCARD", "VERSION:4.0")
         if (displayName.isNotBlank()) lines += "FN:${escape(displayName)}"
