@@ -79,6 +79,8 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.FamilyRestroom
+import androidx.compose.material.icons.filled.Vaccines
 import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
@@ -150,8 +152,8 @@ private val services = listOf(
     ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad, category = "Transport"),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health, category = "Zdrowie"),
-    ServiceItem("Dane dzieci", "Rodzinny rejestr danych i zdjęć dzieci", fallbackIcon = Icons.Filled.AccountCircle, category = "Rodzina"),
-    ServiceItem("eKarta Szczepień", "Prywatna karta szczepień dziecka", fallbackIcon = Icons.Filled.HealthAndSafety, category = "Zdrowie"),
+    ServiceItem("Dane dzieci", "Rodzinny rejestr danych i zdjęć dzieci", fallbackIcon = Icons.Filled.FamilyRestroom, category = "Rodzina"),
+    ServiceItem("eKarta Szczepień", "Prywatna karta szczepień dziecka", fallbackIcon = Icons.Filled.Vaccines, category = "Zdrowie"),
     ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport, category = "Podróże"),
     ServiceItem("Mandaty", "Ewidencja i informacje", R.drawable.mob_penalties, category = "Kierowca i pojazdy"),
     ServiceItem("Sprawdź PESEL", "Informacje o numerze PESEL", R.drawable.mob_pesel_check, category = "Bezpieczeństwo"),
@@ -1666,8 +1668,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
         Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName")),
         Triple("Prawo jazdy", Icons.Filled.CreditCard, listOf("dlNumber", "dlCategories", "dlExpiryDate", "dlStatus")),
         Triple("Karty lojalnościowe", Icons.Filled.CreditCard, listOf("loyalty1Store", "loyalty1Number", "loyalty1Barcode", "loyalty1Qr")),
-        Triple("Dane dzieci", Icons.Filled.AccountCircle, listOf("childrenRecordsCount")),
-        Triple("eKarta Szczepień", Icons.Filled.HealthAndSafety, listOf("vaccinationRecordsCount")),
+        Triple("Dane dzieci", Icons.Filled.FamilyRestroom, listOf("childrenRecordsCount")),
+        Triple("eKarta Szczepień", Icons.Filled.Vaccines, listOf("vaccinationRecordsCount")),
         Triple("Karta biblioteczna", Icons.Filled.Description, listOf("library1Name", "library1CardNumber", "library1Status", "library2Name", "library2CardNumber", "library2Status"))
     )
     Column(
@@ -1691,23 +1693,31 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = painterResource(when (index) {
-                            0 -> R.drawable.documents_family_record
-                            1 -> R.drawable.documents_identity_card
-                            2 -> R.drawable.documents_passport
-                            3 -> R.drawable.documents_family_record
-                            4 -> R.drawable.documents_deputy_legitimacy
-                            5 -> R.drawable.documents_course_legitimacy
-                            6 -> R.drawable.documents_student_legitimacy
-                            8 -> R.drawable.documents_identity_card
-                            9 -> R.drawable.documents_course_legitimacy
-                            else -> R.drawable.documents_medical_certificates
-                        }),
-                        contentDescription = "Ilustracja: $title",
-                        modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)),
-                        contentScale = ContentScale.Crop
-                    )
+                    if (index == 11) {
+                        Icon(Icons.Filled.FamilyRestroom, contentDescription = "Ikona: dane dzieci",
+                            tint = Blue, modifier = Modifier.size(48.dp))
+                    } else if (index == 12) {
+                        Icon(Icons.Filled.Vaccines, contentDescription = "Ikona: eKarta Szczepień",
+                            tint = Blue, modifier = Modifier.size(48.dp))
+                    } else {
+                        Image(
+                            painter = painterResource(when (index) {
+                                0 -> R.drawable.documents_family_record
+                                1 -> R.drawable.documents_identity_card
+                                2 -> R.drawable.documents_passport
+                                3 -> R.drawable.documents_family_record
+                                4 -> R.drawable.documents_deputy_legitimacy
+                                5 -> R.drawable.documents_course_legitimacy
+                                6 -> R.drawable.documents_student_legitimacy
+                                8 -> R.drawable.documents_identity_card
+                                9 -> R.drawable.documents_course_legitimacy
+                                else -> R.drawable.documents_medical_certificates
+                            }),
+                            contentDescription = "Ilustracja: $title",
+                            modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                     Column(Modifier.weight(1f).padding(start = 12.dp)) {
                         Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
                         Text(if (hasData) "Dane dostępne" else "Brak zapisanych danych",
