@@ -142,6 +142,7 @@ private fun HomeScreen() {
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
     var showDocumentsEditor by remember { mutableStateOf(false) }
+    var showSettingsMenu by remember { mutableStateOf(false) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
@@ -151,7 +152,7 @@ private fun HomeScreen() {
     fun openService(title: String) {
         when (title) {
             "Dokumenty" -> showDemoDocuments = true
-            "Ustawienia" -> showDisabilitySettings = true
+            "Ustawienia" -> showSettingsMenu = true
             "Zaświadczenia" -> showCertificates = true
             else -> activeService = title
         }
@@ -162,14 +163,17 @@ private fun HomeScreen() {
             Box(modifier = Modifier.weight(1f)) {
                 when {
                     showDocumentsEditor -> DemoDocumentsScreen(onBack = { showDocumentsEditor = false })
+                    showSettingsMenu -> SettingsMenuScreen(
+                        onBack = { showSettingsMenu = false },
+                        onEditDocuments = { showSettingsMenu = false; showDocumentsEditor = true },
+                        onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true }
+                    )
                     selectedDocumentId != null -> DocumentDetailsScreen(
                         documentId = selectedDocumentId!!,
-                        onBack = { selectedDocumentId = null },
-                        onEdit = { selectedDocumentId = null; showDocumentsEditor = true }
+                        onBack = { selectedDocumentId = null }
                     )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
-                        onEdit = { showDocumentsEditor = true },
                         onOpenDetails = { selectedDocumentId = it }
                     )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false })
@@ -186,7 +190,7 @@ private fun HomeScreen() {
                     )
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
-                            if (selectedTab == 0) Header()
+                            if (selectedTab == 0) Header(onOpenSettings = { showSettingsMenu = true })
                             Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) PrototypeNotice()
@@ -265,6 +269,7 @@ private fun HomeScreen() {
                     showDemoDocuments = false
                     selectedDocumentId = null
                     showDocumentsEditor = false
+                    showSettingsMenu = false
                     showDisabilitySettings = false
                     showCertificates = false
                 }
@@ -299,7 +304,7 @@ private fun ProfileLandingScreen(
                 }
             }
         }
-        ProfileActionCard("Dokumenty i dane", "Przeglądaj i edytuj lokalną ewidencję", Icons.Filled.CreditCard, onOpenDocuments)
+        ProfileActionCard("Dokumenty i dane", "Przeglądaj lokalną ewidencję", Icons.Filled.CreditCard, onOpenDocuments)
         ProfileActionCard("Zaświadczenia", "Zapisane dane dokumentów i zaświadczeń", Icons.Filled.Description, onOpenCertificates)
         ProfileActionCard("Ustawienia danych", "Uzupełnij dane dotyczące niepełnosprawności", Icons.Filled.Settings, onOpenSettings)
         Text(
@@ -371,7 +376,7 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
 }
 
 @Composable
-private fun Header() {
+private fun Header(onOpenSettings: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth().background(Navy)
             .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 22.dp)
@@ -382,12 +387,20 @@ private fun Header() {
                 Text("obywatel", color = White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text("PROTOTYP NIEOFICJALNY", color = Color(0xFFB9D4EA), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
             }
-            Box(
-                modifier = Modifier.size(42.dp).clip(CircleShape)
-                    .background(Color(0xFF234665)).clickable { },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.NotificationsNone, contentDescription = "Powiadomienia — demonstracja", tint = White)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier.size(42.dp).clip(CircleShape)
+                        .background(Color(0xFF234665)).clickable(onClick = onOpenSettings),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Settings, contentDescription = "Ustawienia", tint = White)
+                }
+                Box(
+                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF234665)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.NotificationsNone, contentDescription = "Powiadomienia — demonstracja", tint = White)
+                }
             }
         }
         Spacer(Modifier.height(22.dp))
@@ -480,6 +493,45 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
 }
 
 
+
+@Composable
+private fun SettingsMenuScreen(
+    onBack: () -> Unit,
+    onEditDocuments: () -> Unit,
+    onEditDisability: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("‹  Powrót do ekranu głównego", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Ustawienia", color = Navy, style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Zarządzanie lokalnymi danymi prototypu", color = Muted,
+            style = MaterialTheme.typography.bodyMedium)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("Edycja tylko w Ustawieniach", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Portfel dokumentów i jego szczegóły są widokami do odczytu. Formularze edycji można otworzyć wyłącznie z tego menu.",
+                    color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        ProfileActionCard("Dane osobowe i dokumenty",
+            "Edytuj profil oraz lokalną ewidencję wszystkich kategorii dokumentów",
+            Icons.Filled.CreditCard, onEditDocuments)
+        ProfileActionCard("Dane o niepełnosprawności",
+            "Edytuj informacje o orzeczeniu, zaświadczeniu lub ocenie funkcjonalnej",
+            Icons.Filled.HealthAndSafety, onEditDisability)
+        Text("Zmiany są zapisywane lokalnie w zaszyfrowanym magazynie prototypu. Nie są wysyłane do rejestrów ani podmiotów publicznych.",
+            color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
 
 @Composable
 private fun DisabilitySettingsScreen(onBack: () -> Unit) {
@@ -621,7 +673,7 @@ private fun CertificatesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit, onOpenDetails: (String) -> Unit) {
+private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) -> Unit) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
@@ -704,10 +756,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit, onOpen
                 }
             }
         }
-        androidx.compose.material3.Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
-            Text("Edytuj dane i podgląd")
-        }
-        Text("Wersja obywatelska prototypu. Karty w tym portfelu nie są dokumentami państwowymi, nie nadają uprawnień i nie zastępują oryginałów.",
+        Text("Portfel jest przeznaczony do przeglądania. Zmiana danych jest dostępna wyłącznie w menu Ustawienia otwieranym z ekranu głównego. Karty nie są dokumentami państwowymi, nie nadają uprawnień i nie zastępują oryginałów.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
@@ -715,8 +764,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onEdit: () -> Unit, onOpen
 @Composable
 private fun DocumentDetailsScreen(
     documentId: String,
-    onBack: () -> Unit,
-    onEdit: () -> Unit
+    onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val fields = remember { DemoIdentityStore.load(context) }
@@ -798,10 +846,7 @@ private fun DocumentDetailsScreen(
                 }
             }
         }
-        androidx.compose.material3.Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
-            Text("Edytuj dane w formularzu")
-        }
-        Text("Edycja otwiera wspólny formularz ewidencyjny. Dane są przechowywane lokalnie i nie są sprawdzane w rejestrach publicznych.",
+        Text("Ten ekran służy wyłącznie do przeglądania. Aby zmienić wpis, wróć do ekranu głównego i otwórz menu Ustawienia. Dane są przechowywane lokalnie i nie są sprawdzane w rejestrach publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
