@@ -157,3 +157,18 @@ Menu Ustawienia zawiera oddzielne wejścia do:
 Po zamknięciu formularza użytkownik wraca do menu Ustawienia. Zapis pozostaje lokalny i szyfrowany. Nie dodano integracji z rejestrami ani potwierdzania statusów.
 
 Reguła dotyczy wszystkich ścieżek interfejsu: żadna karta portfela, ekran szczegółów ani ekran profilu nie udostępnia bezpośredniej edycji.
+
+
+## Korekta nawigacji ustawień — przegląd ścieżek profilu
+
+Ponowny przegląd przepływu nawigacji wykazał, że karta „Ustawienia danych” na ekranie Profilu prowadziła bezpośrednio do formularza danych o niepełnosprawności. Skorygowano ją: karta otwiera teraz wspólne menu „Ustawienia”, tak samo jak ikona koła zębatego na ekranie Start i pozycja Ustawienia w katalogu usług. Formularze edycji pozostają osiągalne wyłącznie z tego menu. Portfel, szczegóły dokumentów, zaświadczenia i profil służą do przeglądania.
+
+Kontrola wykonana statycznie na kodzie źródłowym: usunięto jedyną wykrytą ścieżkę profilu omijającą menu. Nie uruchamiano kompilacji ani testów budowania zgodnie z zakresem wersji alfa.
+
+## Następny zakres alfa
+
+- Rozdzielić wspólny formularz dokumentów na niezależne sekcje edycyjne dostępne z menu Ustawienia.
+- Dodać wejścia do każdej kategorii ewidencji, bez udostępniania edycji z portfela i ekranów szczegółów.
+- Uporządkować pola dat, statusów i źródeł potwierdzenia oraz walidację formatów lokalnych.
+- Dodać osobny moduł zarządzania fotografią profilową i przygotować wymienne zasoby marki; oficjalne godło i pieczęć wdrożyć dopiero po dostarczeniu zatwierdzonych plików źródłowych.
+- Zachować wyraźne rozdzielenie ewidencji prywatnej, dokumentów wystawianych przez uprawnione podmioty i integracji urzędowych.
