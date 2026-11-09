@@ -208,13 +208,13 @@ private fun HomeScreen() {
                                     PrototypeNotice()
                                     Spacer(Modifier.height(12.dp))
                                     CivicIllustrationBanner(
-                                        imageRes = R.drawable.a_clean_vector_flat_illustration_asset_sheet_for_a,
-                                        description = "Ilustracje obywateli i usług publicznych — grafika koncepcyjna"
+                                        imageRes = R.drawable.header_main_banner,
+                                        description = "Baner główny prototypu obywatelskiego"
                                     )
                                 } else {
                                     CivicIllustrationBanner(
-                                        imageRes = R.drawable.a_clean_vector_illustration_asset_sheet_on_a_pale,
-                                        description = "Ilustracje instytucji, zdrowia, transportu i środowiska"
+                                        imageRes = R.drawable.header_poland_banner,
+                                        description = "Baner informacyjny Polski"
                                     )
                                     Spacer(Modifier.height(12.dp))
                                 }
@@ -330,8 +330,8 @@ private fun ProfileLandingScreen(
     ) {
         Text("Profil", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         CivicIllustrationBanner(
-            imageRes = R.drawable.a_clean_vector_flat_gradient_illustration_asset_sh,
-            description = "Ilustracje profilu obywatela, rodziny i usług"
+            imageRes = R.drawable.header_logo_panel,
+            description = "Panel znaku i identyfikacji prototypu"
         )
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -398,10 +398,10 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         Text(title, color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         CivicIllustrationBanner(
             imageRes = when (title) {
-                "Zdrowie" -> R.drawable.a_clean_vector_illustration_asset_sheet_on_a_pale
-                "Polak za granicą", "Transport", "Bilety" -> R.drawable.a_clean_vector_flat_gradient_illustration_asset_sh
-                "Środowisko" -> R.drawable.a_clean_vector_flat_illustration_asset_sheet_for_a
-                else -> R.drawable.a_clean_vector_illustration_asset_sheet_on_a_pale
+                "Zdrowie" -> R.drawable.navigation_help
+                "Polak za granicą", "Transport", "Bilety" -> R.drawable.navigation_mountain_landscape
+                "Środowisko" -> R.drawable.navigation_services
+                else -> R.drawable.navigation_profile
             },
             description = "Ilustracja tematyczna modułu $title"
         )
@@ -805,10 +805,21 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(BlueLight),
-                        contentAlignment = Alignment.Center) {
-                        Icon(icon, contentDescription = null, tint = Blue, modifier = Modifier.size(24.dp))
-                    }
+                    Image(
+                        painter = painterResource(when (index) {
+                            0 -> R.drawable.documents_family_record
+                            1 -> R.drawable.documents_identity_card
+                            2 -> R.drawable.documents_passport
+                            3 -> R.drawable.documents_family_record
+                            4 -> R.drawable.documents_deputy_legitimacy
+                            5 -> R.drawable.documents_course_legitimacy
+                            6 -> R.drawable.documents_student_legitimacy
+                            else -> R.drawable.documents_medical_certificates
+                        }),
+                        contentDescription = "Ilustracja: $title",
+                        modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)),
+                        contentScale = ContentScale.Crop
+                    )
                     Column(Modifier.weight(1f).padding(start = 12.dp)) {
                         Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
                         Text(if (hasData) "Dane zapisane lokalnie • ewidencja prywatna" else "Brak zapisanych danych",
@@ -896,6 +907,21 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Image(
+            painter = painterResource(when (documentId.toIntOrNull()) {
+                0 -> R.drawable.documents_document_wallet_banner
+                1 -> R.drawable.documents_identity_card
+                2 -> R.drawable.documents_passport
+                3 -> R.drawable.documents_family_record
+                4 -> R.drawable.documents_deputy_legitimacy
+                5 -> R.drawable.documents_course_legitimacy
+                6 -> R.drawable.documents_student_legitimacy
+                else -> R.drawable.documents_medical_certificates
+            }),
+            contentDescription = "Ilustracja ewidencji: ${section.first}",
+            modifier = Modifier.fillMaxWidth().height(148.dp).clip(RoundedCornerShape(16.dp)),
+            contentScale = ContentScale.Fit
+        )
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
