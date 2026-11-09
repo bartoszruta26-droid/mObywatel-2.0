@@ -191,6 +191,7 @@ private fun HomeScreen() {
                     )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
+                        onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
                         onOpenDetails = { selectedDocumentId = it }
                     )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
@@ -202,6 +203,7 @@ private fun HomeScreen() {
                     )
                     selectedTab == 1 -> DocumentsWalletScreen(
                         onBack = { selectedTab = 0 },
+                        onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
                         onOpenDetails = { selectedDocumentId = it }
                     )
                     selectedTab == 3 -> QrToolsScreen()
@@ -867,7 +869,7 @@ private fun CertificatesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) -> Unit) {
+private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit, onOpenDetails: (String) -> Unit) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
@@ -888,11 +890,29 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("‹  Powrót", color = Blue, fontWeight = FontWeight.SemiBold,
+        Text("‹  Pulpit", color = Blue, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Portfel dokumentów", color = Navy, style = MaterialTheme.typography.headlineSmall,
+        Text("Dokumenty", color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Twoja lokalna ewidencja danych i dokumentów", color = Muted,
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Card(modifier = Modifier.weight(1f).clickable(onClick = onAddDocuments),
+                colors = CardDefaults.cardColors(containerColor = White)) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center) {
+                    Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
+                    Text("Dodaj", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
+                }
+            }
+            Card(modifier = Modifier.weight(1f),
+                colors = CardDefaults.cardColors(containerColor = BlueLight)) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center) {
+                    Icon(Icons.Filled.CreditCard, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
+                    Text("Wszystkie", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
+                }
+            }
+        }
+        Text("Twoje dokumenty i lokalne ewidencje", color = Muted,
             style = MaterialTheme.typography.bodyMedium)
         Card(
             modifier = Modifier.fillMaxWidth(),
