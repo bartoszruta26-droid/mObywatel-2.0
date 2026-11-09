@@ -280,6 +280,7 @@ private fun HomeScreen() {
     )
 
     fun openService(title: String) {
+        ActivityHistoryStore.record(context, "Nawigacja", "Otwarto moduł: $title")
         when (title) {
             "Portfel" -> showDemoDocuments = true
             "Dane dzieci", "eKarta Szczepień", "Historia chorób" -> activeService = title
@@ -1330,7 +1331,9 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         "Bilety" to "Miejsce na prezentację własnych zapisów dotyczących biletów. Aplikacja nie sprzedaje ani nie waliduje biletów.",
         "Bezpieczeństwo" to "Ustawienia prywatności, wskazówki bezpieczeństwa i informacje o ochronie danych.",
         "Środowisko" to "Informacje środowiskowe i lokalne materiały edukacyjne.",
-        "Pozostałe" to "Katalog dodatkowych modułów i informacji."
+        "Pozostałe" to "Katalog dodatkowych modułów i informacji.",
+        "Pomoc i informacje" to "Centrum pomocy: instrukcje korzystania z modułów, wyjaśnienie lokalnego charakteru danych, zasady importu i eksportu oraz informacje o ograniczeniach integracji.",
+        "Powiadomienia" to "Centrum komunikatów. W tej wersji aplikacja nie odbiera jeszcze urzędowych powiadomień ani komunikatów z systemów zewnętrznych."
     )
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -2843,6 +2846,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                             val snapshot = fields.toMutableMap()
                             snapshot["photo"] = photoBase64
                             DemoIdentityStore.save(context, snapshot)
+                            ActivityHistoryStore.record(context, "Dokumenty", "Zapisano dane profilu i dokumentów")
                         }.onSuccess { saveMessage = "Zapisano lokalnie i zaszyfrowano dane oraz zdjęcie." }
                             .onFailure { saveMessage = "Błąd zapisu: ${it.localizedMessage ?: "nieznany błąd"}" }
                     },
