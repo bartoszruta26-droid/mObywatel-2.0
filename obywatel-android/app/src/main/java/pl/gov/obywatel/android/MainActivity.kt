@@ -827,7 +827,14 @@ private fun VCardQrScreen() {
             importMessage = "Zaimportowano dane. Sprawdź ich zakres przed udostępnieniem."
         }.onFailure { importMessage = "Błąd importu: " + (it.message ?: "nieprawidłowy plik vCard") }
     }
-    val payload = remember(contactFields.toMap()) { buildVCardPayload(contactFields.toMap()) }
+    val contactSnapshot = contactFields.toMap()
+    val displayName = contactSnapshot["FN"].orEmpty().trim()
+    // encodeContact requires FN; do not invoke it while the form is still empty.
+    // A validation error must never escape composition and terminate the activity.
+    val payload = remember(contactSnapshot) {
+        if (displayName.isBlank()) ""
+        else runCatching { buildVCardPayload(contactSnapshot) }.getOrDefault("")
+    }
     val qrBitmap = remember(payload, branding, uploadedLogo) {
         if (payload.isBlank() || (branding == QR_BRAND_FILE && uploadedLogo == null)) null
         else runCatching { generateBrandedQr(context, payload, branding, uploadedLogo) }.getOrNull()
@@ -886,7 +893,12 @@ private fun VCardQrScreen() {
                   }
             }
         } else {
-            Text(if (branding == QR_BRAND_FILE && uploadedLogo == null) "Wybierz logo z pliku albo ustaw opcję „Bez znaku”." else "Wpisz co najmniej nazwę kontaktu, aby wygenerować kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            val hint = when {
+                displayName.isBlank() -> "Wpisz nazwę wyświetlaną (FN), aby wygenerować wizytówkę."
+                branding == QR_BRAND_FILE && uploadedLogo == null -> "Wybierz logo z pliku albo ustaw opcję „Bez znaku”."
+                else -> "Nie udało się przygotować kodu QR. Sprawdź dane kontaktowe i spróbuj ponownie."
+            }
+            Text(hint, color = Muted, style = MaterialTheme.typography.bodySmall)
         }
         Text("Prywatność: kod ujawnia każdej osobie skanującej wszystkie zapisane w nim dane. Nie dodawaj numeru PESEL, danych dokumentu ani informacji poufnych.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
@@ -2389,7 +2401,7 @@ private object DemoIdentityStore {
             require(!json.isNull(key)) { "Pole profilu zawiera wartość pustą typu null." }
             result[key] = json.getString(key)
         }
-        result
+        return result
     }
 
     fun save(context: Context, values: Map<String, String>) {
