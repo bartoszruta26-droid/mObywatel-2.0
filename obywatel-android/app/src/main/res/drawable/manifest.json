@@ -1,0 +1,678 @@
+[
+  {
+    "file": "01_navigation/brand_header_illustrative.png",
+    "size": [
+      372,
+      177
+    ],
+    "source_box": [
+      8,
+      4,
+      380,
+      181
+    ]
+  },
+  {
+    "file": "01_navigation/wallet.png",
+    "size": [
+      232,
+      177
+    ],
+    "source_box": [
+      392,
+      4,
+      624,
+      181
+    ]
+  },
+  {
+    "file": "01_navigation/profile.png",
+    "size": [
+      192,
+      177
+    ],
+    "source_box": [
+      632,
+      4,
+      824,
+      181
+    ]
+  },
+  {
+    "file": "01_navigation/public_services.png",
+    "size": [
+      200,
+      177
+    ],
+    "source_box": [
+      836,
+      4,
+      1036,
+      181
+    ]
+  },
+  {
+    "file": "01_navigation/notifications.png",
+    "size": [
+      190,
+      177
+    ],
+    "source_box": [
+      1044,
+      4,
+      1234,
+      181
+    ]
+  },
+  {
+    "file": "01_navigation/settings.png",
+    "size": [
+      148,
+      167
+    ],
+    "source_box": [
+      1244,
+      4,
+      1392,
+      171
+    ]
+  },
+  {
+    "file": "01_navigation/help.png",
+    "size": [
+      128,
+      167
+    ],
+    "source_box": [
+      1404,
+      4,
+      1532,
+      171
+    ]
+  },
+  {
+    "file": "02_documents/identity_card_illustration.png",
+    "size": [
+      217,
+      169
+    ],
+    "source_box": [
+      8,
+      200,
+      225,
+      369
+    ]
+  },
+  {
+    "file": "02_documents/passport_illustration.png",
+    "size": [
+      164,
+      169
+    ],
+    "source_box": [
+      239,
+      200,
+      403,
+      369
+    ]
+  },
+  {
+    "file": "02_documents/driving_licence_illustration.png",
+    "size": [
+      168,
+      169
+    ],
+    "source_box": [
+      417,
+      200,
+      585,
+      369
+    ]
+  },
+  {
+    "file": "02_documents/vehicle_registration_illustration.png",
+    "size": [
+      176,
+      169
+    ],
+    "source_box": [
+      599,
+      200,
+      775,
+      369
+    ]
+  },
+  {
+    "file": "02_documents/student_id_illustration.png",
+    "size": [
+      176,
+      169
+    ],
+    "source_box": [
+      789,
+      200,
+      965,
+      369
+    ]
+  },
+  {
+    "file": "02_documents/school_id_illustration.png",
+    "size": [
+      168,
+      169
+    ],
+    "source_box": [
+      977,
+      200,
+      1145,
+      369
+    ]
+  },
+  {
+    "file": "02_documents/disability_id_illustration.png",
+    "size": [
+      184,
+      169
+    ],
+    "source_box": [
+      1159,
+      200,
+      1343,
+      369
+    ]
+  },
+  {
+    "file": "02_documents/large_family_card_illustration.png",
+    "size": [
+      176,
+      169
+    ],
+    "source_box": [
+      1354,
+      200,
+      1530,
+      369
+    ]
+  },
+  {
+    "file": "03_categories/health.png",
+    "size": [
+      107,
+      138
+    ],
+    "source_box": [
+      8,
+      391,
+      115,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/family.png",
+    "size": [
+      104,
+      138
+    ],
+    "source_box": [
+      123,
+      391,
+      227,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/education.png",
+    "size": [
+      108,
+      138
+    ],
+    "source_box": [
+      235,
+      391,
+      343,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/work.png",
+    "size": [
+      109,
+      138
+    ],
+    "source_box": [
+      350,
+      391,
+      459,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/finance_taxes.png",
+    "size": [
+      107,
+      138
+    ],
+    "source_box": [
+      466,
+      391,
+      573,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/transport.png",
+    "size": [
+      107,
+      138
+    ],
+    "source_box": [
+      580,
+      391,
+      687,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/real_estate.png",
+    "size": [
+      107,
+      138
+    ],
+    "source_box": [
+      694,
+      391,
+      801,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/environment.png",
+    "size": [
+      107,
+      138
+    ],
+    "source_box": [
+      808,
+      391,
+      915,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/security.png",
+    "size": [
+      106,
+      138
+    ],
+    "source_box": [
+      922,
+      391,
+      1028,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/law_citizenship.png",
+    "size": [
+      106,
+      138
+    ],
+    "source_box": [
+      1035,
+      391,
+      1141,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/culture_heritage.png",
+    "size": [
+      107,
+      138
+    ],
+    "source_box": [
+      1148,
+      391,
+      1255,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/sport.png",
+    "size": [
+      106,
+      138
+    ],
+    "source_box": [
+      1263,
+      391,
+      1369,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/social_organizations.png",
+    "size": [
+      105,
+      138
+    ],
+    "source_box": [
+      1377,
+      391,
+      1482,
+      529
+    ]
+  },
+  {
+    "file": "03_categories/church_communities.png",
+    "size": [
+      40,
+      138
+    ],
+    "source_box": [
+      1490,
+      391,
+      1530,
+      529
+    ]
+  },
+  {
+    "file": "04_institutions/presidential_building_illustration.png",
+    "size": [
+      269,
+      168
+    ],
+    "source_box": [
+      8,
+      552,
+      277,
+      720
+    ]
+  },
+  {
+    "file": "04_institutions/parliament_building_illustration.png",
+    "size": [
+      235,
+      168
+    ],
+    "source_box": [
+      289,
+      552,
+      524,
+      720
+    ]
+  },
+  {
+    "file": "04_institutions/senate_building_illustration.png",
+    "size": [
+      243,
+      168
+    ],
+    "source_box": [
+      536,
+      552,
+      779,
+      720
+    ]
+  },
+  {
+    "file": "04_institutions/council_building_illustration.png",
+    "size": [
+      245,
+      168
+    ],
+    "source_box": [
+      791,
+      552,
+      1036,
+      720
+    ]
+  },
+  {
+    "file": "04_institutions/ministry_building_illustration.png",
+    "size": [
+      236,
+      168
+    ],
+    "source_box": [
+      1048,
+      552,
+      1284,
+      720
+    ]
+  },
+  {
+    "file": "04_institutions/public_administration_building_illustration.png",
+    "size": [
+      235,
+      168
+    ],
+    "source_box": [
+      1295,
+      552,
+      1530,
+      720
+    ]
+  },
+  {
+    "file": "05_e_services/e_prescription_icon.png",
+    "size": [
+      115,
+      126
+    ],
+    "source_box": [
+      8,
+      731,
+      123,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/e_referral_icon.png",
+    "size": [
+      125,
+      126
+    ],
+    "source_box": [
+      132,
+      731,
+      257,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/e_sick_leave_icon.png",
+    "size": [
+      123,
+      126
+    ],
+    "source_box": [
+      266,
+      731,
+      389,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/e_declarations_icon.png",
+    "size": [
+      124,
+      126
+    ],
+    "source_box": [
+      398,
+      731,
+      522,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/e_payments_icon.png",
+    "size": [
+      124,
+      126
+    ],
+    "source_box": [
+      531,
+      731,
+      655,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/e_tax_return_icon.png",
+    "size": [
+      121,
+      126
+    ],
+    "source_box": [
+      664,
+      731,
+      785,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/social_insurance_icon.png",
+    "size": [
+      120,
+      126
+    ],
+    "source_box": [
+      794,
+      731,
+      914,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/national_health_fund_icon.png",
+    "size": [
+      114,
+      126
+    ],
+    "source_box": [
+      923,
+      731,
+      1037,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/business_registry_icon.png",
+    "size": [
+      119,
+      126
+    ],
+    "source_box": [
+      1045,
+      731,
+      1164,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/court_registry_icon.png",
+    "size": [
+      113,
+      126
+    ],
+    "source_box": [
+      1172,
+      731,
+      1285,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/national_id_number_icon.png",
+    "size": [
+      114,
+      126
+    ],
+    "source_box": [
+      1294,
+      731,
+      1408,
+      857
+    ]
+  },
+  {
+    "file": "05_e_services/trusted_profile_icon.png",
+    "size": [
+      113,
+      126
+    ],
+    "source_box": [
+      1417,
+      731,
+      1530,
+      857
+    ]
+  },
+  {
+    "file": "06_landscapes/polish_city_landscape.png",
+    "size": [
+      315,
+      152
+    ],
+    "source_box": [
+      8,
+      865,
+      323,
+      1017
+    ]
+  },
+  {
+    "file": "06_landscapes/mountain_landscape.png",
+    "size": [
+      288,
+      152
+    ],
+    "source_box": [
+      336,
+      865,
+      624,
+      1017
+    ]
+  },
+  {
+    "file": "06_landscapes/coast_landscape.png",
+    "size": [
+      287,
+      152
+    ],
+    "source_box": [
+      637,
+      865,
+      924,
+      1017
+    ]
+  },
+  {
+    "file": "06_landscapes/family_with_flag_illustration.png",
+    "size": [
+      325,
+      152
+    ],
+    "source_box": [
+      936,
+      865,
+      1261,
+      1017
+    ]
+  },
+  {
+    "file": "06_landscapes/polish_flag_illustration.png",
+    "size": [
+      256,
+      152
+    ],
+    "source_box": [
+      1274,
+      865,
+      1530,
+      1017
+    ]
+  }
+]
