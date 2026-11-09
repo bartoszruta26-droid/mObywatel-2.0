@@ -335,6 +335,7 @@ private fun HomeScreen() {
                     activeService == "Historia chorób" -> MedicalHistoryRecordsScreen(onBack = { activeService = null })
                     activeService == "Historia działań" -> ActivityHistoryScreen(onBack = { activeService = null })
                     activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null })
+                    activeService == "Podgląd dokumentów podpisanych" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false)
                     activeService == "Prawo wykonywania zawodu i kwalifikacje" -> ProfessionalQualificationsScreen(onBack = { activeService = null })
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
@@ -398,11 +399,15 @@ private fun HomeScreen() {
                                             Triple("Dowód tożsamości", R.drawable.documents_identity_card, "1"),
                                             Triple("Dane paszportowe", R.drawable.documents_passport, "2"),
                                             Triple("Dane rejestru podmiotów", R.drawable.documents_family_record, "registry"),
-                                            Triple("Legitymacje", R.drawable.documents_student_legitimacy, "6")
+                                            Triple("Legitymacje", R.drawable.documents_student_legitimacy, "6"),
+                                            Triple("Dokumenty podpisane elektronicznie", R.drawable.documents_medical_certificates, "signedpdf")
                                         ).forEach { (label, imageRes, id) ->
                                             Card(modifier = Modifier.width(150.dp).clickable {
-                                                if (id == "registry") activeService = "Odpis z rejestru podmiotów"
-                                                else selectedDocumentId = id
+                                                when (id) {
+                                                    "registry" -> activeService = "Odpis z rejestru podmiotów"
+                                                    "signedpdf" -> activeService = "Podgląd dokumentów podpisanych"
+                                                    else -> selectedDocumentId = id
+                                                }
                                             },
                                                 colors = CardDefaults.cardColors(containerColor = White)) {
                                                 Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -415,6 +420,7 @@ private fun HomeScreen() {
                                                                 "1" -> Icons.Filled.CreditCard
                                                                 "2" -> Icons.Filled.Public
                                                                 "registry" -> Icons.Filled.AccountBalance
+                                                                "signedpdf" -> Icons.Filled.Verified
                                                                 else -> Icons.Filled.Badge
                                                             },
                                                             contentDescription = null,
