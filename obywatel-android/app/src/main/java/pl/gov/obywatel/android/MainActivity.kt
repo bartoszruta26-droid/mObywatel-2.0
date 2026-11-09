@@ -189,8 +189,13 @@ private fun HomeScreen() {
                         onBack = { activeService = null },
                         onOpenDocuments = { activeService = null; showDemoDocuments = true }
                     )
-                    selectedTab == 2 -> ProfileLandingScreen(
-                        onOpenDocuments = { showDemoDocuments = true },
+                    selectedTab == 1 -> DocumentsWalletScreen(
+                        onBack = { selectedTab = 0 },
+                        onOpenDetails = { selectedDocumentId = it }
+                    )
+                    selectedTab == 3 -> QrToolsScreen()
+                    selectedTab == 4 -> ProfileLandingScreen(
+                        onOpenDocuments = { selectedTab = 1; showDemoDocuments = true },
                         onOpenSettings = { showSettingsMenu = true },
                         onOpenCertificates = { showCertificates = true }
                     )
@@ -219,11 +224,11 @@ private fun HomeScreen() {
                                     Spacer(Modifier.height(12.dp))
                                 }
                                 SectionHeading(
-                                    if (selectedTab == 1) "Wszystkie usługi" else "Szybki dostęp",
-                                    if (selectedTab == 1) "Katalog modułów prototypu obywatelskiego" else "Najczęściej używane obszary"
+                                    if (selectedTab == 2) "Usługi" else "Pulpit",
+                                    if (selectedTab == 2) "Usługi uporządkowane według kategorii" else "Najczęściej używane obszary"
                                 )
                                 Spacer(Modifier.height(12.dp))
-                                if (selectedTab == 1) {
+                                if (selectedTab == 2) {
                                     OutlinedTextField(
                                         value = serviceSearch,
                                         onValueChange = { serviceSearch = it },
@@ -237,7 +242,7 @@ private fun HomeScreen() {
                                         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        listOf("Wszystkie", "Dokumenty", "Bezpieczeństwo", "Zdrowie", "Kierowca i pojazdy", "Sprawy urzędowe", "Podróże", "Pozostałe")
+                                        listOf("Wszystkie", "Zdrowie", "Kierowca i pojazdy", "Sprawy urzędowe", "Rodzina", "Edukacja", "Praca", "Finanse i podatki", "Transport", "Nieruchomości", "Środowisko", "Bezpieczeństwo", "Prawo i obywatel", "Kultura i dziedzictwo", "Sport", "Organizacje społeczne", "Kościół i wspólnoty", "Dokumenty", "Podróże", "Pozostałe")
                                             .forEach { category ->
                                                 val active = serviceCategory == category
                                                 Box(
@@ -255,7 +260,7 @@ private fun HomeScreen() {
                                     }
                                     Spacer(Modifier.height(10.dp))
                                 }
-                                val visibleServices = if (selectedTab == 1) services.filter { service ->
+                                val visibleServices = if (selectedTab == 2) services.filter { service ->
                                     (serviceCategory == "Wszystkie" || service.category == serviceCategory) &&
                                         (serviceSearch.isBlank() || service.title.contains(serviceSearch, ignoreCase = true) ||
                                             service.subtitle.contains(serviceSearch, ignoreCase = true))
@@ -303,6 +308,36 @@ private fun HomeScreen() {
 }
 
 @Composable
+private fun QrToolsScreen() {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text("Kod QR", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Icon(Icons.Filled.QrCode2, contentDescription = "Ilustracyjna ikona kodu QR", tint = Blue, modifier = Modifier.size(112.dp))
+        Text("Narzędzia kodów QR", color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "Ta sekcja prototypu służy do prezentacji przyszłych funkcji skanowania i udostępniania danych. Nie generuje kodów potwierdzających dokumenty ani nie weryfikuje tożsamości.",
+            color = Muted, style = MaterialTheme.typography.bodyMedium
+        )
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Skanowanie kodu", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Obsługa aparatu i bezpiecznego odczytu zostanie dodana po zaprojektowaniu lokalnego, demonstracyjnego formatu danych.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Udostępnianie danych", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Przyszła funkcja będzie wymagała świadomego wyboru zakresu danych i potwierdzenia przez użytkownika.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Text("Prototyp obywatelski • bez połączenia z systemami administracji publicznej", color = Muted, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+@Composable
 private fun CivicIllustrationBanner(imageRes: Int, description: String) {
     Image(
         painter = painterResource(imageRes),
@@ -328,7 +363,7 @@ private fun ProfileLandingScreen(
             .padding(horizontal = 18.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("Profil", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         CivicIllustrationBanner(
             imageRes = R.drawable.header_logo_panel,
             description = "Panel znaku i identyfikacji prototypu"
@@ -1783,26 +1818,33 @@ private object DemoIdentityStore {
 @Composable
 private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
     val items = listOf(
-        Triple("Start", Icons.Filled.Home, 0),
-        Triple("Usługi", Icons.Filled.Fingerprint, 1),
-        Triple("Profil", Icons.Filled.AccountCircle, 2)
+        Triple("Pulpit", Icons.Filled.Home, 0),
+        Triple("Dokumenty", null, 1),
+        Triple("Usługi", null, 2),
+        Triple("Kod QR", Icons.Filled.QrCode2, 3),
+        Triple("Więcej", null, 4)
     )
     Row(
         modifier = Modifier.fillMaxWidth().background(White)
             .border(width = 0.5.dp, color = Border)
-            .padding(top = 10.dp, bottom = 12.dp),
+            .padding(top = 8.dp, bottom = 10.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
         items.forEach { (label, icon, index) ->
             Column(
-                modifier = Modifier.width(78.dp).clip(RoundedCornerShape(12.dp))
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
                     .clickable { onSelect(index) }.padding(vertical = 3.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(icon, contentDescription = label, tint = if (selectedTab == index) Blue else Muted, modifier = Modifier.size(23.dp))
-                Text(label, color = if (selectedTab == index) Blue else Muted, style = MaterialTheme.typography.labelSmall, fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium)
+                when (index) {
+                    1 -> Image(painterResource(R.drawable.wallet), contentDescription = label, modifier = Modifier.size(23.dp), contentScale = ContentScale.Fit)
+                    2 -> Image(painterResource(R.drawable.public_services), contentDescription = label, modifier = Modifier.size(23.dp), contentScale = ContentScale.Fit)
+                    4 -> Image(painterResource(R.drawable.profile), contentDescription = label, modifier = Modifier.size(23.dp), contentScale = ContentScale.Fit)
+                    else -> Icon(icon!!, contentDescription = label, tint = if (selectedTab == index) Blue else Muted, modifier = Modifier.size(23.dp))
+                }
+                Text(label, color = if (selectedTab == index) Blue else Muted, style = MaterialTheme.typography.labelSmall, fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium, maxLines = 1)
             }
         }
     }
