@@ -91,3 +91,20 @@ W repozytorium znajdują się także:
 - `mob_pesel_lock.xml` — piktogram Zastrzeż PESEL.
 
 Dodano dla nich kafelki usług. Ekrany informacyjne nie wykonują połączeń z rejestrami państwowymi i nie wysyłają dyspozycji zastrzeżenia PESEL.
+
+
+## Zasoby przekazane przez użytkownika — identyfikacja poselska
+
+Projekt przewiduje odrębne zasoby graficzne dla identyfikacji poselskiej użytkownika:
+- logo posła zawierające godło Rzeczypospolitej Polskiej;
+- wzór pieczęci posła;
+- ewentualne warianty kolorystyczne i monochromatyczne, o ile zostały dostarczone jako zatwierdzone oryginały.
+
+Pliki źródłowe nie zostały jeszcze przekazane do repozytorium. Po ich otrzymaniu należy zachować oryginalny wygląd i proporcje, zapisać źródło pliku oraz używać ich wyłącznie w kontekstach wskazanych przez użytkownika. Nie odtwarzać pieczęci na podstawie opisu ani nie generować jej zamiennika.
+
+W interfejsie należy odróżnić:
+- prezentację znaku identyfikacyjnego posła;
+- informację ewidencyjną o pieczęci;
+- rzeczywiste uwierzytelnianie dokumentu, którego sama grafika w aplikacji nie zapewnia.
+
+Zasób godła państwowego powinien pozostać odrębny od autorskiego logo i być używany w zgodnym z prawem, niezmienionym wzorze.
