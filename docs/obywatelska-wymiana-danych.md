@@ -141,3 +141,24 @@ Dodano kolejne niezależne elementy warstwy protokołu:
 To są elementy protokołu i transportu, a nie jeszcze kompletny, zintegrowany przepływ ekranowy. Ekran OWD generuje ofertę QR i uruchamia skaner aparatem, który waliduje typ, wersję i czas ważności oferty. Oferta nadal nie zawiera adresu nasłuchującego urządzenia, a ekran nie uruchamia jeszcze odbiornika ani właściwego transferu. Nie ma jeszcze mechanizmu odkrywania urządzenia/adresu IP i umieszczania endpointu w QR, pełnego powiązania klucza efemerycznego z cyklem życia serwera, integracji odbioru z trwałym rejestrem sesji i interfejsem zgody, ani rzeczywistej usługi przekaźnikowej. Adapter państwowy pozostaje wyłącznie kontraktem architektonicznym. Nie oznaczamy więc transferu jako ukończonego ani przetestowanego na dwóch telefonach.
 
 Przed testem na urządzeniach trzeba jeszcze połączyć ekran z przepływem nadawcy i odbiorcy, przekazywać adres nasłuchującego urządzenia w ofercie QR, podłączyć `OwdReplayStore` w miejscu atomowego przyjęcia sesji, obsłużyć anulowanie/wygaśnięcie i wyczyścić klucze po zakończeniu. Dla transmisji poza jedną siecią lokalną potrzebny będzie zatwierdzony, utrzymywany przekaźnik HTTPS, który przechowuje wyłącznie szyfrogramy.
+
+## Wersjonowane schematy własne OWD — 9 listopada 2026
+
+Wprowadzono rejestr `OwdSchemaRegistry.kt`. Schematy mają własną przestrzeń nazw `pl.owd.*`, numer wersji i jawny katalog pól. Nie są to identyfikatory ani formaty Ministerstwa Cyfryzacji.
+
+Wersja 1 obejmuje:
+- `pl.owd.person.disability-status` — status i stopień wskazany przez źródło, rodzaj/numer dokumentu oraz okres obowiązywania;
+- `pl.owd.civic.mandate-status` — rodzaj mandatu, właściwość/jednostkę, status i okres kadencji;
+- `pl.owd.person.profile` — minimalny profil osoby.
+
+Walidator odrzuca nieznane schematy, nieznane pola, brak wymaganych pól, puste wartości i wartości przekraczające limity. Dla `ISSUER_ATTESTED` i `GOVERNMENT_SERVICE` wymagane są identyfikator wystawcy, referencja dowodu oraz czas wystawienia. Zwykły wpis użytkownika pozostaje `LOCAL_USER`; odebrany od innej osoby pozostaje `PEER_SHARED`. Serializacja tworzy wersjonowaną kopertę JSON `OWD_RECORD`.
+
+Dodano także `ApprovedSchemaMapping` i `GovernmentSchemaMapper`. Mapowanie OWD → schemat rządowy jest osobnym, jawnym wpisem, sprawdzanym względem wersji lokalnego schematu, gotowości integracji i listy dokładnych identyfikatorów dopuszczonych schematów. Kod nie zgaduje nazw pól ani nie wykonuje automatycznej konwersji. Gdy operator opublikuje wymagany format i dopuści podmiot, należy dodać kontrolowane mapowanie pól i testy zgodności. W alfa nie ma żadnego mapowania rządowego ani aktywnego adaptera.
+
+### Zasady kompatybilności i rozwoju schematów
+
+- Nie zmieniać znaczenia istniejącego pola w ramach tej samej wersji głównej.
+- Zmiana wymagalności, semantyki lub typu pola wymaga nowej wersji schematu.
+- Dodatkowe pola muszą być jawnie dopisane do rejestru; walidator nie przepuszcza pól nieznanych.
+- Schematy OWD są niezależne od zestawów danych mObywatela. Ich późniejsze mapowanie wymaga zatwierdzenia i zgodności z warunkami usługi.
+- Własny podpis użytkownika potwierdza co najwyżej autorstwo deklaracji w ramach OWD; nie zmienia pochodzenia na urzędowe.
