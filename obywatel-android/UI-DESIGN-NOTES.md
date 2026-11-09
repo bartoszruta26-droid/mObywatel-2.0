@@ -62,3 +62,25 @@ Formularz ewidencyjny obejmuje dane dokumentu analogiczne do zakresu informacji 
 
 ### Ustawienia danych i zakładka „Zaświadczenia”
 Dodano osobną pozycję „Ustawienia”, w której użytkownik może wprowadzać i zapisywać dane dotyczące niepełnosprawności, w tym źródło dokumentu, wystawcę, podstawę prawną/regulacyjną, dane osoby, numer i datę, stopień/kategorię, symbole przyczyn, okres, wskazania i informacje o ocenie funkcjonalnej (ICF/WHODAS 2.0). Dodano osobną pozycję „Zaświadczenia”, która odczytuje zapisane dane i prezentuje je w formie karty informacyjnej. Dane pozostają w istniejącym lokalnym, szyfrowanym magazynie. Ekran jest ewidencyjny: pokazuje informacje wprowadzone przez użytkownika, nie potwierdza autentyczności dokumentu ani nie nadaje mu skutków prawnych. Moduł nie obejmuje wewnętrznego zarządzania postępowaniami fundacji.
+
+## Rozszerzenie ewidencji dokumentów i sekcji informacji dodatkowych
+
+W formularzu dokumentów rozszerzono zakres danych:
+- profil osoby: nazwisko rodowe i PESEL jako osobne pola;
+- dowód osobisty: status dokumentu, numer poprzedniego dokumentu oraz data utraty lub unieważnienia;
+- paszport: rodzaj dokumentu podróży, dane posiadacza zapisane w dokumencie, miejsce urodzenia, obywatelstwo, płeć, status i data utraty/unieważnienia;
+- ewidencja poselska: data wydania legitymacji, wystawca, status legitymacji i źródło potwierdzenia mandatu;
+- legitymacja kursanta: rzeczywista data ukończenia, liczba godzin, forma kształcenia, zaliczenie/egzamin i numer zaświadczenia o ukończeniu;
+- legitymacja studencka: dodano odrębny formularz ewidencyjny uczelni, jednostki, numeru legitymacji/albumu, kierunku, poziomu, formy, roku akademickiego, ważności, statusu i wystawcy;
+- orzeczenie / zaświadczenie o niepełnosprawności: data wniosku, numer sprawy, data doręczenia, rodzaj rozstrzygnięcia, wynik odwołania, duplikat/zmiana dokumentu i opis dokumentu źródłowego.
+
+Dodano wspólny, rozwijany komponent „Informacje dodatkowe” na końcu sekcji ewidencyjnych. Zawiera pola źródła danych, podstawy prawnej/regulaminowej, daty ostatniej weryfikacji, podmiotu potwierdzającego i adnotacji. Wyjaśnienia prawne oraz ograniczenia dokumentów zostały przeniesione do tych rozwijanych sekcji dla dokumentów dowodu, paszportu, ewidencji poselskiej, legitymacji kursanta i orzeczenia/zaświadczenia. Dodano również sekcję informacji dodatkowych do danych profilu i osobny moduł legitymacji studenckiej.
+
+Ważne ograniczenia:
+- pola są lokalną ewidencją i nie stanowią weryfikacji danych ani autentyczności dokumentu;
+- formularz legitymacji studenckiej nie nadaje statusu studenta i nie zastępuje dokumentu uczelni;
+- formularz ewidencji poselskiej nie potwierdza mandatu ani prawa do reprezentowania Sejmu;
+- nie dodano urzędowych kodów, MRZ, zabezpieczeń ani mechanizmów potwierdzania autentyczności;
+- dotychczasowy lokalny zapis szyfrowany pozostaje wspólnym magazynem danych.
+
+Zmiany są częścią funkcjonalnej wersji alfa. Nie uruchamiano kompilacji, testów budowania ani generowania APK.
