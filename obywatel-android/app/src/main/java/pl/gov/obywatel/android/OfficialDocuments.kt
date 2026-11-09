@@ -162,6 +162,9 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                 OfficialDocumentStore.attachments(context,type.id).forEach { Text("Załącznik: $it",color=Color(0xFF1769AA),style=MaterialTheme.typography.bodySmall) }
                 Text("Plik PDF/XML jest przechowywany jako załącznik. Aplikacja nie weryfikuje podpisu elektronicznego, pieczęci ani statusu KRK.",color=Color(0xFF667788),style=MaterialTheme.typography.bodySmall)
             }
+            DocumentPdfExportButton(type.title, local.mapKeys { (key, _) ->
+                if (key.startsWith("f")) type.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
+            })
             if(!readOnly) Button(onClick={
                 runCatching { OfficialDocumentStore.save(context,records+(type.id to local)); records=OfficialDocumentStore.load(context); status="Zapisano dane lokalnie." }
                     .onFailure { status="Błąd zapisu: ${it.message}" }
