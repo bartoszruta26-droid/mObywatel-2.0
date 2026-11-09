@@ -27,10 +27,10 @@ internal object VCardCodec {
         }
         val lines = mutableListOf("BEGIN:VCARD", "VERSION:4.0")
         if (displayName.isNotBlank()) lines += "FN:${escape(displayName)}"
-        lines += "N:${escape(structuredName.ifBlank { displayName })}"
+        lines += "N:${escapeStructured(structuredName.ifBlank { displayName })}"
         listOf("ORG", "TITLE", "TEL", "EMAIL", "URL", "ADR").forEach { key ->
             normalized[key].orEmpty().trim().takeIf { it.isNotBlank() }?.let {
-                lines += "$key:${escape(it)}"
+                lines += "$key:${if (key == "ORG" || key == "ADR") escapeStructured(it) else escape(it)}"
             }
         }
         lines += "END:VCARD"
@@ -123,7 +123,7 @@ internal object VCardCodec {
         return record
     }
 
-    private fun escape(value: String): String = value
+    private fun escapeStructured(value: String): String = value.split(";").joinToString(";") { escape(it) }\n\n    private fun escape(value: String): String = value
         .replace("\\", "\\\\")
         .replace("\n", "\\n")
         .replace(",", "\\,")
