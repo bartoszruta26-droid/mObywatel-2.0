@@ -6,6 +6,7 @@ Minimalny niezależny prototyp Android w Kotlinie i Jetpack Compose.
 
 - Material 3 i centralne tokeny kolorów/kształtów.
 - Ekran startowy demonstracyjny z kaflami usług.
+- Oryginalne piktogramy usług COI przekonwertowane do Android VectorDrawable, w tym piktogram sprawdzenia dowodu.
 - Oryginalne piktogramy systemu designu przeniesione z publicznego katalogu iOS w tym repozytorium do Android VectorDrawable:
   - DA001 — punkty karne,
   - DA002 — naruszenie środowiskowe,
@@ -31,6 +32,10 @@ Kolory i komponenty w `app/src/main/java/pl/gov/obywatel/android/ui/theme/` pozo
 ## Uruchomienie
 
 Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Projekt korzysta z Gradle Kotlin DSL i Jetpack Compose.
+
+## Źródła zasobów
+
+Piktogramy pochodzą z `iOS/Sources/Assets.xcassets/Icons/Brand/Services/` i są oznaczone licencją `LicenseRef-COI-MIT-PL` (tekst: `LICENSES/LicenseRef-COI-MIT-PL.txt`). Zweryfikowane skale odstępów i promieni znajdują się w `iOS/Sources/Tokens/Spacings.swift` oraz `iOS/Sources/Tokens/Radiuses.swift`. Szczegóły mapowania i ograniczenia opisano w `UI-DESIGN-NOTES.md`.
 
 ## Następne kroki
 
