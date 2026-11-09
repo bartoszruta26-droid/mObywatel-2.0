@@ -1868,6 +1868,17 @@ private fun DocumentDetailsScreen(
             modifier = Modifier.fillMaxWidth().height(148.dp).clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Fit
         )
+        if (documentId == "2") {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Text("Rodzaj paszportu i status reprezentanta — informacja prawna", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("W polskim prawie paszport zwykły, tymczasowy, dyplomatyczny i służbowy MSZ to odrębne rodzaje dokumentów. Paszport dyplomatyczny wydaje minister właściwy do spraw zagranicznych osobom określonym w ustawie o dokumentach paszportowych, w tym — w przewidzianych ustawą przypadkach — osobom pełniącym funkcje związane z przywilejami i immunitetami albo skierowanym do pracy w organizacjach międzynarodowych.", color = Navy, style = MaterialTheme.typography.bodySmall)
+                    Text("Reprezentant międzynarodowej organizacji pozarządowej (NGO) nie otrzymuje z samego tytułu reprezentanta odrębnego paszportu dyplomatycznego ani immunitetu. Zwykle posługuje się paszportem wydanym przez państwo obywatelstwa oraz odrębnym dokumentem mandatu, zaproszeniem lub akredytacją. O uznaniu statusu i ewentualnych przywilejach decyduje właściwa podstawa prawna i państwo przyjmujące.", color = Navy, style = MaterialTheme.typography.bodySmall)
+                    Text("Odrębną kategorią są dokumenty podróży wydawane przez niektóre organizacje międzyrządowe. Przykładowo ONZ może wydawać swoim urzędnikom laissez-passer na podstawie Konwencji o przywilejach i immunitetach Narodów Zjednoczonych z 1946 r. Nie jest to paszport dyplomatyczny państwa.", color = Navy, style = MaterialTheme.typography.bodySmall)
+                    Text("Wpis w tej aplikacji jest wyłącznie ewidencją. Nie nadaje statusu dyplomatycznego, nie stanowi akredytacji i nie potwierdza przywilejów ani immunitetów.", color = Color(0xFF805000), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
