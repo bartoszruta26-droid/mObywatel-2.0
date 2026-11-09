@@ -128,11 +128,12 @@ internal object VCardCodec {
      * to the profile keys used by the local identity editor.
      */
     fun decodeForImport(raw: String): Map<String, String> {
-        runCatching { decodeArchive(raw) }.getOrNull()?.let { return it }
-        require(raw.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) {
+        val normalized = normalizeLegacyExport(raw)
+        runCatching { decodeArchive(normalized) }.getOrNull()?.let { return repairMojibake(it) }
+        require(normalized.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) {
             "Plik vCard przekracza limit 10 MB."
         }
-        val lines = unfold(raw)
+        val lines = unfold(normalized)
         require(lines.size >= 3 && lines.first().equals("BEGIN:VCARD", true) &&
             lines.last().equals("END:VCARD", true)) { "Nieprawidłowa struktura vCard." }
 
@@ -172,7 +173,43 @@ internal object VCardCodec {
         if (first("URL").isNotBlank()) result["contactUrl"] = first("URL")
         if (first("ADR").isNotBlank()) result["contactAddress"] = first("ADR")
         require(result.isNotEmpty()) { "Wizytówka nie zawiera rozpoznawalnych danych kontaktowych." }
-        return result
+        return repairMojibake(result)
+    }
+
+    /**
+     * Older app builds wrote literal backslash-r/backslash-n separators into
+     * some archives. Accept those files without changing normal vCard text.
+     */
+    private fun normalizeLegacyExport(raw: String): String {
+        val withoutBom = raw.removePrefix("\uFEFF")
+        val hasRealLineBreak = withoutBom.contains('\n') || withoutBom.contains('\r')
+        return if (!hasRealLineBreak && withoutBom.contains("\\\\r\\\\n")) {
+            withoutBom.replace("\\\\r\\\\n", "\r\n")
+        } else withoutBom
+    }
+
+    /**
+     * Repairs common UTF-8-as-Windows-1252/Latin-1 mojibake only when clear
+     * corruption markers are present and the conversion reduces them.
+     */
+    private fun repairMojibake(values: Map<String, String>): Map<String, String> =
+        values.mapValues { (_, value) -> repairMojibake(value) }
+
+    private fun repairMojibake(value: String): String {
+        val markers = listOf("Ã", "Å", "Ä", "Â", "â€", "ðŸ")
+        if (markers.none { value.contains(it) }) return value
+        val bytes = ByteArray(value.length)
+        for (index in value.indices) {
+            val code = value[index].code
+            if (code > 0xFF) return value
+            bytes[index] = code.toByte()
+        }
+        val candidates = listOf(
+            runCatching { String(bytes, Charsets.UTF_8) }.getOrNull(),
+            runCatching { String(bytes, java.nio.charset.Charset.forName("windows-1250")) }.getOrNull()
+        ).filterNotNull()
+        fun score(text: String): Int = markers.sumOf { marker -> marker.toRegex().findAll(text).count() }
+        return candidates.minByOrNull(::score)?.takeIf { score(it) < score(value) } ?: value
     }
 
     private fun splitStructured(value: String): List<String> {
