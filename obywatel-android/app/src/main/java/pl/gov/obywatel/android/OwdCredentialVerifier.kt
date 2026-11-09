@@ -42,15 +42,37 @@ internal object OwdCredentialVerifier {
             credential.validUntilEpochSeconds <= credential.issuedAtEpochSeconds
         ) return Result(false, DataProvenance.LOCAL_USER, null, "Poświadczenie jest nieaktualne lub ma nieprawidłowe daty.")
 
+        val signatureBytes = runCatching {
+            Base64.decode(
+                credential.signatureBase64,
+                Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
+            )
+        }.getOrElse {
+            return Result(false, DataProvenance.LOCAL_USER, null, "Nieprawidłowe kodowanie podpisu.")
+        }
+        val evidenceDigest = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(signatureBytes)
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        val candidate = ShareableRecord(
+            schema = credential.schema,
+            fields = credential.fields,
+            provenance = DataProvenance.ISSUER_ATTESTED,
+            issuerId = credential.issuerId,
+            evidenceReference = "sha256:$evidenceDigest",
+            issuedAtEpochSeconds = credential.issuedAtEpochSeconds,
+            validUntilEpochSeconds = credential.validUntilEpochSeconds
+        )
+        val schemaErrors = OwdSchemaRegistry.validate(candidate)
+        if (schemaErrors.isNotEmpty()) {
+            return Result(false, DataProvenance.LOCAL_USER, null,
+                "Dane poświadczenia nie spełniają schematu OWD: ${schemaErrors.joinToString(" ")}")
+        }
+
         return try {
             val verifier = Signature.getInstance("SHA256withECDSA")
             verifier.initVerify(key)
             verifier.update(canonicalBytes(credential))
-            val signature = Base64.decode(
-                credential.signatureBase64,
-                Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
-            )
-            if (verifier.verify(signature)) {
+            if (verifier.verify(signatureBytes)) {
                 Result(true, DataProvenance.ISSUER_ATTESTED, credential.issuerId, "Podpis wystawcy jest prawidłowy.")
             } else {
                 Result(false, DataProvenance.LOCAL_USER, null, "Podpis wystawcy jest nieprawidłowy.")
