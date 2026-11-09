@@ -990,6 +990,7 @@ private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
     val context = LocalContext.current
     var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var saveMessage by remember { mutableStateOf("") }
+    var pendingDocumentOcr by remember { mutableStateOf("") }
     val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri: Uri? ->
         val image = pendingBitmap
         pendingBitmap = null
@@ -1949,6 +1950,102 @@ private fun ReadOnlyAdditionalInformationSection(fields: Map<String, String>, pr
     }
 }
 
+private fun parseDocumentOcr(kind: String, rawText: String): Map<String, String> {
+    val text = rawText.replace('\r', '\n').trim()
+    val compactLines = text.lines().map { it.trim().replace(" ", "").uppercase() }.filter { it.isNotBlank() }
+    val result = linkedMapOf<String, String>()
+    result["${kind}OcrText"] = rawText.trim()
+    fun put(key: String, value: String?) { if (!value.isNullOrBlank()) result[key] = value.trim() }
+    fun labelled(vararg labels: String): String? {
+        val pattern = Regex("(?i)^(?:${labels.joinToString("|") { Regex.escape(it) }})\\s*[:#.-]?\\s*(.+)$")
+        return text.lines().firstNotNullOfOrNull { line -> pattern.find(line.trim())?.groupValues?.getOrNull(1)?.trim() }
+    }
+    fun date(value: String?): String? {
+        if (value == null) return null
+        val digits = value.filter(Char::isDigit)
+        return when {
+            digits.length == 8 && digits.startsWith("19") || digits.length == 8 && digits.startsWith("20") ->
+                "${digits.substring(6,8)}-${digits.substring(4,6)}-${digits.substring(0,4)}"
+            digits.length == 8 -> "${digits.substring(0,2)}-${digits.substring(2,4)}-${digits.substring(4,8)}"
+            else -> value
+        }
+    }
+    val mrz = compactLines.filter { it.matches(Regex("[A-Z0-9<]{25,44}")) }
+    when (kind) {
+        "id" -> {
+            put("firstNames", labelled("Imiona", "Imię", "Given names"))
+            put("lastName", labelled("Nazwisko", "Surname"))
+            put("birthDate", date(labelled("Data urodzenia", "Date of birth")))
+            put("birthPlace", labelled("Miejsce urodzenia", "Place of birth"))
+            put("citizenship", labelled("Obywatelstwo", "Nationality"))
+            put("pesel", labelled("PESEL"))
+            put("idNumber", labelled("Seria i numer", "Numer dokumentu", "Document number"))
+            put("idIssueDate", date(labelled("Data wydania", "Date of issue")))
+            put("idExpiryDate", date(labelled("Termin ważności", "Data ważności", "Date of expiry")))
+            put("idIssuer", labelled("Organ wydający", "Authority"))
+            val first = mrz.firstOrNull { it.startsWith("ID") || it.startsWith("I<") }
+            val second = first?.let { mrz.getOrNull(mrz.indexOf(it) + 1) }
+            val names = first?.let { mrz.getOrNull(mrz.indexOf(it) + 2) }
+            if (first != null) put("idNumber", first.drop(5).take(9).replace("<", "").takeIf { it.isNotBlank() })
+            if (second != null && second.length >= 28) {
+                put("birthDate", second.substring(0,6))
+                put("sex", when (second.getOrNull(7)) { 'M' -> "M"; 'F' -> "K"; else -> null })
+                put("idExpiryDate", second.substring(8,14))
+                put("pesel", second.substring(15,24).replace("<", "").takeIf { it.any(Char::isDigit) })
+            }
+            if (names != null) {
+                val parts = names.split("<<", limit = 2)
+                put("lastName", parts.getOrNull(0)?.replace("<", " ")?.trim())
+                put("firstNames", parts.getOrNull(1)?.replace("<", " ")?.trim())
+            }
+        }
+        "passport" -> {
+            put("passportNumber", labelled("Numer paszportu", "Nr paszportu", "Passport number"))
+            put("passportHolderNames", labelled("Nazwisko i imię", "Nazwisko", "Surname"))
+            put("passportBirthPlace", labelled("Miejsce urodzenia", "Place of birth"))
+            put("passportCountry", labelled("Państwo wydania", "Country"))
+            put("passportCitizenship", labelled("Obywatelstwo", "Nationality"))
+            put("passportIssueDate", date(labelled("Data wydania", "Date of issue")))
+            put("passportExpiryDate", date(labelled("Data ważności", "Date of expiry")))
+            put("passportIssuer", labelled("Organ wydający", "Authority"))
+            val first = mrz.firstOrNull { it.startsWith("P<") }
+            val second = first?.let { mrz.getOrNull(mrz.indexOf(it) + 1) }
+            if (first != null) {
+                val parts = first.drop(5).split("<<", limit = 2)
+                put("passportHolderNames", listOf(parts.getOrNull(1), parts.getOrNull(0)).filterNotNull().joinToString(" ").replace("<", " ").trim())
+            }
+            if (second != null && second.length >= 28) {
+                put("passportNumber", second.take(9).replace("<", "").takeIf { it.isNotBlank() })
+                put("passportCountry", second.substring(10,13))
+                put("passportBirthDate", second.substring(13,19))
+                put("passportSex", when (second.getOrNull(20)) { 'M' -> "M"; 'F' -> "K"; else -> null })
+                put("passportExpiryDate", second.substring(21,27))
+            }
+        }
+        "driving" -> {
+            put("dlNumber", labelled("Numer prawa jazdy", "Nr prawa jazdy", "5"))
+            put("dlHolderNames", labelled("Nazwisko i imię", "Nazwisko", "1", "2"))
+            put("dlBirthDate", date(labelled("Data urodzenia", "3")))
+            put("dlIssueDate", date(labelled("Data wydania", "4a")))
+            put("dlExpiryDate", date(labelled("Data ważności", "4b")))
+            put("dlAuthority", labelled("Organ wydający", "4c"))
+            put("dlCategories", labelled("Kategorie", "Kategorie uprawnień", "9"))
+            put("dlCategoryDates", labelled("Daty kategorii", "10"))
+            put("dlRestrictions", labelled("Ograniczenia", "12"))
+            val categories = Regex("(?i)\\b(AM|A1|A2|A|B1|B|BE|C1|C1E|C|CE|D1|D1E|D|DE|T)\\b")
+                .findAll(text).map { it.value.uppercase() }.distinct().toList()
+            if (result["dlCategories"].isNullOrBlank() && categories.isNotEmpty()) put("dlCategories", categories.joinToString(", "))
+        }
+        "library" -> {
+            put("library1Name", labelled("Biblioteka", "Nazwa biblioteki", "Library"))
+            put("library1CardNumber", labelled("Numer karty", "Nr karty", "Card number", "ID"))
+            val numeric = Regex("(?<!\\d)\\d{6,20}(?!\\d)").find(text)?.value
+            if (result["library1CardNumber"].isNullOrBlank()) put("library1CardNumber", numeric)
+        }
+    }
+    return result.filterValues { it.isNotBlank() }
+}
+
 @Composable
 private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) {
     val context = LocalContext.current
@@ -2040,6 +2137,39 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             }.onFailure { saveMessage = "Nie udało się przetworzyć obrazu: ${it.message ?: "błąd"}" }
         }
         pendingLoyaltyImageKey = ""
+    }
+    val documentOcrPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val kind = pendingDocumentOcr
+        if (uri != null && kind.isNotBlank()) {
+            runCatching {
+                val bitmap = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+                    ?: error("Nie można odczytać wybranego zdjęcia.")
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                recognizer.process(InputImage.fromBitmap(bitmap, 0))
+                    .addOnSuccessListener { visionText ->
+                        val recognized = visionText.text
+                        if (recognized.isBlank()) {
+                            saveMessage = "OCR nie rozpoznał tekstu. Wykonaj wyraźniejsze zdjęcie całego dokumentu."
+                        } else {
+                            val parsed = parseDocumentOcr(kind, recognized)
+                            parsed.forEach { (key, value) ->
+                                if (key.endsWith("OcrText") || fields[key].isNullOrBlank()) fields[key] = value
+                            }
+                            saveMessage = "OCR rozpoznał tekst i zaproponował wartości w ${parsed.keys.count { !it.endsWith("OcrText") }} polach. Sprawdź je z oryginałem przed zapisem."
+                        }
+                        recognizer.close()
+                    }
+                    .addOnFailureListener { error ->
+                        saveMessage = "Błąd OCR: ${error.localizedMessage ?: "nie udało się rozpoznać tekstu"}"
+                        recognizer.close()
+                    }
+            }.onFailure { saveMessage = "Nie udało się przetworzyć zdjęcia: ${it.localizedMessage ?: "błąd odczytu"}" }
+        }
+        pendingDocumentOcr = ""
+    }
+    fun launchDocumentOcr(kind: String) {
+        pendingDocumentOcr = kind
+        documentOcrPicker.launch("image/*")
     }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -2196,6 +2326,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Podstawowe dane identyfikacyjne", color = Navy, fontWeight = FontWeight.Bold)
+                OutlinedButton(onClick = { launchDocumentOcr("id") }, modifier = Modifier.fillMaxWidth()) { Text("Odczytaj dane ze zdjęcia dowodu osobistego (OCR)") }
                 DemoDataField("firstNames", "Imię / imiona", fields)
                 DemoDataField("lastName", "Nazwisko", fields)
                 DemoDataField("birthDate", "Data urodzenia", fields, "DD-MM-RRRR")
@@ -2478,6 +2609,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Karty biblioteczne z różnych bibliotek", color = Navy, fontWeight = FontWeight.Bold)
+                    OutlinedButton(onClick = { launchDocumentOcr("library") }, modifier = Modifier.fillMaxWidth()) { Text("Odczytaj dane ze zdjęcia karty bibliotecznej (OCR)") }
                     Text("Możesz zapisać dane maksymalnie trzech kart. Każda karta ma osobny zestaw danych biblioteki i numeru identyfikacyjnego.",
                         color = Muted, style = MaterialTheme.typography.bodySmall)
                     (1..3).forEach { number ->
@@ -2508,6 +2640,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Dane prawa jazdy", color = Navy, fontWeight = FontWeight.Bold)
+                    OutlinedButton(onClick = { launchDocumentOcr("driving") }, modifier = Modifier.fillMaxWidth()) { Text("Odczytaj dane ze zdjęcia prawa jazdy (OCR)") }
                     DemoDataField("dlNumber", "Numer prawa jazdy", fields)
                     DemoDataField("dlHolderNames", "Imię i nazwisko posiadacza", fields)
                     DemoDataField("dlBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
@@ -2564,6 +2697,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Dane paszportowe", color = Navy, fontWeight = FontWeight.Bold)
+                OutlinedButton(onClick = { launchDocumentOcr("passport") }, modifier = Modifier.fillMaxWidth()) { Text("Odczytaj dane ze zdjęcia paszportu (OCR)") }
                 DemoDataField("passportNumber", "Numer dokumentu paszportowego", fields)
                 DemoDataField("passportCountry", "Państwo wydania", fields)
                 DemoDataField("passportIssueDate", "Data wydania", fields, "DD-MM-RRRR")
