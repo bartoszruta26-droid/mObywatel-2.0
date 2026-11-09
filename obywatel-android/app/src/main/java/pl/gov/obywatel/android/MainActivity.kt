@@ -416,6 +416,24 @@ private fun HomeScreen() {
                 }
             )
         }
+        pendingImport?.let { incoming ->
+            AlertDialog(
+                onDismissRequest = { pendingImport = null },
+                title = { Text("Import danych vCard") },
+                text = { Text("Plik zawiera ${incoming.size} pól. Import połączy je z danymi lokalnymi, zastępując wartości o tych samych nazwach. Sprawdź zakres przed zatwierdzeniem.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        runCatching {
+                            val merged = DemoIdentityStore.load(context).toMutableMap().apply { putAll(incoming) }
+                            DemoIdentityStore.save(context, merged)
+                        }.onSuccess { importStatus = "Zaimportowano ${incoming.size} pól. Dane zapisano lokalnie." }
+                            .onFailure { importStatus = "Błąd zapisu importu: ${it.message}" }
+                        pendingImport = null
+                    }) { Text("Importuj") }
+                },
+                dismissButton = { TextButton(onClick = { pendingImport = null }) { Text("Anuluj") } }
+            )
+        }
     }
 }
 
