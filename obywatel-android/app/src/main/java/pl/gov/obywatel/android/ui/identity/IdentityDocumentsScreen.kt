@@ -91,6 +91,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     var assetName by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(categories.first()) }
     var rights by remember { mutableStateOf("") }
+    var templateName by remember { mutableStateOf("Mój szablon") }
     var title by remember { mutableStateOf("Zaświadczenie") }
     var number by remember { mutableStateOf("OWD/2026/0001") }
     var recipient by remember { mutableStateOf("") }
@@ -203,6 +204,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                 }
                 "Dokumenty" -> {
                     OrgChoice(orgs,orgId){orgId=it}
+                    OutlinedTextField(templateName,{templateName=it},label={Text("Nazwa szablonu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(title,{title=it},label={Text("Tytuł dokumentu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(number,{number=it},label={Text("Numer dokumentu / rejestru")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(recipient,{recipient=it},label={Text("Adresat / przedmiot")},modifier=Modifier.fillMaxWidth(),minLines=2)
@@ -218,6 +220,33 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     AssetChoice("Herb / godło",assets.filter{it.orgId==orgId&&(it.category=="Herb"||it.category=="Godło")},emblemId){emblemId=it}
                     AssetChoice("Hologram / zabezpieczenie",assets.filter{it.orgId==orgId&&(it.category=="Hologram / zabezpieczenie"||it.category=="Znak wodny")},securityId){securityId=it}
                     Card { Column(Modifier.padding(12.dp)){Text("Podgląd",fontWeight=FontWeight.Bold);Text(orgs.firstOrNull{it.id==orgId}?.name ?: "Podmiot");Text(title,style=MaterialTheme.typography.titleLarge);Text("Nr "+number);Text(recipient);Text(body);Text(role+" "+signer);Text("Znak wodny: "+watermark)} }
+                    OutlinedButton(onClick={
+                        runCatching {
+                            val prefs=c.getSharedPreferences("owd_document_templates",0)
+                            val all=JSONArray(prefs.getString("templates","[]"))
+                            all.put(JSONObject().put("name",templateName).put("orgId",orgId).put("title",title).put("number",number)
+                                .put("recipient",recipient).put("body",body).put("signer",signer).put("role",role).put("watermark",watermark)
+                                .put("logoId",logoId).put("sealId",sealId).put("signatureId",signatureId)
+                                .put("backgroundId",backgroundId).put("flagId",flagId).put("emblemId",emblemId).put("securityId",securityId)
+                                .put("savedAt",System.currentTimeMillis()))
+                            check(prefs.edit().putString("templates",all.toString()).commit())
+                            message="Zapisano szablon: "+templateName
+                        }.onFailure{message=it.message ?: "Nie udało się zapisać szablonu."}
+                    },modifier=Modifier.fillMaxWidth()){Text("Zapisz szablon")}
+                    OutlinedButton(onClick={
+                        runCatching {
+                            val all=JSONArray(c.getSharedPreferences("owd_document_templates",0).getString("templates","[]"))
+                            require(all.length()>0){"Brak zapisanych szablonów."}
+                            val t=all.getJSONObject(all.length()-1)
+                            templateName=t.optString("name","Mój szablon");orgId=t.optString("orgId",orgId)
+                            title=t.optString("title",title);number=t.optString("number",number);recipient=t.optString("recipient",recipient)
+                            body=t.optString("body",body);signer=t.optString("signer",signer);role=t.optString("role",role)
+                            watermark=t.optString("watermark",watermark);logoId=t.optString("logoId","");sealId=t.optString("sealId","")
+                            signatureId=t.optString("signatureId","");backgroundId=t.optString("backgroundId","")
+                            flagId=t.optString("flagId","");emblemId=t.optString("emblemId","");securityId=t.optString("securityId","")
+                            message="Wczytano ostatnio zapisany szablon."
+                        }.onFailure{message=it.message ?: "Nie udało się wczytać szablonu."}
+                    },modifier=Modifier.fillMaxWidth()){Text("Wczytaj ostatni szablon")}
                     Button(onClick={pdfSaver.launch(number.replace('/','-')+".pdf")},enabled=orgId.isNotBlank(),modifier=Modifier.fillMaxWidth()){Icon(Icons.Default.PictureAsPdf,null);Text(" Eksportuj PDF")}
                     OutlinedButton(onClick={
                         val u=lastPdf
