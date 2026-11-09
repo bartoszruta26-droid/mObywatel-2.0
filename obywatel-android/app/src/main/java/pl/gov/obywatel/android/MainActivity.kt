@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+// SPDX-License-Identifier: CC0-1.0
+
 package pl.gov.obywatel.android
 
 import android.os.Bundle
