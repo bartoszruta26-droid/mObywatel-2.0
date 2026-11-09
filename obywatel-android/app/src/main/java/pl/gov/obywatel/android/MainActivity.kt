@@ -170,14 +170,13 @@ private fun HomeScreen() {
                     )
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
-                            Header()
+                            if (selectedTab == 0) Header()
                             Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
-                                PrototypeNotice()
-                                Spacer(Modifier.height(18.dp))
+                                if (selectedTab == 0) PrototypeNotice()
                                 SectionHeading(
-                                    if (selectedTab == 1) "Usługi" else "Twoje usługi",
-                                    if (selectedTab == 1) "Wszystkie dostępne obszary" else "Wybierz obszar"
+                                    if (selectedTab == 1) "Wszystkie usługi" else "Szybki dostęp",
+                                    if (selectedTab == 1) "Katalog dostępnych modułów" else "Najczęściej używane obszary"
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 LazyVerticalGrid(
@@ -186,7 +185,7 @@ private fun HomeScreen() {
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    items(services) { service ->
+                                    items(if (selectedTab == 1) services else services.take(4)) { service ->
                                         ServiceCard(service) { openService(service.title) }
                                     }
                                 }
