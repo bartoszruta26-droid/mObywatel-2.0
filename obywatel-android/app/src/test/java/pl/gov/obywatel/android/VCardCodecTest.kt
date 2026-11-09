@@ -30,6 +30,29 @@ class VCardCodecTest {
     }
 
     @Test
+    fun importsArchiveWithLfOnlyLineEndings() {
+        val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski")
+        val encoded = VCardCodec.encodeArchive(source).replace("\\r\\n", "\\n")
+        assertEquals(source, VCardCodec.decodeForImport(encoded))
+    }
+
+    @Test
+    fun importsArchiveWithCrOnlyLineEndings() {
+        val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski")
+        val encoded = VCardCodec.encodeArchive(source).replace("\\r\\n", "\\r")
+        assertEquals(source, VCardCodec.decodeForImport(encoded))
+    }
+
+    @Test
+    fun importsArchiveWithMixedPhysicalAndEscapedLineEndings() {
+        val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski", "notes" to "Linia 1")
+        val encoded = VCardCodec.encodeArchive(source)
+            .replaceFirst("\\r\\n", "\\n")
+            .replace("X-OWD-ARCHIVE-VERSION:1\\r\\n", "X-OWD-ARCHIVE-VERSION:1\\\\r\\\\n")
+        assertEquals(source, VCardCodec.decodeForImport(encoded))
+    }
+
+    @Test
     fun repairsPolishUtf8TextPreviouslyDecodedAsWindows1250() {
         val input = """BEGIN:VCARD
 VERSION:3.0
