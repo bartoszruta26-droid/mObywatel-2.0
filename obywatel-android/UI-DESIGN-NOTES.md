@@ -142,3 +142,18 @@ Każda z ośmiu pozycji portfela otwiera osobny ekran szczegółów. Widok odczy
 Z ekranu szczegółów można wrócić do portfela albo przejść do formularza edycji. Edycja nadal wykorzystuje wspólny formularz danych — nie wprowadzono jeszcze automatycznego przewijania do konkretnej sekcji ani osobnych formularzy dla każdej kategorii. Widok szczegółów nie ujawnia danych na ekranie zbiorczym portfela; są one prezentowane dopiero po świadomym otwarciu danej pozycji.
 
 Każdy ekran szczegółów zawiera oznaczenie „EWIDENCJA LOKALNA • DEMO” oraz informację, że dane nie są weryfikowane w rejestrach publicznych i nie potwierdzają autentyczności dokumentu ani uprawnień. Nie dodano urzędowych wzorów, kodów ani zabezpieczeń.
+
+
+## Zasada dostępu do edycji — menu Ustawienia
+
+Wprowadzono jednoznaczną regułę nawigacji: edycja danych osobowych i ewidencji dokumentów jest dostępna wyłącznie przez menu „Ustawienia”, otwierane ikoną koła zębatego w nagłówku głównego ekranu Start. Katalog usług również kieruje pozycję „Ustawienia” do tego samego menu.
+
+Portfel dokumentów oraz ekrany szczegółów wszystkich ośmiu kategorii są widokami tylko do odczytu. Usunięto z nich przyciski i bezpośrednie przejścia do formularzy edycji. Ekrany informują, że zmian można dokonać po powrocie do ekranu głównego i otwarciu Ustawień.
+
+Menu Ustawienia zawiera oddzielne wejścia do:
+- edycji profilu i lokalnej ewidencji dokumentów;
+- edycji danych o niepełnosprawności, orzeczeniach i zaświadczeniach.
+
+Po zamknięciu formularza użytkownik wraca do menu Ustawienia. Zapis pozostaje lokalny i szyfrowany. Nie dodano integracji z rejestrami ani potwierdzania statusów.
+
+Reguła dotyczy wszystkich ścieżek interfejsu: żadna karta portfela, ekran szczegółów ani ekran profilu nie udostępnia bezpośredniej edycji.
