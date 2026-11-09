@@ -773,6 +773,49 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
 }
 
 @Composable
+
+@Composable
+private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
+    val context = LocalContext.current
+    var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var saveMessage by remember { mutableStateOf("") }
+    val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri: Uri? ->
+        val image = pendingBitmap
+        pendingBitmap = null
+        if (uri == null) {
+            saveMessage = "Zapis obrazu anulowano."
+        } else if (image == null) {
+            saveMessage = "Brak obrazu do zapisania. Wygeneruj kod ponownie."
+        } else {
+            runCatching {
+                val output = context.contentResolver.openOutputStream(uri, "wt")
+                    ?: error("Android nie udostępnił strumienia zapisu.")
+                output.use { stream ->
+                    check(image.compress(Bitmap.CompressFormat.PNG, 100, stream)) { "Nie udało się zakodować obrazu PNG." }
+                    stream.flush()
+                }
+                val saved = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+                    ?: error("Nie można ponownie odczytać zapisanego obrazu.")
+                require(saved.width == image.width && saved.height == image.height) {
+                    "Weryfikacja zapisu PNG nie powiodła się."
+                }
+                "Zapisano grafikę QR jako PNG (${saved.width} × ${saved.height} px)."
+            }.onSuccess { saveMessage = it }
+                .onFailure { saveMessage = "Błąd zapisu grafiki: ${it.message ?: "nieznany błąd"}" }
+        }
+    }
+    OutlinedButton(
+        onClick = {
+            pendingBitmap = bitmap
+            saveLauncher.launch(fileName)
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) { Text("Zapisz grafikę QR (PNG)") }
+    if (saveMessage.isNotBlank()) {
+        Text(saveMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
 private fun WebsiteQrScreen() {
     val context = LocalContext.current
     var address by remember { mutableStateOf("https://") }
@@ -802,6 +845,7 @@ private fun WebsiteQrScreen() {
                     Text("Kod QR strony", color = Navy, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR strony internetowej", modifier = Modifier.size(260.dp), contentScale = ContentScale.Fit)
                      Text(normalized, color = Muted, style = MaterialTheme.typography.bodySmall)
+                    SaveQrImageButton(qrBitmap, "adres-url-qr.png")
                 }
             }
         } else Text(if (!validUrl) "Podaj poprawny adres rozpoczynający się od http:// lub https://." else "Wybierz logo z pliku albo ustaw opcję „Bez znaku”.", color = Muted, style = MaterialTheme.typography.bodySmall)
@@ -898,6 +942,7 @@ private fun VCardQrScreen() {
                 Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Twój kod QR", color = Navy, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR z wizytówką vCard", modifier = Modifier.size(250.dp), contentScale = ContentScale.Fit)
+                    SaveQrImageButton(qrBitmap, "wizytowka-vcard-qr.png")
                   }
             }
         } else {
