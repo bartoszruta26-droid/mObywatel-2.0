@@ -171,11 +171,27 @@ private fun HomeScreen() {
     var exportSnapshot by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     val exportVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/vcard")) { uri ->
         if (uri != null) runCatching {
+            require(exportSnapshot.isNotEmpty()) { "Brak zapisanych danych do eksportu." }
             val payload = VCardCodec.encodeArchive(exportSnapshot)
-            context.contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use { it.write(payload) }
-                ?: error("Nie można zapisać pliku.")
-        }.onSuccess { importStatus = "Wyeksportowano dane do pliku vCard." }
+            val bytes = payload.toByteArray(Charsets.UTF_8)
+            val output = context.contentResolver.openOutputStream(uri, "wt")
+                ?: error("Android nie udostępnił strumienia zapisu dla wybranego pliku.")
+            output.use {
+                it.write(bytes)
+                it.flush()
+            }
+            val writtenBytes = context.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize }
+                ?: -1L
+            require(writtenBytes > 0L) { "Plik został utworzony, ale jest pusty lub nie można potwierdzić zapisu." }
+            require(writtenBytes == bytes.size.toLong()) {
+                "Niepełny zapis pliku vCard: zapisano ${writtenBytes} z ${bytes.size} bajtów."
+            }
+            "Zapisano ${exportSnapshot.size} pól (${bytes.size} bajtów) do pliku vCard."
+        }.onSuccess { importStatus = it }
             .onFailure { importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}" }
+        else {
+            importStatus = "Eksport anulowany — plik nie został zapisany."
+        }
     }
     val importVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
@@ -244,8 +260,12 @@ private fun HomeScreen() {
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
                         onExportAll = {
                             exportSnapshot = DemoIdentityStore.load(context)
-                            runCatching { VCardCodec.encodeArchive(exportSnapshot) }
-                                .onSuccess { exportVCardLauncher.launch("obywatel-archiwum.vcf") }
+                            runCatching {
+                                require(exportSnapshot.isNotEmpty()) {
+                                    "Brak zapisanych danych. Najpierw uzupełnij i zapisz dane w ustawieniach."
+                                }
+                                VCardCodec.encodeArchive(exportSnapshot)
+                            }.onSuccess { exportVCardLauncher.launch("obywatel-archiwum.vcf") }
                                 .onFailure { importStatus = "Nie można przygotować eksportu: ${it.message}" }
                         },
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
