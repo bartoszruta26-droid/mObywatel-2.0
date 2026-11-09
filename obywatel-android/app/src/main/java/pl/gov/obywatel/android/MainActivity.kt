@@ -551,7 +551,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Orzeczenia i zaświadczenia", "Ewidencja danych o rozstrzygnięciach",
             Icons.Filled.HealthAndSafety, onEditDisability)
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
-            Icons.Filled.FolderOpen, { onEditDocuments("all") })
+            Icons.Filled.Description, { onEditDocuments("all") })
         Text("Zmiany są zapisywane lokalnie w zaszyfrowanym magazynie prototypu. Nie są wysyłane do rejestrów ani podmiotów publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
