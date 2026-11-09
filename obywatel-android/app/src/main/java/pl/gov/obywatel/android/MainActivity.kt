@@ -705,7 +705,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
             modifier = Modifier.fillMaxWidth(), label = { Text("Cel udostępnienia") }, minLines = 2)
         Row(verticalAlignment = Alignment.CenterVertically) {
             androidx.compose.material3.Checkbox(checked = consent, onCheckedChange = { consent = it; offerQr = null })
-            Text("Potwierdzam świadomy wybór zakresu i celu. Rozumiem, że dane wpisane ręcznie są deklaracją, a nie potwierdzeniem urzędowym.", color = Ink, style = MaterialTheme.typography.bodySmall)
+            Text("Potwierdzam świadomy wybór zakresu i celu udostępnienia danych.", color = Ink, style = MaterialTheme.typography.bodySmall)
         }
         QrBrandingControls(
             branding = qrBranding,
@@ -1048,7 +1048,7 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         if (title == "Zdrowie") {
             ProfileActionCard("Dane o niepełnosprawności", "Otwórz ewidencję dokumentów i wskazań", Icons.Filled.HealthAndSafety, onOpenDocuments)
         }
-        Text("Dostępne funkcje będą oznaczane bezpośrednio w module. Nie prezentujemy fikcyjnych potwierdzeń, płatności, biletów ani statusów urzędowych.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Dostępne funkcje i zakres danych są opisane bezpośrednio w poszczególnych modułach.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -1466,7 +1466,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                 }
             }
         }
-        Text("Portfel jest przeznaczony do przeglądania. Zmiana danych jest dostępna wyłącznie w menu Ustawienia otwieranym z ekranu głównego. Karty nie są dokumentami państwowymi, nie nadają uprawnień i nie zastępują oryginałów.",
+        Text("Portfel służy do przeglądania zapisanych kart. Zmiana danych jest dostępna w menu Ustawienia otwieranym z ekranu głównego.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
