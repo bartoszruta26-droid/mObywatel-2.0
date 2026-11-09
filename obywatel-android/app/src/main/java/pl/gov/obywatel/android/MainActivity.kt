@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
 import pl.gov.obywatel.android.ui.home.HomeScreen
 import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
+import pl.gov.obywatel.android.ui.services.PublicServicesScreen
 import pl.gov.obywatel.android.ui.navigation.ObywatelBottomNavigation
 import pl.gov.obywatel.android.ui.registry.RegistryScreen
 import pl.gov.obywatel.android.ui.sections.SectionScreen
@@ -43,6 +44,7 @@ class MainActivity : ComponentActivity() {
                             "documents" -> DocumentsScreen(onBack = { route = "home" })
                             "registry" -> RegistryScreen(onBack = { route = "home" })
                             "identity" -> IdentityDocumentsScreen(onBack = { route = "home" })
+                            "services" -> PublicServicesScreen(onBack = { route = "home" })
                             else -> SectionScreen(sectionId = route, onBack = { route = "home" })
                         }
                     }
