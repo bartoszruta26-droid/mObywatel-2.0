@@ -420,7 +420,7 @@ private fun HomeScreen() {
                                                                 "1" -> Icons.Filled.CreditCard
                                                                 "2" -> Icons.Filled.Public
                                                                 "registry" -> Icons.Filled.AccountBalance
-                                                                "signedpdf" -> Icons.Filled.Verified
+                                                                "signedpdf" -> Icons.Filled.Shield
                                                                 else -> Icons.Filled.Badge
                                                             },
                                                             contentDescription = null,
