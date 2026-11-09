@@ -180,11 +180,11 @@ private fun HomeScreen() {
                 it.write(bytes)
                 it.flush()
             }
-            val writtenBytes = context.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize }
-                ?: -1L
-            require(writtenBytes > 0L) { "Plik został utworzony, ale jest pusty lub nie można potwierdzić zapisu." }
-            require(writtenBytes == bytes.size.toLong()) {
-                "Niepełny zapis pliku vCard: zapisano ${writtenBytes} z ${bytes.size} bajtów."
+            val savedBytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: error("Nie można ponownie odczytać zapisanego pliku vCard.")
+            require(savedBytes.isNotEmpty()) { "Zapisany plik vCard jest pusty." }
+            require(savedBytes.contentEquals(bytes)) {
+                "Weryfikacja zapisu nie powiodła się: zawartość pliku różni się od eksportowanych danych."
             }
             "Zapisano ${exportSnapshot.size} pól (${bytes.size} bajtów) do pliku vCard."
         }.onSuccess { importStatus = it }
