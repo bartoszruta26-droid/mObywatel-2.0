@@ -332,6 +332,7 @@ private fun HomeScreen() {
                     activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null })
                     activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
                     activeService == "Historia chorób" -> MedicalHistoryRecordsScreen(onBack = { activeService = null })
+                    activeService == "Historia działań" -> ActivityHistoryScreen(onBack = { activeService = null })
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
@@ -346,10 +347,19 @@ private fun HomeScreen() {
                     )
                     selectedTab == 3 -> QrToolsScreen()
                     selectedTab == 4 -> MoreMenuScreen(
-                        onOpenSettings = { showSettingsMenu = true },
-                        onOpenCertificates = { showCertificates = true },
+                        onOpenSettings = {
+                            ActivityHistoryStore.record(context, "Ustawienia", "Otwarto ustawienia")
+                            showSettingsMenu = true
+                        },
+                        onOpenCertificates = {
+                            ActivityHistoryStore.record(context, "Certyfikaty", "Otwarto rejestr certyfikatów i zaświadczeń")
+                            showCertificates = true
+                        },
                         onOpenHelp = { activeService = "Pomoc i informacje" },
-                        onOpenHistory = { activeService = "Historia działań" }
+                        onOpenHistory = {
+                            ActivityHistoryStore.record(context, "Nawigacja", "Otwarto historię działań")
+                            activeService = "Historia działań"
+                        }
                     )
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
@@ -494,6 +504,7 @@ private fun HomeScreen() {
             BottomNavigation(
                 selectedTab = selectedTab,
                 onSelect = {
+                    ActivityHistoryStore.record(context, "Nawigacja", "Otwarto zakładkę: " + listOf("Pulpit", "Dokumenty", "Usługi", "Kod QR", "Więcej").getOrElse(it) { "Inna" })
                     selectedTab = it
                     activeService = null
                     showDemoDocuments = false
@@ -1238,12 +1249,13 @@ private fun MoreMenuScreen(
     ) {
         Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Informacje, bezpieczeństwo i ustawienia", color = Muted, style = MaterialTheme.typography.bodySmall)
-        ProfileActionCard("Historia działań", "Lokalna lista czynności w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
-        ProfileActionCard("Wydane certyfikaty", "Informacje o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
-        ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
-        ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
-        ProfileActionCard("Ustawienia", "Dane lokalne, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
-        ProfileActionCard("Informacje prawne", "Prywatność i zasady korzystania", Icons.Filled.Description, onOpenHelp)
+        ProfileActionCard("Historia działań", "Chronologiczny rejestr czynności wykonywanych w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
+        ProfileActionCard("Certyfikaty i zaświadczenia", "Rejestr dokumentów, uprawnień i danych wystawcy", Icons.Filled.Security, onOpenCertificates)
+        ProfileActionCard("Powiadomienia i komunikaty", "Informacje o statusach, przypomnieniach i ważności dokumentów", Icons.Filled.NotificationsNone, onOpenHelp)
+        ProfileActionCard("Pomoc i instrukcje", "Obsługa aplikacji, import, eksport i bezpieczeństwo danych", Icons.Filled.Info, onOpenHelp)
+        ProfileActionCard("Ustawienia i prywatność", "Dane lokalne, preferencje i kontrola informacji", Icons.Filled.Settings, onOpenSettings)
+        ProfileActionCard("Informacje prawne", "Charakter ewidencji, zasady przetwarzania i ograniczenia dokumentów", Icons.Filled.Description, onOpenHelp)
+        ProfileActionCard("Informacje o aplikacji", "Wersja, zakres funkcji i status integracji", Icons.Filled.Info, onOpenHelp)
     }
 }
 
@@ -1621,6 +1633,10 @@ private fun CertificatesScreen(onBack: () -> Unit) {
         Text("Zaświadczenia", color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text("Zapisane dane dokumentów i zaświadczeń", color = Muted, style = MaterialTheme.typography.bodySmall)
+        val hasTrainingCertificate = listOf("trainingCourseName", "trainingCardNumber", "trainingInstitution").any { !fields[it].isNullOrBlank() }
+        val hasEducationCertificate = listOf("studentCardNumber", "studentUniversity", "studentCourseName", "studentDiplomaNumber").any { !fields[it].isNullOrBlank() }
+        Text("Rejestr certyfikatów i zaświadczeń", color = Navy, fontWeight = FontWeight.Bold)
+        Text("Zestawienie danych dokumentów zapisanych w profilu. Wpis w tej aplikacji nie oznacza, że dokument został wystawiony, zweryfikowany lub uznany przez organ zewnętrzny.", color = Muted, style = MaterialTheme.typography.bodySmall)
         if (hasDisabilityData) {
             Text("Orzeczenie / zaświadczenie o niepełnosprawności", color = Navy, fontWeight = FontWeight.Bold)
             DisabilityDecisionPreview(fields)
@@ -1641,13 +1657,44 @@ private fun CertificatesScreen(onBack: () -> Unit) {
                     }
                 }
             }
-        } else {
+        }
+        if (hasTrainingCertificate) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Legitymacja / dokument uczestnictwa w szkoleniu", color = Navy, fontWeight = FontWeight.Bold)
+                    listOf("trainingInstitution" to "Instytucja", "trainingCourseName" to "Kurs / kwalifikacja",
+                        "trainingCardNumber" to "Numer dokumentu", "trainingValidUntil" to "Ważność").forEach { (key, label) ->
+                        fields[key].orEmpty().takeIf { it.isNotBlank() }?.let { Text("$label: $it", color = Ink, style = MaterialTheme.typography.bodySmall) }
+                    }
+                    Text("Status: dane zapisane w profilu — brak automatycznej weryfikacji wystawcy.", color = Muted, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+        if (hasEducationCertificate) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Dokumenty edukacyjne", color = Navy, fontWeight = FontWeight.Bold)
+                    listOf("studentUniversity" to "Uczelnia / szkoła", "studentCourseName" to "Kierunek / kurs",
+                        "studentCardNumber" to "Numer legitymacji", "studentDiplomaNumber" to "Numer dyplomu").forEach { (key, label) ->
+                        fields[key].orEmpty().takeIf { it.isNotBlank() }?.let { Text("$label: $it", color = Ink, style = MaterialTheme.typography.bodySmall) }
+                    }
+                    Text("Status: dane ewidencyjne użytkownika.", color = Muted, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+        if (!hasDisabilityData && !hasTrainingCertificate && !hasEducationCertificate) {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     Icon(Icons.Filled.Description, contentDescription = null, tint = Blue, modifier = Modifier.size(30.dp))
-                    Text("Brak zapisanych danych", color = Navy, fontWeight = FontWeight.Bold)
-                    Text("Dodaj dane o niepełnosprawności w Ustawieniach. Po zapisaniu pojawią się tutaj.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text("Brak zapisanych certyfikatów i zaświadczeń", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Uzupełnij odpowiednie dane w edycji dokumentów. Zostaną zestawione w tym rejestrze.", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
+            }
+        }
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+            Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("Ważne rozróżnienie", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Aplikacja może przechowywać dane o certyfikacie, zaświadczeniu, orzeczeniu, legitymacji lub uprawnieniu. Nie wystawia dokumentów w imieniu szkoły, fundacji, pracodawcy ani organu publicznego. Status „wystawiony” powinien wynikać z rzeczywistego dokumentu źródłowego i być potwierdzony przez jego wystawcę.", color = Navy, style = MaterialTheme.typography.bodySmall)
             }
         }
      }
