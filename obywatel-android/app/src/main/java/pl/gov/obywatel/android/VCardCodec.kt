@@ -181,11 +181,27 @@ internal object VCardCodec {
      * some archives. Accept those files without changing normal vCard text.
      */
     private fun normalizeLegacyExport(raw: String): String {
-        val withoutBom = raw.removePrefix("\uFEFF")
-        val hasRealLineBreak = withoutBom.contains('\n') || withoutBom.contains('\r')
-        return if (!hasRealLineBreak && withoutBom.contains("\\r\\n")) {
-            withoutBom.replace("\\r\\n", "\r\n")
-        } else withoutBom
+        var text = raw.removePrefix("\uFEFF")
+        val hasPhysicalSeparators = text.contains('\n') || text.contains('\r')
+
+        // Some previous exports mixed real line endings with the two-character
+        // escape sequences "\\r\\n", "\\n" or "\\r". Repair escaped
+        // separators only when they occur immediately before a vCard line,
+        // so literal backslash sequences inside property values are preserved.
+        if (hasPhysicalSeparators) {
+            val nextProperty = "(?=(?:BEGIN:VCARD|END:VCARD|[A-Za-z0-9.-]+(?:;[^:\\r\\n]*)?:))"
+            text = text.replace(Regex("\\\\\\\\r\\\\\\\n$nextProperty", RegexOption.IGNORE_CASE), "\\r\\n")
+            text = text.replace(Regex("\\\\\\\\n$nextProperty", RegexOption.IGNORE_CASE), "\\n")
+            text = text.replace(Regex("\\\\\\\\r$nextProperty", RegexOption.IGNORE_CASE), "\\r")
+        } else {
+            text = text.replace("\\\\r\\\\n", "\\r\\n")
+                .replace("\\\\n", "\\n")
+                .replace("\\\\r", "\\r")
+        }
+
+        // RFC 6350 files may use CRLF; legacy writers also emitted LF, CR,
+        // or mixtures. The parser receives one canonical separator.
+        return text.replace("\\r\\n", "\\n").replace('\\r', '\\n')
     }
 
     /**
