@@ -758,18 +758,9 @@ private fun parseVCardContact(raw: String): Map<String, String> {
     return result
 }
 
-private fun buildVCardPayload(fields: Map<String, String>): String {
-    if (fields["FN"].orEmpty().isBlank() && fields["N"].orEmpty().isBlank()) return ""
-    fun escape(value: String): String = value.trim().replace("\\", "\\\\").replace("\n", "\\n").replace(";", "\\;").replace(",", "\\,")
-    val lines = mutableListOf("BEGIN:VCARD", "VERSION:3.0")
-    fields["FN"].orEmpty().trim().takeIf { it.isNotBlank() }?.let { lines += "FN:" + escape(it) }
-    fields["N"].orEmpty().trim().takeIf { it.isNotBlank() }?.let { lines += "N:" + escape(it) }
-    listOf("ORG", "TITLE", "TEL", "EMAIL", "URL", "ADR").forEach { key ->
-        fields[key].orEmpty().trim().takeIf { it.isNotBlank() }?.let { lines += key + ":" + escape(it) }
-    }
-    lines += "END:VCARD"
-    return lines.joinToString("\r\n")
-}
+private fun buildVCardPayload(fields: Map<String, String>): String =
+    VCardCodec.encodeContact(fields)
+
 @Composable
 private fun CivicIllustrationBanner(imageRes: Int, description: String) {
     Image(
