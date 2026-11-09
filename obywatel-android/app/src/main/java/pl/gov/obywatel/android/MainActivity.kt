@@ -463,7 +463,7 @@ private fun HomeScreen() {
                 }
             )
             Text(
-                "Niezależny projekt demonstracyjny • brak oficjalnego statusu i połączenia z rejestrami publicznymi",
+                "Aplikacja obywatelska • dane urzędowe wymagają potwierdzenia przez właściwy dokument lub rejestr",
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
                 color = Muted,
                 style = MaterialTheme.typography.labelSmall
@@ -571,17 +571,19 @@ private fun loadQrLogo(context: Context, uri: Uri): Bitmap {
 }
 
 /**
- * Generates a standards-compliant QR bitmap without any graphic overlay.
- * Branding is rendered beside the QR by QrBrandMark; no logo or emblem may
- * cover data modules, finder patterns, timing patterns or the quiet zone.
+ * Generuje kod QR z korekcją błędów H i umieszcza znak graficzny centralnie.
+ * Logo jest ograniczone do 9% szerokości kodu, z białym polem ochronnym.
+ * Mały rozmiar i korekcja H ograniczają ryzyko utraty czytelności; odczyt
+ * należy dodatkowo sprawdzać dla każdego rodzaju ładunku i użytego logo.
  */
 private fun generateBrandedQr(context: Context, payload: String, branding: String, uploadedLogo: Bitmap?): Bitmap {
     require(payload.isNotBlank()) { "Treść kodu QR jest pusta." }
-    when (branding) {
+    val logo = when (branding) {
         QR_BRAND_STATE -> requireNotNull(BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)) {
-            "Nie można wczytać godła państwowego."
+            "Nie można wczytać godła."
         }
         QR_BRAND_FILE -> requireNotNull(uploadedLogo) { "Wybierz plik z logo." }
+        else -> null
     }
     val hints = mapOf<EncodeHintType, Any>(
         EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H,
@@ -595,30 +597,31 @@ private fun generateBrandedQr(context: Context, payload: String, branding: Strin
             bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
         }
     }
+    if (logo != null) {
+        val canvas = Canvas(bitmap)
+        val side = matrix.width * 0.09f
+        val padding = matrix.width * 0.018f
+        val box = side + padding * 2f
+        val left = (matrix.width - box) / 2f
+        val top = (matrix.height - box) / 2f
+        val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            style = Paint.Style.FILL
+        }
+        canvas.drawRoundRect(RectF(left, top, left + box, top + box), box * 0.12f, box * 0.12f, backgroundPaint)
+        val scale = side / maxOf(logo.width, logo.height).toFloat()
+        val width = logo.width * scale
+        val height = logo.height * scale
+        val destination = RectF(
+            (matrix.width - width) / 2f,
+            (matrix.height - height) / 2f,
+            (matrix.width + width) / 2f,
+            (matrix.height + height) / 2f
+        )
+        val logoPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        canvas.drawBitmap(logo, null, destination, logoPaint)
+    }
     return bitmap
-}
-
-@Composable
-private fun QrBrandMark(branding: String, uploadedLogo: Bitmap?) {
-    val context = LocalContext.current
-    val mark = remember(branding, uploadedLogo) {
-        when (branding) {
-            QR_BRAND_STATE -> BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
-            QR_BRAND_FILE -> uploadedLogo
-            else -> null
-        }
-    }
-    mark?.let {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentDescription = if (branding == QR_BRAND_STATE) "Godło państwowe — poza kodem QR" else "Logo — poza kodem QR",
-                modifier = Modifier.size(44.dp),
-                contentScale = ContentScale.Fit
-            )
-            Text("Znak poza kodem QR", color = Muted, style = MaterialTheme.typography.labelSmall)
-        }
-    }
 }
 
 @Composable
@@ -745,8 +748,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Oferta sesji OWD • ważność 180 sekund", color = Navy, fontWeight = FontWeight.Bold)
                     Image(bitmap.asImageBitmap(), contentDescription = "Kod QR oferty sesji OWD", modifier = Modifier.size(250.dp))
-                    QrBrandMark(qrBranding, qrUploadedLogo)
-                    Text("To inicjuje sesję kryptograficzną. Skaner OWD potrafi rozpoznać i zweryfikować ofertę; wymiana kluczy, przesłanie rekordów i potwierdzenie odbioru wymagają jeszcze pełnego połączenia obu urządzeń.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                     Text("To inicjuje sesję kryptograficzną. Skaner OWD potrafi rozpoznać i zweryfikować ofertę; wymiana kluczy, przesłanie rekordów i potwierdzenie odbioru wymagają jeszcze pełnego połączenia obu urządzeń.", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -791,8 +793,7 @@ private fun WebsiteQrScreen() {
                 Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Kod QR strony", color = Navy, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR strony internetowej", modifier = Modifier.size(260.dp), contentScale = ContentScale.Fit)
-                    QrBrandMark(branding, uploadedLogo)
-                    Text(normalized, color = Muted, style = MaterialTheme.typography.bodySmall)
+                     Text(normalized, color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
             }
         } else Text(if (!validUrl) "Podaj poprawny adres rozpoczynający się od http:// lub https://." else "Wybierz logo z pliku albo ustaw opcję „Bez znaku”.", color = Muted, style = MaterialTheme.typography.bodySmall)
@@ -837,8 +838,8 @@ private fun VCardQrScreen() {
         Text("Utwórz kod QR zawierający wizytówkę vCard. Zgodna aplikacja odbiorcy może odczytać dane i zaproponować zapis kontaktu.", color = Muted, style = MaterialTheme.typography.bodyMedium)
         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("To nie jest kod urzędowy", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Kod vCard nie jest kodem mObywatela. Nie potwierdza tożsamości, dokumentów, uprawnień ani danych w rejestrach państwowych.", color = Ink, style = MaterialTheme.typography.bodySmall)
+                Text("Wizytówka kontaktowa", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Kod zawiera dane kontaktowe wybrane przez użytkownika.", color = Ink, style = MaterialTheme.typography.bodySmall)
             }
         }
         OutlinedButton(onClick = { vCardPicker.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth()) {
@@ -883,8 +884,7 @@ private fun VCardQrScreen() {
                     Text("Twój kod QR", color = Navy, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR z wizytówką vCard", modifier = Modifier.size(250.dp), contentScale = ContentScale.Fit)
                     QrBrandMark(branding, uploadedLogo)
-                    Text("Wizytówka vCard • bez weryfikacji urzędowej", color = Muted, style = MaterialTheme.typography.labelSmall)
-                }
+                 }
             }
         } else {
             Text(if (branding == QR_BRAND_FILE && uploadedLogo == null) "Wybierz logo z pliku albo ustaw opcję „Bez znaku”." else "Wpisz co najmniej nazwę kontaktu, aby wygenerować kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
@@ -982,7 +982,7 @@ private fun ProfileLandingScreen(
         ProfileActionCard("Zaświadczenia", "Zapisane dane dokumentów i zaświadczeń", Icons.Filled.Description, onOpenCertificates)
         ProfileActionCard("Ustawienia", "Otwórz menu zarządzania lokalnymi danymi", Icons.Filled.Settings, onOpenSettings)
         Text(
-            "Profil przechowuje dane wyłącznie lokalnie. Nie jest kontem administracji publicznej i nie zapewnia logowania do usług urzędowych.",
+            "Dane profilu są przechowywane lokalnie na tym urządzeniu.",
             color = Muted, style = MaterialTheme.typography.bodySmall
         )
     }
@@ -1346,8 +1346,7 @@ private fun CertificatesScreen(onBack: () -> Unit) {
                 }
             }
         }
-        Text("Widok ma charakter ewidencyjny. Aplikacja prezentuje dane wpisane przez użytkownika i nie potwierdza autentyczności dokumentu ani jego skutków prawnych.", color = Muted, style = MaterialTheme.typography.bodySmall)
-    }
+     }
 }
 
 @Composable
@@ -1567,9 +1566,7 @@ private fun DocumentDetailsScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("EWIDENCJA LOKALNA • DEMO", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
-                Text("To widok danych zapisanych przez użytkownika. Nie potwierdza autentyczności dokumentu, statusu urzędowego ani uprawnień.",
-                    color = Ink, style = MaterialTheme.typography.bodySmall)
+                Text("Dane dokumentu", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
             }
         }
         if (documentId == "0" && photoBitmap != null) {
@@ -1706,22 +1703,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("DEMO • NIE JEST DOKUMENTEM", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
-                Text(
-                    "To wyłącznie formularz testowy. Nie potwierdza tożsamości, obywatelstwa, mandatu poselskiego ani uprawnień. Nie używa oficjalnych wzorów, znaków, kodów ani zabezpieczeń.",
-                    color = Ink,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-        if (categoryId == "all" || categoryId == "profile") {
+         if (categoryId == "all" || categoryId == "profile") {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
@@ -2149,8 +2131,7 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
                         .background(Color(0xFF254B50)).padding(horizontal = 7.dp, vertical = 5.dp)
                 ) {
-                    Text("DOKUMENT PRYWATNY — NIE JEST DOKUMENTEM PAŃSTWOWYM", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
-                    Text("Nie zastępuje dokumentu tożsamości ani dokumentu paszportowego.", color = Color(0xFFE1ECEC), style = MaterialTheme.typography.labelSmall)
+                    Text("DANE DOKUMENTU", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -2241,7 +2222,7 @@ private fun DisabilityDecisionPreview(fields: Map<String, String>) {
                     .padding(horizontal = 8.dp, vertical = 7.dp)
             ) {
                 Text(
-                    when (authorityType) { "foundation" -> "DOKUMENT WYSTAWCY • ZAKRES SKUTKÓW WEDŁUG PODSTAWY"; "other_law" -> "PODSTAWA I SKUTKI WEDŁUG ODRĘBNYCH PRZEPISÓW"; "medical_opinion" -> "OPINIA MEDYCZNA • NIE JEST AUTOMATYCZNIE ORZECZENIEM"; "self_declaration" -> "OŚWIADCZENIE OSOBY • DEKLARACJA WŁASNA"; else -> "PODGLĄD EWIDENCYJNY • NIE ZASTĘPUJE ORYGINAŁU" },
+                    when (authorityType) { "foundation" -> "DOKUMENT WYSTAWCY"; "other_law" -> "DOKUMENT NA PODSTAWIE ODRĘBNYCH PRZEPISÓW"; "medical_opinion" -> "OPINIA MEDYCZNA"; "self_declaration" -> "OŚWIADCZENIE OSOBY"; else -> "DANE EWIDENCYJNE" },
                     color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall
                 )
             }
@@ -2324,8 +2305,7 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
                     .background(Color(0xFF39466F)).padding(horizontal = 7.dp, vertical = 5.dp)
             ) {
-                Text("DOKUMENT INSTYTUCJI SZKOLENIOWEJ • NIE JEST LEGITYMACJĄ STUDENCKĄ", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
-                Text("Potwierdza wyłącznie status w ewidencji wystawcy.", color = Color(0xFFE7EAF5), style = MaterialTheme.typography.labelSmall)
+                Text("LEGITYMACJA UCZESTNIKA KURSU", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
             }
         }
     }
