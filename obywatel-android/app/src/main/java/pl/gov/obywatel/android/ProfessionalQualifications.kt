@@ -285,6 +285,18 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                     if (p.issuer.isNotBlank()) Text("Organ / wystawca: " + p.issuer, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
                     if (p.registerName.isNotBlank()) Text("Rejestr: " + p.registerName, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
                     Text("Status: " + p.status, color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    DocumentPdfExportButton("Karta kwalifikacji — " + p.profession, mapOf(
+                        "Zawód / rola" to p.profession,
+                        (if (p.numberType == "pwzf") "Numer prawa wykonywania zawodu" else "Numer dokumentu / kwalifikacji") to p.number,
+                        "Organ / wystawca" to p.issuer,
+                        "Data wydania" to p.issueDate,
+                        "Ważny do" to p.validUntil,
+                        "Rejestr" to p.registerName,
+                        "Adres rejestru" to p.registerUrl,
+                        "Zakres uprawnień" to p.scope,
+                        "Podstawa prawna / regulaminowa" to p.legalBasis,
+                        "Status" to p.status
+                    ))
                     TextButton(onClick = { selectedProfession = p.profession }) { Text("Pokaż dokumenty tego zawodu") }
                 }
             }
