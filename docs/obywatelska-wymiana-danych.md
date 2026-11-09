@@ -62,3 +62,21 @@ Dodano `OwdSecurity.kt` z podstawowymi funkcjami:
 ## Zasada nadrzędna
 
 Kod QR inicjuje sesję, ale nie jest dokumentem, poświadczeniem ani dowodem tożsamości. Użytkownik zachowuje kontrolę nad zakresem danych, a aplikacja jasno pokazuje ich źródło i status weryfikacji.
+
+## Kompatybilność z rządową aplikacją mObywatel — ważne ograniczenie
+
+OWD nie jest obecnie kompatybilny z rządową aplikacją mObywatel. Oficjalna funkcja QR służy do przepływu, w którym aplikacja mObywatel osoby okazującej dane skanuje kod wygenerowany przez osobę lub podmiot weryfikujący, a następnie przekazuje własne dane z aplikacji mObywatel. Nie jest to ogólny czytnik kodów QR ani mechanizm importowania dowolnych danych z aplikacji zewnętrznej.
+
+W konsekwencji:
+- użytkownik rządowego mObywatela nie zeskanuje kodu OWD i nie zobaczy w nim automatycznie danych o stopniu niepełnosprawności ani o mandacie poselskim;
+- kod OWD jest przeznaczony dla innej instalacji obywatelskiego prototypu, która rozumie protokół OWD;
+- zwykły, jawny QR lub dokument PDF może być otwarty przez ogólny czytnik / przeglądarkę, ale nie staje się przez to wpisem ani dokumentem w rządowym mObywatelu;
+- nie wolno oznaczać danych wpisanych przez użytkownika lub przesłanych z prototypu jako potwierdzonych przez państwo.
+
+Oficjalna usługa przekazywania danych działa w przeciwnym kierunku: użytkownik rządowego mObywatela przekazuje dane przechowywane w tej aplikacji do systemu podmiotu, który uzyskał zgodę Ministra Cyfryzacji, przeszedł procedurę integracji, używa certyfikatów i wymaganego zaplecza. Nie jest to interfejs, przez który zewnętrzna aplikacja może wstrzyknąć własne rekordy do mObywatela.
+
+### Dane o niepełnosprawności i mandacie poselskim
+
+Samo zaszyfrowanie lub podpisanie danych w OWD nie potwierdza ich prawdziwości. Dla stopnia niepełnosprawności wymagany byłby dokument lub elektroniczne poświadczenie wydane przez właściwy organ albo dostęp do właściwego, autoryzowanego źródła. Dla mandatu poselskiego potrzebne byłoby aktualne, wiarygodne poświadczenie pochodzące z właściwego źródła urzędowego, np. organu prowadzącego oficjalną ewidencję mandatu. Dane wpisane ręcznie przez użytkownika mogą być przekazane jako deklaracja, ale nie jako urzędowo zweryfikowany status.
+
+**Wniosek implementacyjny:** OWD może przekazać te informacje do drugiej obywatelskiej aplikacji. Dla użytkownika rządowego mObywatela należy przygotować odrębny, czytelny eksport (np. PDF z danymi i informacją o źródle oraz podpisanym poświadczeniem, jeśli wystawca je zapewnia) albo uzyskać formalną integrację / oficjalną ścieżkę publikacji dokumentu. Żaden z tych wariantów nie gwarantuje importu do portfela rządowej aplikacji.
