@@ -122,6 +122,76 @@ internal object VCardCodec {
         return result
     }
 
+    /**
+     * Imports either this application's full profile archive or an ordinary
+     * contact vCard (2.1, 3.0 or 4.0). Standard contact properties are mapped
+     * to the profile keys used by the local identity editor.
+     */
+    fun decodeForImport(raw: String): Map<String, String> {
+        runCatching { decodeArchive(raw) }.getOrNull()?.let { return it }
+        require(raw.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) {
+            "Plik vCard przekracza limit 10 MB."
+        }
+        val lines = unfold(raw)
+        require(lines.size >= 3 && lines.first().equals("BEGIN:VCARD", true) &&
+            lines.last().equals("END:VCARD", true)) { "Nieprawidłowa struktura vCard." }
+
+        val properties = linkedMapOf<String, MutableList<String>>()
+        var version: String? = null
+        lines.drop(1).dropLast(1).forEach { line ->
+            val colon = findValueSeparator(line)
+            require(colon > 0) { "Nieprawidłowy wiersz vCard." }
+            val left = line.substring(0, colon)
+            val property = left.substringBefore(';').substringAfterLast('.').uppercase()
+            val rawValue = line.substring(colon + 1)
+            val value = unescape(rawValue)
+            if (property == "VERSION") version = value
+            else properties.getOrPut(property) { mutableListOf() }.add(value)
+        }
+        require(version in setOf("2.1", "3.0", "4.0")) {
+            "Obsługiwane wersje vCard: 2.1, 3.0 i 4.0."
+        }
+        fun first(name: String): String = properties[name]?.firstOrNull().orEmpty().trim()
+        val structuredName = properties["N"]?.firstOrNull().orEmpty()
+        val nameParts = splitStructured(structuredName)
+        val family = nameParts.getOrNull(0).orEmpty().trim()
+        val given = nameParts.getOrNull(1).orEmpty().trim()
+        val formatted = first("FN")
+        val fallbackParts = formatted.split(Regex("\\s+"), limit = 2)
+        val firstNames = given.ifBlank { fallbackParts.getOrNull(0).orEmpty() }
+        val lastName = family.ifBlank { fallbackParts.getOrNull(1).orEmpty() }
+
+        val result = linkedMapOf<String, String>()
+        if (firstNames.isNotBlank()) result["firstNames"] = firstNames
+        if (lastName.isNotBlank()) result["lastName"] = lastName
+        if (first("BDAY").isNotBlank()) result["birthDate"] = first("BDAY")
+        if (first("TEL").isNotBlank()) result["contactPhone"] = first("TEL")
+        if (first("EMAIL").isNotBlank()) result["contactEmail"] = first("EMAIL")
+        if (first("ORG").isNotBlank()) result["contactOrganization"] = first("ORG")
+        if (first("TITLE").isNotBlank()) result["contactTitle"] = first("TITLE")
+        if (first("URL").isNotBlank()) result["contactUrl"] = first("URL")
+        if (first("ADR").isNotBlank()) result["contactAddress"] = first("ADR")
+        require(result.isNotEmpty()) { "Wizytówka nie zawiera rozpoznawalnych danych kontaktowych." }
+        return result
+    }
+
+    private fun splitStructured(value: String): List<String> {
+        val parts = mutableListOf<String>()
+        val current = StringBuilder()
+        var escaped = false
+        value.forEach { char ->
+            when {
+                escaped -> { current.append('\\\\').append(char); escaped = false }
+                char == '\\\\' -> escaped = true
+                char == ';' -> { parts += unescape(current.toString()); current.setLength(0) }
+                else -> current.append(char)
+            }
+        }
+        if (escaped) current.append('\\\\')
+        parts += unescape(current.toString())
+        return parts
+    }
+
     fun decodeArchive(raw: String): Map<String, String> {
         val card = decode(raw)
         require(card.extensions["X-OWD-ARCHIVE-VERSION"]?.singleOrNull() == "1") {
