@@ -164,6 +164,9 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                 if (!preview) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP). Nie przechowuj PIN-ów, haseł, kodów autoryzacyjnych ani danych logowania do bankowości.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
                 if (preview) Text("Liczba zarejestrowanych pozycji: \$accountCount", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
             }
+            DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
+                if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
+            })
             if (preview) Text("PODGLĄD EWIDENCYJNY — dokument prywatny / roboczy. Nie stanowi samodzielnie urzędowego odpisu, wpisu rejestrowego ani poświadczenia.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj dane" else "Podgląd") }
