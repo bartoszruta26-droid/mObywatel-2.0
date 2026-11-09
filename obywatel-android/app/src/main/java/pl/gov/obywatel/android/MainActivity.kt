@@ -250,11 +250,16 @@ private fun HomeScreen() {
                                                         .background(if (active) Blue else White)
                                                         .border(1.dp, if (active) Blue else Border, RoundedCornerShape(18.dp))
                                                         .clickable { serviceCategory = category }
-                                                        .padding(horizontal = 13.dp, vertical = 9.dp)
+                                                        .padding(horizontal = 11.dp, vertical = 8.dp)
                                                 ) {
-                                                    Text(category, color = if (active) White else Navy,
-                                                        style = MaterialTheme.typography.labelMedium,
-                                                        fontWeight = if (active) FontWeight.Bold else FontWeight.Medium)
+                                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                        categoryIconFor(category)?.let { iconRes ->
+                                                            Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(19.dp), contentScale = ContentScale.Fit)
+                                                        }
+                                                        Text(category, color = if (active) White else Navy,
+                                                            style = MaterialTheme.typography.labelMedium,
+                                                            fontWeight = if (active) FontWeight.Bold else FontWeight.Medium)
+                                                    }
                                                 }
                                             }
                                     }
@@ -305,6 +310,24 @@ private fun HomeScreen() {
             )
         }
     }
+}
+
+private fun categoryIconFor(category: String): Int? = when (category) {
+    "Zdrowie" -> R.drawable.health
+    "Rodzina" -> R.drawable.family
+    "Edukacja" -> R.drawable.education
+    "Praca" -> R.drawable.work
+    "Finanse i podatki" -> R.drawable.finance_taxes
+    "Transport", "Kierowca i pojazdy", "Podróże" -> R.drawable.transport
+    "Nieruchomości" -> R.drawable.real_estate
+    "Środowisko" -> R.drawable.environment
+    "Bezpieczeństwo" -> R.drawable.security
+    "Prawo i obywatel", "Sprawy urzędowe" -> R.drawable.law_citizenship
+    "Kultura i dziedzictwo" -> R.drawable.culture_heritage
+    "Sport" -> R.drawable.sport
+    "Organizacje społeczne" -> R.drawable.social_organizations
+    "Kościół i wspólnoty" -> R.drawable.church_communities
+    else -> null
 }
 
 @Composable
