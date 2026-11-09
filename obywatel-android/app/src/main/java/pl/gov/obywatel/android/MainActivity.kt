@@ -1996,7 +1996,8 @@ private fun parseDocumentOcr(kind: String, rawText: String): Map<String, String>
                 put("birthDate", mrzDate(second.substring(0,6)))
                 put("sex", when (second.getOrNull(7)) { 'M' -> "M"; 'F' -> "K"; else -> null })
                 put("idExpiryDate", mrzDate(second.substring(8,14)))
-                put("pesel", second.substring(15,24).replace("<", "").takeIf { it.any(Char::isDigit) })
+                put("citizenship", second.substring(12,15))
+                put("pesel", second.substring(15,26).replace("<", "").takeIf { it.matches(Regex("\\d{11}")) })
             }
             if (names != null) {
                 val parts = names.split("<<", limit = 2)
@@ -2712,6 +2713,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("passportIssuer", "Organ wydający", fields)
                 DemoDataField("passportType", "Rodzaj dokumentu podróży", fields, "zwykły / tymczasowy / inny")
                 DemoDataField("passportHolderNames", "Imiona i nazwisko zapisane w paszporcie", fields)
+                DemoDataField("passportBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
                 DemoDataField("passportBirthPlace", "Miejsce urodzenia", fields)
                 DemoDataField("passportCitizenship", "Obywatelstwo w dokumencie", fields)
                 DemoDataField("passportSex", "Płeć w dokumencie", fields)
