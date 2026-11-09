@@ -120,7 +120,7 @@ private data class ServiceItem(
 )
 
 private val services = listOf(
-    ServiceItem("Dokumenty", "Portfel demonstracyjny", R.drawable.mob_document_check, category = "Dokumenty"),
+    ServiceItem("Portfel", "Wszystkie dokumenty i ewidencje", R.drawable.mob_document_check, category = "Dokumenty"),
     ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad, category = "Podróże"),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health, category = "Zdrowie"),
@@ -152,7 +152,7 @@ private fun HomeScreen() {
 
     fun openService(title: String) {
         when (title) {
-            "Dokumenty" -> showDemoDocuments = true
+            "Portfel" -> showDemoDocuments = true
             "Ustawienia" -> {
                 selectedTab = 2
                 showSettingsMenu = false
