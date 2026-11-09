@@ -152,6 +152,7 @@ private val services = listOf(
     ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad, category = "Transport"),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health, category = "Zdrowie"),
+    ServiceItem("Historia chorób", "Prywatne archiwum zdjęć i dokumentacji medycznej", fallbackIcon = Icons.Filled.LocalHospital, category = "Zdrowie"),
     ServiceItem("Dane dzieci", "Rodzinny rejestr danych i zdjęć dzieci", fallbackIcon = Icons.Filled.FamilyRestroom, category = "Rodzina"),
     ServiceItem("eKarta Szczepień", "Prywatna karta szczepień dziecka", fallbackIcon = Icons.Filled.Vaccines, category = "Zdrowie"),
     ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport, category = "Podróże"),
@@ -281,7 +282,7 @@ private fun HomeScreen() {
     fun openService(title: String) {
         when (title) {
             "Portfel" -> showDemoDocuments = true
-            "Dane dzieci", "eKarta Szczepień" -> activeService = title
+            "Dane dzieci", "eKarta Szczepień", "Historia chorób" -> activeService = title
             "Ustawienia" -> {
                 selectedTab = 2
                 showSettingsMenu = false
@@ -330,6 +331,7 @@ private fun HomeScreen() {
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
                     activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null })
                     activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
+                    activeService == "Historia chorób" -> MedicalHistoryRecordsScreen(onBack = { activeService = null })
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
