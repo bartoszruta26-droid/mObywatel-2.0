@@ -185,7 +185,7 @@ private fun HomeScreen() {
                     )
                     selectedTab == 2 -> ProfileLandingScreen(
                         onOpenDocuments = { showDemoDocuments = true },
-                        onOpenSettings = { showDisabilitySettings = true },
+                        onOpenSettings = { showSettingsMenu = true },
                         onOpenCertificates = { showCertificates = true }
                     )
                     else -> {
