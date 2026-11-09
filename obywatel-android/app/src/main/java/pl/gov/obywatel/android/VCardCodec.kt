@@ -201,7 +201,7 @@ internal object VCardCodec {
 
         // RFC 6350 files may use CRLF; legacy writers also emitted LF, CR,
         // or mixtures. The parser receives one canonical separator.
-        return text.replace("\\r\\n", "\\n").replace('\\r', '\\n')
+        return text.replace("\r\n", "\n").replace('\r', '\n')
     }
 
     /**
