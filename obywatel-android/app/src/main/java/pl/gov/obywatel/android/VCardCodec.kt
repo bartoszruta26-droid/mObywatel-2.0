@@ -123,7 +123,9 @@ internal object VCardCodec {
         return record
     }
 
-    private fun escapeStructured(value: String): String = value.split(";").joinToString(";") { escape(it) }\n\n    private fun escape(value: String): String = value
+    private fun escapeStructured(value: String): String = value.split(";").joinToString(";") { escape(it) }
+
+    private fun escape(value: String): String = value
         .replace("\\", "\\\\")
         .replace("\n", "\\n")
         .replace(",", "\\,")
