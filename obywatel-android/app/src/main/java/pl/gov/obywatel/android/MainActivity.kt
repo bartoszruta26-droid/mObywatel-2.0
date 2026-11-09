@@ -1617,7 +1617,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
         Triple("Legitymacja ucznia/studenta", Icons.Filled.Description, listOf("trainingCardNumber", "trainingInstitution")),
         Triple("Legitymacja ucznia/studenta — ewidencja", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
         Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName")),
-        Triple("Prawo jazdy", Icons.Filled.CreditCard, listOf("dlNumber", "dlCategories", "dlExpiryDate", "dlStatus"))
+        Triple("Prawo jazdy", Icons.Filled.CreditCard, listOf("dlNumber", "dlCategories", "dlExpiryDate", "dlStatus")),
+        Triple("Karta biblioteczna", Icons.Filled.MenuBook, listOf("library1Name", "library1CardNumber", "library1Status", "library2Name", "library2CardNumber", "library2Status"))
     )
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1650,6 +1651,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
                             5 -> R.drawable.documents_course_legitimacy
                             6 -> R.drawable.documents_student_legitimacy
                             8 -> R.drawable.documents_identity_card
+                            9 -> R.drawable.documents_course_legitimacy
                             else -> R.drawable.documents_medical_certificates
                         }),
                         contentDescription = "Ilustracja: $title",
@@ -1712,6 +1714,20 @@ private fun DocumentDetailsScreen(
             "Ograniczenia / kody" to "dlRestrictions", "Status dokumentu" to "dlStatus",
             "Numer poprzedniego dokumentu" to "dlReplacementNumber", "Data utraty / unieważnienia" to "dlLossDate"
         )),
+        Triple("Karty biblioteczne — ewidencja", "Dane kart wydanych przez różne biblioteki", listOf(
+            "Biblioteka 1 — nazwa" to "library1Name", "Biblioteka 1 — numer karty" to "library1CardNumber",
+            "Biblioteka 1 — typ karty" to "library1Type", "Biblioteka 1 — data wydania" to "library1IssueDate",
+            "Biblioteka 1 — ważna do" to "library1ExpiryDate", "Biblioteka 1 — status" to "library1Status",
+            "Biblioteka 1 — kod kreskowy / identyfikator" to "library1Barcode", "Biblioteka 1 — uwagi" to "library1Notes",
+            "Biblioteka 2 — nazwa" to "library2Name", "Biblioteka 2 — numer karty" to "library2CardNumber",
+            "Biblioteka 2 — typ karty" to "library2Type", "Biblioteka 2 — data wydania" to "library2IssueDate",
+            "Biblioteka 2 — ważna do" to "library2ExpiryDate", "Biblioteka 2 — status" to "library2Status",
+            "Biblioteka 2 — kod kreskowy / identyfikator" to "library2Barcode", "Biblioteka 2 — uwagi" to "library2Notes",
+            "Biblioteka 3 — nazwa" to "library3Name", "Biblioteka 3 — numer karty" to "library3CardNumber",
+            "Biblioteka 3 — typ karty" to "library3Type", "Biblioteka 3 — data wydania" to "library3IssueDate",
+            "Biblioteka 3 — ważna do" to "library3ExpiryDate", "Biblioteka 3 — status" to "library3Status",
+            "Biblioteka 3 — kod kreskowy / identyfikator" to "library3Barcode", "Biblioteka 3 — uwagi" to "library3Notes"
+        )),
         Triple("Dokument rodowy — ewidencja prywatna", "Prywatna karta ewidencji rodowej", listOf(
             "Numer dokumentu rodowego" to "familyDocNumber", "Nazwa rodu" to "familyName",
             "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyRole",
@@ -1739,7 +1755,7 @@ private fun DocumentDetailsScreen(
         ))
     )
     val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
-    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
+    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra", "libraryExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
@@ -1773,6 +1789,7 @@ private fun DocumentDetailsScreen(
                 5 -> R.drawable.documents_course_legitimacy
                 6 -> R.drawable.documents_student_legitimacy
                 8 -> R.drawable.documents_identity_card
+                9 -> R.drawable.documents_course_legitimacy
                 else -> R.drawable.documents_medical_certificates
             }),
             contentDescription = "Ilustracja ewidencji: ${section.first}",
@@ -2288,6 +2305,36 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 })
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "library_card") {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Karty biblioteczne z różnych bibliotek", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Możesz zapisać dane maksymalnie trzech kart. Każda karta ma osobny zestaw danych biblioteki i numeru identyfikacyjnego.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
+                    (1..3).forEach { number ->
+                        val prefix = "library$number"
+                        Text("Karta biblioteczna $number", color = Navy, fontWeight = FontWeight.SemiBold)
+                        DemoDataField("${prefix}Name", "Nazwa biblioteki / filii", fields)
+                        DemoDataField("${prefix}CardNumber", "Numer karty bibliotecznej", fields)
+                        DemoDataField("${prefix}Type", "Rodzaj karty", fields, "np. miejska / uczelniana / szkolna / dziecięca")
+                        DemoDataField("${prefix}IssueDate", "Data wydania", fields, "DD-MM-RRRR")
+                        DemoDataField("${prefix}ExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
+                        DemoDataField("${prefix}Status", "Status karty", fields, "aktywna / zawieszona / utracona / nieaktywna")
+                        DemoDataField("${prefix}Barcode", "Kod kreskowy / identyfikator", fields)
+                        DemoDataField("${prefix}Notes", "Uwagi", fields)
+                    }
+                    Text("Wspólne zdjęcie dokumentowe może być użyte, jeśli dana biblioteka przewiduje fotografię na karcie.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
+                    AdditionalInformationSection("Informacje dodatkowe — karty biblioteczne", fields, "libraryExtra",
+                        "Zapisz regulamin biblioteki, źródło danych lub datę ich sprawdzenia. Dane karty nie zastępują oryginalnej karty ani systemu bibliotecznego.")
+                }
+            }
         }
         if (categoryId == "all" || categoryId == "driving_license") {
             Card(
