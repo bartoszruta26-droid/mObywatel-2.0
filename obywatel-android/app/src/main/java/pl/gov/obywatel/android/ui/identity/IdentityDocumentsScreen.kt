@@ -4,6 +4,16 @@ package pl.gov.obywatel.android.ui.identity
 
 import android.content.Context
 import android.content.Intent
+import android.print.PrintManager
+import android.print.PrintDocumentAdapter
+import android.print.PrintAttributes
+import android.print.PrintDocumentInfo
+import android.print.PageRange
+import android.os.CancellationSignal
+import android.os.Bundle
+import android.os.ParcelFileDescriptor
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.graphics.Typeface
@@ -36,6 +46,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
 import java.security.MessageDigest
 import java.util.UUID
 
@@ -205,6 +216,16 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                             message="Przekazanie do wybranej aplikacji. Podpis zostanie złożony poza OWD."
                         }
                     },modifier=Modifier.fillMaxWidth()){Icon(Icons.Default.Draw,null);Text(" Przekaż PDF do podpisu")}
+                    OutlinedButton(onClick={
+                        val u=lastPdf
+                        if(u==null) message="Najpierw wygeneruj PDF."
+                        else runCatching {
+                            val bytes=c.contentResolver.openInputStream(u)?.use{it.readBytes()} ?: error("Nie można odczytać PDF.")
+                            val manager=c.getSystemService(Context.PRINT_SERVICE) as PrintManager
+                            manager.print(title,PdfBytesPrintAdapter(title,bytes),PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).setColorMode(PrintAttributes.COLOR_MODE_COLOR).build())
+                            message="Przekazano dokument do systemowej usługi drukowania."
+                        }.onFailure{message=it.message ?: "Nie udało się uruchomić drukowania."}
+                    },modifier=Modifier.fillMaxWidth()){Text("Drukuj PDF")}
                 }
                 else -> {
                     Text("Importuj dokument PDF po podpisaniu",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
@@ -244,14 +265,22 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     p.textSize=10f;p.typeface=Typeface.DEFAULT
     canvas.drawText("Numer: "+number,42f,218f,p)
     canvas.drawText("Data: "+java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date()),42f,236f,p)
+    canvas.drawText("Identyfikator OWD: "+number,42f,252f,p)
     canvas.drawText("Adresat / przedmiot:",42f,280f,p)
     drawLines(canvas,recipient,42f,302f,510f,p)
     drawLines(canvas,body,42f,355f,510f,p)
     canvas.drawText(role.take(70),42f,680f,p);canvas.drawText(signer.take(70),42f,700f,p)
     seal?.let{drawImage(c,canvas,it,410f,615f,90f,90f)}
     signature?.let{drawImage(c,canvas,it,42f,710f,140f,50f)}
+    runCatching {
+        val matrix=QRCodeWriter().encode("urn:owd:document:"+number,BarcodeFormat.QR_CODE,96,96)
+        val qr=android.graphics.Bitmap.createBitmap(96,96,android.graphics.Bitmap.Config.ARGB_8888)
+        for(y in 0 until 96) for(x in 0 until 96) qr.setPixel(x,y,if(matrix[x,y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+        canvas.drawBitmap(qr,470f,700f,null);qr.recycle()
+    }
     p.textSize=8f;p.color=android.graphics.Color.GRAY
-    canvas.drawText("Projekt OWD. Grafika pieczęci i wzór podpisu nie stanowią podpisu elektronicznego.",42f,814f,p)
+    canvas.drawText("Projekt OWD. QR identyfikuje lokalny dokument; nie potwierdza wystawcy.",42f,814f,p)
+    canvas.drawText("Grafika pieczęci i wzór podpisu nie stanowią podpisu elektronicznego.",42f,802f,p)
     pdf.finishPage(page);val out=java.io.ByteArrayOutputStream();pdf.writeTo(out);pdf.close();return out.toByteArray()
 }
 private fun drawLines(canvas:android.graphics.Canvas,text:String,x:Float,start:Float,width:Float,p:Paint){
@@ -267,4 +296,20 @@ private fun drawImage(c:Context,canvas:android.graphics.Canvas,a:BrandAsset,x:Fl
     val b=BitmapFactory.decodeFile(File(File(c.filesDir,"owd-brand-assets"),a.file).absolutePath)?:return
     val s=minOf(w/b.width,h/b.height);val dw=b.width*s;val dh=b.height*s
     canvas.drawBitmap(b,null,android.graphics.RectF(x+(w-dw)/2,y+(h-dh)/2,x+(w+dw)/2,y+(h+dh)/2),Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG));b.recycle()
+}
+
+private class PdfBytesPrintAdapter(private val jobName:String, private val pdfBytes:ByteArray):PrintDocumentAdapter() {
+    override fun onLayout(oldAttributes:PrintAttributes?,newAttributes:PrintAttributes?,cancellationSignal:CancellationSignal,callback:LayoutResultCallback,extras:Bundle?) {
+        if(cancellationSignal.isCanceled){callback.onLayoutCancelled();return}
+        val info=PrintDocumentInfo.Builder(jobName+".pdf").setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).setPageCount(1).build()
+        callback.onLayoutFinished(info,true)
+    }
+    override fun onWrite(pages:Array<out PageRange>,destination:ParcelFileDescriptor,cancellationSignal:CancellationSignal,callback:WriteResultCallback) {
+        try {
+            if(cancellationSignal.isCanceled){callback.onWriteCancelled();return}
+            FileOutputStream(destination.fileDescriptor).use { it.write(pdfBytes);it.flush() }
+            callback.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
+        } catch(failure:Exception) { callback.onWriteFailed(failure.message ?: "Błąd drukowania PDF") }
+        finally { runCatching { destination.close() } }
+    }
 }
