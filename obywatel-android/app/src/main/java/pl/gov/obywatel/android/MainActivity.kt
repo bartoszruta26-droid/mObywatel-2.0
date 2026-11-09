@@ -500,6 +500,11 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     var consent by remember { mutableStateOf(false) }
     var purpose by remember { mutableStateOf("Przekazanie danych wskazanemu odbiorcy") }
     var offerQr by remember { mutableStateOf<Bitmap?>(null) }
+    var qrBranding by remember { mutableStateOf(QR_BRAND_NONE) }
+    var qrUploadedLogo by remember { mutableStateOf<Bitmap?>(null) }
+    val qrLogoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) runCatching { loadQrLogo(context, uri) }.onSuccess { qrUploadedLogo = it; offerQr = null }.onFailure { sessionMessage = "Błąd wczytywania logo: " + (it.message ?: "nieprawidłowy obraz") }
+    }
     var sessionMessage by remember { mutableStateOf("Wybierz zakres danych i zapoznaj się z informacją o ich pochodzeniu.") }
     val scanLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
         val scanned = result.contents
@@ -550,18 +555,20 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
             androidx.compose.material3.Checkbox(checked = consent, onCheckedChange = { consent = it; offerQr = null })
             Text("Potwierdzam świadomy wybór zakresu i celu. Rozumiem, że dane wpisane ręcznie są deklaracją, a nie potwierdzeniem urzędowym.", color = Ink, style = MaterialTheme.typography.bodySmall)
         }
+        QrBrandingControls(
+            branding = qrBranding,
+            onBrandingChange = { qrBranding = it; offerQr = null },
+            logoLoaded = qrUploadedLogo != null,
+            onChooseLogo = { qrLogoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/*")) },
+            onClearLogo = { qrUploadedLogo = null; offerQr = null }
+        )
         Button(
             onClick = {
                 runCatching {
                     require(selected.isNotEmpty()) { "Wybierz co najmniej jedno pole." }
                     require(purpose.isNotBlank()) { "Podaj cel udostępnienia." }
                     val (offer, _) = OwdSecurity.createOffer()
-                    val matrix = QRCodeWriter().encode(offer.encodedQrPayload, BarcodeFormat.QR_CODE, 768, 768)
-                    Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
-                        for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
-                            bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
-                        }
-                    }
+                    generateBrandedQr(context, offer.encodedQrPayload, qrBranding, qrUploadedLogo)
                 }.onSuccess {
                     offerQr = it
                     sessionMessage = "Utworzono krótkotrwałą ofertę sesji. QR nie zawiera wybranych danych osobowych."
