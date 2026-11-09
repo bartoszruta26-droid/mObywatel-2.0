@@ -92,14 +92,14 @@ private data class ServiceItem(
 )
 
 private val services = listOf(
-    ServiceItem("Dokumenty", "Portfel demonstracyjny", R.drawable.mob_abroad),
-    ServiceItem("Moje dane", "Dane profilu", R.drawable.mob_pesel_check),
+    ServiceItem("Dokumenty", "Portfel demonstracyjny", R.drawable.mob_pesel_check),
+    ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health),
     ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport),
-    ServiceItem("Kalendarz", "Terminy i przypomnienia", R.drawable.mob_ticket),
+    ServiceItem("Bilety", "Bilety i przejazdy", R.drawable.mob_ticket),
     ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", R.drawable.mob_cyber_safety),
-    ServiceItem("Usługi publiczne", "Informacje i sprawy", R.drawable.mob_environment),
+    ServiceItem("Środowisko", "Informacje środowiskowe", R.drawable.mob_environment),
     ServiceItem("Ustawienia", "Preferencje aplikacji", R.drawable.mob_penalties),
     ServiceItem("Pozostałe", "Więcej modułów", R.drawable.mob_pesel_lock)
 )
