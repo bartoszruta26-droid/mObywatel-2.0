@@ -134,44 +134,170 @@ private val services = listOf(
 @Composable
 private fun HomeScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
+    var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
+
+    fun openService(title: String) {
+        when (title) {
+            "Dokumenty" -> showDemoDocuments = true
+            "Ustawienia" -> showDisabilitySettings = true
+            "Zaświadczenia" -> showCertificates = true
+            else -> activeService = title
+        }
+    }
+
     Surface(modifier = Modifier.fillMaxSize(), color = AppSurface) {
-        when {
-            showDemoDocuments -> DemoDocumentsScreen(onBack = { showDemoDocuments = false })
-            showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false })
-            showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
-            else -> {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Header()
-                Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
-                    Spacer(Modifier.height(18.dp))
-                    PrototypeNotice()
-                    Spacer(Modifier.height(18.dp))
-                    SectionHeading("Twoje usługi", "Wybierz obszar")
-                    Spacer(Modifier.height(12.dp))
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(services) { service ->
-                            ServiceCard(service) {
-                                when (service.title) {
-                                    "Dokumenty" -> showDemoDocuments = true
-                                    "Ustawienia" -> showDisabilitySettings = true
-                                    "Zaświadczenia" -> showCertificates = true
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
+                when {
+                    showDemoDocuments -> DemoDocumentsScreen(onBack = { showDemoDocuments = false })
+                    showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false })
+                    showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
+                    activeService != null -> ServiceDetailScreen(
+                        title = activeService!!,
+                        onBack = { activeService = null },
+                        onOpenDocuments = { activeService = null; showDemoDocuments = true }
+                    )
+                    selectedTab == 2 -> ProfileLandingScreen(
+                        onOpenDocuments = { showDemoDocuments = true },
+                        onOpenSettings = { showDisabilitySettings = true },
+                        onOpenCertificates = { showCertificates = true }
+                    )
+                    else -> {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Header()
+                            Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
+                                Spacer(Modifier.height(18.dp))
+                                PrototypeNotice()
+                                Spacer(Modifier.height(18.dp))
+                                SectionHeading(
+                                    if (selectedTab == 1) "Usługi" else "Twoje usługi",
+                                    if (selectedTab == 1) "Wszystkie dostępne obszary" else "Wybierz obszar"
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    modifier = Modifier.weight(1f),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(services) { service ->
+                                        ServiceCard(service) { openService(service.title) }
+                                    }
                                 }
+                                Spacer(Modifier.height(10.dp))
                             }
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
                 }
-                BottomNavigation(selectedTab = selectedTab, onSelect = { selectedTab = it })
+            }
+            BottomNavigation(
+                selectedTab = selectedTab,
+                onSelect = {
+                    selectedTab = it
+                    activeService = null
+                    showDemoDocuments = false
+                    showDisabilitySettings = false
+                    showCertificates = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileLandingScreen(
+    onOpenDocuments: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenCertificates: () -> Unit
+) {
+    val context = LocalContext.current
+    val fields = remember { DemoIdentityStore.load(context) }
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("Profil", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Blue, modifier = Modifier.size(48.dp))
+                Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                    Text(
+                        listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Użytkownik" },
+                        color = Navy, fontWeight = FontWeight.Bold
+                    )
+                    Text("Profil lokalny • dane demonstracyjne", color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
             }
         }
+        ProfileActionCard("Dokumenty i dane", "Przeglądaj i edytuj lokalną ewidencję", Icons.Filled.CreditCard, onOpenDocuments)
+        ProfileActionCard("Zaświadczenia", "Zapisane dane dokumentów i zaświadczeń", Icons.Filled.Description, onOpenCertificates)
+        ProfileActionCard("Ustawienia danych", "Uzupełnij dane dotyczące niepełnosprawności", Icons.Filled.Settings, onOpenSettings)
+        Text(
+            "Profil przechowuje dane wyłącznie lokalnie. Nie jest kontem administracji publicznej i nie zapewnia logowania do usług urzędowych.",
+            color = Muted, style = MaterialTheme.typography.bodySmall
+        )
+    }
+}
+
+@Composable
+private fun ProfileActionCard(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = Blue, modifier = Modifier.size(28.dp))
+            Column(Modifier.weight(1f).padding(start = 13.dp)) {
+                Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+            Icon(Icons.Filled.MoreHoriz, contentDescription = "Otwórz", tint = Muted)
+        }
+    }
+}
+
+@Composable
+private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocuments: () -> Unit) {
+    val descriptions = mapOf(
+        "Polak za granicą" to "Informacje dla obywateli przebywających poza granicami kraju.",
+        "Płatności" to "Miejsce na ewidencję opłat i informacje o usługach płatniczych. Brak integracji z systemami płatności.",
+        "Zdrowie" to "Lokalny zestaw informacji zdrowotnych i odnośników. Dane nie są pobierane z Internetowego Konta Pacjenta.",
+        "Transport" to "Informacje transportowe i ewidencja danych związanych z podróżą. Brak połączenia z rejestrami publicznymi.",
+        "Bilety" to "Miejsce na prezentację własnych zapisów dotyczących biletów. Aplikacja nie sprzedaje ani nie waliduje biletów.",
+        "Bezpieczeństwo" to "Ustawienia prywatności, wskazówki bezpieczeństwa i informacje o ochronie danych.",
+        "Środowisko" to "Informacje środowiskowe i lokalne materiały edukacyjne.",
+        "Pozostałe" to "Dodatkowe moduły będą dodawane etapami w wersji alfa."
+    )
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("‹  Powrót do usług", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
+        Text(title, color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Text(descriptions[title] ?: "Moduł informacyjny wersji alfa.", color = Ink)
+                Text("MODUŁ WERSJI ALFA", color = Blue, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    "Ekran jest częścią niezależnego prototypu obywatelskiego. Funkcje wymagające połączenia z rejestrami, usługami lub systemami administracji pozostają nieaktywne do czasu uzyskania odpowiednich integracji.",
+                    color = Muted, style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+        if (title == "Bezpieczeństwo") {
+            ProfileActionCard("Dane i dokumenty lokalne", "Otwórz formularz danych przechowywanych na urządzeniu", Icons.Filled.Security, onOpenDocuments)
+        }
+        if (title == "Zdrowie") {
+            ProfileActionCard("Dane o niepełnosprawności", "Otwórz ewidencję dokumentów i wskazań", Icons.Filled.HealthAndSafety, onOpenDocuments)
+        }
+        Text("Dostępne funkcje będą oznaczane bezpośrednio w module. Nie prezentujemy fikcyjnych potwierdzeń, płatności, biletów ani statusów urzędowych.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 
