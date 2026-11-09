@@ -1,6 +1,7 @@
 <!-- SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors -->
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="false"
         android:label="Obywatel — prototyp"
