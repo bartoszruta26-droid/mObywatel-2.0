@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.material3.AlertDialog
