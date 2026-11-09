@@ -365,9 +365,23 @@ private fun HomeScreen() {
                                             Card(modifier = Modifier.width(150.dp).clickable { selectedDocumentId = id },
                                                 colors = CardDefaults.cardColors(containerColor = White)) {
                                                 Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                                    Image(painterResource(imageRes), contentDescription = label,
-                                                        modifier = Modifier.fillMaxWidth().height(88.dp), contentScale = ContentScale.Fit)
-                                                    Text(label, color = Navy, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                                    Box(
+                                                        modifier = Modifier.fillMaxWidth().height(88.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = when (id) {
+                                                                "1" -> Icons.Filled.CreditCard
+                                                                "2" -> Icons.Filled.Public
+                                                                "3" -> Icons.Filled.Fingerprint
+                                                                else -> Icons.Filled.Badge
+                                                            },
+                                                            contentDescription = null,
+                                                            tint = Blue,
+                                                            modifier = Modifier.size(52.dp)
+                                                        )
+                                                    }
+                                                    Text(label, color = Navy, fontWeight = FontWeight.SemiBold, maxLines = 2)
                                                 }
                                             }
                                         }
