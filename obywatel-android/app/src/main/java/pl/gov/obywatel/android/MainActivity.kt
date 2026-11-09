@@ -21,6 +21,9 @@ import com.google.zxing.MultiFormatReader
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.HybridBinarizer
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
@@ -987,7 +990,6 @@ private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
     val context = LocalContext.current
     var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var saveMessage by remember { mutableStateOf("") }
-    var pendingLoyaltyImageKey by remember { mutableStateOf("") }
     val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri: Uri? ->
         val image = pendingBitmap
         pendingBitmap = null
@@ -1314,34 +1316,6 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         "Środowisko" to "Informacje środowiskowe i lokalne materiały edukacyjne.",
         "Pozostałe" to "Katalog dodatkowych modułów i informacji."
     )
-    val loyaltyImagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        val targetKey = pendingLoyaltyImageKey
-        if (uri != null && targetKey.isNotBlank()) {
-            runCatching {
-                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                    ?: error("Nie można odczytać wybranego obrazu.")
-                require(bytes.size <= 5 * 1024 * 1024) { "Obraz przekracza limit 5 MB." }
-                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                    ?: error("Plik nie jest prawidłowym obrazem.")
-                Triple(Base64.encodeToString(bytes, Base64.NO_WRAP), decodeLoyaltyCode(bitmap), bitmap)
-            }.onSuccess { (encoded, decoded, _) ->
-                fields[targetKey] = encoded
-                val cardPrefix = targetKey.substringBeforeLast("Image")
-                if (decoded != null) {
-                    when {
-                        targetKey.endsWith("BarcodeImage") -> fields["${cardPrefix}Barcode"] = decoded
-                        targetKey.endsWith("QrImage") -> fields["${cardPrefix}Qr"] = decoded
-                        else -> {
-                            if (fields["${cardPrefix}Barcode"].isNullOrBlank()) fields["${cardPrefix}Barcode"] = decoded
-                            else if (fields["${cardPrefix}Qr"].isNullOrBlank()) fields["${cardPrefix}Qr"] = decoded
-                        }
-                    }
-                    saveMessage = "Obraz dodany. Odczytany kod zapisano w polu karty — sprawdź treść i zapisz zmiany."
-                } else saveMessage = "Obraz dodany. Nie wykryto kodu QR ani kreskowego; treść można wpisać ręcznie."
-            }.onFailure { saveMessage = "Nie udało się przetworzyć obrazu: ${it.message ?: "błąd"}" }
-        }
-        pendingLoyaltyImageKey = ""
-    }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2011,6 +1985,62 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             }.onFailure { saveMessage = "Nie udało się wczytać zdjęcia: ${it.localizedMessage ?: "błąd odczytu"}" }
         }
     }
+
+    var pendingLoyaltyImageKey by remember { mutableStateOf("") }
+    val loyaltyImagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        val targetKey = pendingLoyaltyImageKey
+        if (uri != null && targetKey.isNotBlank()) {
+            runCatching {
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    ?: error("Nie można odczytać wybranego obrazu.")
+                require(bytes.size <= 5 * 1024 * 1024) { "Obraz przekracza limit 5 MB." }
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    ?: error("Plik nie jest prawidłowym obrazem.")
+                Triple(Base64.encodeToString(bytes, Base64.NO_WRAP), decodeLoyaltyCode(bitmap), bitmap)
+            }.onSuccess { (encoded, decoded, bitmap) ->
+                fields[targetKey] = encoded
+                val cardPrefix = targetKey.substringBeforeLast("Image")
+                if (decoded != null) {
+                    when {
+                        targetKey.endsWith("BarcodeImage") -> fields["${cardPrefix}Barcode"] = decoded
+                        targetKey.endsWith("QrImage") -> fields["${cardPrefix}Qr"] = decoded
+                        else -> {
+                            if (fields["${cardPrefix}Barcode"].isNullOrBlank()) fields["${cardPrefix}Barcode"] = decoded
+                            else if (fields["${cardPrefix}Qr"].isNullOrBlank()) fields["${cardPrefix}Qr"] = decoded
+                        }
+                    }
+                }
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                recognizer.process(InputImage.fromBitmap(bitmap, 0))
+                    .addOnSuccessListener { visionText ->
+                        val recognized = visionText.textBlocks.flatMap { it.lines }.joinToString("\n") { it.text }.trim()
+                        if (recognized.isNotBlank()) {
+                            fields["${cardPrefix}RecognizedText"] = recognized
+                            val numberCandidate = Regex("(?<!\\d)(?:\\d[ -]?){8,20}(?!\\d)")
+                                .findAll(recognized).map { it.value.replace(Regex("[ -]"), "") }
+                                .firstOrNull { it.length in 8..20 }
+                            if (numberCandidate != null && fields["${cardPrefix}Number"].isNullOrBlank()) {
+                                fields["${cardPrefix}Number"] = numberCandidate
+                            }
+                            if (fields["${cardPrefix}Store"].isNullOrBlank()) {
+                                val firstLine = recognized.lineSequence().map { it.trim() }
+                                    .firstOrNull { it.length in 3..40 && it.any(Char::isLetter) }
+                                if (firstLine != null) fields["${cardPrefix}Store"] = firstLine
+                            }
+                            saveMessage = "Zdjęcie przeanalizowane przez OCR. Rozpoznany tekst i sugerowany numer wpisano do pól — sprawdź je przed zapisem."
+                        } else saveMessage = if (decoded != null) "Kod odczytany. OCR nie rozpoznał tekstu karty." else "Zdjęcie dodane, ale OCR nie rozpoznał tekstu ani kodu."
+                        recognizer.close()
+                    }
+                    .addOnFailureListener { error ->
+                        saveMessage = "Zdjęcie dodane; OCR nie powiódł się: ${error.localizedMessage ?: "błąd rozpoznawania"}"
+                        recognizer.close()
+                    }
+                if (decoded != null) saveMessage = "Wykryto kod. Trwa rozpoznawanie tekstu karty…"
+                else saveMessage = "Trwa rozpoznawanie tekstu ze zdjęcia…"
+            }.onFailure { saveMessage = "Nie udało się przetworzyć obrazu: ${it.message ?: "błąd"}" }
+        }
+        pendingLoyaltyImageKey = ""
+    }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2411,6 +2441,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                         DemoDataField("${prefix}Barcode", "Treść kodu kreskowego", fields)
                         DemoDataField("${prefix}Qr", "Treść kodu QR", fields)
                         DemoDataField("${prefix}Status", "Status karty", fields, "aktywna / nieaktywna")
+                        DemoDataField("${prefix}RecognizedText", "Tekst rozpoznany ze zdjęcia (OCR) — sprawdź i popraw", fields)
                         listOf("Card" to "zdjęcie karty", "Barcode" to "zdjęcie kodu kreskowego", "Qr" to "zdjęcie kodu QR").forEach { (kind, label) ->
                             val imageKey = "${prefix}${kind}Image"
                             OutlinedButton(onClick = { pendingLoyaltyImageKey = imageKey; loyaltyImagePicker.launch("image/*") },
