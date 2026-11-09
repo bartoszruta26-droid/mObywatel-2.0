@@ -40,3 +40,8 @@ Ekran demonstracyjny umożliwia wybranie fotografii przez systemowy selektor And
 ### Informacje konstytucyjne w sekcji ewidencji poselskiej
 
 Sekcja wyświetla treść art. 104 ust. 1 Konstytucji RP (posłowie jako przedstawiciele Narodu; wolny mandat) oraz art. 104 ust. 2–3 (ślubowanie przed Sejmem przed rozpoczęciem sprawowania mandatu; odmowa oznacza zrzeczenie się mandatu). Dodatkowe pola pozwalają opisać datę, miejsce/okoliczności i źródło potwierdzenia ślubowania. Interfejs wyraźnie zaznacza, że Konstytucja mówi „przed Sejmem”, a nie „przed budynkiem Sejmu”; wpis o wypowiedzeniu roty przed budynkiem jest wyłącznie oświadczeniem opisującym okoliczność, nie dowodem mandatu. Samo szerokie, potoczne lub słownikowe rozumienie słowa „poseł” jako reprezentanta interesów nie jest równoznaczne z uzyskaniem konstytucyjnego mandatu posła na Sejm.
+
+
+### Rodowy dokument tożsamości — karta i ewidencja
+
+Dodano odrębną sekcję rodowego dokumentu tożsamości z polami: numer dokumentu rodowego, nazwa rodu, linia lub gałąź, miejsce w strukturze rodu, prowadzący ewidencję, data sporządzenia oraz podstawa wpisu. Rozszerzono dane osobowe o płeć deklarowaną, imiona i nazwiska rodziców. Dodano podgląd karty w proporcji zbliżonej do karty identyfikacyjnej, z fotografią zastępczą, imieniem i nazwiskiem, datą urodzenia oraz numerem rodowym. Projekt ma odrębną nazwę, znak i kolorystykę; pasek informacyjny na karcie wskazuje, że jest to dokument prywatny, a nie dokument państwowy. Dane są objęte istniejącym lokalnym szyfrowanym zapisem.
