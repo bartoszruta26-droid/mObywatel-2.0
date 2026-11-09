@@ -883,8 +883,7 @@ private fun VCardQrScreen() {
                 Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Twój kod QR", color = Navy, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR z wizytówką vCard", modifier = Modifier.size(250.dp), contentScale = ContentScale.Fit)
-                    QrBrandMark(branding, uploadedLogo)
-                 }
+                  }
             }
         } else {
             Text(if (branding == QR_BRAND_FILE && uploadedLogo == null) "Wybierz logo z pliku albo ustaw opcję „Bez znaku”." else "Wpisz co najmniej nazwę kontaktu, aby wygenerować kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
@@ -1227,7 +1226,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
         Text("Ustawienia danych o niepełnosprawności", color = Navy,
             style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Wprowadź dane z posiadanego orzeczenia, zaświadczenia, opinii lub oświadczenia. Wpis jest przechowywany lokalnie i nie jest automatycznie weryfikowany.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Uzupełnij dane zgodnie z posiadanym dokumentem lub informacją źródłową.", color = Muted, style = MaterialTheme.typography.bodySmall)
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text("Źródło dokumentu", color = Navy, fontWeight = FontWeight.Bold)
@@ -1757,7 +1756,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("motherSurname", "Nazwisko rodowe matki", fields)
                 DemoDataField("birthSurname", "Nazwisko rodowe osoby", fields)
                 DemoDataField("pesel", "Numer PESEL", fields)
-                AdditionalInformationSection("Informacje dodatkowe — dane osobowe", fields, "personExtra", "Dane profilu są ewidencyjne. Porównuj je z aktualnym dokumentem źródłowym; aplikacja nie potwierdza tożsamości.")
+                AdditionalInformationSection("Informacje dodatkowe — dane osobowe", fields, "personExtra", "Uzupełnij dane zgodnie z aktualnym dokumentem źródłowym.")
             }
         }
         }
@@ -1806,7 +1805,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("idStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
                 DemoDataField("idPreviousNumber", "Numer poprzedniego dokumentu (jeśli dotyczy)", fields)
                 DemoDataField("idLossOrInvalidationDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
-                AdditionalInformationSection("Informacje dodatkowe — dowód tożsamości", fields, "idExtra", "Formularz prowadzi prywatną ewidencję danych. Nie generuje dokumentu tożsamości, nie potwierdza tożsamości i nie zastępuje usługi publicznej.")
+                AdditionalInformationSection("Informacje dodatkowe — dowód tożsamości", fields, "idExtra", "Formularz służy do uporządkowanego zapisu danych dokumentu.")
             }
         }
         }
@@ -2004,9 +2003,9 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 AdditionalInformationSection("Informacje dodatkowe — orzeczenie / zaświadczenie", fields, "disabilityExtra", when (fields["disabilityAuthorityType"] ?: "powiat") {
                     "foundation" -> "Dokument fundacji opisuje się zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego."
                     "other_law" -> "Skutki dokumentu z odrębnego systemu wynikają z konkretnego przepisu. Należy wskazać podstawę i zakres równoważności."
-                    "medical_opinion" -> "Opinia lub zaświadczenie medyczne dokumentuje ocenę lub stan zdrowia w granicach kompetencji wystawcy; nie jest automatycznie orzeczeniem o stopniu niepełnosprawności."
+                    "medical_opinion" -> "Opinia lub zaświadczenie medyczne dokumentuje ocenę albo stan zdrowia w zakresie wskazanym przez wystawcę."
                     "self_declaration" -> "Oświadczenie własne jest deklaracją osoby. Jego znaczenie zależy od procedury, w której jest składane; samo nie ustanawia ustawowego stopnia niepełnosprawności."
-                    else -> "Karta ewidencyjna prezentuje dane wpisane przez użytkownika. Nie weryfikuje autentyczności dokumentu i nie zastępuje oryginału."
+                    else -> "Karta ewidencyjna porządkuje dane wpisane przez użytkownika."
                 })
             }
         }
@@ -2345,7 +2344,7 @@ private fun AdditionalInformationSection(
                 DemoDataField("${prefix}VerifiedBy", "Podmiot / osoba potwierdzająca dane", fields)
                 DemoDataField("${prefix}Notes", "Adnotacje i informacje uzupełniające", fields)
                 Text(
-                    "Informacje dodatkowe są ewidencją użytkownika. Aplikacja nie potwierdza autentyczności dokumentu ani kompetencji wystawcy.",
+                    "Informacje dodatkowe uzupełniają zapis danych o źródło, podstawę i datę weryfikacji.",
                     color = Muted, style = MaterialTheme.typography.labelSmall
                 )
             }
