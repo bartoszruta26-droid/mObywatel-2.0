@@ -429,13 +429,13 @@ private fun HomeScreen() {
                                     Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         listOf(
-                                            Triple("Dowód tożsamości", R.drawable.documents_identity_card, "1"),
-                                            Triple("Dane paszportowe", R.drawable.documents_passport, "2"),
-                                            Triple("Dane rejestru podmiotów", R.drawable.documents_family_record, "registry"),
-                                            Triple("Legitymacje", R.drawable.documents_student_legitimacy, "6"),
-                                            Triple("Dokumenty podpisane elektronicznie", R.drawable.documents_medical_certificates, "signedpdf"),
-                                            Triple("Inne dokumenty", R.drawable.documents_medical_certificates, "other")
-                                        ).forEach { (label, imageRes, id) ->
+                                            "Dowód tożsamości" to "1",
+                                            "Dane paszportowe" to "2",
+                                            "Dane rejestru podmiotów" to "registry",
+                                            "Legitymacje" to "6",
+                                            "Dokumenty podpisane elektronicznie" to "signedpdf",
+                                            "Inne dokumenty" to "other"
+                                        ).forEach { (label, id) ->
                                             Card(modifier = Modifier.width(150.dp).clickable {
                                                 when (id) {
                                                     "registry" -> activeService = "Odpis z rejestru podmiotów"
