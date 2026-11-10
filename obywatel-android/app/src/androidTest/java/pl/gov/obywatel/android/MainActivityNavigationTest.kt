@@ -79,6 +79,17 @@ class MainActivityNavigationTest {
     }
 
     @Test
+    fun settingsExposePerDocumentPlacementChoicesAndDashboardOtherDocumentsSection() {
+        selectBottomTab("Więcej")
+        composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
+        composeRule.onNodeWithText("Widoczność dokumentów na ekranie głównym").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dokument rodowy").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Inne dokumenty").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Ukryj").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
     fun servicesRetainModulesAndExposeEmbeddedPublicPortalBrowser() {
         selectBottomTab("Usługi", 1)
         composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
