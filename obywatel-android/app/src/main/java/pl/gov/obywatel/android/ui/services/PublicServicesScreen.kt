@@ -200,7 +200,12 @@ fun PublicServicesScreen(onBack:()->Unit) {
                 IconButton(onClick=onBack){Icon(Icons.AutoMirrored.Filled.ArrowBack,contentDescription="Wróć")}
                 Text("Usługi publiczne",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f).semantics{heading()})
             }
-            Text("Wyszukaj usługę i otwórz jej stronę we wbudowanej przeglądarce. Logowanie odbywa się bezpośrednio w portalu, gdy jest przez niego obsługiwane.",style=MaterialTheme.typography.bodySmall)
+            Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceVariant)) {
+                Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
+                    Icon(Icons.Default.Security,contentDescription=null,tint=MaterialTheme.colorScheme.primary)
+                    Text("Wbudowana przeglądarka otwiera strony HTTPS wybranych portali. Nie przekazuje danych logowania poza portal; część usług może wymagać otwarcia w przeglądarce systemowej.",Modifier.padding(start=9.dp),style=MaterialTheme.typography.bodySmall)
+                }
+            }
             OutlinedTextField(query,{query=it},modifier=Modifier.fillMaxWidth(),singleLine=true,label={Text("Szukaj usługi")})
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)){
                 categories.forEach{FilterChip(selected=category==it,onClick={category=it},label={Text(it)})}
