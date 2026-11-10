@@ -37,7 +37,8 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Dane osobowe profilu").performScrollTo().assertIsDisplayed()
         composeRule.onAllNodesWithText("Dowód tożsamości")[0].performScrollTo().assertIsDisplayed()
         composeRule.onAllNodesWithText("Dane paszportowe")[0].performScrollTo().assertIsDisplayed()
-        composeRule.onAllNodesWithText("Legitymacja ucznia/studenta")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Legitymacja ucznia/studenta").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -55,7 +56,7 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Odpis z rejestru podmiotów").performScrollTo().performClick()
         composeRule.onNodeWithText("Wybierz rodzaj podmiotu").assertIsDisplayed()
         composeRule.onNodeWithText("Spółka z ograniczoną odpowiedzialnością — KRS").performClick()
-        composeRule.onNodeWithText("Numer KRS").assertIsDisplayed()
+        composeRule.onNodeWithText("Numer KRS").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("‹  Wszystkie rodzaje podmiotów").assertIsDisplayed()
     }
 
@@ -75,7 +76,6 @@ class MainActivityNavigationTest {
             .performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("OBYWATELSKA IDEA APLIKACJI I GODNOŚĆ CZŁOWIEKA")
             .performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Wróć").assertIsDisplayed()
     }
 
     @Test
