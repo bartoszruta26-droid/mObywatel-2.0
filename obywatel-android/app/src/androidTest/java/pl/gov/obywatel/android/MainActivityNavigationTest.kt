@@ -21,34 +21,39 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun restoredDashboardShowsStateEmblemBrandAndDocumentShortcuts() {
-        composeRule.onNodeWithText("mObywatel 2.0").assertIsDisplayed()
-        composeRule.onNodeWithText("Pulpit").assertIsDisplayed()
-        composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
-        composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
-        composeRule.onNodeWithText("Dane rejestru podmiotów").assertIsDisplayed()
+    fun dashboardShowsCurrentBrandAndDocumentWallet() {
+        composeRule.onNodeWithText("Obywatel").assertIsDisplayed()
+        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
+        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
     }
 
     @Test
     fun documentsWalletShowsIdentityPassportAndLegitimacyRecords() {
         selectBottomTab("Dokumenty", 1)
         composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
+        composeRule.onNodeWithText("Twoje dokumenty i oświadczenia").assertIsDisplayed()
+        composeRule.onNodeWithText("Dane osobowe profilu").assertIsDisplayed()
         composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
         composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Legitymacja ucznia/studenta")[0].assertIsDisplayed()
+        composeRule.onNodeWithText("Legitymacja ucznia/studenta").performScrollTo().assertIsDisplayed()
     }
 
     @Test
     fun documentsWalletBackReturnsToDashboard() {
         selectBottomTab("Dokumenty", 1)
         composeRule.onNodeWithText("‹  Pulpit").performClick()
-        composeRule.onNodeWithText("mObywatel 2.0").assertIsDisplayed()
+        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
     }
 
     @Test
-    fun entityRegistryShortcutOpensRegistryExtract() {
-        composeRule.onNodeWithText("Dane rejestru podmiotów").performClick()
-        composeRule.onNodeWithText("Odpis z rejestru podmiotów").assertIsDisplayed()
+    fun registryExtractOpensFromServicesCatalog() {
+        selectBottomTab("Usługi", 1)
+        composeRule.onNodeWithText("Rejestry").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Odpis z rejestru podmiotów").performClick()
+        composeRule.onNodeWithText("Ewidencja danych identyfikacyjnych i rejestrowych podmiotów.")
+            .assertIsDisplayed()
     }
 
     @Test
@@ -75,22 +80,23 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Dane osobowe").assertIsDisplayed()
         composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
         composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
-        composeRule.onNodeWithText("Legitymacja ucznia/studenta").assertIsDisplayed()
+        composeRule.onNodeWithText("Legitymacja ucznia/studenta").performScrollTo().assertIsDisplayed()
     }
 
     @Test
-    fun settingsExposePerDocumentPlacementChoicesAndDashboardOtherDocumentsSection() {
+    fun settingsExposeDocumentPlacementChoices() {
         selectBottomTab("Więcej")
         composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
-        composeRule.onNodeWithText("Widoczność dokumentów na ekranie głównym").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Widoczność dokumentów na ekranie głównym")
+            .performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dowód tożsamości")[0].performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dokument rodowy").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Inne dokumenty").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Ukryj").performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Ukryj")[0].performScrollTo().assertIsDisplayed()
     }
 
     @Test
-    fun servicesRetainModulesAndExposeEmbeddedPublicPortalBrowser() {
+    fun servicesExposePublicPortalAndQrNavigationRemainsAvailable() {
         selectBottomTab("Usługi", 1)
         composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
         composeRule.onNodeWithText("Przeglądarka usług publicznych").assertIsDisplayed()
@@ -98,12 +104,6 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Usługi publiczne").assertIsDisplayed()
         composeRule.onNodeWithText("Szukaj usługi").assertIsDisplayed()
         composeRule.onNodeWithText("mObywatel — portal").performScrollTo().assertIsDisplayed()
-    }
-
-    @Test
-    fun servicesBrowserBackReturnsToServiceCatalogAndQrStillWorks() {
-        selectBottomTab("Usługi", 1)
-        composeRule.onNodeWithText("Przeglądarka usług publicznych").performClick()
         composeRule.onNodeWithText("Wróć").performClick()
         composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
         selectBottomTab("Kod QR")
