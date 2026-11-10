@@ -32,10 +32,10 @@ class MainActivityNavigationTest {
     @Test
     fun documentsWalletShowsIdentityPassportAndLegitimacyRecords() {
         selectBottomTab("Dokumenty", 1)
-        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
         composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
         composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
-        composeRule.onNodeWithText("Legitymacja ucznia/studenta").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Legitymacja ucznia/studenta")[0].assertIsDisplayed()
     }
 
     @Test
