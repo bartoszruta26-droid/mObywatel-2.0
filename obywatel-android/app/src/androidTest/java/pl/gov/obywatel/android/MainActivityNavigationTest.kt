@@ -7,6 +7,9 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -45,6 +48,8 @@ class MainActivityNavigationTest {
 
     @Test
     fun bankAccountsDocumentTileIsClickableAndOpensReadOnlyCatalog() {
+        val otherDocumentRow = composeRule.onNodeWithTag("document-cards-family")
+        repeat(6) { otherDocumentRow.performTouchInput { swipeLeft() } }
         composeRule.onNodeWithText("Konta bankowe").assertHasClickAction().performClick()
         composeRule.onNodeWithText("Konta bankowe", substring = false).assertIsDisplayed()
         composeRule.onNodeWithText("Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej.")
