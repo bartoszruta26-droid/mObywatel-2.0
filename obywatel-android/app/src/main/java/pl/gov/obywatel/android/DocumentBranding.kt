@@ -380,15 +380,18 @@ internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, 
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Kod QR dokumentu — vCard 4.0", fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleMedium)
-            qrResult.onSuccess { bitmap ->
-                Image(bitmap.asImageBitmap(), contentDescription = "Kod QR zawierający dane dokumentu w formacie vCard",
+            val qrBitmap = qrResult.getOrNull()
+            if (qrBitmap != null) {
+                Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR zawierający dane dokumentu w formacie vCard",
                     modifier = Modifier.size(220.dp))
-                Text("Kod zawiera dane zapisane w tym dokumencie. Odczyt wymaga aplikacji obsługującej rozszerzenia OWD vCard.",
+                Text("Kod zawiera zapisane dane dokumentu w formacie vCard 4.0 z polami OWD.",
                     style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
-            }.onFailure {
-                Text("Nie można wygenerować kodu QR: ${it.message ?: "dane przekraczają pojemność kodu QR"}",
+            } else {
+                Text("Nie można wygenerować kodu QR: ${qrResult.exceptionOrNull()?.message ?: "dane przekraczają pojemność kodu QR"}",
                     style = MaterialTheme.typography.bodySmall, color = Color(0xFFB3261E))
             }
+            Text("Uwaga: kod QR zawiera dane możliwe do odczytania przez osoby, które go zeskanują. Udostępniaj go wyłącznie zaufanym odbiorcom.",
+                style = MaterialTheme.typography.labelSmall, color = Color(0xFF9A5B00))
         }
     }
     OutlinedTextField(owner, { owner = it }, label = { Text("Zestaw identyfikacji podmiotu (nazwa)") },
