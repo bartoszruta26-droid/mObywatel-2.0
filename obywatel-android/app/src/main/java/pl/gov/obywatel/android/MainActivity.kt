@@ -2299,7 +2299,6 @@ private fun DocumentDetailsScreen(
             owner = fields["idIssuer"].orEmpty().ifBlank { fields["passportIssuer"].orEmpty() },
             photoOverride = photoBitmap
         )
-        DocumentPdfExportButton(section.first, section.third.associate { (label, key) -> label to fields[key].orEmpty() })
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
@@ -2378,6 +2377,7 @@ private fun DocumentDetailsScreen(
         }
         Text("Ten ekran służy do przeglądania zapisanych informacji. Aby zmienić wpis, wróć do ekranu głównego i otwórz menu Ustawienia.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
+        DocumentPdfExportButton(section.first, section.third.associate { (label, key) -> label to fields[key].orEmpty() })
     }
 }
 
