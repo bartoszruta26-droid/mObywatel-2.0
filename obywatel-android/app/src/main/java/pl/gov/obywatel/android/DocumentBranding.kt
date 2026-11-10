@@ -126,6 +126,12 @@ private fun defaultDocumentEmblem(context: Context, title: String): Bitmap? =
 private fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
     val resourceId = when {
+        isFamilyDocument(title) && (normalized.contains("paszport") || normalized.contains("podróż") || normalized.contains("podroz")) ->
+            R.drawable.paszport_rodowy_jasny
+        isFamilyDocument(title) && (normalized.contains("orzeczenie") || normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw")) ->
+            R.drawable.orzeczenie_rodowe_jasne
+        isFamilyDocument(title) ->
+            R.drawable.karta_rodowa_jasna
         normalized.contains("szczep") || normalized.contains("vaccin") ->
             R.drawable.bg_document_vaccination_booklet
         normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw") ||
