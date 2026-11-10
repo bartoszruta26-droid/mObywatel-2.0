@@ -94,6 +94,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     var templateName by remember { mutableStateOf("Mój szablon") }
     val documentGroups = listOf("Kościelne", "Fundacyjne", "Stowarzyszeniowe", "Firmowe", "Rodowe", "Cywilne", "Zawodowe", "Urzędowe", "Ogólne")
     var documentGroup by remember { mutableStateOf("Ogólne") }
+    var layout by remember { mutableStateOf(DocumentLayout()) }
     var title by remember { mutableStateOf("Zaświadczenie") }
     var number by remember { mutableStateOf("OWD/2026/0001") }
     var recipient by remember { mutableStateOf("") }
@@ -229,6 +230,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     OutlinedTextField(signer,{signer=it},label={Text("Osoba podpisująca")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(role,{role=it},label={Text("Stanowisko / funkcja / tytuł")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(watermark,{watermark=it},label={Text("Znak wodny")},modifier=Modifier.fillMaxWidth())
+                    DocumentLayoutEditor(layout) { layout = it }
                     AssetChoice("Logo",assets.filter{it.orgId==orgId&&it.category=="Logo"},logoId){logoId=it}
                     AssetChoice("Pieczęć",assets.filter{it.orgId==orgId&&it.category=="Pieczęć"},sealId){sealId=it}
                     AssetChoice("Wzór podpisu",assets.filter{it.orgId==orgId&&it.category=="Wzór podpisu"},signatureId){signatureId=it}
@@ -245,7 +247,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                                 .put("recipient",recipient).put("body",body).put("signer",signer).put("role",role).put("watermark",watermark)
                                 .put("logoId",logoId).put("sealId",sealId).put("signatureId",signatureId)
                                 .put("backgroundId",backgroundId).put("flagId",flagId).put("emblemId",emblemId).put("securityId",securityId)
-                                .put("savedAt",System.currentTimeMillis()))
+                                .put("layout",layout.toJson()).put("savedAt",System.currentTimeMillis()))
                             check(prefs.edit().putString("templates",all.toString()).commit())
                             message="Zapisano szablon: "+templateName
                         }.onFailure{message=it.message ?: "Nie udało się zapisać szablonu."}
@@ -260,8 +262,8 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                             body=t.optString("body",body);signer=t.optString("signer",signer);role=t.optString("role",role)
                             watermark=t.optString("watermark",watermark);logoId=t.optString("logoId","");sealId=t.optString("sealId","")
                             signatureId=t.optString("signatureId","");backgroundId=t.optString("backgroundId","")
-                            flagId=t.optString("flagId","");emblemId=t.optString("emblemId","");securityId=t.optString("securityId","")
-                            message="Wczytano ostatnio zapisany szablon."
+                            flagId=t.optString("flagId","");emblemId=t.optString("emblemId","");securityId=t.optString("securityId","");layout=DocumentLayout.fromJson(t.optJSONObject("layout"))
+                            message="Wczytano ostatnio zapisany szablon wraz z rozmieszczeniem elementów."
                         }.onFailure{message=it.message ?: "Nie udało się wczytać szablonu."}
                     },modifier=Modifier.fillMaxWidth()){Text("Wczytaj ostatni szablon")}
                     Button(onClick={pdfSaver.launch(number.replace('/','-')+".pdf")},enabled=orgId.isNotBlank(),modifier=Modifier.fillMaxWidth()){Icon(Icons.Default.PictureAsPdf,null);Text(" Eksportuj PDF")}
@@ -309,7 +311,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     SimpleChoice(label,items.firstOrNull{it.id==selected}?.name ?: "Brak",listOf("Brak")+items.map{it.name}){name->onPick(items.firstOrNull{it.name==name}?.id ?: "")}
 }
 
-private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?,group:String):ByteArray {
+private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?,group:String,layout:DocumentLayout=DocumentLayout()):ByteArray {
     val pdf=PdfDocument()
     val page=pdf.startPage(PdfDocument.PageInfo.Builder(595,842,1).create())
     val canvas=page.canvas
@@ -342,10 +344,10 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     p.textSize=15f;p.typeface=Typeface.DEFAULT_BOLD;p.color=accent
     canvas.drawText((org?.name ?: "Podmiot").take(58),margin,82f,p)
     p.color=android.graphics.Color.LTGRAY;p.textSize=48f;p.typeface=Typeface.DEFAULT_BOLD
-    canvas.save();canvas.rotate(-30f,295f,420f);canvas.drawText(watermark.take(20),105f,430f,p);canvas.restore()
+    canvas.save();canvas.rotate(-30f,295f,420f);layout.element("watermark")?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(watermark.take(20),element.x,element.y,p) };canvas.restore()
     p.color=accent;p.textSize=21f
-    val titleY=when(group){"Kościelne"->190f;"Urzędowe"->188f;"Rodowe"->198f;else->184f}
-    canvas.drawText(title.take(48),margin,titleY,p)
+    val titleY=layout.element("title")?.y ?: when(group){"Kościelne"->190f;"Urzędowe"->188f;"Rodowe"->198f;else->184f}
+    layout.element("title")?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(title.take(48),element.x,element.y+element.height.coerceAtMost(element.fontSize),p) }
     p.color=android.graphics.Color.DKGRAY;p.textSize=9.5f;p.typeface=Typeface.DEFAULT
     canvas.drawText("Numer: "+number,margin,titleY+24f,p)
     canvas.drawText("Data wystawienia: "+java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date()),margin,titleY+40f,p)
@@ -361,9 +363,9 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     canvas.drawText(recipientLabel,margin,titleY+88f,p)
     p.color=android.graphics.Color.DKGRAY;p.typeface=Typeface.DEFAULT;p.textSize=10f
     drawLines(canvas,recipient,margin,titleY+108f,595f-margin*2,p)
-    val bodyY=when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
-    p.color=android.graphics.Color.DKGRAY;p.textSize=10f
-    drawLines(canvas,body,margin,bodyY,595f-margin*2,p)
+    val bodyY=layout.element("body")?.y ?: when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
+    p.color=android.graphics.Color.DKGRAY;p.textSize=layout.element("body")?.fontSize ?: 10f
+    layout.element("body")?.takeIf { it.visible }?.let { element -> drawLines(canvas,body,element.x,element.y,element.width,p) }
     // Group-specific reference fields and separators establish a distinct formal hierarchy.
     val referenceY=bodyY+145f
     p.color=accent;p.strokeWidth=0.8f
@@ -384,7 +386,7 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     p.color=android.graphics.Color.DKGRAY;p.textSize=9f
     canvas.drawText("………………………………………………………………………………",margin,referenceY+34f,p)
     // Signature area: specimen is visibly distinguished from a cryptographic signature.
-    val signY=675f
+    val signY=layout.element("signature")?.y ?: 675f
     p.color=accent;p.strokeWidth=0.8f
     canvas.drawLine(margin,signY,595f-margin,signY,p)
     p.color=android.graphics.Color.DKGRAY;p.textSize=9f;p.typeface=Typeface.DEFAULT_BOLD
