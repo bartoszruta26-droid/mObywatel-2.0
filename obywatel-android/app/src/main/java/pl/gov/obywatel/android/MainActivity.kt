@@ -378,22 +378,12 @@ private fun HomeScreen() {
                                             },
                                                 colors = CardDefaults.cardColors(containerColor = White)) {
                                                 Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                                    Box(
+                                                    Image(
+                                                        painter = painterResource(imageRes),
+                                                        contentDescription = "Podgląd: $label — lokalna ewidencja",
                                                         modifier = Modifier.fillMaxWidth().height(88.dp),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = when (id) {
-                                                                "1" -> Icons.Filled.CreditCard
-                                                                "2" -> Icons.Filled.Public
-                                                                "registry" -> Icons.Filled.AccountBalance
-                                                                else -> Icons.Filled.Badge
-                                                            },
-                                                            contentDescription = null,
-                                                            tint = Blue,
-                                                            modifier = Modifier.size(52.dp)
-                                                        )
-                                                    }
+                                                        contentScale = ContentScale.Fit
+                                                    )
                                                     Text(label, color = Navy, fontWeight = FontWeight.SemiBold, maxLines = 2)
                                                 }
                                             }
