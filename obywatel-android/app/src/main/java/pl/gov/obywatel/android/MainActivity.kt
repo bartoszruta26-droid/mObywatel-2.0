@@ -65,6 +65,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -731,7 +732,8 @@ private fun HomeScreen() {
                                                 modifier = Modifier.padding(vertical = 8.dp))
                                         } else {
                                             Row(
-                                                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+                                                    .testTag(if (items.firstOrNull()?.first == "family") "document-cards-family" else "document-cards-dashboard"),
                                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                                             ) {
                                                 items.forEach { (id, label, _) ->
