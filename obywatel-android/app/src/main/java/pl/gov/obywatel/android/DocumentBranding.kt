@@ -210,14 +210,14 @@ internal fun DocumentIdentityTemplate(
                         if (photo != null) Image(photo.asImageBitmap(), "Fotografia osoby", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                         else Text("MIEJSCE NA\nFOTOGRAFIĘ", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                     }
-                    Row(Modifier.fillMaxWidth().weight(0.34f), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Box(Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(5.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
-                            if (flag != null) Image(flag.asImageBitmap(), "Flaga", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                    Column(Modifier.fillMaxWidth().weight(0.34f), verticalArrangement = Arrangement.spacedBy(3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(Modifier.fillMaxWidth(0.72f).weight(1f).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
+                            if (flag != null) Image(flag.asImageBitmap(), "Flaga", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
                             else Text("FLAGA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                         }
-                        Box(Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(5.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
-                            if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-                            else Text("GODŁO /\nHERB / LOGO", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                        Box(Modifier.fillMaxWidth(0.72f).weight(1f).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
+                            if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
+                            else Text("GODŁO /\\nHERB / LOGO", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -363,10 +363,13 @@ private object DocumentPdfRenderer {
             val split=(pageW*0.39f).toInt()
             c.drawRoundRect(margin,margin,split-10f,pageH-margin,16f,16f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(239,244,248) })
             drawFit(photo,Rect(48,48,split-28,300))
-            c.drawRect(48f,310f,(split-28).toFloat(),365f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.WHITE })
-            drawFit(flag,Rect(50,312,(split-30)/2,363))
-            drawFit(crest ?: logo,Rect((split+20)/2,312,split-30,363))
-            c.drawText("MIEJSCE NA FOTOGRAFIĘ · FLAGĘ · GODŁO / HERB / LOGO",48f,390f,small)
+            c.drawRect(48f,306f,(split-28).toFloat(),366f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.WHITE })
+            // Mniejsze pola identyfikacji ułożone pionowo: flaga, a pod nią godło/herb/logo.
+            drawFit(flag,Rect(76,309,158,333))
+            drawFit(crest ?: logo,Rect(76,338,158,362))
+            c.drawText("FLAGA",164f,325f,small)
+            c.drawText("GODŁO / HERB / LOGO",164f,354f,small)
+            c.drawText("MIEJSCE NA FOTOGRAFIĘ I ZNAKI IDENTYFIKACYJNE",48f,390f,small)
             c.drawText(owner.ifBlank { "Wystawca / podmiot" },split+12f,50f,small)
             c.drawText(title,split+12f,78f,heading)
             c.drawLine(split+12f,91f,pageW-margin,91f,line)
