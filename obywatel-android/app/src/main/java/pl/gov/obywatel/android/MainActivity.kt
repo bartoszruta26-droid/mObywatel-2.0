@@ -2026,7 +2026,20 @@ private fun DocumentDetailsScreen(
         else -> 0
     }
     val section = sections[sectionIndex]
-    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra", "loyaltyExtra", "libraryExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
+    val extraPrefix = when (documentId) {
+        "0" -> "personExtra"
+        "1" -> "idExtra"
+        "2" -> "passportExtra"
+        "3" -> "familyExtra"
+        "4" -> "mpExtra"
+        "5" -> "trainingExtra"
+        "6" -> "studentExtra"
+        "7" -> "disabilityExtra"
+        "8" -> "dlExtra"
+        "9" -> "loyaltyExtra"
+        "12" -> "libraryExtra"
+        else -> "personExtra"
+    }
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
