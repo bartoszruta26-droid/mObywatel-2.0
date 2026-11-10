@@ -19,8 +19,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: android-gui-${{ github.ref }}
-  cancel-in-progress: true
+  group: android-gui-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   android:
@@ -39,6 +39,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
+          cmdline-tools-version: latest
           packages: platform-tools platforms;android-35 build-tools;35.0.0
 
       - name: Set up Gradle 8.9
