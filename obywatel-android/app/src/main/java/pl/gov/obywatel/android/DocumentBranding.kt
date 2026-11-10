@@ -282,50 +282,69 @@ private object DocumentPdfRenderer {
         val signature = DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
         val background = DocumentBrandStore.image(context,owner,"Tło dokumentu")
         val watermark = DocumentBrandStore.image(context,owner,"Znak wodny") ?: DocumentBrandStore.image(context,owner,"Grafika hologramu / zabezpieczenia")
-        val page = pdf.startPage(PdfDocument.PageInfo.Builder(pageW,pageH,1).create())
-        val c = page.canvas
-        c.drawColor(android.graphics.Color.WHITE)
-        background?.let { c.drawBitmap(it,null,Rect(0,0,pageW,pageH),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=48 }) }
-        watermark?.let { c.drawBitmap(it,null,Rect(230,120,610,500),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=20 }) }
-        val split = (pageW*0.39f).toInt()
-        c.drawRoundRect(margin,margin,split-10f,pageH-margin,16f,16f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(239,244,248) })
+        var pageNo = 0
+        var page: PdfDocument.Page? = null
+        var canvas: Canvas? = null
+        var y = 115f
         fun drawFit(bitmap: Bitmap?, rect: Rect, alpha: Int = 255) {
-            if(bitmap==null) return
-            val p=Paint(Paint.ANTI_ALIAS_FLAG).apply { this.alpha=alpha; isFilterBitmap=true }
-            val src=Rect(0,0,bitmap.width,bitmap.height)
-            val scale=minOf(rect.width().toFloat()/bitmap.width,rect.height().toFloat()/bitmap.height)
-            val w=(bitmap.width*scale).toInt(); val h=(bitmap.height*scale).toInt()
-            val dst=Rect(rect.centerX()-w/2,rect.centerY()-h/2,rect.centerX()+w/2,rect.centerY()+h/2)
-            c.drawBitmap(bitmap,src,dst,p)
+            val target = canvas ?: return
+            if (bitmap == null) return
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.alpha=alpha; isFilterBitmap=true }
+            val scale = minOf(rect.width().toFloat()/bitmap.width, rect.height().toFloat()/bitmap.height)
+            val width=(bitmap.width*scale).toInt(); val height=(bitmap.height*scale).toInt()
+            val dst=Rect(rect.centerX()-width/2,rect.centerY()-height/2,rect.centerX()+width/2,rect.centerY()+height/2)
+            target.drawBitmap(bitmap,Rect(0,0,bitmap.width,bitmap.height),dst,paint)
         }
-        drawFit(photo,Rect(48,48,split-28,300))
-        c.drawRect(48f,310f,(split-28).toFloat(),365f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.WHITE })
-        drawFit(flag,Rect(50,312,(split-30)/2,363))
-        drawFit(crest ?: logo,Rect((split+20)/2,312,split-30,363))
-        c.drawText("MIEJSCE NA FOTOGRAFIĘ · FLAGĘ · GODŁO / HERB / LOGO",48f,390f,small)
-        c.drawText(owner.ifBlank { "Wystawca / podmiot" },split+12f,50f,small)
-        c.drawText(title,split+12f,78f,heading)
-        c.drawLine(split+12f,91f,pageW-margin,91f,line)
-        var y=115f
+        fun startPage() {
+            pageNo++
+            page=pdf.startPage(PdfDocument.PageInfo.Builder(pageW,pageH,pageNo).create())
+            canvas=page!!.canvas
+            val c=canvas!!
+            c.drawColor(android.graphics.Color.WHITE)
+            background?.let { c.drawBitmap(it,null,Rect(0,0,pageW,pageH),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=48 }) }
+            watermark?.let { c.drawBitmap(it,null,Rect(230,120,610,500),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=20 }) }
+            val split=(pageW*0.39f).toInt()
+            c.drawRoundRect(margin,margin,split-10f,pageH-margin,16f,16f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(239,244,248) })
+            drawFit(photo,Rect(48,48,split-28,300))
+            c.drawRect(48f,310f,(split-28).toFloat(),365f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.WHITE })
+            drawFit(flag,Rect(50,312,(split-30)/2,363))
+            drawFit(crest ?: logo,Rect((split+20)/2,312,split-30,363))
+            c.drawText("MIEJSCE NA FOTOGRAFIĘ · FLAGĘ · GODŁO / HERB / LOGO",48f,390f,small)
+            c.drawText(owner.ifBlank { "Wystawca / podmiot" },split+12f,50f,small)
+            c.drawText(title,split+12f,78f,heading)
+            c.drawLine(split+12f,91f,pageW-margin,91f,line)
+            c.drawText("Strona $pageNo",pageW-margin-42f,pageH-18f,small)
+            y=115f
+        }
+        fun finishPage() {
+            val c=canvas ?: return
+            val split=(pageW*0.39f).toInt()
+            drawFit(seal,Rect(pageW-130,pageH-80,pageW-70,pageH-25),220)
+            drawFit(signature,Rect(split+12,pageH-72,split+150,pageH-28))
+            c.drawText("PODGLĄD EWIDENCYJNY · status i autentyczność wymagają odrębnej weryfikacji",48f,pageH-18f,small)
+            pdf.finishPage(page!!)
+        }
+        startPage()
         val entries=values.filterValues { it.isNotBlank() }.entries.toList()
         entries.forEach { entry ->
-            if(y>pageH-82f) return@forEach
-            val label=entry.key.take(50)
-            c.drawText(label,split+12f,y,small); y+=13f
+            val c=canvas!!
+            val split=(pageW*0.39f).toInt()
+            if(y>pageH-82f) { finishPage(); startPage() }
+            c.drawText(entry.key.take(50),split+12f,y,small); y+=13f
             var rest=entry.value
-            while(rest.isNotEmpty() && y<pageH-72f) {
+            while(rest.isNotEmpty()) {
+                if(y>pageH-72f) { finishPage(); startPage() }
                 val available=(pageW-split-margin-24).toInt()
                 val count=body.breakText(rest,true,available.toFloat(),null).coerceAtLeast(1)
-                c.drawText(rest.substring(0,count),split+12f,y,body)
+                canvas!!.drawText(rest.substring(0,count),split+12f,y,body)
                 rest=rest.substring(count).trimStart(); y+=14f
             }
-            y+=5f; c.drawLine(split+12f,y,pageW-margin,y,line); y+=10f
+            y+=5f; canvas!!.drawLine(split+12f,y,pageW-margin,y,line); y+=10f
         }
-        seal?.let { drawFit(it,Rect(pageW-130,pageH-80,pageW-70,pageH-25),220) }
-        signature?.let { drawFit(it,Rect(split+12,pageH-72,split+150,pageH-28)) }
-        c.drawText("PODGLĄD EWIDENCYJNY · status i autentyczność wymagają odrębnej weryfikacji",48f,pageH-18f,small)
-        pdf.finishPage(page)
-        try { context.contentResolver.openOutputStream(uri)?.use { pdf.writeTo(it) } ?: error("Nie można zapisać wybranego pliku PDF.") }
-        finally { pdf.close() }
+        finishPage()
+        try {
+            context.contentResolver.openOutputStream(uri)?.use { pdf.writeTo(it) }
+                ?: error("Nie można zapisać wybranego pliku PDF.")
+        } finally { pdf.close() }
     }
 }
