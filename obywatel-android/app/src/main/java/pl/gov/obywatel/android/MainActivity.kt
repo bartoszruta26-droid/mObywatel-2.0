@@ -3614,7 +3614,6 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                 entityValues,
                 owner = entityFields.firstOrNull()?.let { fields[it.first].orEmpty() }.orEmpty()
             )
-            DocumentPdfExportButton(entityTitle, entityValues)
             entityFields.forEach { (key, label, placeholder) ->
                 if (editable) DemoDataField(key, label, fields, placeholder)
                 else RegistryReadOnlyField(label, fields[key])
@@ -3638,6 +3637,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                 RegistryReadOnlyField("Data sporządzenia odpisu / dokumentu", fields["registry_${entityKey}_documentDate"])
                 RegistryReadOnlyField("Uwagi", fields["registry_${entityKey}_notes"])
             }
+            DocumentPdfExportButton(entityTitle, entityValues)
         }
     }
 }
