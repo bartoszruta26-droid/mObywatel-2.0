@@ -3342,9 +3342,22 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                 Text("‹  Wszystkie rodzaje podmiotów", color = Blue, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clickable { selectedEntity = null }.padding(vertical = 5.dp))
             }
-            Text(sections.first { it.first == entityKey }.second, color = Navy,
-                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            fieldSets[entityKey].orEmpty().forEach { (key, label, placeholder) ->
+            val entityTitle = sections.first { it.first == entityKey }.second
+            val entityFields = fieldSets[entityKey].orEmpty()
+            val entityValues = entityFields.associate { (key, label, _) -> label to fields[key].orEmpty() } +
+                mapOf(
+                    "Źródło danych / adres rejestru" to fields["registry_${entityKey}_source"].orEmpty(),
+                    "Data sprawdzenia" to fields["registry_${entityKey}_checked"].orEmpty(),
+                    "Data sporządzenia dokumentu" to fields["registry_${entityKey}_documentDate"].orEmpty()
+                )
+            Text(entityTitle, color = Navy, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            DocumentIdentityTemplate(
+                entityTitle,
+                entityValues,
+                owner = entityFields.firstOrNull()?.let { fields[it.first].orEmpty() }.orEmpty()
+            )
+            DocumentPdfExportButton(entityTitle, entityValues)
+            entityFields.forEach { (key, label, placeholder) ->
                 if (editable) DemoDataField(key, label, fields, placeholder)
                 else RegistryReadOnlyField(label, fields[key])
             }
