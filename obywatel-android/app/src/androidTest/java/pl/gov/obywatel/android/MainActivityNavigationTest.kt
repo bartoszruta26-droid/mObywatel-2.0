@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import org.junit.Rule
@@ -104,7 +105,7 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Usługi publiczne").assertIsDisplayed()
         composeRule.onNodeWithText("Szukaj usługi").assertIsDisplayed()
         composeRule.onNodeWithText("mObywatel — portal").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Wróć").performClick()
+        composeRule.onNodeWithContentDescription("Wróć").performClick()
         composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
         selectBottomTab("Kod QR")
         composeRule.onNodeWithText("Obywatelska Wymiana Danych").assertIsDisplayed()
