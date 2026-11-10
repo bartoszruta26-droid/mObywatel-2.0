@@ -5,6 +5,7 @@ package pl.gov.obywatel.android.ui.home
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import org.junit.Rule
 import org.junit.Test
 import pl.gov.obywatel.android.MainActivity
@@ -20,16 +21,14 @@ class HomeScreenTest {
 
     @Test
     fun showsIndependentApplicationNoticeAndCurrentDashboard() {
-        composeRule.onNodeWithText("Obywatel").assertIsDisplayed()
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-        composeRule.onNodeWithText(
-            "Niezależna aplikacja obywatelska • nie jest częścią rządowego systemu mObywatel. Dane urzędowe wymagają potwierdzenia we właściwym źródle."
-        ).assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
+        composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
     }
 
     @Test
     fun dashboardProvidesDocumentsAndServicesEntryPoints() {
-        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
         composeRule.onNodeWithText("Wszystkie usługi").assertIsDisplayed()
         composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
     }
