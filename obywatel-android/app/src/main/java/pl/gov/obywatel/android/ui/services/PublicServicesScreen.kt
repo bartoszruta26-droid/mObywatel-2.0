@@ -2,8 +2,14 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.ui.services
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +31,7 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,17 +66,44 @@ private val govServices=listOf(
     GovService("Jakość powietrza GIOŚ","Środowisko","Dane pomiarowe i komunikaty o jakości powietrza.","https://powietrze.gios.gov.pl/","Usługa online",true,"gios.gov.pl")
 )
 
+private val embeddedAllowedHosts = setOf(
+    "gov.pl","www.gov.pl","mobywatel.gov.pl","pz.gov.pl","epuap.gov.pl",
+    "historiapojazdu.gov.pl","pacjent.gov.pl","www.podatki.gov.pl","www.zus.pl",
+    "ceidg.gov.pl","www.biznes.gov.pl","ekrs.ms.gov.pl","ekw.ms.gov.pl",
+    "www.geoportal.gov.pl","www.pfron.org.pl","empatia.mpips.gov.pl",
+    "dane.gov.pl","powietrze.gios.gov.pl"
+)
+
 @Composable
 fun PublicServicesScreen(onBack:()->Unit) {
     val context=LocalContext.current
     val scope= rememberCoroutineScope()
     var query by remember{mutableStateOf("")}
     var category by remember{mutableStateOf("Wszystkie")}
+    var embeddedUrl by remember{mutableStateOf<String?>(null)}
+    var embeddedTitle by remember{mutableStateOf("")}
+    var pageTitle by remember{mutableStateOf("")}
+    var pageProgress by remember{mutableIntStateOf(0)}
+    var canGoBack by remember{mutableStateOf(false)}
+    var canGoForward by remember{mutableStateOf(false)}
+    var webView by remember{mutableStateOf<WebView?>(null)}
     val status= remember{mutableStateMapOf<String,String>()}
     val checkedAt= remember{mutableStateMapOf<String,String>()}
     val categories=listOf("Wszystkie")+govServices.map{it.category}.distinct().sorted()
     val visible=govServices.filter{(category=="Wszystkie"||it.category==category)&&
         (query.isBlank()||(it.name+" "+it.description+" "+it.category).contains(query,true))}
+    fun openInBrowser(service:GovService) {
+        embeddedTitle=service.name
+        pageTitle=service.name
+        embeddedUrl=service.url
+    }
+    BackHandler(enabled=embeddedUrl!=null) {
+        val view=webView
+        if(view?.canGoBack()==true) view.goBack() else {
+            embeddedUrl=null
+            webView=null
+        }
+    }
     fun check(service:GovService) {
         status[service.url]="Sprawdzanie…"
         scope.launch {
@@ -89,13 +124,84 @@ fun PublicServicesScreen(onBack:()->Unit) {
             checkedAt[service.url]=java.text.SimpleDateFormat("HH:mm:ss",java.util.Locale.getDefault()).format(java.util.Date())
         }
     }
+    if(embeddedUrl!=null) {
+        Column(Modifier.fillMaxSize().semantics{paneTitle="Przeglądarka usług publicznych"}) {
+            Row(verticalAlignment=Alignment.CenterVertically,modifier=Modifier.fillMaxWidth().padding(horizontal=8.dp,vertical=4.dp)) {
+                IconButton(onClick={
+                    val view=webView
+                    if(view?.canGoBack()==true) view.goBack() else { embeddedUrl=null; webView=null }
+                }) { Icon(Icons.AutoMirrored.Filled.ArrowBack,contentDescription="Wróć") }
+                Column(Modifier.weight(1f)) {
+                    Text(embeddedTitle,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold,maxLines=1)
+                    Text(pageTitle.ifBlank { embeddedUrl!! },style=MaterialTheme.typography.labelSmall,maxLines=1)
+                }
+                if(pageProgress in 1..99) CircularProgressIndicator(progress={pageProgress/100f},modifier=Modifier.size(22.dp),strokeWidth=2.dp)
+                IconButton(onClick={webView?.reload()}){Icon(Icons.Default.Refresh,contentDescription="Odśwież stronę")}
+                IconButton(onClick={runCatching{context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(embeddedUrl)))}.onFailure{status[embeddedUrl!!]="Nie można otworzyć strony w systemowej przeglądarce."})}){
+                    Icon(Icons.Default.OpenInNew,contentDescription="Otwórz poza aplikacją")
+                }
+            }
+            LinearProgressIndicator(progress={pageProgress/100f},modifier=Modifier.fillMaxWidth(),color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.surfaceVariant)
+            AndroidView(
+                modifier=Modifier.weight(1f).fillMaxWidth(),
+                factory={ctx ->
+                    WebView(ctx).apply {
+                        settings.javaScriptEnabled=true
+                        settings.domStorageEnabled=true
+                        settings.loadsImagesAutomatically=true
+                        settings.javaScriptCanOpenWindowsAutomatically=false
+                        settings.setSupportMultipleWindows(false)
+                        settings.allowFileAccess=false
+                        settings.allowContentAccess=false
+                        settings.mixedContentMode=android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
+                        webChromeClient=object:WebChromeClient(){
+                            override fun onProgressChanged(view:WebView,newProgress:Int){pageProgress=newProgress}
+                            override fun onReceivedTitle(view:WebView,title:String?){pageTitle=title.orEmpty()}
+                        }
+                        webViewClient=object:WebViewClient(){
+                            override fun shouldOverrideUrlLoading(view:WebView,request:WebResourceRequest):Boolean {
+                                val uri=request.url
+                                val scheme=uri.scheme?.lowercase()
+                                val host=uri.host?.lowercase()
+                                if(scheme=="https" && host in embeddedAllowedHosts) return false
+                                if(scheme=="http"||scheme=="https") {
+                                    runCatching{context.startActivity(Intent(Intent.ACTION_VIEW,uri))}
+                                    return true
+                                }
+                                return true
+                            }
+                            override fun onPageFinished(view:WebView,url:String?){
+                                canGoBack=view.canGoBack()
+                                canGoForward=view.canGoForward()
+                            }
+                        }
+                        webView=this
+                        loadUrl(embeddedUrl!!)
+                    }
+                },
+                update={view->
+                    if(view.url!=embeddedUrl) view.loadUrl(embeddedUrl!!)
+                    canGoBack=view.canGoBack()
+                    canGoForward=view.canGoForward()
+                },
+                onRelease={view->view.stopLoading();view.destroy();if(webView===view)webView=null}
+            )
+            Row(Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=5.dp),horizontalArrangement=Arrangement.SpaceBetween) {
+                TextButton(onClick={if(canGoBack)webView?.goBack()}){Text("Wstecz")}
+                TextButton(onClick={if(canGoForward)webView?.goForward()}){Text("Dalej")}
+                TextButton(onClick={webView?.reload()}){Text("Odśwież")}
+            }
+            Text("Przeglądarka jest osadzonym widokiem stron. Logowanie i działanie usług zależą od polityki danego portalu; dla stron blokujących WebView można otworzyć przeglądarkę zewnętrzną.",modifier=Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=4.dp),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        return
+    }
     Surface(Modifier.fillMaxSize().semantics{paneTitle="Katalog usług publicznych"},color=MaterialTheme.colorScheme.background) {
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             Row(verticalAlignment=Alignment.CenterVertically) {
                 IconButton(onClick=onBack){Icon(Icons.AutoMirrored.Filled.ArrowBack,contentDescription="Wróć")}
                 Text("Usługi publiczne",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f).semantics{heading()})
             }
-            Text("Katalog odnośników do oficjalnych portali administracji publicznej. OWD nie przejmuje logowania ani składania wniosków.",style=MaterialTheme.typography.bodySmall)
+            Text("Wyszukaj usługę i otwórz jej stronę we wbudowanej przeglądarce. Logowanie odbywa się bezpośrednio w portalu, gdy jest przez niego obsługiwane.",style=MaterialTheme.typography.bodySmall)
             OutlinedTextField(query,{query=it},modifier=Modifier.fillMaxWidth(),singleLine=true,label={Text("Szukaj usługi")})
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)){
                 categories.forEach{FilterChip(selected=category==it,onClick={category=it},label={Text(it)})}
@@ -108,7 +214,7 @@ fun PublicServicesScreen(onBack:()->Unit) {
                             Row(verticalAlignment=Alignment.CenterVertically) {
                                 Text(service.name,fontWeight=FontWeight.SemiBold,modifier=Modifier.weight(1f))
                                 IconButton(onClick={check(service)}){Icon(Icons.Default.Refresh,contentDescription="Sprawdź odnośnik")}
-                                IconButton(onClick={runCatching{context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(service.url)))}.onFailure{status[service.url]="Nie można otworzyć odnośnika."}}){Icon(Icons.Default.OpenInNew,contentDescription="Otwórz oficjalną stronę")}
+                                IconButton(onClick={openInBrowser(service)}){Icon(Icons.Default.OpenInNew,contentDescription="Otwórz w przeglądarce")}
                             }
                             Text(service.description,style=MaterialTheme.typography.bodySmall)
                             Text(service.category+" • "+service.access,style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary)
