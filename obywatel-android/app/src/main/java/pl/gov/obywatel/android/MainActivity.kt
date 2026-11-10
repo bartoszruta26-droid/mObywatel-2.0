@@ -370,6 +370,9 @@ private fun HomeScreen() {
                     )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
+                    activeService == "Informacje prawne" -> LegalInformationScreen(
+                        onBack = { activeService = null }
+                    )
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
@@ -390,7 +393,8 @@ private fun HomeScreen() {
                         onOpenHelp = { activeService = "Pomoc i informacje" },
                         onOpenHistory = { activeService = "Historia działań" },
                         onOpenIdentityDesigner = { showIdentityDesigner = true },
-                        onOpenImportedDocuments = { showImportedDocuments = true }
+                        onOpenImportedDocuments = { showImportedDocuments = true },
+                        onOpenLegalInformation = { activeService = "Informacje prawne" }
                     )
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
@@ -1268,7 +1272,8 @@ private fun MoreMenuScreen(
     onOpenHelp: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenIdentityDesigner: () -> Unit,
-    onOpenImportedDocuments: () -> Unit
+    onOpenImportedDocuments: () -> Unit,
+    onOpenLegalInformation: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -1284,7 +1289,7 @@ private fun MoreMenuScreen(
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
-        ProfileActionCard("Informacje prawne", "Prywatność i zasady korzystania", Icons.Filled.Description, onOpenHelp)
+        ProfileActionCard("Informacje prawne", "Podstawy prawne, prawa obywatelskie i zasady działania aplikacji", Icons.Filled.Description, onOpenLegalInformation)
     }
 }
 
