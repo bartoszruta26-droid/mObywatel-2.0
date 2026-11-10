@@ -140,7 +140,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     renderPdf(c,title,number,recipient,body,signer,role,watermark,
                         orgs.firstOrNull{it.id==orgId},
                         assets.firstOrNull{it.id==logoId},assets.firstOrNull{it.id==sealId},assets.firstOrNull{it.id==signatureId},
-                        assets.firstOrNull{it.id==backgroundId},assets.firstOrNull{it.id==flagId},assets.firstOrNull{it.id==emblemId},assets.firstOrNull{it.id==securityId})
+                        assets.firstOrNull{it.id==backgroundId},assets.firstOrNull{it.id==flagId},assets.firstOrNull{it.id==emblemId},assets.firstOrNull{it.id==securityId},documentGroup)
                 }
                 withContext(Dispatchers.IO) { c.contentResolver.openOutputStream(uri,"wt")?.use{it.write(bytes)} ?: error("Nie można zapisać PDF.") }
                 lastPdf=uri; message="PDF zapisany. Wzór podpisu i grafika pieczęci nie są podpisem elektronicznym."
@@ -309,42 +309,113 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     SimpleChoice(label,items.firstOrNull{it.id==selected}?.name ?: "Brak",listOf("Brak")+items.map{it.name}){name->onPick(items.firstOrNull{it.name==name}?.id ?: "")}
 }
 
-private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?):ByteArray {
+private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?,group:String):ByteArray {
     val pdf=PdfDocument()
     val page=pdf.startPage(PdfDocument.PageInfo.Builder(595,842,1).create())
     val canvas=page.canvas
     val p=Paint(Paint.ANTI_ALIAS_FLAG)
     canvas.drawColor(android.graphics.Color.WHITE)
     background?.let{drawImage(c,canvas,it,0f,0f,595f,842f)}
-    flag?.let{drawImage(c,canvas,it,42f,105f,82f,42f)}
-    emblem?.let{drawImage(c,canvas,it,135f,95f,54f,54f)}
-    p.color=android.graphics.Color.rgb(30,70,120);p.strokeWidth=2f;canvas.drawLine(38f,38f,557f,38f,p)
-    p.textSize=18f;p.typeface=Typeface.DEFAULT_BOLD
-    canvas.drawText((org?.name ?: "Podmiot").take(50),42f,78f,p)
-    logo?.let{drawImage(c,canvas,it,480f,48f,65f,65f)}
-    p.color=android.graphics.Color.LTGRAY;p.textSize=54f;p.typeface=Typeface.DEFAULT_BOLD
-    canvas.save();canvas.rotate(-30f,295f,420f);canvas.drawText(watermark.take(18),110f,430f,p);canvas.restore()
-    p.color=android.graphics.Color.DKGRAY;p.textSize=22f;canvas.drawText(title.take(45),42f,190f,p)
-    p.textSize=10f;p.typeface=Typeface.DEFAULT
-    canvas.drawText("Numer: "+number,42f,218f,p)
-    canvas.drawText("Data: "+java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date()),42f,236f,p)
-    canvas.drawText("Identyfikator OWD: "+number,42f,252f,p)
-    canvas.drawText("Adresat / przedmiot:",42f,280f,p)
-    drawLines(canvas,recipient,42f,302f,510f,p)
-    drawLines(canvas,body,42f,355f,510f,p)
-    canvas.drawText(role.take(70),42f,680f,p);canvas.drawText(signer.take(70),42f,700f,p)
-    seal?.let{drawImage(c,canvas,it,410f,615f,90f,90f)}
-    security?.let{drawImage(c,canvas,it,485f,610f,65f,65f)}
-    signature?.let{drawImage(c,canvas,it,42f,710f,140f,50f)}
-    runCatching {
-        val matrix=QRCodeWriter().encode("urn:owd:document:"+number,BarcodeFormat.QR_CODE,96,96)
-        val qr=android.graphics.Bitmap.createBitmap(96,96,android.graphics.Bitmap.Config.ARGB_8888)
-        for(y in 0 until 96) for(x in 0 until 96) qr.setPixel(x,y,if(matrix[x,y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
-        canvas.drawBitmap(qr,470f,700f,null);qr.recycle()
+    val navy=android.graphics.Color.rgb(28,48,76)
+    val burgundy=android.graphics.Color.rgb(105,34,54)
+    val forest=android.graphics.Color.rgb(37,83,66)
+    val slate=android.graphics.Color.rgb(65,76,91)
+    val accent=when(group) {
+        "Kościelne" -> burgundy
+        "Fundacyjne","Stowarzyszeniowe" -> forest
+        "Firmowe" -> navy
+        "Rodowe" -> android.graphics.Color.rgb(105,79,39)
+        "Cywilne" -> slate
+        "Zawodowe" -> android.graphics.Color.rgb(31,91,112)
+        "Urzędowe" -> android.graphics.Color.rgb(35,55,82)
+        else -> navy
     }
-    p.textSize=8f;p.color=android.graphics.Color.GRAY
-    canvas.drawText("Projekt OWD. QR identyfikuje lokalny dokument; nie potwierdza wystawcy.",42f,814f,p)
-    canvas.drawText("Grafika pieczęci i wzór podpisu nie stanowią podpisu elektronicznego.",42f,802f,p)
+    val margin=if(group=="Urzędowe")52f else 42f
+    flag?.let{drawImage(c,canvas,it,margin,42f,68f,34f)}
+    emblem?.let{drawImage(c,canvas,it,margin+78f,35f,54f,54f)}
+    logo?.let{drawImage(c,canvas,it,475f,38f,76f,68f)}
+    p.color=accent;p.strokeWidth=2.2f
+    canvas.drawLine(margin,112f,595f-margin,112f,p)
+    p.textSize=8.5f;p.typeface=Typeface.DEFAULT
+    p.color=android.graphics.Color.DKGRAY
+    canvas.drawText(group.uppercase(java.util.Locale("pl")),margin,132f,p)
+    p.textSize=15f;p.typeface=Typeface.DEFAULT_BOLD;p.color=accent
+    canvas.drawText((org?.name ?: "Podmiot").take(58),margin,82f,p)
+    p.color=android.graphics.Color.LTGRAY;p.textSize=48f;p.typeface=Typeface.DEFAULT_BOLD
+    canvas.save();canvas.rotate(-30f,295f,420f);canvas.drawText(watermark.take(20),105f,430f,p);canvas.restore()
+    p.color=accent;p.textSize=21f
+    val titleY=when(group){"Kościelne"->190f;"Urzędowe"->188f;"Rodowe"->198f;else->184f}
+    canvas.drawText(title.take(48),margin,titleY,p)
+    p.color=android.graphics.Color.DKGRAY;p.textSize=9.5f;p.typeface=Typeface.DEFAULT
+    canvas.drawText("Numer: "+number,margin,titleY+24f,p)
+    canvas.drawText("Data wystawienia: "+java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date()),margin,titleY+40f,p)
+    canvas.drawText("Identyfikator OWD: "+number,margin,titleY+56f,p)
+    val recipientLabel=when(group) {
+        "Firmowe" -> "ADRESAT / KONTRAHENT:"
+        "Rodowe" -> "OSOBY, KTÓRYCH DOTYCZY DOKUMENT:"
+        "Urzędowe" -> "ADRESAT:"
+        "Zawodowe" -> "OSOBA / PODMIOT:"
+        else -> "ADRESAT / PRZEDMIOT:"
+    }
+    p.color=accent;p.typeface=Typeface.DEFAULT_BOLD;p.textSize=9f
+    canvas.drawText(recipientLabel,margin,titleY+88f,p)
+    p.color=android.graphics.Color.DKGRAY;p.typeface=Typeface.DEFAULT;p.textSize=10f
+    drawLines(canvas,recipient,margin,titleY+108f,595f-margin*2,p)
+    val bodyY=when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
+    p.color=android.graphics.Color.DKGRAY;p.textSize=10f
+    drawLines(canvas,body,margin,bodyY,595f-margin*2,p)
+    // Group-specific reference fields and separators establish a distinct formal hierarchy.
+    val referenceY=bodyY+145f
+    p.color=accent;p.strokeWidth=0.8f
+    canvas.drawLine(margin,referenceY,595f-margin,referenceY,p)
+    p.textSize=8.5f;p.typeface=Typeface.DEFAULT
+    p.color=android.graphics.Color.DKGRAY
+    val referenceLabel=when(group) {
+        "Kościelne" -> "MIEJSCE I DATA • PODSTAWA WYDANIA"
+        "Fundacyjne","Stowarzyszeniowe" -> "PODSTAWA STATUTOWA / UCHWAŁA"
+        "Firmowe" -> "DANE REJESTROWE • ZNAK SPRAWY"
+        "Rodowe" -> "PODSTAWA USTALEŃ RODOWYCH"
+        "Cywilne" -> "MIEJSCE I DATA • ZAŁĄCZNIKI"
+        "Zawodowe" -> "PODSTAWA KWALIFIKACJI / UPRAWNIEŃ"
+        "Urzędowe" -> "PODSTAWA PRAWNA • ZNAK SPRAWY"
+        else -> "INFORMACJE UZUPEŁNIAJĄCE"
+    }
+    canvas.drawText(referenceLabel,margin,referenceY+16f,p)
+    p.color=android.graphics.Color.DKGRAY;p.textSize=9f
+    canvas.drawText("………………………………………………………………………………",margin,referenceY+34f,p)
+    // Signature area: specimen is visibly distinguished from a cryptographic signature.
+    val signY=675f
+    p.color=accent;p.strokeWidth=0.8f
+    canvas.drawLine(margin,signY,595f-margin,signY,p)
+    p.color=android.graphics.Color.DKGRAY;p.textSize=9f;p.typeface=Typeface.DEFAULT_BOLD
+    canvas.drawText(role.take(65),margin,signY+20f,p)
+    p.typeface=Typeface.DEFAULT
+    canvas.drawText(signer.take(65),margin,signY+37f,p)
+    canvas.drawLine(margin,signY+66f,margin+175f,signY+66f,p)
+    canvas.drawText("Podpis osoby uprawnionej",margin,signY+79f,p)
+    seal?.let{drawImage(c,canvas,it,390f,signY-6f,82f,82f)}
+    security?.let{drawImage(c,canvas,it,490f,signY-4f,54f,54f)}
+    signature?.let{drawImage(c,canvas,it,margin+12f,signY+39f,130f,28f)}
+    runCatching {
+        val matrix=QRCodeWriter().encode("urn:owd:document:"+number,BarcodeFormat.QR_CODE,72,72)
+        val qr=android.graphics.Bitmap.createBitmap(72,72,android.graphics.Bitmap.Config.ARGB_8888)
+        for(y in 0 until 72) for(x in 0 until 72) qr.setPixel(x,y,if(matrix[x,y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+        canvas.drawBitmap(qr,500f,745f,null);qr.recycle()
+    }
+    p.textSize=7.2f;p.color=android.graphics.Color.GRAY
+    val footer=when(group) {
+        "Kościelne" -> "Dokument podmiotu kościelnego • skuteczność zależy od umocowania wystawcy"
+        "Fundacyjne" -> "Dokument fundacji • podstawa statutowa i reprezentacja wymagają weryfikacji"
+        "Stowarzyszeniowe" -> "Dokument stowarzyszenia • podstawa statutowa i reprezentacja wymagają weryfikacji"
+        "Firmowe" -> "Dokument podmiotu gospodarczego • dane rejestrowe należy zweryfikować"
+        "Rodowe" -> "Dokument prywatny/rodowy • nie zastępuje dokumentów urzędowych"
+        "Cywilne" -> "Oświadczenie prywatne • skutki prawne zależą od treści i formy"
+        "Zawodowe" -> "Dokument zawodowy • nie zastępuje urzędowego potwierdzenia kwalifikacji"
+        "Urzędowe" -> "WZÓR dokumentu • nie jest dokumentem organu administracji"
+        else -> "Dokument wygenerowany w OWD"
+    }
+    canvas.drawText(footer.take(100),margin,814f,p)
+    canvas.drawText("Grafika pieczęci i wzór podpisu nie stanowią podpisu elektronicznego.",margin,800f,p)
     pdf.finishPage(page);val out=java.io.ByteArrayOutputStream();pdf.writeTo(out);pdf.close();return out.toByteArray()
 }
 private fun drawLines(canvas:android.graphics.Canvas,text:String,x:Float,start:Float,width:Float,p:Paint){
