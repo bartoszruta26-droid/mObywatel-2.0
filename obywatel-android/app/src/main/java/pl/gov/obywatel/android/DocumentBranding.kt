@@ -112,7 +112,7 @@ private fun isFamilyDocument(title: String): Boolean {
 
 private fun isChurchDocument(title: String): Boolean {
     val t = title.lowercase(Locale.ROOT)
-    return listOf("kościel", "kosciel", "papiesk", "papież", "papiez", "misjon", "sakrament", "kanonicz", "biskup", "parafi").any { t.contains(it) }
+    return listOf("kościel", "kosciel", "papiesk", "papież", "papiez", "misjon", "sakrament", "kanonicz", "biskup", "parafi", "szafarz", "liturg", "święce", "swiece", "konsekr", "jurysdykc", "diecez", "ekumen").any { t.contains(it) }
 }
 
 private fun defaultDocumentFlag(context: Context, title: String): Bitmap? =
@@ -171,7 +171,10 @@ private fun defaultDocumentBackground(context: Context, title: String): Bitmap? 
             R.drawable.bg_document_vaccination_booklet
         normalized.contains("cywil") || normalized.contains("urodzen") || normalized.contains("małżeń") ||
             normalized.contains("malzen") || normalized.contains("zgon") || normalized.contains("meldun") ||
-            normalized.contains("obywatel") || normalized.contains("urzęd") || normalized.contains("urzed") ->
+            normalized.contains("obywatel") || normalized.contains("urzęd") || normalized.contains("urzed") ||
+            normalized.startsWith("akt ") || normalized.startsWith("odpis ") ||
+            normalized.contains("oświadczen") || normalized.contains("oswiadczen") ||
+            normalized.contains("zaświadczen") || normalized.contains("zaswiadczen") ->
             R.drawable.bg_document_civic_identity
         normalized.contains("fundac") || normalized.contains("stowarz") || normalized.contains("firm") ||
             normalized.contains("spół") || normalized.contains("spol") || normalized.contains("rejestr podmiot") ->
