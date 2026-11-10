@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+# SPDX-License-Identifier: EUPL-1.2
+
 # OWD PAdES validation module
 
 JVM-side validation component based on European Commission Digital Signature Services (DSS) **6.5.1**. It is intentionally separate from the Android APK: DSS validation, trust-list and certificate-validation dependencies belong in a controlled backend process.
