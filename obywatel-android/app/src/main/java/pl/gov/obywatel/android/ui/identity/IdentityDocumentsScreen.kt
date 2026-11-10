@@ -141,7 +141,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     renderPdf(c,title,number,recipient,body,signer,role,watermark,
                         orgs.firstOrNull{it.id==orgId},
                         assets.firstOrNull{it.id==logoId},assets.firstOrNull{it.id==sealId},assets.firstOrNull{it.id==signatureId},
-                        assets.firstOrNull{it.id==backgroundId},assets.firstOrNull{it.id==flagId},assets.firstOrNull{it.id==emblemId},assets.firstOrNull{it.id==securityId},documentGroup)
+                        assets.firstOrNull{it.id==backgroundId},assets.firstOrNull{it.id==flagId},assets.firstOrNull{it.id==emblemId},assets.firstOrNull{it.id==securityId},documentGroup,layout)
                 }
                 withContext(Dispatchers.IO) { c.contentResolver.openOutputStream(uri,"wt")?.use{it.write(bytes)} ?: error("Nie można zapisać PDF.") }
                 lastPdf=uri; message="PDF zapisany. Wzór podpisu i grafika pieczęci nie są podpisem elektronicznym."
@@ -297,6 +297,46 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
             }
             if(message.isNotBlank()) Text(message,color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall,modifier=Modifier.padding(top=8.dp))
         }
+    }
+}
+
+@Composable
+private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayout) -> Unit) {
+    var selected by remember { mutableStateOf("title") }
+    val element = layout.element(selected) ?: layout.elements.first()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Układ strony i rozmieszczenie", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("Współrzędne w punktach PDF (A4: 595 × 842). Zmiany zapisują się w szablonie.", style = MaterialTheme.typography.bodySmall)
+        OutlinedTextField(
+            value = layout.pageCount.toString(),
+            onValueChange = { value -> value.toIntOrNull()?.let { onChange(layout.copy(pageCount = it.coerceIn(1, 100))) } },
+            label = { Text("Minimalna liczba stron (1–100)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        SimpleChoice("Edytowany element", element.label, layout.elements.map { it.label }) { label ->
+            layout.elements.firstOrNull { it.label == label }?.let { selected = it.id }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(element.x.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(x=it.coerceIn(0f,595f)))) } }, label={Text("X")}, modifier=Modifier.weight(1f))
+            OutlinedTextField(element.y.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(y=it.coerceIn(0f,842f)))) } }, label={Text("Y")}, modifier=Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(element.width.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(width=it.coerceIn(1f,595f)))) } }, label={Text("Szerokość")}, modifier=Modifier.weight(1f))
+            OutlinedTextField(element.height.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(height=it.coerceIn(1f,842f)))) } }, label={Text("Wysokość")}, modifier=Modifier.weight(1f))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Widoczny")
+            Spacer(Modifier.width(8.dp))
+            Switch(checked=element.visible, onCheckedChange={onChange(layout.update(element.copy(visible=it)))})
+            Spacer(Modifier.width(16.dp))
+            Text("Zablokowany")
+            Spacer(Modifier.width(8.dp))
+            Switch(checked=element.locked, onCheckedChange={onChange(layout.update(element.copy(locked=it)))})
+        }
+        if (!element.locked) {
+            OutlinedTextField(element.fontSize.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(fontSize=it.coerceIn(5f,72f)))) } }, label={Text("Rozmiar tekstu")}, modifier=Modifier.fillMaxWidth())
+        }
+        OutlinedButton(onClick={onChange(DocumentLayout())}, modifier=Modifier.fillMaxWidth()) { Text("Przywróć układ domyślny") }
     }
 }
 
