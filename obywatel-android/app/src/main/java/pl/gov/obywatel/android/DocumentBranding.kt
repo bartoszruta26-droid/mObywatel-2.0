@@ -328,4 +328,4 @@ private object DocumentPdfRenderer {
         try { context.contentResolver.openOutputStream(uri)?.use { pdf.writeTo(it) } ?: error("Nie można zapisać wybranego pliku PDF.") }
         finally { pdf.close() }
     }
-}}
+}
