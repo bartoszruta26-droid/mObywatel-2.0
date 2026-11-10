@@ -108,11 +108,12 @@ internal fun DocumentIdentityTemplate(
     title: String,
     values: Map<String, String>,
     owner: String = "",
+    photoOverride: Bitmap? = null,
     validity: String = values.entries.firstOrNull { it.key.contains("status", true) || it.key.contains("waż", true) }?.value.orEmpty()
 ) {
     val context = LocalContext.current
     val effectiveOwner = owner.ifBlank { values.entries.firstOrNull { it.key.contains("wystawc", true) || it.key.contains("nazwa", true) || it.key.contains("podmiot", true) || it.key.contains("kościół", true) || it.key.contains("rodu", true) }?.value.orEmpty() }
-    val photo = remember(effectiveOwner) { DocumentBrandStore.image(context, effectiveOwner, "Fotografia") }
+    val photo = remember(effectiveOwner, photoOverride) { photoOverride ?: DocumentBrandStore.image(context, effectiveOwner, "Fotografia") }
     val flag = remember(effectiveOwner) { DocumentBrandStore.image(context, effectiveOwner, "Flaga") }
     val emblem = remember(effectiveOwner) {
         DocumentBrandStore.image(context, effectiveOwner, "Godło")
