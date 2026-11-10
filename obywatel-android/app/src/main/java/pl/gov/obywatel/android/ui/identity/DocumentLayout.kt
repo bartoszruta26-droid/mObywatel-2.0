@@ -109,7 +109,7 @@ internal data class DocumentLayout(
                 val saved = source.optJSONObject(index) ?: continue
                 val id = saved.optString("id")
                 val page = saved.optInt("page", 1).coerceIn(1, 100)
-                if (page <= 1 || parsed.any { it.id == id && it.page == page }) continue
+                if (parsed.any { it.id == id && it.page == page }) continue
                 val template = base.firstOrNull { it.id == id } ?: DocumentLayoutElement(
                     id = id,
                     label = saved.optString("label", "Element dekoracyjny"),
