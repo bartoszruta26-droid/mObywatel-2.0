@@ -378,8 +378,6 @@ internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, 
     ) {
         Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Kod QR dokumentu — vCard 4.0", fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium)
             val qrBitmap = qrResult.getOrNull()
             if (qrBitmap != null) {
                 Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR zawierający dane dokumentu w formacie vCard",
