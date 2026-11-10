@@ -405,7 +405,7 @@ private fun HomeScreen() {
                             Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
-                                    SectionHeading("Dokumenty", "Lokalny portfel dokumentów")
+                                    SectionHeading("Dokumenty", "Portfel dokumentów")
                                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                                         Text("Dodaj", color = Blue, fontWeight = FontWeight.Bold,
                                             modifier = Modifier.clickable { selectedTab = 4; showSettingsMenu = true }.padding(vertical = 8.dp))
@@ -444,7 +444,7 @@ private fun HomeScreen() {
                                                         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                                                             Image(
                                                                 painter = painterResource(imageRes),
-                                                                contentDescription = "Podgląd: $label — lokalna ewidencja",
+                                                                contentDescription = "Podgląd: $label",
                                                                 modifier = Modifier.fillMaxWidth().height(88.dp),
                                                                 contentScale = ContentScale.Fit
                                                             )
@@ -591,7 +591,7 @@ private fun HomeScreen() {
                     val added = incoming.size - overwritten
                     Text(
                         "Plik zawiera ${incoming.size} pól. Nowe: ${added}; zastąpią istniejące: ${overwritten}. " +
-                            "Dane zostaną połączone z lokalnymi. Po zapisie aplikacja ponownie odczyta profil i porówna wszystkie wartości."
+                            "Dane zostaną połączone z profilem. Po zapisie aplikacja sprawdzi zgodność zapisanych wartości."
                     )
                 },
                 confirmButton = {
@@ -1126,7 +1126,7 @@ private fun VCardQrScreen() {
     var importMessage by remember {
         val hasProfileName = contactFields["FN"].orEmpty().isNotBlank()
         mutableStateOf(
-            if (hasProfileName) "Wstępnie uzupełniono dane z lokalnego profilu mObywatela. Sprawdź i popraw pola przed utworzeniem kodu."
+            if (hasProfileName) "Wstępnie uzupełniono dane profilu. Sprawdź i popraw pola przed utworzeniem kodu."
             else "Brak imienia i nazwiska w profilu. Uzupełnij dane ręcznie lub wczytaj plik .vcf."
         )
     }
@@ -1185,7 +1185,7 @@ private fun VCardQrScreen() {
         )
         Text(logoMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
         Text("Dane kontaktowe", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-        Text("Pola są domyślnie uzupełniane z danych zapisanych lokalnie w profilu aplikacji. Możesz je edytować przed wygenerowaniem wizytówki. Dane identyfikacyjne, takie jak PESEL i numery dokumentów, nie są kopiowane do kodu QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Pola są domyślnie uzupełniane z profilu. Możesz je edytować przed wygenerowaniem wizytówki. Dane identyfikacyjne, takie jak PESEL i numery dokumentów, nie są kopiowane do kodu QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
         val fields = listOf(
             "FN" to "Nazwa wyświetlana",
             "N" to "Nazwisko;Imię;Drugie imię;Prefiks;Sufiks",
@@ -1277,13 +1277,13 @@ private fun MoreMenuScreen(
     ) {
         Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Informacje, bezpieczeństwo i ustawienia", color = Muted, style = MaterialTheme.typography.bodySmall)
-        ProfileActionCard("Historia działań", "Lokalna lista czynności w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
+        ProfileActionCard("Historia działań", "Lista czynności w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
         ProfileActionCard("Wydane certyfikaty", "Informacje o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Projektant dokumentów", "Tworzenie dokumentów, układ, podgląd i eksport PDF", Icons.Filled.Description, onOpenIdentityDesigner)
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
-        ProfileActionCard("Ustawienia", "Dane lokalne, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
+        ProfileActionCard("Ustawienia", "Dane, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
         ProfileActionCard("Informacje prawne", "Prywatność i zasady korzystania", Icons.Filled.Description, onOpenHelp)
     }
 }
@@ -1318,11 +1318,11 @@ private fun ProfileLandingScreen(
                 }
             }
         }
-        ProfileActionCard("Dokumenty i dane", "Przeglądaj lokalną ewidencję", Icons.Filled.CreditCard, onOpenDocuments)
+        ProfileActionCard("Dokumenty i dane", "Przeglądaj dane i oświadczenia", Icons.Filled.CreditCard, onOpenDocuments)
         ProfileActionCard("Zaświadczenia", "Zapisane dane dokumentów i zaświadczeń", Icons.Filled.Description, onOpenCertificates)
-        ProfileActionCard("Ustawienia", "Otwórz menu zarządzania lokalnymi danymi", Icons.Filled.Settings, onOpenSettings)
+        ProfileActionCard("Ustawienia", "Otwórz menu zarządzania danymi", Icons.Filled.Settings, onOpenSettings)
         Text(
-            "Dane profilu są przechowywane lokalnie na tym urządzeniu.",
+            "Dane profilu możesz uzupełniać i aktualizować w ustawieniach.",
             color = Muted, style = MaterialTheme.typography.bodySmall
         )
     }
@@ -1350,13 +1350,13 @@ private fun ProfileActionCard(title: String, subtitle: String, icon: ImageVector
 private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocuments: () -> Unit) {
     val descriptions = mapOf(
         "Polak za granicą" to "Informacje dla obywateli przebywających poza granicami kraju.",
-        "Płatności" to "Miejsce na ewidencję opłat i informacje o usługach płatniczych. Brak integracji z systemami płatności.",
-        "Zdrowie" to "Lokalny zestaw informacji zdrowotnych i odnośników. Dane nie są pobierane z Internetowego Konta Pacjenta.",
-        "Transport" to "Informacje transportowe i ewidencja danych związanych z podróżą. Brak połączenia z rejestrami publicznymi.",
-        "Mandaty" to "Miejsce na lokalną ewidencję informacji o mandatach. Brak dostępu do policyjnych i administracyjnych rejestrów mandatów.",
-        "Sprawdź PESEL" to "Ekran informacyjny dotyczący numeru PESEL. Aplikacja nie odpytuje rejestru PESEL i nie potwierdza danych.",
-        "Zastrzeż PESEL" to "Ekran informacyjny dotyczący zastrzeżenia numeru PESEL. Aplikacja nie wysyła dyspozycji do rejestru i nie zmienia statusu numeru.",
-        "Bilety" to "Miejsce na prezentację własnych zapisów dotyczących biletów. Aplikacja nie sprzedaje ani nie waliduje biletów.",
+        "Płatności" to "Informacje o opłatach i usługach płatniczych.",
+        "Zdrowie" to "Informacje zdrowotne i odnośniki do usług związanych ze zdrowiem.",
+        "Transport" to "Informacje transportowe i dane związane z podróżą.",
+        "Mandaty" to "Informacje dotyczące mandatów i dane związane ze sprawami kierowcy.",
+        "Sprawdź PESEL" to "Informacje dotyczące numeru PESEL.",
+        "Zastrzeż PESEL" to "Informacje dotyczące zastrzeżenia numeru PESEL.",
+        "Bilety" to "Informacje i dane dotyczące biletów.",
         "Bezpieczeństwo" to "Ustawienia prywatności, wskazówki bezpieczeństwa i informacje o ochronie danych.",
         "Środowisko" to "Informacje środowiskowe i lokalne materiały edukacyjne.",
         "Pozostałe" to "Katalog dodatkowych modułów i informacji."
@@ -1384,7 +1384,7 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
             }
         }
         if (title == "Bezpieczeństwo") {
-            ProfileActionCard("Dane i dokumenty lokalne", "Otwórz formularz danych przechowywanych na urządzeniu", Icons.Filled.Security, onOpenDocuments)
+            ProfileActionCard("Dane i dokumenty", "Otwórz formularz danych", Icons.Filled.Security, onOpenDocuments)
         }
         if (title == "Zdrowie") {
             ProfileActionCard("Dane o niepełnosprawności", "Otwórz ewidencję dokumentów i wskazań", Icons.Filled.HealthAndSafety, onOpenDocuments)
@@ -1516,7 +1516,7 @@ private fun SettingsMenuScreen(
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Ustawienia", color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Zarządzanie lokalnymi danymi", color = Muted,
+        Text("Zarządzanie danymi", color = Muted,
             style = MaterialTheme.typography.bodyMedium)
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -1562,7 +1562,7 @@ private fun SettingsMenuScreen(
             }
         }
         Text("Kopia danych vCard", color = Navy, fontWeight = FontWeight.Bold)
-        Text("Eksport obejmuje zapisane lokalnie pola profilu i ewidencji, w tym załączone dane tekstowe. Plik może zawierać dane wrażliwe — przechowuj go bezpiecznie.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Eksport obejmuje pola profilu i ewidencji, w tym załączone dane tekstowe. Plik może zawierać dane wrażliwe — przechowuj go bezpiecznie.", color = Muted, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Eksportuj wszystkie dane", "Zapisz jedno archiwum .vcf", Icons.Filled.Description, onExportAll)
         ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
         if (importStatus.isNotBlank()) Text(importStatus, color = Blue, style = MaterialTheme.typography.bodySmall)
@@ -1585,7 +1585,7 @@ private fun SettingsMenuScreen(
             Icons.Filled.HealthAndSafety, onEditDisability)
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
-        Text("Zmiany są zapisywane lokalnie w zaszyfrowanym magazynie. Nie są wysyłane do rejestrów ani podmiotów publicznych.",
+        Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
@@ -1667,7 +1667,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                 androidx.compose.material3.Button(
                     onClick = {
                         runCatching { DemoIdentityStore.save(context, fields.toMap()) }
-                            .onSuccess { saveMessage = "Zapisano dane lokalnie i zaszyfrowano." }
+                            .onSuccess { saveMessage = "Zapisano i zabezpieczono dane." }
                             .onFailure { saveMessage = "Błąd zapisu: ${it.localizedMessage ?: "nieznany błąd"}" }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -1772,7 +1772,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                 }
             }
         }
-        Text("Twoje dokumenty i lokalne ewidencje", color = Muted,
+        Text("Twoje dokumenty i oświadczenia", color = Muted,
             style = MaterialTheme.typography.bodyMedium)
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -1783,8 +1783,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Security, contentDescription = null, tint = Blue, modifier = Modifier.size(30.dp))
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text("Dane przechowywane na urządzeniu", color = Navy, fontWeight = FontWeight.Bold)
-                    Text("Wpisy są lokalną ewidencją. Aplikacja nie weryfikuje dokumentów ani statusów w rejestrach publicznych.",
+                    Text("Dane i oświadczenia użytkownika", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Użytkownik może opisać dane własnym oświadczeniem oraz wskazać źródło i podstawę każdego wpisu.",
                         color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -1799,7 +1799,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
             }
             Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
                 Column(Modifier.padding(14.dp)) {
-                    Text("Lokalnie", color = Navy, style = MaterialTheme.typography.titleLarge,
+                    Text("Wpisy", color = Navy, style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold)
                     Text("sposób przechowywania", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
@@ -1833,7 +1833,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                     )
                     Column(Modifier.weight(1f).padding(start = 12.dp)) {
                         Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
-                        Text(if (hasData) "Dane zapisane lokalnie • ewidencja prywatna" else "Brak zapisanych danych",
+                        Text(if (hasData) "Dane uzupełnione • oświadczenie użytkownika" else "Brak zapisanych danych",
                             color = Muted, style = MaterialTheme.typography.bodySmall)
                     }
                     val actionLabel = when (index) {
@@ -2003,7 +2003,7 @@ private fun DocumentDetailsScreen(
                 }
             }
         }
-        Text("Ten ekran służy wyłącznie do przeglądania. Aby zmienić wpis, wróć do ekranu głównego i otwórz menu Ustawienia. Dane są przechowywane lokalnie i nie są sprawdzane w rejestrach publicznych.",
+        Text("Ten ekran służy do przeglądania zapisanych informacji. Aby zmienić wpis, wróć do ekranu głównego i otwórz menu Ustawienia.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
@@ -2437,14 +2437,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Konfiguracja i zapis", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Dane i zdjęcie są szyfrowane lokalnie na tym urządzeniu. Nie są wysyłane do sieci.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Dane i zdjęcie są zabezpieczane przed nieuprawnionym dostępem.", color = Muted, style = MaterialTheme.typography.bodySmall)
                 androidx.compose.material3.Button(
                     onClick = {
                         runCatching {
                             val snapshot = fields.toMutableMap()
                             snapshot["photo"] = photoBase64
                             DemoIdentityStore.save(context, snapshot)
-                        }.onSuccess { saveMessage = "Zapisano lokalnie i zaszyfrowano dane oraz zdjęcie." }
+                        }.onSuccess { saveMessage = "Zapisano i zabezpieczono dane oraz zdjęcie." }
                             .onFailure { saveMessage = "Błąd zapisu: ${it.localizedMessage ?: "nieznany błąd"}" }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -2453,7 +2453,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             }
         }
         Text(
-            "Zapis odbywa się w prywatnym katalogu aplikacji, z użyciem klucza Android Keystore. Odinstalowanie aplikacji usuwa lokalne dane. Zachowaj ostrożność: są to dane wrażliwe.",
+            "Dane są zabezpieczane z użyciem mechanizmów systemu Android. Zachowaj ostrożność: mogą zawierać informacje wrażliwe.",
             color = Muted,
             style = MaterialTheme.typography.bodySmall
         )
@@ -2837,7 +2837,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
         Text("Ewidencja danych identyfikacyjnych i rejestrowych podmiotów. Wybierz rodzaj podmiotu i przepisz dane z właściwego dokumentu lub rejestru.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
         Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
-            Text("Wpisy w tym module są lokalnym zapisem danych. Nie stanowią urzędowego odpisu, nie potwierdzają aktualnego statusu i nie pobierają danych z KRS ani innych rejestrów.",
+            Text("W tym module możesz ująć dane podmiotu oraz własne oświadczenie dotyczące ich zgodności ze stanem faktycznym. Wskaż podstawę i datę oświadczenia.",
                 Modifier.padding(14.dp), color = Navy, style = MaterialTheme.typography.bodySmall)
         }
         sections.forEach { (key, label) ->
@@ -2863,7 +2863,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
         DemoDataField("registry_${selectedEntity}_notes", "Uwagi", fields, "Informacje uzupełniające")
         Button(onClick = {
             runCatching { DemoIdentityStore.save(context, fields.toMap()) }
-                .onSuccess { status = "Zapisano dane lokalnie i zaszyfrowano." }
+                .onSuccess { status = "Zapisano i zabezpieczono dane." }
                 .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
         }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
         if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E),
