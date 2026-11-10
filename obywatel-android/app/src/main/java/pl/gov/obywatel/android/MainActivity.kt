@@ -2290,7 +2290,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     }
                 }
                 OwdDocumentArtworkCard(
-                    imageRes = R.drawable.documents_identity_card,
+                    imageRes = R.drawable.karta_rodowa_jasna,
                     title = "Karta danych tożsamości",
                     subtitle = "Prywatna ewidencja danych identyfikacyjnych",
                     holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane użytkownika" },
@@ -2539,7 +2539,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("passportStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
                 DemoDataField("passportLossDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
                 OwdDocumentArtworkCard(
-                    imageRes = R.drawable.documents_passport,
+                    imageRes = R.drawable.paszport_rodowy_jasny,
                     title = "Dane paszportowe",
                     subtitle = "Prywatna ewidencja dokumentu podróży",
                     holder = fields["passportHolderNames"].orEmpty().ifBlank { "Dane posiadacza" },
@@ -2702,7 +2702,7 @@ private fun DisabilityDecisionPreview(fields: Map<String, String>) {
         else -> "Ewidencja danych orzeczenia"
     }
     OwdDocumentArtworkCard(
-        imageRes = R.drawable.documents_medical_certificates,
+        imageRes = R.drawable.orzeczenie_rodowe_jasne,
         title = "Dane o niepełnosprawności",
         subtitle = label,
         holder = fields["disabilityPersonName"].orEmpty().ifBlank { "Dane osoby" },
