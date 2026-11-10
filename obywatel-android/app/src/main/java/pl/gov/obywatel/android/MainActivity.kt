@@ -949,8 +949,6 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
 }
 
 @Composable
-
-@Composable
 private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
     val context = LocalContext.current
     var pendingBitmap by remember { mutableStateOf<Bitmap?>(null) }
