@@ -1848,6 +1848,64 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
 }
 
 @Composable
+private fun OwdDocumentArtworkCard(
+    imageRes: Int,
+    title: String,
+    subtitle: String,
+    holder: String,
+    details: String,
+    privateRecord: Boolean
+) {
+    Box(
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f)
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, Border, RoundedCornerShape(16.dp))
+    ) {
+        Image(
+            painter = painterResource(imageRes),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Column(
+            modifier = Modifier.fillMaxSize().padding(13.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(0.78f)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(White.copy(alpha = 0.78f))
+                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(title, color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, color = Muted, style = MaterialTheme.typography.labelSmall,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth(0.78f)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(White.copy(alpha = 0.82f))
+                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Text(holder, color = Navy, fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (details.isNotBlank()) {
+                    Text(details, color = Ink, style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Text(
+                    if (privateRecord) "WIDOK INFORMACYJNY • EWIDENCJA PRYWATNA" else "WIDOK INFORMACYJNY • DANE UŻYTKOWNIKA",
+                    color = Muted, style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun DocumentDetailsScreen(
     documentId: String,
     onBack: () -> Unit,
@@ -1925,8 +1983,8 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Image(
-            painter = painterResource(when (documentId.toIntOrNull()) {
+        OwdDocumentArtworkCard(
+            imageRes = when (documentId.toIntOrNull()) {
                 0 -> R.drawable.documents_document_wallet_banner
                 1 -> R.drawable.documents_identity_card
                 2 -> R.drawable.documents_passport
@@ -1935,10 +1993,30 @@ private fun DocumentDetailsScreen(
                 5 -> R.drawable.documents_course_legitimacy
                 6 -> R.drawable.documents_student_legitimacy
                 else -> R.drawable.documents_medical_certificates
-            }),
-            contentDescription = "Ilustracja ewidencji: ${section.first}",
-            modifier = Modifier.fillMaxWidth().height(148.dp).clip(RoundedCornerShape(16.dp)),
-            contentScale = ContentScale.Fit
+            },
+            title = section.first.substringBefore(" —"),
+            subtitle = section.second,
+            holder = when (documentId) {
+                "1" -> listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
+                "2" -> fields["passportHolderNames"].orEmpty()
+                "3" -> fields["familyName"].orEmpty()
+                "4" -> fields["mpIssuer"].orEmpty()
+                "5" -> fields["trainingInstitution"].orEmpty()
+                "6" -> fields["studentUniversity"].orEmpty()
+                "7" -> fields["disabilityPersonName"].orEmpty()
+                else -> ""
+            }.ifBlank { "Dane użytkownika" },
+            details = when (documentId) {
+                "1" -> "Nr: ${fields["idNumber"].orEmpty().ifBlank { "—" }}  •  PESEL: ${fields["pesel"].orEmpty().ifBlank { "—" }}"
+                "2" -> "Nr paszportu: ${fields["passportNumber"].orEmpty().ifBlank { "—" }}"
+                "3" -> "Nr ewidencyjny: ${fields["familyDocNumber"].orEmpty().ifBlank { "—" }}"
+                "4" -> "Kadencja: ${fields["mpTerm"].orEmpty().ifBlank { "—" }}"
+                "5" -> "Nr legitymacji: ${fields["trainingCardNumber"].orEmpty().ifBlank { "—" }}"
+                "6" -> "Nr legitymacji: ${fields["studentCardNumber"].orEmpty().ifBlank { "—" }}"
+                "7" -> "Nr sprawy: ${fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" }}"
+                else -> ""
+            },
+            privateRecord = documentId in setOf("0", "3", "4", "5", "6", "7")
         )
         Card(
             modifier = Modifier.fillMaxWidth(),
