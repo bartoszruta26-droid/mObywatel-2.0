@@ -881,7 +881,7 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     ) {
         Text("Obywatelska Wymiana Danych", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("OWD • niezależna wymiana danych między zgodnymi aplikacjami", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Dwa odrębne kanały rozwoju", color = Navy, fontWeight = FontWeight.Bold)
                 Text("1. OWD peer-to-peer: wymiana między zgodnymi instalacjami aplikacji obywatelskiej. 2. Integracja państwowa: osobny adapter do oficjalnej usługi mObywatela, uruchamiany dopiero po uzyskaniu zgody, certyfikatów i dokumentacji integracyjnej.", color = Ink, style = MaterialTheme.typography.bodySmall)
@@ -1166,7 +1166,7 @@ private fun VCardQrScreen() {
         Text("Kod QR", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Generator kodu kontaktowego", color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text("Utwórz kod QR zawierający wizytówkę vCard. Zgodna aplikacja odbiorcy może odczytać dane i zaproponować zapis kontaktu.", color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Wizytówka kontaktowa", color = Navy, fontWeight = FontWeight.Bold)
                 Text("Kod zawiera dane kontaktowe wybrane przez użytkownika.", color = Ink, style = MaterialTheme.typography.bodySmall)
@@ -1412,13 +1412,13 @@ private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
                     modifier = Modifier.size(42.dp).clip(CircleShape)
-                        .background(Color(0xFF234665)).clickable(onClick = onOpenSettings),
+                        .background(Color(0xFF1B4C3D)).clickable(onClick = onOpenSettings),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Filled.Settings, contentDescription = "Ustawienia", tint = White)
                 }
                 Box(
-                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF234665))
+                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF1B4C3D))
                         .clickable(onClick = onOpenNotifications),
                     contentAlignment = Alignment.Center
                 ) {
@@ -1428,7 +1428,7 @@ private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) 
         }
         Spacer(Modifier.height(22.dp))
         Text("Wszystko w jednym miejscu", color = White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        Text("Usługi, informacje i dokumenty w jednym miejscu", color = Color(0xFFD4E3EF), style = MaterialTheme.typography.bodyMedium)
+        Text("Usługi, informacje i dokumenty w jednym miejscu", color = Color(0xFFDCEBE1), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -1520,7 +1520,7 @@ private fun SettingsMenuScreen(
             style = MaterialTheme.typography.bodyMedium)
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA)),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -1621,7 +1621,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                     val selected = (fields["disabilityAuthorityType"] ?: "powiat") == value
                     Row(
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                            .background(if (selected) BlueLight else Color(0xFFF5F6F7))
+                            .background(if (selected) BlueLight else Color(0xFFF3F4EF))
                             .border(1.dp, if (selected) Blue else Border, RoundedCornerShape(9.dp))
                             .clickable { fields["disabilityAuthorityType"] = value }
                             .padding(11.dp),
@@ -1777,7 +1777,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA)),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -2317,7 +2317,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                         val selected = (fields["disabilityAuthorityType"] ?: "powiat") == value
                         Row(
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                                .background(if (selected) BlueLight else Color(0xFFF5F6F7))
+                                .background(if (selected) BlueLight else Color(0xFFF3F4EF))
                                 .border(1.dp, if (selected) Blue else Border, RoundedCornerShape(9.dp))
                                 .clickable { fields["disabilityAuthorityType"] = value }
                                 .padding(horizontal = 12.dp, vertical = 11.dp),
@@ -2836,7 +2836,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
             fontWeight = FontWeight.Bold)
         Text("Ewidencja danych identyfikacyjnych i rejestrowych podmiotów. Wybierz rodzaj podmiotu i przepisz dane z właściwego dokumentu lub rejestru.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
             Text("Wpisy w tym module są lokalnym zapisem danych. Nie stanowią urzędowego odpisu, nie potwierdzają aktualnego statusu i nie pobierają danych z KRS ani innych rejestrów.",
                 Modifier.padding(14.dp), color = Navy, style = MaterialTheme.typography.bodySmall)
         }
