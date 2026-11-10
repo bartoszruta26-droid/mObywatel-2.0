@@ -12,7 +12,11 @@ import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,6 +24,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,6 +34,9 @@ import org.json.JSONObject
 import java.io.File
 import java.security.KeyStore
 import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -39,7 +48,7 @@ private object DocumentBrandStore {
     private const val ALIAS = "document_brand_assets_aes"
     private const val INDEX = "document-brand-assets.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
-    private val kinds = listOf("Logo", "Godło", "Herb", "Flaga", "Pieczęć", "Wzór podpisu odręcznego", "Tło dokumentu", "Znak wodny", "Grafika hologramu / zabezpieczenia")
+    private val kinds = listOf("Fotografia", "Flaga", "Godło", "Herb", "Logo", "Pieczęć", "Wzór podpisu odręcznego", "Tło dokumentu", "Znak wodny", "Grafika hologramu / zabezpieczenia")
     fun assetKinds() = kinds
     private fun dir(context: Context) = File(context.noBackupFilesDir, "document-brand-assets").apply { mkdirs() }
     private fun key(): SecretKey {
@@ -89,6 +98,100 @@ private object DocumentBrandStore {
     @Synchronized fun delete(context: Context, id: String) {
         val old=list(context); old.firstOrNull { it.id==id }?.let { File(dir(context),it.file).delete() }
         save(context,old.filterNot { it.id==id })
+    }
+}
+
+@Composable
+internal fun DocumentIdentityTemplate(
+    title: String,
+    values: Map<String, String>,
+    owner: String = "",
+    validity: String = values.entries.firstOrNull { it.key.contains("status", true) || it.key.contains("waż", true) }?.value.orEmpty()
+) {
+    val context = LocalContext.current
+    val photo = remember(owner) { DocumentBrandStore.image(context, owner, "Fotografia") }
+    val flag = remember(owner) { DocumentBrandStore.image(context, owner, "Flaga") }
+    val emblem = remember(owner) {
+        DocumentBrandStore.image(context, owner, "Godło")
+            ?: DocumentBrandStore.image(context, owner, "Herb")
+            ?: DocumentBrandStore.image(context, owner, "Logo")
+    }
+    val background = remember(owner) { DocumentBrandStore.image(context, owner, "Tło dokumentu") }
+    val now = remember { SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date()) }
+    val name = values.entries.firstOrNull { it.key.contains("imię", true) || it.key.contains("nazw", true) || it.key.contains("posiadacz", true) || it.key.contains("osoba", true) }?.value.orEmpty()
+    val number = values.entries.firstOrNull { it.key.contains("numer", true) || it.key.contains("znak", true) || it.key.contains("nr ", true) }?.value.orEmpty()
+    val expiry = values.entries.firstOrNull { it.key.contains("ważn", true) || it.key.contains("do dnia", true) || it.key.contains("obowiązywania do", true) }?.value.orEmpty()
+    val state = when {
+        validity.contains("nieważ", true) || validity.contains("unvalid", true) -> "Dokument nieważny"
+        validity.contains("ważny", true) || validity.contains("potwierdz", true) || validity.contains("valid", true) -> "Ważność potwierdzona"
+        else -> "Wymaga weryfikacji"
+    }
+    val stateColor = when (state) {
+        "Ważność potwierdzona" -> Color(0xFFE5F4EA)
+        "Dokument nieważny" -> Color(0xFFFCE8E6)
+        else -> Color(0xFFFFF4D6)
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Stan na: $now", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+        Box(
+            Modifier.fillMaxWidth().aspectRatio(1.586f).clip(RoundedCornerShape(14.dp))
+                .background(Color(0xFFF4F6F8)).border(1.dp, Color(0xFFD5DDE5), RoundedCornerShape(14.dp))
+        ) {
+            if (background != null) Image(background.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.16f)
+            Row(Modifier.fillMaxSize().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.weight(0.39f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.88f)),
+                        contentAlignment = Alignment.Center) {
+                        if (photo != null) Image(photo.asImageBitmap(), "Fotografia osoby", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        else Text("MIEJSCE NA\nFOTOGRAFIĘ", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    }
+                    Row(Modifier.fillMaxWidth().weight(0.34f), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Box(Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(5.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
+                            if (flag != null) Image(flag.asImageBitmap(), "Flaga", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                            else Text("FLAGA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                        }
+                        Box(Modifier.weight(1f).fillMaxSize().clip(RoundedCornerShape(5.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
+                            if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                            else Text("GODŁO /\nHERB / LOGO", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+                Column(Modifier.weight(0.61f).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(title.uppercase(), color = Color(0xFF173B58), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 2)
+                    Text(name.ifBlank { "MIEJSCE NA DANE POSIADACZA" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold, maxLines = 2)
+                    values.entries.filter { it.value.isNotBlank() }.take(3).forEach { (key, value) ->
+                        Text("$key: $value", color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Text("WZÓR DOKUMENTU / EWIDENCJA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = stateColor)) {
+            Text(
+                when (state) {
+                    "Ważność potwierdzona" -> "✓ Ważność potwierdzona"
+                    "Dokument nieważny" -> "✕ Dokument nieważny"
+                    else -> "⚠ Wymaga weryfikacji"
+                },
+                Modifier.padding(12.dp), color = Color(0xFF26384A), fontWeight = FontWeight.Bold
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
+                Column(Modifier.padding(10.dp)) {
+                    Text("Numer dokumentu", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    Text(number.ifBlank { "Nie podano" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold)
+                }
+            }
+            Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
+                Column(Modifier.padding(10.dp)) {
+                    Text("Data ważności", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    Text(expiry.ifBlank { "Nie podano" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+        Text("Ostatnia aktualizacja: $now", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -152,61 +255,65 @@ internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, 
 
 private object DocumentPdfRenderer {
     fun write(context: Context, uri: Uri, title: String, owner: String, values: Map<String,String>) {
-        val pdf=PdfDocument()
-        val pageW=595; val pageH=842; val margin=48f
-        val body=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(35,48,60); textSize=10.5f; typeface=Typeface.create("sans-serif",Typeface.NORMAL) }
-        val heading=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(20,45,78); textSize=19f; typeface=Typeface.create("sans-serif",Typeface.BOLD) }
-        val small=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(95,108,120); textSize=8f }
-        val line=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(210,220,230); strokeWidth=0.7f }
-        val logo=DocumentBrandStore.image(context,owner,"Logo")
-        val crest=DocumentBrandStore.image(context,owner,"Herb") ?: DocumentBrandStore.image(context,owner,"Godło")
-        val seal=DocumentBrandStore.image(context,owner,"Pieczęć")
-        val signature=DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
-        val background=DocumentBrandStore.image(context,owner,"Tło dokumentu")
-        val watermark=DocumentBrandStore.image(context,owner,"Znak wodny") ?: DocumentBrandStore.image(context,owner,"Grafika hologramu / zabezpieczenia")
-        var pageNo=0; var y=0f; var page: PdfDocument.Page?=null
-        fun startPage() {
-            pageNo++
-            page=pdf.startPage(PdfDocument.PageInfo.Builder(pageW,pageH,pageNo).create())
-            val canvas=page!!.canvas
-            background?.let { canvas.drawBitmap(it,null,Rect(0,0,pageW,pageH),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=42 }) }
-            watermark?.let { canvas.save(); canvas.rotate(-28f,pageW/2f,pageH/2f); canvas.drawBitmap(it,null,Rect(95,330,500,735),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=24 }); canvas.restore() }
-            logo?.let { canvas.drawBitmap(it,null,Rect(margin.toInt(),28,margin.toInt()+58,86),Paint(Paint.ANTI_ALIAS_FLAG)) }
-            crest?.let { canvas.drawBitmap(it,null,Rect(pageW-105,28,pageW-48,86),Paint(Paint.ANTI_ALIAS_FLAG)) }
-            canvas.drawText(owner.ifBlank { "Dokument" },margin,105f,small)
-            canvas.drawText(title,margin,137f,heading)
-            canvas.drawLine(margin,151f,pageW-margin,151f,line)
-            y=176f
+        val pdf = PdfDocument()
+        // Landscape 1.586:1 — stały podział: 39% identyfikacja, 61% dane.
+        val pageW = 842; val pageH = 531; val margin = 28f
+        val body = Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(35,48,60); textSize=10.5f }
+        val heading = Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(20,45,78); textSize=18f; typeface=Typeface.create("sans-serif",Typeface.BOLD) }
+        val small = Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(95,108,120); textSize=8f }
+        val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(210,220,230); strokeWidth=0.7f }
+        val photo = DocumentBrandStore.image(context,owner,"Fotografia")
+        val flag = DocumentBrandStore.image(context,owner,"Flaga")
+        val logo = DocumentBrandStore.image(context,owner,"Logo")
+        val crest = DocumentBrandStore.image(context,owner,"Herb") ?: DocumentBrandStore.image(context,owner,"Godło")
+        val seal = DocumentBrandStore.image(context,owner,"Pieczęć")
+        val signature = DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
+        val background = DocumentBrandStore.image(context,owner,"Tło dokumentu")
+        val watermark = DocumentBrandStore.image(context,owner,"Znak wodny") ?: DocumentBrandStore.image(context,owner,"Grafika hologramu / zabezpieczenia")
+        val page = pdf.startPage(PdfDocument.PageInfo.Builder(pageW,pageH,1).create())
+        val c = page.canvas
+        c.drawColor(android.graphics.Color.WHITE)
+        background?.let { c.drawBitmap(it,null,Rect(0,0,pageW,pageH),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=48 }) }
+        watermark?.let { c.drawBitmap(it,null,Rect(230,120,610,500),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=20 }) }
+        val split = (pageW*0.39f).toInt()
+        c.drawRoundRect(margin,margin,split-10f,pageH-margin,16f,16f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(239,244,248) })
+        fun drawFit(bitmap: Bitmap?, rect: Rect, alpha: Int = 255) {
+            if(bitmap==null) return
+            val p=Paint(Paint.ANTI_ALIAS_FLAG).apply { this.alpha=alpha; isFilterBitmap=true }
+            val src=Rect(0,0,bitmap.width,bitmap.height)
+            val scale=minOf(rect.width().toFloat()/bitmap.width,rect.height().toFloat()/bitmap.height)
+            val w=(bitmap.width*scale).toInt(); val h=(bitmap.height*scale).toInt()
+            val dst=Rect(rect.centerX()-w/2,rect.centerY()-h/2,rect.centerX()+w/2,rect.centerY()+h/2)
+            c.drawBitmap(bitmap,src,dst,p)
         }
-        fun finishPage() {
-            val c=page!!.canvas
-            seal?.let { c.drawBitmap(it,null,Rect(pageW-150,pageH-125,pageW-70,pageH-45),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=220 }) }
-            signature?.let { c.drawBitmap(it,null,Rect(margin.toInt(),pageH-125,margin.toInt()+130,pageH-72),Paint(Paint.ANTI_ALIAS_FLAG)) }
-            c.drawLine(margin,pageH-145f,pageW-margin,pageH-145f,line)
-            c.drawText("Miejsce na podpis / podpis elektroniczny · strona "+pageNo,margin,pageH-35f,small)
-            pdf.finishPage(page!!)
-        }
-        startPage()
+        drawFit(photo,Rect(48,48,split-28,300))
+        c.drawRect(48f,310f,(split-28).toFloat(),365f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.WHITE })
+        drawFit(flag,Rect(50,312,(split-30)/2,363))
+        drawFit(crest ?: logo,Rect((split+20)/2,312,split-30,363))
+        c.drawText("MIEJSCE NA FOTOGRAFIĘ · FLAGĘ · GODŁO / HERB / LOGO",48f,390f,small)
+        c.drawText(owner.ifBlank { "Wystawca / podmiot" },split+12f,50f,small)
+        c.drawText(title,split+12f,78f,heading)
+        c.drawLine(split+12f,91f,pageW-margin,91f,line)
+        var y=115f
         val entries=values.filterValues { it.isNotBlank() }.entries.toList()
         entries.forEach { entry ->
-            val label=entry.key
-            val text=entry.value
-            val labelPaint=Paint(body).apply { typeface=Typeface.create("sans-serif",Typeface.BOLD); color=android.graphics.Color.rgb(65,82,98) }
-            if(y>pageH-180f) { finishPage(); startPage() }
-            page!!.canvas.drawText(label.take(82),margin,y,labelPaint); y+=16f
-            var rest=text
-            while(rest.isNotEmpty()) {
-                val available=(pageW-2*margin).toInt()
+            if(y>pageH-82f) return@forEach
+            val label=entry.key.take(50)
+            c.drawText(label,split+12f,y,small); y+=13f
+            var rest=entry.value
+            while(rest.isNotEmpty() && y<pageH-72f) {
+                val available=(pageW-split-margin-24).toInt()
                 val count=body.breakText(rest,true,available.toFloat(),null).coerceAtLeast(1)
-                page!!.canvas.drawText(rest.substring(0,count),margin,y,body)
+                c.drawText(rest.substring(0,count),split+12f,y,body)
                 rest=rest.substring(count).trimStart(); y+=14f
-                if(y>pageH-180f && rest.isNotEmpty()) { finishPage(); startPage() }
             }
-            y+=8f; page!!.canvas.drawLine(margin,y,pageW-margin,y,line); y+=14f
+            y+=5f; c.drawLine(split+12f,y,pageW-margin,y,line); y+=10f
         }
-        if(entries.isEmpty()) page!!.canvas.drawText("Brak wprowadzonych danych.",margin,y,body)
-        finishPage()
-        context.contentResolver.openOutputStream(uri)?.use { pdf.writeTo(it) } ?: error("Nie można zapisać wybranego pliku PDF.")
-        pdf.close()
+        seal?.let { drawFit(it,Rect(pageW-130,pageH-80,pageW-70,pageH-25),220) }
+        signature?.let { drawFit(it,Rect(split+12,pageH-72,split+150,pageH-28)) }
+        c.drawText("PODGLĄD EWIDENCYJNY · status i autentyczność wymagają odrębnej weryfikacji",48f,pageH-18f,small)
+        pdf.finishPage(page)
+        try { context.contentResolver.openOutputStream(uri)?.use { pdf.writeTo(it) } ?: error("Nie można zapisać wybranego pliku PDF.") }
+        finally { pdf.close() }
     }
-}
+}}
