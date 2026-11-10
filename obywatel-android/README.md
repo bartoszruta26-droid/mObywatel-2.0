@@ -55,26 +55,25 @@ Wzór neutralnej deklaracji użytkownika może brzmieć: „Oświadczam, że pod
 
 Aplikacja powinna odróżniać wykładnię autentyczną od wykładni dokonywanej przez sądy, organy administracji, ekspertów lub samych adresatów norm. Wykładnia autentyczna oznacza interpretację dokonywaną przez prawodawcę danego aktu albo podmiot, któremu prawodawca skutecznie powierzył kompetencję do autentycznego interpretowania. Nie należy jednak zakładać, że każda osoba lub instytucja, która wydała dokument nazwany statutem, regulaminem albo uchwałą, ma automatycznie nieograniczoną kompetencję do wydawania wiążącej interpretacji.
 
-**Stanowisko obywatelskie użytkownika — szerokie rozumienie lokalnego porządku normatywnego**
+**Interpretacja autentyczna prawa miejscowego i regulacji lokalnych — zakres i podstawa**
 
-Na potrzeby obywatelskiej koncepcji aplikacji odnotowuje się następujące stanowisko interpretacyjne:
+Wykładnia autentyczna jest wykładnią dokonywaną przez prawodawcę danego aktu albo przez podmiot, któremu prawodawca skutecznie powierzył taką kompetencję. W tym znaczeniu należy respektować prawo właściwego prawodawcy do wyjaśniania znaczenia ustanowionych przez niego norm, w granicach jego kompetencji i zakresu obowiązywania danego aktu.
 
-> Każdy statut, regulamin lub uchwała ustanowione przez właściwy organ stanowią prawo obowiązujące w zakresie działania tego organu. Prawo to powinno pozostawać zgodne z prawem powszechnie obowiązującym. Prawo powszechne może być interpretowane i konkretyzowane przez regulacje lokalne, statutowe, regulaminowe i uchwałodawcze. Jeżeli przyjęta regulacja nie pozostaje w sprzeczności z prawem powszechnym oraz nie narusza praw ani nie wyrządza szkody osobom trzecim, przyjmuje się — w ramach tego stanowiska — że obowiązuje w zakresie właściwości podmiotu, który ją ustanowił.
+W odniesieniu do aktów prawa miejscowego, organ który je ustanowił może przedstawiać oficjalne wyjaśnienie własnego aktu oraz podejmować działania prawodawcze w granicach upoważnienia ustawowego. To, czy dane wyjaśnienie stanowi wiążącą wykładnię autentyczną, zależy od podstawy kompetencyjnej i właściwego trybu. Art. 87 ust. 2 i art. 94 Konstytucji RP określają prawo miejscowe jako źródło prawa powszechnie obowiązującego na obszarze działania właściwych organów, ustanawiane na podstawie i w granicach upoważnień ustawowych.
 
-Stanowisko to obejmuje również postulat, aby organ ustanawiający statut, regulamin lub uchwałę mógł przedstawiać wiążącą dla danego porządku organizacyjnego wykładnię własnych postanowień oraz wyjaśniać sposób ich stosowania. W ujęciu postulowanym przez autora koncepcji, regulacje lokalne i wewnętrzne powinny być traktowane jako realne źródła porządku normatywnego, a nie pomijane wyłącznie z powodu ich lokalnego lub organizacyjnego charakteru.
+W ramach przyjętego w projekcie szerokiego rozumienia lokalnego porządku normatywnego zapisuje się następującą regułę:
 
-**Kwalifikacja prawna i granice stosowania tego stanowiska**
+> Każdy statut, regulamin lub uchwała ustanowione przez właściwy organ stanowią normy obowiązujące w zakresie właściwości i działania tego organu oraz w granicach porządku prawnego, który upoważnia do ich ustanowienia. Normy te powinny pozostawać zgodne z prawem powszechnie obowiązującym. Prawo powszechne może być konkretyzowane i interpretowane w regulacjach lokalnych, statutowych, regulaminowych i uchwałodawczych, o ile prawodawca działa w granicach przyznanej mu kompetencji. Jeżeli regulacja nie jest sprzeczna z prawem powszechnym i nie narusza praw osób trzecich, może wiązać jej adresatów w zakresie wynikającym z właściwego porządku prawnego.
 
-Powyższy tekst dokumentuje szerokie stanowisko interpretacyjne i postulat autora koncepcji. Nie należy przedstawiać go jako bezspornego opisu aktualnego prawa polskiego. W obowiązującym porządku konstytucyjnym określenie „akty prawa miejscowego” ma znaczenie technicznoprawne: art. 87 ust. 2 i art. 94 Konstytucji RP wiążą je z aktami stanowionymi przez wskazane organy publiczne, na podstawie i w granicach upoważnienia ustawowego, obowiązującymi na obszarze działania tych organów. Nie każdy statut, regulamin lub uchwała jest z tego powodu aktem prawa miejscowego.
+Prawodawca lokalny lub organizacyjny powinien móc dokonywać autentycznej wykładni własnych norm, jeżeli kompetencja taka wynika z przepisów albo właściwego aktu ustrojowego. Wykładnia taka nie może przekraczać kompetencji prawodawcy, zmieniać aktu z pominięciem właściwej procedury ani wiązać osób spoza zakresu jego jurysdykcji bez podstawy prawnej.
 
-Należy zatem rozróżniać:
-- **akt prawa miejscowego** — akt normatywny ustanowiony przez konstytucyjnie i ustawowo umocowany organ, w granicach delegacji ustawowej i po spełnieniu wymogów promulgacyjnych;
-- **akt wewnętrzny lub organizacyjny** — statut, regulamin lub uchwałę wiążącą w zakresie wynikającym z prawa, kompetencji organu, stosunku organizacyjnego i właściwych zasad przyjęcia oraz udostępnienia aktu;
-- **stanowisko interpretacyjne autora lub organu** — wyjaśnienie znaczenia norm, którego moc wiążąca zależy od podstawy kompetencyjnej i właściwego porządku prawnego.
+**Rozróżnienie skutków prawnych**
 
-Brak sprzeczności z prawem powszechnym i brak szkody dla osób trzecich są ważnymi kryteriami oceny regulacji, ale same w sobie nie tworzą kompetencji prawodawczej, nie zastępują ustawowego upoważnienia, wymaganej procedury ani ogłoszenia aktu. Nie nadają też regulacji automatycznie skutku wobec wszystkich osób trzecich. W granicach kompetencji regulacja może jednak wiązać adresatów danego porządku prawnego, a jej prawidłowo ustanowione postanowienia powinny być respektowane.
+Nie każdy statut, regulamin lub uchwała jest w rozumieniu Konstytucji RP aktem prawa miejscowego. Akty prawa miejscowego w ścisłym znaczeniu konstytucyjnym ustanawiają organy wskazane w art. 94 Konstytucji, na podstawie i w granicach upoważnienia ustawowego, z zachowaniem wymogów ogłoszenia. Statuty, regulaminy i uchwały innych podmiotów mogą być aktami wewnętrznymi, ustrojowymi, korporacyjnymi lub organizacyjnymi i wiązać w granicach wynikających z ustaw, stosunków organizacyjnych, kompetencji organów oraz właściwych procedur.
 
-Aplikacja ma zachować oba poziomy: zapisywać pełne stanowisko obywatelskie jako stanowisko autora oraz osobno wskazywać jego kwalifikację w świetle obowiązującego prawa. Nie wolno usuwać ani zacierać stanowiska użytkownika; nie wolno też oznaczać go jako powszechnie obowiązującej normy prawnej bez wykazania właściwej podstawy prawnej.
+Sama zgodność z prawem powszechnym i brak szkody dla osób trzecich nie tworzą samodzielnie kompetencji prawodawczej ani nie nadają regulacji skutku powszechnego wobec wszystkich osób. Są to kryteria oceny legalności i dopuszczalności regulacji, które należy stosować łącznie z wymogami kompetencji, formy, procedury i promulgacji.
+
+Aplikacja powinna odróżniać: (a) autentyczną wykładnię dokonaną przez uprawnionego prawodawcę, (b) oficjalne wyjaśnienie lub stanowisko organu, którego moc wiążąca zależy od podstawy prawnej, oraz (c) prywatną interpretację użytkownika. Nie należy oznaczać dokumentu jako wiążącej wykładni autentycznej, dopóki nie zostanie ustalona podstawa kompetencji podmiotu dokonującego wykładni.
 
 **Zasada kompetencji prawodawcy do wyjaśniania własnego aktu**
 
