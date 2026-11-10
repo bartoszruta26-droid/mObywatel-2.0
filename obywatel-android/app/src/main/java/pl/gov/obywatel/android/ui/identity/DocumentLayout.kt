@@ -71,6 +71,12 @@ internal data class DocumentLayout(
 
         fun defaults() = listOf(
             DocumentLayoutElement("header", "Nagłówek", 42f, 42f, 511f, 72f, 15f),
+            DocumentLayoutElement("flag", "Flaga", 42f, 42f, 68f, 34f),
+            DocumentLayoutElement("emblem", "Herb / godło", 120f, 35f, 54f, 54f),
+            DocumentLayoutElement("logo", "Logo", 475f, 38f, 76f, 68f),
+            DocumentLayoutElement("seal", "Pieczęć", 390f, 669f, 82f, 82f),
+            DocumentLayoutElement("security", "Hologram / zabezpieczenie", 490f, 671f, 54f, 54f),
+            DocumentLayoutElement("signatureGraphic", "Grafika podpisu", 54f, 714f, 130f, 28f),
             DocumentLayoutElement("title", "Tytuł", 42f, 184f, 511f, 34f, 21f),
             DocumentLayoutElement("recipient", "Adresat", 42f, 292f, 511f, 64f, 10f),
             DocumentLayoutElement("body", "Treść", 42f, 350f, 511f, 285f, 10f),
