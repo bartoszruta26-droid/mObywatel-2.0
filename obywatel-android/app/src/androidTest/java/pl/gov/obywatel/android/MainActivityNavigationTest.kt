@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -27,6 +28,27 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
         composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
         composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
+    }
+
+    @Test
+    fun dashboardDocumentTilesOpenTheirReadOnlyViews() {
+        composeRule.onNodeWithText("Dowód tożsamości").performClick()
+        composeRule.onNodeWithText("Dowód tożsamości — ewidencja").assertIsDisplayed()
+        composeRule.onNodeWithText("‹  Powrót do portfela").performClick()
+        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Dokument rodowy").performScrollTo().performClick()
+        composeRule.onNodeWithText("Dokument rodowy — ewidencja prywatna").assertIsDisplayed()
+        composeRule.onNodeWithText("‹  Powrót do portfela").performClick()
+        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
+    }
+
+    @Test
+    fun bankAccountsDocumentTileIsClickableAndOpensReadOnlyCatalog() {
+        composeRule.onNodeWithText("Konta bankowe").assertHasClickAction().performClick()
+        composeRule.onNodeWithText("Konta bankowe", substring = false).assertIsDisplayed()
+        composeRule.onNodeWithText("Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej.")
+            .assertIsDisplayed()
     }
 
     @Test
