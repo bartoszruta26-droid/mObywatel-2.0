@@ -167,7 +167,6 @@ private val services = listOf(
     ServiceItem("Pozostałe", "Więcej modułów", fallbackIcon = Icons.Filled.MoreHoriz)
 )
 
-@Composable
 private const val DOCUMENT_DISPLAY_PREFS = "document_display_preferences"
 private const val DOCUMENT_DISPLAY_KEY_PREFIX = "placement_"
 private val documentDisplayOptions = listOf(
@@ -206,6 +205,7 @@ private fun saveDocumentPlacements(context: Context, placements: Map<String, Str
     check(editor.commit()) { "Nie udało się zapisać ustawień widoczności dokumentów." }
 }
 
+@Composable
 private fun HomeScreen() {
     val context = LocalContext.current
     var pendingImport by remember { mutableStateOf<Map<String, String>?>(null) }
