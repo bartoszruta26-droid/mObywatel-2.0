@@ -22,6 +22,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
@@ -174,7 +176,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     }
 
     Surface(Modifier.fillMaxSize().semantics{paneTitle="Zarządzanie dokumentami i identyfikacją"},color=MaterialTheme.colorScheme.background) {
-        Column(Modifier.fillMaxSize().padding(16.dp)) {
+        Column(Modifier.fillMaxSize().padding(16.dp).then(if (page == "Dokumenty") Modifier.verticalScroll(rememberScrollState()) else Modifier)) {
             Row(verticalAlignment=Alignment.CenterVertically) {
                 IconButton(onClick=onBack){Icon(Icons.AutoMirrored.Filled.ArrowBack,contentDescription="Wróć")}
                 Column(Modifier.weight(1f)){Text("Zarządzanie",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,modifier=Modifier.semantics{heading()});Text("Dokumenty i identyfikacja wizualna",style=MaterialTheme.typography.bodySmall)}
