@@ -1829,7 +1829,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                             1 -> R.drawable.documents_identity_card
                             2 -> R.drawable.documents_passport
                             3 -> R.drawable.documents_family_record
-                            4 -> R.drawable.documents_deputy_legitimacy
+                            4 -> R.drawable.legitymacja_zawodowa
                             5 -> R.drawable.documents_course_legitimacy
                             6 -> R.drawable.documents_student_legitimacy
                             else -> R.drawable.documents_medical_certificates
@@ -2331,7 +2331,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
                 DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
                 OwdDocumentArtworkCard(
-                    imageRes = R.drawable.documents_deputy_legitimacy,
+                    imageRes = R.drawable.legitymacja_zawodowa,
                     title = "Ewidencja legitymacji poselskiej",
                     subtitle = "Karta informacyjna — dane i źródła",
                     holder = fields["mpIssuer"].orEmpty().ifBlank { "Dane ewidencyjne" },
@@ -2709,7 +2709,7 @@ private fun DisabilityDecisionPreview(fields: Map<String, String>) {
         else -> "Ewidencja danych orzeczenia"
     }
     OwdDocumentArtworkCard(
-        imageRes = R.drawable.orzeczenie_rodowe_jasne,
+        imageRes = R.drawable.orzeczenie_rodowe_o_niepelnosprawnosci,
         title = "Dane o niepełnosprawności",
         subtitle = label,
         holder = fields["disabilityPersonName"].orEmpty().ifBlank { "Dane osoby" },
