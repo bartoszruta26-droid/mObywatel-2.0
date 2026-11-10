@@ -576,7 +576,7 @@ private fun HomeScreen() {
             )
             Text(
                 "Niezależna aplikacja obywatelska • nie jest częścią rządowego systemu mObywatel. Dane urzędowe wymagają potwierdzenia we właściwym źródle.",
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
+                modifier = Modifier.fillMaxWidth().background(White).padding(horizontal = 12.dp, vertical = 5.dp),
                 color = Muted,
                 style = MaterialTheme.typography.labelSmall
             )
@@ -1396,39 +1396,34 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
 @Composable
 private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxWidth().background(Navy)
-            .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 22.dp)
+        modifier = Modifier.fillMaxWidth()
+            .background(White)
+            .border(width = 0.5.dp, color = Border)
+            .padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(R.drawable.institutions_eagle_emblem),
-                contentDescription = "Godło państwowe Rzeczypospolitej Polskiej",
-                modifier = Modifier.size(54.dp),
-                contentScale = ContentScale.Fit
-            )
-            Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                Text("mObywatel 2.0", color = White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            BrandMark()
+            Column(Modifier.weight(1f).padding(start = 11.dp)) {
+                Text("Obywatel", color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Portfel obywatelski", color = Muted, style = MaterialTheme.typography.labelMedium)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 Box(
-                    modifier = Modifier.size(42.dp).clip(CircleShape)
-                        .background(Color(0xFF1B4C3D)).clickable(onClick = onOpenSettings),
+                    modifier = Modifier.size(40.dp).clip(CircleShape)
+                        .background(BlueLight).clickable(onClick = onOpenSettings),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Ustawienia", tint = White)
+                    Icon(Icons.Filled.Settings, contentDescription = "Ustawienia", tint = Blue)
                 }
                 Box(
-                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF1B4C3D))
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(BlueLight)
                         .clickable(onClick = onOpenNotifications),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.NotificationsNone, contentDescription = "Powiadomienia", tint = White)
+                    Icon(Icons.Filled.NotificationsNone, contentDescription = "Powiadomienia", tint = Blue)
                 }
             }
         }
-        Spacer(Modifier.height(22.dp))
-        Text("Wszystko w jednym miejscu", color = White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        Text("Usługi, informacje i dokumenty w jednym miejscu", color = Color(0xFFDCEBE1), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -2996,25 +2991,35 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
     )
     Row(
         modifier = Modifier.fillMaxWidth().background(White)
-            .border(width = 0.5.dp, color = Border)
-            .padding(top = 8.dp, bottom = 10.dp),
+            .border(width = 0.6.dp, color = Border)
+            .padding(horizontal = 4.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
         items.forEach { (label, icon, index) ->
+            val selected = selectedTab == index
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
-                    .clickable { onSelect(index) }.padding(vertical = 3.dp),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
+                    .clickable { onSelect(index) }.padding(vertical = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                when (index) {
-                    1 -> Image(painterResource(R.drawable.wallet), contentDescription = label, modifier = Modifier.size(23.dp), contentScale = ContentScale.Fit)
-                    2 -> Image(painterResource(R.drawable.public_services), contentDescription = label, modifier = Modifier.size(23.dp), contentScale = ContentScale.Fit)
-                    4 -> Image(painterResource(R.drawable.profile), contentDescription = label, modifier = Modifier.size(23.dp), contentScale = ContentScale.Fit)
-                    else -> Icon(icon!!, contentDescription = label, tint = if (selectedTab == index) Blue else Muted, modifier = Modifier.size(23.dp))
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                        .background(if (selected) BlueLight else Color.Transparent)
+                        .padding(horizontal = 13.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when (index) {
+                        1 -> Image(painterResource(R.drawable.wallet), contentDescription = label, modifier = Modifier.size(22.dp), contentScale = ContentScale.Fit)
+                        2 -> Image(painterResource(R.drawable.public_services), contentDescription = label, modifier = Modifier.size(22.dp), contentScale = ContentScale.Fit)
+                        4 -> Image(painterResource(R.drawable.profile), contentDescription = label, modifier = Modifier.size(22.dp), contentScale = ContentScale.Fit)
+                        else -> Icon(icon!!, contentDescription = label, tint = if (selected) Blue else Muted, modifier = Modifier.size(22.dp))
+                    }
                 }
-                Text(label, color = if (selectedTab == index) Blue else Muted, style = MaterialTheme.typography.labelSmall, fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Medium, maxLines = 1)
+                Text(label, color = if (selected) Blue else Muted,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, maxLines = 1)
             }
         }
     }
