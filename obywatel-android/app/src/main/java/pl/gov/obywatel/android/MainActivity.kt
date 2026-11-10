@@ -1995,49 +1995,8 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
-        if (documentId == "4") {
-            ParliamentaryCredentialPreview(fields)
-            CivicDocumentStatusTile(fields, documentId)
-        } else if (documentId == "5" || documentId == "6") {
-            SchoolLegitimacyPreview(fields, photoBase64, student = documentId == "6")
-        } else {
-            OwdDocumentArtworkCard(
-                imageRes = when (documentId.toIntOrNull()) {
-                    0 -> R.drawable.documents_document_wallet_banner
-                    1 -> R.drawable.documents_identity_card
-                    2 -> R.drawable.art_02_paszport_rodowy_jasny
-                    3 -> R.drawable.art_01_karta_rodowa_jasna
-                    4 -> R.drawable.documents_deputy_legitimacy
-                    5 -> R.drawable.art_02_legitymacja_zawodowa
-                    6 -> R.drawable.documents_student_legitimacy
-                    else -> R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci
-                },
-                title = section.first.substringBefore(" —"),
-                subtitle = section.second,
-                holder = when (documentId) {
-                    "1" -> listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
-                    "2" -> fields["passportHolderNames"].orEmpty()
-                    "3" -> fields["familyName"].orEmpty()
-                    "4" -> fields["mpIssuer"].orEmpty()
-                    "5" -> fields["trainingInstitution"].orEmpty()
-                    "6" -> fields["studentUniversity"].orEmpty()
-                    "7" -> fields["disabilityPersonName"].orEmpty()
-                    else -> ""
-                }.ifBlank { "Dane użytkownika" },
-                details = when (documentId) {
-                    "1" -> "Nr: ${fields["idNumber"].orEmpty().ifBlank { "—" }}  •  PESEL: ${fields["pesel"].orEmpty().ifBlank { "—" }}"
-                    "2" -> "Nr paszportu: ${fields["passportNumber"].orEmpty().ifBlank { "—" }}"
-                    "3" -> "Nr ewidencyjny: ${fields["familyDocNumber"].orEmpty().ifBlank { "—" }}"
-                    "4" -> "Kadencja: ${fields["mpTerm"].orEmpty().ifBlank { "—" }}"
-                    "5" -> "Nr legitymacji: ${fields["trainingCardNumber"].orEmpty().ifBlank { "—" }}"
-                    "6" -> "Nr legitymacji: ${fields["studentCardNumber"].orEmpty().ifBlank { "—" }}"
-                    "7" -> "Nr sprawy: ${fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" }}"
-                    else -> ""
-                },
-                privateRecord = documentId in setOf("0", "3", "4", "5", "6", "7")
-            )
-            CivicDocumentStatusTile(fields, documentId)
-        }
+        CivicDocumentCard(fields, photoBase64, documentId, section.first)
+        CivicDocumentStatusTile(fields, documentId)
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
@@ -3015,6 +2974,68 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
             Icon(Icons.Filled.Info, contentDescription = null, tint = Blue)
             Text(statusLabel + ". Dane wpisane przez użytkownika nie potwierdzają mandatu ani autentyczności legitymacji.",
                 color = Muted, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+private fun CivicDocumentCard(fields: Map<String, String>, photoBase64: String, documentId: String, title: String) {
+    val bitmap = remember(photoBase64) {
+        runCatching {
+            if (photoBase64.isBlank()) null else {
+                val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
+        }.getOrNull()
+    }
+    val rows = when (documentId) {
+        "0" -> listOf("IMIĘ (IMIONA)" to "firstNames", "NAZWISKO" to "lastName", "DATA URODZENIA" to "birthDate", "IDENTYFIKATOR" to "idNumber")
+        "1" -> listOf("IMIĘ (IMIONA)" to "firstNames", "NAZWISKO" to "lastName", "DATA URODZENIA" to "birthDate", "PESEL" to "pesel", "NUMER DOKUMENTU" to "idNumber", "DATA WYDANIA" to "idIssueDate", "WAŻNY DO" to "idExpiryDate")
+        "2" -> listOf("IMIĘ I NAZWISKO" to "passportHolderNames", "NUMER PASZPORTU" to "passportNumber", "OBYWATELSTWO" to "passportCitizenship", "DATA URODZENIA" to "birthDate", "DATA WYDANIA" to "passportIssueDate", "WAŻNY DO" to "passportExpiryDate")
+        "3" -> listOf("NAZWA RODU" to "familyName", "IMIĘ (IMIONA)" to "firstNames", "NAZWISKO" to "lastName", "LINIA / GAŁĄŹ" to "familyLine", "NUMER KARTY" to "familyDocNumber", "DATA WYDANIA" to "familyIssueDate")
+        "4" -> listOf("IMIĘ (IMIONA)" to "firstNames", "NAZWISKO" to "lastName", "RODZAJ UPRAWNIENIA" to "mpEntitlement", "DATA WYDANIA" to "mpCardIssueDate", "NUMER LEGITYMACJI" to "mpCardNumber", "NUMER KADENCJI" to "mpTerm")
+        "5" -> listOf("IMIĘ (IMIONA)" to "firstNames", "NAZWISKO" to "lastName", "SZKOŁA / INSTYTUCJA" to "trainingInstitution", "KURS / KIERUNEK" to "trainingCourseName", "NUMER LEGITYMACJI" to "trainingCardNumber", "DATA WYDANIA" to "trainingIssueDate", "WAŻNA DO" to "trainingValidUntil")
+        "6" -> listOf("IMIĘ (IMIONA)" to "studentNames", "NAZWISKO" to "lastName", "UCZELNIA" to "studentUniversity", "KIERUNEK" to "studentProgramme", "NUMER LEGITYMACJI" to "studentCardNumber", "DATA WYDANIA" to "studentIssueDate", "WAŻNA DO" to "studentValidity")
+        else -> listOf("IMIĘ (IMIONA)" to "firstNames", "NAZWISKO" to "lastName", "NUMER ORZECZENIA" to "disabilityDecisionNumber", "STOPIEŃ / KATEGORIA" to "disabilityDegree", "DATA WYDANIA" to "disabilityDecisionDate", "OKRES OBOWIĄZYWANIA" to "disabilityValidity")
+    }
+    val leftLabel = when (documentId) {
+        "4" -> "SEJM RP"
+        "5" -> fields["trainingInstitution"].orEmpty().ifBlank { "ZNAK SZKOŁY" }
+        "6" -> fields["studentUniversity"].orEmpty().ifBlank { "ZNAK UCZELNI" }
+        "3" -> fields["familyName"].orEmpty().ifBlank { "ZNAK RODU" }
+        else -> "OBYWATEL OBYWATELSKI"
+    }
+    Card(Modifier.fillMaxWidth().aspectRatio(0.70f), shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F1EE)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+        Row(Modifier.fillMaxSize().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(0.9f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(Color(0xFFE4E0DC)), contentAlignment = Alignment.Center) {
+                    if (bitmap != null) Image(bitmap.asImageBitmap(), contentDescription = "Zdjęcie posiadacza dokumentu", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    else Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie", tint = Color(0xFF8B817C), modifier = Modifier.size(58.dp))
+                }
+                Box(Modifier.fillMaxWidth().height(30.dp).clip(RoundedCornerShape(5.dp)).border(1.dp, Color(0xFFD5D0CC), RoundedCornerShape(5.dp))) {
+                    Column(Modifier.fillMaxSize()) {
+                        Box(Modifier.weight(1f).fillMaxWidth().background(Color.White))
+                        Box(Modifier.weight(1f).fillMaxWidth().background(Color(0xFFDC143C)))
+                    }
+                }
+                Box(Modifier.fillMaxWidth().height(55.dp).clip(RoundedCornerShape(7.dp)).background(Color(0xFFE9E5E1)), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Filled.AccountBalance, contentDescription = "Znak wystawcy", tint = Color(0xFF716762), modifier = Modifier.size(25.dp))
+                        Text(leftLabel, color = Color(0xFF625954), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+            Column(Modifier.weight(1.1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceEvenly) {
+                Text(title.substringBefore(" —").uppercase(), color = Color(0xFF393330), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                rows.forEach { (label, key) ->
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text(label, color = Color(0xFF786E69), style = MaterialTheme.typography.labelSmall)
+                        Text(fields[key].orEmpty().ifBlank { "—" }, color = Color(0xFF292522), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
         }
     }
 }
