@@ -250,11 +250,11 @@ internal fun DocumentIdentityTemplate(
                         else Text("MIEJSCE NA\nFOTOGRAFIĘ", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                     }
                     Column(Modifier.fillMaxWidth().weight(0.34f), verticalArrangement = Arrangement.spacedBy(3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.fillMaxWidth(0.72f).weight(1f).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxWidth(0.72f).weight(1f), contentAlignment = Alignment.Center) {
                             if (flag != null) Image(flag.asImageBitmap(), "Flaga", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
                             else Text("FLAGA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                         }
-                        Box(Modifier.fillMaxWidth(0.72f).weight(1f).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxWidth(0.72f).weight(1f), contentAlignment = Alignment.Center) {
                             if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
                             else Text("GODŁO /\nHERB / LOGO", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                         }
@@ -447,7 +447,7 @@ private object DocumentPdfRenderer {
             val split=(pageW*0.39f).toInt()
             c.drawRoundRect(margin,margin,split-10f,pageH-margin,16f,16f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(239,244,248) })
             drawFit(photo,Rect(48,48,split-28,300))
-            c.drawRect(48f,306f,(split-28).toFloat(),366f,Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.WHITE })
+            // Flaga i godło są rysowane bez nieprzezroczystego pola tła.
             // Mniejsze pola identyfikacji ułożone pionowo: flaga, a pod nią godło/herb/logo.
             drawFit(flag,Rect(76,309,158,333))
             drawFit(crest ?: logo,Rect(76,338,158,362))
