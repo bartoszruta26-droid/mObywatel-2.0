@@ -55,9 +55,12 @@ class MainActivityNavigationTest {
             scrollBy(1600f, 0f)
         }
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Konta bankowe").assertHasClickAction().performClick()
+        composeRule.onNodeWithText("Konta bankowe", substring = false)
+            .performScrollTo()
+            .assertHasClickAction()
+            .performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Konta bankowe", substring = false).assertIsDisplayed()
+        composeRule.onNodeWithTag("bank-accounts-screen-title").assertIsDisplayed()
         composeRule.onNodeWithText("Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej.")
             .assertIsDisplayed()
     }
