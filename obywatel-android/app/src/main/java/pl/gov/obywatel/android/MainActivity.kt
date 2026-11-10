@@ -78,6 +78,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Fingerprint
@@ -526,6 +527,7 @@ private fun HomeScreen() {
     var showSettingsMenu by remember { mutableStateOf(false) }
     var showDocumentVisibilitySettings by remember { mutableStateOf(false) }
     var showRegistryEditor by remember { mutableStateOf(false) }
+    var settingsDocumentEditor by remember { mutableStateOf<String?>(null) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
@@ -585,6 +587,12 @@ private fun HomeScreen() {
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
+                    settingsDocumentEditor == "family" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    settingsDocumentEditor == "business" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    settingsDocumentEditor == "bank_accounts" -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    settingsDocumentEditor == "church" -> ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    settingsDocumentEditor == "civil" -> OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    settingsDocumentEditor == "vaccines" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     showDocumentVisibilitySettings -> DocumentVisibilitySettingsScreen(
                         documentPlacements = documentPlacements,
                         onDocumentPlacementsChange = { updated ->
@@ -604,6 +612,7 @@ private fun HomeScreen() {
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
+                        onEditOtherDocuments = { key -> settingsDocumentEditor = key; showSettingsMenu = false },
                         onExportAll = {
                             exportSnapshot = DemoIdentityStore.load(context)
                             runCatching {
@@ -698,25 +707,7 @@ private fun HomeScreen() {
                                             ) {
                                                 items.forEach { (id, label, imageRes) ->
                                                     Card(
-                                                        modifier = Modifier.width(150.dp).clickable {
-                                                            when (id) {
-                                                                "registry" -> activeService = "Odpis z rejestru podmiotów"
-                                                                "identity" -> selectedDocumentId = "1"
-                                                                "passport" -> selectedDocumentId = "2"
-                                                                "family" -> selectedDocumentId = "3"
-                                                                "parliament" -> selectedDocumentId = "4"
-                                                                "training" -> selectedDocumentId = "5"
-                                                                "student" -> selectedDocumentId = "6"
-                                                                "disability" -> selectedDocumentId = "7"
-                                                                "church" -> activeService = "Dokumenty Kościelne"
-                                                                "civil" -> activeService = "Formularze dokumentów"
-                                                                "business" -> activeService = "Dokumenty rejestru podmiotów"
-                                                                "vaccines" -> activeService = "eKarta Szczepień"
-                                                                "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
-                                                                "branding" -> activeService = "Zasoby identyfikacji dokumentów"
-                                                                "loyalty_cards" -> selectedDocumentId = "8"
-                                                            }
-                                                        },
+                                                        modifier = Modifier.width(150.dp),
                                                         colors = CardDefaults.cardColors(containerColor = White)
                                                     ) {
                                                         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -1825,6 +1816,7 @@ private fun SettingsMenuScreen(
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
     onEditRegistry: () -> Unit,
+    onEditOtherDocuments: (String) -> Unit,
     onExportAll: () -> Unit,
     onImportAll: () -> Unit,
     importStatus: String
@@ -1882,6 +1874,12 @@ private fun SettingsMenuScreen(
             Icons.Filled.HealthAndSafety, onEditDisability)
         ProfileActionCard("Karty lojalnościowe sklepów", "Ewidencja do 10 kart, numerów i kodów kreskowych oraz QR",
             Icons.Filled.CreditCard, { onEditDocuments("loyalty_cards") })
+        ProfileActionCard("Dokumenty rodowe", "Księgi, akty i rejestry Rodu", Icons.Filled.Fingerprint, { onEditOtherDocuments("family") })
+        ProfileActionCard("Dokumenty kościelne", "Dokumenty liturgiczne i organizacyjne", Icons.Filled.AccountBalance, { onEditOtherDocuments("church") })
+        ProfileActionCard("Dokumenty cywilne", "Akty i dokumenty cywilne", Icons.Filled.Description, { onEditOtherDocuments("civil") })
+        ProfileActionCard("Dokumenty szczepień", "Książeczka szczepień i historia dawek", Icons.Filled.HealthAndSafety, { onEditOtherDocuments("vaccines") })
+        ProfileActionCard("Dokumenty firmowe i podmiotowe", "Dokumenty spółek, fundacji i organizacji", Icons.Filled.Business, { onEditOtherDocuments("business") })
+        ProfileActionCard("Konta bankowe", "Osobna ewidencja rachunków prywatnych i podmiotowych", Icons.Filled.AccountBalance, { onEditOtherDocuments("bank_accounts") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
