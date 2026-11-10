@@ -154,10 +154,10 @@ private val services = listOf(
     ServiceItem("Środowisko", "Informacje środowiskowe", R.drawable.mob_environment, category = "Środowisko"),
     ServiceItem("Ustawienia", "Preferencje i dane ewidencyjne", fallbackIcon = Icons.Filled.Settings),
     ServiceItem("Zaświadczenia", "Dokumenty i dane o uprawnieniach", fallbackIcon = Icons.Filled.Description),
-    ServiceItem("Sprawy rodzinne", "Lokalna ewidencja spraw rodzinnych", fallbackIcon = Icons.Filled.AccountCircle, category = "Rodzina"),
+    ServiceItem("Sprawy rodzinne", "Dane dotyczące spraw rodzinnych", fallbackIcon = Icons.Filled.AccountCircle, category = "Rodzina"),
     ServiceItem("Edukacja", "Ewidencja nauki i dokumentów edukacyjnych", fallbackIcon = Icons.Filled.Description, category = "Edukacja"),
     ServiceItem("Praca", "Informacje i dokumenty związane z pracą", fallbackIcon = Icons.Filled.Badge, category = "Praca"),
-    ServiceItem("Finanse i podatki", "Lokalny katalog spraw finansowych", fallbackIcon = Icons.Filled.Payments, category = "Finanse i podatki"),
+    ServiceItem("Finanse i podatki", "Informacje dotyczące finansów i podatków", fallbackIcon = Icons.Filled.Payments, category = "Finanse i podatki"),
     ServiceItem("Nieruchomości", "Ewidencja nieruchomości użytkownika", fallbackIcon = Icons.Filled.Home, category = "Nieruchomości"),
     ServiceItem("Prawo i obywatel", "Informacje obywatelskie i prawne", fallbackIcon = Icons.Filled.AccountBalance, category = "Prawo i obywatel"),
     ServiceItem("Kultura i dziedzictwo", "Katalog instytucji i wydarzeń", fallbackIcon = Icons.Filled.Public, category = "Kultura i dziedzictwo"),
@@ -1314,7 +1314,7 @@ private fun ProfileLandingScreen(
                         listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Użytkownik" },
                         color = Navy, fontWeight = FontWeight.Bold
                     )
-                    Text("Profil lokalny", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text("Profil użytkownika", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -2031,7 +2031,7 @@ private fun ReadOnlyAdditionalInformationSection(fields: Map<String, String>, pr
                     }
                 }
             }
-            Text("Wpisane źródło lub podstawa nie oznaczają niezależnej weryfikacji danych przez aplikację.", color = Muted, style = MaterialTheme.typography.labelSmall)
+            Text("Oświadczenie użytkownika opisuje dane zgodnie z jego wiedzą oraz wskazaną podstawą i źródłem.", color = Muted, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
