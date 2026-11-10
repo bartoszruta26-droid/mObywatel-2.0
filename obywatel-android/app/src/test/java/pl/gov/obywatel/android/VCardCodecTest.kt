@@ -3,6 +3,7 @@
 
 package pl.gov.obywatel.android
 
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -175,6 +176,7 @@ END:VCARD
         val imported = VCardCodec.decodeForImport(encoded)
         assertEquals(fields, imported)
         assertEquals(photoBase64, imported["photo"])
+        assertArrayEquals(photoBytes, java.util.Base64.getDecoder().decode(imported.getValue("photo")))
     }
 
 }
