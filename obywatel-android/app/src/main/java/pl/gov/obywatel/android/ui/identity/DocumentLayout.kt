@@ -19,7 +19,8 @@ internal data class DocumentLayoutElement(
     val fontSize: Float = 10f,
     val visible: Boolean = true,
     val locked: Boolean = false,
-    val page: Int = 1
+    val page: Int = 1,
+    val kind: String = "text"
 )
 
 internal data class DocumentLayout(
@@ -41,7 +42,7 @@ internal data class DocumentLayout(
                     .put("x", e.x).put("y", e.y)
                     .put("width", e.width).put("height", e.height)
                     .put("fontSize", e.fontSize)
-                    .put("visible", e.visible).put("locked", e.locked).put("page", e.page))
+                    .put("visible", e.visible).put("locked", e.locked).put("page", e.page).put("kind", e.kind))
             }
         })
 
@@ -109,7 +110,16 @@ internal data class DocumentLayout(
                 val id = saved.optString("id")
                 val page = saved.optInt("page", 1).coerceIn(1, 100)
                 if (page <= 1 || parsed.any { it.id == id && it.page == page }) continue
-                val template = base.firstOrNull { it.id == id } ?: continue
+                val template = base.firstOrNull { it.id == id } ?: DocumentLayoutElement(
+                    id = id,
+                    label = saved.optString("label", "Element dekoracyjny"),
+                    x = saved.optDouble("x", 42.0).toFloat(),
+                    y = saved.optDouble("y", 42.0).toFloat(),
+                    width = saved.optDouble("width", 180.0).toFloat(),
+                    height = saved.optDouble("height", 2.0).toFloat(),
+                    fontSize = saved.optDouble("fontSize", 18.0).toFloat(),
+                    kind = saved.optString("kind", "ornament")
+                )
                 parsed.add(template.copy(
                     x = saved.optDouble("x", template.x.toDouble()).toFloat().coerceIn(0f, 595f),
                     y = saved.optDouble("y", template.y.toDouble()).toFloat().coerceIn(0f, 842f),
@@ -118,7 +128,8 @@ internal data class DocumentLayout(
                     fontSize = saved.optDouble("fontSize", template.fontSize.toDouble()).toFloat().coerceIn(5f, 72f),
                     visible = saved.optBoolean("visible", template.visible),
                     locked = saved.optBoolean("locked", template.locked),
-                    page = page
+                    page = page,
+                    kind = saved.optString("kind", template.kind)
                 ))
             }
             return DocumentLayout(json.optInt("pageCount", 1).coerceIn(1, 100), parsed)
