@@ -2335,14 +2335,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
                 DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
-                OwdDocumentArtworkCard(
-                    imageRes = R.drawable.legitymacja_zawodowa,
-                    title = "Ewidencja legitymacji poselskiej",
-                    subtitle = "Karta informacyjna — dane i źródła",
-                    holder = fields["mpIssuer"].orEmpty().ifBlank { "Dane ewidencyjne" },
-                    details = "Kadencja: ${fields["mpTerm"].orEmpty().ifBlank { "—" }}",
-                    privateRecord = true
-                )
+                Text("Podgląd cyfrowej legitymacji", color = Navy, fontWeight = FontWeight.Bold)
+                ParliamentaryCredentialPreview(fields)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja poselska", fields, "mpExtra", "Art. 104 Konstytucji RP określa wolny mandat poselski oraz obowiązek złożenia ślubowania przed Sejmem przed rozpoczęciem sprawowania mandatu. Odmowa ślubowania oznacza zrzeczenie się mandatu. Sam wpis użytkownika ani prywatna ewidencja nie potwierdzają uzyskania mandatu ani prawa do reprezentowania Sejmu.")
             }
         }
@@ -2918,6 +2912,107 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
         }
         Text("Wizualizacja informacyjna własnego dokumentu szkolnego. Status jest obliczany wyłącznie z danych zapisanych przez wystawcę; nie stanowi zewnętrznej walidacji.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
+    val photoBase64 = fields["photo"].orEmpty()
+    val photoBitmap = remember(photoBase64) {
+        runCatching {
+            if (photoBase64.isBlank()) null else {
+                val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                var sample = 1
+                while (bounds.outWidth / sample > 700 || bounds.outHeight / sample > 700) sample *= 2
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+            }
+        }.getOrNull()
+    }
+    val firstNames = fields["firstNames"].orEmpty()
+    val lastName = fields["lastName"].orEmpty()
+    val fullName = listOf(firstNames, lastName).filter { it.isNotBlank() }.joinToString(" ")
+    val authority = fields["mpIssuer"].orEmpty()
+    val status = fields["mpStatus"].orEmpty().trim().lowercase()
+    val mandateActive = status in setOf("aktywna", "aktywny", "active", "ważna", "wazna")
+    val term = fields["mpTerm"].orEmpty()
+    val issueDate = fields["mpCardIssueDate"].orEmpty()
+    val cardNumber = fields["mpCardNumber"].orEmpty()
+    val statusLabel = when {
+        status.isBlank() -> "Status do uzupełnienia"
+        mandateActive -> "Status wpisany: aktywna"
+        else -> "Status wpisany: ${fields["mpStatus"].orEmpty()}"
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F2EF)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().padding(15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("LEGITYMACJA POSELSKA", color = Color(0xFF28252A),
+                    fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
+                Text("WIZUALIZACJA DOKUMENTU • EWIDENCJA INFORMACYJNA",
+                    color = Color(0xFF6C6260), style = MaterialTheme.typography.labelSmall)
+                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(
+                        Modifier.weight(0.92f).fillMaxSize().clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFE8E4E1)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (photoBitmap != null) {
+                            Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie osoby w legitymacji poselskiej",
+                                modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        } else {
+                            Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie",
+                                tint = Color(0xFF9A918D), modifier = Modifier.size(64.dp))
+                        }
+                    }
+                    Column(Modifier.weight(1.18f).fillMaxSize(), verticalArrangement = Arrangement.SpaceEvenly) {
+                        @Composable fun detail(label: String, value: String) {
+                            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Text(label, color = Color(0xFF716966), style = MaterialTheme.typography.labelSmall)
+                                Text(value.ifBlank { "—" }, color = Color(0xFF302B2A),
+                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                        detail("IMIĘ (IMIONA)", firstNames)
+                        detail("NAZWISKO", lastName)
+                        detail("RODZAJ UPRAWNIENIA", "Poseł na Sejm RP")
+                        detail("DATA WYDANIA", issueDate)
+                        detail("NUMER LEGITYMACJI", cardNumber)
+                        detail("NUMER KADENCJI", term)
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(Modifier.size(width = 54.dp, height = 34.dp).clip(RoundedCornerShape(5.dp))
+                        .border(1.dp, Color(0xFFD6D0CB), RoundedCornerShape(5.dp))) {
+                        Column(Modifier.fillMaxSize()) {
+                            Box(Modifier.weight(1f).fillMaxWidth().background(Color.White))
+                            Box(Modifier.weight(1f).fillMaxWidth().background(Color(0xFFDC143C)))
+                        }
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text("SEJM RZECZYPOSPOLITEJ POLSKIEJ", color = Color(0xFF5E5552),
+                            fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                        Text(authority.ifBlank { "Organ wystawiający do uzupełnienia" },
+                            color = Color(0xFF786E6A), style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+        }
+    }
+    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F5F8))) {
+        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Filled.Info, contentDescription = null, tint = Blue)
+            Text(statusLabel + ". Dane wpisane przez użytkownika nie potwierdzają mandatu ani autentyczności legitymacji.",
+                color = Muted, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 
