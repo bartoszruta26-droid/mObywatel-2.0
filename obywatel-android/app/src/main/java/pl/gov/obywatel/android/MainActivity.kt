@@ -1995,7 +1995,9 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
-        if (documentId == "5" || documentId == "6") {
+        if (documentId == "4") {
+            ParliamentaryCredentialPreview(fields)
+        } else if (documentId == "5" || documentId == "6") {
             SchoolLegitimacyPreview(fields, photoBase64, student = documentId == "6")
         } else {
             OwdDocumentArtworkCard(
