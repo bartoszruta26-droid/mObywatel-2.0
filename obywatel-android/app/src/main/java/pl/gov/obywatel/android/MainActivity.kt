@@ -132,6 +132,54 @@ import pl.gov.obywatel.android.ui.documents.DocumentsScreen
 import pl.gov.obywatel.android.ui.services.PublicServicesScreen
 
 @Composable
+private fun GeneralDocumentOcrEditor(
+    categoryId: String,
+    fields: androidx.compose.runtime.MutableMap<String, String>,
+    context: Context,
+    saveMessage: (String) -> Unit
+) {
+    var processing by remember { mutableStateOf(false) }
+    val key = "${categoryId}OcrText"
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            processing = true
+            // ML Kit odczytuje obraz bezpośrednio z URI. Nie tworzymy kopii pliku w pamięci aplikacji.
+            runCatching { InputImage.fromFilePath(context, uri) }
+                .onSuccess { image ->
+                    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                    recognizer.process(image)
+                        .addOnSuccessListener { result ->
+                            fields[key] = result.text
+                            saveMessage("OCR zakończony. Zweryfikuj tekst i ręcznie przenieś właściwe dane do pól dokumentu.")
+                        }
+                        .addOnFailureListener { saveMessage("OCR nie powiódł się: ${it.localizedMessage ?: "błąd odczytu"}") }
+                        .addOnCompleteListener { recognizer.close(); processing = false }
+                }
+                .onFailure {
+                    processing = false
+                    saveMessage("Nie można otworzyć obrazu: ${it.localizedMessage ?: "błąd pliku"}")
+                }
+        }
+    }
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Odczyt tekstu dokumentu (OCR)", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Dotyczy zdjęć i skanów dowodów, paszportów, legitymacji, orzeczeń i zaświadczeń. Obraz jest przetwarzany z URI w pamięci; aplikacja zapisuje wyłącznie rozpoznany tekst po zatwierdzeniu formularza. OCR nie weryfikuje autentyczności dokumentu.",
+                color = Muted, style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = { picker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
+                Text("Wybierz zdjęcie lub skan do OCR")
+            }
+            if (processing) Text("Rozpoznawanie tekstu…", color = Blue)
+            val recognized = fields[key].orEmpty()
+            if (recognized.isNotBlank()) {
+                Text("Rozpoznany tekst — sprawdź i popraw", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text(recognized, color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+@Composable
 private fun LoyaltyCardsEditor(
     fields: androidx.compose.runtime.MutableMap<String, String>,
     context: Context,
@@ -2410,6 +2458,9 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
+        if (categoryId in setOf("identity_card", "parliament", "training", "student", "disability", "passport")) {
+            GeneralDocumentOcrEditor(categoryId, fields, context) { saveMessage = it }
+        }
          if (categoryId == "all" || categoryId == "profile") {
         Card(
             modifier = Modifier.fillMaxWidth(),
