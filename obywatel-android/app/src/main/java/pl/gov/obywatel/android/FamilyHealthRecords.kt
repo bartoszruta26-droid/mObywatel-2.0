@@ -192,6 +192,28 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
         } else {
             TextButton(onClick = { selectedId = null }) { Text("‹ Lista dzieci") }
             if (section == "children") {
+                DocumentIdentityTemplate(
+                    "Karta dziecka",
+                    mapOf(
+                        "Imię i nazwisko" to listOf(selected.firstName, selected.lastName).filter { it.isNotBlank() }.joinToString(" "),
+                        "Data urodzenia" to selected.birthDate,
+                        "PESEL" to selected.pesel,
+                        "Rodzic / opiekun" to selected.guardian,
+                        "Liczba wpisów szczepień" to selected.vaccines.size.toString()
+                    ),
+                    owner = selected.guardian
+                )
+                DocumentPdfExportButton("Karta dziecka", mapOf(
+                    "Imię i nazwisko" to listOf(selected.firstName, selected.lastName).filter { it.isNotBlank() }.joinToString(" "),
+                    "Data urodzenia" to selected.birthDate,
+                    "PESEL" to selected.pesel,
+                    "Płeć" to selected.sex,
+                    "Miejsce urodzenia" to selected.birthPlace,
+                    "Grupa krwi" to selected.bloodGroup,
+                    "Alergie" to selected.allergies,
+                    "Rodzic / opiekun" to selected.guardian,
+                    "Uwagi" to selected.notes
+                ))
                 Text("Zdjęcie dziecka", fontWeight = FontWeight.Bold)
                 if (selected.photoBase64.isNotBlank()) {
                     val bytes = remember(selected.photoBase64) { Base64.decode(selected.photoBase64, Base64.DEFAULT) }
@@ -217,6 +239,25 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
                     selectedId = null
                 }) { Text("Usuń profil dziecka") }
             } else {
+                DocumentIdentityTemplate(
+                    "Książeczka szczepień",
+                    mapOf(
+                        "Imię i nazwisko" to listOf(selected.firstName, selected.lastName).filter { it.isNotBlank() }.joinToString(" "),
+                        "Data urodzenia" to selected.birthDate,
+                        "Rodzic / opiekun" to selected.guardian,
+                        "Liczba dawek" to selected.vaccines.size.toString(),
+                        "Ostatnie szczepienie" to selected.vaccines.lastOrNull()?.date.orEmpty()
+                    ),
+                    owner = selected.guardian
+                )
+                DocumentPdfExportButton("Książeczka szczepień", buildMap {
+                    put("Imię i nazwisko", listOf(selected.firstName, selected.lastName).filter { it.isNotBlank() }.joinToString(" "))
+                    put("Data urodzenia", selected.birthDate)
+                    put("Rodzic / opiekun", selected.guardian)
+                    selected.vaccines.forEachIndexed { index, v ->
+                        put("Szczepienie ${index + 1}", listOf(v.vaccine, v.date, v.dose, v.disease, v.batch, v.manufacturer, v.facility, v.provider, v.nextDate, v.notes).filter { it.isNotBlank() }.joinToString(" · "))
+                    }
+                })
                 Text(listOf(selected.firstName, selected.lastName).filter { it.isNotBlank() }.joinToString(" ").ifBlank { "Dziecko — bez nazwy" },
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text("Historia szczepień — wpisy ręczne", color = Color(0xFF596675))
