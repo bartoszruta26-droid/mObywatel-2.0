@@ -1094,7 +1094,7 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
         "Organ wydający" to "passportIssuer", "Data utraty" to "passportLossDate"
     ) + listOf("Źródło danych" to "passportExtraSource", "Podstawa prawna" to "passportExtraLegalBasis",
         "Data weryfikacji" to "passportExtraVerifiedAt", "Podmiot weryfikujący" to "passportExtraVerifiedBy", "Uwagi" to "passportExtraNotes")),
-    OwdDocumentGroup("family", "Dokument rodowy — ewidencja prywatna", listOf(
+    OwdDocumentGroup("family", "Dokument rodowy", listOf(
         "Numer dokumentu" to "familyDocNumber", "Nazwa rodu" to "familyName", "Linia / gałąź" to "familyLine",
         "Miejsce w strukturze rodu" to "familyRole", "Prowadzący ewidencję" to "familyRegistry",
         "Data sporządzenia" to "familyIssueDate", "Data aktualizacji" to "familyExpiryDate",
@@ -1104,7 +1104,7 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
         "Podpis posiadacza" to "familyHolderSignature", "Podpis wystawcy" to "familyRegistrarSignature"
     ) + listOf("Źródło danych" to "familyExtraSource", "Podstawa prawna" to "familyExtraLegalBasis",
         "Data weryfikacji" to "familyExtraVerifiedAt", "Podmiot weryfikujący" to "familyExtraVerifiedBy", "Uwagi dodatkowe" to "familyExtraNotes")),
-    OwdDocumentGroup("parliament", "Legitymacja poselska — ewidencja", listOf(
+    OwdDocumentGroup("parliament", "Legitymacja poselska", listOf(
         "Numer legitymacji" to "mpCardNumber", "Kadencja" to "mpTerm", "Wystawca" to "mpIssuer",
         "Status" to "mpStatus", "Okręg wyborczy" to "mpDistrict", "Początek mandatu" to "mpStart",
         "Koniec mandatu" to "mpEnd", "Data wydania legitymacji" to "mpCardIssueDate",
@@ -2088,10 +2088,10 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
         Triple("Dane osobowe profilu", Icons.Filled.AccountCircle, listOf("contactPhone", "contactEmail", "contactOrganization", "contactAddress")),
         Triple("Dowód tożsamości", Icons.Filled.CreditCard, listOf("firstNames", "lastName", "birthDate", "pesel", "idNumber", "idStatus")),
         Triple("Dane paszportowe", Icons.Filled.Public, listOf("passportNumber", "passportStatus")),
-        Triple("Dokument rodowy — ewidencja prywatna", Icons.Filled.Fingerprint, listOf("familyDocNumber", "familyName")),
-        Triple("Legitymacja poselska — ewidencja", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
+        Triple("Dokument rodowy", Icons.Filled.Fingerprint, listOf("familyDocNumber", "familyName")),
+        Triple("Legitymacja poselska", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
         Triple("Legitymacja kursanta", Icons.Filled.Description, listOf("trainingCardNumber", "trainingInstitution")),
-        Triple("Legitymacja ucznia/studenta — ewidencja", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
+        Triple("Legitymacja ucznia/studenta", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
         Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName")),
         Triple("Karty lojalnościowe sklepów", Icons.Filled.CreditCard, (1..10).flatMap { n -> listOf("loyalty${n}Store", "loyalty${n}Number", "loyalty${n}Barcode", "loyalty${n}Qr") })
     )
@@ -2277,24 +2277,24 @@ private fun DocumentDetailsScreen(
             "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname",
             "Imiona matki" to "motherNames", "Nazwisko rodowe matki" to "motherSurname"
         )),
-        Triple("Dowód tożsamości — ewidencja", "Podstawowe dane identyfikacyjne oraz dane dokumentu — wpis użytkownika", listOf(
+        Triple("Dowód tożsamości", "Podstawowe dane identyfikacyjne oraz dane dokumentu — wpis użytkownika", listOf(
             "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
             "Miejsce urodzenia" to "birthPlace", "Obywatelstwo" to "citizenship", "Płeć — wpis deklarowany" to "sex",
             "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel",
             "Numer dokumentu" to "idNumber", "Status" to "idStatus",
             "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data wydania" to "idIssueDate", "Data ważności" to "idExpiryDate", "Organ wydający" to "idIssuer", "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
         )),
-        Triple("Dane paszportowe — ewidencja", "Dane dokumentu podróży — wpis użytkownika", listOf(
+        Triple("Dane paszportowe", "Dane dokumentu podróży — wpis użytkownika", listOf(
             "Numer dokumentu paszportowego" to "passportNumber", "Rodzaj dokumentu" to "passportType",
             "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
             "Państwo wydania" to "passportCountry", "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace", "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate", "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
         )),
-        Triple("Dokument rodowy — ewidencja prywatna", "Prywatna karta ewidencji rodowej", listOf(
+        Triple("Dokument rodowy", "Prywatna karta ewidencji rodowej", listOf(
             "Numer dokumentu rodowego" to "familyDocNumber", "Nazwa rodu" to "familyName",
             "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyRole",
             "Prowadzący ewidencję" to "familyRegistry", "Data sporządzenia" to "familyIssueDate", "Data przeglądu / aktualizacji" to "familyExpiryDate", "Miejsce prowadzenia ewidencji" to "familyRegistryPlace", "Miejsce zamieszkania — wpis dobrowolny" to "familyResidence", "Linia rodowa ojca" to "familyFatherLine", "Linia rodowa matki" to "familyMotherLine", "Podstawa wpisu" to "familySource", "Uwagi ewidencyjne" to "familyNotes"
         )),
-        Triple("Legitymacja poselska — ewidencja", "Ewidencja informacji o legitymacji i mandacie", listOf(
+        Triple("Legitymacja poselska", "Ewidencja informacji o legitymacji i mandacie", listOf(
             "Numer legitymacji" to "mpCardNumber", "Kadencja" to "mpTerm",
             "Wystawca" to "mpIssuer", "Status legitymacji" to "mpStatus",
             "Okręg wyborczy" to "mpDistrict", "Data rozpoczęcia mandatu" to "mpStart", "Data zakończenia mandatu" to "mpEnd", "Data wydania legitymacji" to "mpCardIssueDate", "Data ślubowania" to "mpOathDate", "Miejsce ślubowania" to "mpOathPlace", "Źródło potwierdzenia ślubowania" to "mpOathEvidence", "Źródło potwierdzenia" to "mpMandateSource"
@@ -2304,7 +2304,7 @@ private fun DocumentDetailsScreen(
             "Nazwa kursu" to "trainingCourseName", "Status uczestnictwa" to "trainingStatus",
             "Adres instytucji" to "trainingInstitutionAddress", "Numer wpisu instytucji" to "trainingInstitutionRegistry", "Symbol kursu" to "trainingCourseCode", "Data rozpoczęcia" to "trainingStartDate", "Data zakończenia" to "trainingEndDate", "Data wydania legitymacji" to "trainingIssueDate", "Ważna do" to "trainingValidUntil", "Wystawca" to "trainingIssuer", "Podpis wystawcy" to "trainingSignature", "Data ukończenia" to "trainingCompletionDate", "Liczba godzin" to "trainingHours", "Wynik zaliczenia" to "trainingAssessment", "Numer zaświadczenia" to "trainingCertificateNumber", "Forma kształcenia" to "trainingForm"
         )),
-        Triple("Legitymacja ucznia/studenta — ewidencja", "Ewidencja danych podanych przez użytkownika", listOf(
+        Triple("Legitymacja ucznia/studenta", "Ewidencja danych podanych przez użytkownika", listOf(
             "Numer legitymacji" to "studentCardNumber", "Uczelnia" to "studentUniversity",
             "Kierunek" to "studentProgramme", "Rok akademicki" to "studentAcademicYear",
             "Adres uczelni" to "studentUniversityAddress", "Identyfikator uczelni" to "studentUniversityId", "Imię i nazwisko w dokumencie" to "studentNames", "Wydział" to "studentFaculty", "Kierunek" to "studentProgramme", "Poziom studiów" to "studentLevel", "Profil / forma studiów" to "studentProfile", "Rok i semestr" to "studentYear", "Rok akademicki" to "studentAcademicYear", "Data wydania" to "studentIssueDate", "Status" to "studentStatus", "Ważność" to "studentValidity", "Wystawca" to "studentIssuer"
@@ -2314,7 +2314,7 @@ private fun DocumentDetailsScreen(
             "Data dokumentu" to "disabilityDecisionDate", "Stopień / kategoria" to "disabilityDegree",
             "Okres obowiązywania" to "disabilityValidity", "Rodzaj rozstrzygnięcia" to "disabilityDecisionType", "Osoba podpisująca / wystawca" to "disabilityIssuerName", "Powiat / miasto" to "disabilityCounty", "Podstawa prawna" to "disabilityLegalBasis", "Przepis określający skutki" to "disabilityLegalProvision", "Zakres uznania / równoważności" to "disabilityEquivalentEffect", "Fundacja / podmiot prowadzący" to "disabilityFoundationName", "Podstawa statutowa" to "disabilityFoundationStatute", "Kwalifikacje osoby wystawiającej" to "disabilityMedicalQualification", "Ocena medyczna" to "disabilityMedicalAssessment", "Skład zespołu" to "disabilityPanelMembers", "Przewodniczący zespołu" to "disabilityChairperson", "Osoba zatwierdzająca" to "disabilitySignature", "Tryb odwołania" to "disabilityAppealInfo", "Data wniosku" to "disabilityApplicationDate", "Numer sprawy" to "disabilityCaseNumber", "Data doręczenia" to "disabilityDeliveryDate", "Wynik odwołania" to "disabilityAppealOutcome", "Duplikat / zmiana dokumentu" to "disabilityDuplicateInfo", "Dokument źródłowy" to "disabilitySourceAttachment"
         )),
-        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..10).flatMap { n ->
+        Triple("Karty lojalnościowe", "Dane kart programów lojalnościowych sklepów", (1..10).flatMap { n ->
             val p = "loyalty$n"
             listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty nadany przez sklep" to "${p}Number",
                 "Lokalny numer ewidencyjny" to "${p}LocalId", "Kod cyfrowy" to "${p}DigitalCode",
@@ -2473,14 +2473,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
     var saveMessage by remember { mutableStateOf("") }
     val editorTitle = when (categoryId) {
         "profile" -> "Dane osobowe i zdjęcie profilowe"
-        "family" -> "Dokument rodowy — ewidencja prywatna"
-        "identity_card" -> "Dowód tożsamości — ewidencja"
-        "parliament" -> "Legitymacja poselska — ewidencja"
-        "training" -> "Legitymacja ucznia/studenta — ewidencja"
-        "student" -> "Legitymacja ucznia/studenta — ewidencja"
-        "disability" -> "Orzeczenia i zaświadczenia — ewidencja"
-        "loyalty_cards" -> "Karty lojalnościowe — ewidencja"
-        "passport" -> "Dane paszportowe — ewidencja"
+        "family" -> "Dokument rodowy"
+        "identity_card" -> "Dowód tożsamości"
+        "parliament" -> "Legitymacja poselska"
+        "training" -> "Legitymacja ucznia/studenta"
+        "student" -> "Legitymacja ucznia/studenta"
+        "disability" -> "Orzeczenia i zaświadczenia"
+        "loyalty_cards" -> "Karty lojalnościowe"
+        "passport" -> "Dane paszportowe"
         else -> "Wszystkie dane i dokumenty"
     }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
