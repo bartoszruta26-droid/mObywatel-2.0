@@ -2060,8 +2060,13 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
-        CivicDocumentCard(fields, photoBase64, documentId, section.first)
-        CivicDocumentStatusTile(fields, documentId)
+        DocumentIdentityTemplate(
+            section.first,
+            section.third.associate { (label, key) -> label to fields[key].orEmpty() },
+            owner = fields["idIssuer"].orEmpty().ifBlank { fields["passportIssuer"].orEmpty() },
+            photoOverride = photoBitmap
+        )
+        DocumentPdfExportButton(section.first, section.third.associate { (label, key) -> label to fields[key].orEmpty() })
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
