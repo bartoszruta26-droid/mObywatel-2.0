@@ -848,12 +848,6 @@ private fun HomeScreen() {
                     showCertificates = false
                 }
             )
-            Text(
-                "Niezależna aplikacja obywatelska • nie jest częścią rządowego systemu mObywatel. Dane urzędowe wymagają potwierdzenia we właściwym źródle.",
-                modifier = Modifier.fillMaxWidth().background(White).padding(horizontal = 12.dp, vertical = 5.dp),
-                color = Muted,
-                style = MaterialTheme.typography.labelSmall
-            )
         }
         pendingImport?.let { incoming ->
             AlertDialog(
