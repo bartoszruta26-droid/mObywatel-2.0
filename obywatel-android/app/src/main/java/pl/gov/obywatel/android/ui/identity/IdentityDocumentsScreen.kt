@@ -22,6 +22,12 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -303,41 +309,131 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
 
 @Composable
 private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayout) -> Unit) {
-    var selected by remember { mutableStateOf("title") }
-    val element = layout.element(selected) ?: layout.elements.first()
+    var currentPage by remember { mutableIntStateOf(1) }
+    var selectedKey by remember { mutableStateOf("title:1") }
+    val pageElements = layout.elements.filter { it.page == currentPage }
+    val selected = pageElements.firstOrNull { "${it.id}:${it.page}" == selectedKey }
+        ?: pageElements.firstOrNull()
+        ?: layout.elements.first()
+    LaunchedEffect(selected.id, selected.page) { selectedKey = "${selected.id}:${selected.page}" }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Układ strony i rozmieszczenie", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text("Współrzędne w punktach PDF (A4: 595 × 842). Zmiany zapisują się w szablonie.", style = MaterialTheme.typography.bodySmall)
-        OutlinedTextField(
-            value = layout.pageCount.toString(),
-            onValueChange = { value -> value.toIntOrNull()?.let { onChange(layout.copy(pageCount = it.coerceIn(1, 100))) } },
-            label = { Text("Minimalna liczba stron (1–100)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        SimpleChoice("Edytowany element", element.label, layout.elements.map { it.label }) { label ->
-            layout.elements.firstOrNull { it.label == label }?.let { selected = it.id }
+        Text("Projektant układu dokumentu", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("Przeciągnij ramkę na podglądzie strony A4. Współrzędne i rozmiary są wyrażone w punktach PDF.", style = MaterialTheme.typography.bodySmall)
+        SimpleChoice("Edytowana strona", currentPage.toString(), (1..layout.pageCount).map { it.toString() }) {
+            currentPage = it.toInt()
+            selectedKey = pageElements.firstOrNull()?.let { e -> "${e.id}:${e.page}" } ?: "body:${currentPage}"
+        }
+        DocumentLayoutCanvas(layout, currentPage, selectedKey, onSelect = { selectedKey = "${it.id}:${it.page}" }) { moved ->
+            onChange(layout.update(moved))
+        }
+        Text("Elementy na stronie: ${pageElements.size}", style = MaterialTheme.typography.labelSmall)
+        SimpleChoice(
+            "Edytowany element",
+            selected.label + " • str. " + selected.page,
+            layout.elements.map { it.label + " • str. " + it.page }
+        ) { label ->
+            layout.elements.firstOrNull { it.label + " • str. " + it.page == label }?.let {
+                selectedKey = "${it.id}:${it.page}"
+                currentPage = it.page
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(element.x.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(x=it.coerceIn(0f,595f)))) } }, label={Text("X")}, enabled=!element.locked, modifier=Modifier.weight(1f))
-            OutlinedTextField(element.y.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(y=it.coerceIn(0f,842f)))) } }, label={Text("Y")}, enabled=!element.locked, modifier=Modifier.weight(1f))
+            OutlinedTextField(selected.x.toInt().toString(), { v -> if (!selected.locked) v.toFloatOrNull()?.let { onChange(layout.update(selected.copy(x=it.coerceIn(0f,595f)))) } }, label={Text("X")}, enabled=!selected.locked, modifier=Modifier.weight(1f))
+            OutlinedTextField(selected.y.toInt().toString(), { v -> if (!selected.locked) v.toFloatOrNull()?.let { onChange(layout.update(selected.copy(y=it.coerceIn(0f,842f)))) } }, label={Text("Y")}, enabled=!selected.locked, modifier=Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(element.width.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(width=it.coerceIn(1f,595f)))) } }, label={Text("Szerokość")}, enabled=!element.locked, modifier=Modifier.weight(1f))
-            OutlinedTextField(element.height.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(height=it.coerceIn(1f,842f)))) } }, label={Text("Wysokość")}, enabled=!element.locked, modifier=Modifier.weight(1f))
+            OutlinedTextField(selected.width.toInt().toString(), { v -> if (!selected.locked) v.toFloatOrNull()?.let { onChange(layout.update(selected.copy(width=it.coerceIn(1f,595f)))) } }, label={Text("Szerokość")}, enabled=!selected.locked, modifier=Modifier.weight(1f))
+            OutlinedTextField(selected.height.toInt().toString(), { v -> if (!selected.locked) v.toFloatOrNull()?.let { onChange(layout.update(selected.copy(height=it.coerceIn(1f,842f)))) } }, label={Text("Wysokość")}, enabled=!selected.locked, modifier=Modifier.weight(1f))
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Widoczny")
             Spacer(Modifier.width(8.dp))
-            Switch(checked=element.visible, onCheckedChange={onChange(layout.update(element.copy(visible=it)))})
+            Switch(checked=selected.visible, onCheckedChange={onChange(layout.update(selected.copy(visible=it)))})
             Spacer(Modifier.width(16.dp))
             Text("Zablokowany")
             Spacer(Modifier.width(8.dp))
-            Switch(checked=element.locked, onCheckedChange={onChange(layout.update(element.copy(locked=it)))})
+            Switch(checked=selected.locked, onCheckedChange={onChange(layout.update(selected.copy(locked=it)))})
         }
-        if (!element.locked) {
-            OutlinedTextField(element.fontSize.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(fontSize=it.coerceIn(5f,72f)))) } }, label={Text("Rozmiar tekstu")}, modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(selected.fontSize.toInt().toString(), { v -> if (!selected.locked) v.toFloatOrNull()?.let { onChange(layout.update(selected.copy(fontSize=it.coerceIn(5f,72f)))) } }, label={Text("Rozmiar tekstu")}, enabled=!selected.locked, modifier=Modifier.fillMaxWidth())
+        OutlinedButton(
+            onClick = {
+                val base = layout.elements.firstOrNull { it.id == selected.id && it.page == 1 } ?: selected
+                val clone = base.copy(page=currentPage, x=42f, y=if (base.id=="body") 350f else base.y)
+                if (layout.elements.none { it.id == clone.id && it.page == currentPage }) {
+                    onChange(layout.copy(elements=layout.elements + clone))
+                    selectedKey = "${clone.id}:${clone.page}"
+                }
+            },
+            enabled = layout.elements.none { it.id == selected.id && it.page == currentPage } && currentPage > 1,
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Dodaj kopię elementu na tej stronie") }
+        OutlinedButton(
+            onClick = { onChange(layout.copy(pageCount=(layout.pageCount+1).coerceAtMost(100))); currentPage=(layout.pageCount+1).coerceAtMost(100) },
+            enabled = layout.pageCount < 100,
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Dodaj stronę") }
+        OutlinedButton(onClick={onChange(DocumentLayout.forGroup("Ogólne"));currentPage=1;selectedKey="title:1"}, modifier=Modifier.fillMaxWidth()) { Text("Przywróć układ domyślny") }
+    }
+}
+
+@Composable
+private fun DocumentLayoutCanvas(
+    layout: DocumentLayout,
+    page: Int,
+    selectedKey: String,
+    onSelect: (DocumentLayoutElement) -> Unit,
+    onMove: (DocumentLayoutElement) -> Unit
+) {
+    val elements = layout.elements.filter { it.page == page && it.visible }
+    Canvas(
+        modifier = Modifier.fillMaxWidth().height(420.dp).pointerInput(layout, page) {
+            var dragging: DocumentLayoutElement? = null
+            var scale = minOf(size.width / 595f, size.height / 842f)
+            var left = (size.width - 595f * scale) / 2f
+            var top = (size.height - 842f * scale) / 2f
+            detectDragGestures(
+                onDragStart = { point ->
+                    val x = (point.x - left) / scale
+                    val y = (point.y - top) / scale
+                    dragging = elements.asReversed().firstOrNull { x >= it.x && x <= it.x+it.width && y >= it.y && y <= it.y+it.height && !it.locked }
+                    dragging?.let(onSelect)
+                },
+                onDrag = { change, amount ->
+                    val current = dragging ?: return@detectDragGestures
+                    change.consume()
+                    val updated = current.copy(
+                        x = (current.x + amount.x / scale).coerceIn(0f, 595f-current.width),
+                        y = (current.y + amount.y / scale).coerceIn(0f, 842f-current.height)
+                    )
+                    dragging = updated
+                    onMove(updated)
+                },
+                onDragEnd = { dragging = null },
+                onDragCancel = { dragging = null }
+            )
         }
-        OutlinedButton(onClick={onChange(DocumentLayout())}, modifier=Modifier.fillMaxWidth()) { Text("Przywróć układ domyślny") }
+    ) {
+        val scale = minOf(size.width / 595f, size.height / 842f)
+        val left = (size.width - 595f * scale) / 2f
+        val top = (size.height - 842f * scale) / 2f
+        drawRect(ComposeColor(0xFFE6E9ED))
+        drawRect(ComposeColor.White, Offset(left,top), Size(595f*scale,842f*scale))
+        elements.forEach { element ->
+            val chosen = "${element.id}:${element.page}" == selectedKey
+            val origin = Offset(left+element.x*scale,top+element.y*scale)
+            val rectSize = Size(element.width*scale,element.height*scale)
+            drawRect(if(chosen) ComposeColor(0xFFB7D5F5) else ComposeColor(0xFFE8EDF3),origin,rectSize)
+            drawRect(if(chosen) ComposeColor(0xFF1558A6) else ComposeColor(0xFF68788A),origin,rectSize,style=androidx.compose.ui.graphics.drawscope.Stroke(width=if(chosen) 2.5f else 1f))
+            drawContext.canvas.nativeCanvas.drawText(
+                element.label,
+                origin.x+4f,
+                origin.y+(14f*scale).coerceAtLeast(8f),
+                android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                    color=android.graphics.Color.DKGRAY
+                    textSize=(element.fontSize*scale).coerceIn(7f,16f)
+                }
+            )
+        }
     }
 }
 
