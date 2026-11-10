@@ -514,24 +514,23 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     p.color=android.graphics.Color.DKGRAY;p.textSize=layout.element("body",pageNumber+1)?.fontSize ?: 10f
     layout.element("body",pageNumber+1)?.takeIf { it.visible }?.let { element -> drawLines(canvas,bodyPages[pageNumber],element.x,element.y,element.width,p) }
     // Group-specific reference fields and separators establish a distinct formal hierarchy.
-    val referenceY=bodyY+145f
-    p.color=accent;p.strokeWidth=0.8f
-    canvas.drawLine(margin,referenceY,595f-margin,referenceY,p)
-    p.textSize=8.5f;p.typeface=Typeface.DEFAULT
-    p.color=android.graphics.Color.DKGRAY
-    val referenceLabel=when(group) {
-        "Kościelne" -> "MIEJSCE I DATA • PODSTAWA WYDANIA"
-        "Fundacyjne","Stowarzyszeniowe" -> "PODSTAWA STATUTOWA / UCHWAŁA"
-        "Firmowe" -> "DANE REJESTROWE • ZNAK SPRAWY"
-        "Rodowe" -> "PODSTAWA USTALEŃ RODOWYCH"
-        "Cywilne" -> "MIEJSCE I DATA • ZAŁĄCZNIKI"
-        "Zawodowe" -> "PODSTAWA KWALIFIKACJI / UPRAWNIEŃ"
-        "Urzędowe" -> "PODSTAWA PRAWNA • ZNAK SPRAWY"
-        else -> "INFORMACJE UZUPEŁNIAJĄCE"
+    layout.element("reference",pageNumber+1)?.takeIf { it.visible }?.let { e ->
+        p.color=accent;p.strokeWidth=0.8f
+        canvas.drawLine(e.x,e.y,e.x+e.width,e.y,p)
+        p.textSize=e.fontSize;p.typeface=Typeface.DEFAULT;p.color=android.graphics.Color.DKGRAY
+        val referenceLabel=when(group) {
+            "Kościelne" -> "MIEJSCE I DATA • PODSTAWA WYDANIA"
+            "Fundacyjne","Stowarzyszeniowe" -> "PODSTAWA STATUTOWA / UCHWAŁA"
+            "Firmowe" -> "DANE REJESTROWE • ZNAK SPRAWY"
+            "Rodowe" -> "PODSTAWA USTALEŃ RODOWYCH"
+            "Cywilne" -> "MIEJSCE I DATA • ZAŁĄCZNIKI"
+            "Zawodowe" -> "PODSTAWA KWALIFIKACJI / UPRAWNIEŃ"
+            "Urzędowe" -> "PODSTAWA PRAWNA • ZNAK SPRAWY"
+            else -> "INFORMACJE UZUPEŁNIAJĄCE"
+        }
+        canvas.drawText(referenceLabel,e.x,e.y+16f,p)
+        canvas.drawText("………………………………………………………………………………",e.x,e.y+34f,p)
     }
-    canvas.drawText(referenceLabel,margin,referenceY+16f,p)
-    p.color=android.graphics.Color.DKGRAY;p.textSize=9f
-    canvas.drawText("………………………………………………………………………………",margin,referenceY+34f,p)
     // Signature area: specimen is visibly distinguished from a cryptographic signature.
     val signatureElement=layout.element("signature",pageNumber+1)
     val signY=signatureElement?.y ?: 675f
