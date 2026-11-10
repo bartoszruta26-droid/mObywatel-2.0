@@ -33,7 +33,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-private data class BrandAsset(val id: String, val owner: String, val kind: String, val label: String, val file: String)
+internal data class BrandAsset(val id: String, val owner: String, val kind: String, val label: String, val file: String)
 
 internal object DocumentBrandStore {
     private const val ALIAS = "document_brand_assets_aes"
