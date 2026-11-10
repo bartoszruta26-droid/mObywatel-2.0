@@ -92,6 +92,8 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     var category by remember { mutableStateOf(categories.first()) }
     var rights by remember { mutableStateOf("") }
     var templateName by remember { mutableStateOf("Mój szablon") }
+    val documentGroups = listOf("Kościelne", "Fundacyjne", "Stowarzyszeniowe", "Firmowe", "Rodowe", "Cywilne", "Zawodowe", "Urzędowe", "Ogólne")
+    var documentGroup by remember { mutableStateOf("Ogólne") }
     var title by remember { mutableStateOf("Zaświadczenie") }
     var number by remember { mutableStateOf("OWD/2026/0001") }
     var recipient by remember { mutableStateOf("") }
@@ -204,6 +206,21 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                 }
                 "Dokumenty" -> {
                     OrgChoice(orgs,orgId){orgId=it}
+                    SimpleChoice("Grupa dokumentu",documentGroup,documentGroups){ documentGroup=it }
+                    OutlinedButton(onClick={
+                        when(documentGroup) {
+                            "Kościelne" -> { templateName="Dokument kościelny"; title="Zaświadczenie kościelne"; role="Osoba uprawniona do reprezentacji podmiotu kościelnego"; watermark="DOKUMENT KOŚCIELNY"; body="Niniejszym zaświadcza się, że…\\n\\nPodstawa wydania: …\\nData i miejsce: …" }
+                            "Fundacyjne" -> { templateName="Dokument fundacji"; title="Zaświadczenie / potwierdzenie fundacji"; role="Zarząd Fundacji"; watermark="FUNDACJA"; body="Dane fundacji: …\\nCel i przedmiot dokumentu: …\\nPodstawa statutowa / uchwała: …\\nRozstrzygnięcie lub potwierdzenie: …" }
+                            "Stowarzyszeniowe" -> { templateName="Dokument stowarzyszenia"; title="Zaświadczenie stowarzyszenia"; role="Zarząd Stowarzyszenia"; watermark="STOWARZYSZENIE"; body="Dane stowarzyszenia: …\\nCzłonek / adresat: …\\nPodstawa statutowa / uchwała: …\\nTreść zaświadczenia: …" }
+                            "Firmowe" -> { templateName="Dokument firmowy"; title="Pismo firmowe"; role="Zarząd / właściciel"; watermark="DOKUMENT FIRMOWY"; body="Dane rejestrowe podmiotu: …\\nAdresat: …\\nPrzedmiot sprawy: …\\nTreść: …\\nOsoba do kontaktu: …" }
+                            "Rodowe" -> { templateName="Dokument rodowy"; title="Oświadczenie rodowe"; role="Przedstawiciel rodu"; watermark="DOKUMENT RODOWY"; body="Oznaczenie rodu: …\\nOsoby, których dotyczy dokument: …\\nPrzedmiot oświadczenia: …\\nTreść i podstawa ustaleń: …" }
+                            "Cywilne" -> { templateName="Dokument cywilny"; title="Oświadczenie"; role="Osoba składająca oświadczenie"; watermark="DOKUMENT CYWILNY"; body="Dane osoby składającej oświadczenie: …\\nTreść oświadczenia: …\\nMiejsce i data: …\\nZałączniki: …" }
+                            "Zawodowe" -> { templateName="Dokument zawodowy"; title="Zaświadczenie zawodowe"; role="Osoba uprawniona / pracodawca"; watermark="DOKUMENT ZAWODOWY"; body="Dane osoby: …\\nKwalifikacje / stanowisko: …\\nZakres czynności lub potwierdzenia: …\\nOkres / data: …" }
+                            "Urzędowe" -> { templateName="Wzór pisma urzędowego"; title="Pismo"; role="Organ / osoba upoważniona"; watermark="WZÓR"; body="Oznaczenie podmiotu i znak sprawy: …\\nAdresat: …\\nPodstawa prawna: …\\nUzasadnienie: …\\nRozstrzygnięcie / pouczenie: …" }
+                            else -> { templateName="Dokument ogólny"; title="Dokument"; role="Osoba uprawniona"; watermark="WZÓR"; body="Treść dokumentu…\\n\\nZałączniki: …" }
+                        }
+                        message="Zastosowano układ początkowy dla grupy: "+documentGroup+". Uzupełnij dane i sprawdź podstawę prawną przed wydaniem."
+                    },modifier=Modifier.fillMaxWidth()){ Text("Zastosuj wzorzec grupy") }
                     OutlinedTextField(templateName,{templateName=it},label={Text("Nazwa szablonu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(title,{title=it},label={Text("Tytuł dokumentu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(number,{number=it},label={Text("Numer dokumentu / rejestru")},modifier=Modifier.fillMaxWidth())
@@ -224,7 +241,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                         runCatching {
                             val prefs=c.getSharedPreferences("owd_document_templates",0)
                             val all=JSONArray(prefs.getString("templates","[]"))
-                            all.put(JSONObject().put("name",templateName).put("orgId",orgId).put("title",title).put("number",number)
+                            all.put(JSONObject().put("name",templateName).put("group",documentGroup).put("orgId",orgId).put("title",title).put("number",number)
                                 .put("recipient",recipient).put("body",body).put("signer",signer).put("role",role).put("watermark",watermark)
                                 .put("logoId",logoId).put("sealId",sealId).put("signatureId",signatureId)
                                 .put("backgroundId",backgroundId).put("flagId",flagId).put("emblemId",emblemId).put("securityId",securityId)
@@ -238,7 +255,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                             val all=JSONArray(c.getSharedPreferences("owd_document_templates",0).getString("templates","[]"))
                             require(all.length()>0){"Brak zapisanych szablonów."}
                             val t=all.getJSONObject(all.length()-1)
-                            templateName=t.optString("name","Mój szablon");orgId=t.optString("orgId",orgId)
+                            templateName=t.optString("name","Mój szablon");documentGroup=t.optString("group","Ogólne");orgId=t.optString("orgId",orgId)
                             title=t.optString("title",title);number=t.optString("number",number);recipient=t.optString("recipient",recipient)
                             body=t.optString("body",body);signer=t.optString("signer",signer);role=t.optString("role",role)
                             watermark=t.optString("watermark",watermark);logoId=t.optString("logoId","");sealId=t.optString("sealId","")
@@ -270,8 +287,9 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     },modifier=Modifier.fillMaxWidth()){Text("Drukuj PDF")}
                 }
                 else -> {
-                    Text("Importuj dokument PDF po podpisaniu",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-                    Text("Po imporcie zapisujemy SHA-256 i czas importu. Nie weryfikujemy certyfikatu, łańcucha zaufania, znacznika czasu ani kryptograficznej poprawności podpisu.",style=MaterialTheme.typography.bodySmall)
+                    Text("Walidacja podpisów PAdES",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
+                    Text("Obecna wersja rejestruje skrót SHA-256 i czas importu, ale nie potwierdza poprawności kryptograficznej podpisu. Wynik NIEZWERYFIKOWANY nie może być traktowany jako podpis ważny. Pełna walidacja wymaga silnika zgodnego z ETSI EN 319 102-1 / EN 319 142-1, walidacji ścieżki certyfikacji, statusu unieważnienia OCSP/CRL, znaczników czasu oraz unijnego wykazu zaufanych list (w tym formatu TLv6).",style=MaterialTheme.typography.bodySmall)
+                    Text("Importuj dokument PDF po podpisaniu",style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.SemiBold)
                     Button(onClick={signedImporter.launch(arrayOf("application/pdf"))},modifier=Modifier.fillMaxWidth()){Text("Importuj podpisany PDF")}
                 }
             }
