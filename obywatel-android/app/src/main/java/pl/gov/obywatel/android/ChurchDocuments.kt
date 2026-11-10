@@ -154,6 +154,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
             val saved = records[doc.id].orEmpty()
             var local by remember(doc.id) { mutableStateOf(saved) }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            DocumentIdentityTemplate(doc.title, local.mapKeys { (key, _) -> if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key })
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
                 Text(doc.note, Modifier.padding(12.dp), color = Color(0xFF284B64), style = MaterialTheme.typography.bodySmall)
             }
