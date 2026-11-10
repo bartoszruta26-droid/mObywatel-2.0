@@ -317,12 +317,12 @@ private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayo
             layout.elements.firstOrNull { it.label == label }?.let { selected = it.id }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(element.x.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(x=it.coerceIn(0f,595f)))) } }, label={Text("X")}, modifier=Modifier.weight(1f))
-            OutlinedTextField(element.y.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(y=it.coerceIn(0f,842f)))) } }, label={Text("Y")}, modifier=Modifier.weight(1f))
+            OutlinedTextField(element.x.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(x=it.coerceIn(0f,595f)))) } }, label={Text("X")}, enabled=!element.locked, modifier=Modifier.weight(1f))
+            OutlinedTextField(element.y.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(y=it.coerceIn(0f,842f)))) } }, label={Text("Y")}, enabled=!element.locked, modifier=Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(element.width.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(width=it.coerceIn(1f,595f)))) } }, label={Text("Szerokość")}, modifier=Modifier.weight(1f))
-            OutlinedTextField(element.height.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(height=it.coerceIn(1f,842f)))) } }, label={Text("Wysokość")}, modifier=Modifier.weight(1f))
+            OutlinedTextField(element.width.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(width=it.coerceIn(1f,595f)))) } }, label={Text("Szerokość")}, enabled=!element.locked, modifier=Modifier.weight(1f))
+            OutlinedTextField(element.height.toInt().toString(), { v -> v.toFloatOrNull()?.let { onChange(layout.update(element.copy(height=it.coerceIn(1f,842f)))) } }, label={Text("Wysokość")}, enabled=!element.locked, modifier=Modifier.weight(1f))
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Widoczny")
@@ -470,7 +470,7 @@ private fun splitDocumentBody(text:String, minimumPages:Int):List<String> {
     val estimatedPages=maxOf(1, (text.length+1099)/1100)
     val pageCount=maxOf(minimumPages.coerceIn(1,100), estimatedPages).coerceAtMost(100)
     val targetWords=maxOf(1, (words.size+pageCount-1)/pageCount)
-    return words.chunked(targetWords).map { it.joinToString(" ") }.ifEmpty { listOf("") }
+    return (0 until pageCount).map { page ->\n        val start = page * targetWords\n        val end = minOf(words.size, start + targetWords)\n        if (start >= words.size) "" else words.subList(start, end).joinToString(" ")\n    }
 }
 private fun drawLines(canvas:android.graphics.Canvas,text:String,x:Float,start:Float,width:Float,p:Paint){
     var y=start;var line=""
