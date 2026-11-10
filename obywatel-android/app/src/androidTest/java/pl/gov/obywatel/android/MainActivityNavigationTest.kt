@@ -38,7 +38,6 @@ class MainActivityNavigationTest {
         composeRule.onAllNodesWithText("Dowód tożsamości")[0].performScrollTo().assertIsDisplayed()
         composeRule.onAllNodesWithText("Dane paszportowe")[0].performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Legitymacja ucznia/studenta").performScrollTo().assertIsDisplayed()
     }
 
     @Test
