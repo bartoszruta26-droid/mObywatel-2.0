@@ -185,7 +185,7 @@ private fun LoyaltyCardsEditor(
     context: Context,
     saveMessage: (String) -> Unit
 ) {
-    val existingCount = (1..25).count { n -> fields.keys.any { it.startsWith("loyalty$n") && fields[it].orEmpty().isNotBlank() } }
+    val existingCount = (1..25).lastOrNull { n -> fields.keys.any { it.startsWith("loyalty$n") && fields[it].orEmpty().isNotBlank() } } ?: 0
     var cardCount by remember { mutableIntStateOf(maxOf(1, fields["loyaltyCardCount"]?.toIntOrNull() ?: existingCount)) }
     var selectedCard by remember { mutableIntStateOf(1) }
     var processing by remember { mutableStateOf(false) }
@@ -255,7 +255,12 @@ private fun LoyaltyCardsEditor(
                 if (hasData) {
                     val keys = fields.keys.filter { it.startsWith(prefix) }
                     keys.forEach { fields.remove(it) }
-                    saveMessage("Wyczyszczono dane karty nr $selectedCard. Zapisz zmiany, aby zatwierdzić usunięcie.")
+                    if (selectedCard == cardCount && cardCount > 1) {
+                        cardCount -= 1
+                        fields["loyaltyCardCount"] = cardCount.toString()
+                        selectedCard = cardCount
+                    }
+                    saveMessage("Usunięto dane wybranej karty. Zapisz zmiany, aby zatwierdzić usunięcie.")
                 } else saveMessage("Wybrana karta jest już pusta.")
             }, enabled = selectedCard <= cardCount, modifier = Modifier.weight(1f)) { Text("Usuń wybraną") }
         }
