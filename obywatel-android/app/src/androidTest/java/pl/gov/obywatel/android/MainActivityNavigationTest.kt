@@ -66,6 +66,17 @@ class MainActivityNavigationTest {
     }
 
     @Test
+    fun legalInformationOpensFromMoreAndShowsReadmeContent() {
+        selectBottomTab("Więcej")
+        composeRule.onNodeWithText("Informacje prawne").performScrollTo().performClick()
+        composeRule.onNodeWithText("PRAWA, KTÓRE PROJEKT MA POMAGAĆ ROZPOZNAWAĆ I WYKONYWAĆ")
+            .performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("SAMODZIELNOŚĆ OBYWATELSKA I BEZPOŚREDNIE UCZESTNICTWO W SPRAWOWANIU WŁADZY")
+            .performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Wróć").assertIsDisplayed()
+    }
+
+    @Test
     fun designerRouteRetainsPdfLayoutAndDecorationTools() {
         selectBottomTab("Więcej")
         composeRule.onNodeWithText("Projektant dokumentów").performScrollTo().performClick()
