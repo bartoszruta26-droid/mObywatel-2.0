@@ -53,8 +53,10 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Rejestry").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Odpis z rejestru podmiotów").performClick()
-        composeRule.onNodeWithText("Ewidencja danych identyfikacyjnych i rejestrowych podmiotów.")
-            .assertIsDisplayed()
+        composeRule.onNodeWithText("Wybierz rodzaj podmiotu").assertIsDisplayed()
+        composeRule.onNodeWithText("Spółka z ograniczoną odpowiedzialnością — KRS").performClick()
+        composeRule.onNodeWithText("Numer KRS").assertIsDisplayed()
+        composeRule.onNodeWithText("‹  Wszystkie rodzaje podmiotów").assertIsDisplayed()
     }
 
     @Test
