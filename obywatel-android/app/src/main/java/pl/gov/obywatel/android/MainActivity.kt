@@ -990,6 +990,7 @@ private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
     }
 }
 
+@Composable
 private fun WebsiteQrScreen() {
     val context = LocalContext.current
     var address by remember { mutableStateOf("https://") }
