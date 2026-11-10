@@ -482,12 +482,12 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     layout.element("emblem",pageNumber+1)?.takeIf { it.visible }?.let { e -> emblem?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
     layout.element("logo",pageNumber+1)?.takeIf { it.visible }?.let { e -> logo?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
     p.color=accent;p.strokeWidth=2.2f
-    canvas.drawLine(margin,112f,595f-margin,112f,p)
+    layout.element("header",pageNumber+1)?.takeIf { it.visible }?.let { e -> canvas.drawLine(e.x,e.y+e.height,e.x+e.width,e.y+e.height,p) }
     p.textSize=8.5f;p.typeface=Typeface.DEFAULT
     p.color=android.graphics.Color.DKGRAY
     canvas.drawText(group.uppercase(java.util.Locale("pl")),margin,132f,p)
     p.textSize=15f;p.typeface=Typeface.DEFAULT_BOLD;p.color=accent
-    canvas.drawText((org?.name ?: "Podmiot").take(58),margin,82f,p)
+    layout.element("header",pageNumber+1)?.takeIf { it.visible }?.let { e -> p.textSize=e.fontSize; canvas.drawText((org?.name ?: "Podmiot").take(58),e.x,e.y+e.fontSize,p) }
     p.color=android.graphics.Color.LTGRAY;p.textSize=48f;p.typeface=Typeface.DEFAULT_BOLD
     canvas.save();canvas.rotate(-30f,295f,420f);layout.element("watermark",pageNumber+1)?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(watermark.take(20),element.x,element.y,p) };canvas.restore()
     p.color=accent;p.textSize=21f
