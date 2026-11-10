@@ -126,27 +126,59 @@ private fun defaultDocumentEmblem(context: Context, title: String): Bitmap? =
 private fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
     val resourceId = when {
+        // Dokumenty rodowe mają własną, odrębną identyfikację.
         isFamilyDocument(title) && (normalized.contains("paszport") || normalized.contains("podróż") || normalized.contains("podroz")) ->
             R.drawable.paszport_rodowy_jasny
         isFamilyDocument(title) && (normalized.contains("orzeczenie") || normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw")) ->
             R.drawable.orzeczenie_rodowe_jasne
         isFamilyDocument(title) ->
             R.drawable.karta_rodowa_jasna
-        normalized.contains("szczep") || normalized.contains("vaccin") ->
-            R.drawable.bg_document_vaccination_booklet
-        normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw") ||
-            normalized.contains("orzeczenie") ->
-            R.drawable.bg_document_disability_certificate
-        normalized.contains("misjon") || normalized.contains("papiesk") ||
-            normalized.contains("kościel") || normalized.contains("kosciel") ->
-            R.drawable.bg_document_missionary_pdm
+
+        // Dokumenty tożsamości i paszportowe.
+        normalized.contains("paszport") || normalized.contains("passport") ->
+            R.drawable.documents_passport
         normalized.contains("dowód") || normalized.contains("dowod") ||
             normalized.contains("tożsamo") || normalized.contains("tozsamos") ||
-            normalized.contains("cywil") ->
+            normalized.contains("dokument cywil") ->
             R.drawable.bg_document_civic_identity
-        else -> 0
+
+        // Legitymacje edukacyjne, parlamentarne i szkoleniowe.
+        normalized.contains("poselsk") || normalized.contains("senatorsk") || normalized.contains("parlament") ->
+            R.drawable.documents_deputy_legitimacy
+        normalized.contains("uczn") || normalized.contains("student") || normalized.contains("szkoln") ||
+            normalized.contains("doktorant") ->
+            R.drawable.documents_student_legitimacy
+        normalized.contains("kursant") || normalized.contains("kursu") || normalized.contains("szkoleni") ||
+            normalized.contains("ukończenia kurs") || normalized.contains("ukonczenia kurs") ->
+            R.drawable.documents_course_legitimacy
+        normalized.contains("zawodow") || normalized.contains("pracown") || normalized.contains("wykonywania zawodu") ->
+            R.drawable.legitymacja_zawodowa
+
+        // Orzeczenia i dokumenty związane z niepełnosprawnością.
+        normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw") ||
+            normalized.contains("orzeczenie") || normalized.contains("disability") ->
+            R.drawable.bg_document_disability_certificate
+
+        // Dokumenty kościelne: misje mają dedykowane tło, pozostałe dokumenty kościelne własną ilustrację.
+        normalized.contains("misjon") || normalized.contains("papiesk") || normalized.contains("pdm") ||
+            normalized.contains("pum") ->
+            R.drawable.bg_document_missionary_pdm
+        isChurchDocument(title) || normalized.contains("kościo") || normalized.contains("kosció") ->
+            R.drawable.church_communities
+
+        // Pozostałe dokumenty cywilne, społeczne i podmiotowe.
+        normalized.contains("szczep") || normalized.contains("vaccin") ->
+            R.drawable.bg_document_vaccination_booklet
+        normalized.contains("cywil") || normalized.contains("urodzen") || normalized.contains("małżeń") ||
+            normalized.contains("malzen") || normalized.contains("zgon") || normalized.contains("meldun") ||
+            normalized.contains("obywatel") || normalized.contains("urzęd") || normalized.contains("urzed") ->
+            R.drawable.bg_document_civic_identity
+        normalized.contains("fundac") || normalized.contains("stowarz") || normalized.contains("firm") ||
+            normalized.contains("spół") || normalized.contains("spol") || normalized.contains("rejestr podmiot") ->
+            R.drawable.documents_document_wallet_banner
+        else -> R.drawable.documents_document_wallet_banner
     }
-    return if (resourceId == 0) null else BitmapFactory.decodeResource(context.resources, resourceId)
+    return BitmapFactory.decodeResource(context.resources, resourceId)
 }
 
 @Composable
