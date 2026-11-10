@@ -2561,6 +2561,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     if (photoBase64.isNotBlank()) Text("Usuń zdjęcie", color = Color(0xFF9B2C2C), fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoBase64 = "" }.padding(vertical = 8.dp))
                 }
                 Text("Dane osobowe", color = Navy, fontWeight = FontWeight.Bold)
+                DemoDataField("firstNames", "Imię / imiona", fields)
+                DemoDataField("lastName", "Nazwisko", fields)
                 DemoDataField("contactPhone", "Telefon kontaktowy", fields)
                 DemoDataField("contactEmail", "Adres poczty elektronicznej", fields)
                 DemoDataField("contactOrganization", "Organizacja", fields)
