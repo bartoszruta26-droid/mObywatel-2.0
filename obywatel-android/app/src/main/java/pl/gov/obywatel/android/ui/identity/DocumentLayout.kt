@@ -18,17 +18,18 @@ internal data class DocumentLayoutElement(
     val height: Float,
     val fontSize: Float = 10f,
     val visible: Boolean = true,
-    val locked: Boolean = false
+    val locked: Boolean = false,
+    val page: Int = 1
 )
 
 internal data class DocumentLayout(
     val pageCount: Int = 1,
     val elements: List<DocumentLayoutElement> = defaults()
 ) {
-    fun element(id: String) = elements.firstOrNull { it.id == id }
+    fun element(id: String, page: Int = 1) = elements.firstOrNull { it.id == id && it.page == page } ?: elements.firstOrNull { it.id == id }
 
     fun update(element: DocumentLayoutElement) = copy(
-        elements = elements.map { if (it.id == element.id) element else it }
+        elements = elements.map { if (it.id == element.id && it.page == element.page) element else it }
     )
 
     fun toJson(): JSONObject = JSONObject()
@@ -40,7 +41,7 @@ internal data class DocumentLayout(
                     .put("x", e.x).put("y", e.y)
                     .put("width", e.width).put("height", e.height)
                     .put("fontSize", e.fontSize)
-                    .put("visible", e.visible).put("locked", e.locked))
+                    .put("visible", e.visible).put("locked", e.locked).put("page", e.page))
             }
         })
 
@@ -80,20 +81,38 @@ internal data class DocumentLayout(
 
         fun fromJson(json: JSONObject?): DocumentLayout {
             if (json == null) return DocumentLayout()
-            val defaults = defaults()
+            val base = defaults()
             val source = json.optJSONArray("elements") ?: JSONArray()
-            val parsed = defaults.map { base ->
+            val parsed = base.map { element ->
                 val saved = (0 until source.length()).map { source.optJSONObject(it) }
-                    .firstOrNull { it?.optString("id") == base.id }
-                if (saved == null) base else base.copy(
-                    x = saved.optDouble("x", base.x.toDouble()).toFloat().coerceIn(0f, 595f),
-                    y = saved.optDouble("y", base.y.toDouble()).toFloat().coerceIn(0f, 842f),
-                    width = saved.optDouble("width", base.width.toDouble()).toFloat().coerceIn(1f, 595f),
-                    height = saved.optDouble("height", base.height.toDouble()).toFloat().coerceIn(1f, 842f),
-                    fontSize = saved.optDouble("fontSize", base.fontSize.toDouble()).toFloat().coerceIn(5f, 72f),
-                    visible = saved.optBoolean("visible", base.visible),
-                    locked = saved.optBoolean("locked", base.locked)
+                    .firstOrNull { it?.optString("id") == element.id && it.optInt("page", 1) == 1 }
+                if (saved == null) element else element.copy(
+                    x = saved.optDouble("x", element.x.toDouble()).toFloat().coerceIn(0f, 595f),
+                    y = saved.optDouble("y", element.y.toDouble()).toFloat().coerceIn(0f, 842f),
+                    width = saved.optDouble("width", element.width.toDouble()).toFloat().coerceIn(1f, 595f),
+                    height = saved.optDouble("height", element.height.toDouble()).toFloat().coerceIn(1f, 842f),
+                    fontSize = saved.optDouble("fontSize", element.fontSize.toDouble()).toFloat().coerceIn(5f, 72f),
+                    visible = saved.optBoolean("visible", element.visible),
+                    locked = saved.optBoolean("locked", element.locked),
+                    page = 1
                 )
+            }.toMutableList()
+            for (index in 0 until source.length()) {
+                val saved = source.optJSONObject(index) ?: continue
+                val id = saved.optString("id")
+                val page = saved.optInt("page", 1).coerceIn(1, 100)
+                if (page <= 1 || parsed.any { it.id == id && it.page == page }) continue
+                val template = base.firstOrNull { it.id == id } ?: continue
+                parsed.add(template.copy(
+                    x = saved.optDouble("x", template.x.toDouble()).toFloat().coerceIn(0f, 595f),
+                    y = saved.optDouble("y", template.y.toDouble()).toFloat().coerceIn(0f, 842f),
+                    width = saved.optDouble("width", template.width.toDouble()).toFloat().coerceIn(1f, 595f),
+                    height = saved.optDouble("height", template.height.toDouble()).toFloat().coerceIn(1f, 842f),
+                    fontSize = saved.optDouble("fontSize", template.fontSize.toDouble()).toFloat().coerceIn(5f, 72f),
+                    visible = saved.optBoolean("visible", template.visible),
+                    locked = saved.optBoolean("locked", template.locked),
+                    page = page
+                ))
             }
             return DocumentLayout(json.optInt("pageCount", 1).coerceIn(1, 100), parsed)
         }
