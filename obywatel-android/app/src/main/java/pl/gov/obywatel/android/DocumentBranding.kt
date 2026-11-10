@@ -125,9 +125,17 @@ internal fun DocumentIdentityTemplate(
     val name = values.entries.firstOrNull { it.key.contains("imię", true) || it.key.contains("nazw", true) || it.key.contains("posiadacz", true) || it.key.contains("osoba", true) }?.value.orEmpty()
     val number = values.entries.firstOrNull { it.key.contains("numer", true) || it.key.contains("znak", true) || it.key.contains("nr ", true) }?.value.orEmpty()
     val expiry = values.entries.firstOrNull { it.key.contains("ważn", true) || it.key.contains("do dnia", true) || it.key.contains("obowiązywania do", true) }?.value.orEmpty()
+    val parsedExpiry = runCatching {
+        listOf(
+            java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+            java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"),
+            java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+        ).firstNotNullOfOrNull { formatter -> runCatching { java.time.LocalDate.parse(expiry, formatter) }.getOrNull() }
+    }.getOrNull()
+    val expired = parsedExpiry?.isBefore(java.time.LocalDate.now()) == true
     val state = when {
-        validity.contains("nieważ", true) || validity.contains("unvalid", true) -> "Dokument nieważny"
-        validity.contains("ważny", true) || validity.contains("potwierdz", true) || validity.contains("valid", true) -> "Ważność potwierdzona"
+        validity.contains("nieważ", true) || validity.contains("unvalid", true) || expired -> "Dokument nieważny"
+        validity.contains("aktywn", true) || validity.contains("ważny", true) || validity.contains("potwierdz", true) || validity.contains("valid", true) -> "Ważność potwierdzona"
         else -> "Wymaga weryfikacji"
     }
     val stateColor = when (state) {
