@@ -33,14 +33,14 @@ class VCardCodecTest {
     @Test
     fun importsArchiveWithLfOnlyLineEndings() {
         val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski")
-        val encoded = VCardCodec.encodeArchive(source).replace("\\r\\n", "\\n")
+        val encoded = VCardCodec.encodeArchive(source).replace("\r\n", "\n")
         assertEquals(source, VCardCodec.decodeForImport(encoded))
     }
 
     @Test
     fun importsArchiveWithCrOnlyLineEndings() {
         val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski")
-        val encoded = VCardCodec.encodeArchive(source).replace("\\r\\n", "\\r")
+        val encoded = VCardCodec.encodeArchive(source).replace("\r\n", "\r")
         assertEquals(source, VCardCodec.decodeForImport(encoded))
     }
 
@@ -48,8 +48,8 @@ class VCardCodecTest {
     fun importsArchiveWithMixedPhysicalAndEscapedLineEndings() {
         val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski", "notes" to "Linia 1")
         val encoded = VCardCodec.encodeArchive(source)
-            .replaceFirst("\\r\\n", "\\n")
-            .replace("X-OWD-ARCHIVE-VERSION:1\\r\\n", "X-OWD-ARCHIVE-VERSION:1\\\\r\\\\n")
+            .replaceFirst("\r\n", "\n")
+            .replace("X-OWD-ARCHIVE-VERSION:1\r\n", "X-OWD-ARCHIVE-VERSION:1\\r\\n")
         assertEquals(source, VCardCodec.decodeForImport(encoded))
     }
 
