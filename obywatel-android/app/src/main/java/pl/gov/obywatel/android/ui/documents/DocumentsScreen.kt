@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.ui.documents
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,6 +50,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -97,6 +100,8 @@ fun DocumentsScreen(onBack: () -> Unit) {
     var selected by remember { mutableStateOf<ImportedDocument?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoadingDocuments by remember { mutableStateOf(true) }
+    var showSigningOptions by remember { mutableStateOf(false) }
+    var signingMethodInfo by remember { mutableStateOf<String?>(null) }
 
     // Wstecz najpierw zamyka podgląd dokumentu; dopiero kolejny powrót
     // opuszcza ekran dokumentów (obsługiwany przez MainActivity).
@@ -302,8 +307,69 @@ fun DocumentsScreen(onBack: () -> Unit) {
                 } else {
                     DocumentPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
                 }
+                Spacer(Modifier.height(10.dp))
+                Button(
+                    onClick = { showSigningOptions = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Podpisz dokument")
+                }
+                OutlinedButton(
+                    onClick = {
+                        importLauncher.launch(arrayOf("application/pdf"))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Dodaj podpisany plik PDF")
+                }
+                signingMethodInfo?.let { message ->
+                    Text(message, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 6.dp))
+                }
+                Text(
+                    "Podpis składasz w oficjalnej usłudze. Po zakończeniu pobierz podpisany plik i dodaj go tutaj; aplikacja zachowa go jako osobny dokument.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
+    }
+
+    if (showSigningOptions) {
+        AlertDialog(
+            onDismissRequest = { showSigningOptions = false },
+            title = { Text("Wybierz sposób podpisania") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Profil Zaufany — podpis zaufany")
+                    Text("Certyfikat kwalifikowany — podpis kwalifikowany")
+                    Text(
+                        "Obie metody są dostępne w rządowej usłudze podpisywania. Wybór konkretnej metody następuje po dodaniu pliku w usłudze.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSigningOptions = false
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany")
+                    )
+                    runCatching { context.startActivity(intent) }
+                        .onSuccess {
+                            signingMethodInfo = "Otworzono oficjalną usługę podpisywania. Dodaj dokument i wybierz Profil Zaufany albo certyfikat kwalifikowany. Po podpisaniu pobierz plik i wróć do aplikacji."
+                        }
+                        .onFailure {
+                            signingMethodInfo = "Nie udało się otworzyć usługi. Otwórz gov.pl i wyszukaj usługę „Podpisz dokument elektronicznie”."
+                        }
+                }) { Text("Otwórz usługę gov.pl") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSigningOptions = false }) { Text("Anuluj") }
+            }
+        )
     }
 }
 
