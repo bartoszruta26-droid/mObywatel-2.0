@@ -1995,41 +1995,46 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
-        OwdDocumentArtworkCard(
-            imageRes = when (documentId.toIntOrNull()) {
-                0 -> R.drawable.documents_document_wallet_banner
-                1 -> R.drawable.documents_identity_card
-                2 -> R.drawable.art_02_paszport_rodowy_jasny
-                3 -> R.drawable.art_01_karta_rodowa_jasna
-                4 -> R.drawable.documents_deputy_legitimacy
-                5 -> R.drawable.art_02_legitymacja_zawodowa
-                6 -> R.drawable.documents_student_legitimacy
-                else -> R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci
-            },
-            title = section.first.substringBefore(" —"),
-            subtitle = section.second,
-            holder = when (documentId) {
-                "1" -> listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
-                "2" -> fields["passportHolderNames"].orEmpty()
-                "3" -> fields["familyName"].orEmpty()
-                "4" -> fields["mpIssuer"].orEmpty()
-                "5" -> fields["trainingInstitution"].orEmpty()
-                "6" -> fields["studentUniversity"].orEmpty()
-                "7" -> fields["disabilityPersonName"].orEmpty()
-                else -> ""
-            }.ifBlank { "Dane użytkownika" },
-            details = when (documentId) {
-                "1" -> "Nr: ${fields["idNumber"].orEmpty().ifBlank { "—" }}  •  PESEL: ${fields["pesel"].orEmpty().ifBlank { "—" }}"
-                "2" -> "Nr paszportu: ${fields["passportNumber"].orEmpty().ifBlank { "—" }}"
-                "3" -> "Nr ewidencyjny: ${fields["familyDocNumber"].orEmpty().ifBlank { "—" }}"
-                "4" -> "Kadencja: ${fields["mpTerm"].orEmpty().ifBlank { "—" }}"
-                "5" -> "Nr legitymacji: ${fields["trainingCardNumber"].orEmpty().ifBlank { "—" }}"
-                "6" -> "Nr legitymacji: ${fields["studentCardNumber"].orEmpty().ifBlank { "—" }}"
-                "7" -> "Nr sprawy: ${fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" }}"
-                else -> ""
-            },
-            privateRecord = documentId in setOf("0", "3", "4", "5", "6", "7")
-        )
+        if (documentId == "5" || documentId == "6") {
+            SchoolLegitimacyPreview(fields, photoBase64, student = documentId == "6")
+        } else {
+            OwdDocumentArtworkCard(
+                imageRes = when (documentId.toIntOrNull()) {
+                    0 -> R.drawable.documents_document_wallet_banner
+                    1 -> R.drawable.documents_identity_card
+                    2 -> R.drawable.art_02_paszport_rodowy_jasny
+                    3 -> R.drawable.art_01_karta_rodowa_jasna
+                    4 -> R.drawable.documents_deputy_legitimacy
+                    5 -> R.drawable.art_02_legitymacja_zawodowa
+                    6 -> R.drawable.documents_student_legitimacy
+                    else -> R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci
+                },
+                title = section.first.substringBefore(" —"),
+                subtitle = section.second,
+                holder = when (documentId) {
+                    "1" -> listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
+                    "2" -> fields["passportHolderNames"].orEmpty()
+                    "3" -> fields["familyName"].orEmpty()
+                    "4" -> fields["mpIssuer"].orEmpty()
+                    "5" -> fields["trainingInstitution"].orEmpty()
+                    "6" -> fields["studentUniversity"].orEmpty()
+                    "7" -> fields["disabilityPersonName"].orEmpty()
+                    else -> ""
+                }.ifBlank { "Dane użytkownika" },
+                details = when (documentId) {
+                    "1" -> "Nr: ${fields["idNumber"].orEmpty().ifBlank { "—" }}  •  PESEL: ${fields["pesel"].orEmpty().ifBlank { "—" }}"
+                    "2" -> "Nr paszportu: ${fields["passportNumber"].orEmpty().ifBlank { "—" }}"
+                    "3" -> "Nr ewidencyjny: ${fields["familyDocNumber"].orEmpty().ifBlank { "—" }}"
+                    "4" -> "Kadencja: ${fields["mpTerm"].orEmpty().ifBlank { "—" }}"
+                    "5" -> "Nr legitymacji: ${fields["trainingCardNumber"].orEmpty().ifBlank { "—" }}"
+                    "6" -> "Nr legitymacji: ${fields["studentCardNumber"].orEmpty().ifBlank { "—" }}"
+                    "7" -> "Nr sprawy: ${fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" }}"
+                    else -> ""
+                },
+                privateRecord = documentId in setOf("0", "3", "4", "5", "6", "7")
+            )
+    
+        }
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
