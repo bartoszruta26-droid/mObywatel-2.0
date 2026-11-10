@@ -417,12 +417,6 @@ private fun HomeScreen() {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
                                     SectionHeading("Dokumenty", "Lokalny portfel dokumentów")
-                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                                        Text("Dodaj", color = Blue, fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.clickable { selectedTab = 4; showSettingsMenu = true }.padding(vertical = 8.dp))
-                                        Text("Wszystkie", color = Blue, fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.clickable { selectedTab = 1 }.padding(vertical = 8.dp))
-                                    }
                                     Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                         listOf(
