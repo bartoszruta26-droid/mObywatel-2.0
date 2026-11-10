@@ -217,7 +217,7 @@ internal fun DocumentIdentityTemplate(
                         }
                         Box(Modifier.fillMaxWidth(0.72f).weight(1f).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
                             if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
-                            else Text("GODŁO /\\nHERB / LOGO", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                            else Text("GODŁO /\nHERB / LOGO", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
