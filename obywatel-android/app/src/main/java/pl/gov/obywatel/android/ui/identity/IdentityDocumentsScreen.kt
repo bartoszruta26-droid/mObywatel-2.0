@@ -466,11 +466,15 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     val out=java.io.ByteArrayOutputStream();pdf.writeTo(out);pdf.close();return out.toByteArray()
 }
 private fun splitDocumentBody(text:String, minimumPages:Int):List<String> {
-    val words=text.split(Regex("\\\\s+")).filter { it.isNotBlank() }
+    val words=text.split(Regex("\\s+")).filter { it.isNotBlank() }
     val estimatedPages=maxOf(1, (text.length+1099)/1100)
     val pageCount=maxOf(minimumPages.coerceIn(1,100), estimatedPages).coerceAtMost(100)
     val targetWords=maxOf(1, (words.size+pageCount-1)/pageCount)
-    return (0 until pageCount).map { page ->\n        val start = page * targetWords\n        val end = minOf(words.size, start + targetWords)\n        if (start >= words.size) "" else words.subList(start, end).joinToString(" ")\n    }
+    return (0 until pageCount).map { page ->
+        val start = page * targetWords
+        val end = minOf(words.size, start + targetWords)
+        if (start >= words.size) "" else words.subList(start, end).joinToString(" ")
+    }
 }
 private fun drawLines(canvas:android.graphics.Canvas,text:String,x:Float,start:Float,width:Float,p:Paint){
     var y=start;var line=""
