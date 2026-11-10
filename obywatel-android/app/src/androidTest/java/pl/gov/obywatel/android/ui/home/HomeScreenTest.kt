@@ -2,56 +2,35 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.ui.home
 
-import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
-import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import pl.gov.obywatel.android.ui.theme.ObywatelTheme
+import pl.gov.obywatel.android.MainActivity
 
+/**
+ * Integration checks for the actual activity-hosted home screen.
+ * The former tests targeted a removed HomeScreen(onOpenSection) API and
+ * therefore no longer represented the application navigation model.
+ */
 class HomeScreenTest {
     @get:Rule
-    val composeRule = createComposeRule()
+    val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun showsIndependentApplicationNoticeAndAllServiceEntries() {
-        composeRule.setContent {
-            ObywatelTheme { HomeScreen(onOpenSection = {}) }
-        }
-        composeRule.onNodeWithText("Niezależna aplikacja").assertIsDisplayed()
+    fun showsIndependentApplicationNoticeAndCurrentDashboard() {
+        composeRule.onNodeWithText("Obywatel").assertIsDisplayed()
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-        listOf(
-            "Dokumenty", "Rejestr dokumentów", "Weryfikacja QR", "Moje dane",
-            "Bezpieczeństwo", "Płatności", "Zdrowie", "Więcej"
-        ).forEach { title ->
-            composeRule.onNodeWithText(title).performScrollTo().assertIsDisplayed().assertHasClickAction()
-        }
+        composeRule.onNodeWithText(
+            "Niezależna aplikacja obywatelska • nie jest częścią rządowego systemu mObywatel. Dane urzędowe wymagają potwierdzenia we właściwym źródle."
+        ).assertIsDisplayed()
     }
 
     @Test
-    fun selectingEachServiceEmitsItsRoute() {
-        val opened = mutableListOf<String>()
-        composeRule.setContent {
-            ObywatelTheme { HomeScreen(onOpenSection = { opened.add(it) }) }
-        }
-        listOf(
-            "Dokumenty" to "documents",
-            "Rejestr dokumentów" to "registry",
-            "Weryfikacja QR" to "verify",
-            "Moje dane" to "profile",
-            "Bezpieczeństwo" to "security",
-            "Płatności" to "payments",
-            "Zdrowie" to "health",
-            "Więcej" to "more"
-        ).forEach { (label, route) ->
-            composeRule.onNodeWithText(label).performScrollTo().performClick()
-            composeRule.waitForIdle()
-            assertEquals(route, opened.last())
-        }
-        assertEquals(8, opened.size)
+    fun dashboardProvidesDocumentsAndServicesEntryPoints() {
+        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("Wszystkie usługi").assertIsDisplayed()
+        composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
     }
 }
