@@ -107,6 +107,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -134,6 +135,7 @@ import pl.gov.obywatel.android.ui.theme.White
 import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
 import pl.gov.obywatel.android.ui.services.PublicServicesScreen
+import kotlinx.coroutines.delay
 
 @Composable
 private fun GeneralDocumentOcrEditor(
@@ -1180,6 +1182,20 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     var consent by remember { mutableStateOf(false) }
     var purpose by remember { mutableStateOf("Przekazanie danych wskazanemu odbiorcy") }
     var offerQr by remember { mutableStateOf<Bitmap?>(null) }
+    var offerQrRemainingSeconds by remember { mutableIntStateOf(0) }
+    LaunchedEffect(offerQr) {
+        if (offerQr == null) {
+            offerQrRemainingSeconds = 0
+        } else {
+            offerQrRemainingSeconds = 180
+            while (offerQrRemainingSeconds > 0) {
+                delay(1_000)
+                offerQrRemainingSeconds = (offerQrRemainingSeconds - 1).coerceAtLeast(0)
+            }
+            offerQr = null
+            sessionMessage = "Oferta QR OWD wygasła po 180 sekundach. Utwórz nowy kod, aby rozpocząć kolejną sesję."
+        }
+    }
     var qrBranding by remember { mutableStateOf(QR_BRAND_NONE) }
     var qrUploadedLogo by remember { mutableStateOf<Bitmap?>(null) }
     val qrLogoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -1329,7 +1345,10 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Oferta sesji OWD • ważność 180 sekund", color = Navy, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Oferta sesji OWD • pozostało ${offerQrRemainingSeconds / 60}:${(offerQrRemainingSeconds % 60).toString().padStart(2, '0')}",
+                        color = Navy, fontWeight = FontWeight.Bold
+                    )
                     Image(bitmap.asImageBitmap(), contentDescription = "Kod QR oferty sesji OWD", modifier = Modifier.size(250.dp))
                      Text("To inicjuje sesję kryptograficzną. Skaner OWD potrafi rozpoznać i zweryfikować ofertę; wymiana kluczy, przesłanie rekordów i potwierdzenie odbioru wymagają jeszcze pełnego połączenia obu urządzeń.", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
