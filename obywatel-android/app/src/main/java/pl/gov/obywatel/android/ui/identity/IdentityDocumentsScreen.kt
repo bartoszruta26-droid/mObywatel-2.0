@@ -443,7 +443,7 @@ private class PdfBytesPrintAdapter(private val jobName:String, private val pdfBy
         try {
             if(cancellationSignal.isCanceled){callback.onWriteCancelled();return}
             FileOutputStream(destination.fileDescriptor).use { it.write(pdfBytes);it.flush() }
-            callback.onWriteFinished(PageRange.ALL_PAGES)
+            callback.onWriteFinished(arrayOf(PageRange.ALL_PAGES))
         } catch(failure:Exception) { callback.onWriteFailed(failure.message ?: "Błąd drukowania PDF") }
         finally { runCatching { destination.close() } }
     }
