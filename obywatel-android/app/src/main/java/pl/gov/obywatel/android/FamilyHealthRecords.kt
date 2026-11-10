@@ -89,7 +89,7 @@ private data class FamilyChildRecord(
 )
 
 @Composable
-internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Unit) {
+internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Unit, readOnly: Boolean = false) {
     val context = LocalContext.current
     var children by remember { mutableStateOf(FamilyHealthStore.load(context)) }
     var selectedId by remember { mutableStateOf<String?>(null) }
@@ -156,7 +156,8 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
         if (selected == null) {
             if (children.isEmpty()) {
                 Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
-                    Text("Nie dodano jeszcze profilu dziecka. Wybierz „Dodaj dziecko”, aby utworzyć pierwszą kartę.",
+                    Text(if (readOnly) "Brak zapisanych danych. Uzupełnij je w Więcej → Ustawienia."
+                        else "Nie dodano jeszcze profilu dziecka. Wybierz „Dodaj dziecko”, aby utworzyć pierwszą kartę.",
                         Modifier.padding(16.dp), color = Color(0xFF26384A))
                 }
             }
@@ -183,7 +184,7 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
                     }
                 }
             }
-            Button(onClick = {
+            if (!readOnly) Button(onClick = {
                 val created = FamilyChildRecord()
                 persist(children + created)
                 selectedId = created.id
@@ -226,21 +227,21 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
                     val bitmap = remember(selected.photoBase64) { BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap() }
                     if (bitmap != null) Image(bitmap, null, Modifier.fillMaxWidth().height(190.dp))
                 }
-                OutlinedButton(onClick = { photoLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
+                if (!readOnly) OutlinedButton(onClick = { photoLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
                     Text(if (selected.photoBase64.isBlank()) "Dodaj zdjęcie" else "Zmień zdjęcie")
                 }
-                ChildField("Imię / imiona", selected.firstName) { v -> updateChild(selected.id) { it.copy(firstName = v) } }
-                ChildField("Nazwisko", selected.lastName) { v -> updateChild(selected.id) { it.copy(lastName = v) } }
-                ChildField("Data urodzenia (DD-MM-RRRR)", selected.birthDate) { v -> updateChild(selected.id) { it.copy(birthDate = v) } }
-                ChildField("PESEL (opcjonalnie)", selected.pesel) { v -> updateChild(selected.id) { it.copy(pesel = v) } }
-                ChildField("Płeć — wpis opiekuna", selected.sex) { v -> updateChild(selected.id) { it.copy(sex = v) } }
-                ChildField("Miejsce urodzenia", selected.birthPlace) { v -> updateChild(selected.id) { it.copy(birthPlace = v) } }
-                ChildField("Grupa krwi (jeśli znana)", selected.bloodGroup) { v -> updateChild(selected.id) { it.copy(bloodGroup = v) } }
-                ChildField("Alergie / reakcje niepożądane", selected.allergies, singleLine = false) { v -> updateChild(selected.id) { it.copy(allergies = v) } }
-                ChildField("Rodzic / opiekun", selected.guardian) { v -> updateChild(selected.id) { it.copy(guardian = v) } }
-                ChildField("Uwagi", selected.notes, singleLine = false) { v -> updateChild(selected.id) { it.copy(notes = v) } }
+                ChildDataField("Imię / imiona", selected.firstName, readOnly) { v -> updateChild(selected.id) { it.copy(firstName = v) } }
+                ChildDataField("Nazwisko", selected.lastName, readOnly) { v -> updateChild(selected.id) { it.copy(lastName = v) } }
+                ChildDataField("Data urodzenia (DD-MM-RRRR)", selected.birthDate, readOnly) { v -> updateChild(selected.id) { it.copy(birthDate = v) } }
+                ChildDataField("PESEL (opcjonalnie)", selected.pesel, readOnly) { v -> updateChild(selected.id) { it.copy(pesel = v) } }
+                ChildDataField("Płeć — wpis opiekuna", selected.sex, readOnly) { v -> updateChild(selected.id) { it.copy(sex = v) } }
+                ChildDataField("Miejsce urodzenia", selected.birthPlace, readOnly) { v -> updateChild(selected.id) { it.copy(birthPlace = v) } }
+                ChildDataField("Grupa krwi (jeśli znana)", selected.bloodGroup, readOnly) { v -> updateChild(selected.id) { it.copy(bloodGroup = v) } }
+                ChildDataField("Alergie / reakcje niepożądane", selected.allergies, readOnly, singleLine = false) { v -> updateChild(selected.id) { it.copy(allergies = v) } }
+                ChildDataField("Rodzic / opiekun", selected.guardian, readOnly) { v -> updateChild(selected.id) { it.copy(guardian = v) } }
+                ChildDataField("Uwagi", selected.notes, readOnly, singleLine = false) { v -> updateChild(selected.id) { it.copy(notes = v) } }
                 Button(onClick = { section = "vaccines" }, modifier = Modifier.fillMaxWidth()) { Text("Otwórz eKartę Szczepień") }
-                TextButton(onClick = {
+                if (!readOnly) TextButton(onClick = {
                     persist(children.filterNot { it.id == selected.id })
                     selectedId = null
                 }) { Text("Usuń profil dziecka") }
@@ -283,13 +284,13 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
                             if (v.provider.isNotBlank()) Text("Osoba dokonująca wpisu: ${v.provider}")
                             if (v.nextDate.isNotBlank()) Text("Kolejna dawka / termin: ${v.nextDate}")
                             if (v.notes.isNotBlank()) Text("Uwagi: ${v.notes}")
-                            TextButton(onClick = {
+                            if (!readOnly) TextButton(onClick = {
                                 updateChild(selected.id) { child -> child.copy(vaccines = child.vaccines.filterNot { it.id == v.id }) }
                             }) { Text("Usuń wpis") }
                         }
                     }
                 }
-                OutlinedButton(onClick = { showVaccineForm = true }, modifier = Modifier.fillMaxWidth()) {
+                if (!readOnly) OutlinedButton(onClick = { showVaccineForm = true }, modifier = Modifier.fillMaxWidth()) {
                     Text("Dodaj wpis szczepienia")
                 }
                 Text("Liczba wpisów: ${selected.vaccines.size}", color = Color(0xFF596675))
@@ -299,7 +300,7 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
         Spacer(Modifier.height(8.dp))
     }
 
-    if (showVaccineForm && selected != null) {
+    if (!readOnly && showVaccineForm && selected != null) {
         AlertDialog(
             onDismissRequest = { showVaccineForm = false },
             title = { Text("Nowy wpis szczepienia") },
@@ -336,6 +337,18 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
             },
             dismissButton = { TextButton(onClick = { showVaccineForm = false }) { Text("Anuluj") } }
         )
+    }
+}
+
+@Composable
+private fun ChildDataField(label: String, value: String, readOnly: Boolean, singleLine: Boolean = true, onChange: (String) -> Unit) {
+    if (readOnly) {
+        Column(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788))
+            Text(value.ifBlank { "Nie podano" }, style = MaterialTheme.typography.bodyLarge, color = Color(0xFF26384A))
+        }
+    } else {
+        ChildField(label, value, singleLine, onChange)
     }
 }
 
