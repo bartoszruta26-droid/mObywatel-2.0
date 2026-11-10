@@ -430,12 +430,14 @@ private fun HomeScreen() {
                                             Triple("Dane paszportowe", R.drawable.documents_passport, "2"),
                                             Triple("Dane rejestru podmiotów", R.drawable.documents_family_record, "registry"),
                                             Triple("Legitymacje", R.drawable.documents_student_legitimacy, "6"),
-                                            Triple("Dokumenty podpisane elektronicznie", R.drawable.documents_medical_certificates, "signedpdf")
+                                            Triple("Dokumenty podpisane elektronicznie", R.drawable.documents_medical_certificates, "signedpdf"),
+                                            Triple("Inne dokumenty", R.drawable.documents_medical_certificates, "other")
                                         ).forEach { (label, imageRes, id) ->
                                             Card(modifier = Modifier.width(150.dp).clickable {
                                                 when (id) {
                                                     "registry" -> activeService = "Odpis z rejestru podmiotów"
                                                     "signedpdf" -> activeService = "Podgląd dokumentów podpisanych"
+                                                    "other" -> selectedTab = 1
                                                     else -> selectedDocumentId = id
                                                 }
                                             },
@@ -1627,14 +1629,12 @@ private fun SettingsMenuScreen(
             Icons.Filled.Fingerprint, { onEditDocuments("family") })
         ProfileActionCard("Legitymacja poselska", "Ewidencja danych i źródeł potwierdzenia",
             Icons.Filled.AccountBalance, { onEditDocuments("parliament") })
-        ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych ucznia lub studenta",
+        ProfileActionCard("Legitymacja uczestnika kursu", "Dane instytucji, kursu i ukończenia",
             Icons.Filled.Description, { onEditDocuments("training") })
-        ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych uczelni i statusu",
+        ProfileActionCard("Legitymacja ucznia / studenta", "Dane szkoły lub uczelni i statusu nauki",
             Icons.Filled.Badge, { onEditDocuments("student") })
         ProfileActionCard("Orzeczenia i zaświadczenia", "Ewidencja danych o rozstrzygnięciach",
             Icons.Filled.HealthAndSafety, onEditDisability)
-        ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
-            Icons.Filled.Description, { onEditDocuments("all") })
         Text("Zmiany są zapisywane lokalnie w zaszyfrowanym magazynie. Nie są wysyłane do rejestrów ani podmiotów publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
@@ -1844,12 +1844,17 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
         Text("Dokumenty", color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text("Twoje dokumenty i dane", color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Text("Twoje dokumenty i dane", color = Navy, style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold)
         groups.forEachIndexed { index, (title, icon, keys) ->
             val hasData = keys.any { !fields[it].isNullOrBlank() }
             Card(
-                modifier = Modifier.fillMaxWidth().clickable { onOpenDetails(when (index) { 11 -> "family_children"; 12 -> "family_vaccinations"; else -> index.toString() }) },
+                modifier = Modifier.fillMaxWidth().clickable {
+                    val target = when (index) {
+                        10 -> "family_children"
+                        11 -> "family_vaccinations"
+                        else -> index.toString()
+                    }
+                    onOpenDetails(target)
+                },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -2006,7 +2011,21 @@ private fun DocumentDetailsScreen(
             "Okres obowiązywania" to "disabilityValidity", "Rodzaj rozstrzygnięcia" to "disabilityDecisionType", "Osoba podpisująca / wystawca" to "disabilityIssuerName", "Powiat / miasto" to "disabilityCounty", "Podstawa prawna" to "disabilityLegalBasis", "Przepis określający skutki" to "disabilityLegalProvision", "Zakres uznania / równoważności" to "disabilityEquivalentEffect", "Fundacja / podmiot prowadzący" to "disabilityFoundationName", "Podstawa statutowa" to "disabilityFoundationStatute", "Kwalifikacje osoby wystawiającej" to "disabilityMedicalQualification", "Ocena medyczna" to "disabilityMedicalAssessment", "Skład zespołu" to "disabilityPanelMembers", "Przewodniczący zespołu" to "disabilityChairperson", "Osoba zatwierdzająca" to "disabilitySignature", "Tryb odwołania" to "disabilityAppealInfo", "Data wniosku" to "disabilityApplicationDate", "Numer sprawy" to "disabilityCaseNumber", "Data doręczenia" to "disabilityDeliveryDate", "Wynik odwołania" to "disabilityAppealOutcome", "Duplikat / zmiana dokumentu" to "disabilityDuplicateInfo", "Dokument źródłowy" to "disabilitySourceAttachment"
         ))
     )
-    val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
+    val sectionIndex = when (documentId) {
+        "0" -> 0
+        "1" -> 1
+        "2" -> 2
+        "3" -> 6
+        "4" -> 7
+        "5" -> 8
+        "6" -> 9
+        "7" -> 10
+        "8" -> 3
+        "9" -> 4
+        "12" -> 5
+        else -> 0
+    }
+    val section = sections[sectionIndex]
     val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "dlExtra", "loyaltyExtra", "libraryExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
@@ -2085,12 +2104,16 @@ private fun DocumentDetailsScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                section.third.forEach { (label, key) ->
-                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
-                        Text(fields[key].orEmpty().ifBlank { "Brak wpisu" },
-                            color = if (fields[key].isNullOrBlank()) Muted else Navy,
-                            fontWeight = if (fields[key].isNullOrBlank()) FontWeight.Normal else FontWeight.SemiBold)
+                val visibleFields = section.third.filter { !fields[it.second].isNullOrBlank() }
+                if (visibleFields.isEmpty()) {
+                    Text("Brak uzupełnionych danych dla tego dokumentu.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
+                } else {
+                    visibleFields.distinctBy { it.second }.forEach { (label, key) ->
+                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
+                            Text(fields[key].orEmpty(), color = Navy, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
             }
@@ -3468,7 +3491,7 @@ private object DemoIdentityStore {
         val keys = json.keys()
         while (keys.hasNext()) {
             val key = keys.next()
-            require(key.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowa nazwa pola profilu." }
+            require(key.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Nieprawidłowa nazwa pola profilu." }
             require(!json.isNull(key)) { "Pole profilu zawiera wartość pustą typu null." }
             result[key] = json.getString(key)
         }
