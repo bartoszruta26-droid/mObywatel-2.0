@@ -166,6 +166,14 @@ private object SignedPdfStore {
         }
     }
 
+    fun exportPdf(context: Context, id: String, uri: Uri) {
+        val file = decryptPdfToCache(context, id)
+        try {
+            context.contentResolver.openOutputStream(uri)?.use { output -> file.inputStream().use { it.copyTo(output) } }
+                ?: error("Nie można utworzyć pliku docelowego.")
+        } finally { file.delete() }
+    }
+
     @Synchronized
     fun delete(context: Context, id: String) {
         File(directory(context), "$id.pdf.enc").delete()
@@ -227,6 +235,14 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
     var pendingRecord by remember { mutableStateOf<SignedPdfRecord?>(null) }
     var showDelete by remember { mutableStateOf(false) }
 
+    var exportTargetId by remember { mutableStateOf<String?>(null) }
+    val exportPdfLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        val id = exportTargetId
+        if (uri != null && id != null) runCatching { SignedPdfStore.exportPdf(context, id, uri) }
+            .onSuccess { status = "Wyeksportowano oryginalny PDF." }
+            .onFailure { status = "Eksport PDF nie powiódł się: ${it.message}" }
+        exportTargetId = null
+    }
     val pdfPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching { SignedPdfStore.importPdf(context, uri) }
             .onSuccess {
@@ -291,6 +307,16 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
             }
         } else {
             TextButton(onClick = { selectedId = null }) { Text("‹ Lista dokumentów") }
+            DocumentIdentityTemplate(
+                "Dokument PDF",
+                mapOf(
+                    "Nazwa dokumentu" to selected.name,
+                    "Data importu" to SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date(selected.importedAt)),
+                    "Rodzaj podpisu" to selected.signatureKind,
+                    "Plik podpisu" to selected.signatureFileName,
+                    "Pole podpisu w PDF" to if (selected.pdfHasSignatureField) "Wykryto strukturę pola podpisu — bez walidacji" else "Nie wykryto"
+                )
+            )
             Text(selected.name, color = Color(0xFF142D4E), fontWeight = FontWeight.Bold)
             SignatureKindLabel(selected.signatureKind)
             Text("Data importu: " + SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date(selected.importedAt)),
@@ -310,6 +336,10 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
             OutlinedButton(onClick = { showSignatureChoice = true; pendingRecord = selected }, modifier = Modifier.fillMaxWidth()) {
                 Text("Oznacz rodzaj podpisu")
             }
+            OutlinedButton(onClick = {
+                exportTargetId = selected.id
+                exportPdfLauncher.launch(selected.name.substringBeforeLast('.', selected.name) + "-kopia.pdf")
+            }, modifier = Modifier.fillMaxWidth()) { Text("Eksportuj oryginalny PDF") }
             OutlinedButton(onClick = { showDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("Usuń dokument") }
         }
         if (status.isNotBlank()) Text(status, color = Color(0xFF1769AA), style = MaterialTheme.typography.bodySmall)
