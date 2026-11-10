@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableIntStateOf
@@ -136,8 +137,19 @@ fun PublicServicesScreen(onBack:()->Unit) {
                 }
                 if(pageProgress in 1..99) CircularProgressIndicator(progress={pageProgress/100f},modifier=Modifier.size(22.dp),strokeWidth=2.dp)
                 IconButton(onClick={webView?.reload()}){Icon(Icons.Default.Refresh,contentDescription="Odśwież stronę")}
-                IconButton(onClick={runCatching{context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(embeddedUrl)))}.onFailure{status[embeddedUrl!!]="Nie można otworzyć strony w systemowej przeglądarce."})}){
-                    Icon(Icons.Default.OpenInNew,contentDescription="Otwórz poza aplikacją")
+                IconButton(
+                    onClick = {
+                        val url = embeddedUrl
+                        if (url != null) {
+                            runCatching {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                            }.onFailure {
+                                status[url] = "Nie można otworzyć strony w systemowej przeglądarce."
+                            }
+                        }
+                    }
+                ) {
+                    Icon(Icons.Default.OpenInNew, contentDescription = "Otwórz poza aplikacją")
                 }
             }
             LinearProgressIndicator(progress={pageProgress/100f},modifier=Modifier.fillMaxWidth(),color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.surfaceVariant)
