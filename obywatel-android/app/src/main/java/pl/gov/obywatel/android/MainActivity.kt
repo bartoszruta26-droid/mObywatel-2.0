@@ -535,6 +535,7 @@ private fun HomeScreen() {
     var showCertificates by remember { mutableStateOf(false) }
     var showIdentityDesigner by remember { mutableStateOf(false) }
     var showImportedDocuments by remember { mutableStateOf(false) }
+    var showBankAccounts by remember { mutableStateOf(false) }
     var showPublicServicesBrowser by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
     var serviceCategory by remember { mutableStateOf("Wszystkie") }
@@ -545,6 +546,7 @@ private fun HomeScreen() {
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
+            showBankAccounts -> showBankAccounts = false
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
             settingsDocumentEditor != null -> { settingsDocumentEditor = null; showSettingsMenu = true }
@@ -561,7 +563,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -581,6 +583,28 @@ private fun HomeScreen() {
         }
     }
 
+    fun openDocumentCard(documentId: String) {
+        when (documentId) {
+            "identity" -> selectedDocumentId = "1"
+            "passport" -> selectedDocumentId = "2"
+            "family" -> selectedDocumentId = "3"
+            "parliament" -> selectedDocumentId = "4"
+            "training" -> selectedDocumentId = "5"
+            "student" -> selectedDocumentId = "6"
+            "disability" -> selectedDocumentId = "7"
+            "loyalty_cards" -> selectedDocumentId = "8"
+            "registry" -> activeService = "Odpis z rejestru podmiotów"
+            "church" -> activeService = "Dokumenty Kościelne"
+            "civil" -> activeService = "Formularze dokumentów"
+            "business" -> activeService = "Dokumenty rejestru podmiotów"
+            "bank_accounts" -> showBankAccounts = true
+            "vaccines" -> activeService = "eKarta Szczepień"
+            "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
+            "branding" -> activeService = "Zasoby identyfikacji dokumentów"
+            else -> activeService = "Dokumenty"
+        }
+    }
+
     Surface(modifier = Modifier.fillMaxSize(), color = AppSurface) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
@@ -588,6 +612,7 @@ private fun HomeScreen() {
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 })
+                    showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
                     settingsDocumentEditor == "family" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
@@ -648,6 +673,11 @@ private fun HomeScreen() {
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
+                    activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null }, readOnly = true)
+                    activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { activeService = null }, readOnly = true)
+                    activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null }, readOnly = true)
+                    activeService == "Zasoby identyfikacji dokumentów" -> DocumentBrandAssetsScreen(onBack = { activeService = null })
+                    activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false)
                     activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null }, readOnly = true)
                     activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null }, readOnly = true)
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null })
@@ -709,19 +739,32 @@ private fun HomeScreen() {
                                                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                                             ) {
-                                                items.forEach { (id, label, imageRes) ->
+                                                items.forEach { (id, label, _) ->
                                                     Card(
-                                                        modifier = Modifier.width(150.dp),
-                                                        colors = CardDefaults.cardColors(containerColor = White)
+                                                        modifier = Modifier.width(150.dp).height(118.dp)
+                                                            .clickable { openDocumentCard(id) },
+                                                        shape = RoundedCornerShape(14.dp),
+                                                        colors = CardDefaults.cardColors(containerColor = White),
+                                                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                                                     ) {
-                                                        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                                            Image(
-                                                                painter = painterResource(imageRes),
-                                                                contentDescription = "Podgląd: $label",
-                                                                modifier = Modifier.fillMaxWidth().height(88.dp),
-                                                                contentScale = ContentScale.Fit
+                                                        Column(
+                                                            Modifier.fillMaxSize().padding(12.dp),
+                                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = documentIconFor(id),
+                                                                contentDescription = "Ikona dokumentu: $label",
+                                                                tint = Blue,
+                                                                modifier = Modifier.size(30.dp)
                                                             )
-                                                            Text(label, color = Navy, fontWeight = FontWeight.SemiBold, maxLines = 2)
+                                                            Text(
+                                                                label,
+                                                                color = Navy,
+                                                                fontWeight = FontWeight.SemiBold,
+                                                                maxLines = 2,
+                                                                overflow = TextOverflow.Ellipsis,
+                                                                style = MaterialTheme.typography.labelLarge
+                                                            )
                                                         }
                                                     }
                                                 }
@@ -846,6 +889,7 @@ private fun HomeScreen() {
                     showRegistryEditor = false
                     showDisabilitySettings = false
                     showCertificates = false
+                    showBankAccounts = false
                 }
             )
         }
@@ -886,6 +930,19 @@ private fun HomeScreen() {
             )
         }
     }
+}
+
+private fun documentIconFor(documentId: String): ImageVector = when (documentId) {
+    "identity" -> Icons.Filled.CreditCard
+    "passport" -> Icons.Filled.Public
+    "registry", "parliament", "church", "business", "bank_accounts" -> Icons.Filled.AccountBalance
+    "family" -> Icons.Filled.Fingerprint
+    "training", "student" -> Icons.Filled.Badge
+    "disability", "vaccines" -> Icons.Filled.HealthAndSafety
+    "civil", "signed_pdf" -> Icons.Filled.Description
+    "loyalty_cards" -> Icons.Filled.CreditCard
+    "branding" -> Icons.Filled.Info
+    else -> Icons.Filled.Description
 }
 
 private fun categoryIconFor(category: String): Int? = when (category) {
