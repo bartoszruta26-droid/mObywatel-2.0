@@ -1896,7 +1896,7 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
                 Column(Modifier.padding(14.dp)) {
-                    Text("$populatedCount / 8", color = Navy, style = MaterialTheme.typography.headlineSmall,
+                    Text("$populatedCount / 9", color = Navy, style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold)
                     Text("obszary z danymi", color = Muted, style = MaterialTheme.typography.bodySmall)
                 }
@@ -2075,7 +2075,7 @@ private fun DocumentDetailsScreen(
         })
     )
     val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
-    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
+    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "loyaltyExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
