@@ -26,6 +26,7 @@ jobs:
   android:
     name: Android tests and debug APK
     runs-on: ubuntu-latest
+    timeout-minutes: 50
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,7 +77,17 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save
           script: |
-            cd obywatel-android && gradle --no-daemon :app:connectedDebugAndroidTest || { echo "Android instrumentation failed; collecting emulator diagnostics."; adb devices -l || true; adb logcat -d -v threadtime | tail -n 500 || true; exit 1; }
+            cd obywatel-android && timeout --signal=TERM --kill-after=30s 30m gradle --no-daemon :app:connectedDebugAndroidTest || { echo "Android instrumentation failed or timed out; collecting emulator diagnostics."; adb devices -l || true; adb logcat -d -v threadtime | tail -n 500 || true; exit 1; }
+
+      - name: Archive Android instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-instrumentation-reports
+          path: |
+            obywatel-android/app/build/reports/androidTests/connected/debug
+            obywatel-android/app/build/outputs/androidTest-results/connected/debug
+          if-no-files-found: ignore
 
       - name: Assemble Android debug APK
         working-directory: obywatel-android
