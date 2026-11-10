@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   python-tests:
@@ -72,3 +72,14 @@ jobs:
           path: obywatel-android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+      - name: Publish direct APK download
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: debug-latest
+          name: Latest Android debug APK
+          target_commitish: main
+          prerelease: true
+          make_latest: false
+          files: obywatel-android/app/build/outputs/apk/debug/app-debug.apk
+          fail_on_unmatched_files: true
