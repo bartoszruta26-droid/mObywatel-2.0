@@ -16,7 +16,7 @@ class MainActivityNavigationTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private fun openDocumentsTile() {
-        composeRule.onAllNodesWithText("Dokumenty").onFirst().performClick()
+        composeRule.onAllNodesWithText("Dokumenty")[0].performClick()
     }
 
     @Test
@@ -52,7 +52,7 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Wyszukiwanie globalne — do wdrożenia.").assertIsDisplayed()
         composeRule.onNodeWithText("Skanuj").performClick()
         composeRule.onNodeWithText("Skanuj kod QR").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Więcej").onLast().performClick()
+        composeRule.onAllNodesWithText("Więcej")[1].performClick()
         composeRule.onNodeWithText("Niezależny prototyp Android", substring = true).assertIsDisplayed()
     }
 
