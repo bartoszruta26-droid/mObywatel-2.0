@@ -566,9 +566,11 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
         "Urzędowe" -> "WZÓR dokumentu • nie jest dokumentem organu administracji"
         else -> "Dokument wygenerowany w OWD"
     }
-    canvas.drawText(footer.take(100),margin,814f,p)
-    canvas.drawText("Grafika pieczęci i wzór podpisu nie stanowią podpisu elektronicznego.",margin,800f,p)
-    canvas.drawText("Strona "+(pageNumber+1)+" z "+bodyPages.size,595f-margin-70f,814f,p)
+    layout.element("footer",pageNumber+1)?.takeIf { it.visible }?.let { e ->
+        canvas.drawText(footer.take(100),e.x,e.y+10f,p)
+        canvas.drawText("Grafika pieczęci i wzór podpisu nie stanowią podpisu elektronicznego.",e.x,e.y+24f,p)
+        canvas.drawText("Strona "+(pageNumber+1)+" z "+bodyPages.size,e.x+e.width-70f,e.y+10f,p)
+    }
     pdf.finishPage(page)
     }
     val out=java.io.ByteArrayOutputStream();pdf.writeTo(out);pdf.close();return out.toByteArray()
