@@ -29,7 +29,7 @@ class HomeScreenTest {
     @Test
     fun dashboardProvidesDocumentsAndServicesEntryPoints() {
         composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
-        composeRule.onNodeWithText("Wszystkie usługi").assertIsDisplayed()
+        composeRule.onNodeWithText("Wszystkie usługi").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
     }
 }
