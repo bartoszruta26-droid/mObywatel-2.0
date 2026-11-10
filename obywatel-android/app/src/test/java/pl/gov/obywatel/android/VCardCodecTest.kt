@@ -146,4 +146,35 @@ END:VCARD
         )
         VCardCodec.encodeOwdRecord(record)
     }
+
+    @Test
+    fun archiveRoundTripsFieldsFromAllDocumentGroupsIncludingProfilePhoto() {
+        val photoBytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0x00, 0x11)
+        val photoBase64 = java.util.Base64.getEncoder().encodeToString(photoBytes)
+        val fields = linkedMapOf(
+            "firstNames" to "Jan Adam",
+            "lastName" to "Kowalski",
+            "birthDate" to "1980-01-02",
+            "pesel" to "80010212345",
+            "idNumber" to "ABC123456",
+            "idIssueDate" to "2020-01-01",
+            "idExpiryDate" to "2030-01-01",
+            "passportNumber" to "PA1234567",
+            "passportIssuer" to "Wojewoda",
+            "passportLpNumber" to "LP-123",
+            "disabilityNumber" to "ON-123",
+            "disabilityDegree" to "umiarkowany",
+            "disabilityCauseCodes" to "05-R",
+            "registry_association_name" to "Fundacja Aria",
+            "registry_association_krs" to "0000123456",
+            "contactPhone" to "+48123456789",
+            "contactEmail" to "jan@example.org",
+            "photo" to photoBase64
+        )
+        val encoded = VCardCodec.encodeArchive(fields)
+        val imported = VCardCodec.decodeForImport(encoded)
+        assertEquals(fields, imported)
+        assertEquals(photoBase64, imported["photo"])
+    }
+
 }
