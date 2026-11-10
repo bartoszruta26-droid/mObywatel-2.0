@@ -106,13 +106,13 @@ private object FamilyEntityDocumentStore {
 }
 
 @Composable
-internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false) {
+internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false, readOnly: Boolean = false) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val bankDocuments = (rodDocs + entityDocs).filter { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
     val catalog = if (bankAccountsOnly) bankDocuments else (if (entityMode) entityDocs else rodDocs).filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
     var records by remember { mutableStateOf(FamilyEntityDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
-    var preview by remember { mutableStateOf(false) }
+    var preview by remember { mutableStateOf(readOnly) }
     var message by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color = Color(0xFF1769AA), modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
@@ -123,7 +123,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                 Text(section, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF173B58))
                 docs.forEach { doc ->
                     val filled = records[doc.id].orEmpty().values.any { it.isNotBlank() }
-                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id; preview = false }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id; preview = readOnly }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
                         Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column(Modifier.weight(1f)) { Text(doc.title, fontWeight = FontWeight.SemiBold, color = Color(0xFF173B58)); Text(if (filled) "Dane zapisane" else "Formularz pusty", style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788)) }
                             Text("Otwórz", color = Color(0xFF1769AA))
@@ -178,9 +178,15 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                 if (preview) Text("Liczba zarejestrowanych pozycji: \$accountCount", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
             }
             if (preview) Text("PODGLĄD EWIDENCYJNY — dokument prywatny / roboczy. Nie stanowi samodzielnie urzędowego odpisu, wpisu rejestrowego ani poświadczenia.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj dane" else "Podgląd") }
-                if (!preview) Button(onClick = { runCatching { FamilyEntityDocumentStore.save(context, records + (doc.id to (if (isBankRegister) local + ("accountCount" to accountCount.toString()) else local))); records = FamilyEntityDocumentStore.load(context); message = "Zapisano formularz." }.onFailure { message = "Błąd zapisu: ${it.message}" } }, modifier = Modifier.weight(1f)) { Text("Zapisz") }
+            if (!readOnly) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj dane" else "Podgląd") }
+                    if (!preview) Button(onClick = { runCatching { FamilyEntityDocumentStore.save(context, records + (doc.id to (if (isBankRegister) local + ("accountCount" to accountCount.toString()) else local))); records = FamilyEntityDocumentStore.load(context); message = "Zapisano formularz." }.onFailure { message = "Błąd zapisu: ${it.message}" } }, modifier = Modifier.weight(1f)) { Text("Zapisz") }
+                }
+
+            } else {
+                Text("Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia.",
+                    style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788))
             }
             if (message.isNotBlank()) Text(message, color = Color(0xFF1769AA), style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = { selected = null; message = "" }) { Text("Wróć do katalogu") }
