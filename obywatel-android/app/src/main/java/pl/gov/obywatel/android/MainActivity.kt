@@ -666,7 +666,10 @@ private fun HomeScreen() {
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
                         onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
-                        onOpenDetails = { selectedDocumentId = it }
+                        onOpenDetails = { selectedDocumentId = it },
+                        onOpenService = { title ->
+                            if (title == "Konta bankowe") showBankAccounts = true else activeService = title
+                        }
                     )
                     showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
@@ -692,7 +695,10 @@ private fun HomeScreen() {
                     selectedTab == 1 -> DocumentsWalletScreen(
                         onBack = { selectedTab = 0 },
                         onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
-                        onOpenDetails = { selectedDocumentId = it }
+                        onOpenDetails = { selectedDocumentId = it },
+                        onOpenService = { title ->
+                            if (title == "Konta bankowe") showBankAccounts = true else activeService = title
+                        }
                     )
                     selectedTab == 3 -> QrToolsScreen()
                     selectedTab == 4 -> MoreMenuScreen(
@@ -2098,128 +2104,123 @@ private fun CertificatesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit, onOpenDetails: (String) -> Unit) {
-    val context = LocalContext.current
-    val fields = remember {
-        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
-    }
-    val groups = listOf(
-        Triple("Dane osobowe profilu", Icons.Filled.AccountCircle, listOf("contactPhone", "contactEmail", "contactOrganization", "contactAddress")),
-        Triple("Dowód tożsamości", Icons.Filled.CreditCard, listOf("firstNames", "lastName", "birthDate", "pesel", "idNumber", "idStatus")),
-        Triple("Dane paszportowe", Icons.Filled.Public, listOf("passportNumber", "passportStatus")),
-        Triple("Dokument rodowy", Icons.Filled.Fingerprint, listOf("familyDocNumber", "familyName")),
-        Triple("Legitymacja poselska", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
-        Triple("Legitymacja kursanta", Icons.Filled.Description, listOf("trainingCardNumber", "trainingInstitution")),
-        Triple("Legitymacja ucznia/studenta", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
-        Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName")),
-        Triple("Karty lojalnościowe sklepów", Icons.Filled.CreditCard, (1..10).flatMap { n -> listOf("loyalty${n}Store", "loyalty${n}Number", "loyalty${n}Barcode", "loyalty${n}Qr") })
+private fun DocumentsWalletScreen(
+    onBack: () -> Unit,
+    onAddDocuments: () -> Unit,
+    onOpenDetails: (String) -> Unit,
+    onOpenService: (String) -> Unit
+) {
+    data class CatalogDocument(
+        val id: String,
+        val title: String,
+        val subtitle: String,
+        val categories: List<String>,
+        val detailsIndex: String? = null,
+        val service: String? = null,
+        val icon: ImageVector = Icons.Filled.Description
     )
-    val populatedCount = groups.count { (_, _, keys) -> keys.any { !fields[it].isNullOrBlank() } }
+
+    val documents = listOf(
+        CatalogDocument("profile", "Dane osobowe profilu", "Dane kontaktowe i podstawowe dane rodzinne", listOf("Osobiste", "Cywilne", "Rodowe"), "0", icon = Icons.Filled.AccountCircle),
+        CatalogDocument("identity", "Dowód tożsamości", "Dane dokumentu tożsamości i identyfikacyjne", listOf("Państwowe", "Cywilne", "Rodowe", "OC", "Osobiste"), "1", icon = Icons.Filled.CreditCard),
+        CatalogDocument("passport", "Dane paszportowe", "Dane paszportu i status dokumentu", listOf("Państwowe", "Cywilne", "Rodowe", "Osobiste"), "2", icon = Icons.Filled.Public),
+        CatalogDocument("registry", "Odpis z rejestru podmiotów", "Podgląd danych podmiotów i wpisów rejestrowych", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "Rejestry"), service = "Odpis z rejestru podmiotów", icon = Icons.Filled.AccountBalance),
+        CatalogDocument("family", "Dokument rodowy", "Księgi, akty i dane ewidencji Rodu", listOf("Cywilne", "Kościelne", "Rodowe", "OC", "Osobiste", "Rejestry"), "3", icon = Icons.Filled.Fingerprint),
+        CatalogDocument("parliament", "Legitymacja poselska", "Dane legitymacji i kadencji", listOf("Państwowe", "Cywilne", "Osobiste", "Zawodowe"), "4", icon = Icons.Filled.AccountBalance),
+        CatalogDocument("training", "Legitymacja kursanta", "Dane uczestnictwa w kursie i instytucji szkolącej", listOf("Osobiste", "Zawodowe", "Rejestry"), "5", icon = Icons.Filled.Description),
+        CatalogDocument("student", "Legitymacja ucznia / studenta", "Dane edukacyjne i identyfikator legitymacji", listOf("Państwowe", "Osobiste", "Zawodowe"), "6", icon = Icons.Filled.Badge),
+        CatalogDocument("disability", "Orzeczenia i zaświadczenia", "Dane orzeczeń, stopnia i okresu obowiązywania", listOf("Państwowe", "Cywilne", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), "7", icon = Icons.Filled.HealthAndSafety),
+        CatalogDocument("church", "Dokumenty kościelne", "Dokumenty kościelne, liturgiczne i organizacyjne", listOf("Kościelne", "Rodowe", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty Kościelne", icon = Icons.Filled.AccountBalance),
+        CatalogDocument("civil", "Dokumenty cywilne", "Formularze, oświadczenia i akty cywilne", listOf("Państwowe", "Cywilne", "Rodowe", "Osobiste", "Rejestry"), service = "Formularze dokumentów", icon = Icons.Filled.Description),
+        CatalogDocument("business", "Dokumenty firmowe i podmiotowe", "Dane organizacji, firm i jednostek", listOf("Cywilne", "Kościelne", "Rodowe", "Zawodowe", "Rejestry"), service = "Dokumenty rejestru podmiotów", icon = Icons.Filled.Business),
+        CatalogDocument("bank_accounts", "Konta bankowe", "Ewidencja rachunków bankowych", listOf("Państwowe", "Cywilne", "Osobiste", "Rejestry"), service = "Konta bankowe", icon = Icons.Filled.Payments),
+        CatalogDocument("vaccines", "Książeczka szczepień WHO", "Prywatna ewidencja szczepień i dawek", listOf("Zdrowotne", "Osobiste", "Rodowe"), service = "eKarta Szczepień", icon = Icons.Filled.HealthAndSafety),
+        CatalogDocument("signed_pdf", "Dokumenty PDF i podpisy", "Pliki PDF, podgląd oraz ewidencja importu podpisanych dokumentów", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty PDF i podpisy elektroniczne", icon = Icons.Filled.PictureAsPdf),
+        CatalogDocument("branding", "Zasoby identyfikacji dokumentów", "Flagi, godła, herby, pieczęcie, logo i wzory dokumentów", listOf("Państwowe", "Kościelne", "Rodowe", "Zawodowe", "Rejestry"), service = "Zasoby identyfikacji dokumentów", icon = Icons.Filled.Description),
+        CatalogDocument("imported", "Dokumenty własne — pliki", "Importowane pliki PDF, DOCX i obrazy", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty PDF i podpisy elektroniczne", icon = Icons.Filled.FileOpen),
+        CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
+    )
+    val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry")
+    var expandedCategories by remember { mutableStateOf(categories.toSet()) }
+
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("‹  Pulpit", color = Blue, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Dokumenty", color = Navy, style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Card(modifier = Modifier.weight(1f).clickable(onClick = onAddDocuments),
-                colors = CardDefaults.cardColors(containerColor = White)) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center) {
-                    Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
-                    Text("Dodaj", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
-                }
-            }
-            Card(modifier = Modifier.weight(1f),
-                colors = CardDefaults.cardColors(containerColor = BlueLight)) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center) {
-                    Icon(Icons.Filled.CreditCard, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
-                    Text("Wszystkie", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
-                }
-            }
-        }
-        Text("Twoje dokumenty i oświadczenia", color = Muted,
-            style = MaterialTheme.typography.bodyMedium)
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Security, contentDescription = null, tint = Blue, modifier = Modifier.size(30.dp))
-                Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text("Dane i oświadczenia użytkownika", color = Navy, fontWeight = FontWeight.Bold)
-                    Text("Użytkownik może opisać dane własnym oświadczeniem oraz wskazać źródło i podstawę każdego wpisu.",
-                        color = Muted, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
+        Text("Dokumenty", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Katalog obejmuje wszystkie rodzaje dokumentów i ewidencji zaprogramowane w aplikacji. Ten sam dokument może występować w kilku grupach.", color = Muted, style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
-                Column(Modifier.padding(14.dp)) {
-                    Text("$populatedCount / 9", color = Navy, style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold)
-                    Text("obszary z danymi", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Card(modifier = Modifier.weight(1f).clickable(onClick = onAddDocuments), colors = CardDefaults.cardColors(containerColor = White)) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    Icon(Icons.Filled.Add, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
+                    Text("Dodaj / uzupełnij", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
                 }
             }
-            Card(modifier = Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = White)) {
-                Column(Modifier.padding(14.dp)) {
-                    Text("Wpisy", color = Navy, style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold)
-                    Text("sposób przechowywania", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Card(modifier = Modifier.weight(1f).clickable { expandedCategories = if (expandedCategories.size == categories.size) emptySet() else categories.toSet() },
+                colors = CardDefaults.cardColors(containerColor = BlueLight)) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    Icon(Icons.Filled.Description, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
+                    Text(if (expandedCategories.size == categories.size) "Zwiń grupy" else "Rozwiń grupy", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
                 }
             }
         }
-        Text("Twoje dokumenty i dane", color = Navy, style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold)
-        groups.forEachIndexed { index, (title, icon, keys) ->
-            val hasData = keys.any { !fields[it].isNullOrBlank() }
+        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
+            Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(26.dp))
+                Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                    Text("Ewidencja dokumentów", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Katalog pokazuje moduły, formularze i ewidencje dostępne w kodzie. Sam wpis lub podgląd w aplikacji nie oznacza urzędowego wydania dokumentu ani potwierdzenia jego autentyczności.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        categories.forEach { category ->
+            val entries = documents.filter { category in it.categories }
             Card(
-                modifier = Modifier.fillMaxWidth().clickable { onOpenDetails(index.toString()) },
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                colors = CardDefaults.cardColors(containerColor = White)
             ) {
-                Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = painterResource(when (index) {
-                            0 -> R.drawable.art_01_karta_rodowa_jasna
-                            1 -> R.drawable.documents_identity_card
-                            2 -> R.drawable.art_02_paszport_rodowy_jasny
-                            3 -> R.drawable.art_06_przynaleznosc_rodowa_organizacyjna
-                            4 -> R.drawable.documents_deputy_legitimacy
-                            5 -> R.drawable.art_02_legitymacja_zawodowa
-                            6 -> R.drawable.documents_student_legitimacy
-                            7 -> R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci
-                        else -> R.drawable.documents_course_legitimacy
-                        }),
-                        contentDescription = "Ilustracja: $title",
-                        modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                        Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
-                        Text(if (hasData) "Dane uzupełnione • oświadczenie użytkownika" else "Brak zapisanych danych",
-                            color = Muted, style = MaterialTheme.typography.bodySmall)
+                Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            expandedCategories = if (category in expandedCategories) expandedCategories - category else expandedCategories + category
+                        },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(category, color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                        Text("${entries.size} dokumentów", color = Muted, style = MaterialTheme.typography.labelSmall)
+                        Text(if (category in expandedCategories) "  −" else "  +", color = Blue, fontWeight = FontWeight.Bold)
                     }
-                    val actionLabel = when (index) {
-                        0 -> "Dane osobowe"
-                        1 -> "Dowód tożsamości"
-                        2 -> "Dane paszportowe"
-                        else -> if (hasData) "Dane ewidencyjne" else "Dodaj"
+                    if (category in expandedCategories) {
+                        entries.forEach { document ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                    .clickable {
+                                        when {
+                                            document.detailsIndex != null -> onOpenDetails(document.detailsIndex)
+                                            document.service == "Konta bankowe" -> onOpenService("Konta bankowe")
+                                            document.service != null -> onOpenService(document.service)
+                                        }
+                                    }.padding(vertical = 9.dp, horizontal = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(25.dp))
+                                Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
+                                    Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                                    Text(document.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                                }
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Otwórz: ${document.title}",
+                                    tint = Muted, modifier = Modifier.size(17.dp))
+                            }
+                        }
                     }
-                    Text(actionLabel, color = Blue,
-                        style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 }
             }
         }
-        Text("Portfel służy do przeglądania zapisanych kart. Zmiana danych jest dostępna w menu Ustawienia otwieranym z ekranu głównego.",
-            color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Wszystkie pozycje są dostępne jako moduły, formularze lub ewidencje. Zakres danych i możliwość edycji zależą od danego modułu oraz uprawnień użytkownika.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 
