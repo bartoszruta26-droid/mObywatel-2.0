@@ -530,7 +530,7 @@ private fun DocumentPdfPreview(
 
 private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?,group:String,layout:DocumentLayout=DocumentLayout()):ByteArray {
     val pdf=PdfDocument()
-    val bodyPages = splitDocumentBody(body, layout.pageCount)
+    val bodyPages = paginateDocumentBody(body, layout)
     for (pageNumber in bodyPages.indices) {
     val page=pdf.startPage(PdfDocument.PageInfo.Builder(595,842,pageNumber+1).create())
     val canvas=page.canvas
@@ -610,7 +610,7 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     }
     val bodyY=layout.element("body",pageNumber+1)?.y ?: when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
     p.color=android.graphics.Color.DKGRAY;p.textSize=layout.element("body",pageNumber+1)?.fontSize ?: 10f
-    layout.element("body",pageNumber+1)?.takeIf { it.visible }?.let { element -> drawLines(canvas,bodyPages[pageNumber],element.x,element.y,element.width,p) }
+    layout.element("body",pageNumber+1)?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; drawLines(canvas,bodyPages.getOrElse(pageNumber){""},element.x,element.y,element.width,p) }
     // Group-specific reference fields and separators establish a distinct formal hierarchy.
     layout.element("reference",pageNumber+1)?.takeIf { it.visible }?.let { e ->
         p.color=accent;p.strokeWidth=0.8f
@@ -673,24 +673,84 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     }
     val out=java.io.ByteArrayOutputStream();pdf.writeTo(out);pdf.close();return out.toByteArray()
 }
-private fun splitDocumentBody(text:String, minimumPages:Int):List<String> {
-    val words=text.split(Regex("\\s+")).filter { it.isNotBlank() }
-    val estimatedPages=maxOf(1, (text.length+1099)/1100)
-    val pageCount=maxOf(minimumPages.coerceIn(1,100), estimatedPages).coerceAtMost(100)
-    val targetWords=maxOf(1, (words.size+pageCount-1)/pageCount)
-    return (0 until pageCount).map { page ->
-        val start = page * targetWords
-        val end = minOf(words.size, start + targetWords)
-        if (start >= words.size) "" else words.subList(start, end).joinToString(" ")
+private fun paginateDocumentBody(text:String, layout:DocumentLayout):List<String> {
+    val first = layout.element("body",1) ?: DocumentLayout.defaults().first { it.id=="body" }
+    val measure = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize=first.fontSize }
+    val lineHeight = (measure.fontMetrics.descent-measure.fontMetrics.ascent+measure.fontMetrics.leading).coerceAtLeast(1f)
+    val visualLines = mutableListOf<String>()
+    text.split("\\n").forEach { paragraph ->
+        if (paragraph.isEmpty()) {
+            visualLines.add("")
+        } else {
+            var line = ""
+            paragraph.split(Regex("\\s+")).filter { it.isNotBlank() }.forEach { word ->
+                val candidate = if(line.isEmpty()) word else "$line $word"
+                if (measure.measureText(candidate) <= first.width) {
+                    line = candidate
+                } else {
+                    if (line.isNotEmpty()) visualLines.add(line)
+                    if (measure.measureText(word) <= first.width) {
+                        line = word
+                    } else {
+                        var remainder = word
+                        while (remainder.isNotEmpty()) {
+                            val count = measure.breakText(remainder, true, first.width, null).coerceAtLeast(1)
+                            visualLines.add(remainder.substring(0,count))
+                            remainder = remainder.substring(count)
+                        }
+                        line = ""
+                    }
+                }
+            }
+            if(line.isNotEmpty()) visualLines.add(line)
+        }
     }
+    val pages = mutableListOf<String>()
+    var offset = 0
+    var page = 1
+    while (offset < visualLines.size || page <= layout.pageCount) {
+        val area = layout.element("body",page) ?: first
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize=area.fontSize }
+        val height = (paint.fontMetrics.descent-paint.fontMetrics.ascent+paint.fontMetrics.leading).coerceAtLeast(1f)
+        val capacity = (area.height/height).toInt().coerceAtLeast(1)
+        val end = minOf(visualLines.size,offset+capacity)
+        pages.add(if(offset < end) visualLines.subList(offset,end).joinToString("\\n") else "")
+        offset=end
+        page++
+        if(page>100) break
+    }
+    return pages.ifEmpty { listOf("") }
 }
 private fun drawLines(canvas:android.graphics.Canvas,text:String,x:Float,start:Float,width:Float,p:Paint){
-    var y=start;var line=""
-    text.split(Regex("\\s+")).forEach{word->
-        val candidate=if(line.isEmpty())word else line+" "+word
-        if(p.measureText(candidate)>width&&line.isNotEmpty()){canvas.drawText(line,x,y,p);y+=18f;line=word}else line=candidate
+    val lineHeight=(p.fontMetrics.descent-p.fontMetrics.ascent+p.fontMetrics.leading).coerceAtLeast(1f)
+    var y=start
+    text.split("\\n").forEach { paragraph ->
+        if(paragraph.isEmpty()) {
+            y+=lineHeight
+        } else {
+            var line=""
+            paragraph.split(Regex("\\s+")).filter { it.isNotBlank() }.forEach { word ->
+                val candidate=if(line.isEmpty()) word else "$line $word"
+                if(p.measureText(candidate)<=width) {
+                    line=candidate
+                } else {
+                    if(line.isNotEmpty()) { canvas.drawText(line,x,y,p); y+=lineHeight }
+                    if(p.measureText(word)<=width) line=word
+                    else {
+                        var remainder=word
+                        while(remainder.isNotEmpty()) {
+                            val count=p.breakText(remainder,true,width,null).coerceAtLeast(1)
+                            canvas.drawText(remainder.substring(0,count),x,y,p)
+                            y+=lineHeight
+                            remainder=remainder.substring(count)
+                        }
+                        line=""
+                    }
+                }
+            }
+            if(line.isNotEmpty()) { canvas.drawText(line,x,y,p); y+=lineHeight }
+        }
     }
-    if(line.isNotEmpty())canvas.drawText(line,x,y,p)
 }
 private fun drawImage(c:Context,canvas:android.graphics.Canvas,a:BrandAsset,x:Float,y:Float,w:Float,h:Float){
     if(a.mime !in listOf("image/png","image/jpeg","image/webp"))return
