@@ -2799,7 +2799,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
     }
-    var selectedEntity by remember { mutableStateOf("company") }
+    var selectedEntity by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf("") }
     val sections = listOf(
         "company" to "Spółka z ograniczoną odpowiedzialnością — KRS",
@@ -2923,34 +2923,59 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
             Text("W tym module możesz ująć dane podmiotu oraz własne oświadczenie dotyczące ich zgodności ze stanem faktycznym. Wskaż podstawę i datę oświadczenia.",
                 Modifier.padding(14.dp), color = Navy, style = MaterialTheme.typography.bodySmall)
         }
-        sections.forEach { (key, label) ->
-            Card(
-                modifier = Modifier.fillMaxWidth().clickable { selectedEntity = key },
-                colors = CardDefaults.cardColors(containerColor = if (selectedEntity == key) BlueLight else White)
+        if (selectedEntity == null) {
+            Text("Wybierz rodzaj podmiotu", color = Navy, fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.fillMaxWidth().height(440.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(label, Modifier.fillMaxWidth().padding(13.dp),
-                    color = if (selectedEntity == key) Blue else Navy,
-                    fontWeight = FontWeight.SemiBold)
+                items(sections) { (key, label) ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth().height(142.dp).clickable { selectedEntity = key },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(Modifier.fillMaxSize().padding(14.dp),
+                            verticalArrangement = Arrangement.SpaceBetween) {
+                            Icon(Icons.Filled.AccountBalance, contentDescription = null,
+                                tint = Blue, modifier = Modifier.size(30.dp))
+                            Text(label, color = Navy, fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium)
+                            Text("Otwórz dokument  ›", color = Blue,
+                                style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
+        } else {
+            val entityKey = selectedEntity!!
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("‹  Wszystkie rodzaje podmiotów", color = Blue, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable { selectedEntity = null }.padding(vertical = 5.dp))
+            }
+            Text(sections.first { it.first == entityKey }.second, color = Navy,
+                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            fieldSets[entityKey].orEmpty().forEach { (key, label, placeholder) ->
+                DemoDataField(key, label, fields, placeholder)
+            }
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
+            Text("Źródło i kontrola aktualności", color = Navy, fontWeight = FontWeight.Bold)
+            DemoDataField("registry_${entityKey}_source", "Źródło danych / adres rejestru", fields, "Adres strony lub nazwa dokumentu")
+            DemoDataField("registry_${entityKey}_checked", "Data sprawdzenia", fields, "DD-MM-RRRR")
+            DemoDataField("registry_${entityKey}_documentDate", "Data sporządzenia odpisu / dokumentu", fields, "DD-MM-RRRR")
+            DemoDataField("registry_${entityKey}_notes", "Uwagi", fields, "Informacje uzupełniające")
+            Button(onClick = {
+                runCatching { DemoIdentityStore.save(context, fields.toMap()) }
+                    .onSuccess { status = "Zapisano i zabezpieczono dane." }
+                    .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
+            }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
+            if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E),
+                style = MaterialTheme.typography.bodySmall)
         }
-        Text(sections.first { it.first == selectedEntity }.second, color = Navy,
-            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        fieldSets[selectedEntity].orEmpty().forEach { (key, label, placeholder) ->
-            DemoDataField(key, label, fields, placeholder)
-        }
-        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
-        Text("Źródło i kontrola aktualności", color = Navy, fontWeight = FontWeight.Bold)
-        DemoDataField("registry_${selectedEntity}_source", "Źródło danych / adres rejestru", fields, "Adres strony lub nazwa dokumentu")
-        DemoDataField("registry_${selectedEntity}_checked", "Data sprawdzenia", fields, "DD-MM-RRRR")
-        DemoDataField("registry_${selectedEntity}_documentDate", "Data sporządzenia odpisu / dokumentu", fields, "DD-MM-RRRR")
-        DemoDataField("registry_${selectedEntity}_notes", "Uwagi", fields, "Informacje uzupełniające")
-        Button(onClick = {
-            runCatching { DemoIdentityStore.save(context, fields.toMap()) }
-                .onSuccess { status = "Zapisano i zabezpieczono dane." }
-                .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
-        }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
-        if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E),
-            style = MaterialTheme.typography.bodySmall)
     }
 }
 
