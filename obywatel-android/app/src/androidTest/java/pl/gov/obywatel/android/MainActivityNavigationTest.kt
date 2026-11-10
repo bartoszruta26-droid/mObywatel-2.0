@@ -35,8 +35,8 @@ class MainActivityNavigationTest {
         composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
         composeRule.onNodeWithText("Twoje dokumenty i oświadczenia").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dane osobowe profilu").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Dane paszportowe").performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dowód tożsamości")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dane paszportowe")[0].performScrollTo().assertIsDisplayed()
         composeRule.onAllNodesWithText("Legitymacja ucznia/studenta")[0].performScrollTo().assertIsDisplayed()
     }
 
@@ -50,9 +50,9 @@ class MainActivityNavigationTest {
     @Test
     fun registryExtractOpensFromServicesCatalog() {
         selectBottomTab("Usługi", 1)
-        composeRule.onNodeWithText("Rejestry").performClick()
+        
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Odpis z rejestru podmiotów").performClick()
+        composeRule.onNodeWithText("Odpis z rejestru podmiotów").performScrollTo().performClick()
         composeRule.onNodeWithText("Wybierz rodzaj podmiotu").assertIsDisplayed()
         composeRule.onNodeWithText("Spółka z ograniczoną odpowiedzialnością — KRS").performClick()
         composeRule.onNodeWithText("Numer KRS").assertIsDisplayed()
@@ -91,10 +91,10 @@ class MainActivityNavigationTest {
     fun settingsExposeIdentityPassportAndLegitimacyDataEntry() {
         selectBottomTab("Więcej")
         composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
-        composeRule.onNodeWithText("Dane osobowe").assertIsDisplayed()
-        composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
-        composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
-        composeRule.onNodeWithText("Legitymacja ucznia/studenta").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dane osobowe", substring = false).assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości", substring = false).assertIsDisplayed()
+        composeRule.onNodeWithText("Dane paszportowe", substring = false).assertIsDisplayed()
+        composeRule.onAllNodesWithText("Legitymacja ucznia/studenta")[0].performScrollTo().assertIsDisplayed()
     }
 
     @Test
