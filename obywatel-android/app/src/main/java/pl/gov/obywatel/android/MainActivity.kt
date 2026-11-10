@@ -171,13 +171,13 @@ private const val DOCUMENT_DISPLAY_PREFS = "document_display_preferences"
 private const val DOCUMENT_DISPLAY_KEY_PREFIX = "placement_"
 private val documentDisplayOptions = listOf(
     Triple("identity", "Dowód tożsamości", R.drawable.documents_identity_card),
-    Triple("passport", "Dane paszportowe", R.drawable._02_paszport_rodowy_jasny),
-    Triple("registry", "Odpis z rejestru podmiotów", R.drawable._06_przynaleznosc_rodowa_organizacyjna),
-    Triple("family", "Dokument rodowy", R.drawable._01_karta_rodowa_jasna),
+    Triple("passport", "Dane paszportowe", R.drawable.art_02_paszport_rodowy_jasny),
+    Triple("registry", "Odpis z rejestru podmiotów", R.drawable.art_06_przynaleznosc_rodowa_organizacyjna),
+    Triple("family", "Dokument rodowy", R.drawable.art_01_karta_rodowa_jasna),
     Triple("parliament", "Legitymacja poselska", R.drawable.documents_deputy_legitimacy),
-    Triple("training", "Legitymacja kursanta", R.drawable._02_legitymacja_zawodowa),
+    Triple("training", "Legitymacja kursanta", R.drawable.art_02_legitymacja_zawodowa),
     Triple("student", "Legitymacja ucznia/studenta", R.drawable.documents_student_legitimacy),
-    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable._03_orzeczenie_rodowe_o_niepelnosprawnosci)
+    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci)
 )
 private val defaultDocumentPlacements = mapOf(
     "identity" to "dashboard",
@@ -1825,14 +1825,14 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                 Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         painter = painterResource(when (index) {
-                            0 -> R.drawable._01_karta_rodowa_jasna
+                            0 -> R.drawable.art_01_karta_rodowa_jasna
                             1 -> R.drawable.documents_identity_card
-                            2 -> R.drawable._02_paszport_rodowy_jasny
-                            3 -> R.drawable._06_przynaleznosc_rodowa_organizacyjna
+                            2 -> R.drawable.art_02_paszport_rodowy_jasny
+                            3 -> R.drawable.art_06_przynaleznosc_rodowa_organizacyjna
                             4 -> R.drawable.documents_deputy_legitimacy
-                            5 -> R.drawable._02_legitymacja_zawodowa
+                            5 -> R.drawable.art_02_legitymacja_zawodowa
                             6 -> R.drawable.documents_student_legitimacy
-                            else -> R.drawable._03_orzeczenie_rodowe_o_niepelnosprawnosci
+                            else -> R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci
                         }),
                         contentDescription = "Ilustracja: $title",
                         modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)),
@@ -1999,12 +1999,12 @@ private fun DocumentDetailsScreen(
             imageRes = when (documentId.toIntOrNull()) {
                 0 -> R.drawable.documents_document_wallet_banner
                 1 -> R.drawable.documents_identity_card
-                2 -> R.drawable._02_paszport_rodowy_jasny
-                3 -> R.drawable._01_karta_rodowa_jasna
+                2 -> R.drawable.art_02_paszport_rodowy_jasny
+                3 -> R.drawable.art_01_karta_rodowa_jasna
                 4 -> R.drawable.documents_deputy_legitimacy
-                5 -> R.drawable._02_legitymacja_zawodowa
+                5 -> R.drawable.art_02_legitymacja_zawodowa
                 6 -> R.drawable.documents_student_legitimacy
-                else -> R.drawable._03_orzeczenie_rodowe_o_niepelnosprawnosci
+                else -> R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci
             },
             title = section.first.substringBefore(" —"),
             subtitle = section.second,
