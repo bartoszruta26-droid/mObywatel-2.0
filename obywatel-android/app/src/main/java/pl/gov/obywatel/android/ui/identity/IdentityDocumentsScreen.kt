@@ -220,7 +220,8 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                             "Urzędowe" -> { templateName="Wzór pisma urzędowego"; title="Pismo"; role="Organ / osoba upoważniona"; watermark="WZÓR"; body="Oznaczenie podmiotu i znak sprawy: …\nAdresat: …\nPodstawa prawna: …\nUzasadnienie: …\nRozstrzygnięcie / pouczenie: …" }
                             else -> { templateName="Dokument ogólny"; title="Dokument"; role="Osoba uprawniona"; watermark="WZÓR"; body="Treść dokumentu…\n\nZałączniki: …" }
                         }
-                        message="Zastosowano układ początkowy dla grupy: "+documentGroup+". Uzupełnij dane i sprawdź podstawę prawną przed wydaniem."
+                        layout = DocumentLayout.forGroup(documentGroup)
+                        message="Zastosowano odrębny układ graficzny grupy: "+documentGroup+". Uzupełnij dane i sprawdź podstawę prawną przed wydaniem."
                     },modifier=Modifier.fillMaxWidth()){ Text("Zastosuj wzorzec grupy") }
                     OutlinedTextField(templateName,{templateName=it},label={Text("Nazwa szablonu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(title,{title=it},label={Text("Tytuł dokumentu")},modifier=Modifier.fillMaxWidth())
