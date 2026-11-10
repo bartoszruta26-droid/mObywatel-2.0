@@ -2242,7 +2242,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("familyHolderSignature", "Imię i nazwisko posiadacza / podpis", fields)
                 DemoDataField("familyRegistrarSignature", "Imię i nazwisko wystawcy / podpis", fields)
                 Text("Wizualizacja dokumentu — awers i rewers", color = Navy, fontWeight = FontWeight.Bold)
-                RodowyDocumentPreview(fields = fields, photoBase64 = photoBase64)
+                OwdDocumentArtworkCard(
+                    imageRes = R.drawable.documents_family_record,
+                    title = "Dokument rodowy",
+                    subtitle = "Prywatna ewidencja rodowa",
+                    holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane posiadacza" },
+                    details = "Nr: ${fields["familyDocNumber"].orEmpty().ifBlank { "—" }} • Ród: ${fields["familyName"].orEmpty().ifBlank { "—" }}",
+                    privateRecord = true
+                )
             }
         }
         }
@@ -2277,6 +2284,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                         Text("To prywatna karta danych identyfikacyjnych utworzona przez użytkownika. Nie jest dowodem osobistym wydanym przez państwo, nie potwierdza urzędowo tożsamości i nie zastępuje dokumentu z rejestru państwowego. Wiarygodność wpisów zależy od wskazanego źródła i jego niezależnej weryfikacji.", color = Ink, style = MaterialTheme.typography.bodySmall)
                     }
                 }
+                OwdDocumentArtworkCard(
+                    imageRes = R.drawable.documents_identity_card,
+                    title = "Karta danych tożsamości",
+                    subtitle = "Prywatna ewidencja danych identyfikacyjnych",
+                    holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane użytkownika" },
+                    details = "Nr: ${fields["idNumber"].orEmpty().ifBlank { "—" }}",
+                    privateRecord = true
+                )
                 AdditionalInformationSection("Źródła i weryfikacja danych identyfikacyjnych", fields, "idExtra", "Wskaż dokument źródłowy i datę jego sprawdzenia. Sam wpis użytkownika nie stanowi potwierdzenia urzędowego.")
             }
         }
@@ -2303,6 +2318,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
                 DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
+                OwdDocumentArtworkCard(
+                    imageRes = R.drawable.documents_deputy_legitimacy,
+                    title = "Ewidencja legitymacji poselskiej",
+                    subtitle = "Karta informacyjna — dane i źródła",
+                    holder = fields["mpIssuer"].orEmpty().ifBlank { "Dane ewidencyjne" },
+                    details = "Kadencja: ${fields["mpTerm"].orEmpty().ifBlank { "—" }}",
+                    privateRecord = true
+                )
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja poselska", fields, "mpExtra", "Art. 104 Konstytucji RP określa wolny mandat poselski oraz obowiązek złożenia ślubowania przed Sejmem przed rozpoczęciem sprawowania mandatu. Odmowa ślubowania oznacza zrzeczenie się mandatu. Sam wpis użytkownika ani prywatna ewidencja nie potwierdzają uzyskania mandatu ani prawa do reprezentowania Sejmu.")
             }
         }
@@ -2335,7 +2358,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("trainingCertificateNumber", "Numer zaświadczenia o ukończeniu", fields)
                 DemoDataField("trainingForm", "Forma kształcenia", fields, "stacjonarna / zdalna / hybrydowa")
                 Text("Podgląd legitymacji", color = Navy, fontWeight = FontWeight.Bold)
-                TrainingParticipantCard(fields = fields, photoBase64 = photoBase64)
+                OwdDocumentArtworkCard(
+                    imageRes = R.drawable.documents_course_legitimacy,
+                    title = "Legitymacja uczestnika kursu",
+                    subtitle = fields["trainingInstitution"].orEmpty().ifBlank { "Instytucja szkoleniowa" },
+                    holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane uczestnika" },
+                    details = "Kurs: ${fields["trainingCourseName"].orEmpty().ifBlank { "—" }}",
+                    privateRecord = true
+                )
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "trainingExtra", "Legitymacja instytucji szkoleniowej potwierdza status w ewidencji wystawcy w granicach regulaminu i właściwej podstawy działania. Nie jest legitymacją studencką i sama nie nadaje statusu studenta uczelni.")
             }
         }
@@ -2503,6 +2533,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("passportSex", "Płeć w dokumencie", fields)
                 DemoDataField("passportStatus", "Status dokumentu", fields, "ważny / utracony / unieważniony / wymieniony")
                 DemoDataField("passportLossDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
+                OwdDocumentArtworkCard(
+                    imageRes = R.drawable.documents_passport,
+                    title = "Dane paszportowe",
+                    subtitle = "Prywatna ewidencja dokumentu podróży",
+                    holder = fields["passportHolderNames"].orEmpty().ifBlank { "Dane posiadacza" },
+                    details = "Nr paszportu: ${fields["passportNumber"].orEmpty().ifBlank { "—" }}",
+                    privateRecord = true
+                )
                 AdditionalInformationSection("Informacje dodatkowe — dane paszportowe", fields, "passportExtra", "Jest to ewidencja danych wpisanych przez użytkownika, a nie dokument paszportowy ani jego cyfrowy odpowiednik. Nie odtwarzamy strefy MRZ, kodów ani zabezpieczeń dokumentu.")
             }
         }
@@ -2651,54 +2689,21 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
 @Composable
 private fun DisabilityDecisionPreview(fields: Map<String, String>) {
     val authorityType = fields["disabilityAuthorityType"] ?: "powiat"
-    val isFoundation = authorityType == "foundation"
-    val previewTitle = when (authorityType) {
-        "other_law" -> "DOKUMENT NA PODSTAWIE ODRĘBNYCH PRZEPISÓW"
-        "foundation" -> "DOKUMENT ZESPOŁU MEDYCZNEGO FUNDACJI"
-        "medical_opinion" -> "OPINIA / ZAŚWIADCZENIE MEDYCZNE"
-        "self_declaration" -> "OŚWIADCZENIE WŁASNE"
-        else -> "DANE ORZECZENIA POWIATOWEGO"
+    val label = when (authorityType) {
+        "foundation" -> "Dokument zespołu medycznego fundacji"
+        "other_law" -> "Dokument na podstawie odrębnych przepisów"
+        "medical_opinion" -> "Opinia / zaświadczenie medyczne"
+        "self_declaration" -> "Oświadczenie własne"
+        else -> "Ewidencja danych orzeczenia"
     }
-    val person = fields["disabilityPersonName"].orEmpty().ifBlank { "OSOBA, KTÓREJ DOTYCZY WPIS" }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isFoundation) Color(0xFFF0EBF7) else Color(0xFFE8F0F7)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            Text(
-                previewTitle,
-                color = if (isFoundation) Color(0xFF51416E) else Navy,
-                fontWeight = FontWeight.ExtraBold,
-                style = MaterialTheme.typography.labelLarge
-            )
-            Text(fields["disabilityAuthorityName"].orEmpty().ifBlank {
-                when (authorityType) { "foundation" -> "ZESPÓŁ MEDYCZNY FUNDACJI"; "other_law" -> "ORGAN WSKAZANY W ODRĘBNYCH PRZEPISACH"; "medical_opinion" -> "OSOBA WYKONUJĄCA ZAWÓD MEDYCZNY"; "self_declaration" -> "OŚWIADCZENIE OSOBY"; else -> "POWIATOWY ZESPÓŁ DO SPRAW ORZEKANIA" }
-            }, color = Ink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-            Text(person, color = Ink, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-            Text("Nr: " + fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" } +
-                "   Data: " + fields["disabilityDecisionDate"].orEmpty().ifBlank { "—" },
-                color = Muted, style = MaterialTheme.typography.bodySmall)
-            Text("Stopień / kategoria: " + fields["disabilityDegree"].orEmpty().ifBlank {
-                fields["disabilityCategory"].orEmpty().ifBlank { "—" }
-            }, color = Ink, style = MaterialTheme.typography.bodyMedium)
-            Text("Przyczyny / symbole: " + fields["disabilityCauseCodes"].orEmpty().ifBlank { "—" },
-                color = Ink, style = MaterialTheme.typography.bodySmall)
-            Text("Okres: " + fields["disabilityValidity"].orEmpty().ifBlank { "—" },
-                color = Ink, style = MaterialTheme.typography.bodySmall)
-            Box(
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp))
-                    .background(if (isFoundation) Color(0xFF51416E) else Color(0xFF315A78))
-                    .padding(horizontal = 8.dp, vertical = 7.dp)
-            ) {
-                Text(
-                    when (authorityType) { "foundation" -> "DOKUMENT WYSTAWCY"; "other_law" -> "DOKUMENT NA PODSTAWIE ODRĘBNYCH PRZEPISÓW"; "medical_opinion" -> "OPINIA MEDYCZNA"; "self_declaration" -> "OŚWIADCZENIE OSOBY"; else -> "DANE EWIDENCYJNE" },
-                    color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall
-                )
-            }
-        }
-    }
+    OwdDocumentArtworkCard(
+        imageRes = R.drawable.documents_medical_certificates,
+        title = "Dane o niepełnosprawności",
+        subtitle = label,
+        holder = fields["disabilityPersonName"].orEmpty().ifBlank { "Dane osoby" },
+        details = "Nr: ${fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" }} • Stopień: ${fields["disabilityDegree"].orEmpty().ifBlank { "—" }}",
+        privateRecord = true
+    )
 }
 
 @Composable
