@@ -490,7 +490,8 @@ private fun DocumentPdfPreview(
     seal: BrandAsset?, signature: BrandAsset?, background: BrandAsset?, flag: BrandAsset?,
     emblem: BrandAsset?, security: BrandAsset?, group: String, layout: DocumentLayout
 ) {
-    val bitmap by produceState<android.graphics.Bitmap?>(null, title, number, recipient, body, signer, role, watermark, org, logo, seal, signature, background, flag, emblem, security, group, layout) {
+    var previewPage by remember { mutableIntStateOf(0) }
+    val preview by produceState<Pair<android.graphics.Bitmap?,Int>>(null to 0, title, number, recipient, body, signer, role, watermark, org, logo, seal, signature, background, flag, emblem, security, group, layout, previewPage) {
         value = withContext(Dispatchers.IO) {
             runCatching {
                 val bytes = renderPdf(context, title, number, recipient, body, signer, role, watermark,
@@ -499,35 +500,47 @@ private fun DocumentPdfPreview(
                 try {
                     file.writeBytes(bytes)
                     ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
-                        PdfRenderer(descriptor).use { renderer ->
-                            if (renderer.pageCount == 0) return@use null
-                            renderer.openPage(0).use { page ->
-                                val width = 900
-                                val height = (width.toFloat() * page.height / page.width).toInt()
-                                android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888).also {
-                                    page.render(it, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                        val renderer = PdfRenderer(descriptor)
+                        try {
+                            val count = renderer.pageCount
+                            if (count == 0) null to 0
+                            else {
+                                val index = previewPage.coerceIn(0,count-1)
+                                renderer.openPage(index).use { page ->
+                                    val width = 900
+                                    val height = (width.toFloat() * page.height / page.width).toInt()
+                                    val rendered = android.graphics.Bitmap.createBitmap(width,height,android.graphics.Bitmap.Config.ARGB_8888)
+                                    page.render(rendered,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                    rendered to count
                                 }
                             }
-                        }
+                        } finally { renderer.close() }
                     }
                 } finally { file.delete() }
-            }.getOrNull()
+            }.getOrElse { null to 0 }
         }
     }
+    val bitmap=preview.first
+    val pageCount=preview.second
+    LaunchedEffect(pageCount) { if(pageCount>0) previewPage=previewPage.coerceIn(0,pageCount-1) }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Podgląd dokumentu — render eksportowanego PDF", fontWeight = FontWeight.Bold)
-            Text("Podgląd jest generowany z tego samego pliku PDF co eksport, dlatego odwzorowuje rzeczywisty układ strony.", style = MaterialTheme.typography.bodySmall)
+            Text("Każda wyświetlana strona pochodzi z renderowania tego samego PDF, który jest zapisywany podczas eksportu.", style = MaterialTheme.typography.bodySmall)
             if (bitmap != null) {
-                Image(bitmap!!.asImageBitmap(), contentDescription = "Podgląd pierwszej strony dokumentu PDF",
+                Image(bitmap.asImageBitmap(), contentDescription = "Podgląd strony ${previewPage+1} z $pageCount",
                     modifier = Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
+                Row(verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.SpaceBetween, modifier=Modifier.fillMaxWidth()) {
+                    TextButton(onClick={previewPage=(previewPage-1).coerceAtLeast(0)},enabled=previewPage>0){Text("Poprzednia")}
+                    Text("Strona ${previewPage+1} z $pageCount",style=MaterialTheme.typography.labelMedium)
+                    TextButton(onClick={previewPage=(previewPage+1).coerceAtMost(pageCount-1)},enabled=previewPage<pageCount-1){Text("Następna")}
+                }
             } else {
                 Text("Nie udało się wyrenderować podglądu PDF.", color = MaterialTheme.colorScheme.error)
             }
         }
     }
 }
-
 private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?,group:String,layout:DocumentLayout=DocumentLayout()):ByteArray {
     val pdf=PdfDocument()
     val bodyPages = paginateDocumentBody(body, layout)
