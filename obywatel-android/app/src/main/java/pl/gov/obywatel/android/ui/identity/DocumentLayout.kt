@@ -79,6 +79,7 @@ internal data class DocumentLayout(
             DocumentLayoutElement("signatureGraphic", "Grafika podpisu", 54f, 714f, 130f, 28f),
             DocumentLayoutElement("title", "Tytuł", 42f, 184f, 511f, 34f, 21f),
             DocumentLayoutElement("recipient", "Adresat", 42f, 292f, 511f, 64f, 10f),
+            DocumentLayoutElement("reference", "Podstawa / informacje uzupełniające", 42f, 535f, 511f, 70f, 9f),
             DocumentLayoutElement("body", "Treść", 42f, 350f, 511f, 285f, 10f),
             DocumentLayoutElement("signature", "Podpis", 42f, 675f, 511f, 100f, 9f),
             DocumentLayoutElement("watermark", "Znak wodny", 105f, 390f, 385f, 80f, 48f),
