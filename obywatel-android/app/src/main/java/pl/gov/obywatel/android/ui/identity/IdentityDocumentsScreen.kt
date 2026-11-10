@@ -11,7 +11,6 @@ import android.print.PrintDocumentInfo
 import android.print.PageRange
 import android.os.CancellationSignal
 import android.os.Bundle
-import android.os.ParcelFileDescriptor
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import android.graphics.BitmapFactory
