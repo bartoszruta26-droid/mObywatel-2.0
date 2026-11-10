@@ -168,6 +168,44 @@ private val services = listOf(
 )
 
 @Composable
+private const val DOCUMENT_DISPLAY_PREFS = "document_display_preferences"
+private const val DOCUMENT_DISPLAY_KEY_PREFIX = "placement_"
+private val documentDisplayOptions = listOf(
+    Triple("identity", "Dowód tożsamości", R.drawable.documents_identity_card),
+    Triple("passport", "Dane paszportowe", R.drawable.documents_passport),
+    Triple("registry", "Odpis z rejestru podmiotów", R.drawable.documents_family_record),
+    Triple("family", "Dokument rodowy", R.drawable.documents_family_record),
+    Triple("parliament", "Legitymacja poselska", R.drawable.documents_deputy_legitimacy),
+    Triple("training", "Legitymacja kursanta", R.drawable.documents_course_legitimacy),
+    Triple("student", "Legitymacja ucznia/studenta", R.drawable.documents_student_legitimacy),
+    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.documents_medical_certificates)
+)
+private val defaultDocumentPlacements = mapOf(
+    "identity" to "dashboard",
+    "passport" to "dashboard",
+    "registry" to "dashboard",
+    "student" to "dashboard",
+    "family" to "other",
+    "parliament" to "other",
+    "training" to "other",
+    "disability" to "other"
+)
+private fun loadDocumentPlacements(context: Context): Map<String, String> {
+    val prefs = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+    return documentDisplayOptions.associate { (id, _, _) ->
+        id to (prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + id, null) ?: defaultDocumentPlacements[id] ?: "hidden")
+    }
+}
+private fun saveDocumentPlacements(context: Context, placements: Map<String, String>) {
+    val editor = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE).edit()
+    documentDisplayOptions.forEach { (id, _, _) ->
+        val placement = placements[id] ?: "hidden"
+        require(placement in setOf("dashboard", "other", "hidden")) { "Nieprawidłowe miejsce wyświetlania dokumentu: $id" }
+        editor.putString(DOCUMENT_DISPLAY_KEY_PREFIX + id, placement)
+    }
+    check(editor.commit()) { "Nie udało się zapisać ustawień widoczności dokumentów." }
+}
+
 private fun HomeScreen() {
     val context = LocalContext.current
     var pendingImport by remember { mutableStateOf<Map<String, String>?>(null) }
@@ -235,6 +273,7 @@ private fun HomeScreen() {
             importStatus = "Import anulowany — dane lokalne pozostają bez zmian."
         }
     }
+    var documentPlacements by remember(context) { mutableStateOf(loadDocumentPlacements(context)) }
     var selectedTab by remember { mutableIntStateOf(0) }
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
@@ -298,6 +337,11 @@ private fun HomeScreen() {
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showSettingsMenu -> SettingsMenuScreen(
+                        documentPlacements = documentPlacements,
+                        onDocumentPlacementsChange = { updated ->
+                            saveDocumentPlacements(context, updated)
+                            documentPlacements = updated
+                        },
                         onBack = { showSettingsMenu = false },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
@@ -368,31 +412,53 @@ private fun HomeScreen() {
                                         Text("Wszystkie", color = Blue, fontWeight = FontWeight.Bold,
                                             modifier = Modifier.clickable { selectedTab = 1 }.padding(vertical = 8.dp))
                                     }
-                                    Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        listOf(
-                                            Triple("Dowód tożsamości", R.drawable.documents_identity_card, "1"),
-                                            Triple("Dane paszportowe", R.drawable.documents_passport, "2"),
-                                            Triple("Dane rejestru podmiotów", R.drawable.documents_family_record, "registry"),
-                                            Triple("Legitymacje", R.drawable.documents_student_legitimacy, "6")
-                                        ).forEach { (label, imageRes, id) ->
-                                            Card(modifier = Modifier.width(150.dp).clickable {
-                                                if (id == "registry") activeService = "Odpis z rejestru podmiotów"
-                                                else selectedDocumentId = id
-                                            },
-                                                colors = CardDefaults.cardColors(containerColor = White)) {
-                                                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                                    Image(
-                                                        painter = painterResource(imageRes),
-                                                        contentDescription = "Podgląd: $label — lokalna ewidencja",
-                                                        modifier = Modifier.fillMaxWidth().height(88.dp),
-                                                        contentScale = ContentScale.Fit
-                                                    )
-                                                    Text(label, color = Navy, fontWeight = FontWeight.SemiBold, maxLines = 2)
+                                    val dashboardDocuments = documentDisplayOptions.filter { documentPlacements[it.first] == "dashboard" }
+                                    val otherDocuments = documentDisplayOptions.filter { documentPlacements[it.first] == "other" }
+                                    @Composable
+                                    fun DocumentCards(items: List<Triple<String, String, Int>>) {
+                                        if (items.isEmpty()) {
+                                            Text("Brak dokumentów przypisanych do tego obszaru. Zmień ustawienia widoczności dokumentów.",
+                                                color = Muted, style = MaterialTheme.typography.bodySmall,
+                                                modifier = Modifier.padding(vertical = 8.dp))
+                                        } else {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                            ) {
+                                                items.forEach { (id, label, imageRes) ->
+                                                    Card(
+                                                        modifier = Modifier.width(150.dp).clickable {
+                                                            when (id) {
+                                                                "registry" -> activeService = "Odpis z rejestru podmiotów"
+                                                                "identity" -> selectedDocumentId = "1"
+                                                                "passport" -> selectedDocumentId = "2"
+                                                                "family" -> selectedDocumentId = "3"
+                                                                "parliament" -> selectedDocumentId = "4"
+                                                                "training" -> selectedDocumentId = "5"
+                                                                "student" -> selectedDocumentId = "6"
+                                                                "disability" -> selectedDocumentId = "7"
+                                                            }
+                                                        },
+                                                        colors = CardDefaults.cardColors(containerColor = White)
+                                                    ) {
+                                                        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                                            Image(
+                                                                painter = painterResource(imageRes),
+                                                                contentDescription = "Podgląd: $label — lokalna ewidencja",
+                                                                modifier = Modifier.fillMaxWidth().height(88.dp),
+                                                                contentScale = ContentScale.Fit
+                                                            )
+                                                            Text(label, color = Navy, fontWeight = FontWeight.SemiBold, maxLines = 2)
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+                                    DocumentCards(dashboardDocuments)
+                                    Spacer(Modifier.height(14.dp))
+                                    SectionHeading("Inne dokumenty", "Dokumenty przeniesione do osobnego kafelka")
+                                    DocumentCards(otherDocuments)
                                     Spacer(Modifier.height(18.dp))
                                     SectionHeading("Usługi", "Szybki dostęp do wybranych funkcji")
                                     Text("Wszystkie usługi", color = Blue, fontWeight = FontWeight.Bold,
@@ -1432,6 +1498,8 @@ private fun ServiceCard(item: ServiceItem, isFavorite: Boolean, onFavorite: () -
 
 @Composable
 private fun SettingsMenuScreen(
+    documentPlacements: Map<String, String>,
+    onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit,
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
@@ -1459,6 +1527,38 @@ private fun SettingsMenuScreen(
                 Text("Edycja tylko w Ustawieniach", color = Navy, fontWeight = FontWeight.Bold)
                 Text("Portfel dokumentów i jego szczegóły są widokami do odczytu. Formularze edycji można otworzyć wyłącznie z tego menu.",
                     color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Text("Widoczność dokumentów na ekranie głównym", color = Navy, fontWeight = FontWeight.Bold)
+        Text("Wybierz, gdzie ma być widoczny każdy dokument. Ustawienie zmienia wyłącznie rozmieszczenie kafelków — nie usuwa danych ani dokumentów.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                documentDisplayOptions.forEach { (id, title, _) ->
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf("dashboard" to "Dokumenty", "other" to "Inne dokumenty", "hidden" to "Ukryj").forEach { (value, label) ->
+                                Row(
+                                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
+                                        .clickable {
+                                            onDocumentPlacementsChange(documentPlacements + (id to value))
+                                        }.padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = documentPlacements[id] == value,
+                                        onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) }
+                                    )
+                                    Text(label, color = Ink, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         Text("Kopia danych vCard", color = Navy, fontWeight = FontWeight.Bold)
