@@ -18,6 +18,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,11 +27,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -248,7 +253,15 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     AssetChoice("Flaga",assets.filter{it.orgId==orgId&&it.category=="Flaga"},flagId){flagId=it}
                     AssetChoice("Herb / godło",assets.filter{it.orgId==orgId&&(it.category=="Herb"||it.category=="Godło")},emblemId){emblemId=it}
                     AssetChoice("Hologram / zabezpieczenie",assets.filter{it.orgId==orgId&&(it.category=="Hologram / zabezpieczenie"||it.category=="Znak wodny")},securityId){securityId=it}
-                    Card { Column(Modifier.padding(12.dp)){Text("Podgląd",fontWeight=FontWeight.Bold);Text(orgs.firstOrNull{it.id==orgId}?.name ?: "Podmiot");Text(title,style=MaterialTheme.typography.titleLarge);Text("Nr "+number);Text(recipient);Text(body);Text(role+" "+signer);Text("Znak wodny: "+watermark)} }
+                    DocumentPdfPreview(
+                        context=c, title=title, number=number, recipient=recipient, body=body,
+                        signer=signer, role=role, watermark=watermark,
+                        org=orgs.firstOrNull{it.id==orgId},
+                        logo=assets.firstOrNull{it.id==logoId}, seal=assets.firstOrNull{it.id==sealId},
+                        signature=assets.firstOrNull{it.id==signatureId}, background=assets.firstOrNull{it.id==backgroundId},
+                        flag=assets.firstOrNull{it.id==flagId}, emblem=assets.firstOrNull{it.id==emblemId},
+                        security=assets.firstOrNull{it.id==securityId}, group=documentGroup, layout=layout
+                    )
                     OutlinedButton(onClick={
                         runCatching {
                             val prefs=c.getSharedPreferences("owd_document_templates",0)
@@ -452,6 +465,52 @@ private fun DocumentLayoutCanvas(
 }
 @Composable private fun AssetChoice(label:String,items:List<BrandAsset>,selected:String,onPick:(String)->Unit){
     SimpleChoice(label,items.firstOrNull{it.id==selected}?.name ?: "Brak",listOf("Brak")+items.map{it.name}){name->onPick(items.firstOrNull{it.name==name}?.id ?: "")}
+}
+
+
+@Composable
+private fun DocumentPdfPreview(
+    context: Context, title: String, number: String, recipient: String, body: String,
+    signer: String, role: String, watermark: String, org: Org?, logo: BrandAsset?,
+    seal: BrandAsset?, signature: BrandAsset?, background: BrandAsset?, flag: BrandAsset?,
+    emblem: BrandAsset?, security: BrandAsset?, group: String, layout: DocumentLayout
+) {
+    val bitmap by produceState<android.graphics.Bitmap?>(null, title, number, recipient, body, signer, role, watermark, org, logo, seal, signature, background, flag, emblem, security, group, layout) {
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                val bytes = renderPdf(context, title, number, recipient, body, signer, role, watermark,
+                    org, logo, seal, signature, background, flag, emblem, security, group, layout)
+                val file = File.createTempFile("owd-preview-", ".pdf", context.cacheDir)
+                try {
+                    file.writeBytes(bytes)
+                    ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
+                        PdfRenderer(descriptor).use { renderer ->
+                            if (renderer.pageCount == 0) return@use null
+                            renderer.openPage(0).use { page ->
+                                val width = 900
+                                val height = (width.toFloat() * page.height / page.width).toInt()
+                                android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888).also {
+                                    page.render(it, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                }
+                            }
+                        }
+                    }
+                } finally { file.delete() }
+            }.getOrNull()
+        }
+    }
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Podgląd dokumentu — render eksportowanego PDF", fontWeight = FontWeight.Bold)
+            Text("Podgląd jest generowany z tego samego pliku PDF co eksport, dlatego odwzorowuje rzeczywisty układ strony.", style = MaterialTheme.typography.bodySmall)
+            if (bitmap != null) {
+                Image(bitmap!!.asImageBitmap(), contentDescription = "Podgląd pierwszej strony dokumentu PDF",
+                    modifier = Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
+            } else {
+                Text("Nie udało się wyrenderować podglądu PDF.", color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
 }
 
 private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?,group:String,layout:DocumentLayout=DocumentLayout()):ByteArray {
