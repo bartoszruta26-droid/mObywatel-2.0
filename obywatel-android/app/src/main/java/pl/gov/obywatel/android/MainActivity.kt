@@ -145,6 +145,14 @@ private val services = listOf(
     ServiceItem("Polak za granicą", "Informacje konsularne", R.drawable.mob_abroad, category = "Transport"),
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health, category = "Zdrowie"),
+    ServiceItem("eKarta Szczepień", "Prywatna książeczka szczepień i historia dawek", fallbackIcon = Icons.Filled.HealthAndSafety, category = "Zdrowie"),
+    ServiceItem("Dane dzieci", "Rodzinny rejestr danych i dokumentacji dzieci", fallbackIcon = Icons.Filled.FamilyRestroom, category = "Rodzina"),
+    ServiceItem("Formularze dokumentów", "Akty i dokumenty cywilne — ewidencja i załączniki", fallbackIcon = Icons.Filled.Description, category = "Dokumenty"),
+    ServiceItem("Dokumenty Rodowe", "Księgi, akty, rejestry i dokumenty Rodu", fallbackIcon = Icons.Filled.Fingerprint, category = "Rodzina"),
+    ServiceItem("Dokumenty rejestru podmiotów", "Dokumenty firmowe i organizacyjne", fallbackIcon = Icons.Filled.AccountBalance, category = "Rejestry"),
+    ServiceItem("Dokumenty Kościelne", "Dokumenty kościelne, liturgiczne i organizacyjne", fallbackIcon = Icons.Filled.Church, category = "Kościół i wspólnoty"),
+    ServiceItem("Zasoby identyfikacji dokumentów", "Logo, godła, flagi, pieczęcie i tła dokumentów", fallbackIcon = Icons.Filled.Palette, category = "Dokumenty"),
+    ServiceItem("Dokumenty PDF i podpisy elektroniczne", "Import, przechowywanie i podgląd dokumentów PDF", fallbackIcon = Icons.Filled.Draw, category = "Dokumenty"),
     ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport, category = "Podróże"),
     ServiceItem("Mandaty", "Ewidencja i informacje", R.drawable.mob_penalties, category = "Kierowca i pojazdy"),
     ServiceItem("Sprawdź PESEL", "Informacje o numerze PESEL", R.drawable.mob_pesel_check, category = "Bezpieczeństwo"),
@@ -280,6 +288,7 @@ private fun HomeScreen() {
     var showDocumentsEditor by remember { mutableStateOf(false) }
     var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
+    var showDocumentVisibilitySettings by remember { mutableStateOf(false) }
     var showRegistryEditor by remember { mutableStateOf(false) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
@@ -298,6 +307,7 @@ private fun HomeScreen() {
             showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
+            showDocumentVisibilitySettings -> { showDocumentVisibilitySettings = false; showSettingsMenu = true }
             showSettingsMenu -> showSettingsMenu = false
             selectedDocumentId != null -> selectedDocumentId = null
             showDemoDocuments -> showDemoDocuments = false
@@ -310,7 +320,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showDocumentsEditor || showSettingsMenu || showRegistryEditor || selectedDocumentId != null ||
+        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showRegistryEditor || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -339,6 +349,14 @@ private fun HomeScreen() {
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
+                    showDocumentVisibilitySettings -> DocumentVisibilitySettingsScreen(
+                        documentPlacements = documentPlacements,
+                        onDocumentPlacementsChange = { updated ->
+                            saveDocumentPlacements(context, updated)
+                            documentPlacements = updated
+                        },
+                        onBack = { showDocumentVisibilitySettings = false; showSettingsMenu = true }
+                    )
                     showSettingsMenu -> SettingsMenuScreen(
                         documentPlacements = documentPlacements,
                         onDocumentPlacementsChange = { updated ->
@@ -346,6 +364,7 @@ private fun HomeScreen() {
                             documentPlacements = updated
                         },
                         onBack = { showSettingsMenu = false },
+                        onManageDocumentVisibility = { showSettingsMenu = false; showDocumentVisibilitySettings = true },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
@@ -380,6 +399,14 @@ private fun HomeScreen() {
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
+                    activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null })
+                    activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
+                    activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null })
+                    activeService == "Dokumenty Rodowe" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { activeService = null })
+                    activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { activeService = null })
+                    activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null })
+                    activeService == "Zasoby identyfikacji dokumentów" -> DocumentBrandAssetsScreen(onBack = { activeService = null })
+                    activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null })
                     activeService != null -> ServiceDetailScreen(
                         title = activeService!!,
                         onBack = { activeService = null },
@@ -1502,10 +1529,56 @@ private fun ServiceCard(item: ServiceItem, isFavorite: Boolean, onFavorite: () -
 
 
 @Composable
+private fun DocumentVisibilitySettingsScreen(
+    documentPlacements: Map<String, String>,
+    onDocumentPlacementsChange: (Map<String, String>) -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("‹  Powrót do ustawień", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Widoczność dokumentów", color = Navy, style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Dla każdego dokumentu wybierz miejsce wyświetlania. Ukrycie dokumentu nie usuwa jego danych ani załączników.",
+            color = Muted, style = MaterialTheme.typography.bodyMedium)
+        documentDisplayOptions.forEach { (id, title, iconRes) ->
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Image(painter = painterResource(iconRes), contentDescription = null, modifier = Modifier.size(42.dp))
+                        Text(title, color = Navy, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    }
+                    listOf("dashboard" to "Dokumenty", "other" to "Inne dokumenty", "hidden" to "Ukryj").forEach { (value, label) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
+                                .background(if (documentPlacements[id] == value) BlueLight else Color.Transparent)
+                                .clickable { onDocumentPlacementsChange(documentPlacements + (id to value)) }
+                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = documentPlacements[id] == value,
+                                onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) }
+                            )
+                            Text(label, color = Ink, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SettingsMenuScreen(
     documentPlacements: Map<String, String>,
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit,
+    onManageDocumentVisibility: () -> Unit,
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
     onEditRegistry: () -> Unit,
@@ -1535,38 +1608,12 @@ private fun SettingsMenuScreen(
                     color = Muted, style = MaterialTheme.typography.bodySmall)
             }
         }
-        Text("Widoczność dokumentów na ekranie głównym", color = Navy, fontWeight = FontWeight.Bold)
-        Text("Wybierz, gdzie ma być widoczny każdy dokument. Ustawienie zmienia wyłącznie rozmieszczenie kafelków — nie usuwa danych ani dokumentów.", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                documentDisplayOptions.forEach { (id, title, _) ->
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            listOf("dashboard" to "Dokumenty", "other" to "Inne dokumenty", "hidden" to "Ukryj").forEach { (value, label) ->
-                                Row(
-                                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp))
-                                        .clickable {
-                                            onDocumentPlacementsChange(documentPlacements + (id to value))
-                                        }.padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = documentPlacements[id] == value,
-                                        onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) }
-                                    )
-                                    Text(label, color = Ink, style = MaterialTheme.typography.labelSmall)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        ProfileActionCard(
+            "Widoczność dokumentów",
+            "Wybierz: Dokumenty, Inne dokumenty albo Ukryj",
+            Icons.Filled.Visibility,
+            onManageDocumentVisibility
+        )
         Text("Kopia danych vCard", color = Navy, fontWeight = FontWeight.Bold)
         Text("Eksport obejmuje pola profilu i ewidencji, w tym załączone dane tekstowe. Plik może zawierać dane wrażliwe — przechowuj go bezpiecznie.", color = Muted, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Eksportuj wszystkie dane", "Zapisz jedno archiwum .vcf", Icons.Filled.Description, onExportAll)
