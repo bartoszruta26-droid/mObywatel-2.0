@@ -10,6 +10,12 @@ SPDX-FileCopyrightText = "2025 Centralny Ośrodek Informatyki"
 SPDX-License-Identifier = "LicenseRef-COI-MIT-PL"
 
 [[annotations]]
+path = ["obywatel-android/**"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 bartoszruta26-droid"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
 path = ["rmackiewicz-mit.jpg"]
 precedence = "closest"
 SPDX-FileCopyrightText = "2025 Damian Fajfer <damian@fajfer.org>"
