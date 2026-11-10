@@ -91,9 +91,9 @@ class MainActivityNavigationTest {
     fun settingsExposeIdentityPassportAndLegitimacyDataEntry() {
         selectBottomTab("Więcej")
         composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
-        composeRule.onNodeWithText("Dane osobowe", substring = false).assertIsDisplayed()
-        composeRule.onNodeWithText("Dowód tożsamości", substring = false).assertIsDisplayed()
-        composeRule.onNodeWithText("Dane paszportowe", substring = false).assertIsDisplayed()
+        composeRule.onNodeWithText("Dane osobowe", substring = false).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości", substring = false).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dane paszportowe", substring = false).performScrollTo().assertIsDisplayed()
         composeRule.onAllNodesWithText("Legitymacja ucznia/studenta")[0].performScrollTo().assertIsDisplayed()
     }
 
