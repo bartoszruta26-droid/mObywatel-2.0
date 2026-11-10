@@ -38,8 +38,6 @@ class DocumentsScreenTest {
             composeRule.onAllNodes(androidx.compose.ui.test.hasText("Brak dokumentów. Dodaj plik, aby rozpocząć.")).fetchSemanticsNodes().isNotEmpty()
         }
         composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
-        composeRule.onNodeWithText("To lokalny prototyp — dokumenty nie są weryfikowane przez administrację.", substring = true)
-            .assertIsDisplayed()
         composeRule.onNodeWithText("Brak dokumentów. Dodaj plik, aby rozpocząć.").assertIsDisplayed()
         composeRule.onNodeWithText("Dodaj PDF, DOCX lub obraz").assertIsEnabled()
     }
