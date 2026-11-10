@@ -127,6 +127,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
             val accountFields = listOf("Nazwa własna rachunku", "Bank / instytucja prowadząca", "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT", "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku", "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi")
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            DocumentIdentityTemplate(doc.title, local.mapKeys { (key, _) -> if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key })
             Text(doc.note, style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
             if (isBankRegister) {
                 Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Każdy rachunek jest osobnym wpisem, a numer IBAN i dane właściciela są przechowywane w zaszyfrowanym archiwum lokalnym.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1769AA))
