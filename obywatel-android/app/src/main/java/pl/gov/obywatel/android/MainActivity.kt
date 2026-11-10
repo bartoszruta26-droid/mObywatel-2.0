@@ -280,6 +280,7 @@ private fun HomeScreen() {
     var showDocumentsEditor by remember { mutableStateOf(false) }
     var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
+    var showRegistryEditor by remember { mutableStateOf(false) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
@@ -296,6 +297,7 @@ private fun HomeScreen() {
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
+            showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
             showSettingsMenu -> showSettingsMenu = false
             selectedDocumentId != null -> selectedDocumentId = null
             showDemoDocuments -> showDemoDocuments = false
@@ -308,7 +310,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showDocumentsEditor || showSettingsMenu || selectedDocumentId != null ||
+        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showDocumentsEditor || showSettingsMenu || showRegistryEditor || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -336,6 +338,7 @@ private fun HomeScreen() {
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
+                    showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
                     showSettingsMenu -> SettingsMenuScreen(
                         documentPlacements = documentPlacements,
                         onDocumentPlacementsChange = { updated ->
@@ -345,6 +348,7 @@ private fun HomeScreen() {
                         onBack = { showSettingsMenu = false },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
+                        onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
                         onExportAll = {
                             exportSnapshot = DemoIdentityStore.load(context)
                             runCatching {
@@ -574,6 +578,7 @@ private fun HomeScreen() {
                     selectedDocumentId = null
                     showDocumentsEditor = false
                     showSettingsMenu = false
+                    showRegistryEditor = false
                     showDisabilitySettings = false
                     showCertificates = false
                 }
@@ -1503,6 +1508,7 @@ private fun SettingsMenuScreen(
     onBack: () -> Unit,
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
+    onEditRegistry: () -> Unit,
     onExportAll: () -> Unit,
     onImportAll: () -> Unit,
     importStatus: String
@@ -1567,6 +1573,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
         if (importStatus.isNotBlank()) Text(importStatus, color = Blue, style = MaterialTheme.typography.bodySmall)
         Text("Dane profilu i dokumenty", color = Navy, fontWeight = FontWeight.Bold)
+        ProfileActionCard("Odpis z rejestru podmiotów", "Wprowadzanie i aktualizacja danych podmiotów", Icons.Filled.AccountBalance, onEditRegistry)
         ProfileActionCard("Dane osobowe", "Zdjęcie profilowe, dane osoby i rodziców",
             Icons.Filled.AccountCircle, { onEditDocuments("profile") })
         ProfileActionCard("Dowód tożsamości", "Prywatna ewidencja danych dokumentu tożsamości",
@@ -1991,8 +1998,8 @@ private fun DocumentDetailsScreen(
         OwdDocumentArtworkCard(
             imageRes = when (documentId.toIntOrNull()) {
                 0 -> R.drawable.documents_document_wallet_banner
-                1 -> R.drawable.documents_identity_card
-                2 -> R.drawable.documents_passport
+                1 -> R.drawable.karta_rodowa_jasna
+                2 -> R.drawable.paszport_rodowy_jasny
                 3 -> R.drawable.documents_family_record
                 4 -> R.drawable.documents_deputy_legitimacy
                 5 -> R.drawable.documents_course_legitimacy
@@ -2794,7 +2801,7 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
 
 
 @Composable
-private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
+private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = false) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
@@ -2917,10 +2924,10 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Odpis z rejestru podmiotów", color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Ewidencja danych identyfikacyjnych i rejestrowych podmiotów. Wybierz rodzaj podmiotu i przepisz dane z właściwego dokumentu lub rejestru.",
+        Text(if (editable) "Wprowadzanie i aktualizacja danych podmiotów. Wybierz rodzaj podmiotu i uzupełnij dane na podstawie właściwego dokumentu lub rejestru." else "Podgląd zapisanych danych identyfikacyjnych i rejestrowych podmiotów. Wybierz kafelek, aby wyświetlić szczegóły.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
         Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
-            Text("W tym module możesz ująć dane podmiotu oraz własne oświadczenie dotyczące ich zgodności ze stanem faktycznym. Wskaż podstawę i datę oświadczenia.",
+            Text(if (editable) "Wpisy są przechowywane lokalnie jako dane wprowadzone przez użytkownika. Podaj źródło i datę sprawdzenia." else "To widok informacyjny danych zapisanych w ustawieniach. Dane wymagają weryfikacji w odpowiednim rejestrze; aplikacja nie wydaje urzędowego odpisu.",
                 Modifier.padding(14.dp), color = Navy, style = MaterialTheme.typography.bodySmall)
         }
         if (selectedEntity == null) {
@@ -2960,22 +2967,38 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
             Text(sections.first { it.first == entityKey }.second, color = Navy,
                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             fieldSets[entityKey].orEmpty().forEach { (key, label, placeholder) ->
-                DemoDataField(key, label, fields, placeholder)
+                if (editable) DemoDataField(key, label, fields, placeholder)
+                else RegistryReadOnlyField(label, fields[key])
             }
             Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
             Text("Źródło i kontrola aktualności", color = Navy, fontWeight = FontWeight.Bold)
-            DemoDataField("registry_${entityKey}_source", "Źródło danych / adres rejestru", fields, "Adres strony lub nazwa dokumentu")
-            DemoDataField("registry_${entityKey}_checked", "Data sprawdzenia", fields, "DD-MM-RRRR")
-            DemoDataField("registry_${entityKey}_documentDate", "Data sporządzenia odpisu / dokumentu", fields, "DD-MM-RRRR")
-            DemoDataField("registry_${entityKey}_notes", "Uwagi", fields, "Informacje uzupełniające")
-            Button(onClick = {
-                runCatching { DemoIdentityStore.save(context, fields.toMap()) }
-                    .onSuccess { status = "Zapisano i zabezpieczono dane." }
-                    .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
-            }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
-            if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E),
-                style = MaterialTheme.typography.bodySmall)
+            if (editable) {
+                DemoDataField("registry_${entityKey}_source", "Źródło danych / adres rejestru", fields, "Adres strony lub nazwa dokumentu")
+                DemoDataField("registry_${entityKey}_checked", "Data sprawdzenia", fields, "DD-MM-RRRR")
+                DemoDataField("registry_${entityKey}_documentDate", "Data sporządzenia odpisu / dokumentu", fields, "DD-MM-RRRR")
+                DemoDataField("registry_${entityKey}_notes", "Uwagi", fields, "Informacje uzupełniające")
+                Button(onClick = {
+                    runCatching { DemoIdentityStore.save(context, fields.toMap()) }
+                        .onSuccess { status = "Zapisano i zabezpieczono dane." }
+                        .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
+                }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
+                if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E), style = MaterialTheme.typography.bodySmall)
+            } else {
+                RegistryReadOnlyField("Źródło danych / adres rejestru", fields["registry_${entityKey}_source"])
+                RegistryReadOnlyField("Data sprawdzenia", fields["registry_${entityKey}_checked"])
+                RegistryReadOnlyField("Data sporządzenia odpisu / dokumentu", fields["registry_${entityKey}_documentDate"])
+                RegistryReadOnlyField("Uwagi", fields["registry_${entityKey}_notes"])
+            }
         }
+    }
+}
+
+@Composable
+private fun RegistryReadOnlyField(label: String, value: String?) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
+        Text(value?.takeIf { it.isNotBlank() } ?: "Brak zapisanego wpisu", color = if (value.isNullOrBlank()) Muted else Navy,
+            fontWeight = if (value.isNullOrBlank()) FontWeight.Normal else FontWeight.SemiBold)
     }
 }
 
