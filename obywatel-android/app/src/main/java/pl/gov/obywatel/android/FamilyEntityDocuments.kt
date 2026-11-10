@@ -106,17 +106,18 @@ private object FamilyEntityDocumentStore {
 }
 
 @Composable
-internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit) {
+internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val catalog = if (entityMode) entityDocs else rodDocs
+    val bankDocuments = (rodDocs + entityDocs).filter { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
+    val catalog = if (bankAccountsOnly) bankDocuments else (if (entityMode) entityDocs else rodDocs).filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
     var records by remember { mutableStateOf(FamilyEntityDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
     var preview by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color = Color(0xFF1769AA), modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text(if (entityMode) "Dokumenty rejestru podmiotów" else "Dokumenty Rodowe", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Katalog formularzy z edycją danych, zapisem lokalnym i podglądem dokumentu. Dane są przechowywane lokalnie w postaci zaszyfrowanej.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
+        Text(if (bankAccountsOnly) "Konta bankowe" else if (entityMode) "Dokumenty rejestru podmiotów" else "Dokumenty Rodowe", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(if (bankAccountsOnly) "Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej." else "Katalog formularzy z edycją danych, zapisem lokalnym i podglądem dokumentu. Dane są przechowywane lokalnie w postaci zaszyfrowanej.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
         if (selected == null) {
             catalog.groupBy { it.section }.forEach { (section, docs) ->
                 Text(section, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF173B58))
