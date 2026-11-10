@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -22,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -109,14 +111,15 @@ internal fun DocumentIdentityTemplate(
     validity: String = values.entries.firstOrNull { it.key.contains("status", true) || it.key.contains("waż", true) }?.value.orEmpty()
 ) {
     val context = LocalContext.current
-    val photo = remember(owner) { DocumentBrandStore.image(context, owner, "Fotografia") }
-    val flag = remember(owner) { DocumentBrandStore.image(context, owner, "Flaga") }
-    val emblem = remember(owner) {
-        DocumentBrandStore.image(context, owner, "Godło")
-            ?: DocumentBrandStore.image(context, owner, "Herb")
-            ?: DocumentBrandStore.image(context, owner, "Logo")
+    val effectiveOwner = owner.ifBlank { values.entries.firstOrNull { it.key.contains("wystawc", true) || it.key.contains("nazwa", true) || it.key.contains("podmiot", true) || it.key.contains("kościół", true) || it.key.contains("rodu", true) }?.value.orEmpty() }
+    val photo = remember(effectiveOwner) { DocumentBrandStore.image(context, effectiveOwner, "Fotografia") }
+    val flag = remember(effectiveOwner) { DocumentBrandStore.image(context, effectiveOwner, "Flaga") }
+    val emblem = remember(effectiveOwner) {
+        DocumentBrandStore.image(context, effectiveOwner, "Godło")
+            ?: DocumentBrandStore.image(context, effectiveOwner, "Herb")
+            ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
     }
-    val background = remember(owner) { DocumentBrandStore.image(context, owner, "Tło dokumentu") }
+    val background = remember(effectiveOwner) { DocumentBrandStore.image(context, effectiveOwner, "Tło dokumentu") }
     val now = remember { SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date()) }
     val name = values.entries.firstOrNull { it.key.contains("imię", true) || it.key.contains("nazw", true) || it.key.contains("posiadacz", true) || it.key.contains("osoba", true) }?.value.orEmpty()
     val number = values.entries.firstOrNull { it.key.contains("numer", true) || it.key.contains("znak", true) || it.key.contains("nr ", true) }?.value.orEmpty()
