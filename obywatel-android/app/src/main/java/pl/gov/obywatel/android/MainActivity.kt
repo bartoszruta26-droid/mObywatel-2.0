@@ -547,6 +547,7 @@ private fun HomeScreen() {
             showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
+            settingsDocumentEditor != null -> { settingsDocumentEditor = null; showSettingsMenu = true }
             showDocumentVisibilitySettings -> { showDocumentVisibilitySettings = false; showSettingsMenu = true }
             showSettingsMenu -> showSettingsMenu = false
             selectedDocumentId != null -> selectedDocumentId = null
@@ -560,7 +561,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showRegistryEditor || selectedDocumentId != null ||
+        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
