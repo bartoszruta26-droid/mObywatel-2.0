@@ -17,6 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedButton
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
+import com.google.zxing.MultiFormatWriter
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.journeyapps.barcodescanner.ScanContract
@@ -122,6 +123,34 @@ import pl.gov.obywatel.android.ui.theme.White
 import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
 import pl.gov.obywatel.android.ui.services.PublicServicesScreen
+
+@Composable
+private fun LoyaltyGeneratedCodes(barcodeValue: String, qrValue: String) {
+    val barcode = remember(barcodeValue) { generateLoyaltyCodeBitmap(barcodeValue, BarcodeFormat.CODE_128) }
+    val qr = remember(qrValue) { generateLoyaltyCodeBitmap(qrValue, BarcodeFormat.QR_CODE) }
+    if (barcode != null || qr != null) {
+        Text("Podgląd kodów", color = Navy, fontWeight = FontWeight.SemiBold)
+        if (barcode != null) Image(barcode.asImageBitmap(), contentDescription = "Kod kreskowy karty lojalnościowej",
+            modifier = Modifier.fillMaxWidth().height(76.dp), contentScale = ContentScale.Fit)
+        if (qr != null) Image(qr.asImageBitmap(), contentDescription = "Kod QR karty lojalnościowej",
+            modifier = Modifier.size(170.dp), contentScale = ContentScale.Fit)
+    }
+}
+
+private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bitmap? {
+    if (value.isBlank()) return null
+    return runCatching {
+        val width = if (format == BarcodeFormat.QR_CODE) 480 else 900
+        val height = if (format == BarcodeFormat.QR_CODE) 480 else 220
+        val matrix = MultiFormatWriter().encode(value, format, width, height,
+            mapOf(EncodeHintType.MARGIN to 2, EncodeHintType.CHARACTER_SET to "UTF-8"))
+        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+            for (y in 0 until height) for (x in 0 until width) {
+                bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+            }
+        }
+    }.getOrNull()
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -1655,6 +1684,8 @@ private fun SettingsMenuScreen(
             Icons.Filled.Badge, { onEditDocuments("student") })
         ProfileActionCard("Orzeczenia i zaświadczenia", "Ewidencja danych o rozstrzygnięciach",
             Icons.Filled.HealthAndSafety, onEditDisability)
+        ProfileActionCard("Karty lojalnościowe sklepów", "Ewidencja do 10 kart, numerów i kodów kreskowych oraz QR",
+            Icons.Filled.CreditCard, { onEditDocuments("loyalty_cards") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
@@ -1814,7 +1845,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
         Triple("Legitymacja poselska — ewidencja", Icons.Filled.AccountBalance, listOf("mpCardNumber", "mpTerm")),
         Triple("Legitymacja ucznia/studenta", Icons.Filled.Description, listOf("trainingCardNumber", "trainingInstitution")),
         Triple("Legitymacja ucznia/studenta — ewidencja", Icons.Filled.Badge, listOf("studentCardNumber", "studentUniversity")),
-        Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName"))
+        Triple("Orzeczenia i zaświadczenia", Icons.Filled.HealthAndSafety, listOf("disabilityDecisionNumber", "disabilityAuthorityName")),
+        Triple("Karty lojalnościowe sklepów", Icons.Filled.CreditCard, (1..10).flatMap { n -> listOf("loyalty${n}Store", "loyalty${n}Number", "loyalty${n}Barcode", "loyalty${n}Qr") })
     )
     val populatedCount = groups.count { (_, _, keys) -> keys.any { !fields[it].isNullOrBlank() } }
     Column(
@@ -1897,7 +1929,8 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onAddDocuments: () -> Unit
                             4 -> R.drawable.documents_deputy_legitimacy
                             5 -> R.drawable.art_02_legitymacja_zawodowa
                             6 -> R.drawable.documents_student_legitimacy
-                            else -> R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci
+                            7 -> R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci
+                        else -> R.drawable.documents_course_legitimacy
                         }),
                         contentDescription = "Ilustracja: $title",
                         modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)),
@@ -2033,7 +2066,13 @@ private fun DocumentDetailsScreen(
             "Numer dokumentu / sprawy" to "disabilityDecisionNumber", "Wystawca" to "disabilityAuthorityName",
             "Data dokumentu" to "disabilityDecisionDate", "Stopień / kategoria" to "disabilityDegree",
             "Okres obowiązywania" to "disabilityValidity", "Rodzaj rozstrzygnięcia" to "disabilityDecisionType", "Osoba podpisująca / wystawca" to "disabilityIssuerName", "Powiat / miasto" to "disabilityCounty", "Podstawa prawna" to "disabilityLegalBasis", "Przepis określający skutki" to "disabilityLegalProvision", "Zakres uznania / równoważności" to "disabilityEquivalentEffect", "Fundacja / podmiot prowadzący" to "disabilityFoundationName", "Podstawa statutowa" to "disabilityFoundationStatute", "Kwalifikacje osoby wystawiającej" to "disabilityMedicalQualification", "Ocena medyczna" to "disabilityMedicalAssessment", "Skład zespołu" to "disabilityPanelMembers", "Przewodniczący zespołu" to "disabilityChairperson", "Osoba zatwierdzająca" to "disabilitySignature", "Tryb odwołania" to "disabilityAppealInfo", "Data wniosku" to "disabilityApplicationDate", "Numer sprawy" to "disabilityCaseNumber", "Data doręczenia" to "disabilityDeliveryDate", "Wynik odwołania" to "disabilityAppealOutcome", "Duplikat / zmiana dokumentu" to "disabilityDuplicateInfo", "Dokument źródłowy" to "disabilitySourceAttachment"
-        ))
+        )),
+        Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..10).flatMap { n ->
+            val p = "loyalty$n"
+            listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty" to "${p}Number",
+                "Kod cyfrowy" to "${p}DigitalCode", "Treść kodu kreskowego" to "${p}Barcode",
+                "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status")
+        })
     )
     val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
     val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
@@ -2174,6 +2213,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         "training" -> "Legitymacja ucznia/studenta — ewidencja"
         "student" -> "Legitymacja ucznia/studenta — ewidencja"
         "disability" -> "Orzeczenia i zaświadczenia — ewidencja"
+        "loyalty_cards" -> "Karty lojalnościowe — ewidencja"
         "passport" -> "Dane paszportowe — ewidencja"
         else -> "Wszystkie dane i dokumenty"
     }
@@ -2435,6 +2475,31 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "studentExtra", "Ten formularz służy wyłącznie do ewidencji danych. Nie nadaje statusu studenta, nie potwierdza wpisu na listę studentów i nie zastępuje dokumentu ani certyfikatu wydanego przez uczelnię.")
             }
         }
+        }
+        if (categoryId == "all" || categoryId == "loyalty_cards") {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Karty lojalnościowe sklepów", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Zapisz maksymalnie dziesięć kart. Wpisz dane identyfikacyjne oraz treść kodu kreskowego lub QR. Kody są generowane lokalnie z podanej treści; nie zastępują aplikacji ani systemu sklepu.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
+                    (1..10).forEach { number ->
+                        val prefix = "loyalty$number"
+                        Text("Karta $number", color = Navy, fontWeight = FontWeight.SemiBold)
+                        DemoDataField("${prefix}Store", "Sklep / marka", fields)
+                        DemoDataField("${prefix}Program", "Nazwa programu lojalnościowego", fields)
+                        DemoDataField("${prefix}Number", "Numer karty / identyfikator", fields)
+                        DemoDataField("${prefix}DigitalCode", "Kod cyfrowy", fields)
+                        DemoDataField("${prefix}Barcode", "Treść kodu kreskowego", fields)
+                        DemoDataField("${prefix}Qr", "Treść kodu QR", fields)
+                        DemoDataField("${prefix}Status", "Status karty", fields, "aktywna / nieaktywna")
+                        LoyaltyGeneratedCodes(fields["${prefix}Barcode"].orEmpty(), fields["${prefix}Qr"].orEmpty())
+                    }
+                    AdditionalInformationSection("Informacje dodatkowe — karty lojalnościowe", fields, "loyaltyExtra",
+                        "Wskaż źródło danych lub datę weryfikacji. Kody mogą dawać dostęp do konta lojalnościowego — chroń je jak dane dostępowe.")
+                }
+            }
         }
         if (categoryId == "all" || categoryId == "disability") {
         Card(
