@@ -307,6 +307,14 @@ private fun HomeScreen() {
                         onBack = { showSettingsMenu = false },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
+                        onOpenCertificates = { showSettingsMenu = false; showCertificates = true },
+                        onOpenSignedPdfs = { showSettingsMenu = false; activeService = "Dokumenty PDF i podpisy elektroniczne" },
+                        onOpenProfessionalQualifications = { showSettingsMenu = false; activeService = "Prawo wykonywania zawodu i kwalifikacje" },
+                        onOpenOfficialDocuments = { showSettingsMenu = false; activeService = "Formularze dokumentów" },
+                        onOpenFamilyDocuments = { showSettingsMenu = false; activeService = "Dokumenty Rodowe" },
+                        onOpenEntityDocuments = { showSettingsMenu = false; activeService = "Dokumenty rejestru podmiotów" },
+                        onOpenChurchDocuments = { showSettingsMenu = false; activeService = "Dokumenty Kościelne" },
+                        onOpenDocumentBrandAssets = { showSettingsMenu = false; activeService = "Zasoby identyfikacji dokumentów" },
                         onExportAll = {
                             exportSnapshot = DemoIdentityStore.load(context)
                             runCatching {
@@ -1337,14 +1345,6 @@ private fun MoreMenuScreen(
         Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Informacje, bezpieczeństwo i ustawienia", color = Muted, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Historia działań", "Chronologiczny rejestr czynności wykonywanych w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
-        ProfileActionCard("Dokumenty PDF i podpisy elektroniczne", "Import, podgląd PDF i oznaczenia podpisu ePUAP lub kwalifikowanego", Icons.Filled.Description, onOpenSignedPdfs)
-        ProfileActionCard("Prawo wykonywania zawodu i kwalifikacje", "Numery PWZ/PWZF, dane zawodów oraz archiwum zdjęć i PDF certyfikatów", Icons.Filled.Badge, onOpenProfessionalQualifications)
-        ProfileActionCard("Formularze dokumentów urzędowych i ubezpieczeniowych", "Akty stanu cywilnego, KDR, EKUZ, OC, KRK, podróże służbowe i kwalifikacje UE", Icons.Filled.Description, onOpenOfficialDocuments)
-        ProfileActionCard("Dokumenty Rodowe", "Akty, księgi, ustrój Rodu, władze, majątek oraz dokumenty społeczne i religijne", Icons.Filled.FamilyRestroom, onOpenFamilyDocuments)
-        ProfileActionCard("Dokumenty rejestru podmiotów", "Dokumenty założycielskie, rejestrowe, organów, władz i właścicieli", Icons.Filled.AccountBalance, onOpenEntityDocuments)
-        ProfileActionCard("Dokumenty Kościelne", "Posługa, Kościół jako osoba prawna, misje PDM/PUM oraz współpraca ekumeniczna", Icons.Filled.AccountBalance, onOpenChurchDocuments)
-        ProfileActionCard("Zasoby identyfikacji dokumentów", "Loga, godła, herby, flagi, pieczęcie, wzory podpisów, tła i znaki wodne dla prowadzonych podmiotów", Icons.Filled.Description, onOpenDocumentBrandAssets)
-        ProfileActionCard("Certyfikaty i zaświadczenia", "Rejestr dokumentów, uprawnień i danych wystawcy", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia i komunikaty", "Informacje o statusach, przypomnieniach i ważności dokumentów", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Pomoc i instrukcje", "Obsługa aplikacji, import, eksport i bezpieczeństwo danych", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia i prywatność", "Dane lokalne, preferencje i kontrola informacji", Icons.Filled.Settings, onOpenSettings)
@@ -1568,6 +1568,14 @@ private fun SettingsMenuScreen(
     onBack: () -> Unit,
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
+    onOpenCertificates: () -> Unit,
+    onOpenSignedPdfs: () -> Unit,
+    onOpenProfessionalQualifications: () -> Unit,
+    onOpenOfficialDocuments: () -> Unit,
+    onOpenFamilyDocuments: () -> Unit,
+    onOpenEntityDocuments: () -> Unit,
+    onOpenChurchDocuments: () -> Unit,
+    onOpenDocumentBrandAssets: () -> Unit,
     onExportAll: () -> Unit,
     onImportAll: () -> Unit,
     importStatus: String
@@ -1616,6 +1624,15 @@ private fun SettingsMenuScreen(
             Icons.Filled.Badge, { onEditDocuments("student") })
         ProfileActionCard("Orzeczenia i zaświadczenia", "Ewidencja danych o rozstrzygnięciach",
             Icons.Filled.HealthAndSafety, onEditDisability)
+        Text("Pozostałe dokumenty i ewidencje", color = Navy, fontWeight = FontWeight.Bold)
+        ProfileActionCard("Dokumenty PDF i podpisy elektroniczne", "Import, podgląd PDF i oznaczenia podpisu ePUAP lub kwalifikowanego", Icons.Filled.Description, onOpenSignedPdfs)
+        ProfileActionCard("Prawo wykonywania zawodu i kwalifikacje", "Numery PWZ/PWZF, dane zawodów oraz archiwum zdjęć i PDF certyfikatów", Icons.Filled.Badge, onOpenProfessionalQualifications)
+        ProfileActionCard("Formularze dokumentów urzędowych i ubezpieczeniowych", "Akty stanu cywilnego, KDR, EKUZ, OC, KRK, podróże służbowe i kwalifikacje UE", Icons.Filled.Description, onOpenOfficialDocuments)
+        ProfileActionCard("Dokumenty Rodowe", "Akty, księgi, ustrój Rodu, władze, majątek oraz dokumenty społeczne i religijne", Icons.Filled.FamilyRestroom, onOpenFamilyDocuments)
+        ProfileActionCard("Dokumenty rejestru podmiotów", "Dokumenty założycielskie, rejestrowe, organów, władz i właścicieli", Icons.Filled.AccountBalance, onOpenEntityDocuments)
+        ProfileActionCard("Dokumenty Kościelne", "Posługa, Kościół jako osoba prawna, misje PDM/PUM oraz współpraca ekumeniczna", Icons.Filled.AccountBalance, onOpenChurchDocuments)
+        ProfileActionCard("Zasoby identyfikacji dokumentów", "Loga, godła, herby, flagi, pieczęcie, wzory podpisów, tła i znaki wodne dla prowadzonych podmiotów", Icons.Filled.Description, onOpenDocumentBrandAssets)
+        ProfileActionCard("Certyfikaty i zaświadczenia", "Rejestr dokumentów, uprawnień i danych wystawcy", Icons.Filled.Security, onOpenCertificates)
         Text("Zmiany są zapisywane lokalnie w zaszyfrowanym magazynie. Nie są wysyłane do rejestrów ani podmiotów publicznych.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
     }
