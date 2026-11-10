@@ -402,10 +402,12 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
         "Zawodowe" -> "OSOBA / PODMIOT:"
         else -> "ADRESAT / PRZEDMIOT:"
     }
-    p.color=accent;p.typeface=Typeface.DEFAULT_BOLD;p.textSize=9f
-    canvas.drawText(recipientLabel,margin,titleY+88f,p)
-    p.color=android.graphics.Color.DKGRAY;p.typeface=Typeface.DEFAULT;p.textSize=10f
-    drawLines(canvas,recipient,margin,titleY+108f,595f-margin*2,p)
+    layout.element("recipient")?.takeIf { it.visible }?.let { element ->
+        p.color=accent;p.typeface=Typeface.DEFAULT_BOLD;p.textSize=9f
+        canvas.drawText(recipientLabel,element.x,element.y,p)
+        p.color=android.graphics.Color.DKGRAY;p.typeface=Typeface.DEFAULT;p.textSize=element.fontSize
+        drawLines(canvas,recipient,element.x,element.y+20f,element.width,p)
+    }
     val bodyY=layout.element("body")?.y ?: when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
     p.color=android.graphics.Color.DKGRAY;p.textSize=layout.element("body")?.fontSize ?: 10f
     layout.element("body")?.takeIf { it.visible }?.let { element -> drawLines(canvas,bodyPages[pageNumber],element.x,element.y,element.width,p) }
@@ -429,18 +431,22 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     p.color=android.graphics.Color.DKGRAY;p.textSize=9f
     canvas.drawText("………………………………………………………………………………",margin,referenceY+34f,p)
     // Signature area: specimen is visibly distinguished from a cryptographic signature.
-    val signY=layout.element("signature")?.y ?: 675f
-    p.color=accent;p.strokeWidth=0.8f
-    canvas.drawLine(margin,signY,595f-margin,signY,p)
-    p.color=android.graphics.Color.DKGRAY;p.textSize=9f;p.typeface=Typeface.DEFAULT_BOLD
-    canvas.drawText(role.take(65),margin,signY+20f,p)
-    p.typeface=Typeface.DEFAULT
-    canvas.drawText(signer.take(65),margin,signY+37f,p)
-    canvas.drawLine(margin,signY+66f,margin+175f,signY+66f,p)
-    canvas.drawText("Podpis osoby uprawnionej",margin,signY+79f,p)
-    seal?.let{drawImage(c,canvas,it,390f,signY-6f,82f,82f)}
-    security?.let{drawImage(c,canvas,it,490f,signY-4f,54f,54f)}
-    signature?.let{drawImage(c,canvas,it,margin+12f,signY+39f,130f,28f)}
+    val signatureElement=layout.element("signature")
+    val signY=signatureElement?.y ?: 675f
+    if (signatureElement?.visible != false) {
+        val signX=signatureElement?.x ?: margin
+        p.color=accent;p.strokeWidth=0.8f
+        canvas.drawLine(signX,signY,signX+(signatureElement?.width ?: (595f-margin*2)),signY,p)
+        p.color=android.graphics.Color.DKGRAY;p.textSize=signatureElement?.fontSize ?: 9f;p.typeface=Typeface.DEFAULT_BOLD
+        canvas.drawText(role.take(65),signX,signY+20f,p)
+        p.typeface=Typeface.DEFAULT
+        canvas.drawText(signer.take(65),signX,signY+37f,p)
+        canvas.drawLine(signX,signY+66f,signX+175f,signY+66f,p)
+        canvas.drawText("Podpis osoby uprawnionej",signX,signY+79f,p)
+        seal?.let{drawImage(c,canvas,it,390f,signY-6f,82f,82f)}
+        security?.let{drawImage(c,canvas,it,490f,signY-4f,54f,54f)}
+        signature?.let{drawImage(c,canvas,it,signX+12f,signY+39f,130f,28f)}
+    }
     runCatching {
         val matrix=QRCodeWriter().encode("urn:owd:document:"+number,BarcodeFormat.QR_CODE,72,72)
         val qr=android.graphics.Bitmap.createBitmap(72,72,android.graphics.Bitmap.Config.ARGB_8888)
