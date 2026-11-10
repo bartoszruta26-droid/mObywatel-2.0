@@ -2370,14 +2370,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("trainingCertificateNumber", "Numer zaświadczenia o ukończeniu", fields)
                 DemoDataField("trainingForm", "Forma kształcenia", fields, "stacjonarna / zdalna / hybrydowa")
                 Text("Podgląd legitymacji", color = Navy, fontWeight = FontWeight.Bold)
-                OwdDocumentArtworkCard(
-                    imageRes = R.drawable.documents_course_legitimacy,
-                    title = "Legitymacja uczestnika kursu",
-                    subtitle = fields["trainingInstitution"].orEmpty().ifBlank { "Instytucja szkoleniowa" },
-                    holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane uczestnika" },
-                    details = "Kurs: ${fields["trainingCourseName"].orEmpty().ifBlank { "—" }}",
-                    privateRecord = true
-                )
+                SchoolLegitimacyPreview(fields, photoBase64, student = false)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "trainingExtra", "Legitymacja instytucji szkoleniowej potwierdza status w ewidencji wystawcy w granicach regulaminu i właściwej podstawy działania. Nie jest legitymacją studencką i sama nie nadaje statusu studenta uczelni.")
             }
         }
@@ -2406,6 +2399,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("studentValidity", "Termin ważności / aktualizacji", fields, "DD-MM-RRRR")
                 DemoDataField("studentStatus", "Status studenta", fields, "aktywny / urlop / skreślony / ukończony")
                 DemoDataField("studentIssuer", "Osoba / jednostka wydająca", fields)
+                Text("Podgląd legitymacji", color = Navy, fontWeight = FontWeight.Bold)
+                SchoolLegitimacyPreview(fields, photoBase64, student = true)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "studentExtra", "Ten formularz służy wyłącznie do ewidencji danych. Nie nadaje statusu studenta, nie potwierdza wpisu na listę studentów i nie zastępuje dokumentu ani certyfikatu wydanego przez uczelnię.")
             }
         }
@@ -2799,6 +2794,127 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
     }
 }
 
+
+@Composable
+private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: String, student: Boolean) {
+    val photoBitmap = remember(photoBase64) {
+        runCatching {
+            if (photoBase64.isBlank()) null else {
+                val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                var sample = 1
+                while (bounds.outWidth / sample > 600 || bounds.outHeight / sample > 600) sample *= 2
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+            }
+        }.getOrNull()
+    }
+    val name = if (student) fields["studentNames"].orEmpty().ifBlank {
+        listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
+    } else listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
+    val institution = if (student) fields["studentUniversity"].orEmpty() else fields["trainingInstitution"].orEmpty()
+    val number = if (student) fields["studentCardNumber"].orEmpty() else fields["trainingCardNumber"].orEmpty()
+    val validity = if (student) fields["studentValidity"].orEmpty() else fields["trainingValidUntil"].orEmpty()
+    val status = if (student) fields["studentStatus"].orEmpty() else fields["trainingStatus"].orEmpty()
+    val course = if (student) fields["studentProgramme"].orEmpty() else fields["trainingCourseName"].orEmpty()
+    val issueDate = if (student) fields["studentIssueDate"].orEmpty() else fields["trainingIssueDate"].orEmpty()
+    val expiry = runCatching {
+        val normalized = validity.trim()
+        val parsed = java.time.LocalDate.parse(normalized, java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+        parsed
+    }.recoverCatching {
+        java.time.LocalDate.parse(validity.trim())
+    }.getOrNull()
+    val activeStatus = status.trim().lowercase() in setOf("aktywny", "aktywna", "active", "ważny", "wazny")
+    val valid = activeStatus && (validity.isBlank() || (expiry != null && !expiry.isBefore(java.time.LocalDate.now())))
+    val statusLabel = when {
+        status.isBlank() -> "Status do uzupełnienia"
+        !activeStatus -> "Status: ${status}"
+        validity.isNotBlank() && expiry == null -> "Nieprawidłowa data ważności"
+        valid -> "Dokument ważny"
+        else -> "Dokument po terminie"
+    }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Card(
+            modifier = Modifier.fillMaxWidth().height(320.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE2D2)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxWidth().height(320.dp).background(Color(0xFFF8D9D1)))
+                Column(Modifier.fillMaxSize().padding(13.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(if (student) "LEGITYMACJA SZKOLNA" else "LEGITYMACJA UCZESTNIKA KURSU",
+                                color = Color(0xFF392B35), fontWeight = FontWeight.ExtraBold,
+                                style = MaterialTheme.typography.titleSmall)
+                            Text(institution.ifBlank { "NAZWA SZKOŁY / INSTYTUCJI" },
+                                color = Color(0xFF62535A), style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        Text("WZÓR", color = Color(0xFF7B4B58), fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelSmall)
+                    }
+                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(
+                            Modifier.width(100.dp).fillMaxSize().clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFE8D6D0)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (photoBitmap != null) {
+                                Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie posiadacza legitymacji",
+                                    modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            } else {
+                                Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie",
+                                    tint = Color(0xFF8A777B), modifier = Modifier.size(54.dp))
+                            }
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            @Composable fun data(label: String, value: String) {
+                                Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                                    Text(label, color = Color(0xFF705D62), style = MaterialTheme.typography.labelSmall)
+                                    Text(value.ifBlank { "—" }, color = Color(0xFF29252A),
+                                        fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
+                            data("IMIĘ I NAZWISKO", name.ifBlank { "Dane ucznia" })
+                            data(if (student) "KLASA / KIERUNEK" else "KURS", course)
+                            data("NUMER LEGITYMACJI", number)
+                            data("DATA WYDANIA", issueDate)
+                            data("WAŻNA DO", validity)
+                        }
+                    }
+                    Text("DOKUMENT EWIDENCYJNY • WYSTAWCA: ${institution.ifBlank { "NIE WSKAZANO" }}",
+                        color = Color(0xFF59434B), style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = White)
+        ) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (valid) {
+                    Box(Modifier.size(28.dp).clip(CircleShape).border(2.dp, Color(0xFF27833B), CircleShape),
+                        contentAlignment = Alignment.Center) {
+                        Text("✓", color = Color(0xFF27833B), fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFF9A6A16))
+                }
+                Text(statusLabel, color = if (valid) Color(0xFF237A35) else Color(0xFF805000),
+                    fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        Text("Wizualizacja informacyjna własnego dokumentu szkolnego. Status jest obliczany wyłącznie z danych zapisanych przez wystawcę; nie stanowi zewnętrznej walidacji.",
+            color = Muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
 
 @Composable
 private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = false) {
