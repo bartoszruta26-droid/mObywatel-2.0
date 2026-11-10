@@ -101,13 +101,12 @@ class MainActivityNavigationTest {
     fun settingsExposeDocumentPlacementChoices() {
         selectBottomTab("Więcej")
         composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
-        composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Widoczność dokumentów").performClick()
-        composeRule.onNodeWithText("Dla każdego dokumentu wybierz miejsce wyświetlania.")
-            .assertDoesNotExist()
-        composeRule.onAllNodesWithText("Dowód tożsamości")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
+        composeRule.onNodeWithText("Dla każdego dokumentu wybierz miejsce wyświetlania. Ukrycie dokumentu nie usuwa jego danych ani załączników.")
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dokument rodowy").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Inne dokumenty").performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Inne dokumenty")[0].performScrollTo().assertIsDisplayed()
         composeRule.onAllNodesWithText("Ukryj")[0].performScrollTo().assertIsDisplayed()
     }
 
