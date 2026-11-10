@@ -8,6 +8,10 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
@@ -340,17 +344,59 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
 
 @Composable
 internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, modifier: Modifier = Modifier) {
-    val context= LocalContext.current
+    val context = LocalContext.current
     var owner by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
-    val create= rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
-        if(uri!=null) runCatching { DocumentPdfRenderer.write(context,uri,title,owner,values) }
-            .onSuccess { status="Utworzono PDF. Plik można teraz podpisać obsługiwanym podpisem elektronicznym." }
-            .onFailure { status="Eksport PDF nie powiódł się: "+(it.message ?: "błąd") }
+    val qrResult = remember(title, values) {
+        runCatching {
+            val payloadFields = linkedMapOf("firstNames" to title, "documentTitle" to title)
+            values.entries.filter { it.value.isNotBlank() }.forEachIndexed { index, entry ->
+                payloadFields["field${(index + 1).toString().padStart(3, '0')}"] = "${entry.key}: ${entry.value}"
+            }
+            val payload = VCardCodec.encodeArchive(payloadFields)
+            val hints = mapOf<EncodeHintType, Any>(
+                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
+                EncodeHintType.MARGIN to 4,
+                EncodeHintType.CHARACTER_SET to "UTF-8"
+            )
+            val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, 720, 720, hints)
+            Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+                    bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+            }
+        }
     }
-    OutlinedTextField(owner,{owner=it},label={Text("Zestaw identyfikacji podmiotu (nazwa)")},modifier=Modifier.fillMaxWidth())
-    Button(onClick={create.launch(title.replace(Regex("[^A-Za-z0-9_-]"),"_").take(50).ifBlank { "dokument" }+".pdf")},modifier=modifier.fillMaxWidth()) { Text("Eksportuj dokument do PDF") }
-    if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=Color(0xFF1769AA))
+    val create = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        if (uri != null) runCatching { DocumentPdfRenderer.write(context, uri, title, owner, values) }
+            .onSuccess { status = "Utworzono PDF. Plik można teraz podpisać obsługiwanym podpisem elektronicznym." }
+            .onFailure { status = "Eksport PDF nie powiódł się: " + (it.message ?: "błąd") }
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Kod QR dokumentu — vCard 4.0", fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium)
+            qrResult.onSuccess { bitmap ->
+                Image(bitmap.asImageBitmap(), contentDescription = "Kod QR zawierający dane dokumentu w formacie vCard",
+                    modifier = Modifier.size(220.dp))
+                Text("Kod zawiera dane zapisane w tym dokumencie. Odczyt wymaga aplikacji obsługującej rozszerzenia OWD vCard.",
+                    style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
+            }.onFailure {
+                Text("Nie można wygenerować kodu QR: ${it.message ?: "dane przekraczają pojemność kodu QR"}",
+                    style = MaterialTheme.typography.bodySmall, color = Color(0xFFB3261E))
+            }
+        }
+    }
+    OutlinedTextField(owner, { owner = it }, label = { Text("Zestaw identyfikacji podmiotu (nazwa)") },
+        modifier = Modifier.fillMaxWidth())
+    Button(onClick = {
+        create.launch(title.replace(Regex("[^A-Za-z0-9_-]"), "_").take(50).ifBlank { "dokument" } + ".pdf")
+    }, modifier = modifier.fillMaxWidth()) { Text("Eksportuj dokument do PDF") }
+    if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall, color = Color(0xFF1769AA))
 }
 
 private object DocumentPdfRenderer {
