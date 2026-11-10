@@ -899,13 +899,6 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     ) {
         Text("Obywatelska Wymiana Danych", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("OWD • niezależna wymiana danych między zgodnymi aplikacjami", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Dwa odrębne kanały rozwoju", color = Navy, fontWeight = FontWeight.Bold)
-                Text("1. OWD peer-to-peer: wymiana między zgodnymi instalacjami aplikacji obywatelskiej. 2. Integracja państwowa: osobny adapter do oficjalnej usługi mObywatela, uruchamiany dopiero po uzyskaniu zgody, certyfikatów i dokumentacji integracyjnej.", color = Ink, style = MaterialTheme.typography.bodySmall)
-                Text("Przyszła certyfikacja jest założeniem architektonicznym, a nie obecnym uprawnieniem. Do tego czasu aplikacja nie łączy się z rządowym mObywatelem.", color = Muted, style = MaterialTheme.typography.bodySmall)
-            }
-        }
         Text("Wybór danych do udostępnienia", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
         if (populated.isEmpty()) {
             Text("Brak zapisanych danych do udostępnienia. Uzupełnij je w Ustawieniach.", color = Muted, style = MaterialTheme.typography.bodySmall)
