@@ -117,6 +117,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
     var records by remember { mutableStateOf(OfficialDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf("") }
+    var preview by remember { mutableStateOf(false) }
     var refresh by remember { mutableIntStateOf(0) }
     val attachmentPicker= rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         val id=selected
@@ -154,7 +155,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                 Text(type.note,Modifier.padding(12.dp),color=Color(0xFF29445B),style=MaterialTheme.typography.bodySmall)
             }
             type.fields.forEachIndexed { index,label ->
-                OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6,readOnly=readOnly)
+                OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6,readOnly=readOnly || preview)
             }
             if(type.id=="criminal_record") {
                 OutlinedButton(onClick={attachmentPicker.launch(arrayOf("application/pdf","text/xml","application/xml"))},modifier=Modifier.fillMaxWidth()) {
@@ -166,7 +167,10 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
             DocumentPdfExportButton(type.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) type.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
             })
-            if(!readOnly) Button(onClick={
+            if (!readOnly) OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.fillMaxWidth()) {
+                Text(if (preview) "Wróć do edycji" else "Podgląd dokumentu")
+            }
+            if(!readOnly && !preview) Button(onClick={
                 runCatching { OfficialDocumentStore.save(context,records+(type.id to local)); records=OfficialDocumentStore.load(context); status="Zapisano dane lokalnie." }
                     .onFailure { status="Błąd zapisu: ${it.message}" }
             },modifier=Modifier.fillMaxWidth()) { Text("Zapisz dane") }
