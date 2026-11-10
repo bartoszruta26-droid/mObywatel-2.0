@@ -363,26 +363,26 @@ private data class ServiceItem(
 )
 
 private val services = listOf(
-    ServiceItem("Portfel", "Wszystkie dokumenty i ewidencje", fallbackIcon = Icons.Filled.CreditCard, category = "Dokumenty"),
+    ServiceItem("Portfel", "Wszystkie dokumenty i ewidencje", icon = R.drawable.service_folder, fallbackIcon = Icons.Filled.CreditCard, category = "Dokumenty"),
     ServiceItem("Odpis z rejestru podmiotów", "Dane spółki, fundacji, kościoła i instytucji szkoleniowej", fallbackIcon = Icons.Filled.AccountBalance, category = "Rejestry"),
-    ServiceItem("Polak za granicą", "Informacje konsularne", fallbackIcon = Icons.Filled.Public, category = "Transport"),
-    ServiceItem("Płatności", "Usługi i opłaty", fallbackIcon = Icons.Filled.Payments, category = "Sprawy urzędowe"),
-    ServiceItem("Zdrowie", "Informacje zdrowotne", fallbackIcon = Icons.Filled.LocalHospital, category = "Zdrowie"),
-    ServiceItem("eKarta Szczepień", "Prywatna książeczka szczepień i historia dawek", fallbackIcon = Icons.Filled.HealthAndSafety, category = "Zdrowie"),
+    ServiceItem("Polak za granicą", "Informacje konsularne", icon = R.drawable.mob_abroad, fallbackIcon = Icons.Filled.Public, category = "Transport"),
+    ServiceItem("Płatności", "Usługi i opłaty", icon = R.drawable.mob_payments, fallbackIcon = Icons.Filled.Payments, category = "Sprawy urzędowe"),
+    ServiceItem("Zdrowie", "Informacje zdrowotne", icon = R.drawable.mob_health, fallbackIcon = Icons.Filled.LocalHospital, category = "Zdrowie"),
+    ServiceItem("eKarta Szczepień", "Prywatna książeczka szczepień i historia dawek", icon = R.drawable.service_prescription, fallbackIcon = Icons.Filled.HealthAndSafety, category = "Zdrowie"),
     ServiceItem("Dane dzieci", "Rodzinny rejestr danych i dokumentacji dzieci", fallbackIcon = Icons.Filled.AccountCircle, category = "Rodzina"),
-    ServiceItem("Formularze dokumentów", "Akty i dokumenty cywilne — ewidencja i załączniki", fallbackIcon = Icons.Filled.Description, category = "Dokumenty"),
+    ServiceItem("Formularze dokumentów", "Akty i dokumenty cywilne — ewidencja i załączniki", icon = R.drawable.mob_document_check, fallbackIcon = Icons.Filled.Description, category = "Dokumenty"),
     ServiceItem("Dokumenty Rodowe", "Księgi, akty, rejestry i dokumenty Rodu", fallbackIcon = Icons.Filled.Fingerprint, category = "Rodzina"),
     ServiceItem("Dokumenty rejestru podmiotów", "Dokumenty firmowe i organizacyjne", fallbackIcon = Icons.Filled.AccountBalance, category = "Rejestry"),
     ServiceItem("Dokumenty Kościelne", "Dokumenty kościelne, liturgiczne i organizacyjne", fallbackIcon = Icons.Filled.AccountBalance, category = "Kościół i wspólnoty"),
     ServiceItem("Zasoby identyfikacji dokumentów", "Logo, godła, flagi, pieczęcie i tła dokumentów", fallbackIcon = Icons.Filled.Description, category = "Dokumenty"),
     ServiceItem("Dokumenty PDF i podpisy elektroniczne", "Import, przechowywanie i podgląd dokumentów PDF", fallbackIcon = Icons.Filled.Description, category = "Dokumenty"),
-    ServiceItem("Transport", "Podróże i przejazdy", fallbackIcon = Icons.Filled.Train, category = "Podróże"),
-    ServiceItem("Mandaty", "Ewidencja i informacje", fallbackIcon = Icons.Filled.Description, category = "Kierowca i pojazdy"),
-    ServiceItem("Sprawdź PESEL", "Informacje o numerze PESEL", fallbackIcon = Icons.Filled.Fingerprint, category = "Bezpieczeństwo"),
-    ServiceItem("Zastrzeż PESEL", "Informacje o zastrzeżeniu", fallbackIcon = Icons.Filled.Security, category = "Bezpieczeństwo"),
-    ServiceItem("Bilety", "Bilety i przejazdy", fallbackIcon = Icons.Filled.ConfirmationNumber, category = "Podróże"),
-    ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", fallbackIcon = Icons.Filled.Shield, category = "Bezpieczeństwo"),
-    ServiceItem("Środowisko", "Informacje środowiskowe", fallbackIcon = Icons.Filled.Public, category = "Środowisko"),
+    ServiceItem("Transport", "Podróże i przejazdy", icon = R.drawable.mob_transport, fallbackIcon = Icons.Filled.Train, category = "Podróże"),
+    ServiceItem("Mandaty", "Ewidencja i informacje", icon = R.drawable.mob_penalties, fallbackIcon = Icons.Filled.Description, category = "Kierowca i pojazdy"),
+    ServiceItem("Sprawdź PESEL", "Informacje o numerze PESEL", icon = R.drawable.mob_pesel_check, fallbackIcon = Icons.Filled.Fingerprint, category = "Bezpieczeństwo"),
+    ServiceItem("Zastrzeż PESEL", "Informacje o zastrzeżeniu", icon = R.drawable.mob_pesel_lock, fallbackIcon = Icons.Filled.Security, category = "Bezpieczeństwo"),
+    ServiceItem("Bilety", "Bilety i przejazdy", icon = R.drawable.mob_ticket, fallbackIcon = Icons.Filled.ConfirmationNumber, category = "Podróże"),
+    ServiceItem("Bezpieczeństwo", "Prywatność i ochrona", icon = R.drawable.mob_cyber_safety, fallbackIcon = Icons.Filled.Shield, category = "Bezpieczeństwo"),
+    ServiceItem("Środowisko", "Informacje środowiskowe", icon = R.drawable.mob_environment, fallbackIcon = Icons.Filled.Public, category = "Środowisko"),
     ServiceItem("Ustawienia", "Preferencje i dane ewidencyjne", fallbackIcon = Icons.Filled.Settings),
     ServiceItem("Zaświadczenia", "Dokumenty i dane o uprawnieniach", fallbackIcon = Icons.Filled.Description),
     ServiceItem("Sprawy rodzinne", "Dane dotyczące spraw rodzinnych", fallbackIcon = Icons.Filled.AccountCircle, category = "Rodzina"),
@@ -788,7 +788,7 @@ private fun HomeScreen() {
                                                 ) {
                                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                                         categoryIconFor(category)?.let { iconRes ->
-                                                            Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(19.dp), contentScale = ContentScale.Fit)
+                                                            Icon(painter = painterResource(iconRes), contentDescription = null, tint = if (active) White else Blue, modifier = Modifier.size(19.dp))
                                                         }
                                                         Text(category, color = if (active) White else Navy,
                                                             style = MaterialTheme.typography.labelMedium,
@@ -889,15 +889,15 @@ private fun HomeScreen() {
 }
 
 private fun categoryIconFor(category: String): Int? = when (category) {
-    "Zdrowie" -> R.drawable.health
+    "Zdrowie" -> R.drawable.mob_health
     "Rodzina" -> R.drawable.family
     "Edukacja" -> R.drawable.education
     "Praca" -> R.drawable.work
-    "Finanse i podatki" -> R.drawable.finance_taxes
-    "Transport", "Kierowca i pojazdy", "Podróże" -> R.drawable.transport
+    "Finanse i podatki" -> R.drawable.mob_payments
+    "Transport", "Kierowca i pojazdy", "Podróże" -> R.drawable.mob_transport
     "Nieruchomości" -> R.drawable.real_estate
-    "Środowisko" -> R.drawable.environment
-    "Bezpieczeństwo" -> R.drawable.security
+    "Środowisko" -> R.drawable.mob_environment
+    "Bezpieczeństwo" -> R.drawable.mob_cyber_safety
     "Prawo i obywatel", "Sprawy urzędowe" -> R.drawable.law_citizenship
     "Kultura i dziedzictwo" -> R.drawable.culture_heritage
     "Sport" -> R.drawable.sport
