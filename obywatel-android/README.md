@@ -55,6 +55,27 @@ Wzór neutralnej deklaracji użytkownika może brzmieć: „Oświadczam, że pod
 
 Aplikacja powinna odróżniać wykładnię autentyczną od wykładni dokonywanej przez sądy, organy administracji, ekspertów lub samych adresatów norm. Wykładnia autentyczna oznacza interpretację dokonywaną przez prawodawcę danego aktu albo podmiot, któremu prawodawca skutecznie powierzył kompetencję do autentycznego interpretowania. Nie należy jednak zakładać, że każda osoba lub instytucja, która wydała dokument nazwany statutem, regulaminem albo uchwałą, ma automatycznie nieograniczoną kompetencję do wydawania wiążącej interpretacji.
 
+**Stanowisko obywatelskie użytkownika — szerokie rozumienie lokalnego porządku normatywnego**
+
+Na potrzeby obywatelskiej koncepcji aplikacji odnotowuje się następujące stanowisko interpretacyjne:
+
+> Każdy statut, regulamin lub uchwała ustanowione przez właściwy organ stanowią prawo obowiązujące w zakresie działania tego organu. Prawo to powinno pozostawać zgodne z prawem powszechnie obowiązującym. Prawo powszechne może być interpretowane i konkretyzowane przez regulacje lokalne, statutowe, regulaminowe i uchwałodawcze. Jeżeli przyjęta regulacja nie pozostaje w sprzeczności z prawem powszechnym oraz nie narusza praw ani nie wyrządza szkody osobom trzecim, przyjmuje się — w ramach tego stanowiska — że obowiązuje w zakresie właściwości podmiotu, który ją ustanowił.
+
+Stanowisko to obejmuje również postulat, aby organ ustanawiający statut, regulamin lub uchwałę mógł przedstawiać wiążącą dla danego porządku organizacyjnego wykładnię własnych postanowień oraz wyjaśniać sposób ich stosowania. W ujęciu postulowanym przez autora koncepcji, regulacje lokalne i wewnętrzne powinny być traktowane jako realne źródła porządku normatywnego, a nie pomijane wyłącznie z powodu ich lokalnego lub organizacyjnego charakteru.
+
+**Kwalifikacja prawna i granice stosowania tego stanowiska**
+
+Powyższy tekst dokumentuje szerokie stanowisko interpretacyjne i postulat autora koncepcji. Nie należy przedstawiać go jako bezspornego opisu aktualnego prawa polskiego. W obowiązującym porządku konstytucyjnym określenie „akty prawa miejscowego” ma znaczenie technicznoprawne: art. 87 ust. 2 i art. 94 Konstytucji RP wiążą je z aktami stanowionymi przez wskazane organy publiczne, na podstawie i w granicach upoważnienia ustawowego, obowiązującymi na obszarze działania tych organów. Nie każdy statut, regulamin lub uchwała jest z tego powodu aktem prawa miejscowego.
+
+Należy zatem rozróżniać:
+- **akt prawa miejscowego** — akt normatywny ustanowiony przez konstytucyjnie i ustawowo umocowany organ, w granicach delegacji ustawowej i po spełnieniu wymogów promulgacyjnych;
+- **akt wewnętrzny lub organizacyjny** — statut, regulamin lub uchwałę wiążącą w zakresie wynikającym z prawa, kompetencji organu, stosunku organizacyjnego i właściwych zasad przyjęcia oraz udostępnienia aktu;
+- **stanowisko interpretacyjne autora lub organu** — wyjaśnienie znaczenia norm, którego moc wiążąca zależy od podstawy kompetencyjnej i właściwego porządku prawnego.
+
+Brak sprzeczności z prawem powszechnym i brak szkody dla osób trzecich są ważnymi kryteriami oceny regulacji, ale same w sobie nie tworzą kompetencji prawodawczej, nie zastępują ustawowego upoważnienia, wymaganej procedury ani ogłoszenia aktu. Nie nadają też regulacji automatycznie skutku wobec wszystkich osób trzecich. W granicach kompetencji regulacja może jednak wiązać adresatów danego porządku prawnego, a jej prawidłowo ustanowione postanowienia powinny być respektowane.
+
+Aplikacja ma zachować oba poziomy: zapisywać pełne stanowisko obywatelskie jako stanowisko autora oraz osobno wskazywać jego kwalifikację w świetle obowiązującego prawa. Nie wolno usuwać ani zacierać stanowiska użytkownika; nie wolno też oznaczać go jako powszechnie obowiązującej normy prawnej bez wykazania właściwej podstawy prawnej.
+
 **Zasada kompetencji prawodawcy do wyjaśniania własnego aktu**
 
 Organ lub podmiot, który ustanowił statut, regulamin albo uchwałę, powinien mieć w aplikacji możliwość przedstawienia oficjalnego stanowiska co do rozumienia własnego aktu. Jeżeli właściwe przepisy albo sam akt ustrojowy przyznają temu organowi kompetencję interpretacyjną, stanowisko może być wiążące w określonym zakresie i wobec określonych adresatów. Jeżeli takiej kompetencji nie ustanowiono, organ może wyjaśniać motywy i sposób rozumienia przyjętych postanowień, lecz nie należy automatycznie przypisywać temu wyjaśnieniu mocy wiążącej wobec wszystkich osób lub organów. W żadnym przypadku interpretacja nie może rozszerzać kompetencji prawodawcy ani zmieniać treści aktu z pominięciem właściwego trybu jego zmiany.
