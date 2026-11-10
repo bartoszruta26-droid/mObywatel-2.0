@@ -575,7 +575,7 @@ private fun HomeScreen() {
                 }
             )
             Text(
-                "Aplikacja obywatelska • dane urzędowe wymagają potwierdzenia przez właściwy dokument lub rejestr",
+                "Niezależna aplikacja obywatelska • nie jest częścią rządowego systemu mObywatel. Dane urzędowe wymagają potwierdzenia we właściwym źródle.",
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
                 color = Muted,
                 style = MaterialTheme.typography.labelSmall
