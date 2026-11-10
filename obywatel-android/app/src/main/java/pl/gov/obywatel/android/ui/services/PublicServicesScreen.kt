@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.ui.services
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.webkit.WebChromeClient
