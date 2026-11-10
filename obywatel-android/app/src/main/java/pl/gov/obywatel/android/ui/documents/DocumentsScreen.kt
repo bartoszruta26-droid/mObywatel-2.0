@@ -167,8 +167,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
 
             if (selected == null) {
                 Text(
-                    "Pliki pozostają na urządzeniu lub u wybranego dostawcy. " +
-                        "To lokalny prototyp — dokumenty nie są weryfikowane przez administrację.",
+                    "Dodaj dokumenty i uzupełnij ich opis, źródło oraz własne oświadczenie dotyczące zgodności danych.",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
