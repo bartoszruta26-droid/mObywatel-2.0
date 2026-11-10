@@ -25,7 +25,7 @@ class MainActivityNavigationTest {
     fun dashboardShowsCurrentBrandAndDocumentWallet() {
         composeRule.onNodeWithText("Obywatel").assertIsDisplayed()
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
         composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
     }
 
@@ -33,11 +33,11 @@ class MainActivityNavigationTest {
     fun documentsWalletShowsIdentityPassportAndLegitimacyRecords() {
         selectBottomTab("Dokumenty", 1)
         composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
-        composeRule.onNodeWithText("Twoje dokumenty i oświadczenia").assertIsDisplayed()
-        composeRule.onNodeWithText("Dane osobowe profilu").assertIsDisplayed()
-        composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
-        composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
-        composeRule.onNodeWithText("Legitymacja ucznia/studenta").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Twoje dokumenty i oświadczenia").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dane osobowe profilu").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dane paszportowe").performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Legitymacja ucznia/studenta")[0].performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -71,9 +71,9 @@ class MainActivityNavigationTest {
     fun legalInformationOpensFromMoreAndShowsReadmeContent() {
         selectBottomTab("Więcej")
         composeRule.onNodeWithText("Informacje prawne").performScrollTo().performClick()
-        composeRule.onNodeWithText("PRAWA, KTÓRE PROJEKT MA POMAGAĆ ROZPOZNAWAĆ I WYKONYWAĆ")
+        composeRule.onNodeWithText("STATUS I NIEZALEŻNOŚĆ APLIKACJI")
             .performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("SAMODZIELNOŚĆ OBYWATELSKA I BEZPOŚREDNIE UCZESTNICTWO W SPRAWOWANIU WŁADZY")
+        composeRule.onNodeWithText("OBYWATELSKA IDEA APLIKACJI I GODNOŚĆ CZŁOWIEKA")
             .performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Wróć").assertIsDisplayed()
     }
@@ -101,8 +101,10 @@ class MainActivityNavigationTest {
     fun settingsExposeDocumentPlacementChoices() {
         selectBottomTab("Więcej")
         composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
-        composeRule.onNodeWithText("Widoczność dokumentów na ekranie głównym")
-            .performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Widoczność dokumentów").performClick()
+        composeRule.onNodeWithText("Dla każdego dokumentu wybierz miejsce wyświetlania.")
+            .assertDoesNotExist()
         composeRule.onAllNodesWithText("Dowód tożsamości")[0].performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dokument rodowy").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Inne dokumenty").performScrollTo().assertIsDisplayed()
