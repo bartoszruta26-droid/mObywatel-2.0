@@ -201,7 +201,13 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
                         "Rodzic / opiekun" to selected.guardian,
                         "Liczba wpisów szczepień" to selected.vaccines.size.toString()
                     ),
-                    owner = selected.guardian
+                    owner = selected.guardian,
+                    photoOverride = remember(selected.photoBase64) {
+                        runCatching {
+                            val bytes = Base64.decode(selected.photoBase64, Base64.DEFAULT)
+                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        }.getOrNull()
+                    }
                 )
                 DocumentPdfExportButton("Karta dziecka", mapOf(
                     "Imię i nazwisko" to listOf(selected.firstName, selected.lastName).filter { it.isNotBlank() }.joinToString(" "),
