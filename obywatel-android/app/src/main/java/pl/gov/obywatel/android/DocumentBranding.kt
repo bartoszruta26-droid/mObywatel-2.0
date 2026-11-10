@@ -35,7 +35,7 @@ import javax.crypto.spec.GCMParameterSpec
 
 private data class BrandAsset(val id: String, val owner: String, val kind: String, val label: String, val file: String)
 
-private object DocumentBrandStore {
+internal object DocumentBrandStore {
     private const val ALIAS = "document_brand_assets_aes"
     private const val INDEX = "document-brand-assets.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
