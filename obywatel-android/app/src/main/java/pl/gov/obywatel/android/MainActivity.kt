@@ -178,7 +178,7 @@ private fun LoyaltyCardsEditor(
     }
     val liveScanner = rememberLauncherForActivityResult(ScanContract()) { result ->
         result.contents?.let { value ->
-            if (result.format == BarcodeFormat.QR_CODE.name) fields["${prefix}Qr"] = value
+            if (result.formatName == BarcodeFormat.QR_CODE.name) fields["${prefix}Qr"] = value
             else fields["${prefix}Barcode"] = value
             saveMessage("Odczytano kod. Sprawdź dane i zapisz kartę.")
         }
@@ -2186,9 +2186,10 @@ private fun DocumentDetailsScreen(
         )),
         Triple("Karty lojalnościowe — ewidencja", "Dane kart programów lojalnościowych sklepów", (1..10).flatMap { n ->
             val p = "loyalty$n"
-            listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty" to "${p}Number",
-                "Kod cyfrowy" to "${p}DigitalCode", "Treść kodu kreskowego" to "${p}Barcode",
-                "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status")
+            listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty nadany przez sklep" to "${p}Number",
+                "Lokalny numer ewidencyjny" to "${p}LocalId", "Kod cyfrowy" to "${p}DigitalCode",
+                "Treść kodu kreskowego" to "${p}Barcode", "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status",
+                "Tekst rozpoznany przez OCR" to "${p}OcrText")
         })
     )
     val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
