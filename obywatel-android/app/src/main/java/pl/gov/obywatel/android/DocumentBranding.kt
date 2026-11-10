@@ -104,6 +104,25 @@ private object DocumentBrandStore {
     }
 }
 
+
+private fun isFamilyDocument(title: String): Boolean {
+    val t = title.lowercase(Locale.ROOT)
+    return t.contains("rodow") || t.contains("rodu") || t.contains("rodzinn")
+}
+
+private fun isChurchDocument(title: String): Boolean {
+    val t = title.lowercase(Locale.ROOT)
+    return listOf("kościel", "kosciel", "papiesk", "papież", "papiez", "misjon", "sakrament", "kanonicz", "biskup", "parafi").any { t.contains(it) }
+}
+
+private fun defaultDocumentFlag(context: Context, title: String): Bitmap? =
+    if (isFamilyDocument(title) || isChurchDocument(title)) null
+    else BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
+
+private fun defaultDocumentEmblem(context: Context, title: String): Bitmap? =
+    if (isFamilyDocument(title) || isChurchDocument(title)) null
+    else BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+
 private fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
     val resourceId = when {
@@ -135,11 +154,18 @@ internal fun DocumentIdentityTemplate(
     val context = LocalContext.current
     val effectiveOwner = owner.ifBlank { values.entries.firstOrNull { it.key.contains("wystawc", true) || it.key.contains("nazwa", true) || it.key.contains("podmiot", true) || it.key.contains("kościół", true) || it.key.contains("rodu", true) }?.value.orEmpty() }
     val photo = remember(effectiveOwner, photoOverride) { photoOverride ?: DocumentBrandStore.image(context, effectiveOwner, "Fotografia") }
-    val flag = remember(effectiveOwner) { DocumentBrandStore.image(context, effectiveOwner, "Flaga") }
-    val emblem = remember(effectiveOwner) {
-        DocumentBrandStore.image(context, effectiveOwner, "Godło")
-            ?: DocumentBrandStore.image(context, effectiveOwner, "Herb")
-            ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
+    val flag = remember(effectiveOwner, title) { DocumentBrandStore.image(context, effectiveOwner, "Flaga") ?: defaultDocumentFlag(context, title) }
+    val emblem = remember(effectiveOwner, title) {
+        val custom = if (isFamilyDocument(title) || isChurchDocument(title)) {
+            DocumentBrandStore.image(context, effectiveOwner, "Herb")
+                ?: DocumentBrandStore.image(context, effectiveOwner, "Godło")
+                ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
+        } else {
+            DocumentBrandStore.image(context, effectiveOwner, "Godło")
+                ?: DocumentBrandStore.image(context, effectiveOwner, "Herb")
+                ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
+        }
+        custom ?: defaultDocumentEmblem(context, title)
     }
     val background = remember(effectiveOwner, title) { DocumentBrandStore.image(context, effectiveOwner, "Tło dokumentu") ?: defaultDocumentBackground(context, title) }
     val now = remember { SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date()) }
@@ -296,9 +322,13 @@ private object DocumentPdfRenderer {
         val small = Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(95,108,120); textSize=8f }
         val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(210,220,230); strokeWidth=0.7f }
         val photo = DocumentBrandStore.image(context,owner,"Fotografia")
-        val flag = DocumentBrandStore.image(context,owner,"Flaga")
+        val flag = DocumentBrandStore.image(context,owner,"Flaga") ?: defaultDocumentFlag(context,title)
         val logo = DocumentBrandStore.image(context,owner,"Logo")
-        val crest = DocumentBrandStore.image(context,owner,"Herb") ?: DocumentBrandStore.image(context,owner,"Godło")
+        val crest = (if (isFamilyDocument(title) || isChurchDocument(title)) {
+            DocumentBrandStore.image(context,owner,"Herb") ?: DocumentBrandStore.image(context,owner,"Godło") ?: logo
+        } else {
+            DocumentBrandStore.image(context,owner,"Godło") ?: DocumentBrandStore.image(context,owner,"Herb") ?: logo
+        }) ?: defaultDocumentEmblem(context,title)
         val seal = DocumentBrandStore.image(context,owner,"Pieczęć")
         val signature = DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
         val background = DocumentBrandStore.image(context,owner,"Tło dokumentu") ?: defaultDocumentBackground(context,title)
