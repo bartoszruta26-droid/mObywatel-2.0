@@ -54,6 +54,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.horizontalScroll
@@ -134,7 +135,7 @@ import pl.gov.obywatel.android.ui.services.PublicServicesScreen
 @Composable
 private fun GeneralDocumentOcrEditor(
     categoryId: String,
-    fields: androidx.compose.runtime.MutableMap<String, String>,
+    fields: MutableMap<String, String>,
     context: Context,
     saveMessage: (String) -> Unit
 ) {
@@ -181,7 +182,7 @@ private fun GeneralDocumentOcrEditor(
 
 @Composable
 private fun LoyaltyCardsEditor(
-    fields: androidx.compose.runtime.MutableMap<String, String>,
+    fields: MutableMap<String, String>,
     context: Context,
     saveMessage: (String) -> Unit
 ) {
