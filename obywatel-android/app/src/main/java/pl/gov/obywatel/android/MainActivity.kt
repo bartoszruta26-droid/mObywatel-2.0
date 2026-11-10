@@ -121,6 +121,7 @@ import pl.gov.obywatel.android.ui.theme.Surface as AppSurface
 import pl.gov.obywatel.android.ui.theme.White
 import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
+import pl.gov.obywatel.android.ui.services.PublicServicesScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -245,6 +246,7 @@ private fun HomeScreen() {
     var showCertificates by remember { mutableStateOf(false) }
     var showIdentityDesigner by remember { mutableStateOf(false) }
     var showImportedDocuments by remember { mutableStateOf(false) }
+    var showPublicServicesBrowser by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
     var serviceCategory by remember { mutableStateOf("Wszystkie") }
     val favoriteServices = remember { mutableStateMapOf("Zastrzeż PESEL" to true, "Zdrowie" to true, "Transport" to true) }
@@ -252,6 +254,7 @@ private fun HomeScreen() {
     fun handleSystemBack() {
         when {
             showIdentityDesigner -> { showIdentityDesigner = false }
+            showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
             showSettingsMenu -> showSettingsMenu = false
@@ -266,7 +269,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showIdentityDesigner || showImportedDocuments || showDocumentsEditor || showSettingsMenu || selectedDocumentId != null ||
+        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showDocumentsEditor || showSettingsMenu || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -291,6 +294,7 @@ private fun HomeScreen() {
             Box(modifier = Modifier.weight(1f)) {
                 when {
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
+                    showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showSettingsMenu -> SettingsMenuScreen(
@@ -403,6 +407,23 @@ private fun HomeScreen() {
                                     Spacer(Modifier.height(12.dp))
                                 }
                                 if (selectedTab == 2) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().clickable { showPublicServicesBrowser = true },
+                                        colors = CardDefaults.cardColors(containerColor = BlueLight)
+                                    ) {
+                                        Row(
+                                            Modifier.fillMaxWidth().padding(14.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(Icons.Filled.Public, contentDescription = null, tint = Blue, modifier = Modifier.size(26.dp))
+                                            Column(Modifier.weight(1f).padding(start = 10.dp)) {
+                                                Text("Przeglądarka usług publicznych", color = Navy, fontWeight = FontWeight.Bold)
+                                                Text("Otwieraj portale gov.pl i inne serwisy wewnątrz aplikacji", color = Muted, style = MaterialTheme.typography.bodySmall)
+                                            }
+                                            Text("Otwórz", color = Blue, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                    Spacer(Modifier.height(10.dp))
                                     OutlinedTextField(
                                         value = serviceSearch,
                                         onValueChange = { serviceSearch = it },
