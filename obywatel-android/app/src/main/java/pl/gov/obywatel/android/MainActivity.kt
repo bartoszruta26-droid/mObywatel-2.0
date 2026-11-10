@@ -686,7 +686,7 @@ private fun HomeScreen() {
                                 },
                                 onOpenNotifications = { activeService = "Powiadomienia" }
                             )
-                            Column(modifier = Modifier.weight(1f).padding(horizontal = 18.dp)) {
+                            Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
                                     SectionHeading("Dokumenty", "Portfel dokumentów")
@@ -1864,7 +1864,7 @@ private fun SettingsMenuScreen(
             Icons.Filled.Fingerprint, { onEditDocuments("family") })
         ProfileActionCard("Legitymacja poselska", "Ewidencja danych i źródeł potwierdzenia",
             Icons.Filled.AccountBalance, { onEditDocuments("parliament") })
-        ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych ucznia lub studenta",
+        ProfileActionCard("Legitymacja kursanta", "Ewidencja danych uczestnika kursu lub szkolenia",
             Icons.Filled.Description, { onEditDocuments("training") })
         ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych uczelni i statusu",
             Icons.Filled.Badge, { onEditDocuments("student") })
