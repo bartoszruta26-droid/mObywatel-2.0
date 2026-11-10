@@ -3871,7 +3871,7 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     when (index) {
-                        1 -> Image(painterResource(R.drawable.wallet), contentDescription = label, modifier = Modifier.size(22.dp), contentScale = ContentScale.Fit)
+                        1 -> Icon(Icons.Filled.Description, contentDescription = label, tint = if (selected) Blue else Muted, modifier = Modifier.size(22.dp))
                         2 -> Image(painterResource(R.drawable.public_services), contentDescription = label, modifier = Modifier.size(22.dp), contentScale = ContentScale.Fit)
                         4 -> Image(painterResource(R.drawable.profile), contentDescription = label, modifier = Modifier.size(22.dp), contentScale = ContentScale.Fit)
                         else -> Icon(icon!!, contentDescription = label, tint = if (selected) Blue else Muted, modifier = Modifier.size(22.dp))
