@@ -353,7 +353,9 @@ private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayo
 
 private fun renderPdf(c:Context,title:String,number:String,recipient:String,body:String,signer:String,role:String,watermark:String,org:Org?,logo:BrandAsset?,seal:BrandAsset?,signature:BrandAsset?,background:BrandAsset?,flag:BrandAsset?,emblem:BrandAsset?,security:BrandAsset?,group:String,layout:DocumentLayout=DocumentLayout()):ByteArray {
     val pdf=PdfDocument()
-    val page=pdf.startPage(PdfDocument.PageInfo.Builder(595,842,1).create())
+    val bodyPages = splitDocumentBody(body, layout.pageCount)
+    for (pageNumber in bodyPages.indices) {
+    val page=pdf.startPage(PdfDocument.PageInfo.Builder(595,842,pageNumber+1).create())
     val canvas=page.canvas
     val p=Paint(Paint.ANTI_ALIAS_FLAG)
     canvas.drawColor(android.graphics.Color.WHITE)
@@ -405,7 +407,7 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     drawLines(canvas,recipient,margin,titleY+108f,595f-margin*2,p)
     val bodyY=layout.element("body")?.y ?: when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
     p.color=android.graphics.Color.DKGRAY;p.textSize=layout.element("body")?.fontSize ?: 10f
-    layout.element("body")?.takeIf { it.visible }?.let { element -> drawLines(canvas,body,element.x,element.y,element.width,p) }
+    layout.element("body")?.takeIf { it.visible }?.let { element -> drawLines(canvas,bodyPages[pageNumber],element.x,element.y,element.width,p) }
     // Group-specific reference fields and separators establish a distinct formal hierarchy.
     val referenceY=bodyY+145f
     p.color=accent;p.strokeWidth=0.8f
@@ -458,7 +460,17 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     }
     canvas.drawText(footer.take(100),margin,814f,p)
     canvas.drawText("Grafika pieczęci i wzór podpisu nie stanowią podpisu elektronicznego.",margin,800f,p)
-    pdf.finishPage(page);val out=java.io.ByteArrayOutputStream();pdf.writeTo(out);pdf.close();return out.toByteArray()
+    canvas.drawText("Strona "+(pageNumber+1)+" z "+bodyPages.size,595f-margin-70f,814f,p)
+    pdf.finishPage(page)
+    }
+    val out=java.io.ByteArrayOutputStream();pdf.writeTo(out);pdf.close();return out.toByteArray()
+}
+private fun splitDocumentBody(text:String, minimumPages:Int):List<String> {
+    val words=text.split(Regex("\\\\s+")).filter { it.isNotBlank() }
+    val estimatedPages=maxOf(1, (text.length+1099)/1100)
+    val pageCount=maxOf(minimumPages.coerceIn(1,100), estimatedPages).coerceAtMost(100)
+    val targetWords=maxOf(1, (words.size+pageCount-1)/pageCount)
+    return words.chunked(targetWords).map { it.joinToString(" ") }.ifEmpty { listOf("") }
 }
 private fun drawLines(canvas:android.graphics.Canvas,text:String,x:Float,start:Float,width:Float,p:Paint){
     var y=start;var line=""
