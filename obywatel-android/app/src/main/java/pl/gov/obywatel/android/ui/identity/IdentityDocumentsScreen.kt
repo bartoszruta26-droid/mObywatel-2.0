@@ -28,6 +28,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -312,7 +313,7 @@ private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayo
     var currentPage by remember { mutableIntStateOf(1) }
     var selectedKey by remember { mutableStateOf("title:1") }
     val pageElements = layout.elements.filter { it.page == currentPage }
-    val selected = pageElements.firstOrNull { "${it.id}:${it.page}" == selectedKey }
+    val selected = layout.elements.firstOrNull { it.id + ":" + it.page == selectedKey } ?: pageElements.firstOrNull() ?: layout.elements.first()
         ?: pageElements.firstOrNull()
         ?: layout.elements.first()
     LaunchedEffect(selected.id, selected.page) { selectedKey = "${selected.id}:${selected.page}" }
@@ -321,7 +322,7 @@ private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayo
         Text("Przeciągnij ramkę na podglądzie strony A4. Współrzędne i rozmiary są wyrażone w punktach PDF.", style = MaterialTheme.typography.bodySmall)
         SimpleChoice("Edytowana strona", currentPage.toString(), (1..layout.pageCount).map { it.toString() }) {
             currentPage = it.toInt()
-            selectedKey = pageElements.firstOrNull()?.let { e -> "${e.id}:${e.page}" } ?: "body:${currentPage}"
+            selectedKey = pageElements.firstOrNull()?.let { it.id + ":" + it.page } ?: "body:1"
         }
         DocumentLayoutCanvas(layout, currentPage, selectedKey, onSelect = { selectedKey = "${it.id}:${it.page}" }) { moved ->
             onChange(layout.update(moved))
@@ -334,7 +335,7 @@ private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayo
         ) { label ->
             layout.elements.firstOrNull { it.label + " • str. " + it.page == label }?.let {
                 selectedKey = "${it.id}:${it.page}"
-                currentPage = it.page
+
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -364,7 +365,7 @@ private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayo
                     selectedKey = "${clone.id}:${clone.page}"
                 }
             },
-            enabled = layout.elements.none { it.id == selected.id && it.page == currentPage } && currentPage > 1,
+            enabled = layout.elements.none { it.id == selected.id && it.page == currentPage } && selected.page != currentPage,
             modifier = Modifier.fillMaxWidth()
         ) { Text("Dodaj kopię elementu na tej stronie") }
         OutlinedButton(
@@ -472,9 +473,9 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
         else -> navy
     }
     val margin=if(group=="Urzędowe")52f else 42f
-    flag?.let{drawImage(c,canvas,it,margin,42f,68f,34f)}
-    emblem?.let{drawImage(c,canvas,it,margin+78f,35f,54f,54f)}
-    logo?.let{drawImage(c,canvas,it,475f,38f,76f,68f)}
+    layout.element("flag",pageNumber+1)?.takeIf { it.visible }?.let { e -> flag?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
+    layout.element("emblem",pageNumber+1)?.takeIf { it.visible }?.let { e -> emblem?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
+    layout.element("logo",pageNumber+1)?.takeIf { it.visible }?.let { e -> logo?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
     p.color=accent;p.strokeWidth=2.2f
     canvas.drawLine(margin,112f,595f-margin,112f,p)
     p.textSize=8.5f;p.typeface=Typeface.DEFAULT
