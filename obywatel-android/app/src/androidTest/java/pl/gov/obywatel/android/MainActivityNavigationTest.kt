@@ -79,8 +79,21 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun servicesAndQrRemainPrimaryDestinations() {
+    fun servicesRetainModulesAndExposeEmbeddedPublicPortalBrowser() {
         selectBottomTab("Usługi", 1)
+        composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
+        composeRule.onNodeWithText("Przeglądarka usług publicznych").assertIsDisplayed()
+        composeRule.onNodeWithText("Przeglądarka usług publicznych").performClick()
+        composeRule.onNodeWithText("Usługi publiczne").assertIsDisplayed()
+        composeRule.onNodeWithText("Szukaj usługi").assertIsDisplayed()
+        composeRule.onNodeWithText("mObywatel — portal").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun servicesBrowserBackReturnsToServiceCatalogAndQrStillWorks() {
+        selectBottomTab("Usługi", 1)
+        composeRule.onNodeWithText("Przeglądarka usług publicznych").performClick()
+        composeRule.onNodeWithText("Wróć").performClick()
         composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
         selectBottomTab("Kod QR")
         composeRule.onNodeWithText("Obywatelska Wymiana Danych").assertIsDisplayed()
