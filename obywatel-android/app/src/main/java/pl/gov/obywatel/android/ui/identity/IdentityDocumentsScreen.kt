@@ -342,6 +342,21 @@ private fun DocumentLayoutEditor(layout: DocumentLayout, onChange: (DocumentLayo
         DocumentLayoutCanvas(layout, currentPage, selectedKey, onSelect = { selectedKey = "${it.id}:${it.page}" }) { moved ->
             onChange(layout.update(moved))
         }
+        Text("Dodawanie elementów dekoracyjnych", fontWeight = FontWeight.SemiBold)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = {
+                val item = DocumentLayoutElement(UUID.randomUUID().toString(), "Linia", 42f, 620f, 250f, 2f, 2f, page=currentPage, kind="line")
+                onChange(layout.copy(elements=layout.elements + item)); selectedKey="${item.id}:${item.page}"
+            }, modifier=Modifier.weight(1f)) { Text("Linia") }
+            OutlinedButton(onClick = {
+                val item = DocumentLayoutElement(UUID.randomUUID().toString(), "Ramka", 42f, 620f, 250f, 100f, 1.5f, page=currentPage, kind="frame")
+                onChange(layout.copy(elements=layout.elements + item)); selectedKey="${item.id}:${item.page}"
+            }, modifier=Modifier.weight(1f)) { Text("Ramka") }
+            OutlinedButton(onClick = {
+                val item = DocumentLayoutElement(UUID.randomUUID().toString(), "Ornament", 250f, 620f, 60f, 40f, 24f, page=currentPage, kind="ornament")
+                onChange(layout.copy(elements=layout.elements + item)); selectedKey="${item.id}:${item.page}"
+            }, modifier=Modifier.weight(1f)) { Text("Ornament") }
+        }
         Text("Elementy na stronie: ${pageElements.size}", style = MaterialTheme.typography.labelSmall)
         SimpleChoice(
             "Edytowany element",
@@ -537,6 +552,30 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
         else -> navy
     }
     val margin=if(group=="Urzędowe")52f else 42f
+    // User-created geometry and ornaments are rendered into the actual PDF page.
+    layout.elements.filter { it.page == pageNumber + 1 && it.visible && it.kind in setOf("line", "frame", "ornament") }.forEach { e ->
+        p.color=accent
+        when (e.kind) {
+            "line" -> {
+                p.style=Paint.Style.STROKE
+                p.strokeWidth=e.fontSize.coerceAtLeast(0.5f)
+                canvas.drawLine(e.x,e.y,e.x+e.width,e.y+e.height,p)
+                p.style=Paint.Style.FILL
+            }
+            "frame" -> {
+                p.style=Paint.Style.STROKE
+                p.strokeWidth=e.fontSize.coerceIn(0.5f,12f)
+                canvas.drawRect(e.x,e.y,e.x+e.width,e.y+e.height,p)
+                p.style=Paint.Style.FILL
+            }
+            "ornament" -> {
+                p.typeface=Typeface.SERIF
+                p.textSize=e.fontSize.coerceIn(8f,96f)
+                canvas.drawText("❦",e.x,e.y+e.height.coerceAtMost(e.fontSize),p)
+                p.typeface=Typeface.DEFAULT
+            }
+        }
+    }
     layout.element("flag",pageNumber+1)?.takeIf { it.visible }?.let { e -> flag?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
     layout.element("emblem",pageNumber+1)?.takeIf { it.visible }?.let { e -> emblem?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
     layout.element("logo",pageNumber+1)?.takeIf { it.visible }?.let { e -> logo?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
