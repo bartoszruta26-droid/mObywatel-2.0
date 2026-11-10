@@ -1858,31 +1858,12 @@ private fun DocumentsWalletScreen(onBack: () -> Unit, onOpenDetails: (String) ->
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (index == 11) {
-                        Icon(Icons.Filled.FamilyRestroom, contentDescription = "Ikona: dane dzieci",
-                            tint = Blue, modifier = Modifier.size(48.dp))
-                    } else if (index == 12) {
-                        Icon(Icons.Filled.Vaccines, contentDescription = "Ikona: eKarta Szczepień",
-                            tint = Blue, modifier = Modifier.size(48.dp))
-                    } else {
-                        Image(
-                            painter = painterResource(when (index) {
-                                0 -> R.drawable.documents_family_record
-                                1 -> R.drawable.documents_identity_card
-                                2 -> R.drawable.documents_passport
-                                3 -> R.drawable.documents_family_record
-                                4 -> R.drawable.documents_deputy_legitimacy
-                                5 -> R.drawable.documents_course_legitimacy
-                                6 -> R.drawable.documents_student_legitimacy
-                                8 -> R.drawable.documents_identity_card
-                                9 -> R.drawable.documents_course_legitimacy
-                                else -> R.drawable.documents_medical_certificates
-                            }),
-                            contentDescription = "Ilustracja: $title",
-                            modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "Ikona dokumentu: $title",
+                        tint = Blue,
+                        modifier = Modifier.size(42.dp)
+                    )
                     Column(Modifier.weight(1f).padding(start = 12.dp)) {
                         Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
                         Text(if (hasData) "Dane dostępne" else "Brak zapisanych danych",
@@ -2061,23 +2042,33 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Image(
-            painter = painterResource(when (documentId.toIntOrNull()) {
-                0 -> R.drawable.documents_document_wallet_banner
-                1 -> R.drawable.documents_identity_card
-                2 -> R.drawable.documents_passport
-                3 -> R.drawable.documents_family_record
-                4 -> R.drawable.documents_deputy_legitimacy
-                5 -> R.drawable.documents_course_legitimacy
-                6 -> R.drawable.documents_student_legitimacy
-                8 -> R.drawable.documents_identity_card
-                9, 10 -> R.drawable.documents_course_legitimacy
-                else -> R.drawable.documents_medical_certificates
-            }),
-            contentDescription = "Ilustracja ewidencji: ${section.first}",
-            modifier = Modifier.fillMaxWidth().height(148.dp).clip(RoundedCornerShape(16.dp)),
-            contentScale = ContentScale.Fit
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth().height(112.dp).clip(RoundedCornerShape(16.dp))
+                .background(BlueLight),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = when (documentId) {
+                    "1" -> Icons.Filled.CreditCard
+                    "2" -> Icons.Filled.Public
+                    "3" -> Icons.Filled.Fingerprint
+                    "4" -> Icons.Filled.AccountBalance
+                    "5", "6" -> Icons.Filled.Badge
+                    "7" -> Icons.Filled.HealthAndSafety
+                    "8" -> Icons.Filled.CreditCard
+                    "9" -> Icons.Filled.CreditCard
+                    "10" -> Icons.Filled.FamilyRestroom
+                    "11" -> Icons.Filled.Vaccines
+                    "12" -> Icons.Filled.Description
+                    "registry" -> Icons.Filled.AccountBalance
+                    "signedpdf" -> Icons.Filled.Shield
+                    else -> Icons.Filled.Description
+                },
+                contentDescription = "Wektorowa ikona dokumentu: ${section.first}",
+                tint = Blue,
+                modifier = Modifier.size(68.dp)
+            )
+        }
         if (documentId == "2") {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -2681,6 +2672,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("studentValidity", "Termin ważności / aktualizacji", fields, "DD-MM-RRRR")
                 DemoDataField("studentStatus", "Status studenta", fields, "aktywny / urlop / skreślony / ukończony")
                 DemoDataField("studentIssuer", "Osoba / jednostka wydająca", fields)
+                Text("Podgląd legitymacji — awers i rewers", color = Navy, fontWeight = FontWeight.Bold)
+                StudentCardPreview(fields = fields, photoBase64 = photoBase64)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "studentExtra", "Ten formularz służy wyłącznie do ewidencji danych. Nie nadaje statusu studenta, nie potwierdza wpisu na listę studentów i nie zastępuje dokumentu ani certyfikatu wydanego przez uczelnię.")
             }
         }
@@ -3185,8 +3178,35 @@ private fun DisabilityDecisionPreview(fields: Map<String, String>) {
     }
 }
 
+private fun credentialIsActive(status: String, validUntil: String): Boolean {
+    val normalized = status.trim().lowercase(java.util.Locale("pl", "PL"))
+    if (normalized !in setOf("aktywny", "aktywna", "active", "ważna", "wazna", "ważny", "wazny")) return false
+    val date = validUntil.trim()
+    if (date.isBlank()) return false
+    val parsed = listOf("dd-MM-yyyy", "dd.MM.yyyy", "yyyy-MM-dd").firstNotNullOfOrNull { pattern ->
+        runCatching {
+            java.text.SimpleDateFormat(pattern, java.util.Locale.ROOT).apply { isLenient = false }.parse(date)
+        }.getOrNull()
+    } ?: return false
+    val today = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.ROOT).format(java.util.Date())
+    val expiry = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.ROOT).format(parsed)
+    return expiry >= today
+}
+
 @Composable
-private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: String) {
+private fun CredentialCardPreview(
+    title: String,
+    holder: String,
+    institution: String,
+    number: String,
+    program: String,
+    status: String,
+    validUntil: String,
+    photoBase64: String,
+    backgroundRes: Int,
+    backDetails: List<Pair<String, String>>
+) {
+    val context = LocalContext.current
     val photoBitmap = remember(photoBase64) {
         runCatching {
             if (photoBase64.isBlank()) null else {
@@ -3194,78 +3214,231 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
                 val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
                 var sample = 1
-                while (bounds.outWidth / sample > 500 || bounds.outHeight / sample > 500) sample *= 2
+                while (bounds.outWidth / sample > 600 || bounds.outHeight / sample > 600) sample *= 2
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
             }
         }.getOrNull()
     }
-    val participantName = listOf(fields["firstNames"], fields["lastName"])
-        .filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO UCZESTNIKA" }
+    val brand = remember(institution) {
+        Triple(
+            DocumentBrandStore.image(context, institution, "Logo"),
+            DocumentBrandStore.image(context, institution, "Herb") ?: DocumentBrandStore.image(context, institution, "Godło"),
+            DocumentBrandStore.image(context, institution, "Flaga")
+                ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
+        )
+    }
+    val qrPayload = remember(title, number, institution, validUntil) {
+        listOf("CREDENTIAL", title, number, institution, validUntil).joinToString("|")
+    }
+    val qrBitmap = remember(qrPayload) { generateLoyaltyCodeBitmap(qrPayload, BarcodeFormat.QR_CODE) }
+    val active = credentialIsActive(status, validUntil)
+    val displayHolder = holder.ifBlank { "IMIĘ I NAZWISKO POSIADACZA" }
+    val displayInstitution = institution.ifBlank { "NAZWA INSTYTUCJI" }
+    val displayNumber = number.ifBlank { "—" }
+    val accent = Color(0xFF29466D)
+    val ink = Color(0xFF1D2D45)
+    val muted = Color(0xFF52627A)
+
+    Text("AWERS", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
     Card(
         modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8EAF4)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-        Column(Modifier.fillMaxSize().padding(11.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(29.dp).clip(RoundedCornerShape(7.dp)).background(Color(0xFF39466F)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.Description, contentDescription = "Znak instytucji szkoleniowej", tint = White)
-                }
-                Column(Modifier.weight(1f).padding(start = 7.dp)) {
-                    Text(
-                        fields["trainingInstitution"].orEmpty().ifBlank { "INSTYTUCJA SZKOLENIOWA" },
-                        color = Color(0xFF26345D),
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text("LEGITYMACJA UCZESTNIKA KURSU", color = Color(0xFF4C587B), style = MaterialTheme.typography.labelSmall)
-                }
-            }
-            Row(
-                modifier = Modifier.weight(1f).padding(top = 7.dp, bottom = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(9.dp)
+        Box(Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(backgroundRes),
+                contentDescription = "Tło legitymacji",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Column(
+                Modifier.fillMaxSize().padding(11.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier.width(66.dp).fillMaxSize().clip(RoundedCornerShape(6.dp)).background(Color(0xFFD5D9E8)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (photoBitmap != null) {
-                        Image(photoBitmap.asImageBitmap(), contentDescription = "Fotografia uczestnika kursu", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    if (brand.first != null) {
+                        Image(brand.first.asImageBitmap(), contentDescription = "Logo instytucji",
+                            modifier = Modifier.size(34.dp), contentScale = ContentScale.Fit)
                     } else {
-                        Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na fotografię", tint = Color(0xFF66729A), modifier = Modifier.size(40.dp))
+                        Icon(Icons.Filled.AccountBalance, contentDescription = "Miejsce na logo instytucji",
+                            tint = accent, modifier = Modifier.size(32.dp))
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(displayInstitution, color = ink, fontWeight = FontWeight.ExtraBold,
+                            style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(title, color = accent, fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    if (brand.third != null) {
+                        Image(brand.third.asImageBitmap(), contentDescription = "Flaga",
+                            modifier = Modifier.width(36.dp).height(24.dp), contentScale = ContentScale.Fit)
+                    }
+                    if (brand.second != null) {
+                        Image(brand.second.asImageBitmap(), contentDescription = "Herb lub godło instytucji",
+                            modifier = Modifier.size(31.dp), contentScale = ContentScale.Fit)
                     }
                 }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("UCZESTNIK", color = Color(0xFF596487), style = MaterialTheme.typography.labelSmall)
-                    Text(participantName, color = Color(0xFF202B4C), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text("KURS", color = Color(0xFF596487), style = MaterialTheme.typography.labelSmall)
-                    Text(fields["trainingCourseName"].orEmpty().ifBlank { "—" }, color = Color(0xFF202B4C), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Row(
+                    Modifier.weight(1f).padding(top = 7.dp, bottom = 5.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        Modifier.width(72.dp).fillMaxSize().clip(RoundedCornerShape(6.dp))
+                            .background(Color.White.copy(alpha = 0.76f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (photoBitmap != null) {
+                            Image(photoBitmap.asImageBitmap(), contentDescription = "Fotografia posiadacza",
+                                modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        } else {
+                            Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na fotografię",
+                                tint = muted, modifier = Modifier.size(46.dp))
+                        }
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("IMIĘ I NAZWISKO", color = muted, style = MaterialTheme.typography.labelSmall)
+                        Text(displayHolder, color = ink, fontWeight = FontWeight.ExtraBold,
+                            style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text("PROGRAM / KIERUNEK", color = muted, style = MaterialTheme.typography.labelSmall)
+                        Text(program.ifBlank { "—" }, color = ink, fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text("NR $displayNumber", color = accent, fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp))
+                        .background(Color.White.copy(alpha = 0.82f)).padding(horizontal = 8.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        if (active) Icons.Filled.CheckCircle else Icons.Filled.Info,
+                        contentDescription = if (active) "Status ważności potwierdzony danymi" else "Status ważności niepotwierdzony",
+                        tint = if (active) Color(0xFF168447) else Color(0xFF9A5B00),
+                        modifier = Modifier.size(20.dp)
+                    )
                     Text(
-                        "NR " + fields["trainingCardNumber"].orEmpty().ifBlank { "—" } +
-                            "   WAŻNA DO " + fields["trainingValidUntil"].orEmpty().ifBlank { "—" },
-                        color = Color(0xFF35436D),
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        if (active) "WAŻNA DO $validUntil" else "STATUS / WAŻNOŚĆ DO WERYFIKACJI",
+                        color = if (active) Color(0xFF126B3A) else Color(0xFF805000),
+                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(start = 5.dp)
                     )
                 }
             }
-            Column(
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
-                    .background(Color(0xFF39466F)).padding(horizontal = 7.dp, vertical = 5.dp)
-            ) {
-                Text("LEGITYMACJA UCZESTNIKA KURSU", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+        }
+    }
+
+    Spacer(Modifier.height(8.dp))
+    Text("REWERS", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+    Card(
+        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(backgroundRes),
+                contentDescription = "Tło rewersu legitymacji",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Column(Modifier.fillMaxSize().padding(11.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("$title • REWERS", color = accent, fontWeight = FontWeight.ExtraBold,
+                        style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("NR $displayNumber", color = ink, fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall)
+                }
+                Row(Modifier.weight(1f).padding(vertical = 5.dp), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        backDetails.filter { it.second.isNotBlank() }.forEach { (label, value) ->
+                            Text(label.uppercase(java.util.Locale("pl", "PL")), color = muted,
+                                fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                            Text(value, color = ink, style = MaterialTheme.typography.bodySmall,
+                                maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                        Text("WYSTAWCA: $displayInstitution", color = accent, fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        if (qrBitmap != null) {
+                            Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR identyfikacyjny legitymacji",
+                                modifier = Modifier.size(78.dp), contentScale = ContentScale.Fit)
+                        } else {
+                            Icon(Icons.Filled.QrCode2, contentDescription = "Kod QR niedostępny",
+                                tint = muted, modifier = Modifier.size(78.dp))
+                        }
+                        Text("KOD IDENTYFIKACYJNY", color = muted, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+                Column(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
+                        .background(Color.White.copy(alpha = 0.82f)).padding(horizontal = 7.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        if (active) "STATUS EWIDENCYJNY: AKTYWNY" else "STATUS EWIDENCYJNY: NIEPOTWIERDZONY",
+                        color = if (active) Color(0xFF126B3A) else Color(0xFF805000),
+                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall
+                    )
+                    Text("Kod QR zawiera identyfikator i dane karty; nie potwierdza statusu w rejestrze zewnętrznym.",
+                        color = muted, style = MaterialTheme.typography.labelSmall)
+                }
             }
         }
     }
 }
 
+@Composable
+private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: String) {
+    CredentialCardPreview(
+        title = "LEGITYMACJA UCZESTNIKA KURSU",
+        holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" "),
+        institution = fields["trainingInstitution"].orEmpty(),
+        number = fields["trainingCardNumber"].orEmpty(),
+        program = fields["trainingCourseName"].orEmpty(),
+        status = fields["trainingStatus"].orEmpty(),
+        validUntil = fields["trainingValidUntil"].orEmpty(),
+        photoBase64 = photoBase64,
+        backgroundRes = R.drawable.tlo_legitymacji_niebieskie,
+        backDetails = listOf(
+            "Adres instytucji" to fields["trainingInstitutionAddress"].orEmpty(),
+            "Numer rejestru" to fields["trainingInstitutionRegistry"].orEmpty(),
+            "Kod kursu" to fields["trainingCourseCode"].orEmpty(),
+            "Okres kursu" to listOf(fields["trainingStartDate"], fields["trainingEndDate"]).filterNot { it.isNullOrBlank() }.joinToString(" – "),
+            "Data wydania" to fields["trainingIssueDate"].orEmpty(),
+            "Wystawca" to fields["trainingIssuer"].orEmpty(),
+            "Podpis wystawcy" to fields["trainingSignature"].orEmpty()
+        )
+    )
+}
+
+@Composable
+private fun StudentCardPreview(fields: Map<String, String>, photoBase64: String) {
+    CredentialCardPreview(
+        title = "LEGITYMACJA UCZNIA / STUDENTA",
+        holder = fields["studentNames"].orEmpty().ifBlank {
+            listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
+        },
+        institution = fields["studentUniversity"].orEmpty(),
+        number = fields["studentCardNumber"].orEmpty(),
+        program = fields["studentProgramme"].orEmpty(),
+        status = fields["studentStatus"].orEmpty(),
+        validUntil = fields["studentValidity"].orEmpty(),
+        photoBase64 = photoBase64,
+        backgroundRes = R.drawable.tlo_legitymacji_zielone,
+        backDetails = listOf(
+            "Adres uczelni" to fields["studentUniversityAddress"].orEmpty(),
+            "Wydział" to fields["studentFaculty"].orEmpty(),
+            "Poziom i forma" to listOf(fields["studentLevel"], fields["studentProfile"]).filterNot { it.isNullOrBlank() }.joinToString(" / "),
+            "Rok / semestr" to fields["studentYear"].orEmpty(),
+            "Rok akademicki" to fields["studentAcademicYear"].orEmpty(),
+            "Data wydania" to fields["studentIssueDate"].orEmpty(),
+            "Wystawca" to fields["studentIssuer"].orEmpty()
+        )
+    )
+}
 
 @Composable
 private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
