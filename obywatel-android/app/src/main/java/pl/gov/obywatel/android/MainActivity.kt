@@ -697,7 +697,7 @@ private fun HomeScreen() {
                         onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
                         onOpenDetails = { selectedDocumentId = it },
                         onOpenService = { title ->
-                            if (title == "Konta bankowe") showBankAccounts = true else activeService = title
+                            when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
                         }
                     )
                     selectedTab == 3 -> QrToolsScreen()
