@@ -146,13 +146,13 @@ private val services = listOf(
     ServiceItem("Płatności", "Usługi i opłaty", R.drawable.mob_payments, category = "Sprawy urzędowe"),
     ServiceItem("Zdrowie", "Informacje zdrowotne", R.drawable.mob_health, category = "Zdrowie"),
     ServiceItem("eKarta Szczepień", "Prywatna książeczka szczepień i historia dawek", fallbackIcon = Icons.Filled.HealthAndSafety, category = "Zdrowie"),
-    ServiceItem("Dane dzieci", "Rodzinny rejestr danych i dokumentacji dzieci", fallbackIcon = Icons.Filled.FamilyRestroom, category = "Rodzina"),
+    ServiceItem("Dane dzieci", "Rodzinny rejestr danych i dokumentacji dzieci", fallbackIcon = Icons.Filled.AccountCircle, category = "Rodzina"),
     ServiceItem("Formularze dokumentów", "Akty i dokumenty cywilne — ewidencja i załączniki", fallbackIcon = Icons.Filled.Description, category = "Dokumenty"),
     ServiceItem("Dokumenty Rodowe", "Księgi, akty, rejestry i dokumenty Rodu", fallbackIcon = Icons.Filled.Fingerprint, category = "Rodzina"),
     ServiceItem("Dokumenty rejestru podmiotów", "Dokumenty firmowe i organizacyjne", fallbackIcon = Icons.Filled.AccountBalance, category = "Rejestry"),
-    ServiceItem("Dokumenty Kościelne", "Dokumenty kościelne, liturgiczne i organizacyjne", fallbackIcon = Icons.Filled.Church, category = "Kościół i wspólnoty"),
-    ServiceItem("Zasoby identyfikacji dokumentów", "Logo, godła, flagi, pieczęcie i tła dokumentów", fallbackIcon = Icons.Filled.Palette, category = "Dokumenty"),
-    ServiceItem("Dokumenty PDF i podpisy elektroniczne", "Import, przechowywanie i podgląd dokumentów PDF", fallbackIcon = Icons.Filled.Draw, category = "Dokumenty"),
+    ServiceItem("Dokumenty Kościelne", "Dokumenty kościelne, liturgiczne i organizacyjne", fallbackIcon = Icons.Filled.AccountBalance, category = "Kościół i wspólnoty"),
+    ServiceItem("Zasoby identyfikacji dokumentów", "Logo, godła, flagi, pieczęcie i tła dokumentów", fallbackIcon = Icons.Filled.Description, category = "Dokumenty"),
+    ServiceItem("Dokumenty PDF i podpisy elektroniczne", "Import, przechowywanie i podgląd dokumentów PDF", fallbackIcon = Icons.Filled.Description, category = "Dokumenty"),
     ServiceItem("Transport", "Podróże i przejazdy", R.drawable.mob_transport, category = "Podróże"),
     ServiceItem("Mandaty", "Ewidencja i informacje", R.drawable.mob_penalties, category = "Kierowca i pojazdy"),
     ServiceItem("Sprawdź PESEL", "Informacje o numerze PESEL", R.drawable.mob_pesel_check, category = "Bezpieczeństwo"),
@@ -185,7 +185,13 @@ private val documentDisplayOptions = listOf(
     Triple("parliament", "Legitymacja poselska", R.drawable.documents_deputy_legitimacy),
     Triple("training", "Legitymacja kursanta", R.drawable.art_02_legitymacja_zawodowa),
     Triple("student", "Legitymacja ucznia/studenta", R.drawable.documents_student_legitimacy),
-    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci)
+    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci),
+    Triple("church", "Dokumenty kościelne", R.drawable.church_communities),
+    Triple("civil", "Dokumenty cywilne", R.drawable.documents_identity_card),
+    Triple("business", "Dokumenty firmowe i podmiotowe", R.drawable.business_registry_icon),
+    Triple("vaccines", "Książeczka szczepień WHO", R.drawable.documents_medical_certificates),
+    Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.documents_document_wallet_banner),
+    Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.documents_family_record)
 )
 private val defaultDocumentPlacements = mapOf(
     "identity" to "dashboard",
@@ -195,7 +201,13 @@ private val defaultDocumentPlacements = mapOf(
     "family" to "other",
     "parliament" to "other",
     "training" to "other",
-    "disability" to "other"
+    "disability" to "other",
+    "church" to "other",
+    "civil" to "other",
+    "business" to "other",
+    "vaccines" to "other",
+    "signed_pdf" to "other",
+    "branding" to "hidden"
 )
 private fun loadDocumentPlacements(context: Context): Map<String, String> {
     val prefs = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
@@ -472,6 +484,12 @@ private fun HomeScreen() {
                                                                 "training" -> selectedDocumentId = "5"
                                                                 "student" -> selectedDocumentId = "6"
                                                                 "disability" -> selectedDocumentId = "7"
+                                                                "church" -> activeService = "Dokumenty Kościelne"
+                                                                "civil" -> activeService = "Formularze dokumentów"
+                                                                "business" -> activeService = "Dokumenty rejestru podmiotów"
+                                                                "vaccines" -> activeService = "eKarta Szczepień"
+                                                                "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
+                                                                "branding" -> activeService = "Zasoby identyfikacji dokumentów"
                                                             }
                                                         },
                                                         colors = CardDefaults.cardColors(containerColor = White)
@@ -1611,7 +1629,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard(
             "Widoczność dokumentów",
             "Wybierz: Dokumenty, Inne dokumenty albo Ukryj",
-            Icons.Filled.Visibility,
+            Icons.Filled.Security,
             onManageDocumentVisibility
         )
         Text("Kopia danych vCard", color = Navy, fontWeight = FontWeight.Bold)
