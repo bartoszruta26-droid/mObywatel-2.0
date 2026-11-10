@@ -164,9 +164,6 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                 OfficialDocumentStore.attachments(context,type.id).forEach { Text("Załącznik: $it",color=Color(0xFF1769AA),style=MaterialTheme.typography.bodySmall) }
                 Text("Plik PDF/XML jest przechowywany jako załącznik. Aplikacja nie weryfikuje podpisu elektronicznego, pieczęci ani statusu KRK.",color=Color(0xFF667788),style=MaterialTheme.typography.bodySmall)
             }
-            DocumentPdfExportButton(type.title, local.mapKeys { (key, _) ->
-                if (key.startsWith("f")) type.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
-            })
             if (!readOnly) OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.fillMaxWidth()) {
                 Text(if (preview) "Wróć do edycji" else "Podgląd dokumentu")
             }
@@ -176,6 +173,9 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
             },modifier=Modifier.fillMaxWidth()) { Text("Zapisz dane") }
             if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA),style=MaterialTheme.typography.bodySmall)
             TextButton(onClick={selected=null;status=""}) { Text("Wróć do katalogu") }
+            DocumentPdfExportButton(type.title, local.mapKeys { (key, _) ->
+                if (key.startsWith("f")) type.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
+            })
         }
         Text("Dane są szyfrowane lokalnie w pamięci aplikacji. Aplikacja nie pobiera danych z rejestrów państwowych i nie wystawia dokumentów w imieniu organów.",color=Color(0xFF667788),style=MaterialTheme.typography.labelSmall)
     }
