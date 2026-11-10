@@ -3381,10 +3381,10 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Odpis z rejestru podmiotów", color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Ewidencja danych identyfikacyjnych i rejestrowych podmiotów. Wybierz rodzaj podmiotu i przepisz dane z właściwego dokumentu lub rejestru.",
+        Text("Dane identyfikacyjne i rejestrowe podmiotów zapisane w profilu. Wybierz rodzaj podmiotu, aby wyświetlić jego dane.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
         Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
-            Text("Wpisy w tym module są lokalnym zapisem danych. Nie stanowią urzędowego odpisu, nie potwierdzają aktualnego statusu i nie pobierają danych z KRS ani innych rejestrów.",
+            Text("To jest widok informacyjny. Edycja danych rejestrowych jest dostępna w: Więcej → Ustawienia → Dane rejestru podmiotów. Wyświetlane informacje są lokalnym zapisem i nie stanowią urzędowego odpisu ani potwierdzenia aktualności wpisu.",
                 Modifier.padding(14.dp), color = Navy, style = MaterialTheme.typography.bodySmall)
         }
         sections.forEach { (key, label) ->
@@ -3399,22 +3399,30 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit) {
         }
         Text(sections.first { it.first == selectedEntity }.second, color = Navy,
             style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        fieldSets[selectedEntity].orEmpty().forEach { (key, label, placeholder) ->
-            DemoDataField(key, label, fields, placeholder)
+        val visibleFields = fieldSets[selectedEntity].orEmpty()
+            .mapNotNull { (key, label, _) -> fields[key]?.takeIf { it.isNotBlank() }?.let { label to it } }
+        val sourceFields = listOf(
+            "registry_${selectedEntity}_source" to "Źródło danych / adres rejestru",
+            "registry_${selectedEntity}_checked" to "Data sprawdzenia",
+            "registry_${selectedEntity}_documentDate" to "Data sporządzenia odpisu / dokumentu",
+            "registry_${selectedEntity}_notes" to "Uwagi"
+        ).mapNotNull { (key, label) -> fields[key]?.takeIf { it.isNotBlank() }?.let { label to it } }
+        if (visibleFields.isEmpty() && sourceFields.isEmpty()) {
+            Text("Brak zapisanych danych dla wybranego rodzaju podmiotu. Dane można uzupełnić w ustawieniach.",
+                color = Muted, style = MaterialTheme.typography.bodyMedium)
+        } else {
+            (visibleFields + sourceFields).forEach { (label, value) ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = White)
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(13.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
+                        Text(value, color = Navy, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
         }
-        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
-        Text("Źródło i kontrola aktualności", color = Navy, fontWeight = FontWeight.Bold)
-        DemoDataField("registry_${selectedEntity}_source", "Źródło danych / adres rejestru", fields, "Adres strony lub nazwa dokumentu")
-        DemoDataField("registry_${selectedEntity}_checked", "Data sprawdzenia", fields, "DD-MM-RRRR")
-        DemoDataField("registry_${selectedEntity}_documentDate", "Data sporządzenia odpisu / dokumentu", fields, "DD-MM-RRRR")
-        DemoDataField("registry_${selectedEntity}_notes", "Uwagi", fields, "Informacje uzupełniające")
-        Button(onClick = {
-            runCatching { DemoIdentityStore.save(context, fields.toMap()) }
-                .onSuccess { status = "Zapisano dane lokalnie i zaszyfrowano." }
-                .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
-        }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
-        if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E),
-            style = MaterialTheme.typography.bodySmall)
     }
 }
 
