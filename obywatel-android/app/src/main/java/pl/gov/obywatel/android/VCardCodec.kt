@@ -9,7 +9,7 @@ package pl.gov.obywatel.android
  * the QR session offer and cryptographic envelope remain outside the vCard.
  */
 internal object VCardCodec {
-    private val fieldName = Regex("[A-Za-z0-9-]{1,64}")
+    private val fieldName = Regex("[A-Za-z0-9_-]{1,64}")
 
     data class Card(
         val properties: Map<String, List<String>>,
