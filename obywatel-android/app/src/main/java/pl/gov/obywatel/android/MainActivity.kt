@@ -178,18 +178,18 @@ private val services = listOf(
 private const val DOCUMENT_DISPLAY_PREFS = "document_display_preferences"
 private const val DOCUMENT_DISPLAY_KEY_PREFIX = "placement_"
 private val documentDisplayOptions = listOf(
-    Triple("identity", "Dowód tożsamości", R.drawable.documents_identity_card),
+    Triple("identity", "Dowód tożsamości", R.drawable.bg_document_civic_identity),
     Triple("passport", "Dane paszportowe", R.drawable.art_02_paszport_rodowy_jasny),
     Triple("registry", "Odpis z rejestru podmiotów", R.drawable.art_06_przynaleznosc_rodowa_organizacyjna),
     Triple("family", "Dokument rodowy", R.drawable.art_01_karta_rodowa_jasna),
     Triple("parliament", "Legitymacja poselska", R.drawable.documents_deputy_legitimacy),
     Triple("training", "Legitymacja kursanta", R.drawable.art_02_legitymacja_zawodowa),
     Triple("student", "Legitymacja ucznia/studenta", R.drawable.documents_student_legitimacy),
-    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.art_03_orzeczenie_rodowe_o_niepelnosprawnosci),
-    Triple("church", "Dokumenty kościelne", R.drawable.church_communities),
-    Triple("civil", "Dokumenty cywilne", R.drawable.documents_identity_card),
+    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.bg_document_disability_certificate),
+    Triple("church", "Dokumenty kościelne", R.drawable.bg_document_missionary_pdm),
+    Triple("civil", "Dokumenty cywilne", R.drawable.bg_document_civic_identity),
     Triple("business", "Dokumenty firmowe i podmiotowe", R.drawable.business_registry_icon),
-    Triple("vaccines", "Książeczka szczepień WHO", R.drawable.documents_medical_certificates),
+    Triple("vaccines", "Książeczka szczepień WHO", R.drawable.bg_document_vaccination_booklet),
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.documents_document_wallet_banner),
     Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.documents_family_record)
 )

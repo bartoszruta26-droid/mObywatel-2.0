@@ -103,6 +103,26 @@ private object DocumentBrandStore {
     }
 }
 
+private fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
+    val normalized = title.lowercase(Locale.ROOT)
+    val resourceId = when {
+        normalized.contains("szczep") || normalized.contains("vaccin") ->
+            R.drawable.bg_document_vaccination_booklet
+        normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw") ||
+            normalized.contains("orzeczenie") ->
+            R.drawable.bg_document_disability_certificate
+        normalized.contains("misjon") || normalized.contains("papiesk") ||
+            normalized.contains("kościel") || normalized.contains("kosciel") ->
+            R.drawable.bg_document_missionary_pdm
+        normalized.contains("dowód") || normalized.contains("dowod") ||
+            normalized.contains("tożsamo") || normalized.contains("tozsamos") ||
+            normalized.contains("cywil") ->
+            R.drawable.bg_document_civic_identity
+        else -> 0
+    }
+    return if (resourceId == 0) null else BitmapFactory.decodeResource(context.resources, resourceId)
+}
+
 @Composable
 internal fun DocumentIdentityTemplate(
     title: String,
@@ -120,7 +140,7 @@ internal fun DocumentIdentityTemplate(
             ?: DocumentBrandStore.image(context, effectiveOwner, "Herb")
             ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
     }
-    val background = remember(effectiveOwner) { DocumentBrandStore.image(context, effectiveOwner, "Tło dokumentu") }
+    val background = remember(effectiveOwner, title) { DocumentBrandStore.image(context, effectiveOwner, "Tło dokumentu") ?: defaultDocumentBackground(context, title) }
     val now = remember { SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date()) }
     val name = values.entries.firstOrNull { it.key.contains("imię", true) || it.key.contains("nazw", true) || it.key.contains("posiadacz", true) || it.key.contains("osoba", true) }?.value.orEmpty()
     val number = values.entries.firstOrNull { it.key.contains("numer", true) || it.key.contains("znak", true) || it.key.contains("nr ", true) }?.value.orEmpty()
@@ -280,7 +300,7 @@ private object DocumentPdfRenderer {
         val crest = DocumentBrandStore.image(context,owner,"Herb") ?: DocumentBrandStore.image(context,owner,"Godło")
         val seal = DocumentBrandStore.image(context,owner,"Pieczęć")
         val signature = DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
-        val background = DocumentBrandStore.image(context,owner,"Tło dokumentu")
+        val background = DocumentBrandStore.image(context,owner,"Tło dokumentu") ?: defaultDocumentBackground(context,title)
         val watermark = DocumentBrandStore.image(context,owner,"Znak wodny") ?: DocumentBrandStore.image(context,owner,"Grafika hologramu / zabezpieczenia")
         var pageNo = 0
         var page: PdfDocument.Page? = null
