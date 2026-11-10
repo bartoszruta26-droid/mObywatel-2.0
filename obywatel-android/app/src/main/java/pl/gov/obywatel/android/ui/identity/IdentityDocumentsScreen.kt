@@ -483,10 +483,10 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     p.textSize=15f;p.typeface=Typeface.DEFAULT_BOLD;p.color=accent
     canvas.drawText((org?.name ?: "Podmiot").take(58),margin,82f,p)
     p.color=android.graphics.Color.LTGRAY;p.textSize=48f;p.typeface=Typeface.DEFAULT_BOLD
-    canvas.save();canvas.rotate(-30f,295f,420f);layout.element("watermark")?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(watermark.take(20),element.x,element.y,p) };canvas.restore()
+    canvas.save();canvas.rotate(-30f,295f,420f);layout.element("watermark",pageNumber+1)?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(watermark.take(20),element.x,element.y,p) };canvas.restore()
     p.color=accent;p.textSize=21f
-    val titleY=layout.element("title")?.y ?: when(group){"Kościelne"->190f;"Urzędowe"->188f;"Rodowe"->198f;else->184f}
-    layout.element("title")?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(title.take(48),element.x,element.y+element.height.coerceAtMost(element.fontSize),p) }
+    val titleY=layout.element("title",pageNumber+1)?.y ?: when(group){"Kościelne"->190f;"Urzędowe"->188f;"Rodowe"->198f;else->184f}
+    layout.element("title",pageNumber+1)?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(title.take(48),element.x,element.y+element.height.coerceAtMost(element.fontSize),p) }
     p.color=android.graphics.Color.DKGRAY;p.textSize=9.5f;p.typeface=Typeface.DEFAULT
     canvas.drawText("Numer: "+number,margin,titleY+24f,p)
     canvas.drawText("Data wystawienia: "+java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date()),margin,titleY+40f,p)
@@ -498,15 +498,15 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
         "Zawodowe" -> "OSOBA / PODMIOT:"
         else -> "ADRESAT / PRZEDMIOT:"
     }
-    layout.element("recipient")?.takeIf { it.visible }?.let { element ->
+    layout.element("recipient",pageNumber+1)?.takeIf { it.visible }?.let { element ->
         p.color=accent;p.typeface=Typeface.DEFAULT_BOLD;p.textSize=9f
         canvas.drawText(recipientLabel,element.x,element.y,p)
         p.color=android.graphics.Color.DKGRAY;p.typeface=Typeface.DEFAULT;p.textSize=element.fontSize
         drawLines(canvas,recipient,element.x,element.y+20f,element.width,p)
     }
-    val bodyY=layout.element("body")?.y ?: when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
-    p.color=android.graphics.Color.DKGRAY;p.textSize=layout.element("body")?.fontSize ?: 10f
-    layout.element("body")?.takeIf { it.visible }?.let { element -> drawLines(canvas,bodyPages[pageNumber],element.x,element.y,element.width,p) }
+    val bodyY=layout.element("body",pageNumber+1)?.y ?: when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
+    p.color=android.graphics.Color.DKGRAY;p.textSize=layout.element("body",pageNumber+1)?.fontSize ?: 10f
+    layout.element("body",pageNumber+1)?.takeIf { it.visible }?.let { element -> drawLines(canvas,bodyPages[pageNumber],element.x,element.y,element.width,p) }
     // Group-specific reference fields and separators establish a distinct formal hierarchy.
     val referenceY=bodyY+145f
     p.color=accent;p.strokeWidth=0.8f
@@ -527,7 +527,7 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     p.color=android.graphics.Color.DKGRAY;p.textSize=9f
     canvas.drawText("………………………………………………………………………………",margin,referenceY+34f,p)
     // Signature area: specimen is visibly distinguished from a cryptographic signature.
-    val signatureElement=layout.element("signature")
+    val signatureElement=layout.element("signature",pageNumber+1)
     val signY=signatureElement?.y ?: 675f
     if (signatureElement?.visible != false) {
         val signX=signatureElement?.x ?: margin
