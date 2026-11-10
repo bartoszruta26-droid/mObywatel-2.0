@@ -90,8 +90,8 @@ internal data class DocumentLayout(
             val base = defaults()
             val source = json.optJSONArray("elements") ?: JSONArray()
             val parsed = base.map { element ->
-                val saved = (0 until source.length()).map { source.optJSONObject(it) }
-                    .firstOrNull { it?.optString("id") == element.id && it.optInt("page", 1) == 1 }
+                val saved = (0 until source.length()).mapNotNull { source.optJSONObject(it) }
+                    .firstOrNull { it.optString("id") == element.id && it.optInt("page", 1) == 1 }
                 if (saved == null) element else element.copy(
                     x = saved.optDouble("x", element.x.toDouble()).toFloat().coerceIn(0f, 595f),
                     y = saved.optDouble("y", element.y.toDouble()).toFloat().coerceIn(0f, 842f),
