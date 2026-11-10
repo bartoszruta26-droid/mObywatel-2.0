@@ -351,20 +351,36 @@ fun DocumentsScreen(onBack: () -> Unit) {
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    showSigningOptions = false
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        android.net.Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany")
-                    )
-                    runCatching { context.startActivity(intent) }
-                        .onSuccess {
-                            signingMethodInfo = "Otworzono oficjalną usługę podpisywania. Dodaj dokument i wybierz Profil Zaufany albo certyfikat kwalifikowany. Po podpisaniu pobierz plik i wróć do aplikacji."
-                        }
-                        .onFailure {
-                            signingMethodInfo = "Nie udało się otworzyć usługi. Otwórz gov.pl i wyszukaj usługę „Podpisz dokument elektronicznie”."
-                        }
-                }) { Text("Otwórz usługę gov.pl") }
+                Column(horizontalAlignment = Alignment.End) {
+                    TextButton(onClick = {
+                        showSigningOptions = false
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany")
+                        )
+                        runCatching { context.startActivity(intent) }
+                            .onSuccess {
+                                signingMethodInfo = "Wybrano ścieżkę podpisu zaufanego. W usłudze gov.pl dodaj dokument i potwierdź metodę Profil Zaufany. Po podpisaniu pobierz plik i wróć do aplikacji."
+                            }
+                            .onFailure {
+                                signingMethodInfo = "Nie udało się otworzyć usługi. Otwórz gov.pl i wyszukaj usługę „Podpisz dokument elektronicznie”."
+                            }
+                    }) { Text("Profil Zaufany") }
+                    TextButton(onClick = {
+                        showSigningOptions = false
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany")
+                        )
+                        runCatching { context.startActivity(intent) }
+                            .onSuccess {
+                                signingMethodInfo = "Wybrano ścieżkę podpisu kwalifikowanego. W usłudze gov.pl wybierz certyfikat kwalifikowany i postępuj zgodnie z instrukcją Podpis GOV."
+                            }
+                            .onFailure {
+                                signingMethodInfo = "Nie udało się otworzyć usługi. Otwórz gov.pl i wyszukaj usługę „Podpisz dokument elektronicznie”."
+                            }
+                    }) { Text("Certyfikat kwalifikowany") }
+                }
             },
             dismissButton = {
                 TextButton(onClick = { showSigningOptions = false }) { Text("Anuluj") }
