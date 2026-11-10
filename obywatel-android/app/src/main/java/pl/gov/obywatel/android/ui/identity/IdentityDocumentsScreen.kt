@@ -216,7 +216,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                         items(assets.filter{it.orgId==orgId},key={it.id}){a->Card(Modifier.fillMaxWidth()){Column(Modifier.padding(10.dp)){Text(a.name,fontWeight=FontWeight.SemiBold);Text(a.category+" • "+a.mime+" • wersja "+a.version,style=MaterialTheme.typography.bodySmall)
                         Text("Dodano: "+java.text.SimpleDateFormat("yyyy-MM-dd HH:mm",java.util.Locale.getDefault()).format(java.util.Date(a.createdAt)),style=MaterialTheme.typography.labelSmall);if(a.rights.isNotBlank())Text("Prawa: "+a.rights,style=MaterialTheme.typography.labelSmall)}}}
                     }
-                    Text("Pliki przechowywane lokalnie. PNG/JPG/WEBP są osadzane w PDF; SVG i PDF są archiwizowane w bibliotece, ale nie są jeszcze rasteryzowane w eksporcie.",style=MaterialTheme.typography.labelSmall)
+                    Text("PNG/JPG/WEBP są osadzane w PDF; SVG i PDF są archiwizowane w bibliotece, ale nie są jeszcze rasteryzowane w eksporcie.",style=MaterialTheme.typography.labelSmall)
                 }
                 "Dokumenty" -> {
                     OrgChoice(orgs,orgId){orgId=it}
