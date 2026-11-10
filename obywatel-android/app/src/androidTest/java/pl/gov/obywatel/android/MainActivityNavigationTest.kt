@@ -73,7 +73,7 @@ class MainActivityNavigationTest {
             .performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("SAMODZIELNOŚĆ OBYWATELSKA I BEZPOŚREDNIE UCZESTNICTWO W SPRAWOWANIU WŁADZY")
             .performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Wróć").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Wróć").assertIsDisplayed()
     }
 
     @Test
