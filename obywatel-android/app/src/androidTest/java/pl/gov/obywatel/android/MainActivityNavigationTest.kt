@@ -5,9 +5,9 @@ package pl.gov.obywatel.android
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import org.junit.Rule
 import org.junit.Test
 
@@ -15,59 +15,74 @@ class MainActivityNavigationTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    private fun openDocumentsTile() {
-        composeRule.onAllNodesWithText("Dokumenty")[0].performClick()
-    }
-
-    @Test
-    fun documentsServiceOpensAndSystemBackReturnsHome() {
-        openDocumentsTile()
-        composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
-        composeRule.activityRule.scenario.onActivity { activity ->
-            activity.onBackPressedDispatcher.onBackPressed()
-        }
+    private fun selectBottomTab(label: String, matchingIndex: Int = 0) {
+        composeRule.onAllNodesWithText(label)[matchingIndex].performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
     }
 
     @Test
-    fun documentsToolbarBackReturnsToHome() {
-        openDocumentsTile()
-        composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Wróć do ekranu głównego").performClick()
-        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
+    fun restoredDashboardShowsStateEmblemBrandAndDocumentShortcuts() {
+        composeRule.onNodeWithText("mObywatel 2.0").assertIsDisplayed()
+        composeRule.onNodeWithText("Pulpit").assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
+        composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
+        composeRule.onNodeWithText("Dane rejestru podmiotów").assertIsDisplayed()
     }
 
     @Test
-    fun registryRouteOpensRegistryScreen() {
-        composeRule.onNodeWithText("Rejestr dokumentów").performClick()
-        composeRule.onNodeWithText("Wybierz plik i zarejestruj SHA-256").assertIsDisplayed()
+    fun documentsWalletShowsIdentityPassportAndLegitimacyRecords() {
+        selectBottomTab("Dokumenty", 1)
+        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
+        composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
+        composeRule.onNodeWithText("Legitymacja ucznia/studenta").assertIsDisplayed()
     }
 
     @Test
-    fun persistentBottomNavigationOpensEveryPrimaryDestination() {
-        composeRule.onNodeWithText("Usługi").performClick()
-        composeRule.onNodeWithText("Katalog funkcji prototypu", substring = true).assertIsDisplayed()
-        composeRule.onNodeWithText("Szukaj").performClick()
-        composeRule.onNodeWithText("Wyszukiwanie globalne — do wdrożenia.").assertIsDisplayed()
-        composeRule.onNodeWithText("Skanuj").performClick()
-        composeRule.onNodeWithText("Skanuj kod QR").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Więcej")[1].performClick()
-        composeRule.onNodeWithText("Niezależny prototyp Android", substring = true).assertIsDisplayed()
+    fun documentsWalletBackReturnsToDashboard() {
+        selectBottomTab("Dokumenty", 1)
+        composeRule.onNodeWithText("‹  Pulpit").performClick()
+        composeRule.onNodeWithText("mObywatel 2.0").assertIsDisplayed()
     }
 
     @Test
-    fun everyInformationModuleCanBeOpened() {
-        val cases = listOf(
-            "Moje dane" to "Ustawienia profilu przechowywanego lokalnie na urządzeniu.",
-            "Bezpieczeństwo" to "Docelowo: blokada aplikacji",
-            "Płatności" to "Moduł informacyjny.",
-            "Zdrowie" to "Moduł informacyjny przeznaczony"
-        )
-        cases.forEach { (tile, expected) ->
-            composeRule.onNodeWithText(tile).performClick()
-            composeRule.onNodeWithText(expected, substring = true).assertIsDisplayed()
-            composeRule.onNodeWithContentDescription("Wróć").performClick()
-        }
+    fun entityRegistryShortcutOpensRegistryExtract() {
+        composeRule.onNodeWithText("Dane rejestru podmiotów").performClick()
+        composeRule.onNodeWithText("Odpis z rejestru podmiotów").assertIsDisplayed()
+    }
+
+    @Test
+    fun moreContainsSettingsDesignerAndImportedFiles() {
+        selectBottomTab("Więcej")
+        composeRule.onNodeWithText("Projektant dokumentów").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Pliki i załączniki").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Ustawienia").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun designerRouteRetainsPdfLayoutAndDecorationTools() {
+        selectBottomTab("Więcej")
+        composeRule.onNodeWithText("Projektant dokumentów").performScrollTo().performClick()
+        composeRule.onNodeWithText("Zarządzanie").assertIsDisplayed()
+        composeRule.onNodeWithText("Projektant układu dokumentu").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dodawanie elementów dekoracyjnych").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsExposeIdentityPassportAndLegitimacyDataEntry() {
+        selectBottomTab("Więcej")
+        composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
+        composeRule.onNodeWithText("Dane osobowe").assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości").assertIsDisplayed()
+        composeRule.onNodeWithText("Dane paszportowe").assertIsDisplayed()
+        composeRule.onNodeWithText("Legitymacja ucznia/studenta").assertIsDisplayed()
+    }
+
+    @Test
+    fun servicesAndQrRemainPrimaryDestinations() {
+        selectBottomTab("Usługi", 1)
+        composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
+        selectBottomTab("Kod QR")
+        composeRule.onNodeWithText("Obywatelska Wymiana Danych").assertIsDisplayed()
     }
 }
