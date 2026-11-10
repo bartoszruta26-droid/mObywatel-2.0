@@ -1080,12 +1080,6 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                 }
             }
         }
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9))) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Status funkcjonalny — etap alfa", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
-                Text("Dostępne: selekcja pól, cel i zgoda, krótkotrwały QR, skaner QR z walidacją oferty, prymitywy ECDH/HKDF/AES-GCM, bezpośredni transport TCP, uwierzytelnione potwierdzenie i trwały rejestr sesji. Jeszcze niedostępne: spięcie nadawcy i odbiorcy w kompletny przepływ, adres urządzenia w QR, wzajemna wymiana kluczy w UI, uruchamianie odbiornika, podłączenie trwałego rejestru do przyjęcia sesji i działający serwer przekaźnikowy. Nie pokazujemy fikcyjnego potwierdzenia przesłania.", color = Ink, style = MaterialTheme.typography.bodySmall)
-            }
-        }
         OutlinedButton(onClick = onOpenVCard, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator wizytówki vCard") }
         OutlinedButton(onClick = onOpenWebsite, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator kodu strony internetowej") }
         Text("Prywatność: dane nie są umieszczane w kodzie inicjującym. Odbiorca i cel muszą zostać zweryfikowani przed właściwym transferem. Dane rodzinne/rodowe są całkowicie wyłączone z obecnego zakresu OWD.", color = Muted, style = MaterialTheme.typography.bodySmall)
