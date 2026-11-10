@@ -137,12 +137,16 @@ private fun LoyaltyCardsEditor(
     context: Context,
     saveMessage: (String) -> Unit
 ) {
+    val existingCount = (1..25).count { n -> fields.keys.any { it.startsWith("loyalty$n") && fields[it].orEmpty().isNotBlank() } }
+    var cardCount by remember { mutableIntStateOf(maxOf(1, fields["loyaltyCardCount"]?.toIntOrNull() ?: existingCount)) }
     var selectedCard by remember { mutableIntStateOf(1) }
     var processing by remember { mutableStateOf(false) }
     val prefix = "loyalty$selectedCard"
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
             processing = true
+            // Obraz jest czytany bezpośrednio z URI dostawcy treści i przekazywany ML Kit.
+            // Nie kopiujemy go do filesDir/cacheDir ani nie zapisujemy jego bajtów w ewidencji.
             val image = runCatching { InputImage.fromFilePath(context, uri) }
             image.onSuccess { input ->
                 val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -166,6 +170,8 @@ private fun LoyaltyCardsEditor(
                             }
                             .addOnFailureListener { saveMessage("Odczyt kodu nie powiódł się: ${it.localizedMessage ?: "błąd"}") }
                             .addOnCompleteListener {
+                                recognizer.close()
+                                scanner.close()
                                 processing = false
                                 saveMessage("Zakończono odczyt zdjęcia. Sprawdź rozpoznane pola i zapisz dane.")
                             }
@@ -185,14 +191,32 @@ private fun LoyaltyCardsEditor(
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("Karty lojalnościowe sklepów", color = Navy, fontWeight = FontWeight.Bold)
-        Text("Dodawanie i odczyt są dostępne wyłącznie w Ustawieniach. OCR rozpoznaje tekst ze zdjęcia, a skaner odczytuje kody QR i kreskowe. Każde rozpoznane pole wymaga sprawdzenia przed zapisem.",
+        Text("Można prowadzić maksymalnie 25 kart. Dane można ręcznie poprawiać. Zdjęcie jest przetwarzane bez zapisywania pliku w pamięci aplikacji; zapisujesz wyłącznie sprawdzone dane tekstowe.",
             color = Muted, style = MaterialTheme.typography.bodySmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (1..10).forEach { n ->
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = {
+                if (cardCount < 25) {
+                    cardCount += 1
+                    fields["loyaltyCardCount"] = cardCount.toString()
+                    selectedCard = cardCount
+                    saveMessage("Dodano miejsce na kartę nr $cardCount. Zapisz zmiany.")
+                } else saveMessage("Osiągnięto limit 25 kart.")
+            }, enabled = cardCount < 25, modifier = Modifier.weight(1f)) { Text("Dodaj kartę ($cardCount/25)") }
+            OutlinedButton(onClick = {
+                val hasData = fields.keys.any { it.startsWith(prefix) && fields[it].orEmpty().isNotBlank() }
+                if (hasData) {
+                    val keys = fields.keys.filter { it.startsWith(prefix) }
+                    keys.forEach { fields.remove(it) }
+                    saveMessage("Wyczyszczono dane karty nr $selectedCard. Zapisz zmiany, aby zatwierdzić usunięcie.")
+                } else saveMessage("Wybrana karta jest już pusta.")
+            }, enabled = selectedCard <= cardCount, modifier = Modifier.weight(1f)) { Text("Usuń wybraną") }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            (1..cardCount).forEach { n ->
                 androidx.compose.material3.FilterChip(selected = selectedCard == n, onClick = { selectedCard = n }, label = { Text(n.toString()) })
             }
         }
-        Text("Karta $selectedCard", color = Navy, fontWeight = FontWeight.SemiBold)
+        Text("Karta $selectedCard z $cardCount", color = Navy, fontWeight = FontWeight.SemiBold)
         DemoDataField("${prefix}Store", "Sklep / marka", fields)
         DemoDataField("${prefix}Program", "Nazwa programu lojalnościowego", fields)
         DemoDataField("${prefix}Number", "Numer karty nadany przez sklep", fields)
