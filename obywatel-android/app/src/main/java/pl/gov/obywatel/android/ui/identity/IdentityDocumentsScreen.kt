@@ -386,18 +386,21 @@ private fun DocumentLayoutCanvas(
     onMove: (DocumentLayoutElement) -> Unit
 ) {
     val elements = layout.elements.filter { it.page == page && it.visible }
+    val currentLayout by rememberUpdatedState(layout)
+    val selectCurrent by rememberUpdatedState(onSelect)
+    val moveCurrent by rememberUpdatedState(onMove)
     Canvas(
-        modifier = Modifier.fillMaxWidth().height(420.dp).pointerInput(layout, page) {
+        modifier = Modifier.fillMaxWidth().height(420.dp).pointerInput(page) {
             var dragging: DocumentLayoutElement? = null
-            var scale = minOf(size.width / 595f, size.height / 842f)
-            var left = (size.width - 595f * scale) / 2f
-            var top = (size.height - 842f * scale) / 2f
+            val scale = minOf(size.width / 595f, size.height / 842f)
+            val left = (size.width - 595f * scale) / 2f
+            val top = (size.height - 842f * scale) / 2f
             detectDragGestures(
                 onDragStart = { point ->
                     val x = (point.x - left) / scale
                     val y = (point.y - top) / scale
-                    dragging = elements.asReversed().firstOrNull { x >= it.x && x <= it.x+it.width && y >= it.y && y <= it.y+it.height && !it.locked }
-                    dragging?.let(onSelect)
+                    dragging = currentLayout.elements.filter { it.page == page && it.visible }.asReversed().firstOrNull { x >= it.x && x <= it.x+it.width && y >= it.y && y <= it.y+it.height && !it.locked }
+                    dragging?.let(selectCurrent)
                 },
                 onDrag = { change, amount ->
                     val current = dragging ?: return@detectDragGestures
@@ -407,7 +410,7 @@ private fun DocumentLayoutCanvas(
                         y = (current.y + amount.y / scale).coerceIn(0f, 842f-current.height)
                     )
                     dragging = updated
-                    onMove(updated)
+                    moveCurrent(updated)
                 },
                 onDragEnd = { dragging = null },
                 onDragCancel = { dragging = null }
