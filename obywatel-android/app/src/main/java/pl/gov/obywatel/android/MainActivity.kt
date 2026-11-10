@@ -1997,6 +1997,7 @@ private fun DocumentDetailsScreen(
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
         if (documentId == "4") {
             ParliamentaryCredentialPreview(fields)
+            CivicDocumentStatusTile(fields, documentId)
         } else if (documentId == "5" || documentId == "6") {
             SchoolLegitimacyPreview(fields, photoBase64, student = documentId == "6")
         } else {
@@ -2035,7 +2036,7 @@ private fun DocumentDetailsScreen(
                 },
                 privateRecord = documentId in setOf("0", "3", "4", "5", "6", "7")
             )
-    
+            CivicDocumentStatusTile(fields, documentId)
         }
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -3014,6 +3015,74 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
             Icon(Icons.Filled.Info, contentDescription = null, tint = Blue)
             Text(statusLabel + ". Dane wpisane przez użytkownika nie potwierdzają mandatu ani autentyczności legitymacji.",
                 color = Muted, style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+private fun CivicDocumentStatusTile(fields: Map<String, String>, documentId: String) {
+    val statusKey = when (documentId) {
+        "1" -> "idStatus"
+        "2" -> "passportStatus"
+        "4" -> "mpStatus"
+        "5" -> "trainingStatus"
+        "6" -> "studentStatus"
+        "7" -> "disabilityStatus"
+        else -> "familyStatus"
+    }
+    val expiryKey = when (documentId) {
+        "1" -> "idExpiryDate"
+        "2" -> "passportExpiryDate"
+        "4" -> "mpEnd"
+        "5" -> "trainingValidUntil"
+        "6" -> "studentValidity"
+        "7" -> "disabilityValidity"
+        else -> "familyExpiryDate"
+    }
+    val rawStatus = fields[statusKey].orEmpty().trim().lowercase()
+    val rawExpiry = fields[expiryKey].orEmpty().trim()
+    val parsedExpiry = runCatching {
+        runCatching { java.time.LocalDate.parse(rawExpiry, java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy")) }
+            .getOrElse { java.time.LocalDate.parse(rawExpiry) }
+    }.getOrNull()
+    val active = rawStatus in setOf("aktywny", "aktywna", "aktywne", "active", "ważny", "ważna", "wazny", "wazna")
+    val invalid = rawStatus in setOf("nieważny", "nieważna", "unieważniony", "unieważniona", "zwrócona", "zwrócony", "expired", "invalid") ||
+        (parsedExpiry != null && parsedExpiry.isBefore(java.time.LocalDate.now()))
+    val confirmed = active && !invalid && rawExpiry.isNotBlank() && parsedExpiry != null
+    val title = when {
+        confirmed -> "Dokument ważny"
+        invalid -> "Dokument nieważny"
+        else -> "Wymaga weryfikacji"
+    }
+    val tint = when {
+        confirmed -> Color(0xFF27833B)
+        invalid -> Color(0xFFB3261E)
+        else -> Color(0xFF9A6A16)
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(11.dp)) {
+            Box(Modifier.size(30.dp).clip(CircleShape).border(2.dp, tint, CircleShape),
+                contentAlignment = Alignment.Center) {
+                Text(if (confirmed) "✓" else if (invalid) "×" else "!",
+                    color = tint, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, color = tint, fontWeight = FontWeight.SemiBold)
+                Text(
+                    when {
+                        confirmed -> "Status i termin ważności wynikają z zapisanych danych."
+                        invalid -> "Zapisane dane wskazują na utratę ważności."
+                        else -> "Brak kompletnych danych do potwierdzenia aktualności dokumentu."
+                    },
+                    color = Muted, style = MaterialTheme.typography.labelSmall
+                )
+            }
         }
     }
 }
