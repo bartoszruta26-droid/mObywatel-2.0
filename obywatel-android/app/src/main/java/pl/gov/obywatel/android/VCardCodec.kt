@@ -144,10 +144,15 @@ internal object VCardCodec {
             require(colon > 0) { "Nieprawidłowy wiersz vCard." }
             val left = line.substring(0, colon)
             val property = left.substringBefore(';').substringAfterLast('.').uppercase()
+            val parameters = left.substringAfter(';', "").split(';').filter { it.isNotBlank() }
             val rawValue = line.substring(colon + 1)
             val value = unescape(rawValue)
             if (property == "VERSION") version = value
-            else properties.getOrPut(property) { mutableListOf() }.add(value)
+            else if (property == "PHOTO") {
+                normalizePhotoProperty(rawValue, parameters)?.let { photo ->
+                    properties.getOrPut("PHOTO") { mutableListOf() }.add(photo)
+                }
+            } else properties.getOrPut(property) { mutableListOf() }.add(value)
         }
         require(version in setOf("2.1", "3.0", "4.0")) {
             "Obsługiwane wersje vCard: 2.1, 3.0 i 4.0."
@@ -174,8 +179,33 @@ internal object VCardCodec {
         if (first("TITLE").isNotBlank()) result["contactTitle"] = first("TITLE")
         if (first("URL").isNotBlank()) result["contactUrl"] = first("URL")
         if (first("ADR").isNotBlank()) result["contactAddress"] = first("ADR")
+        properties["PHOTO"]?.firstOrNull()?.takeIf { it.isNotBlank() }?.let { result["photo"] = it }
         require(result.isNotEmpty()) { "Wizytówka nie zawiera rozpoznawalnych danych kontaktowych." }
         return repairMojibake(result)
+    }
+
+    /**
+     * Converts inline vCard PHOTO payloads to the profile's canonical Base64
+     * representation. Remote PHOTO URIs are intentionally not fetched.
+     */
+    private fun normalizePhotoProperty(rawValue: String, parameters: List<String>): String? {
+        val value = rawValue.trim()
+        val dataUri = Regex(
+            """^data:image/[A-Za-z0-9.+-]+;base64,(.*)$""",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+        ).find(value)?.groupValues?.getOrNull(1)
+        val isInlineBinary = parameters.any { parameter ->
+            parameter.equals("ENCODING=B", true) ||
+                parameter.equals("ENCODING=BASE64", true) ||
+                parameter.equals("VALUE=BINARY", true)
+        }
+        val encoded = dataUri ?: value.takeIf { isInlineBinary }
+            ?: return null
+        val compact = encoded.filterNot(Char::isWhitespace)
+        val decoded = java.util.Base64.getDecoder().decode(compact)
+        require(decoded.isNotEmpty()) { "Zdjęcie vCard jest puste." }
+        require(decoded.size <= 5 * 1024 * 1024) { "Zdjęcie vCard przekracza limit 5 MB." }
+        return java.util.Base64.getEncoder().encodeToString(decoded)
     }
 
     /**
