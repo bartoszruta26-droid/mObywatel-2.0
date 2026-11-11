@@ -326,7 +326,7 @@ private fun documentTypeForTitle(title: String): String {
         value.contains("niekaralności") || value.contains("niekaralnosci") -> "criminal_record"
         value.contains("podróży służbowej") || value.contains("podrozy sluzbowej") || value.contains("misji międzynarodowej") -> "mission_travel"
         value.contains("europejska karta ubezpieczenia zdrowotnego") || value.contains("ekuz") -> "ehic"
-        value.contains("zgodności kwalifikacji") || value.contains("zgodnosci kwalifikacji") -> "eu_education"
+        value.contains("zgodności kwalifikacji") || value.contains("zgodnosci kwalifikacji") || value.contains("zgodności wykształcenia") || value.contains("zgodnosci wyksztalcenia") -> "eu_education"
         value.contains("odpis") && value.contains("rejestr") -> "registry"
         value.contains("spół") || value.contains("spol") || value.contains("firm") || value.contains("przedsięb") || value.contains("przedsieb") -> "business"
         value.contains("fundac") -> "organization_foundation"
