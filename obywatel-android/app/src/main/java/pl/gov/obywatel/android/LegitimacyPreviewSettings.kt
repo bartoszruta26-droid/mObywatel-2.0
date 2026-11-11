@@ -470,46 +470,34 @@ internal fun LegitimacyHeraldry(
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
     }
-    Column(
+    val horizontal = settings.orientation == "POZIOMA"
+    Row(
         Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        if (settings.showFlag && selectedFlag != null) {
-            Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu",
-                modifier = Modifier.size(width = 46.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-        } else if (settings.showFlag) {
-            Image(painterResource(R.drawable.institutions_polish_flag), contentDescription = "Flaga dokumentu",
-                modifier = Modifier.size(width = 46.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+        if (settings.showFlag) {
+            val flagModifier = Modifier.size(width = if (horizontal) 34.dp else 42.dp, height = if (horizontal) 18.dp else 22.dp)
+            if (selectedFlag != null) Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu", modifier = flagModifier, contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+            else Image(painterResource(R.drawable.institutions_polish_flag), contentDescription = "Flaga dokumentu", modifier = flagModifier, contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+            Spacer(Modifier.width(6.dp))
         }
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (settings.showCrest && selectedCrest != null) {
-                Image(selectedCrest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(42.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            } else if (settings.showCrest) {
-                Image(painterResource(R.drawable.institutions_eagle_emblem), contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(42.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            }
-            Column(Modifier.weight(1f).padding(start = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2)
-                if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 2)
-                if (settings.showLogo && assignedLogo != null) {
-                    Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
-                        modifier = Modifier.size(width = 54.dp, height = 24.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-                }
-                if (settings.crestCaption.isNotBlank()) {
-                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, maxLines = 2)
-                }
-            }
+        if (settings.showCrest) {
+            if (selectedCrest != null) Image(selectedCrest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu", modifier = Modifier.size(if (horizontal) 32.dp else 40.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+            else Image(painterResource(R.drawable.institutions_eagle_emblem), contentDescription = "Godło lub herb dokumentu", modifier = Modifier.size(if (horizontal) 32.dp else 40.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+            Spacer(Modifier.width(6.dp))
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(title, fontWeight = FontWeight.ExtraBold, style = if (horizontal) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall, maxLines = if (horizontal) 1 else 2)
+            if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            if (settings.crestCaption.isNotBlank()) Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        }
+        if (settings.showLogo && assignedLogo != null) {
+            Spacer(Modifier.width(6.dp))
+            Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy", modifier = Modifier.size(width = if (horizontal) 38.dp else 46.dp, height = if (horizontal) 20.dp else 24.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
         }
     }
 }
-
 @Composable
 private fun CredentialFieldValue(item: Triple<String, String, String>) {
     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
