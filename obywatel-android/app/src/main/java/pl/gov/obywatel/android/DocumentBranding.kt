@@ -633,7 +633,7 @@ internal fun DocumentIdentityTemplate(
                 "ehic" -> "ehicNumber"
                 else -> if (documentType.startsWith("church")) "churchDocumentNumber" else "documentNumber"
             }
-            value.contains("wystawc") || value.contains("organ wydaj") || value.contains("instytucja wydająca") -> when {
+            value.contains("wystawc") || value.contains("organ wydaj") || value.contains("instytucja wydająca") || value.contains("urząd stanu cywilnego") -> when {
                 documentType in setOf("birth_extract", "marriage_extract", "death_extract") -> "civilIssuer"
                 documentType == "disability" -> "disabilityIssuerName"
                 documentType.startsWith("professional") -> "professionalIssuer"
