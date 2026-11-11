@@ -47,6 +47,7 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
     "vaccines" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "vaccineName" to "Preparat", "vaccineDate" to "Data szczepienia", "vaccineDose" to "Dawka")
     "civil" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "civilDocumentNumber" to "Numer dokumentu", "civilIssueDate" to "Data sporządzenia", "civilIssuer" to "Wystawca")
     else -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "documentNumber" to "Numer dokumentu", "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca")
+    + listOf("details" to "Informacje dodatkowe")
 }
 
 internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
