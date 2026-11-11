@@ -2006,6 +2006,24 @@ private fun DocumentDetailsScreen(
         else -> 0
     }
     val section = sections[sectionIndex]
+    val brandDocumentType = when (documentId) {
+        "1" -> "identity"
+        "2" -> "passport"
+        "3" -> "family"
+        "4" -> "parliament"
+        "5" -> "training"
+        "6" -> "student"
+        else -> null
+    }
+    val brandOwner = when (documentId) {
+        "1" -> fields["idIssuer"].orEmpty()
+        "2" -> fields["passportIssuer"].orEmpty()
+        "3" -> fields["familyName"].orEmpty()
+        "4" -> fields["mpIssuer"].orEmpty()
+        "5" -> fields["trainingInstitution"].orEmpty()
+        "6" -> fields["studentUniversity"].orEmpty()
+        else -> ""
+    }
     val extraPrefix = when (documentId) {
         "0" -> "personExtra"
         "1" -> "idExtra"
@@ -2043,6 +2061,14 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
+        if (brandDocumentType != null) AssignedDocumentBrandPreview(
+            documentType = brandDocumentType,
+            owner = brandOwner,
+            title = "Znak przypisany do ewidencji",
+            subtitle = if (brandDocumentType == "identity" || brandDocumentType == "passport")
+                "Prywatne oznaczenie ewidencji — nie jest elementem oryginalnego dokumentu państwowego."
+            else "Herb, godło lub logo przypisane do dokumentu"
+        )
         Box(
             modifier = Modifier.fillMaxWidth().height(112.dp).clip(RoundedCornerShape(16.dp))
                 .background(BlueLight),
@@ -2608,6 +2634,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpIssuer", "Organ / osoba wystawiająca", fields)
                 DemoDataField("mpStatus", "Status legitymacji", fields, "aktywna / zwrócona / unieważniona")
                 DemoDataField("mpMandateSource", "Źródło potwierdzenia mandatu", fields)
+                Text("Podgląd legitymacji — wzór ewidencyjny", color = Navy, fontWeight = FontWeight.Bold)
+                ParliamentCredentialCard(fields = fields, photoBase64 = photoBase64)
                 Text("Dane dotyczące ślubowania — oświadczenie własne", color = Navy, fontWeight = FontWeight.Bold)
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
@@ -3014,6 +3042,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
 
 @Composable
 private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: String) {
+    val context = LocalContext.current
+    val familyCrest = remember(fields["familyName"]) {
+        DocumentBrandStore.imageForDocument(context, "family", fields["familyName"].orEmpty(), "Herb")
+    }
     val photoBitmap = remember(photoBase64) {
         runCatching {
             if (photoBase64.isBlank()) null else {
@@ -3045,7 +3077,8 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                             .background(Color(0xFF254B50)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Filled.AccountCircle, contentDescription = "Znak ewidencji rodowej", tint = White)
+                        if (familyCrest != null) Image(familyCrest.asImageBitmap(), contentDescription = "Herb rodu", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                        else Icon(Icons.Filled.AccountCircle, contentDescription = "Znak ewidencji rodowej", tint = White)
                     }
                     Column(Modifier.padding(start = 8.dp)) {
                         Text("DOKUMENT RODOWY", color = Color(0xFF254B50), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.labelLarge)
@@ -3199,6 +3232,7 @@ private fun CredentialCardPreview(
     title: String,
     holder: String,
     institution: String,
+    documentType: String,
     number: String,
     program: String,
     status: String,
@@ -3220,14 +3254,18 @@ private fun CredentialCardPreview(
             }
         }.getOrNull()
     }
-    val brand = remember(institution) {
+    val brand = remember(institution, documentType) {
         Triple(
-            DocumentBrandStore.image(context, institution, "Logo"),
-            DocumentBrandStore.image(context, institution, "Herb") ?: DocumentBrandStore.image(context, institution, "Godło"),
-            DocumentBrandStore.image(context, institution, "Flaga")
+            DocumentBrandStore.imageForDocument(context, documentType, institution, "Logo"),
+            DocumentBrandStore.imageForDocument(context, documentType, institution, "Herb")
+                ?: DocumentBrandStore.imageForDocument(context, documentType, institution, "Godło"),
+            DocumentBrandStore.imageForDocument(context, documentType, institution, "Flaga")
                 ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
         )
     }
+    val brandLogo = brand.first
+    val brandCrest = brand.second
+    val brandFlag = brand.third
     val qrPayload = remember(title, number, institution, validUntil) {
         listOf("CREDENTIAL", title, number, institution, validUntil).joinToString("|")
     }
@@ -3258,8 +3296,8 @@ private fun CredentialCardPreview(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    if (brand.first != null) {
-                        Image(brand.first.asImageBitmap(), contentDescription = "Logo instytucji",
+                    if (brandLogo != null) {
+                        Image(brandLogo.asImageBitmap(), contentDescription = "Logo instytucji",
                             modifier = Modifier.size(34.dp), contentScale = ContentScale.Fit)
                     } else {
                         Icon(Icons.Filled.AccountBalance, contentDescription = "Miejsce na logo instytucji",
@@ -3271,12 +3309,12 @@ private fun CredentialCardPreview(
                         Text(title, color = accent, fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    if (brand.third != null) {
-                        Image(brand.third.asImageBitmap(), contentDescription = "Flaga",
+                    if (brandFlag != null) {
+                        Image(brandFlag.asImageBitmap(), contentDescription = "Flaga",
                             modifier = Modifier.width(36.dp).height(24.dp), contentScale = ContentScale.Fit)
                     }
-                    if (brand.second != null) {
-                        Image(brand.second.asImageBitmap(), contentDescription = "Herb lub godło instytucji",
+                    if (brandCrest != null) {
+                        Image(brandCrest.asImageBitmap(), contentDescription = "Herb lub godło instytucji",
                             modifier = Modifier.size(31.dp), contentScale = ContentScale.Fit)
                     }
                 }
@@ -3392,11 +3430,38 @@ private fun CredentialCardPreview(
 }
 
 @Composable
+private fun ParliamentCredentialCard(fields: Map<String, String>, photoBase64: String) {
+    val issuer = fields["mpIssuer"].orEmpty()
+    CredentialCardPreview(
+        title = "LEGITYMACJA POSELSKA — WZÓR EWIDENCYJNY",
+        holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" "),
+        institution = issuer,
+        documentType = "parliament",
+        number = fields["mpCardNumber"].orEmpty(),
+        program = fields["mpTerm"].orEmpty().let { term ->
+            listOf(term, fields["mpDistrict"].orEmpty().let { if (it.isBlank()) "" else "Okręg $it" }).filter { it.isNotBlank() }.joinToString(" · ")
+        },
+        status = fields["mpStatus"].orEmpty(),
+        validUntil = fields["mpEnd"].orEmpty(),
+        photoBase64 = photoBase64,
+        backgroundRes = R.drawable.tlo_legitymacji_niebieskie,
+        backDetails = listOf(
+            "Kadencja" to fields["mpTerm"].orEmpty(),
+            "Okręg wyborczy" to fields["mpDistrict"].orEmpty(),
+            "Data wydania" to fields["mpCardIssueDate"].orEmpty(),
+            "Organ / wystawca" to issuer,
+            "Źródło potwierdzenia mandatu" to fields["mpMandateSource"].orEmpty()
+        )
+    )
+}
+
+@Composable
 private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: String) {
     CredentialCardPreview(
         title = "LEGITYMACJA UCZESTNIKA KURSU",
         holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" "),
         institution = fields["trainingInstitution"].orEmpty(),
+        documentType = "training",
         number = fields["trainingCardNumber"].orEmpty(),
         program = fields["trainingCourseName"].orEmpty(),
         status = fields["trainingStatus"].orEmpty(),
@@ -3423,6 +3488,7 @@ private fun StudentCardPreview(fields: Map<String, String>, photoBase64: String)
             listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
         },
         institution = fields["studentUniversity"].orEmpty(),
+        documentType = "student",
         number = fields["studentCardNumber"].orEmpty(),
         program = fields["studentProgramme"].orEmpty(),
         status = fields["studentStatus"].orEmpty(),

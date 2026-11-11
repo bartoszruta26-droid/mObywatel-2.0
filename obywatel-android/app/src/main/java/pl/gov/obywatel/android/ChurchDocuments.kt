@@ -154,6 +154,14 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
             val saved = records[doc.id].orEmpty()
             var local by remember(doc.id) { mutableStateOf(saved) }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            val churchNameIndex = doc.fields.indexOfFirst { it.contains("Pełna nazwa Kościoła", ignoreCase = true) || it.contains("nazwa wspólnoty", ignoreCase = true) }
+            val churchOwner = if (churchNameIndex >= 0) local["f$churchNameIndex"].orEmpty() else ""
+            AssignedDocumentBrandPreview(
+                documentType = doc.id,
+                owner = churchOwner,
+                title = "Znak przypisany do dokumentu",
+                subtitle = "Herb, godło lub logo wystawcy"
+            )
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
                 Text(doc.note, Modifier.padding(12.dp), color = Color(0xFF284B64), style = MaterialTheme.typography.bodySmall)
             }
@@ -168,7 +176,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
             }
             DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
-            })
+            }, documentType = doc.id, ownerDefault = churchOwner)
             if (preview) Text("PODGLĄD EWIDENCYJNY — status dokumentu zależy od właściwego wystawcy, podpisu, pieczęci i kompetencji.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj" else "Podgląd") }

@@ -285,6 +285,12 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                     if (p.issuer.isNotBlank()) Text("Organ / wystawca: " + p.issuer, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
                     if (p.registerName.isNotBlank()) Text("Rejestr: " + p.registerName, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
                     Text("Status: " + p.status, color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    AssignedDocumentBrandPreview(
+                        documentType = "professional",
+                        owner = p.profession,
+                        title = "Znak przypisany do kwalifikacji",
+                        subtitle = "Herb, godło lub logo właściwe dla tej dziedziny"
+                    )
                     DocumentPdfExportButton("Karta kwalifikacji — " + p.profession, mapOf(
                         "Zawód / rola" to p.profession,
                         (if (p.numberType == "pwzf") "Numer prawa wykonywania zawodu" else "Numer dokumentu / kwalifikacji") to p.number,
@@ -296,7 +302,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                         "Zakres uprawnień" to p.scope,
                         "Podstawa prawna / regulaminowa" to p.legalBasis,
                         "Status" to p.status
-                    ))
+                    ), documentType = "professional", ownerDefault = p.profession)
                     TextButton(onClick = { selectedProfession = p.profession }) { Text("Pokaż dokumenty tego zawodu") }
                 }
             }
