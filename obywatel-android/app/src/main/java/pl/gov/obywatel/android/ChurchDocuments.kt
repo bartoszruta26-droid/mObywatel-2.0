@@ -156,8 +156,22 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             val churchNameIndex = doc.fields.indexOfFirst { it.contains("Pełna nazwa Kościoła", ignoreCase = true) || it.contains("nazwa wspólnoty", ignoreCase = true) }
             val churchOwner = if (churchNameIndex >= 0) local["f$churchNameIndex"].orEmpty() else ""
+            val dignityFieldIndex = doc.fields.indexOfFirst {
+                it.contains("urzędu / tytułu", ignoreCase = true) ||
+                    it.contains("tytuł biskupi", ignoreCase = true) ||
+                    it.contains("stopień święceń", ignoreCase = true)
+            }
+            val dignityValue = if (dignityFieldIndex >= 0) local["f$dignityFieldIndex"].orEmpty().lowercase(java.util.Locale.ROOT) else ""
+            val brandDocumentType = when {
+                doc.id.startsWith("missionary_") -> "church_missionary"
+                dignityValue.contains("arcybiskup") -> "church_archbishop"
+                dignityValue.contains("kardyn") -> "church_cardinal"
+                dignityValue.contains("opat") -> "church_abbot"
+                dignityValue.contains("biskup") -> "church_bishop"
+                else -> doc.id
+            }
             AssignedDocumentBrandPreview(
-                documentType = doc.id,
+                documentType = brandDocumentType,
                 owner = churchOwner,
                 title = "Znak przypisany do dokumentu",
                 subtitle = "Herb, godło lub logo wystawcy"
@@ -176,7 +190,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
             }
             DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
-            }, documentType = doc.id, ownerDefault = churchOwner)
+            }, documentType = brandDocumentType, ownerDefault = churchOwner)
             if (preview) Text("PODGLĄD EWIDENCYJNY — status dokumentu zależy od właściwego wystawcy, podpisu, pieczęci i kompetencji.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj" else "Podgląd") }
