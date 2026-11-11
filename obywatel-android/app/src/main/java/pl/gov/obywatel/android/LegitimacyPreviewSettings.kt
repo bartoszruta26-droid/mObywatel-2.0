@@ -1031,3 +1031,42 @@ internal fun LegitimacyReverseSide(title: String, issuer: String, number: String
         }
     }
 }
+
+
+@Composable
+internal fun CredentialAppearanceDefaultsScreen(onBack: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("‹  Powrót do zakładki Więcej", color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
+        Text("Domyślny wygląd legitymacji", style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Ustaw osobny wzór dla każdego rodzaju legitymacji. W panelu wybierz orientację pionową lub poziomą, a następnie dostosuj grafiki, położenie, obrót, skalę i krój pisma. Zmiany są zapisywane lokalnie.",
+            style = MaterialTheme.typography.bodySmall)
+        CredentialAppearancePreset("student", "Legitymacja ucznia / studenta")
+        CredentialAppearancePreset("training", "Legitymacja uczestnika kursu")
+        CredentialAppearancePreset("parliament", "Legitymacja poselska")
+        CredentialAppearancePreset("church_bishop", "Legitymacja / dokument kościelny")
+        CredentialAppearancePreset("professional_medical", "Legitymacja zawodowa — medyczna")
+        CredentialAppearancePreset("identity", "Dokument tożsamości")
+        CredentialAppearancePreset("passport", "Paszport")
+    }
+}
+
+@Composable
+private fun CredentialAppearancePreset(documentKey: String, title: String) {
+    val state = rememberLegitimacyPreviewSettings(documentKey)
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(title, fontWeight = FontWeight.Bold)
+            LegitimacyPreviewSettingsPanel(
+                documentKey = documentKey,
+                settings = state.value,
+                onChange = { state.value = it }
+            )
+        }
+    }
+}
