@@ -342,6 +342,74 @@ internal fun LegitimacyHeraldry(
 }
 
 @Composable
+internal fun UnifiedCredentialCard(
+    documentKey: String,
+    title: String,
+    subtitle: String,
+    holderName: String,
+    fields: List<Triple<String, String, String>>,
+    settings: LegitimacyPreviewSettings,
+    photo: Bitmap? = null,
+    fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare
+) {
+    val context = LocalContext.current
+    val background = remember(settings.backgroundAssetId, documentKey, fallbackBackgroundRes) {
+        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
+            ?: BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
+    }
+    val visible = if (settings.visibleFields.isEmpty()) fields else fields.filter { it.first in settings.visibleFields }
+    Card(
+        Modifier.fillMaxWidth().aspectRatio(if (settings.orientation == "POZIOMA") 1.586f else 0.70f),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            if (background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
+                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
+            Column(Modifier.fillMaxSize().padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LegitimacyHeraldry(settings, documentKey, vertical = true, title = title.uppercase(), subtitle = subtitle)
+                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Box(Modifier.width(58.dp).height(78.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center) {
+                        if (photo != null) Image(photo.asImageBitmap(), contentDescription = "Fotografia posiadacza",
+                            modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+                        else Text("FOTO", style = MaterialTheme.typography.labelSmall)
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(holderName.ifBlank { "IMIĘ I NAZWISKO" }, fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall, maxLines = 2)
+                        visible.take(if (settings.orientation == "POZIOMA") 5 else 7).forEach { (_, label, value) ->
+                            Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                                Text(label.uppercase(), style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Medium, maxLines = 1)
+                                Text(value.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold, maxLines = 2)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun CredentialValidityTile(valid: Boolean) {
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
+        containerColor = if (valid) Color(0xFFE5F4EA) else Color(0xFFFCE8E6)
+    )) {
+        Text(if (valid) "Dokument ważny" else "Dokument nieważny",
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            color = if (valid) Color(0xFF237A35) else Color(0xFFB3261E),
+            fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
 internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings) {
     val context = LocalContext.current
     val title = documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
