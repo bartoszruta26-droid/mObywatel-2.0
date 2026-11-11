@@ -433,7 +433,6 @@ internal object DocumentBrandStore {
             out.toByteArray()
         } ?: error("Nie można odczytać pliku.")
         require(bytes.isNotEmpty()) { "Wybrany zasób jest pusty." }
-        if (kind in imageKinds && item.optString("mimeType") != "application/pdf") decodeImage(bytes).recycle()
         val mime = context.contentResolver.getType(uri).orEmpty()
         importBytes(context, owner, kind, label, bytes, mimeType = mime)
     }
