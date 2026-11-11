@@ -141,16 +141,26 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
 
 internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
     val value = rawExpiry.trim()
+    // Pusty termin lub opis tekstowy (np. „bezterminowo”, „do odwołania”)
+    // nie oznacza utraty ważności. Nieważność wynika wyłącznie z rozpoznanej,
+    // kalendarzowej daty, która już upłynęła.
     if (value.isEmpty()) return true
+
+    val polishLocale = java.util.Locale.forLanguageTag("pl-PL")
     val formats = listOf(
-        java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"),
-        java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"),
-        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+        java.time.format.DateTimeFormatter.ofPattern("d-M-uuuu"),
+        java.time.format.DateTimeFormatter.ofPattern("d.M.uuuu"),
+        java.time.format.DateTimeFormatter.ofPattern("d/M/uuuu"),
+        java.time.format.DateTimeFormatter.ofPattern("d MMMM uuuu", polishLocale),
         java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
     )
     val parsed = formats.firstNotNullOfOrNull { formatter ->
-        runCatching { java.time.LocalDate.parse(value, formatter) }.getOrNull()
+        runCatching {
+            java.time.LocalDate.parse(value, formatter.withResolverStyle(java.time.format.ResolverStyle.STRICT))
+        }.getOrNull()
     }
+    // Nieznany format pozostaje wartością tekstową i zgodnie z regułą jest ważny.
+    // Dzień wskazany jako ostatni dzień ważności pozostaje ważny do końca tego dnia.
     return parsed == null || !parsed.isBefore(java.time.LocalDate.now())
 }
 
@@ -610,7 +620,7 @@ internal fun CredentialTemplatePreview(documentKey: String, settings: Legitimacy
 @Composable
 internal fun LegitimacyReverseSide(title: String, issuer: String, number: String, validity: String, orientation: String = "PIONOWA") {
     val payload = remember(title, issuer, number, validity) {
-        "OWD-DEMO|${title.take(80)}|${number.take(48)}|${validity.take(32)}"
+        "OWD|${title.take(80)}|${number.take(48)}|${validity.take(32)}"
     }
     val qrBitmap = remember(payload) {
         runCatching {
