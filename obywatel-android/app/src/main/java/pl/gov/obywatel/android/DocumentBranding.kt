@@ -447,147 +447,49 @@ internal fun DocumentIdentityTemplate(
     assetRevision: Int = 0
 ) {
     val context = LocalContext.current
-    val qrPayload = remember(title, values) { buildString { append("DEMO|"); append(title); values.forEach { (key, value) -> append("|").append(key).append("=").append(value) } } }
-    val qrBitmap = remember(qrPayload) { createDocumentQr(qrPayload) }
-    val effectiveOwner = owner.ifBlank { values.entries.firstOrNull { it.key.contains("wystawc", true) || it.key.contains("nazwa", true) || it.key.contains("podmiot", true) || it.key.contains("kościół", true) || it.key.contains("rodu", true) }?.value.orEmpty() }
-    val photo = remember(effectiveOwner, photoOverride, assetRevision) {
-        photoOverride ?: DocumentBrandStore.image(context, effectiveOwner, "Fotografia")
+    val settings = rememberLegitimacyPreviewSettings(documentType).value
+    val photo = remember(owner, photoOverride, assetRevision) {
+        photoOverride ?: DocumentBrandStore.image(context, owner, "Fotografia")
     }
-    val flag = remember(effectiveOwner, title, documentType, assetRevision) {
-        DocumentBrandStore.imageForDocument(context, documentType, effectiveOwner, "Flaga")
-            ?: defaultDocumentFlag(context, title)
+    val labels = credentialFieldOptions(documentType).toMap()
+    val cardFields = values.entries.filter { it.value.isNotBlank() }.map { (key, value) ->
+        Triple(key, labels[key] ?: key.replace(Regex("([a-z])([A-Z])"), "$1 $2"), value)
     }
-    val emblem = remember(effectiveOwner, title, documentType, assetRevision) {
-        val kinds = if (isFamilyDocument(title) || isChurchDocument(title)) {
-            listOf("Herb", "Godło", "Logo")
-        } else {
-            listOf("Godło", "Herb", "Logo")
-        }
-        kinds.firstNotNullOfOrNull { kind ->
-            DocumentBrandStore.imageForDocument(context, documentType, effectiveOwner, kind)
-        } ?: defaultDocumentEmblem(context, title)
-    }
-    val background = remember(effectiveOwner, title, documentType, assetRevision) {
-        DocumentBrandStore.imageForDocument(context, documentType, effectiveOwner, "Tło dokumentu")
-            ?: defaultDocumentBackground(context, title)
-    }
-    val now = remember { SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date()) }
-    val name = values.entries.firstOrNull { it.key.contains("imię", true) || it.key.contains("nazw", true) || it.key.contains("posiadacz", true) || it.key.contains("osoba", true) }?.value.orEmpty()
-    val number = values.entries.firstOrNull { it.key.contains("numer", true) || it.key.contains("znak", true) || it.key.contains("nr ", true) }?.value.orEmpty()
-    val expiry = values.entries.firstOrNull { it.key.contains("ważn", true) || it.key.contains("do dnia", true) || it.key.contains("obowiązywania do", true) }?.value.orEmpty()
-    val parsedExpiry = runCatching {
-        listOf(
-            java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"),
-            java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"),
-            java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
-        ).firstNotNullOfOrNull { formatter -> runCatching { java.time.LocalDate.parse(expiry, formatter) }.getOrNull() }
-    }.getOrNull()
-    val expired = parsedExpiry?.isBefore(java.time.LocalDate.now()) == true
+    val holder = values.entries.firstOrNull {
+        it.key.contains("imię", true) || it.key.contains("nazw", true) ||
+            it.key.contains("posiadacz", true) || it.key.contains("osoba", true)
+    }?.value.orEmpty()
+    val expiry = values.entries.firstOrNull {
+        it.key.contains("ważn", true) || it.key.contains("do dnia", true) ||
+            it.key.contains("obowiązywania do", true) || it.key.contains("expiry", true)
+    }?.value.orEmpty()
     val explicitlyInvalid = validity.contains("nieważ", true) || validity.contains("unvalid", true) ||
-        validity.contains("utrac", true) || validity.contains("zwróc", true) || validity.contains("expired", true) ||
-        validity.contains("invalid", true)
-    val state = if (expired || explicitlyInvalid) "Dokument nieważny" else "Dokument ważny"
-    val stateColor = if (state == "Dokument ważny") Color(0xFFE5F4EA) else Color(0xFFFCE8E6)
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Stan na: $now", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-        Box(
-            Modifier.fillMaxWidth().aspectRatio(0.70f).clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFFF4F6F8)).border(1.dp, Color(0xFFD5DDE5), RoundedCornerShape(14.dp))
-        ) {
-            if (background != null) Image(background.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.34f)
-            Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) {
-                        if (flag != null) Image(flag.asImageBitmap(), "Flaga", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-                        else Text("FL", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                    }
-                    Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
-                        if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-                        else Text("ZNAK", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                    }
-                    Text(title.uppercase(), modifier = Modifier.weight(1f), color = Color(0xFF173B58),
-                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 3)
-                }
-                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Column(Modifier.weight(0.42f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                        Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.88f)), contentAlignment = Alignment.Center) {
-                            if (photo != null) Image(photo.asImageBitmap(), "Fotografia osoby", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                            else Text("MIEJSCE NA\nFOTOGRAFIĘ", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                        }
-                        Text("DOKUMENT / EWIDENCJA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                    }
-                    Column(Modifier.weight(0.58f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                        Text(name.ifBlank { "MIEJSCE NA DANE POSIADACZA" }, color = Color(0xFF173B58),
-                            fontWeight = FontWeight.SemiBold, maxLines = 3)
-                        values.entries.filter { it.value.isNotBlank() }.take(5).forEach { (key, value) ->
-                            Text("$key: $value", color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall, maxLines = 3)
-                        }
-                    }
-                }
-            }
-        }
-        if (showReverse) {
-            Box(
-                Modifier.fillMaxWidth().aspectRatio(0.70f).clip(RoundedCornerShape(14.dp))
-                    .border(1.dp, Color(0xFFD5DDE5), RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4F6F8))
-            ) {
-                if (background != null) {
-                    Image(background.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.24f)
-                }
-                Row(
-                    Modifier.fillMaxSize().padding(14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("REWERS DOKUMENTU", color = Color(0xFF173B58), fontWeight = FontWeight.Bold)
-                        Text("Wystawca: " + effectiveOwner.ifBlank { "Nie wskazano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
-                        Text("Numer: " + number.ifBlank { "Nie podano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
-                        Text("Ważny do: " + expiry.ifBlank { "Nie podano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
-                    }
-                    if (qrBitmap != null) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR na rewersie dokumentu", modifier = Modifier.size(104.dp))
+        validity.contains("utrac", true) || validity.contains("zwróc", true) ||
+        validity.contains("expired", true) || validity.contains("invalid", true)
+    val valid = !explicitlyInvalid && isCredentialValidByExpiry(expiry)
 
-                        }
-                    }
-                }
-            }
-        }
-        Card(colors = CardDefaults.cardColors(containerColor = stateColor)) {
-            Text(
-                if (state == "Dokument ważny") "Dokument ważny" else "Dokument nieważny",
-                Modifier.padding(12.dp), color = Color(0xFF26384A), fontWeight = FontWeight.Bold
+    if (settings.showCard) {
+        UnifiedCredentialCard(
+            documentKey = documentType,
+            title = title,
+            subtitle = owner,
+            holderName = holder,
+            fields = cardFields,
+            settings = settings,
+            photo = photo
+        )
+        if (showReverse || settings.showReverse) {
+            LegitimacyReverseSide(
+                title = "$title — rewers",
+                issuer = owner,
+                number = values.entries.firstOrNull { it.key.contains("numer", true) || it.key.contains("number", true) }?.value.orEmpty(),
+                validity = expiry,
+                orientation = settings.orientation
             )
         }
-        if (qrBitmap != null) {
-            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
-                Column(Modifier.fillMaxWidth().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR z danymi dokumentu", modifier = Modifier.size(112.dp))
-                }
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
-                Column(Modifier.padding(10.dp)) {
-                    Text("Numer dokumentu", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                    Text(number.ifBlank { "Nie podano" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold)
-                }
-            }
-            Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
-                Column(Modifier.padding(10.dp)) {
-                    Text("Data ważności", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                    Text(expiry.ifBlank { "Nie podano" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold)
-                }
-            }
-        }
-        Text("Ostatnia aktualizacja: $now", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
     }
+    CredentialValidityTile(valid)
 }
-
 
 @Composable
 internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null) {
