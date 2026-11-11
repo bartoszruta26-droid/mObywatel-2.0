@@ -363,13 +363,18 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
                 Text("Strona ${pageIndex + 1}", color = Color(0xFF344054))
                 OutlinedButton(onClick = { pageIndex++ }) { Text("Następna") }
             }
-            if (!readOnly) OutlinedButton(onClick = { pendingId = selected.id; signaturePicker.launch(arrayOf("application/xml", "text/xml", "application/octet-stream", "*/*")) },
-                modifier = Modifier.fillMaxWidth()) { Text(if (selected.signatureFileName.isBlank()) "Dołącz plik podpisu XML/XAdES" else "Zmień dołączony plik podpisu") }
-            if (selected.signatureFileName.isNotBlank()) Text("Dołączono: ${selected.signatureFileName}", color = Color(0xFF475467))
-            OutlinedButton(onClick = { showSignatureChoice = true; pendingRecord = selected }, modifier = Modifier.fillMaxWidth()) {
-                Text("Oznacz rodzaj podpisu")
+            if (!readOnly) {
+                OutlinedButton(onClick = { pendingId = selected.id; signaturePicker.launch(arrayOf("application/xml", "text/xml", "application/octet-stream", "*/*")) },
+                    modifier = Modifier.fillMaxWidth()) { Text(if (selected.signatureFileName.isBlank()) "Dołącz plik podpisu XML/XAdES" else "Zmień dołączony plik podpisu") }
+                if (selected.signatureFileName.isNotBlank()) Text("Dołączono: ${selected.signatureFileName}", color = Color(0xFF475467))
+                OutlinedButton(onClick = { showSignatureChoice = true; pendingRecord = selected }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Oznacz rodzaj podpisu")
+                }
+                OutlinedButton(onClick = { showDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("Usuń dokument") }
+            } else {
+                Text("Widok tylko do odczytu. Zarządzanie plikami i podpisami pozostaje poza portfelem dokumentów.",
+                    style = MaterialTheme.typography.labelSmall)
             }
-            OutlinedButton(onClick = { showDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("Usuń dokument") }
         }
         if (status.isNotBlank()) Text(status, color = Color(0xFF1769AA), style = MaterialTheme.typography.bodySmall)
     }
