@@ -109,6 +109,32 @@ internal object OfficialDocumentStore {
         val f=File(File(context.noBackupFilesDir,DIR),"index.enc"); if(!f.exists()) return emptyList()
         val a=JSONArray(String(crypt(f.readBytes(),false))); (0 until a.length()).map { a.getJSONObject(it) }.filter { it.optString("docId")==docId }.map { it.optString("name") }
     }.getOrDefault(emptyList())
+
+    fun exportArchive(context: Context): String {
+        val root = JSONObject()
+        load(context).forEach { (documentId, fields) ->
+            val item = JSONObject()
+            fields.forEach { (key, value) -> item.put(key, value) }
+            root.put(documentId, item)
+        }
+        return root.toString()
+    }
+
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        val restored = linkedMapOf<String, Map<String, String>>()
+        root.keys().forEach { documentId ->
+            require(documentId.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowy identyfikator dokumentu." }
+            val item = root.getJSONObject(documentId)
+            val fields = linkedMapOf<String, String>()
+            item.keys().forEach { key ->
+                require(key.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowa nazwa pola dokumentu." }
+                fields[key] = item.getString(key)
+            }
+            restored[documentId] = fields
+        }
+        save(context, restored)
+    }
 }
 
 @Composable
@@ -181,31 +207,4 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
         }
         Text("Dane są szyfrowane lokalnie w pamięci aplikacji. Aplikacja nie pobiera danych z rejestrów państwowych i nie wystawia dokumentów w imieniu organów.",color=Color(0xFF667788),style=MaterialTheme.typography.labelSmall)
     }
-    
-    fun exportArchive(context: Context): String {
-        val root = org.json.JSONObject()
-        load(context).forEach { (documentId, fields) ->
-            val item = org.json.JSONObject()
-            fields.forEach { (key, value) -> item.put(key, value) }
-            root.put(documentId, item)
-        }
-        return root.toString()
-    }
-
-    fun importArchive(context: Context, raw: String) {
-        val root = org.json.JSONObject(raw)
-        val restored = linkedMapOf<String, Map<String, String>>()
-        root.keys().forEach { documentId ->
-            require(documentId.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowy identyfikator dokumentu." }
-            val item = root.getJSONObject(documentId)
-            val fields = linkedMapOf<String, String>()
-            item.keys().forEach { key ->
-                require(key.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowa nazwa pola dokumentu." }
-                fields[key] = item.getString(key)
-            }
-            restored[documentId] = fields
-        }
-        save(context, restored)
-    }
-
 }
