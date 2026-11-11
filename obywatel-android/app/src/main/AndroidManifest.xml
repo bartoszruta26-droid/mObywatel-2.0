@@ -3,7 +3,7 @@
     <application
         android:allowBackup="false"
         android:icon="@drawable/institutions_eagle_emblem"
-        android:label="mObywatel 2.0"
+        android:label="Aplikacja Obywatelska"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
