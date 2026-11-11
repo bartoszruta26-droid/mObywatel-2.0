@@ -63,7 +63,8 @@ internal data class DocumentLayout(
             DocumentLayoutElement("body", "Treść", 42f, 350f, 511f, 285f, 10f),
             DocumentLayoutElement("signature", "Podpis", 42f, 675f, 511f, 100f, 9f),
             DocumentLayoutElement("watermark", "Znak wodny", 105f, 390f, 385f, 80f, 48f),
-            DocumentLayoutElement("footer", "Stopka", 42f, 790f, 511f, 30f, 7f)
+            DocumentLayoutElement("footer", "Stopka", 42f, 790f, 511f, 30f, 7f),
+            DocumentLayoutElement("qr", "Kod QR", 500f, 745f, 48f, 48f)
         )
 
         fun fromJson(json: JSONObject?): DocumentLayout {
