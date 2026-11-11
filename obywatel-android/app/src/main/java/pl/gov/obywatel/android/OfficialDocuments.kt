@@ -149,6 +149,14 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
             val values=records[type.id].orEmpty()
             var local by remember(type.id, records) { mutableStateOf(values) }
             Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=Color(0xFF102D46))
+            // Ten sam wzór legitymacji jest używany dla wszystkich typów dokumentów.
+            // Klucze pól pozostają etykietami formularza, aby wspólny renderer mógł je mapować
+            // na ustawienia widoczności pól właściwe dla rodzaju dokumentu.
+            DocumentIdentityTemplate(
+                title = type.title,
+                values = type.fields.mapIndexed { index, label -> label to local["f$index"].orEmpty() }.toMap(),
+                documentType = type.id
+            )
             if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=Color(0xFFEAF3FA))) {
                 Text(type.note,Modifier.padding(12.dp),color=Color(0xFF29445B),style=MaterialTheme.typography.bodySmall)
             }
