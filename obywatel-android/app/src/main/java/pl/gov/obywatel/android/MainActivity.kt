@@ -376,20 +376,12 @@ private fun ApplicationEntryFlow() {
 
 @Composable
 private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
-    Box(
-        Modifier.size(size).clip(RoundedCornerShape(size * 0.24f))
-            .background(Color.White)
-            .border(1.dp, Color(0xFFD8E1EA), RoundedCornerShape(size * 0.24f))
-            .padding(size * 0.13f),
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(R.drawable.institutions_eagle_emblem),
-            contentDescription = "Godło Polski",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit
-        )
-    }
+    Image(
+        painter = painterResource(R.drawable.header_logo_panel),
+        contentDescription = "Orzeł Polski na czerwonym polu — znak aplikacji",
+        modifier = Modifier.size(size),
+        contentScale = ContentScale.Fit
+    )
 }
 
 @Composable
