@@ -3318,11 +3318,17 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                     contentScale = ContentScale.Crop,
                     alpha = 0.52f
                 )
-                Box(Modifier.fillMaxWidth().height(320.dp).background(Color(0xFFF8D9D1).copy(alpha = 0.48f)))
                 Column(Modifier.fillMaxSize().padding(13.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                        // Grafika wzoru legitymacji z katalogu zasobów; obrazy zawierają właściwy czerwony znak Orła.
+                        Image(
+                            painter = painterResource(if (student) R.drawable.documents_course_legitimacy else R.drawable.documents_student_legitimacy),
+                            contentDescription = if (student) "Wzór legitymacji studenckiej" else "Wzór legitymacji kursanta",
+                            modifier = Modifier.size(54.dp),
+                            contentScale = ContentScale.Fit
+                        )
                         Column(Modifier.weight(1f)) {
-                            Text(if (student) "LEGITYMACJA SZKOLNA" else "LEGITYMACJA UCZESTNIKA KURSU",
+                            Text(if (student) "LEGITYMACJA SZKOLNA / STUDENCKA" else "LEGITYMACJA UCZESTNIKA KURSU",
                                 color = Color(0xFF392B35), fontWeight = FontWeight.ExtraBold,
                                 style = MaterialTheme.typography.titleSmall)
                             Text(institution.ifBlank { "NAZWA SZKOŁY / INSTYTUCJI" },
@@ -3450,10 +3456,20 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
                 alpha = 0.46f
             )
             Column(Modifier.fillMaxSize().padding(15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("LEGITYMACJA POSELSKA", color = Color(0xFF28252A),
-                    fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
-                Text("WIZUALIZACJA DOKUMENTU • EWIDENCJA INFORMACYJNA",
-                    color = Color(0xFF6C6260), style = MaterialTheme.typography.labelSmall)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Image(
+                        painter = painterResource(R.drawable.documents_deputy_legitimacy),
+                        contentDescription = "Graficzny wzór legitymacji poselskiej z godłem",
+                        modifier = Modifier.size(76.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("LEGITYMACJA POSELSKA", color = Color(0xFF28252A),
+                            fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
+                        Text("WIZUALIZACJA DOKUMENTU • EWIDENCJA INFORMACYJNA",
+                            color = Color(0xFF6C6260), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
                 LegitimacyHeraldry(settings, documentKey)
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(
