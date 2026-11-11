@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -377,6 +378,16 @@ internal fun LegitimacyHeraldry(
 }
 
 @Composable
+private fun CredentialFieldValue(item: Triple<String, String, String>) {
+    Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+        Text(item.second.uppercase(), style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium, maxLines = 1)
+        Text(item.third.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold, maxLines = 2)
+    }
+}
+
+@Composable
 internal fun UnifiedCredentialCard(
     documentKey: String,
     title: String,
@@ -395,15 +406,6 @@ internal fun UnifiedCredentialCard(
             ?: BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
     }
     val visible = if (settings.visibleFields.isEmpty()) fields else fields.filter { it.first in settings.visibleFields }
-    @Composable
-    fun field(item: Triple<String, String, String>) {
-        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-            Text(item.second.uppercase(), style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium, maxLines = 1)
-            Text(item.third.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold, maxLines = 2)
-        }
-    }
     Card(
         Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
@@ -432,14 +434,14 @@ internal fun UnifiedCredentialCard(
                         if (horizontal) {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    visible.take(2).forEach { field(it) }
+                                    visible.take(2).forEach { CredentialFieldValue(it) }
                                 }
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    visible.drop(2).take(2).forEach { field(it) }
+                                    visible.drop(2).take(2).forEach { CredentialFieldValue(it) }
                                 }
                             }
                         } else {
-                            visible.take(7).forEach { field(it) }
+                            visible.take(7).forEach { CredentialFieldValue(it) }
                         }
                     }
                 }
@@ -508,7 +510,7 @@ internal fun LegitimacyReverseSide(title: String, issuer: String, number: String
             Text("Termin ważności: ${validity.ifBlank { "Nie określono" }}")
             Spacer(Modifier.weight(1f))
             if (qrBitmap != null) {
-                Image(qrBitmap.asImageBitmap(), contentDescription = "Demonstracyjny kod QR rewersu",
+                Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR rewersu",
                     modifier = Modifier.size(112.dp).align(Alignment.CenterHorizontally))
             }
         }
