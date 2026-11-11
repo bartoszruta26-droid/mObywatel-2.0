@@ -42,7 +42,7 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "churchRole" to "Posługa / godność", "churchDocumentNumber" to "Numer dokumentu", "churchIssueDate" to "Data wydania", "churchValidity" to "Okres obowiązywania", "churchIssuer" to "Wystawca")
     "organization_foundation", "organization_association", "organization_church", "organization_company", "entity" ->
         listOf("entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP", "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant")
-    "loyalty" -> listOf("loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz")
+    "loyalty", "loyalty_cards" -> listOf("loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz")
     "bank_accounts" -> listOf("bankName" to "Bank", "accountName" to "Nazwa rachunku", "accountNumber" to "Numer rachunku", "accountOwner" to "Właściciel")
     "children" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "childRelationship" to "Relacja", "guardianName" to "Opiekun")
     "vaccines" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "vaccineName" to "Preparat", "vaccineDate" to "Data szczepienia", "vaccineDose" to "Dawka")
