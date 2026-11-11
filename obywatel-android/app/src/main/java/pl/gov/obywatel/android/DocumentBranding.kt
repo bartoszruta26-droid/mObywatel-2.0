@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.graphics.Bitmap
 import java.util.Locale
 import java.util.Date
 import java.text.SimpleDateFormat
