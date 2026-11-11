@@ -3539,11 +3539,18 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
     } else {
         Text("Podgląd całej legitymacji jest wyłączony w ustawieniach powyżej.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
-    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F5F8))) {
+    Card(colors = CardDefaults.cardColors(containerColor = if (mandateActive) Color(0xFFE5F4EA) else Color(0xFFFFF4D6))) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(Icons.Filled.Info, contentDescription = null, tint = Blue)
-            Text(statusLabel + ". Dane wpisane przez użytkownika nie potwierdzają mandatu ani autentyczności legitymacji.",
+            if (mandateActive) {
+                Box(Modifier.size(28.dp).clip(CircleShape).border(2.dp, Color(0xFF27833B), CircleShape),
+                    contentAlignment = Alignment.Center) {
+                    Text("✓", color = Color(0xFF27833B), fontWeight = FontWeight.Bold)
+                }
+            } else {
+                Icon(Icons.Filled.Info, contentDescription = null, tint = Blue)
+            }
+            Text(statusLabel + ". Status wynika z wpisu użytkownika i nie potwierdza mandatu ani autentyczności legitymacji.",
                 color = Muted, style = MaterialTheme.typography.bodySmall)
         }
     }
