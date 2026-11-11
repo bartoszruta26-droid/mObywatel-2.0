@@ -142,7 +142,7 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
         composeRule.onNodeWithText("Przeglądarka usług publicznych").performScrollTo().performClick()
         composeRule.onNodeWithText("Usługi publiczne").assertIsDisplayed()
-        composeRule.onNodeWithText("Szukaj usługi").assertIsDisplayed()
+        composeRule.onNodeWithText("Znajdź sprawę urzędową").assertIsDisplayed()
     }
 
     @Test
