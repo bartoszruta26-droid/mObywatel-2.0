@@ -93,7 +93,7 @@ private data class DocumentPreview(
 )
 
 @Composable
-fun DocumentsScreen(onBack: () -> Unit) {
+fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var documents by remember { mutableStateOf<List<ImportedDocument>>(emptyList()) }
@@ -172,11 +172,11 @@ fun DocumentsScreen(onBack: () -> Unit) {
 
             if (selected == null) {
                 Text(
-                    "Dodaj dokumenty i uzupełnij ich opis, źródło oraz własne oświadczenie dotyczące zgodności danych.",
+                    if (readOnly) "Twoje pliki — wybierz dokument, aby otworzyć jego podgląd." else "Dodaj dokumenty i uzupełnij ich opis, źródło oraz własne oświadczenie dotyczące zgodności danych.",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
-                Button(
+                if (!readOnly) Button(
                     onClick = {
                         importLauncher.launch(
                             arrayOf(
@@ -273,7 +273,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
                                             style = MaterialTheme.typography.bodySmall
                                         )
                                     }
-                                    IconButton(onClick = {
+                                    if (!readOnly) IconButton(onClick = {
                                         scope.launch {
                                             val result = withContext(Dispatchers.IO) {
                                                 try {
@@ -308,13 +308,13 @@ fun DocumentsScreen(onBack: () -> Unit) {
                     DocumentPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
                 }
                 Spacer(Modifier.height(10.dp))
-                Button(
+                if (!readOnly) Button(
                     onClick = { showSigningOptions = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Podpisz dokument")
                 }
-                OutlinedButton(
+                if (!readOnly) OutlinedButton(
                     onClick = {
                         importLauncher.launch(arrayOf("application/pdf"))
                     },
@@ -322,6 +322,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
                 ) {
                     Text("Dodaj podpisany plik PDF")
                 }
+                if (readOnly) Text("Podgląd tylko do odczytu. Dodawanie, usuwanie i obsługa podpisów są dostępne w Więcej → Ustawienia → Dokumenty do edycji.", style = MaterialTheme.typography.bodySmall)
                 signingMethodInfo?.let { message ->
                     Text(message, style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -336,7 +337,7 @@ fun DocumentsScreen(onBack: () -> Unit) {
         }
     }
 
-    if (showSigningOptions) {
+    if (!readOnly && showSigningOptions) {
         AlertDialog(
             onDismissRequest = { showSigningOptions = false },
             title = { Text("Wybierz sposób podpisania") },
