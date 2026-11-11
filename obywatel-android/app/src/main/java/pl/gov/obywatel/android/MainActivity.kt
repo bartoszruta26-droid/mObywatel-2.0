@@ -1288,14 +1288,23 @@ private fun DocumentDetailsScreen(
     val context = LocalContext.current
     val allValues = remember { DemoIdentityStore.load(context) }
     val group = remember(documentId) {
-        owdDocumentGroups().firstOrNull { it.id == documentId }
-            ?: when (documentId) {
-                "8" -> OwdDocumentGroup("loyalty", "Karty lojalnościowe", listOf(
-                    "Posiadacz" to "loyaltyHolder", "Nazwa programu" to "loyaltyName",
-                    "Numer karty" to "loyaltyNumber", "Status" to "status"
-                ))
-                else -> null
-            }
+        val normalizedId = when (documentId) {
+            "0" -> "profile"
+            "1" -> "identity"
+            "2" -> "passport"
+            "3" -> "family"
+            "4" -> "parliament"
+            "5" -> "training"
+            "6" -> "student"
+            "7" -> "disability"
+            "8" -> "loyalty"
+            else -> documentId
+        }
+        owdDocumentGroups().firstOrNull { it.id == normalizedId }
+            ?: if (normalizedId == "loyalty") OwdDocumentGroup("loyalty", "Karty lojalnościowe", listOf(
+                "Posiadacz" to "loyaltyHolder", "Nazwa programu" to "loyaltyName",
+                "Numer karty" to "loyaltyNumber", "Status" to "status"
+            )) else null
     }
     val title = group?.title ?: "Dokument"
     val values = remember(allValues, group) {
@@ -1319,7 +1328,6 @@ private fun DocumentDetailsScreen(
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Brak zapisanych danych tego dokumentu.", fontWeight = FontWeight.SemiBold, color = Navy)
                     Text("Uzupełnij dane w ustawieniach, aby wyświetlić podgląd.", color = Muted)
-                    TextButton(onClick = { onOpenService("Dane dokumentów") }) { Text("Otwórz ustawienia danych") }
                 }
             }
         } else {
