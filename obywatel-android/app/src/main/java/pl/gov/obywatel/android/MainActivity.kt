@@ -424,7 +424,6 @@ private fun EntryPreparationScreen(
         Spacer(Modifier.height(16.dp))
         listOf(
             "Dane są wprowadzane przez użytkownika; aplikacja nie potwierdza ich w rejestrach państwowych.",
-            "Wzory dokumentów i legitymacji mają charakter poglądowy.",
             "Nie ma tu aktywnego logowania do rządowego mObywatela ani potwierdzania tożsamości."
         ).forEach { item ->
             Card(Modifier.fillMaxWidth().padding(vertical = 5.dp), colors = CardDefaults.cardColors(containerColor = White)) {
@@ -2383,10 +2382,6 @@ private fun OwdDocumentArtworkCard(
                     Text(details, color = Ink, style = MaterialTheme.typography.labelSmall,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                Text(
-                    if (privateRecord) "WIDOK INFORMACYJNY • WZÓR" else "WIDOK INFORMACYJNY • DANE UŻYTKOWNIKA",
-                    color = Muted, style = MaterialTheme.typography.labelSmall
-                )
             }
         }
     }
@@ -2982,7 +2977,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("disabilityAppealOutcome", "Wynik odwołania / sprzeciwu", fields)
                 DemoDataField("disabilityDuplicateInfo", "Duplikat / zmiana dokumentu", fields)
                 DemoDataField("disabilitySourceAttachment", "Nazwa / opis dokumentu źródłowego", fields)
-                Text("Podgląd informacyjny", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Podgląd dokumentu", color = Navy, fontWeight = FontWeight.Bold)
                 DisabilityDecisionPreview(fields)
                 AdditionalInformationSection("Informacje dodatkowe — orzeczenie / zaświadczenie", fields, "disabilityExtra", when (fields["disabilityAuthorityType"] ?: "powiat") {
                     "foundation" -> "Dokument fundacji opisuje się zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego."
@@ -3091,7 +3086,7 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                     }
                     Column(Modifier.padding(start = 8.dp)) {
                         Text("DOKUMENT RODOWY", color = Color(0xFF254B50), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.labelLarge)
-                        Text("KARTA DANYCH TOŻSAMOŚCI • WZÓR", color = Color(0xFF455A64), style = MaterialTheme.typography.labelSmall)
+                        Text("KARTA DANYCH TOŻSAMOŚCI", color = Color(0xFF455A64), style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 Row(
@@ -3156,7 +3151,7 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
                     .background(Color(0xFF254B50)).padding(horizontal = 7.dp, vertical = 5.dp)
             ) {
-                Text("WZÓR • EWIDENCJA RODOWA", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                Text("EWIDENCJA RODOWA", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
             }
         }
     }
@@ -3338,7 +3333,7 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                         // Grafika wzoru legitymacji z katalogu zasobów; obrazy zawierają właściwy czerwony znak Orła.
                         Image(
                             painter = painterResource(if (student) R.drawable.documents_course_legitimacy else R.drawable.documents_student_legitimacy),
-                            contentDescription = if (student) "Wzór legitymacji studenckiej" else "Wzór legitymacji kursanta",
+                            contentDescription = if (student) "Legitymacja studencka" else "Legitymacja kursanta",
                             modifier = Modifier.size(54.dp),
                             contentScale = ContentScale.Fit
                         )
@@ -3350,8 +3345,6 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                                 color = Color(0xFF62535A), style = MaterialTheme.typography.labelSmall,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                        Text("WZÓR", color = Color(0xFF7B4B58), fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.labelSmall)
                     }
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Column(Modifier.width(100.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -3481,7 +3474,7 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Image(
                         painter = painterResource(R.drawable.documents_deputy_legitimacy),
-                        contentDescription = "Graficzny wzór legitymacji poselskiej z godłem",
+                        contentDescription = "Graficzna legitymacja poselska z godłem",
                         modifier = Modifier.size(76.dp),
                         contentScale = ContentScale.Fit
                     )
@@ -3824,7 +3817,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
         Text(if (editable) "Wprowadzanie i aktualizacja danych podmiotów. Wybierz rodzaj podmiotu i uzupełnij dane na podstawie właściwego dokumentu lub rejestru." else "Podgląd zapisanych danych identyfikacyjnych i rejestrowych podmiotów. Wybierz kafelek, aby wyświetlić szczegóły.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
         Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
-            Text(if (editable) "Wpisy są przechowywane lokalnie jako dane wprowadzone przez użytkownika. Podaj źródło i datę sprawdzenia." else "To widok informacyjny danych zapisanych w ustawieniach. Dane wymagają weryfikacji w odpowiednim rejestrze; aplikacja nie wydaje urzędowego odpisu.",
+            Text(if (editable) "Wpisy są przechowywane lokalnie jako dane wprowadzone przez użytkownika. Podaj źródło i datę sprawdzenia." else "Dane zapisane w ustawieniach. W razie potrzeby porównaj je z właściwym rejestrem; aplikacja nie pobiera urzędowego odpisu.",
                 Modifier.padding(14.dp), color = Navy, style = MaterialTheme.typography.bodySmall)
         }
         if (selectedEntity == null) {
