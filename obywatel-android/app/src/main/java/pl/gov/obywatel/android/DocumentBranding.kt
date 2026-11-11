@@ -568,12 +568,13 @@ private fun isChurchDocument(title: String): Boolean {
 
 internal fun defaultDocumentFlag(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
-    val resource = when {
+    val assetId = when {
         listOf("watykan", "papies", "stolica apostolska", "kościel", "kosciel", "biskup", "kardynał", "kardynal").any { normalized.contains(it) } ->
-            R.drawable.flag_vatican_vector
-        else -> R.drawable.flag_poland_vector
+            "builtin_drawable_flag_vatican_vector"
+        else -> "builtin_drawable_flag_poland_vector"
     }
-    return BitmapFactory.decodeResource(context.resources, resource)
+    return DocumentBrandStore.preview(context, assetId)
+        ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
 }
 
 internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
