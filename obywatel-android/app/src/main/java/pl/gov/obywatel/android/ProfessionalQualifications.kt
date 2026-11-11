@@ -87,7 +87,7 @@ private data class QualificationFile(
     val size: Long
 )
 
-private object ProfessionalCredentialStore {
+internal object ProfessionalCredentialStore {
     private const val KEY_ALIAS = "obywatel_professional_credentials_aes"
     private const val INDEX = "professional-credentials.enc"
     private const val MAX_FILE = 25 * 1024 * 1024
