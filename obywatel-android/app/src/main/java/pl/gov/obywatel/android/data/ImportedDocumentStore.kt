@@ -124,7 +124,12 @@ object ImportedDocumentStore {
             require(isSupportedDocumentMimeType(mime)) { "Nieobsługiwany typ załącznika: $mime" }
             val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
             require(bytes.isNotEmpty() && bytes.size <= 25 * 1024 * 1024) { "Załącznik przekracza limit 25 MB." }
-            val extension = when (mime) {\n                "application/vnd.oasis.opendocument.text" -> "odt"\n                "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "docx"\n                "application/pdf" -> "pdf"\n                else -> MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.take(12) ?: "bin"\n            }
+            val extension = when (mime) {
+                "application/vnd.oasis.opendocument.text" -> "odt"
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "docx"
+                "application/pdf" -> "pdf"
+                else -> MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.take(12) ?: "bin"
+            }
             val target = File(directory, "${java.util.UUID.randomUUID()}.$extension")
             target.writeBytes(bytes)
             uris.add(Uri.fromFile(target).toString())
@@ -159,7 +164,7 @@ object ImportedDocumentStore {
         val mime = (if (isPrivateFile) inferredMime else context.contentResolver.getType(uri))
             .orEmpty().trim().lowercase()
         require(isSupportedDocumentMimeType(mime)) {
-            "Obsługiwane są pliki PDF, DOCX oraz obrazy rastrowe (JPEG, PNG, WebP, GIF, BMP)."
+            "Obsługiwane są pliki PDF, DOCX, ODT oraz obrazy rastrowe (JPEG, PNG, WebP, GIF, BMP)."
         }
         return ImportedDocument(uri, title, mime)
     }
