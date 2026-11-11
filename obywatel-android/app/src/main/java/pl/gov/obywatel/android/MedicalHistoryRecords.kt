@@ -262,7 +262,7 @@ internal fun MedicalHistoryRecordsScreen(onBack: () -> Unit) {
     }
 }
 
-private object MedicalHistoryStore {
+internal object MedicalHistoryStore {
     private const val FILE_NAME = "medical_history_archive.enc"
     private const val KEY_ALIAS = "obywatel_medical_history_aes"
 
@@ -305,6 +305,39 @@ private object MedicalHistoryStore {
             temporary.copyTo(target, overwrite = true)
             temporary.delete()
         }
+    }
+
+
+    fun exportArchive(context: Context): String {
+        val array = JSONArray()
+        load(context).forEach { entry ->
+            val images = JSONArray()
+            entry.images.forEach { images.put(it) }
+            array.put(JSONObject().put("id", entry.id).put("title", entry.title).put("date", entry.date)
+                .put("diagnosis", entry.diagnosis).put("facility", entry.facility)
+                .put("physician", entry.physician).put("notes", entry.notes).put("images", images))
+        }
+        return JSONObject().put("version", 1).put("entries", array).toString()
+    }
+
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja historii medycznej." }
+        val array = root.optJSONArray("entries") ?: JSONArray()
+        val imported = (0 until array.length()).map { i ->
+            val item = array.getJSONObject(i)
+            val images = item.optJSONArray("images") ?: JSONArray()
+            MedicalHistoryEntry(
+                id = item.optString("id", UUID.randomUUID().toString()),
+                title = item.optString("title"), date = item.optString("date"),
+                diagnosis = item.optString("diagnosis"), facility = item.optString("facility"),
+                physician = item.optString("physician"), notes = item.optString("notes"),
+                images = (0 until images.length()).map { images.getString(it) }
+            )
+        }
+        val merged = load(context).associateBy { it.id }.toMutableMap()
+        imported.forEach { merged[it.id] = it }
+        save(context, merged.values.toList())
     }
 
     private fun key(): SecretKey {
