@@ -191,3 +191,15 @@ Z gałęzi `feature/bishop-heraldry-full-and-shield-icons` przeniesiono do `main
 Gałęzie `android-app-skeleton-refactor-8343a` i `refactoring-the-application-skeleton-3dc4f` zawierają dodatkowe XML-y w odrębnym katalogu głównym `app/src/main/res`, bez wspólnej historii z aktualnym projektem `obywatel-android`. Nie zostały scalone wprost, ponieważ reprezentują osobny, starszy szkielet aplikacji. Część ich zasobów ma jawnie tymczasowy charakter: uproszczona grafika orła jest opisana jako przybliżenie do zastąpienia oficjalnym wzorem, a flaga UE używa kół zamiast gwiazd. Nie kopiujemy takich placeholderów do aktywnej aplikacji jako gotowych symboli.
 
 **Wniosek:** biblioteka Android zawiera obecnie 16 zasobów heraldycznych SVG, a katalog iOS 356 plików SVG. Nie prowadzono audytu wykorzystania ikon w interfejsie — zasoby pozostają dostępne również do przyszłego wykorzystania w edytorze dokumentów.
+
+
+### Dodatkowe wektorowe zasoby XML — 11 listopada 2026
+
+Do aktywnego katalogu Android `app/src/main/res/drawable/` dodano 11 wektorowych zasobów XML odzyskanych z dwóch historycznych gałęzi szkieletu aplikacji. Zapisano je pod prefiksami `legacy_*`, aby zachować oryginalne ikony i nie kolidować z nazwami bieżących zasobów:
+
+- `legacy_flag_rp.xml` — flaga RP;
+- `legacy_ic_chevron_left.xml`, `legacy_ic_chevron_right.xml` — strzałki nawigacyjne;
+- `legacy_ic_portfolio.xml`, `legacy_ic_profile.xml`, `legacy_ic_register.xml`, `legacy_ic_viewer.xml` — dokumenty, profil, rejestr i podgląd;
+- `legacy_ic_info.xml`, `legacy_ic_search.xml`, `legacy_ic_star.xml`, `legacy_ic_upload.xml` — informacja, wyszukiwanie, gwiazda i przesyłanie.
+
+Grafiki zachowano jako zasoby dostępne do przyszłego wykorzystania, również w edytorze dokumentów. Nie podłączano ich automatycznie do ekranów. Zależności kolorów w czterech ikonach zastąpiono wartościami bezpośrednimi, aby zasoby nie wymagały brakujących definicji `@color` w aktualnym module. Nie przeniesiono historycznej flagi UE z kółkami zamiast gwiazd ani przybliżonego godła opisanego w źródle jako placeholder — wymagają poprawnych, oficjalnych geometrii.
