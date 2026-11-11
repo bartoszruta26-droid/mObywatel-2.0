@@ -80,7 +80,13 @@ internal data class LegitimacyPreviewSettings(
     val crestCaption: String = "",
     val captionPosition: String = "Pod herbem",
     val orientation: String = "PIONOWA",
-    val visibleFields: Set<String> = emptySet()
+    val visibleFields: Set<String> = emptySet(),
+    val visibleFieldsConfigured: Boolean = false,
+    val showPhoto: Boolean = true,
+    val showFlag: Boolean = true,
+    val showCrest: Boolean = true,
+    val showLogo: Boolean = true,
+    val showBackground: Boolean = true
 )
 
 private object LegitimacyPreviewSettingsStore {
@@ -98,7 +104,13 @@ private object LegitimacyPreviewSettingsStore {
             crestCaption = p.getString("${key}_caption", "").orEmpty(),
             captionPosition = p.getString("${key}_caption_position", "Pod herbem").orEmpty(),
             orientation = p.getString("${key}_orientation", "PIONOWA").orEmpty(),
-            visibleFields = p.getStringSet("${key}_visible_fields", emptySet())?.toSet().orEmpty()
+            visibleFields = p.getStringSet("${key}_visible_fields", emptySet())?.toSet().orEmpty(),
+            visibleFieldsConfigured = p.getBoolean("${key}_visible_fields_configured", false),
+            showPhoto = p.getBoolean("${key}_show_photo", true),
+            showFlag = p.getBoolean("${key}_show_flag", true),
+            showCrest = p.getBoolean("${key}_show_crest", true),
+            showLogo = p.getBoolean("${key}_show_logo", true),
+            showBackground = p.getBoolean("${key}_show_background", true)
         )
     }
 
@@ -114,6 +126,12 @@ private object LegitimacyPreviewSettingsStore {
             .putString("${key}_caption_position", value.captionPosition)
             .putString("${key}_orientation", value.orientation)
             .putStringSet("${key}_visible_fields", value.visibleFields)
+            .putBoolean("${key}_visible_fields_configured", value.visibleFieldsConfigured)
+            .putBoolean("${key}_show_photo", value.showPhoto)
+            .putBoolean("${key}_show_flag", value.showFlag)
+            .putBoolean("${key}_show_crest", value.showCrest)
+            .putBoolean("${key}_show_logo", value.showLogo)
+            .putBoolean("${key}_show_background", value.showBackground)
             .apply()
     }
 }
@@ -208,15 +226,28 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Checkbox(checked = settings.showReverse, onCheckedChange = { update(settings.copy(showReverse = it)) })
                 Text("Wyświetlaj rewers (domyślnie ukryty)")
             }
+            Text("Elementy wzoru", fontWeight = FontWeight.SemiBold)
+            listOf(
+                Triple(settings.showPhoto, "Fotografia", { v: Boolean -> update(settings.copy(showPhoto = v)) }),
+                Triple(settings.showFlag, "Flaga", { v: Boolean -> update(settings.copy(showFlag = v)) }),
+                Triple(settings.showCrest, "Godło / herb", { v: Boolean -> update(settings.copy(showCrest = v)) }),
+                Triple(settings.showLogo, "Logo wystawcy", { v: Boolean -> update(settings.copy(showLogo = v)) }),
+                Triple(settings.showBackground, "Tło dokumentu", { v: Boolean -> update(settings.copy(showBackground = v)) })
+            ).forEach { (checked, label, onToggle) ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = checked, onCheckedChange = onToggle)
+                    Text(label, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
             Text("Pola na legitymacji", fontWeight = FontWeight.SemiBold)
             val fieldOptions = credentialFieldOptions(documentKey)
             fieldOptions.forEach { (fieldKey, fieldLabel) ->
-                val checked = settings.visibleFields.isEmpty() || fieldKey in settings.visibleFields
+                val checked = !settings.visibleFieldsConfigured || fieldKey in settings.visibleFields
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = checked, onCheckedChange = { selected ->
-                        val current = if (settings.visibleFields.isEmpty()) fieldOptions.map { it.first }.toSet() else settings.visibleFields
+                        val current = if (settings.visibleFieldsConfigured) settings.visibleFields else fieldOptions.map { it.first }.toSet()
                         val next = if (selected) current + fieldKey else current - fieldKey
-                        update(settings.copy(visibleFields = next))
+                        update(settings.copy(visibleFields = next, visibleFieldsConfigured = true))
                     })
                     Text(fieldLabel, style = MaterialTheme.typography.bodyMedium)
                 }
@@ -347,10 +378,10 @@ internal fun LegitimacyHeraldry(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        if (selectedFlag != null) {
+        if (settings.showFlag && selectedFlag != null) {
             Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu",
                 modifier = Modifier.size(width = 46.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-        } else {
+        } else if (settings.showFlag) {
             Image(painterResource(R.drawable.institutions_polish_flag), contentDescription = "Flaga dokumentu",
                 modifier = Modifier.size(width = 46.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
         }
@@ -359,10 +390,10 @@ internal fun LegitimacyHeraldry(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (selectedCrest != null) {
+            if (settings.showCrest && selectedCrest != null) {
                 Image(selectedCrest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
                     modifier = Modifier.size(42.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            } else {
+            } else if (settings.showCrest) {
                 Image(painterResource(R.drawable.institutions_eagle_emblem), contentDescription = "Godło lub herb dokumentu",
                     modifier = Modifier.size(42.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
             }
@@ -370,7 +401,7 @@ internal fun LegitimacyHeraldry(
                 Text(title, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleSmall,
                     maxLines = 2)
                 Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 2)
-                if (assignedLogo != null) {
+                if (settings.showLogo && assignedLogo != null) {
                     Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
                         modifier = Modifier.size(width = 54.dp, height = 24.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
                 }
@@ -410,7 +441,7 @@ internal fun UnifiedCredentialCard(
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
             ?: BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
     }
-    val visible = if (settings.visibleFields.isEmpty()) fields else fields.filter { it.first in settings.visibleFields }
+    val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter { it.first in settings.visibleFields }
     Card(
         Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
@@ -418,13 +449,13 @@ internal fun UnifiedCredentialCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(Modifier.fillMaxSize()) {
-            if (background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
+            if (settings.showBackground && background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
                 modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
             Column(Modifier.fillMaxSize().padding(if (horizontal) 8.dp else 11.dp),
                 verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
                 LegitimacyHeraldry(settings, documentKey, vertical = true, title = title.uppercase(), subtitle = subtitle)
                 Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.width(if (horizontal) 42.dp else 46.dp)
+                    if (settings.showPhoto) Box(Modifier.width(if (horizontal) 42.dp else 46.dp)
                         .height(if (horizontal) 56.dp else 62.dp)
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
@@ -471,7 +502,7 @@ internal fun CredentialValidityTile(valid: Boolean) {
 internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings) {
     val title = documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
-    val selected = if (settings.visibleFields.isEmpty()) options else options.filter { it.first in settings.visibleFields }
+    val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
     UnifiedCredentialCard(
         documentKey = documentKey,
         title = title,
