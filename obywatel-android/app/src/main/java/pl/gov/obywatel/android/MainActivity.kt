@@ -356,21 +356,14 @@ private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bit
 @Composable
 private fun ApplicationEntryFlow() {
     var stage by remember { mutableIntStateOf(0) }
-    var accepted by remember { mutableStateOf(false) }
     when (stage) {
         0 -> EntryWelcomeScreen(
             onStart = { stage = 1 },
-            onSkip = { stage = 2 }
+            onSkip = { stage = 1 }
         )
-        1 -> EntryPreparationScreen(
-            accepted = accepted,
-            onAccepted = { accepted = it },
-            onContinue = { stage = 2 },
+        1 -> EntryLoginScreen(
+            onDemo = { stage = 2 },
             onBack = { stage = 0 }
-        )
-        2 -> EntryLoginScreen(
-            onDemo = { stage = 3 },
-            onBack = { stage = 1 }
         )
         else -> HomeScreen()
     }
@@ -406,38 +399,6 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) { Text("Rozpocznij") }
         TextButton(onClick = onSkip) { Text("Pomiń wprowadzenie") }
-    }
-}
-
-@Composable
-private fun EntryPreparationScreen(
-    accepted: Boolean,
-    onAccepted: (Boolean) -> Unit,
-    onContinue: () -> Unit,
-    onBack: () -> Unit
-) {
-    Column(
-        Modifier.fillMaxSize().background(AppSurface).verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("Przygotowanie aplikacji", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Przed rozpoczęciem sprawdź podstawowe informacje dotyczące prywatności i statusu dokumentów.",
-            color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(16.dp))
-        listOf(
-            "Dane są wprowadzane przez użytkownika; aplikacja nie potwierdza ich w rejestrach państwowych.",
-            "Nie ma tu aktywnego logowania do rządowego mObywatela ani potwierdzania tożsamości."
-        ).forEach { item ->
-            Card(Modifier.fillMaxWidth().padding(vertical = 5.dp), colors = CardDefaults.cardColors(containerColor = White)) {
-                Text("•  $item", Modifier.padding(14.dp), color = Navy)
-            }
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            androidx.compose.material3.Checkbox(checked = accepted, onCheckedChange = onAccepted)
-            Text("Zapoznałem się z informacjami o charakterze prototypu.", color = Navy)
-        }
-        Button(onClick = onContinue, enabled = accepted, modifier = Modifier.fillMaxWidth()) { Text("Przejdź do logowania") }
-        TextButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Wstecz") }
     }
 }
 
@@ -2380,7 +2341,6 @@ private fun DocumentsWalletScreen(
         CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
     )
     val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry")
-    var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     fun openDocument(document: CatalogDocument) {
         when {
@@ -2394,86 +2354,38 @@ private fun DocumentsWalletScreen(
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        Text("‹  Pulpit", color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Dokumenty", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
-            if (selectedCategory == null) "‹  Pulpit" else "‹  Wszystkie grupy",
-            color = Blue, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable {
-                if (selectedCategory == null) onBack() else selectedCategory = null
-            }.padding(vertical = 5.dp)
+            "Wybierz dokument. Grupy porządkują katalog, a każda pozycja otwiera bezpośrednio podgląd dokumentu.",
+            color = Muted, style = MaterialTheme.typography.bodySmall
         )
-        Text(
-            if (selectedCategory == null) "Dokumenty" else selectedCategory!!,
-            color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold
-        )
-        if (selectedCategory == null) {
-            Text(
-                "Wybierz grupę dokumentów. Ten sam dokument może występować w kilku grupach.",
-                color = Muted, style = MaterialTheme.typography.bodySmall
-            )
-            Card(
-                modifier = Modifier.fillMaxWidth().clickable(onClick = onAddDocuments),
-                colors = CardDefaults.cardColors(containerColor = BlueLight)
-            ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(20.dp))
-                    Text("Dodaj / uzupełnij dane", color = Blue, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 8.dp))
-                }
-            }
-            categories.chunked(2).forEach { pair ->
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    pair.forEach { category ->
-                        val count = documents.count { category in it.categories }
-                        Card(
-                            modifier = Modifier.weight(1f).clickable { selectedCategory = category },
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = White)
-                        ) {
-                            Column(
-                                Modifier.fillMaxWidth().padding(15.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(Icons.Filled.Description, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
-                                Text(category, color = Navy, fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleSmall)
-                                Text("$count dokumentów", color = Muted, style = MaterialTheme.typography.labelSmall)
-                                Text("Otwórz grupę  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                    }
-                    if (pair.size == 1) Spacer(Modifier.weight(1f))
-                }
-            }
-        } else {
-            val entries = documents.filter { document -> selectedCategory?.let { it in document.categories } == true }
-            if (entries.isEmpty()) {
-                Card(colors = CardDefaults.cardColors(containerColor = White)) {
-                    Text("W tej grupie nie ma jeszcze przypisanych dokumentów.",
-                        modifier = Modifier.padding(16.dp), color = Muted)
-                }
-            }
-            entries.forEach { document ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().clickable { openDocument(document) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = White)
-                ) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(13.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(11.dp)
+        categories.forEach { category ->
+            val entries = documents.filter { category in it.categories }
+            if (entries.isNotEmpty()) {
+                Text(category, color = Navy, fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 5.dp))
+                entries.forEach { document ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth().clickable { openDocument(document) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = White)
                     ) {
-                        Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
-                                style = MaterialTheme.typography.bodyMedium)
-                            Text(document.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                        Row(
+                            Modifier.fillMaxWidth().padding(13.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(11.dp)
+                        ) {
+                            Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.bodyMedium)
+                                Text(document.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                            }
+                            Text("Podgląd  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
                         }
-                        Text("Otwórz  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -3157,7 +3069,8 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                 fields = cardFields,
                 settings = settings,
                 photo = photoBitmap,
-                fallbackBackgroundRes = if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe
+                fallbackBackgroundRes = if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe,
+                validity = valid
             )
             if (settings.showReverse) LegitimacyReverseSide(
                 title = if (student) "Legitymacja szkolna — rewers" else "Legitymacja uczestnika kursu — rewers",
@@ -3167,7 +3080,6 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                 orientation = settings.orientation
             )
         }
-        CredentialValidityTile(valid)
     }
 }
 
@@ -3215,13 +3127,13 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
                 fields = cardFields,
                 settings = settings,
                 photo = photoBitmap,
-                fallbackBackgroundRes = R.drawable.tlo_legitymacji_szare
+                fallbackBackgroundRes = R.drawable.tlo_legitymacji_szare,
+                validity = valid
             )
             if (settings.showReverse) LegitimacyReverseSide(
                 "Legitymacja poselska — rewers", issuer, number, expiry, settings.orientation
             )
         }
-        CredentialValidityTile(valid)
     }
 }
 
