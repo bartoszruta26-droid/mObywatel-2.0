@@ -1341,6 +1341,7 @@ private fun DocumentDetailsScreen(
     }
 }
 
+@Composable
 private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     val context = LocalContext.current
     val fields = remember { DemoIdentityStore.load(context) }
