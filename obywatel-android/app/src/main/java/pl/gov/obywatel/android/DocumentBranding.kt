@@ -499,6 +499,14 @@ internal fun DocumentIdentityTemplate(
     fun stableFieldKey(label: String): String {
         val value = label.lowercase(Locale.ROOT)
         return when {
+            value.contains("rodzaj aktu") -> "civilActType"
+            value.contains("rodzaj odpisu") -> "civilExtractType"
+            value.contains("data i miejsce zawarcia małżeństwa") || value.contains("data zawarcia małżeństwa") -> "marriageDate"
+            value.contains("data i miejsce zgonu") || value.contains("data zgonu") -> "deathDate"
+            value.contains("data przyznania") -> "bloodDonorIssueDate"
+            value.contains("stopień") && documentType == "blood_donor" -> "bloodDonorTitle"
+            value.contains("właściciel") || value.contains("współwłaściciel") -> "vehicleOwner"
+            value.contains("data pierwszej rejestracji") -> "vehicleFirstRegistration"
             value.contains("osoba zmarła") || value.contains("osoba zmarla") -> "deceasedName"
             value.contains("małżonkowie") || value.contains("malzonkowie") -> "spouseNames"
             value.contains("liczba oddanych litrów") || value.contains("liczba oddanych litrow") -> "bloodDonorLitres"
@@ -575,6 +583,7 @@ internal fun DocumentIdentityTemplate(
                 "identity" -> "idIssueDate"
                 "passport" -> "passportIssueDate"
                 "family" -> "familyIssueDate"
+                "birth_extract", "marriage_extract", "death_extract" -> "civilIssueDate"
                 "large_family" -> "largeFamilyIssueDate"
                 "blood_donor" -> "bloodDonorIssueDate"
                 "disability_card" -> "disabilityCardIssueDate"
@@ -600,6 +609,7 @@ internal fun DocumentIdentityTemplate(
                 else -> if (documentType.startsWith("church")) "churchDocumentNumber" else "documentNumber"
             }
             value.contains("wystawc") || value.contains("organ wydaj") -> when {
+                documentType in setOf("birth_extract", "marriage_extract", "death_extract") -> "civilIssuer"
                 documentType == "disability" -> "disabilityIssuerName"
                 documentType.startsWith("professional") -> "professionalIssuer"
                 documentType.startsWith("church") -> "churchIssuer"
