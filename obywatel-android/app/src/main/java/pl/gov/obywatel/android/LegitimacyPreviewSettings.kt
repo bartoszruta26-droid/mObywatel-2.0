@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -175,30 +176,54 @@ internal fun LegitimacyPreviewSettingsPanel(
 @Composable
 internal fun LegitimacyHeraldry(settings: LegitimacyPreviewSettings, documentKey: String) {
     val context = LocalContext.current
-    val crest = remember(settings.crestAssetId) {
+    val selectedCrest = remember(settings.crestAssetId) {
         settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
     }
-    val flag = remember(settings.flagAssetId) {
+    val selectedFlag = remember(settings.flagAssetId) {
         settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
     }
-    if (crest != null || flag != null || settings.crestCaption.isNotBlank()) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (flag != null) Image(flag.asImageBitmap(), contentDescription = "Flaga legitymacji", modifier = Modifier.size(width = 48.dp, height = 30.dp))
-            if (settings.captionPosition == "Po lewej" && settings.crestCaption.isNotBlank()) {
-                Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+    val assignedLogo = remember(documentKey) {
+        DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
+    }
+    val defaultCrest = remember {
+        BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+    }
+    val defaultFlag = remember {
+        BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
+    }
+    val crest = selectedCrest ?: defaultCrest
+    val flag = selectedFlag ?: defaultFlag
+
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (flag != null) {
+            Image(flag.asImageBitmap(), contentDescription = "Flaga dokumentu",
+                modifier = Modifier.size(width = 42.dp, height = 27.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+        }
+        if (assignedLogo != null) {
+            Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
+                modifier = Modifier.size(36.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+        }
+        if (settings.captionPosition == "Po lewej" && settings.crestCaption.isNotBlank()) {
+            Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            if (settings.captionPosition == "Nad herbem" && settings.crestCaption.isNotBlank()) {
+                Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                if (settings.captionPosition == "Nad herbem" && settings.crestCaption.isNotBlank()) {
-                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
-                }
-                if (crest != null) Image(crest.asImageBitmap(), contentDescription = "Herb legitymacji", modifier = Modifier.size(48.dp))
-                if (settings.captionPosition == "Pod herbem" && settings.crestCaption.isNotBlank()) {
-                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
-                }
+            if (crest != null) {
+                Image(crest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
+                    modifier = Modifier.size(48.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
             }
-            if (settings.captionPosition == "Po prawej" && settings.crestCaption.isNotBlank()) {
-                Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+            if (settings.captionPosition == "Pod herbem" && settings.crestCaption.isNotBlank()) {
+                Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
             }
+        }
+        if (settings.captionPosition == "Po prawej" && settings.crestCaption.isNotBlank()) {
+            Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
         }
     }
 }
