@@ -302,7 +302,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                         "Zakres uprawnień" to p.scope,
                         "Podstawa prawna / regulaminowa" to p.legalBasis,
                         "Status" to p.status
-                    ), documentType = "professional")
+                    ), documentType = "professional", ownerDefault = p.profession)
                     TextButton(onClick = { selectedProfession = p.profession }) { Text("Pokaż dokumenty tego zawodu") }
                 }
             }
