@@ -773,7 +773,12 @@ private fun HomeScreen() {
                         onExportAll = {
                             exportSnapshot = DemoIdentityStore.load(context) +
                                 LegitimacyPreviewSettingsStore.exportAll(context) +
-                                loadDocumentPlacements(context).mapKeys { "dp_${it.key}" }
+                                loadDocumentPlacements(context).mapKeys { "dp_${it.key}" } +
+                                mapOf(
+                                    "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
+                                    "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
+                                    "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context)
+                                )
                             runCatching {
                                 require(exportSnapshot.isNotEmpty()) {
                                     "Brak zapisanych danych. Najpierw uzupełnij i zapisz dane w ustawieniach."
@@ -1037,9 +1042,13 @@ private fun HomeScreen() {
                         runCatching {
                             val current = DemoIdentityStore.loadStrict(context)
                             val profileValues = incoming.filterKeys {
-                                !it.startsWith("cs_") && !it.startsWith("dp_")
+                                !it.startsWith("cs_") && !it.startsWith("dp_") &&
+                                    it !in setOf("churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive")
                             }
                             DemoIdentityStore.save(context, current.toMutableMap().apply { putAll(profileValues) })
+                            incoming["churchDocumentArchive"]?.let { ChurchDocumentStore.importArchive(context, it) }
+                            incoming["familyEntityDocumentArchive"]?.let { FamilyEntityDocumentStore.importArchive(context, it) }
+                            incoming["officialDocumentArchive"]?.let { OfficialDocumentStore.importArchive(context, it) }
                             LegitimacyPreviewSettingsStore.importAll(context, incoming)
                             val importedPlacements = incoming.filterKeys { it.startsWith("dp_") }
                                 .mapKeys { it.key.removePrefix("dp_") }
@@ -1055,10 +1064,11 @@ private fun HomeScreen() {
                             require(profileValues.all { (key, value) -> persisted[key] == value }) {
                                 "Weryfikacja zapisu nie powiodła się. Dane profilu nie odpowiadają importowi."
                             }
-                            val settingsCount = incoming.keys.count {
-                                it.startsWith("cs_") || it.startsWith("dp_")
+                            val auxiliaryCount = incoming.keys.count {
+                                it.startsWith("cs_") || it.startsWith("dp_") ||
+                                    it in setOf("churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive")
                             }
-                            val changed = profileValues.keys.count { persisted[it] == profileValues[it] } + settingsCount
+                            val changed = profileValues.keys.count { persisted[it] == profileValues[it] } + auxiliaryCount
                             require(changed == incoming.size) {
                                 "Weryfikacja importu wykazała niezgodność części pól lub ustawień."
                             }
