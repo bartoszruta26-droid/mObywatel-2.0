@@ -69,14 +69,15 @@ internal object OdtTextExtractor {
         parser.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false)
         parser.setInput(ByteArrayInputStream(bytes), "UTF-8")
         val result = StringBuilder()
+        var paragraphDepth = 0
         var event = parser.eventType
         while (event != XmlPullParser.END_DOCUMENT) {
             when (event) {
                 XmlPullParser.START_TAG -> when (parser.name) {
-                    "p", "h" -> Unit
-                    "tab" -> appendBounded(result, "\\t")
-                    "line-break" -> appendBounded(result, "\\n")
-                    "s" -> {
+                    "p", "h" -> paragraphDepth++
+                    "tab" -> if (paragraphDepth > 0) appendBounded(result, "\\t")
+                    "line-break" -> if (paragraphDepth > 0) appendBounded(result, "\\n")
+                    "s" -> if (paragraphDepth > 0) {
                         val count = (0 until parser.attributeCount)
                             .firstOrNull { parser.getAttributeName(it) == "c" }
                             ?.let { parser.getAttributeValue(it)?.toIntOrNull() } ?: 1
@@ -84,8 +85,11 @@ internal object OdtTextExtractor {
                         appendBounded(result, " ".repeat(count))
                     }
                 }
-                XmlPullParser.TEXT -> appendBounded(result, parser.text.orEmpty())
+                XmlPullParser.TEXT -> if (paragraphDepth > 0) {
+                    appendBounded(result, parser.text.orEmpty())
+                }
                 XmlPullParser.END_TAG -> if (parser.name == "p" || parser.name == "h") {
+                    if (paragraphDepth > 0) paragraphDepth--
                     appendBounded(result, "\\n")
                 }
             }
