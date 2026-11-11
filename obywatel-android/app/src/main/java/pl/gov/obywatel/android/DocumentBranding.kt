@@ -297,7 +297,13 @@ private fun documentTypeForTitle(title: String): String {
         value.contains("poselsk") || value.contains("parlament") -> "parliament"
         value.contains("kursant") || value.contains("uczestnika kurs") || value.contains("kursu") -> "training"
         value.contains("student") || value.contains("uczn") || value.contains("szkoln") -> "student"
-        value.contains("kościel") || value.contains("kosciel") || value.contains("misjon") -> "church"
+        value.contains("arcybiskup") -> "church_archbishop"
+        value.contains("kardynał") || value.contains("kardynal") -> "church_cardinal"
+        value.contains("biskup") -> "church_bishop"
+        value.contains("opat") -> "church_abbot"
+        value.contains("misjon") || value.contains("pdm") || value.contains("pum") -> "church_missionary"
+        value.contains("posług") || value.contains("urząd kościel") || value.contains("urzad kosciel") -> "church_minister"
+        value.contains("kościel") || value.contains("kosciel") -> "church"
         value.contains("orzeczen") || value.contains("niepełnospraw") || value.contains("niepelnospraw") ||
             value.contains("zaświadczen") || value.contains("zaswiadczen") -> "disability"
         value.contains("lojalności") || value.contains("lojalnosci") -> "loyalty"
@@ -306,8 +312,15 @@ private fun documentTypeForTitle(title: String): String {
         value.contains("dzieci") || value.contains("dziecka") -> "children"
         value.contains("cywil") || value.contains("urodzen") || value.contains("małżeń") ||
             value.contains("malzen") || value.contains("zgon") || value.contains("meldun") -> "civil"
+        value.contains("medycz") || value.contains("fizjoter") || value.contains("pielęg") || value.contains("diagnost") -> "professional_medical"
+        value.contains("nauczyc") || value.contains("pedagog") || value.contains("edukac") || value.contains("szkol") -> "professional_education"
+        value.contains("terapeut") || value.contains("masaż") || value.contains("masaz") || value.contains("naturop") -> "professional_therapeutic"
         value.contains("zawod") || value.contains("kwalifikac") -> "professional"
-        value.contains("fundac") || value.contains("stowarz") || value.contains("podmiot") || value.contains("organizac") -> "entity"
+        value.contains("fundac") -> "organization_foundation"
+        value.contains("stowarz") -> "organization_association"
+        value.contains("kośció") || value.contains("koscio") || value.contains("parafi") || value.contains("wspólnot") -> "organization_church"
+        value.contains("spół") || value.contains("spol") || value.contains("przedsięb") || value.contains("przedsieb") -> "organization_company"
+        value.contains("podmiot") || value.contains("organizac") -> "entity"
         value.contains("tożsamo") || value.contains("tozsamos") || value.contains("dowód") || value.contains("dowod") -> "identity"
         else -> "official"
     }
@@ -621,7 +634,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         OutlinedTextField(label,{label=it},label={Text("Opis / nazwa pliku (opcjonalnie)")},modifier=Modifier.fillMaxWidth())
         Button(onClick={picker.launch(arrayOf("image/png","image/jpeg","image/webp","image/svg+xml"))},enabled=owner.isNotBlank(),modifier=Modifier.fillMaxWidth()) { Text("Wgraj wybrany zasób") }
         if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA))
-        if (fixedTarget in setOf("parliament", "training", "student")) {
+        if (fixedTarget != null && fixedTarget in setOf("parliament", "training", "student")) {
             Text("Ustawienia wyglądu legitymacji", fontWeight=FontWeight.SemiBold)
             LegitimacyPreviewSettingsPanel(fixedTarget!!, legitimacySettingsState.value) {
                 legitimacySettingsState.value = it
