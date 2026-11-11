@@ -90,6 +90,44 @@ END:VCARD
     }
 
     @Test
+    fun importsInlineBase64PhotoFromLegacyVCard() {
+        val photoBytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0x01, 0x02)
+        val photoBase64 = java.util.Base64.getEncoder().encodeToString(photoBytes)
+        val input = """BEGIN:VCARD
+VERSION:3.0
+FN:Jan Kowalski
+N:Kowalski;Jan;;;
+PHOTO;ENCODING=b;TYPE=JPEG:$photoBase64
+END:VCARD
+"""
+        val imported = VCardCodec.decodeForImport(input)
+        assertEquals(photoBase64, imported["photo"])
+        assertArrayEquals(photoBytes, java.util.Base64.getDecoder().decode(imported.getValue("photo")))
+    }
+
+    @Test
+    fun importsVCardDataUriPhotoAndIgnoresRemotePhotoUri() {
+        val photoBytes = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x01)
+        val photoBase64 = java.util.Base64.getEncoder().encodeToString(photoBytes)
+        val dataUri = "data:image/png;base64,$photoBase64"
+        val input = """BEGIN:VCARD
+VERSION:4.0
+FN:Jan Kowalski
+PHOTO:$dataUri
+END:VCARD
+"""
+        assertEquals(photoBase64, VCardCodec.decodeForImport(input)["photo"])
+
+        val remote = """BEGIN:VCARD
+VERSION:4.0
+FN:Jan Kowalski
+PHOTO;VALUE=uri:https://example.org/photo.jpg
+END:VCARD
+"""
+        assertTrue(VCardCodec.decodeForImport(remote)["photo"].isNullOrBlank())
+    }
+
+    @Test
     fun importsApplicationArchiveWithoutLosingCustomProfileFields() {
         val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski", "pesel" to "123")
         assertEquals(source, VCardCodec.decodeForImport(VCardCodec.encodeArchive(source)))
