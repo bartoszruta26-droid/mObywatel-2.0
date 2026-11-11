@@ -96,7 +96,8 @@ def process_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
     try:
         if file_path.is_symlink() or not file_path.is_file():
             return False, "Refusing to process non-regular file or symlink"
-        with file_path.open("r", encoding="utf-8", newline="") as source_text:\n            original = source_text.read()
+        with file_path.open("r", encoding="utf-8", newline="") as source_text:
+            original = source_text.read()
         if not has_line_numbers(original):
             return False, "No strict sequential line numbering detected"
         cleaned = remove_line_numbers(original)
