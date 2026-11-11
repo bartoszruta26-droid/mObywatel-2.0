@@ -590,6 +590,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     var label by remember { mutableStateOf("") }
     var assets by remember { mutableStateOf(DocumentBrandStore.list(context)) }
     var status by remember { mutableStateOf("") }
+    val legitimacySettingsState = rememberLegitimacyPreviewSettings(fixedTarget ?: "asset-library")
     val picker= rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if(uri!=null) runCatching { DocumentBrandStore.import(context,uri,owner,kind,label) }
             .onSuccess { assets=DocumentBrandStore.list(context); status="Zapisano zasób identyfikacji wizualnej." }
@@ -614,6 +615,12 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         OutlinedTextField(label,{label=it},label={Text("Opis / nazwa pliku (opcjonalnie)")},modifier=Modifier.fillMaxWidth())
         Button(onClick={picker.launch(arrayOf("image/png","image/jpeg","image/webp","image/svg+xml"))},enabled=owner.isNotBlank(),modifier=Modifier.fillMaxWidth()) { Text("Wgraj wybrany zasób") }
         if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA))
+        if (fixedTarget in setOf("parliament", "training", "student")) {
+            Text("Ustawienia wyglądu legitymacji", fontWeight=FontWeight.SemiBold)
+            LegitimacyPreviewSettingsPanel(fixedTarget!!, legitimacySettingsState.value) {
+                legitimacySettingsState.value = it
+            }
+        }
         HorizontalDivider()
         Text("Zapisane zasoby",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
         assignments.filter { fixedTarget == null || it.documentType == fixedTarget }.forEach { assignment ->
