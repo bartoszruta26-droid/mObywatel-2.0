@@ -76,7 +76,7 @@ private data class SignedPdfRecord(
     val pdfHasSignatureField: Boolean
 )
 
-internal object SignedPdfStore {
+private object SignedPdfStore {
     private const val KEY_ALIAS = "obywatel_signed_pdf_store_key"
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
     private const val META_FILE = "signed-pdf-index.enc"
@@ -270,6 +270,9 @@ internal object SignedPdfStore {
         return generator.generateKey()
     }
 }
+
+internal fun exportSignedPdfArchive(context: Context): String = SignedPdfStore.exportArchive(context)
+internal fun importSignedPdfArchive(context: Context, raw: String) = SignedPdfStore.importArchive(context, raw)
 
 @Composable
 internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean = true) {
