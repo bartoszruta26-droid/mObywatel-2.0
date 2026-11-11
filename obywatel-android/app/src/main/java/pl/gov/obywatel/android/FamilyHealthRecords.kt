@@ -298,7 +298,7 @@ private fun ChildField(label: String, value: String, singleLine: Boolean = true,
         label = { Text(label) }, singleLine = singleLine, minLines = if (singleLine) 1 else 3)
 }
 
-private object FamilyHealthStore {
+internal object FamilyHealthStore {
     private const val FILE_NAME = "family_health_records.enc"
     private const val KEY_ALIAS = "obywatel_family_health_aes"
 
@@ -361,6 +361,57 @@ private object FamilyHealthStore {
             temporary.copyTo(target, overwrite = true)
             temporary.delete()
         }
+    }
+
+
+    fun exportArchive(context: Context): String {
+        val children = JSONArray()
+        load(context).forEach { child ->
+            val vaccines = JSONArray()
+            child.vaccines.forEach { v ->
+                vaccines.put(JSONObject().put("id", v.id).put("date", v.date).put("vaccine", v.vaccine)
+                    .put("disease", v.disease).put("dose", v.dose).put("batch", v.batch)
+                    .put("manufacturer", v.manufacturer).put("provider", v.provider)
+                    .put("facility", v.facility).put("nextDate", v.nextDate).put("notes", v.notes))
+            }
+            children.put(JSONObject().put("id", child.id).put("firstName", child.firstName)
+                .put("lastName", child.lastName).put("birthDate", child.birthDate).put("pesel", child.pesel)
+                .put("sex", child.sex).put("birthPlace", child.birthPlace).put("bloodGroup", child.bloodGroup)
+                .put("allergies", child.allergies).put("guardian", child.guardian).put("notes", child.notes)
+                .put("photoBase64", child.photoBase64).put("vaccines", vaccines))
+        }
+        return JSONObject().put("version", 1).put("children", children).toString()
+    }
+
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja archiwum danych rodzinnych." }
+        val array = root.optJSONArray("children") ?: JSONArray()
+        val imported = (0 until array.length()).map { i ->
+            val o = array.getJSONObject(i)
+            val vaccines = o.optJSONArray("vaccines") ?: JSONArray()
+            FamilyChildRecord(
+                id = o.optString("id", UUID.randomUUID().toString()),
+                firstName = o.optString("firstName"), lastName = o.optString("lastName"),
+                birthDate = o.optString("birthDate"), pesel = o.optString("pesel"),
+                sex = o.optString("sex"), birthPlace = o.optString("birthPlace"),
+                bloodGroup = o.optString("bloodGroup"), allergies = o.optString("allergies"),
+                guardian = o.optString("guardian"), notes = o.optString("notes"),
+                photoBase64 = o.optString("photoBase64"),
+                vaccines = (0 until vaccines.length()).map { j ->
+                    val v = vaccines.getJSONObject(j)
+                    FamilyVaccineEntry(id = v.optString("id", UUID.randomUUID().toString()),
+                        date = v.optString("date"), vaccine = v.optString("vaccine"),
+                        disease = v.optString("disease"), dose = v.optString("dose"),
+                        batch = v.optString("batch"), manufacturer = v.optString("manufacturer"),
+                        provider = v.optString("provider"), facility = v.optString("facility"),
+                        nextDate = v.optString("nextDate"), notes = v.optString("notes"))
+                }
+            )
+        }
+        val merged = load(context).associateBy { it.id }.toMutableMap()
+        imported.forEach { merged[it.id] = it }
+        save(context, merged.values.toList())
     }
 
     private fun key(): SecretKey {
