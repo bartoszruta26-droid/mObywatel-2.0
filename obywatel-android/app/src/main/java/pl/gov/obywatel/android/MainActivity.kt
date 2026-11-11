@@ -1896,10 +1896,6 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         "Środowisko" to "Informacje środowiskowe i lokalne materiały edukacyjne.",
         "Pozostałe" to "Katalog dodatkowych modułów i informacji."
     )
-    androidx.compose.runtime.CompositionLocalProvider(
-        LocalCredentialFieldVisibility provides if (categoryId == "all") null
-            else CredentialFieldVisibilityBinding(credentialKey, appearance, fields)
-    ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2559,6 +2555,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             }.onFailure { saveMessage = "Nie udało się wczytać zdjęcia: ${it.localizedMessage ?: "błąd odczytu"}" }
         }
     }
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalCredentialFieldVisibility provides if (categoryId == "all") null
+            else CredentialFieldVisibilityBinding(credentialKey, appearance, fields)
+    ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
