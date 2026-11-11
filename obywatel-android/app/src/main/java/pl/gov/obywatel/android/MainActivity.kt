@@ -3410,7 +3410,7 @@ private fun ParliamentCredentialCard(fields: Map<String, String>, photoBase64: S
         documentType = "parliament",
         number = fields["mpCardNumber"].orEmpty(),
         program = fields["mpTerm"].orEmpty().let { term ->
-            listOf(term, fields["mpDistrict"].orEmpty().let { if (it.isBlank()) "" else "Okręg $it" }).filter(String::isNotBlank).joinToString(" · ")
+            listOf(term, fields["mpDistrict"].orEmpty().let { if (it.isBlank()) "" else "Okręg $it" }).filter { it.isNotBlank() }.joinToString(" · ")
         },
         status = fields["mpStatus"].orEmpty(),
         validUntil = fields["mpEnd"].orEmpty(),
