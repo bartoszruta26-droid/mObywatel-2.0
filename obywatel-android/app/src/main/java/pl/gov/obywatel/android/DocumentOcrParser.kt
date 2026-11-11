@@ -49,7 +49,7 @@ internal object DocumentOcrParser {
         fun put(k:String,v:String){val x=v.trim().trim(':','-',' ','|');if(x.length in 2..160&&!x.equals("POLSKA",true))out.putIfAbsent(k,x)}
         rules.forEach{r->r.labels.forEach{label->
             val n=norm(label);val i=lines.indexOfFirst{norm(it)==n||norm(it).startsWith("$n ")}
-            if(i>=0){val re=Regex("(?i)^\\s*\${Regex.escape(label)}\\s*[:：-]?\\s*(.*)$")
+            if(i>=0){val re=Regex("(?i)^\\s*${Regex.escape(label)}\\s*[:：-]?\\s*(.*)$")
                 put(r.key,re.find(lines[i])?.groupValues?.getOrNull(1).orEmpty().ifBlank{lines.getOrNull(i+1).orEmpty()})}
         }}
         val all=lines.joinToString(" ")

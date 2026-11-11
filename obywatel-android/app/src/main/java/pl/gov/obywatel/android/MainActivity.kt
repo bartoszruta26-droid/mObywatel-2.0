@@ -143,10 +143,10 @@ import kotlinx.coroutines.delay
 @Composable
 private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<String, String>, context: Context, saveMessage: (String) -> Unit) {
     var processing by remember { mutableStateOf(false) }
-    var recognizedText by remember { mutableStateOf(fields["\${categoryId}OcrText"].orEmpty()) }
+    var recognizedText by remember { mutableStateOf(fields["${categoryId}OcrText"].orEmpty()) }
     var mappedCount by remember { mutableIntStateOf(0) }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
-    val key = "\${categoryId}OcrText"
+    val key = "${categoryId}OcrText"
     fun recognize(uri: Uri) {
         processing = true
         runCatching { InputImage.fromFilePath(context, uri) }.onSuccess { image ->
@@ -163,7 +163,7 @@ private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Stri
                 mappedCount = applied
                 saveMessage(if (raw.isBlank()) "Nie wykryto tekstu. Zrób wyraźniejsze zdjęcie, wypełniając kadr dokumentem."
                     else "OCR rozpoznał tekst i zaproponował uzupełnienie $applied pól. Sprawdź każdą wartość przed zapisaniem.")
-            }.addOnFailureListener { saveMessage("OCR nie powiódł się: \${it.localizedMessage ?: "błąd odczytu"}") }
+            }.addOnFailureListener { saveMessage("OCR nie powiódł się: ${it.localizedMessage ?: "błąd odczytu"}") }
                 .addOnCompleteListener {
                     recognizer.close()
                     processing = false
@@ -172,7 +172,7 @@ private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Stri
         }.onFailure {
             processing = false
             pendingCameraUri?.let { runCatching { context.contentResolver.delete(it, null, null) }; pendingCameraUri = null }
-            saveMessage("Nie można otworzyć obrazu: \${it.localizedMessage ?: "błąd pliku"}")
+            saveMessage("Nie można otworzyć obrazu: ${it.localizedMessage ?: "błąd pliku"}")
         }
     }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri -> if (uri != null) recognize(uri) }
@@ -192,9 +192,9 @@ private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Stri
             OutlinedButton(onClick = {
                 runCatching {
                     val file = File.createTempFile("document-ocr-", ".jpg", context.cacheDir)
-                    androidx.core.content.FileProvider.getUriForFile(context, "\${context.packageName}.ocrfiles", file)
+                    androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.ocrfiles", file)
                 }.onSuccess { pendingCameraUri = it; camera.launch(it) }
-                    .onFailure { saveMessage("Nie można uruchomić aparatu: \${it.localizedMessage ?: "błąd przygotowania zdjęcia"}") }
+                    .onFailure { saveMessage("Nie można uruchomić aparatu: ${it.localizedMessage ?: "błąd przygotowania zdjęcia"}") }
             }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Zrób zdjęcie aparatem") }
             OutlinedButton(onClick = { picker.launch("image/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) {
                 Text("Wybierz zdjęcie lub skan")
