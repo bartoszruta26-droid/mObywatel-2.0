@@ -347,6 +347,7 @@ private fun HomeScreen() {
                     activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
                     activeService == "Historia chorób" -> MedicalHistoryRecordsScreen(onBack = { activeService = null })
                     activeService == "Historia działań" -> ActivityHistoryScreen(onBack = { activeService = null })
+                    activeService == "Informacje prawne" -> LegalInformationScreen(onBack = { activeService = null })
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null })
                     activeService == "Dokumenty Rodowe" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { activeService = null })
                     activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { activeService = null })
@@ -379,6 +380,7 @@ private fun HomeScreen() {
                             showCertificates = true
                         },
                         onOpenHelp = { activeService = "Pomoc i informacje" },
+                        onOpenLegalInfo = { activeService = "Informacje prawne" },
                         onOpenHistory = {
                             ActivityHistoryStore.record(context, "Nawigacja", "Otwarto historię działań")
                             activeService = "Historia działań"
@@ -1329,6 +1331,7 @@ private fun MoreMenuScreen(
     onOpenSettings: () -> Unit,
     onOpenCertificates: () -> Unit,
     onOpenHelp: () -> Unit,
+    onOpenLegalInfo: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenSignedPdfs: () -> Unit,
     onOpenProfessionalQualifications: () -> Unit,
@@ -1349,7 +1352,7 @@ private fun MoreMenuScreen(
         ProfileActionCard("Powiadomienia i komunikaty", "Informacje o statusach, przypomnieniach i ważności dokumentów", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Pomoc i instrukcje", "Obsługa aplikacji, import, eksport i bezpieczeństwo danych", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia i prywatność", "Dane lokalne, preferencje i kontrola informacji", Icons.Filled.Settings, onOpenSettings)
-        ProfileActionCard("Informacje prawne", "Charakter ewidencji, zasady przetwarzania i ograniczenia dokumentów", Icons.Filled.Description, onOpenHelp)
+        ProfileActionCard("Informacje prawne", "Status aplikacji, prywatność, odpowiedzialność i podstawy prawne", Icons.Filled.Description, onOpenLegalInfo)
         ProfileActionCard("Informacje o aplikacji", "Wersja, zakres funkcji i status integracji", Icons.Filled.Info, onOpenHelp)
     }
 }
