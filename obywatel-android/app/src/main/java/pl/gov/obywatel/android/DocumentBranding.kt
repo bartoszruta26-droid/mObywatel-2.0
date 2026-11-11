@@ -298,7 +298,11 @@ private fun documentTypeForTitle(title: String): String {
     val value = title.lowercase(Locale.ROOT)
     return when {
         value.contains("odpis") && value.contains("rejestr") -> "registry"
-        value.contains("firm") || value.contains("przedsięb") || value.contains("przedsieb") -> "business"
+        value.contains("spół") || value.contains("spol") || value.contains("firm") || value.contains("przedsięb") || value.contains("przedsieb") -> "business"
+        value.contains("fundac") -> "organization_foundation"
+        value.contains("stowarz") -> "organization_association"
+        value.contains("instytucja szkoleniowa") || value.contains("kwalifikac") || value.contains("zawodow") -> "professional_education"
+        value.contains("jednostka lokalna") || value.contains("rejestr") -> "registry"
         value.contains("pdf") || value.contains("podpis elektroniczn") -> "signed_pdf"
         value.contains("importowan") || value.contains("własne — pliki") -> "imported"
         value.contains("karta lojal") || value.contains("lojalności") -> "loyalty_cards"
@@ -461,9 +465,73 @@ internal fun DocumentIdentityTemplate(
     val photo = remember(owner, photoOverride, assetRevision) {
         photoOverride ?: DocumentBrandStore.image(context, owner, "Fotografia")
     }
-    val labels = credentialFieldOptions(documentType).toMap()
+    val fieldOptions = credentialFieldOptions(documentType)
+    fun stableFieldKey(label: String): String {
+        val value = label.lowercase(Locale.ROOT)
+        return when {
+            value.contains("krs") -> "entityKrs"
+            value.contains("nip") -> "entityNip"
+            value.contains("regon") -> "entityRegon"
+            value.contains("reprezent") || value.contains("zarząd") || value.contains("zarzad") -> "entityRepresentative"
+            value.contains("imię") || value.contains("imie") -> "firstNames"
+            value.contains("nazwisko") -> "lastName"
+            value.contains("pesel") -> "pesel"
+            value.contains("data urodzenia") -> "birthDate"
+            value.contains("data waż") || value.contains("ważna do") || value.contains("termin waż") || value.contains("okres obowiązywania") -> when (documentType) {
+                "parliament" -> "mpEnd"
+                "training" -> "trainingValidUntil"
+                "student" -> "studentValidity"
+                "identity" -> "idExpiryDate"
+                "passport" -> "passportExpiryDate"
+                "family" -> "familyExpiryDate"
+                "disability" -> "disabilityValidity"
+                "church" -> "churchValidity"
+                else -> "expiryDate"
+            }
+            value.contains("data wyd") || value.contains("data sporządz") || value.contains("data sporząd") -> when (documentType) {
+                "parliament" -> "mpCardIssueDate"
+                "training" -> "trainingIssueDate"
+                "student" -> "studentIssueDate"
+                "identity" -> "idIssueDate"
+                "passport" -> "passportIssueDate"
+                "family" -> "familyIssueDate"
+                "church" -> "churchIssueDate"
+                else -> "issueDate"
+            }
+            value.contains("numer") || value.startsWith("nr ") -> when (documentType) {
+                "parliament" -> "mpCardNumber"
+                "training" -> "trainingCardNumber"
+                "student" -> "studentCardNumber"
+                "identity" -> "idNumber"
+                "passport" -> "passportNumber"
+                "family" -> "familyDocNumber"
+                "church" -> "churchDocumentNumber"
+                else -> "documentNumber"
+            }
+            value.contains("wystawc") || value.contains("organ wydaj") -> "issuer"
+            value.contains("kurs") || value.contains("kwalifikac") -> "trainingCourseName"
+            value.contains("uczeln") || value.contains("student") -> "studentUniversity"
+            value.contains("nazwa") || value.contains("firma") || value.contains("podmiot") -> when (documentType) {
+                "family" -> "familyName"
+                "church" -> "churchRole"
+                else -> "entityName"
+            }
+            value.contains("rod") || value.contains("linia") -> "familyName"
+            value.contains("posług") || value.contains("godnoś") -> "churchRole"
+            value.contains("telefon") -> "contactPhone"
+            value.contains("e-mail") || value.contains("email") -> "contactEmail"
+            value.contains("adres") -> "contactAddress"
+            value.contains("bank") -> "bankName"
+            value.contains("rachun") || value.contains("iban") -> "accountNumber"
+            value.contains("szczep") || value.contains("preparat") -> "vaccineName"
+            value.contains("tytuł") -> "professionalTitle"
+            else -> "details"
+        }
+    }
+    val optionLabels = fieldOptions.toMap()
     val cardFields = values.entries.filter { it.value.isNotBlank() }.map { (key, value) ->
-        Triple(key, labels[key] ?: key.replace(Regex("([a-z])([A-Z])"), "$1 $2"), value)
+        val stableKey = stableFieldKey(key)
+        Triple(stableKey, optionLabels[stableKey] ?: key, value)
     }
     val holder = values.entries.firstOrNull {
         it.key.contains("imię", true) || it.key.contains("nazw", true) ||
