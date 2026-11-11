@@ -30,9 +30,7 @@ class BankAccountsNavigationTest {
         enterDemoMode()
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
-        // Portfel najpierw pokazuje kafelki grup; rachunki są w grupie „Państwowe”.
-        composeRule.onNodeWithText("Państwowe", substring = false).performClick()
-        composeRule.waitForIdle()
+        // Grupy są nagłówkami jednego katalogu; rachunki otwierają się bezpośrednio z listy.
         composeRule.onAllNodesWithText("Konta bankowe", substring = false)[0]
             .performScrollTo()
             .assertHasClickAction()
