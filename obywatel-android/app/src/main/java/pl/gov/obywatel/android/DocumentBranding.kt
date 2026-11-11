@@ -75,11 +75,34 @@ internal object DocumentBrandStore {
         cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, bytes.copyOfRange(0, 12)))
         return cipher.doFinal(bytes.copyOfRange(12, bytes.size))
     }
-    @Synchronized fun list(context: Context): List<BrandAsset> = runCatching {
-        val f = File(dir(context), INDEX); if (!f.exists()) return emptyList()
-        val a = JSONArray(String(crypt(f.readBytes(), false), Charsets.UTF_8))
-        (0 until a.length()).map { i -> a.getJSONObject(i).let { o -> BrandAsset(o.getString("id"), o.getString("owner"), o.getString("kind"), o.getString("label"), o.getString("file")) } }
-    }.getOrDefault(emptyList())
+    private val builtInAssets = listOf(
+        BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
+        BrandAsset("builtin_rodu_dab", "Katalog heraldyczny", "Herb", "Herb rodowy — dąb", "builtin:heraldry/herb-rodu-klasyczny.svg"),
+        BrandAsset("builtin_rodu_lilia", "Katalog heraldyczny", "Herb", "Herb rodowy — lilia", "builtin:heraldry/herb-rodu-lilia.svg"),
+        BrandAsset("builtin_biskupi", "Katalog heraldyczny", "Herb", "Herb biskupi", "builtin:heraldry/herb-biskupi.svg"),
+        BrandAsset("builtin_arcybiskupi", "Katalog heraldyczny", "Herb", "Herb arcybiskupi", "builtin:heraldry/herb-arcybiskupi.svg"),
+        BrandAsset("builtin_kardynalski", "Katalog heraldyczny", "Herb", "Herb kardynalski", "builtin:heraldry/herb-kardynalski.svg"),
+        BrandAsset("builtin_opacki", "Katalog heraldyczny", "Herb", "Herb opacki", "builtin:heraldry/herb-opacki.svg"),
+        BrandAsset("builtin_rycerski", "Katalog heraldyczny", "Herb", "Herb rycerski", "builtin:heraldry/herb-rycerski.svg"),
+        BrandAsset("builtin_medyczny", "Katalog heraldyczny", "Herb", "Znak medyczny", "builtin:heraldry/herb-medyczny.svg"),
+        BrandAsset("builtin_naukowy", "Katalog heraldyczny", "Herb", "Znak naukowy", "builtin:heraldry/herb-naukowy.svg"),
+        BrandAsset("builtin_fundacyjny", "Katalog heraldyczny", "Herb", "Znak fundacyjny", "builtin:heraldry/herb-fundacyjny.svg"),
+        BrandAsset("builtin_misjonarski", "Katalog heraldyczny", "Herb", "Znak misyjny", "builtin:heraldry/herb-misjonarski.svg"),
+        BrandAsset("builtin_samorzadowy", "Katalog heraldyczny", "Herb", "Znak samorządowy", "builtin:heraldry/herb-samorzadowy.svg"),
+        BrandAsset("builtin_zaslugi", "Katalog heraldyczny", "Herb", "Znak zasługi", "builtin:heraldry/herb-zaslugi.svg")
+    )
+    @Synchronized fun list(context: Context): List<BrandAsset> {
+        val stored = runCatching {
+            val f = File(dir(context), INDEX)
+            if (!f.exists()) emptyList() else {
+                val a = JSONArray(String(crypt(f.readBytes(), false), Charsets.UTF_8))
+                (0 until a.length()).map { i -> a.getJSONObject(i).let { o ->
+                    BrandAsset(o.getString("id"), o.getString("owner"), o.getString("kind"), o.getString("label"), o.getString("file"))
+                } }
+            }
+        }.getOrDefault(emptyList())
+        return builtInAssets + stored
+    }
     private fun save(context: Context, assets: List<BrandAsset>) {
         val a = JSONArray()
         assets.forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file) }) }
@@ -112,12 +135,24 @@ internal object DocumentBrandStore {
     }
     private fun imageById(context: Context, assetId: String): android.graphics.Bitmap? = runCatching {
         val asset = list(context).firstOrNull { it.id == assetId } ?: return null
-        BitmapFactory.decodeByteArray(crypt(File(dir(context), asset.file).readBytes(), false), 0,
-            crypt(File(dir(context), asset.file).readBytes(), false).size)
+        val bytes = if (asset.file.startsWith("builtin:")) {
+            context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
+        } else {
+            crypt(File(dir(context), asset.file).readBytes(), false)
+        }
+        decodeImage(context, bytes)
     }.getOrNull()
     fun imageForDocument(context: Context, documentType: String, owner: String, kind: String): android.graphics.Bitmap? {
         val assigned = assignments(context).lastOrNull { it.documentType == documentType && it.kind == kind }
         return assigned?.let { imageById(context, it.assetId) } ?: image(context, owner, kind)
+    }
+    private fun decodeImage(context: Context, bytes: ByteArray): android.graphics.Bitmap {
+        BitmapFactory.decodeByteArray(bytes,0,bytes.size)?.let { return it }
+        val svg = com.caverock.androidsvg.SVG.getFromString(String(bytes, Charsets.UTF_8))
+        val picture = svg.renderToPicture(512, 512)
+        val bitmap = android.graphics.Bitmap.createBitmap(512, 512, android.graphics.Bitmap.Config.ARGB_8888)
+        android.graphics.Canvas(bitmap).drawPicture(picture)
+        return bitmap
     }
     @Synchronized fun import(context: Context, uri: Uri, owner: String, kind: String, label: String) {
         val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
@@ -125,10 +160,11 @@ internal object DocumentBrandStore {
             while (true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=MAX_IMAGE) { "Plik przekracza limit 12 MB." }; out.write(buffer,0,n) }
             out.toByteArray()
         } ?: error("Nie można odczytać pliku.")
-        require(BitmapFactory.decodeByteArray(bytes,0,bytes.size) != null) { "Wybierz prawidłowy obraz PNG, JPEG lub WebP." }
-        val id=UUID.randomUUID().toString(); val file=id+".asset.enc"
+        decodeImage(context, bytes)
+        val isSvg = String(bytes, 0, minOf(bytes.size, 256), Charsets.UTF_8).contains("<svg", ignoreCase = true)
+        val id=UUID.randomUUID().toString(); val file=id+(if (isSvg) ".svg.enc" else ".asset.enc")
         File(dir(context),file).writeBytes(crypt(bytes,true))
-        save(context,list(context)+BrandAsset(id,owner.trim(),kind,label.trim().ifBlank { kind },file))
+        save(context,list(context).filterNot { it.file.startsWith("builtin:") }+BrandAsset(id,owner.trim(),kind,label.trim().ifBlank { kind },file))
     }
     fun image(context: Context, owner: String, kind: String) : android.graphics.Bitmap? = runCatching {
         val asset=list(context).lastOrNull { it.owner.equals(owner,true) && it.kind==kind } ?: return null
@@ -136,8 +172,11 @@ internal object DocumentBrandStore {
         BitmapFactory.decodeByteArray(bytes,0,bytes.size)
     }.getOrNull()
     @Synchronized fun delete(context: Context, id: String) {
-        val old=list(context); old.firstOrNull { it.id==id }?.let { File(dir(context),it.file).delete() }
-        save(context,old.filterNot { it.id==id })
+        val old=list(context)
+        val selected=old.firstOrNull { it.id==id } ?: return
+        if (selected.file.startsWith("builtin:")) return
+        File(dir(context),selected.file).delete()
+        save(context,old.filterNot { it.id==id || it.file.startsWith("builtin:") })
     }
 }
 
@@ -181,7 +220,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
             }
         }
         OutlinedTextField(label,{label=it},label={Text("Opis / nazwa pliku (opcjonalnie)")},modifier=Modifier.fillMaxWidth())
-        Button(onClick={picker.launch(arrayOf("image/png","image/jpeg","image/webp"))},enabled=owner.isNotBlank(),modifier=Modifier.fillMaxWidth()) { Text("Wgraj wybrany zasób") }
+        Button(onClick={picker.launch(arrayOf("image/png","image/jpeg","image/webp","image/svg+xml"))},enabled=owner.isNotBlank(),modifier=Modifier.fillMaxWidth()) { Text("Wgraj wybrany zasób") }
         if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA))
         HorizontalDivider()
         Text("Zapisane zasoby",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
@@ -200,7 +239,9 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
                                 .onSuccess { assignments=DocumentBrandStore.assignments(context); status="Przypisano ${asset.kind} do wybranego rodzaju dokumentu." }
                                 .onFailure { status="Nie udało się przypisać zasobu: ${it.message}" }
                         }) { Text("Przypisz do dokumentu") }
-                        TextButton(onClick={
+                        if (asset.file.startsWith("builtin:")) {
+                            Text("Wbudowany SVG", color=Color(0xFF667788), style=MaterialTheme.typography.labelSmall, modifier=Modifier.padding(top=10.dp))
+                        } else TextButton(onClick={
                             DocumentBrandStore.delete(context,asset.id)
                             assets=DocumentBrandStore.list(context)
                             assignments=DocumentBrandStore.assignments(context)
