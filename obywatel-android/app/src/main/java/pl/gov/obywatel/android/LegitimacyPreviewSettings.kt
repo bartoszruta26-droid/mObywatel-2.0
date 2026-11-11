@@ -529,6 +529,87 @@ internal fun LegitimacyHeraldry(
 }
 
 @Composable
+private fun CredentialFieldValue(item: Triple<String, String, String>) {
+    Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+        Text(item.second.uppercase(), style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium, maxLines = 1)
+        Text(item.third.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold, maxLines = 2)
+    }
+}
+
+@Composable
+internal fun UnifiedCredentialCard(
+    documentKey: String,
+    title: String,
+    subtitle: String,
+    holderName: String,
+    fields: List<Triple<String, String, String>>,
+    settings: LegitimacyPreviewSettings,
+    photo: Bitmap? = null,
+    fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare,
+    assetRevision: Int = 0
+) {
+    val context = LocalContext.current
+    val horizontal = settings.orientation == "POZIOMA"
+    // Wspólny wzór nie dziedziczy dawnych teł graficznych poszczególnych dokumentów.
+    // Zapobiega to powielaniu flag, godeł i napisów zaszytych w historycznych grafikach.
+    val background = remember(settings.backgroundAssetId, documentKey, assetRevision) {
+        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
+    }
+    val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter { it.first in settings.visibleFields }
+    Card(
+        Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            if (settings.showBackground && background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
+                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
+            Column(Modifier.fillMaxSize().padding(if (horizontal) 8.dp else 11.dp),
+                verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
+                LegitimacyHeraldry(settings, documentKey, vertical = true, assetRevision = assetRevision, title = title.uppercase(), subtitle = subtitle)
+                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (settings.showPhoto) Box(Modifier.width(35.dp)
+                        .height(45.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center) {
+                        if (photo != null) Image(photo.asImageBitmap(), contentDescription = "Fotografia posiadacza",
+                            modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+                        else Text("FOTO", style = MaterialTheme.typography.labelSmall)
+                    }
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(if (horizontal) 2.dp else 4.dp)) {
+                        Text(holderName.ifBlank { "IMIĘ I NAZWISKO" }, fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall, maxLines = 1)
+                        if (horizontal) {
+                            Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach { CredentialFieldValue(it) }
+                                }
+                                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach { CredentialFieldValue(it) }
+                                }
+                            }
+                        } else {
+                            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                visible.forEach { CredentialFieldValue(it) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
 internal fun CredentialValidityTile(valid: Boolean) {
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
         containerColor = if (valid) Color(0xFFE5F4EA) else Color(0xFFFCE8E6)
