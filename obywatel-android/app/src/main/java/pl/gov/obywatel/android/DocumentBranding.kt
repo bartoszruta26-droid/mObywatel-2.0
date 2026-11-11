@@ -156,7 +156,7 @@ internal object DocumentBrandStore {
         } else {
             crypt(File(dir(context), asset.file).readBytes(), false)
         }
-        decodeImage(context, bytes)
+        decodeImage(bytes)
     }.getOrNull()
     private fun assignmentKeys(documentType: String, owner: String): List<String> {
         val lower = owner.lowercase(java.util.Locale.ROOT)
@@ -196,12 +196,18 @@ internal object DocumentBrandStore {
         return assigned?.let { imageById(context, it.assetId) } ?: image(context, owner, kind)
     }
     fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
-    private fun decodeImage(context: Context, bytes: ByteArray): android.graphics.Bitmap {
+    private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
         BitmapFactory.decodeByteArray(bytes,0,bytes.size)?.let { return it }
         val svg = com.caverock.androidsvg.SVG.getFromString(String(bytes, Charsets.UTF_8))
-        val picture = svg.renderToPicture(512, 512)
+        val picture = svg.renderToPicture()
         val bitmap = android.graphics.Bitmap.createBitmap(512, 512, android.graphics.Bitmap.Config.ARGB_8888)
-        android.graphics.Canvas(bitmap).drawPicture(picture)
+        val sourceWidth = picture.width.coerceAtLeast(1).toFloat()
+        val sourceHeight = picture.height.coerceAtLeast(1).toFloat()
+        val scale = minOf(512f / sourceWidth, 512f / sourceHeight)
+        val canvas = Canvas(bitmap)
+        canvas.translate((512f - sourceWidth * scale) / 2f, (512f - sourceHeight * scale) / 2f)
+        canvas.scale(scale, scale)
+        canvas.drawPicture(picture)
         return bitmap
     }
     @Synchronized fun import(context: Context, uri: Uri, owner: String, kind: String, label: String) {
@@ -210,7 +216,7 @@ internal object DocumentBrandStore {
             while (true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=MAX_IMAGE) { "Plik przekracza limit 12 MB." }; out.write(buffer,0,n) }
             out.toByteArray()
         } ?: error("Nie można odczytać pliku.")
-        decodeImage(context, bytes)
+        decodeImage(bytes).recycle()
         val isSvg = String(bytes, 0, minOf(bytes.size, 256), Charsets.UTF_8).contains("<svg", ignoreCase = true)
         val id=UUID.randomUUID().toString(); val file=id+(if (isSvg) ".svg.enc" else ".asset.enc")
         File(dir(context),file).writeBytes(crypt(bytes,true))
