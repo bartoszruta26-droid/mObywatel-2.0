@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from clean_line_numbers import has_line_numbers, process_file, remove_line_numbers
+from clean_line_numbers import has_line_numbers, is_text_file, process_file, remove_line_numbers
 
 
 def numbered(*lines):
@@ -41,6 +41,19 @@ class CleanLineNumbersTests(unittest.TestCase):
         source = numbered("alpha  ", "", "", "beta\t", "gamma")
         cleaned = remove_line_numbers(source)
         self.assertEqual(cleaned, "alpha  \n\n\nbeta\t\ngamma\n")
+
+    def test_preserves_crlf_line_endings(self):
+        source = "1    alpha\r\n2    beta\r\n3    gamma\r\n4    delta\r\n5    epsilon\r\n"
+        self.assertEqual(
+            remove_line_numbers(source),
+            "alpha\r\nbeta\r\ngamma\r\ndelta\r\nepsilon\r\n",
+        )
+
+    def test_skips_backup_files_during_repository_scan(self):
+        with tempfile.TemporaryDirectory() as directory:
+            backup = Path(directory) / "source.txt.bak"
+            backup.write_text(numbered("a", "b", "c", "d", "e"), encoding="utf-8")
+            self.assertFalse(is_text_file(backup))
 
     def test_requires_at_least_five_lines(self):
         source = numbered("a", "b", "c", "d")
