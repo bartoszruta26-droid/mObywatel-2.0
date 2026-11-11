@@ -100,11 +100,11 @@ internal object DocumentBrandStore {
         BrandAsset("builtin_kardynalski", "Katalog heraldyczny", "Herb", "Herb kardynalski", "builtin:heraldry/herb-kardynalski.svg"),
         BrandAsset("builtin_opacki", "Katalog heraldyczny", "Herb", "Herb opacki", "builtin:heraldry/herb-opacki.svg"),
         BrandAsset("builtin_rycerski", "Katalog heraldyczny", "Herb", "Herb rycerski", "builtin:heraldry/herb-rycerski.svg"),
-        BrandAsset("builtin_medyczny", "Katalog heraldyczny", "Herb", "Znak medyczny", "builtin:heraldry/herb-medyczny.svg"),
-        BrandAsset("builtin_naukowy", "Katalog heraldyczny", "Herb", "Znak naukowy", "builtin:heraldry/herb-naukowy.svg"),
-        BrandAsset("builtin_fundacyjny", "Katalog heraldyczny", "Herb", "Znak fundacyjny", "builtin:heraldry/herb-fundacyjny.svg"),
-        BrandAsset("builtin_misjonarski", "Katalog heraldyczny", "Herb", "Znak misyjny", "builtin:heraldry/herb-misjonarski.svg"),
-        BrandAsset("builtin_samorzadowy", "Katalog heraldyczny", "Herb", "Znak samorządowy", "builtin:heraldry/herb-samorzadowy.svg"),
+        BrandAsset("builtin_medyczny", "Katalog heraldyczny", "Logo", "Znak medyczny", "builtin:heraldry/herb-medyczny.svg"),
+        BrandAsset("builtin_naukowy", "Katalog heraldyczny", "Logo", "Znak naukowy", "builtin:heraldry/herb-naukowy.svg"),
+        BrandAsset("builtin_fundacyjny", "Katalog heraldyczny", "Logo", "Znak fundacyjny", "builtin:heraldry/herb-fundacyjny.svg"),
+        BrandAsset("builtin_misjonarski", "Katalog heraldyczny", "Logo", "Znak misyjny", "builtin:heraldry/herb-misjonarski.svg"),
+        BrandAsset("builtin_samorzadowy", "Katalog heraldyczny", "Godło", "Znak samorządowy", "builtin:heraldry/herb-samorzadowy.svg"),
         BrandAsset("builtin_zaslugi", "Katalog heraldyczny", "Herb", "Znak zasługi", "builtin:heraldry/herb-zaslugi.svg")
     )
     @Synchronized fun list(context: Context): List<BrandAsset> {
