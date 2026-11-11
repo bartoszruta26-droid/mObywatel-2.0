@@ -200,7 +200,8 @@ internal object DocumentBrandStore {
     }
     private fun save(context: Context, assets: List<BrandAsset>) {
         val a = JSONArray()
-        assets.forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file) }) }
+        assets.filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
+            .forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file) }) }
         File(dir(context), INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
     @Synchronized fun assignments(context: Context): List<BrandAssignment> = runCatching {
