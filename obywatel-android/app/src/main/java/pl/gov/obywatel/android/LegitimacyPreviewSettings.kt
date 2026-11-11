@@ -456,7 +456,7 @@ internal fun CredentialTemplatePreview(documentKey: String, settings: Legitimacy
 }
 
 @Composable
-internal fun LegitimacyReverseSide(title: String, issuer: String, number: String, validity: String) {
+internal fun LegitimacyReverseSide(title: String, issuer: String, number: String, validity: String, orientation: String = "PIONOWA") {
     val payload = remember(title, issuer, number, validity) {
         "OWD-DEMO|${title.take(80)}|${number.take(48)}|${validity.take(32)}"
     }
@@ -475,7 +475,7 @@ internal fun LegitimacyReverseSide(title: String, issuer: String, number: String
         }.getOrNull()
     }
     Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
+        modifier = Modifier.fillMaxWidth().aspectRatio(if (orientation == "POZIOMA") 1.586f else 0.70f),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
