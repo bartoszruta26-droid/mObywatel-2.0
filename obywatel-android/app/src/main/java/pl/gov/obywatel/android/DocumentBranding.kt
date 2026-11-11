@@ -300,6 +300,81 @@ internal object DocumentBrandStore {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
         } else crypt(File(dir(context), asset.file).readBytes(), false)
     }.getOrNull()
+
+    /** Exports custom library files and their document assignments. Bundled resources remain app resources. */
+    @Synchronized
+    fun exportArchive(context: Context): String {
+        val root = JSONObject().put("version", 1)
+        val assets = JSONArray()
+        list(context).filter { !it.file.startsWith("builtin:") && !it.file.startsWith("resource:") }.forEach { asset ->
+            val file = File(dir(context), asset.file)
+            require(file.isFile) { "Brak pliku zasobu: ${asset.label}" }
+            val bytes = crypt(file.readBytes(), false)
+            assets.put(JSONObject()
+                .put("id", asset.id).put("owner", asset.owner).put("kind", asset.kind)
+                .put("label", asset.label)
+                .put("bytes", java.util.Base64.getEncoder().encodeToString(bytes)))
+        }
+        val assigned = JSONArray()
+        assignments(context).forEach { item ->
+            assigned.put(JSONObject().put("documentType", item.documentType)
+                .put("kind", item.kind).put("assetId", item.assetId))
+        }
+        root.put("assets", assets).put("assignments", assigned)
+        return root.toString()
+    }
+
+    @Synchronized
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja biblioteki zasobów." }
+        val restored = list(context).filter { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
+            .associateBy { it.id }.toMutableMap()
+        list(context).filter { !it.file.startsWith("builtin:") && !it.file.startsWith("resource:") }
+            .forEach { restored[it.id] = it }
+        val assets = root.optJSONArray("assets") ?: JSONArray()
+        for (index in 0 until assets.length()) {
+            val item = assets.getJSONObject(index)
+            val id = item.getString("id")
+            require(id.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu." }
+            val kind = item.getString("kind")
+            require(kind in kinds) { "Nieznana kategoria zasobu: $kind" }
+            val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
+            require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Zasób przekracza limit 12 MB." }
+            if (kind in imageKinds) decodeImage(bytes).recycle()
+            val header = String(bytes, 0, minOf(bytes.size, 512), Charsets.UTF_8)
+            val extension = when {
+                header.contains("<svg", true) -> ".svg.enc"
+                kind == "Certyfikat" -> ".cer.enc"
+                kind == "Załącznik tekstowy" -> ".txt.enc"
+                kind == "Załącznik" -> ".bin.enc"
+                else -> ".asset.enc"
+            }
+            val file = "$id$extension"
+            File(dir(context), file).writeBytes(crypt(bytes, true))
+            restored[id] = BrandAsset(id, item.optString("owner").take(120), kind,
+                item.optString("label").take(180), file)
+        }
+        save(context, restored.values.toList())
+        val validIds = restored.keys
+        val assigned = root.optJSONArray("assignments") ?: JSONArray()
+        val next = assignments(context).associateBy { it.documentType to it.kind }.toMutableMap()
+        for (index in 0 until assigned.length()) {
+            val item = assigned.getJSONObject(index)
+            val documentType = item.getString("documentType")
+            val kind = item.getString("kind")
+            val assetId = item.getString("assetId")
+            require(documentBrandTargets.any { it.first == documentType } && kind in kinds && assetId in validIds) {
+                "Nieprawidłowe przypisanie zasobu do dokumentu."
+            }
+            next[documentType to kind] = BrandAssignment(documentType, kind, assetId)
+        }
+        val array = JSONArray()
+        next.values.forEach { item -> array.put(JSONObject().put("documentType", item.documentType)
+            .put("kind", item.kind).put("assetId", item.assetId)) }
+        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(array.toString().toByteArray(Charsets.UTF_8), true))
+    }
+
     private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
         BitmapFactory.decodeByteArray(bytes,0,bytes.size)?.let { return it }
         val svg = com.caverock.androidsvg.SVG.getFromString(String(bytes, Charsets.UTF_8))
