@@ -152,3 +152,8 @@ Grupy przypisań obejmują godności biskupią, arcybiskupią, kardynalską, opa
 - Przypisanie znaku ma charakter prezentacyjny i ewidencyjny.
 - Dokumenty prywatne i wzory legitymacji pozostają jednoznacznie oznaczone jako ewidencyjne.
 - Oficjalne godło RP i znaki innych instytucji muszą być wykorzystywane wyłącznie w prawidłowym wzorze i zgodnie z warunkami prawnymi.
+
+
+### Rozpoznawanie godności kościelnej
+
+Podgląd dokumentu kościelnego rozpoznaje wpisaną nazwę godności w polu tytułu / urzędu / stopnia święceń. Pozwala to zastosować osobne przypisanie dla biskupa, arcybiskupa, kardynała i opata. Dokumenty misyjne korzystają z przypisania posługi misyjnej, a dokumenty ekumeniczne z ogólnego znaku kościelnego. Rozpoznanie wpływa wyłącznie na prezentację znaku; nie weryfikuje ani nie ustanawia godności.
