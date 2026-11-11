@@ -168,8 +168,10 @@ internal object DocumentBrandStore {
     }
     fun image(context: Context, owner: String, kind: String) : android.graphics.Bitmap? = runCatching {
         val asset=list(context).lastOrNull { it.owner.equals(owner,true) && it.kind==kind } ?: return null
-        val bytes=crypt(File(dir(context),asset.file).readBytes(),false)
-        BitmapFactory.decodeByteArray(bytes,0,bytes.size)
+        val bytes = if (asset.file.startsWith("builtin:")) {
+            context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
+        } else crypt(File(dir(context),asset.file).readBytes(),false)
+        decodeImage(context, bytes)
     }.getOrNull()
     @Synchronized fun delete(context: Context, id: String) {
         val old=list(context)
