@@ -474,13 +474,13 @@ internal fun LegitimacyHeraldry(
     val horizontal = settings.orientation == "POZIOMA"
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val availableWidth = maxWidth
-        val flagWidth = (availableWidth * 0.13f).coerceIn(24.dp, 54.dp)
+        val flagWidth = (availableWidth * 0.13f).coerceAtLeast(24.dp)
         val flagHeight = flagWidth * 0.625f
-        val crestSize = (availableWidth * 0.12f).coerceIn(24.dp, 48.dp)
-        val logoWidth = (availableWidth * 0.14f).coerceIn(28.dp, 58.dp)
+        val crestSize = (availableWidth * 0.12f).coerceAtLeast(24.dp)
+        val logoWidth = (availableWidth * 0.14f).coerceAtLeast(28.dp)
         val logoHeight = logoWidth * 0.55f
-        val titleSize = (availableWidth.value * 0.038f).coerceIn(10f, 17f).sp
-        val subtitleSize = (availableWidth.value * 0.027f).coerceIn(8f, 12f).sp
+        val titleSize = (availableWidth.value * 0.038f).coerceIn(10f, 24f).sp
+        val subtitleSize = (availableWidth.value * 0.027f).coerceIn(8f, 16f).sp
         Column(
             Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy((availableWidth * 0.008f).coerceIn(1.dp, 4.dp))
@@ -575,11 +575,11 @@ internal fun UnifiedCredentialCard(
             val cardWidth = maxWidth
             val horizontalPadding = (cardWidth * 0.035f).coerceIn(5.dp, 16.dp)
             val verticalPadding = (cardWidth * 0.035f).coerceIn(5.dp, 16.dp)
-            val photoWidth = (cardWidth * if (horizontal) 0.18f else 0.20f).coerceIn(30.dp, 92.dp)
+            val photoWidth = (cardWidth * if (horizontal) 0.18f else 0.20f).coerceAtLeast(30.dp)
             val photoHeight = photoWidth * (45f / 35f)
-            val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 11f).sp
-            val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 13f).sp
-            val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 18f).sp
+            val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
+            val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
+            val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
             Box(Modifier.fillMaxSize()) {
                 if (settings.showBackground && background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
                     modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
@@ -634,10 +634,14 @@ internal fun CredentialValidityTile(valid: Boolean) {
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
         containerColor = if (valid) Color(0xFFE5F4EA) else Color(0xFFFCE8E6)
     )) {
-        Text(if (valid) "Dokument ważny" else "Dokument nieważny",
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            color = if (valid) Color(0xFF237A35) else Color(0xFFB3261E),
-            fontWeight = FontWeight.SemiBold)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val statusSize = (maxWidth.value * 0.038f).coerceIn(12f, 20f).sp
+            Text(if (valid) "Dokument ważny" else "Dokument nieważny",
+                modifier = Modifier.fillMaxWidth().padding(horizontal = maxWidth * 0.035f, vertical = maxWidth * 0.025f),
+                fontSize = statusSize,
+                color = if (valid) Color(0xFF237A35) else Color(0xFFB3261E),
+                fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 
