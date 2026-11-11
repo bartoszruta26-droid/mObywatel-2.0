@@ -578,6 +578,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     var label by remember { mutableStateOf("") }
     var assets by remember { mutableStateOf(DocumentBrandStore.list(context)) }
     var status by remember { mutableStateOf("") }
+    var assetRevision by remember { mutableIntStateOf(0) }
     val legitimacySettingsState = rememberLegitimacyPreviewSettings(fixedTarget ?: "asset-library")
     val picker= rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if(uri!=null) runCatching { DocumentBrandStore.import(context,uri,owner,kind,label) }
@@ -605,9 +606,9 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA))
         if (fixedTarget != null) {
             Text("Ustawienia wyglądu i zawartości dokumentu", fontWeight=FontWeight.SemiBold)
-            LegitimacyPreviewSettingsPanel(fixedTarget!!, legitimacySettingsState.value) {
+            LegitimacyPreviewSettingsPanel(fixedTarget!!, legitimacySettingsState.value, onChange = {
                 legitimacySettingsState.value = it
-            }
+            }, assetRevision = assetRevision)
         }
         HorizontalDivider()
         Text("Zapisane zasoby",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
@@ -616,7 +617,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             val asset = assets.firstOrNull { it.id == assignment.assetId }
             Row(Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
                 Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${if (assignment.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall, modifier=Modifier.weight(1f))
-                TextButton(onClick={ DocumentBrandStore.unassign(context,assignment.documentType,assignment.kind); assignments=DocumentBrandStore.assignments(context) }) { Text("Odłącz") }
+                TextButton(onClick={ DocumentBrandStore.unassign(context,assignment.documentType,assignment.kind); assignments=DocumentBrandStore.assignments(context); assetRevision++ }) { Text("Odłącz") }
             }
         }
         }
@@ -631,7 +632,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                     Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                         if (fixedTarget != null) TextButton(onClick={
                             runCatching { DocumentBrandStore.assign(context,fixedTarget,asset.kind,asset.id) }
-                                .onSuccess { assignments=DocumentBrandStore.assignments(context); status="Zapisano zasób dla wybranego dokumentu." }
+                                .onSuccess { assignments=DocumentBrandStore.assignments(context); assetRevision++; status="Zapisano zasób dla wybranego dokumentu." }
                                 .onFailure { status="Nie udało się przypisać zasobu: " + (it.message ?: "błąd") }
                         }) { Text("Ustaw dla tego dokumentu") }
                         if (asset.file.startsWith("builtin:")) {
