@@ -773,7 +773,7 @@ private fun HomeScreen() {
                         onExportAll = {
                             exportSnapshot = DemoIdentityStore.load(context) +
                                 LegitimacyPreviewSettingsStore.exportAll(context) +
-                                loadDocumentPlacements(context).mapKeys { "documentPlacement_${it.key}" }
+                                loadDocumentPlacements(context).mapKeys { "dp_${it.key}" }
                             runCatching {
                                 require(exportSnapshot.isNotEmpty()) {
                                     "Brak zapisanych danych. Najpierw uzupełnij i zapisz dane w ustawieniach."
@@ -1038,12 +1038,12 @@ private fun HomeScreen() {
                             val current = DemoIdentityStore.loadStrict(context)
                             val merged = current.toMutableMap().apply { putAll(incoming) }
                             val profileValues = incoming.filterKeys {
-                                !it.startsWith("credentialSetting_") && !it.startsWith("documentPlacement_")
+                                !it.startsWith("cs_") && !it.startsWith("dp_")
                             }
                             DemoIdentityStore.save(context, current.toMutableMap().apply { putAll(profileValues) })
                             LegitimacyPreviewSettingsStore.importAll(context, incoming)
-                            val importedPlacements = incoming.filterKeys { it.startsWith("documentPlacement_") }
-                                .mapKeys { it.key.removePrefix("documentPlacement_") }
+                            val importedPlacements = incoming.filterKeys { it.startsWith("dp_") }
+                                .mapKeys { it.key.removePrefix("dp_") }
                                 .mapValues { (_, value) -> value }
                             if (importedPlacements.isNotEmpty()) {
                                 val mergedPlacements = loadDocumentPlacements(context).toMutableMap().apply {
@@ -1057,7 +1057,7 @@ private fun HomeScreen() {
                                 "Weryfikacja zapisu nie powiodła się. Dane profilu nie odpowiadają importowi."
                             }
                             val settingsCount = incoming.keys.count {
-                                it.startsWith("credentialSetting_") || it.startsWith("documentPlacement_")
+                                it.startsWith("cs_") || it.startsWith("dp_")
                             }
                             val changed = profileValues.keys.count { persisted[it] == profileValues[it] } + settingsCount
                             require(changed == incoming.size) {
