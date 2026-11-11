@@ -1,0 +1,55 @@
+// SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+// SPDX-License-Identifier: CC0-1.0
+package pl.gov.obywatel.android
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class LegitimacyPreviewSettingsTest {
+    @Test
+    fun sharedAppearanceOverridesLayoutButPreservesDocumentAssetsAndFields() {
+        val document = LegitimacyPreviewSettings(
+            crestAssetId = "crest-student",
+            flagAssetId = "flag-student",
+            backgroundAssetId = "background-student",
+            logoAssetId = "logo-student",
+            visibleFields = setOf("firstNames", "lastName"),
+            visibleFieldsConfigured = true,
+            orientation = "PIONOWA",
+            graphicScale = 1.0f,
+            fontFamily = "sans"
+        )
+        val shared = LegitimacyPreviewSettings(
+            orientation = "POZIOMA",
+            showCard = false,
+            showReverse = true,
+            showPhoto = false,
+            showFlag = false,
+            showCrest = true,
+            showLogo = false,
+            showBackground = true,
+            graphicScale = 1.4f,
+            graphicRotation = 12f,
+            graphicOffsetX = 8f,
+            labelScale = 1.2f,
+            valueScale = 0.9f,
+            fontFamily = "serif"
+        )
+
+        val result = mergeSharedLegitimacyAppearance(document, shared)
+
+        assertEquals("POZIOMA", result.orientation)
+        assertEquals(false, result.showCard)
+        assertEquals(true, result.showReverse)
+        assertEquals(1.4f, result.graphicScale)
+        assertEquals(12f, result.graphicRotation)
+        assertEquals("serif", result.fontFamily)
+        assertEquals("crest-student", result.crestAssetId)
+        assertEquals("flag-student", result.flagAssetId)
+        assertEquals("background-student", result.backgroundAssetId)
+        assertEquals("logo-student", result.logoAssetId)
+        assertEquals(setOf("firstNames", "lastName"), result.visibleFields)
+        assertTrue(result.visibleFieldsConfigured)
+    }
+}

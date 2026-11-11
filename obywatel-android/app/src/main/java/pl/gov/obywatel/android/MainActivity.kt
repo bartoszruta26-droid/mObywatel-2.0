@@ -1901,7 +1901,7 @@ private fun MoreMenuScreen(
         ProfileActionCard("Wydane certyfikaty", "Informacje o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Projektant dokumentów", "Tworzenie dokumentów, układ, podgląd i eksport PDF", Icons.Filled.Description, onOpenIdentityDesigner)
-        ProfileActionCard("Domyślny wygląd legitymacji", "Edytuj osobno legitymacje pionowe i poziome: grafiki, położenie, obrót, rozmiar i czcionki", Icons.Filled.Badge, onOpenCredentialAppearance)
+        ProfileActionCard("Wspólny wygląd legitymacji", "Jeden układ, rozmieszczenie, skala i typografia dla wszystkich legitymacji", Icons.Filled.Badge, onOpenCredentialAppearance)
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
@@ -3064,7 +3064,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             LegitimacyPreviewSettingsPanel(
                 documentKey = credentialKey,
                 settings = appearance.value,
-                onChange = { appearance.value = it }
+                onChange = { appearance.value = it },
+                assetSelectionOnly = true
             )
         }
         Text(

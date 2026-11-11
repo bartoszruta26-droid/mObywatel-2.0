@@ -208,6 +208,35 @@ internal data class LegitimacyPreviewSettings(
     val fontFamily: String = "sans"
 )
 
+private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
+
+internal fun mergeSharedLegitimacyAppearance(
+    document: LegitimacyPreviewSettings,
+    shared: LegitimacyPreviewSettings
+): LegitimacyPreviewSettings = document.copy(
+    showCard = shared.showCard,
+    showReverse = shared.showReverse,
+    orientation = shared.orientation,
+    showPhoto = shared.showPhoto,
+    showFlag = shared.showFlag,
+    showCrest = shared.showCrest,
+    showLogo = shared.showLogo,
+    showBackground = shared.showBackground,
+    graphicScale = shared.graphicScale,
+    graphicRotation = shared.graphicRotation,
+    graphicOffsetX = shared.graphicOffsetX,
+    graphicOffsetY = shared.graphicOffsetY,
+    labelScale = shared.labelScale,
+    labelRotation = shared.labelRotation,
+    labelOffsetX = shared.labelOffsetX,
+    labelOffsetY = shared.labelOffsetY,
+    valueScale = shared.valueScale,
+    valueRotation = shared.valueRotation,
+    valueOffsetX = shared.valueOffsetX,
+    valueOffsetY = shared.valueOffsetY,
+    fontFamily = shared.fontFamily
+)
+
 internal object LegitimacyPreviewSettingsStore {
     private const val PREFS = "legitimacy_preview_preferences"
 
@@ -318,7 +347,18 @@ internal object LegitimacyPreviewSettingsStore {
 @Composable
 internal fun rememberLegitimacyPreviewSettings(documentKey: String): MutableState<LegitimacyPreviewSettings> {
     val context = LocalContext.current
-    val state = remember(documentKey) { mutableStateOf(LegitimacyPreviewSettingsStore.load(context, documentKey)) }
+    val state = remember(documentKey) {
+        mutableStateOf(
+            if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) {
+                LegitimacyPreviewSettingsStore.load(context, documentKey)
+            } else {
+                mergeSharedLegitimacyAppearance(
+                    LegitimacyPreviewSettingsStore.load(context, documentKey),
+                    LegitimacyPreviewSettingsStore.load(context, GLOBAL_LEGITIMACY_APPEARANCE_KEY)
+                )
+            }
+        )
+    }
     return state
 }
 
@@ -327,7 +367,8 @@ internal fun LegitimacyPreviewSettingsPanel(
     documentKey: String,
     settings: LegitimacyPreviewSettings,
     onChange: (LegitimacyPreviewSettings) -> Unit,
-    assetRevision: Int = 0
+    assetRevision: Int = 0,
+    assetSelectionOnly: Boolean = false
 ) {
     val context = LocalContext.current
     var assets by remember(documentKey) { mutableStateOf(DocumentBrandStore.list(context)) }
@@ -341,16 +382,11 @@ internal fun LegitimacyPreviewSettingsPanel(
 
     fun update(value: LegitimacyPreviewSettings) {
         LegitimacyPreviewSettingsStore.save(context, documentKey, value)
-        val orientationKey = if (value.orientation == "POZIOMA") "horizontal" else "vertical"
-        LegitimacyPreviewSettingsStore.save(context, documentKey + "_" + orientationKey, value)
         onChange(value)
     }
 
     fun selectOrientation(target: String) {
-        val orientationKey = if (target == "POZIOMA") "horizontal" else "vertical"
-        val stored = LegitimacyPreviewSettingsStore.load(context, documentKey + "_" + orientationKey)
-        val next = stored.copy(orientation = target)
-        update(next)
+        update(settings.copy(orientation = target))
     }
 
     val crestPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -398,7 +434,11 @@ internal fun LegitimacyPreviewSettingsPanel(
 
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Ustawienia wyglądu dokumentu", fontWeight = FontWeight.Bold)
+            Text(
+                if (assetSelectionOnly) "Grafiki przypisane do tego dokumentu" else "Wspólny wygląd wszystkich legitymacji",
+                fontWeight = FontWeight.Bold
+            )
+            if (!assetSelectionOnly) {
             Text("Orientacja", fontWeight = FontWeight.SemiBold)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(selected = settings.orientation == "PIONOWA", onClick = { selectOrientation("PIONOWA") })
@@ -429,6 +469,9 @@ internal fun LegitimacyPreviewSettingsPanel(
                 }
             }
             Text("Widoczność pól ustawiasz bezpośrednio przy odpowiednim polu danych.", style = MaterialTheme.typography.bodySmall)
+            }
+            if (assetSelectionOnly) {
+            Text("Wybierz herb, flagę, tło i logo niezależnie dla tego dokumentu.", style = MaterialTheme.typography.bodySmall)
             Text("Herb / godło / logo", fontWeight = FontWeight.SemiBold)
             Box {
                 OutlinedButton(onClick = { crestMenu = true }, modifier = Modifier.fillMaxWidth()) {
@@ -520,6 +563,8 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Text("Wczytaj własne tło")
             }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            }
+            if (!assetSelectionOnly) {
             Text("Położenie i rozmiar grafiki", fontWeight = FontWeight.SemiBold)
             Text("Skala grafiki: ${"%.2f".format(settings.graphicScale)}")
             Slider(settings.graphicScale, { update(settings.copy(graphicScale = it)) }, valueRange = 0.5f..2.5f)
@@ -573,7 +618,10 @@ internal fun LegitimacyPreviewSettingsPanel(
                     valueOffsetY = 0f, fontFamily = "sans"))
             }, modifier = Modifier.fillMaxWidth()) { Text("Przywróć domyślne przekształcenia") }
             CredentialTemplatePreview(documentKey, settings, assetRevision)
-            Text("Ustawienia są zapisywane lokalnie i pozostają zachowane po ponownym uruchomieniu aplikacji.", style = MaterialTheme.typography.labelSmall)
+            Text("Wspólny wzór jest stosowany do wszystkich legitymacji. Zasoby graficzne pozostają przypisane do wybranego dokumentu.", style = MaterialTheme.typography.labelSmall)
+            } else {
+                Text("Przypisanie grafiki dotyczy wyłącznie tego dokumentu i nie zmienia pozostałych legitymacji.", style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }
@@ -986,7 +1034,8 @@ internal fun CredentialValidityTile(valid: Boolean) {
 
 @Composable
 internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings, assetRevision: Int = 0) {
-    val title = documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
+    val title = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "Wspólny wzór legitymacji"
+        else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
     val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
     UnifiedCredentialCard(
@@ -1052,15 +1101,9 @@ internal fun CredentialAppearanceDefaultsScreen(onBack: () -> Unit) {
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
         Text("Domyślny wygląd legitymacji", style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Ustaw osobny wzór dla każdego rodzaju legitymacji. W panelu wybierz orientację pionową lub poziomą, a następnie dostosuj grafiki, położenie, obrót, skalę i krój pisma. Zmiany są zapisywane lokalnie.",
+        Text("Jeden wspólny wzór obowiązuje wszystkie legitymacje. Tutaj ustawiasz orientację, rozmieszczenie elementów, skalę, obrót i typografię. Herby, flagi, tła oraz logo wybierasz osobno w ustawieniach każdego dokumentu.",
             style = MaterialTheme.typography.bodySmall)
-        CredentialAppearancePreset("student", "Legitymacja ucznia / studenta")
-        CredentialAppearancePreset("training", "Legitymacja uczestnika kursu")
-        CredentialAppearancePreset("parliament", "Legitymacja poselska")
-        CredentialAppearancePreset("church_bishop", "Legitymacja / dokument kościelny")
-        CredentialAppearancePreset("professional_medical", "Legitymacja zawodowa — medyczna")
-        CredentialAppearancePreset("identity", "Dokument tożsamości")
-        CredentialAppearancePreset("passport", "Paszport")
+        CredentialAppearancePreset(GLOBAL_LEGITIMACY_APPEARANCE_KEY, "Wspólny wzór wszystkich legitymacji")
     }
 }
 
@@ -1073,7 +1116,8 @@ private fun CredentialAppearancePreset(documentKey: String, title: String) {
             LegitimacyPreviewSettingsPanel(
                 documentKey = documentKey,
                 settings = state.value,
-                onChange = { state.value = it }
+                onChange = { state.value = it },
+                assetSelectionOnly = documentKey != GLOBAL_LEGITIMACY_APPEARANCE_KEY
             )
         }
     }
