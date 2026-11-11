@@ -2364,7 +2364,7 @@ private fun DocumentsWalletScreen(
                 }
             }
         } else {
-            val entries = documents.filter { selectedCategory in it.categories }
+            val entries = documents.filter { document -> selectedCategory?.let { it in document.categories } == true }
             if (entries.isEmpty()) {
                 Card(colors = CardDefaults.cardColors(containerColor = White)) {
                     Text("W tej grupie nie ma jeszcze przypisanych dokumentów.",
