@@ -175,6 +175,7 @@ internal object DocumentBrandStore {
         }
     }
     private val builtInAssets = listOf(
+        BrandAsset("builtin_polish_emblem", "Zasoby aplikacji", "Godło", "Godło Polski — grafika zasobów aplikacji", "resource:institutions_eagle_emblem"),
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
         BrandAsset("builtin_rodu_dab", "Katalog heraldyczny", "Herb", "Herb rodowy — dąb", "builtin:heraldry/herb-rodu-klasyczny.svg"),
         BrandAsset("builtin_rodu_lilia", "Katalog heraldyczny", "Herb", "Herb rodowy — lilia", "builtin:heraldry/herb-rodu-lilia.svg"),
@@ -565,8 +566,15 @@ private fun isChurchDocument(title: String): Boolean {
     return listOf("kościel", "kosciel", "papiesk", "papież", "papiez", "misjon", "sakrament", "kanonicz", "biskup", "parafi", "szafarz", "liturg", "święce", "swiece", "konsekr", "jurysdykc", "diecez", "ekumen").any { t.contains(it) }
 }
 
-internal fun defaultDocumentFlag(context: Context, title: String): Bitmap? =
-    BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
+internal fun defaultDocumentFlag(context: Context, title: String): Bitmap? {
+    val normalized = title.lowercase(Locale.ROOT)
+    val resource = when {
+        listOf("watykan", "papies", "stolica apostolska", "kościel", "kosciel", "biskup", "kardynał", "kardynal").any { normalized.contains(it) } ->
+            R.drawable.flag_vatican_vector
+        else -> R.drawable.flag_poland_vector
+    }
+    return BitmapFactory.decodeResource(context.resources, resource)
+}
 
 internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
@@ -580,7 +588,9 @@ internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
         else -> ""
     }
     val selected = assetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-    return selected ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+    return selected
+        ?: DocumentBrandStore.preview(context, "builtin_polish_emblem")
+        ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
 }
 
 internal fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
