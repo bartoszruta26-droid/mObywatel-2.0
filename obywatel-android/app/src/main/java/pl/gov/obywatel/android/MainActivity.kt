@@ -1311,7 +1311,7 @@ private fun DocumentDetailsScreen(
     val values = remember(allValues, group) {
         group?.fields.orEmpty().mapNotNull { (label, key) ->
             allValues[key]?.takeIf { it.isNotBlank() }?.let { label to it }
-        }.toMap()
+        }.toMap() + listOfNotNull(allValues["photo"]?.takeIf { it.isNotBlank() }?.let { "photo" to it })
     }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
@@ -2565,6 +2565,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     saveMessage = "Zdjęcie przekracza limit 5 MB. Wybierz mniejszy plik."
                 } else {
                     photoBase64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                    fields["photo"] = photoBase64
                     saveMessage = "Zdjęcie dodane. Zapisz zmiany."
                 }
             }.onFailure { saveMessage = "Nie udało się wczytać zdjęcia: ${it.localizedMessage ?: "błąd odczytu"}" }
@@ -2630,7 +2631,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Wybierz zdjęcie", color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoPicker.launch("image/*") }.padding(vertical = 8.dp))
-                    if (photoBase64.isNotBlank()) Text("Usuń zdjęcie", color = Color(0xFF9B2C2C), fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoBase64 = "" }.padding(vertical = 8.dp))
+                    if (photoBase64.isNotBlank()) Text("Usuń zdjęcie", color = Color(0xFF9B2C2C), fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoBase64 = ""; fields["photo"] = "" }.padding(vertical = 8.dp))
                 }
                 Text("Dane osobowe", color = Navy, fontWeight = FontWeight.Bold)
                 DemoDataField("firstNames", "Imię / imiona", fields)
