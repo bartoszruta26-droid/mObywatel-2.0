@@ -82,7 +82,7 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Wybierz rodzaj podmiotu").assertIsDisplayed()
         composeRule.onNodeWithText("Spółka z ograniczoną odpowiedzialnością — KRS")
             .performScrollTo().performClick()
-        composeRule.onNodeWithText("Numer KRS").performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Numer KRS")[0].performScrollTo().assertIsDisplayed()
     }
 
     @Test
