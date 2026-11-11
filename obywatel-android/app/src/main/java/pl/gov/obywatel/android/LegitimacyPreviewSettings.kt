@@ -183,15 +183,17 @@ internal fun LegitimacyHeraldry(settings: LegitimacyPreviewSettings, documentKey
     }
     if (crest != null || flag != null || settings.crestCaption.isNotBlank()) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (flag != null) Image(flag.asImageBitmap(), contentDescription = "Flaga legitymacji", modifier = Modifier.size(width = 48.dp, height = 30.dp))
             if (settings.captionPosition == "Po lewej" && settings.crestCaption.isNotBlank()) {
                 Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
             }
-            if (flag != null) Image(flag.asImageBitmap(), contentDescription = "Flaga legitymacji", modifier = Modifier.size(width = 48.dp, height = 30.dp))
-            if (crest != null) Image(crest.asImageBitmap(), contentDescription = "Herb legitymacji", modifier = Modifier.size(48.dp))
-            if (settings.captionPosition == "Nad herbem" || settings.captionPosition == "Pod herbem") {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    if (settings.captionPosition == "Nad herbem" && settings.crestCaption.isNotBlank()) Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
-                    if (settings.captionPosition == "Pod herbem" && settings.crestCaption.isNotBlank()) Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                if (settings.captionPosition == "Nad herbem" && settings.crestCaption.isNotBlank()) {
+                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
+                }
+                if (crest != null) Image(crest.asImageBitmap(), contentDescription = "Herb legitymacji", modifier = Modifier.size(48.dp))
+                if (settings.captionPosition == "Pod herbem" && settings.crestCaption.isNotBlank()) {
+                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
                 }
             }
             if (settings.captionPosition == "Po prawej" && settings.crestCaption.isNotBlank()) {
