@@ -88,6 +88,9 @@ private data class FamilyChildRecord(
     val vaccines: List<FamilyVaccineEntry> = emptyList()
 )
 
+internal fun exportFamilyHealthArchive(context: Context): String = FamilyHealthStore.exportArchive(context)
+internal fun importFamilyHealthArchive(context: Context, raw: String) = FamilyHealthStore.importArchive(context, raw)
+
 @Composable
 internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Unit) {
     val context = LocalContext.current
@@ -298,7 +301,7 @@ private fun ChildField(label: String, value: String, singleLine: Boolean = true,
         label = { Text(label) }, singleLine = singleLine, minLines = if (singleLine) 1 else 3)
 }
 
-internal object FamilyHealthStore {
+private object FamilyHealthStore {
     private const val FILE_NAME = "family_health_records.enc"
     private const val KEY_ALIAS = "obywatel_family_health_aes"
 
