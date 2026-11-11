@@ -790,8 +790,8 @@ private fun HomeScreen() {
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null })
                     activeService == "Zasoby identyfikacji dokumentów" -> DocumentBrandAssetsScreen(onBack = { activeService = null })
                     activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false)
-                    activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null }, readOnly = true)
-                    activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null }, readOnly = true)
+                    activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null })
+                    activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
                     activeService == "Dokumenty Rodowe" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { activeService = null })
                     activeService != null -> ServiceDetailScreen(
                         title = activeService!!,
