@@ -3343,20 +3343,22 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                         Text("WZÓR", color = Color(0xFF7B4B58), fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.labelSmall)
                     }
-                    LegitimacyHeraldry(settings, documentKey)
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Box(
-                            Modifier.width(100.dp).fillMaxSize().clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFFE8D6D0)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (photoBitmap != null) {
-                                Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie posiadacza legitymacji",
-                                    modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                            } else {
-                                Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie",
-                                    tint = Color(0xFF8A777B), modifier = Modifier.size(54.dp))
+                        Column(Modifier.width(100.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Box(
+                                Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFFE8D6D0)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (photoBitmap != null) {
+                                    Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie posiadacza legitymacji",
+                                        modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                                } else {
+                                    Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie",
+                                        tint = Color(0xFF8A777B), modifier = Modifier.size(54.dp))
+                                }
                             }
+                            LegitimacyHeraldry(settings, documentKey, vertical = true)
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             @Composable fun data(label: String, value: String) {
@@ -3480,20 +3482,22 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
                             color = Color(0xFF6C6260), style = MaterialTheme.typography.labelSmall)
                     }
                 }
-                LegitimacyHeraldry(settings, documentKey)
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Box(
-                        Modifier.weight(0.92f).fillMaxSize().clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFE8E4E1)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (photoBitmap != null) {
-                            Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie osoby w legitymacji poselskiej",
-                                modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                        } else {
-                            Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie",
-                                tint = Color(0xFF9A918D), modifier = Modifier.size(64.dp))
+                    Column(Modifier.weight(0.92f).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Box(
+                            Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFE8E4E1)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (photoBitmap != null) {
+                                Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie osoby w legitymacji poselskiej",
+                                    modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            } else {
+                                Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie",
+                                    tint = Color(0xFF9A918D), modifier = Modifier.size(64.dp))
+                            }
                         }
+                        LegitimacyHeraldry(settings, documentKey, vertical = true)
                     }
                     Column(Modifier.weight(1.18f).fillMaxSize(), verticalArrangement = Arrangement.SpaceEvenly) {
                         @Composable fun detail(label: String, value: String) {
