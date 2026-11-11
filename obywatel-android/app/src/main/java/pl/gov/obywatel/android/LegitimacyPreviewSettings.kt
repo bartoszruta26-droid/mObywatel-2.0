@@ -216,11 +216,18 @@ internal fun LegitimacyHeraldry(
     vertical: Boolean = false
 ) {
     val context = LocalContext.current
-    val selectedCrest = remember(settings.crestAssetId) {
-        settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+    val assignedCrest = remember(documentKey) {
+        DocumentBrandStore.imageForDocument(context, documentKey, "", "Herb")
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Godło")
     }
-    val selectedFlag = remember(settings.flagAssetId) {
-        settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+    val assignedFlag = remember(documentKey) {
+        DocumentBrandStore.imageForDocument(context, documentKey, "", "Flaga")
+    }
+    val selectedCrest = remember(settings.crestAssetId, assignedCrest) {
+        settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedCrest
+    }
+    val selectedFlag = remember(settings.flagAssetId, assignedFlag) {
+        settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedFlag
     }
     val assignedLogo = remember(documentKey) {
         DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
