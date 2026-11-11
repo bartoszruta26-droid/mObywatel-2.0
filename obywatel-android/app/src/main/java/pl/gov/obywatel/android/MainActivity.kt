@@ -737,10 +737,12 @@ private fun HomeScreen() {
                 when {
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
-                    showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 })
+                    showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 }, readOnly = true)
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
+                    settingsDocumentEditor == "imported" -> DocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
+                    settingsDocumentEditor == "signed_pdf" -> SignedPdfDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, allowImport = true, readOnly = false)
                     settingsDocumentEditor == "family" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     settingsDocumentEditor == "business" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     settingsDocumentEditor == "bank_accounts" -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
@@ -2192,6 +2194,8 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Dane karty szczepień", "Edycja historii dawek, preparatów, serii, placówek i terminów kolejnych szczepień", Icons.Filled.HealthAndSafety, { onEditOtherDocuments("vaccines") })
         ProfileActionCard("Dokumenty firmowe i podmiotowe", "Dokumenty spółek, fundacji i organizacji", Icons.Filled.Business, { onEditOtherDocuments("business") })
         ProfileActionCard("Konta bankowe", "Osobna ewidencja rachunków prywatnych i podmiotowych", Icons.Filled.AccountBalance, { onEditOtherDocuments("bank_accounts") })
+        ProfileActionCard("Dokumenty własne — pliki", "Dodawanie, porządkowanie i usuwanie importowanych plików", Icons.Filled.Description, { onEditOtherDocuments("imported") })
+        ProfileActionCard("Pliki PDF i podpisy", "Import dokumentów, dołączanie plików podpisów i zarządzanie ewidencją", Icons.Filled.PictureAsPdf, { onEditOtherDocuments("signed_pdf") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
