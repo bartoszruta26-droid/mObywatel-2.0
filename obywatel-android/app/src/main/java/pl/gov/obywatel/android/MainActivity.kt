@@ -3335,7 +3335,6 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
         else -> "Dokument po terminie"
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        LegitimacyPreviewSettingsPanel(documentKey, settings) { settingsState.value = it }
         if (settings.showCard) {
         Card(
             modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
@@ -3477,7 +3476,6 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
         else -> "Status wpisany: ${fields["mpStatus"].orEmpty()}"
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    LegitimacyPreviewSettingsPanel(documentKey, settings) { settingsState.value = it }
     if (settings.showCard) {
     Card(
         modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
