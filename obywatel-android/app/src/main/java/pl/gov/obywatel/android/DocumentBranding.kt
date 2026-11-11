@@ -499,6 +499,22 @@ internal fun DocumentIdentityTemplate(
     fun stableFieldKey(label: String): String {
         val value = label.lowercase(Locale.ROOT)
         return when {
+            value.contains("miejsce w rodzie") -> "familyRole"
+            value.contains("nazwa rodu") -> "familyName"
+            value.contains("linia") || value.contains("gałąź") -> "familyLine"
+            value.contains("nazwa programu") -> "loyaltyName"
+            value.contains("nazwa rachunku") -> "accountName"
+            value.contains("relacja") -> "childRelationship"
+            value.contains("opiekun") -> "guardianName"
+            value.contains("data szczepienia") -> "vaccineDate"
+            value.contains("dawka") -> "vaccineDose"
+            value.contains("seria") -> "vaccineBatch"
+            value.contains("podmiot wykonujący") -> "vaccineIssuer"
+            value.contains("specjalność") -> "professionalSpeciality"
+            value.contains("zakres kwalifikacji") -> "professionalQualification"
+            value.contains("stanowisko") -> "contactTitle"
+            value.contains("strona internetowa") -> "contactUrl"
+            value.contains("nazwa organizacji") && documentType == "profile" -> "contactOrganization"
             value.contains("rodzaj aktu") -> "civilActType"
             value.contains("rodzaj odpisu") -> "civilExtractType"
             value.contains("data i miejsce zawarcia małżeństwa") || value.contains("data zawarcia małżeństwa") -> "marriageDate"
