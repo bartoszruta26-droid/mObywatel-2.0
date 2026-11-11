@@ -178,11 +178,15 @@ internal object DocumentBrandStore {
             documentType == "family" -> "organization_family"
             else -> ""
         }
-        return listOf(documentType, role, when {
+        val fallback = when {
             documentType.startsWith("church_") -> "church"
             documentType.startsWith("organization_") -> "entity"
             else -> ""
-        }).filter { it.isNotBlank() }.distinct()
+        }
+        val candidates = if (documentType == "professional" || documentType == "entity")
+            listOf(role, documentType, fallback)
+        else listOf(documentType, role, fallback)
+        return candidates.filter { it.isNotBlank() }.distinct()
     }
     fun imageForDocument(context: Context, documentType: String, owner: String, kind: String): android.graphics.Bitmap? {
         val all = assignments(context)
