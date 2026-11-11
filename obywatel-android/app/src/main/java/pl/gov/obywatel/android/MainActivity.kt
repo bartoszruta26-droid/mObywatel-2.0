@@ -2006,6 +2006,24 @@ private fun DocumentDetailsScreen(
         else -> 0
     }
     val section = sections[sectionIndex]
+    val brandDocumentType = when (documentId) {
+        "1" -> "identity"
+        "2" -> "passport"
+        "3" -> "family"
+        "4" -> "parliament"
+        "5" -> "training"
+        "6" -> "student"
+        else -> null
+    }
+    val brandOwner = when (documentId) {
+        "1" -> fields["idIssuer"].orEmpty()
+        "2" -> fields["passportIssuer"].orEmpty()
+        "3" -> fields["familyName"].orEmpty()
+        "4" -> fields["mpIssuer"].orEmpty()
+        "5" -> fields["trainingInstitution"].orEmpty()
+        "6" -> fields["studentUniversity"].orEmpty()
+        else -> ""
+    }
     val extraPrefix = when (documentId) {
         "0" -> "personExtra"
         "1" -> "idExtra"
@@ -2043,6 +2061,14 @@ private fun DocumentDetailsScreen(
         Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
+        if (brandDocumentType != null) AssignedDocumentBrandPreview(
+            documentType = brandDocumentType,
+            owner = brandOwner,
+            title = "Znak przypisany do ewidencji",
+            subtitle = if (brandDocumentType == "identity" || brandDocumentType == "passport")
+                "Prywatne oznaczenie ewidencji — nie jest elementem oryginalnego dokumentu państwowego."
+            else "Herb, godło lub logo przypisane do dokumentu"
+        )
         Box(
             modifier = Modifier.fillMaxWidth().height(112.dp).clip(RoundedCornerShape(16.dp))
                 .background(BlueLight),
