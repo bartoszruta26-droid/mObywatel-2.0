@@ -5,6 +5,7 @@ package pl.gov.obywatel.android
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -35,7 +36,7 @@ class MainActivityNavigationTest {
     @Test
     fun bankAccountsDocumentEntryOpensDedicatedReadOnlyCatalog() {
         selectBottomTab(1)
-        composeRule.onNodeWithText("Konta bankowe", substring = false)
+        composeRule.onAllNodesWithText("Konta bankowe", substring = false)[0]
             .performScrollTo()
             .assertHasClickAction()
             .performClick()
@@ -60,10 +61,10 @@ class MainActivityNavigationTest {
     @Test
     fun documentsWalletShowsIdentityPassportAndLegitimacyRecords() {
         selectBottomTab(1)
-        composeRule.onNodeWithText("Dane osobowe profilu").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Dane paszportowe").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dane osobowe profilu")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dowód tożsamości")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dane paszportowe")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Legitymacja kursanta")[0].performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -132,7 +133,7 @@ class MainActivityNavigationTest {
         ).assertIsDisplayed()
         composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dokument rodowy").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Ukryj").performScrollTo().assertIsDisplayed()
+        composeRule.onAllNodesWithText("Ukryj")[0].performScrollTo().assertIsDisplayed()
     }
 
     @Test
