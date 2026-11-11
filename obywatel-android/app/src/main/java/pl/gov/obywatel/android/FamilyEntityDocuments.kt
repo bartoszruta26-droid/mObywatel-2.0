@@ -52,7 +52,7 @@ private val rodDocs = listOf(
     }
     val note = when {
         title.startsWith("Dane medyczne") -> "Zawiera szczególne kategorie danych osobowych dotyczących zdrowia. Wprowadzaj wyłącznie dane niezbędne, zgodnie z prawem i na podstawie właściwej zgody lub innej podstawy prawnej; osoba, której dane dotyczą, powinna znać cel i zakres przetwarzania. Nie wpisuj haseł ani danych dostępowych. Rejestr lokalny nie zastępuje dokumentacji medycznej prowadzonej przez uprawniony podmiot."
-        title.startsWith("Odpis rodowy") -> "Prywatny odpis z ewidencji Rodowej. Podpis Starosty Rodowego należy złożyć dopiero po weryfikacji wpisu i umocowania. Formularz nie tworzy podpisu ani pieczęci i nie jest urzędowym odpisem aktu stanu cywilnego."
+        title.startsWith("Odpis rodowy") -> "Odpis z ewidencji Rodowej. Podpis Starosty Rodowego należy złożyć dopiero po weryfikacji wpisu i umocowania. Formularz nie tworzy podpisu ani pieczęci i nie jest urzędowym odpisem aktu stanu cywilnego."
         else -> "Dokument ewidencji Rodowej. Jego skutki prawne zależą od treści, formy i właściwych przepisów; sam wpis w aplikacji nie zastępuje aktu notarialnego, wpisu urzędowego ani wymaganej formy czynności."
     }
     RegistryDoc(if (title.contains("rachunków bankowych")) "rod_bank_accounts" else "rod_${section.hashCode().toUInt().toString(16)}_${index}", title, section, if (title.contains("rachunków bankowych")) emptyList() else fields.distinct(), note)
