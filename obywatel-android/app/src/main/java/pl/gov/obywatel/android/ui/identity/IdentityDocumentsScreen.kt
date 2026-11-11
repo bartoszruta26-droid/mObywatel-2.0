@@ -104,8 +104,8 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     var assetName by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(categories.first()) }
     var rights by remember { mutableStateOf("") }
-    var templateName by remember { mutableStateOf("Mój szablon") }
-    val documentGroups = listOf("Kościelne", "Fundacyjne", "Stowarzyszeniowe", "Firmowe", "Rodowe", "Cywilne", "Zawodowe", "Urzędowe", "Ogólne")
+    var templateName by remember { mutableStateOf("Dokument") }
+    val documentGroups = listOf("Ogólne")
     var documentGroup by remember { mutableStateOf("Ogólne") }
     var layout by remember { mutableStateOf(DocumentLayout()) }
     var title by remember { mutableStateOf("Zaświadczenie") }
@@ -222,20 +222,12 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     OrgChoice(orgs,orgId){orgId=it}
                     SimpleChoice("Grupa dokumentu",documentGroup,documentGroups){ documentGroup=it }
                     OutlinedButton(onClick={
-                        when(documentGroup) {
-                            "Kościelne" -> { templateName="Dokument kościelny"; title="Zaświadczenie kościelne"; role="Osoba uprawniona do reprezentacji podmiotu kościelnego"; watermark="DOKUMENT KOŚCIELNY"; body="Niniejszym zaświadcza się, że…\n\nPodstawa wydania: …\nData i miejsce: …" }
-                            "Fundacyjne" -> { templateName="Dokument fundacji"; title="Zaświadczenie / potwierdzenie fundacji"; role="Zarząd Fundacji"; watermark="FUNDACJA"; body="Dane fundacji: …\nCel i przedmiot dokumentu: …\nPodstawa statutowa / uchwała: …\nRozstrzygnięcie lub potwierdzenie: …" }
-                            "Stowarzyszeniowe" -> { templateName="Dokument stowarzyszenia"; title="Zaświadczenie stowarzyszenia"; role="Zarząd Stowarzyszenia"; watermark="STOWARZYSZENIE"; body="Dane stowarzyszenia: …\nCzłonek / adresat: …\nPodstawa statutowa / uchwała: …\nTreść zaświadczenia: …" }
-                            "Firmowe" -> { templateName="Dokument firmowy"; title="Pismo firmowe"; role="Zarząd / właściciel"; watermark="DOKUMENT FIRMOWY"; body="Dane rejestrowe podmiotu: …\nAdresat: …\nPrzedmiot sprawy: …\nTreść: …\nOsoba do kontaktu: …" }
-                            "Rodowe" -> { templateName="Dokument rodowy"; title="Oświadczenie rodowe"; role="Przedstawiciel rodu"; watermark="DOKUMENT RODOWY"; body="Oznaczenie rodu: …\nOsoby, których dotyczy dokument: …\nPrzedmiot oświadczenia: …\nTreść i podstawa ustaleń: …" }
-                            "Cywilne" -> { templateName="Dokument cywilny"; title="Oświadczenie"; role="Osoba składająca oświadczenie"; watermark="DOKUMENT CYWILNY"; body="Dane osoby składającej oświadczenie: …\nTreść oświadczenia: …\nMiejsce i data: …\nZałączniki: …" }
-                            "Zawodowe" -> { templateName="Dokument zawodowy"; title="Zaświadczenie zawodowe"; role="Osoba uprawniona / pracodawca"; watermark="DOKUMENT ZAWODOWY"; body="Dane osoby: …\nKwalifikacje / stanowisko: …\nZakres czynności lub potwierdzenia: …\nOkres / data: …" }
-                            "Urzędowe" -> { templateName="Wzór pisma urzędowego"; title="Pismo"; role="Organ / osoba upoważniona"; watermark="WZÓR"; body="Oznaczenie podmiotu i znak sprawy: …\nAdresat: …\nPodstawa prawna: …\nUzasadnienie: …\nRozstrzygnięcie / pouczenie: …" }
-                            else -> { templateName="Dokument ogólny"; title="Dokument"; role="Osoba uprawniona"; watermark="WZÓR"; body="Treść dokumentu…\n\nZałączniki: …" }
-                        }
-                        layout = DocumentLayout.forGroup(documentGroup)
-                        message="Zastosowano odrębny układ graficzny grupy: "+documentGroup+". Uzupełnij dane i sprawdź podstawę prawną przed wydaniem."
-                    },modifier=Modifier.fillMaxWidth()){ Text("Zastosuj wzorzec grupy") }
+                        templateName = "Dokument"
+                        role = "Osoba uprawniona"
+                        watermark = "WZÓR"
+                        layout = DocumentLayout()
+                        message = "Zastosowano wspólny układ dokumentu A4. Rodzaj dokumentu określają treść, pola i dane wystawcy."
+                    },modifier=Modifier.fillMaxWidth()){ Text("Przywróć wspólny układ") }
                     OutlinedTextField(templateName,{templateName=it},label={Text("Nazwa szablonu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(title,{title=it},label={Text("Tytuł dokumentu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(number,{number=it},label={Text("Numer dokumentu / rejestru")},modifier=Modifier.fillMaxWidth())
