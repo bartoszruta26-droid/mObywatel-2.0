@@ -75,10 +75,16 @@ object ImportedDocumentStore {
         check(prefs.edit().putStringSet(KEY_URIS, updated).commit()) {
             "Nie udało się usunąć dokumentu z listy."
         }
-        runCatching {
-            context.contentResolver.releasePersistableUriPermission(
-                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
+        if (uri.scheme == "file") {
+            val base = File(context.filesDir, "imported-documents").canonicalFile
+            val file = File(uri.path.orEmpty()).canonicalFile
+            if (file.path.startsWith(base.path + File.separator)) file.delete()
+        } else {
+            runCatching {
+                context.contentResolver.releasePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
         }
     }
 
