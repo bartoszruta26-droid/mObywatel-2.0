@@ -189,7 +189,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                 OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6,readOnly=readOnly)
             }
             if(type.id=="criminal_record") {
-                OutlinedButton(onClick={attachmentPicker.launch(arrayOf("application/pdf","text/xml","application/xml"))},modifier=Modifier.fillMaxWidth()) {
+                if (!readOnly) OutlinedButton(onClick={attachmentPicker.launch(arrayOf("application/pdf","text/xml","application/xml"))},modifier=Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.FolderOpen,contentDescription=null); Spacer(Modifier.width(8.dp)); Text("Dodaj oryginalny plik PDF lub XML")
                 }
                 OfficialDocumentStore.attachments(context,type.id).forEach { Text("Załącznik: $it",color=Color(0xFF1769AA),style=MaterialTheme.typography.bodySmall) }
