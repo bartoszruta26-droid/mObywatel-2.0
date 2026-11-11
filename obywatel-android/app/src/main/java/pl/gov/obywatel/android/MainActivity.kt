@@ -2381,223 +2381,23 @@ private fun OwdDocumentArtworkCard(
     details: String,
     privateRecord: Boolean
 ) {
-    Box(
-        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f)
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, Border, RoundedCornerShape(16.dp))
-    ) {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+    val documentKey = when {
+        title.contains("rodow", true) -> "family"
+        title.contains("kościel", true) || title.contains("kosciel", true) -> "church"
+        title.contains("cywil", true) -> "civil"
+        title.contains("podmiot", true) || title.contains("firm", true) -> "entity"
+        else -> "official"
+    }
+    val settings = rememberLegitimacyPreviewSettings(documentKey).value
+    if (settings.showCard) {
+        UnifiedCredentialCard(
+            documentKey = documentKey, title = title, subtitle = subtitle, holderName = holder,
+            fields = listOf(Triple("details", "DANE DOKUMENTU", details)), settings = settings,
+            fallbackBackgroundRes = imageRes
         )
-        Column(
-            modifier = Modifier.fillMaxSize().padding(13.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(0.78f)
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(White.copy(alpha = 0.78f))
-                    .padding(horizontal = 10.dp, vertical = 7.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(title, color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, color = Muted, style = MaterialTheme.typography.labelSmall,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis)
-            }
-            Column(
-                modifier = Modifier.fillMaxWidth(0.78f)
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(White.copy(alpha = 0.82f))
-                    .padding(horizontal = 10.dp, vertical = 7.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                Text(holder, color = Navy, fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (details.isNotBlank()) {
-                    Text(details, color = Ink, style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
-        }
     }
 }
 
-@Composable
-private fun DocumentDetailsScreen(
-    documentId: String,
-    onBack: () -> Unit,
-    onOpenService: (String) -> Unit
-) {
-    val context = LocalContext.current
-    val fields = remember { DemoIdentityStore.load(context) }
-    val sections = listOf(
-        Triple("Dane osobowe profilu", "Profil kontaktowy i dane rodzinne", listOf(
-            "Telefon" to "contactPhone", "E-mail" to "contactEmail", "Organizacja" to "contactOrganization",
-            "Stanowisko" to "contactTitle", "Strona internetowa" to "contactUrl", "Adres kontaktowy" to "contactAddress",
-            "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname",
-            "Imiona matki" to "motherNames", "Nazwisko rodowe matki" to "motherSurname"
-        )),
-        Triple("Dowód tożsamości", "Podstawowe dane identyfikacyjne oraz dane dokumentu — wpis użytkownika", listOf(
-            "Imiona" to "firstNames", "Nazwisko" to "lastName", "Data urodzenia" to "birthDate",
-            "Miejsce urodzenia" to "birthPlace", "Obywatelstwo" to "citizenship", "Płeć — wpis deklarowany" to "sex",
-            "Nazwisko rodowe" to "birthSurname", "PESEL" to "pesel",
-            "Numer dokumentu" to "idNumber", "Status" to "idStatus",
-            "Numer poprzedniego dokumentu" to "idPreviousNumber", "Data wydania" to "idIssueDate", "Data ważności" to "idExpiryDate", "Organ wydający" to "idIssuer", "Data utraty / unieważnienia" to "idLossOrInvalidationDate"
-        )),
-        Triple("Dane paszportowe", "Dane dokumentu podróży — wpis użytkownika", listOf(
-            "Numer dokumentu paszportowego" to "passportNumber", "Rodzaj dokumentu" to "passportType",
-            "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
-            "Państwo wydania" to "passportCountry", "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace", "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate", "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
-        )),
-        Triple("Dokument rodowy", "Karta ewidencji rodowej", listOf(
-            "Numer dokumentu rodowego" to "familyDocNumber", "Nazwa rodu" to "familyName",
-            "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyRole",
-            "Prowadzący ewidencję" to "familyRegistry", "Data sporządzenia" to "familyIssueDate", "Data przeglądu / aktualizacji" to "familyExpiryDate", "Miejsce prowadzenia ewidencji" to "familyRegistryPlace", "Miejsce zamieszkania — wpis dobrowolny" to "familyResidence", "Linia rodowa ojca" to "familyFatherLine", "Linia rodowa matki" to "familyMotherLine", "Podstawa wpisu" to "familySource", "Uwagi ewidencyjne" to "familyNotes"
-        )),
-        Triple("Legitymacja poselska", "Ewidencja informacji o legitymacji i mandacie", listOf(
-            "Numer legitymacji" to "mpCardNumber", "Kadencja" to "mpTerm",
-            "Wystawca" to "mpIssuer", "Status legitymacji" to "mpStatus",
-            "Okręg wyborczy" to "mpDistrict", "Data rozpoczęcia mandatu" to "mpStart", "Data zakończenia mandatu" to "mpEnd", "Data wydania legitymacji" to "mpCardIssueDate", "Data ślubowania" to "mpOathDate", "Miejsce ślubowania" to "mpOathPlace", "Źródło potwierdzenia ślubowania" to "mpOathEvidence", "Źródło potwierdzenia" to "mpMandateSource"
-        )),
-        Triple("Legitymacja ucznia/studenta", "Ewidencja danych legitymacji ucznia lub studenta", listOf(
-            "Numer legitymacji" to "trainingCardNumber", "Instytucja" to "trainingInstitution",
-            "Nazwa kursu" to "trainingCourseName", "Status uczestnictwa" to "trainingStatus",
-            "Adres instytucji" to "trainingInstitutionAddress", "Numer wpisu instytucji" to "trainingInstitutionRegistry", "Symbol kursu" to "trainingCourseCode", "Data rozpoczęcia" to "trainingStartDate", "Data zakończenia" to "trainingEndDate", "Data wydania legitymacji" to "trainingIssueDate", "Ważna do" to "trainingValidUntil", "Wystawca" to "trainingIssuer", "Podpis wystawcy" to "trainingSignature", "Data ukończenia" to "trainingCompletionDate", "Liczba godzin" to "trainingHours", "Wynik zaliczenia" to "trainingAssessment", "Numer zaświadczenia" to "trainingCertificateNumber", "Forma kształcenia" to "trainingForm"
-        )),
-        Triple("Legitymacja ucznia/studenta", "Ewidencja danych podanych przez użytkownika", listOf(
-            "Numer legitymacji" to "studentCardNumber", "Uczelnia" to "studentUniversity",
-            "Kierunek" to "studentProgramme", "Rok akademicki" to "studentAcademicYear",
-            "Adres uczelni" to "studentUniversityAddress", "Identyfikator uczelni" to "studentUniversityId", "Imię i nazwisko w dokumencie" to "studentNames", "Wydział" to "studentFaculty", "Kierunek" to "studentProgramme", "Poziom studiów" to "studentLevel", "Profil / forma studiów" to "studentProfile", "Rok i semestr" to "studentYear", "Rok akademicki" to "studentAcademicYear", "Data wydania" to "studentIssueDate", "Status" to "studentStatus", "Ważność" to "studentValidity", "Wystawca" to "studentIssuer"
-        )),
-        Triple("Orzeczenia i zaświadczenia", "Ewidencja informacji o rozstrzygnięciach i zaświadczeniach", listOf(
-            "Numer dokumentu / sprawy" to "disabilityDecisionNumber", "Wystawca" to "disabilityAuthorityName",
-            "Data dokumentu" to "disabilityDecisionDate", "Stopień / kategoria" to "disabilityDegree",
-            "Okres obowiązywania" to "disabilityValidity", "Rodzaj rozstrzygnięcia" to "disabilityDecisionType", "Osoba podpisująca / wystawca" to "disabilityIssuerName", "Powiat / miasto" to "disabilityCounty", "Podstawa prawna" to "disabilityLegalBasis", "Przepis określający skutki" to "disabilityLegalProvision", "Zakres uznania / równoważności" to "disabilityEquivalentEffect", "Fundacja / podmiot prowadzący" to "disabilityFoundationName", "Podstawa statutowa" to "disabilityFoundationStatute", "Kwalifikacje osoby wystawiającej" to "disabilityMedicalQualification", "Ocena medyczna" to "disabilityMedicalAssessment", "Skład zespołu" to "disabilityPanelMembers", "Przewodniczący zespołu" to "disabilityChairperson", "Osoba zatwierdzająca" to "disabilitySignature", "Tryb odwołania" to "disabilityAppealInfo", "Data wniosku" to "disabilityApplicationDate", "Numer sprawy" to "disabilityCaseNumber", "Data doręczenia" to "disabilityDeliveryDate", "Wynik odwołania" to "disabilityAppealOutcome", "Duplikat / zmiana dokumentu" to "disabilityDuplicateInfo", "Dokument źródłowy" to "disabilitySourceAttachment"
-        )),
-        Triple("Karty lojalnościowe", "Dane kart programów lojalnościowych sklepów", (1..10).flatMap { n ->
-            val p = "loyalty$n"
-            listOf("Sklep / marka" to "${p}Store", "Program" to "${p}Program", "Numer karty nadany przez sklep" to "${p}Number",
-                "Lokalny numer ewidencyjny" to "${p}LocalId", "Kod cyfrowy" to "${p}DigitalCode",
-                "Treść kodu kreskowego" to "${p}Barcode", "Treść kodu QR" to "${p}Qr", "Status" to "${p}Status",
-                "Tekst rozpoznany przez OCR" to "${p}OcrText")
-        })
-    )
-    val section = sections.getOrNull(documentId.toIntOrNull() ?: -1) ?: sections.first()
-    val extraPrefix = listOf("personExtra", "idExtra", "passportExtra", "familyExtra", "mpExtra", "trainingExtra", "studentExtra", "disabilityExtra", "loyaltyExtra").getOrNull(documentId.toIntOrNull() ?: -1) ?: "personExtra"
-    val photoBase64 = fields["photo"].orEmpty()
-    val photoBitmap = remember(photoBase64) {
-        runCatching {
-            if (photoBase64.isBlank()) null else {
-                val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
-                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-                var sample = 1
-                while (bounds.outWidth / sample > 500 || bounds.outHeight / sample > 500) sample *= 2
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
-            }
-        }.getOrNull()
-    }
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Text("‹  Powrót do portfela", color = Blue, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text(section.first, color = Navy, style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold)
-        Text(section.second, color = Muted, style = MaterialTheme.typography.bodyMedium)
-        DocumentIdentityTemplate(
-            section.first,
-            section.third.associate { (label, key) -> label to fields[key].orEmpty() },
-            owner = fields["idIssuer"].orEmpty().ifBlank { fields["passportIssuer"].orEmpty() },
-            photoOverride = photoBitmap?.asImageBitmap()
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Dane dokumentu", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
-            }
-        }
-        if (documentId == "0" && photoBitmap != null) {
-            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Zdjęcie profilowe", color = Navy, fontWeight = FontWeight.Bold)
-                    Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie profilowe",
-                        modifier = Modifier.fillMaxWidth().height(190.dp).clip(RoundedCornerShape(10.dp)), contentScale = ContentScale.Fit)
-                }
-            }
-        }
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-        ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                section.third.forEach { (label, key) ->
-                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
-                        Text(fields[key].orEmpty().ifBlank { "Brak wpisu" },
-                            color = if (fields[key].isNullOrBlank()) Muted else Navy,
-                            fontWeight = if (fields[key].isNullOrBlank()) FontWeight.Normal else FontWeight.SemiBold)
-                    }
-                }
-            }
-        }
-        if (documentId == "8") {
-            (1..10).forEach { n ->
-                val prefix = "loyalty$n"
-                if (listOf("Store", "Number", "Barcode", "Qr").any { !fields["$prefix$it"].isNullOrBlank() }) {
-                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
-                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                            Text(fields["${prefix}Store"].orEmpty().ifBlank { "Karta lojalnościowa $n" }, color = Navy, fontWeight = FontWeight.Bold)
-                            Text("Numer karty: " + fields["${prefix}Number"].orEmpty().ifBlank { "—" }, color = Ink)
-                            Text("Program: " + fields["${prefix}Program"].orEmpty().ifBlank { "—" }, color = Muted)
-                            LoyaltyGeneratedCodes(
-                                fields["${prefix}Barcode"].orEmpty().ifBlank { fields["${prefix}Number"].orEmpty() },
-                                fields["${prefix}Qr"].orEmpty().ifBlank { fields["${prefix}Number"].orEmpty() }
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        ReadOnlyAdditionalInformationSection(fields, extraPrefix)
-        val relatedServices = when (documentId) {
-            "1" -> listOf("Zastrzeż PESEL", "Mandaty", "Sprawdź PESEL")
-            "2" -> listOf("Polak za granicą")
-            "5", "6" -> listOf("Edukacja")
-            "7" -> listOf("Zdrowie")
-            else -> listOf("Bezpieczeństwo")
-        }
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Powiązane moduły", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Skróty otwierają powiązane sekcje aplikacji.", color = Muted, style = MaterialTheme.typography.bodySmall)
-                relatedServices.forEach { serviceTitle ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                            .clickable { onOpenService(serviceTitle) }.padding(vertical = 9.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.MoreHoriz, contentDescription = null, tint = Blue, modifier = Modifier.size(19.dp))
-                        Text(serviceTitle, color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 9.dp))
-                    }
-                }
-            }
-        }
-        Text("Ten ekran służy do przeglądania zapisanych informacji. Aby zmienić wpis, wróć do ekranu głównego i otwórz menu Ustawienia.",
-            color = Muted, style = MaterialTheme.typography.bodySmall)
-        DocumentPdfExportButton(section.first, section.third.associate { (label, key) -> label to fields[key].orEmpty() })
-    }
-}
 
 @Composable
 private fun ReadOnlyAdditionalInformationSection(fields: Map<String, String>, prefix: String) {
@@ -2765,7 +2565,6 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("familyNotes", "Uwagi ewidencyjne", fields)
                 DemoDataField("familyHolderSignature", "Imię i nazwisko posiadacza / podpis", fields)
                 DemoDataField("familyRegistrarSignature", "Imię i nazwisko wystawcy / podpis", fields)
-                Text("Wizualizacja dokumentu — awers i rewers", color = Navy, fontWeight = FontWeight.Bold)
                 OwdDocumentArtworkCard(
                     imageRes = R.drawable.documents_family_record,
                     title = "Dokument rodowy",
@@ -3422,11 +3221,20 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
 
 @Composable
 private fun CivicDocumentCard(fields: Map<String, String>, photoBase64: String, documentId: String, title: String) {
+    val documentKey = when (documentId) {
+        "0" -> "profile"; "1" -> "identity"; "2" -> "passport"; "3" -> "family"
+        "4" -> "parliament"; "5" -> "training"; "6" -> "student"; else -> "disability"
+    }
+    val settings = rememberLegitimacyPreviewSettings(documentKey).value
     val bitmap = remember(photoBase64) {
         runCatching {
             if (photoBase64.isBlank()) null else {
                 val bytes = Base64.decode(photoBase64, Base64.DEFAULT)
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                var sample = 1
+                while (bounds.outWidth / sample > 500 || bounds.outHeight / sample > 500) sample *= 2
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
             }
         }.getOrNull()
     }
@@ -3440,47 +3248,14 @@ private fun CivicDocumentCard(fields: Map<String, String>, photoBase64: String, 
         "6" -> listOf("IMIĘ (IMIONA)" to "studentNames", "NAZWISKO" to "lastName", "UCZELNIA" to "studentUniversity", "KIERUNEK" to "studentProgramme", "NUMER LEGITYMACJI" to "studentCardNumber", "DATA WYDANIA" to "studentIssueDate", "WAŻNA DO" to "studentValidity")
         else -> listOf("IMIĘ (IMIONA)" to "firstNames", "NAZWISKO" to "lastName", "NUMER ORZECZENIA" to "disabilityDecisionNumber", "STOPIEŃ / KATEGORIA" to "disabilityDegree", "DATA WYDANIA" to "disabilityDecisionDate", "OKRES OBOWIĄZYWANIA" to "disabilityValidity")
     }
-    val leftLabel = when (documentId) {
-        "4" -> "SEJM RP"
-        "5" -> fields["trainingInstitution"].orEmpty().ifBlank { "ZNAK SZKOŁY" }
-        "6" -> fields["studentUniversity"].orEmpty().ifBlank { "ZNAK UCZELNI" }
-        "3" -> fields["familyName"].orEmpty().ifBlank { "ZNAK RODU" }
-        else -> "OBYWATEL OBYWATELSKI"
-    }
-    Card(Modifier.fillMaxWidth().aspectRatio(0.70f), shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F1EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-        Row(Modifier.fillMaxSize().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Column(Modifier.weight(0.9f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(Color(0xFFE4E0DC)), contentAlignment = Alignment.Center) {
-                    if (bitmap != null) Image(bitmap.asImageBitmap(), contentDescription = "Zdjęcie posiadacza dokumentu", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                    else Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie", tint = Color(0xFF8B817C), modifier = Modifier.size(58.dp))
-                }
-                Box(Modifier.fillMaxWidth().height(30.dp).clip(RoundedCornerShape(5.dp)).border(1.dp, Color(0xFFD5D0CC), RoundedCornerShape(5.dp))) {
-                    Column(Modifier.fillMaxSize()) {
-                        Box(Modifier.weight(1f).fillMaxWidth().background(Color.White))
-                        Box(Modifier.weight(1f).fillMaxWidth().background(Color(0xFFDC143C)))
-                    }
-                }
-                Box(Modifier.fillMaxWidth().height(55.dp).clip(RoundedCornerShape(7.dp)).background(Color(0xFFE9E5E1)), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Filled.AccountBalance, contentDescription = "Znak wystawcy", tint = Color(0xFF716762), modifier = Modifier.size(25.dp))
-                        Text(leftLabel, color = Color(0xFF625954), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            }
-            Column(Modifier.weight(1.1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceEvenly) {
-                Text(title.substringBefore(" —").uppercase(), color = Color(0xFF393330), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                rows.forEach { (label, key) ->
-                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                        Text(label, color = Color(0xFF786E69), style = MaterialTheme.typography.labelSmall)
-                        Text(fields[key].orEmpty().ifBlank { "—" }, color = Color(0xFF292522), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            }
-        }
+    val holderName = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
+    val cardFields = rows.map { (label, key) -> Triple(key, label, fields[key].orEmpty()) }
+    if (settings.showCard) {
+        UnifiedCredentialCard(documentKey, title.substringBefore(" —"), "DOKUMENT", holderName, cardFields, settings, bitmap)
+        if (settings.showReverse) LegitimacyReverseSide(title, "", "", "", settings.orientation)
     }
 }
+
 
 @Composable
 private fun CivicDocumentStatusTile(fields: Map<String, String>, documentId: String) {
