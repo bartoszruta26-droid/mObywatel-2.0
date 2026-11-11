@@ -127,6 +127,15 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
             val accountFields = listOf("Nazwa własna rachunku", "Bank / instytucja prowadząca", "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT", "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku", "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi")
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            val brandOwnerLabel = if (entityMode) "Pełna nazwa podmiotu" else "Nazwa Rodu"
+            val brandOwnerIndex = doc.fields.indexOf(brandOwnerLabel)
+            val brandOwner = if (brandOwnerIndex >= 0) local["f$brandOwnerIndex"].orEmpty() else ""
+            AssignedDocumentBrandPreview(
+                documentType = if (entityMode) "entity" else "family",
+                owner = brandOwner,
+                title = "Znak przypisany do dokumentu",
+                subtitle = if (entityMode) "Logo, godło lub herb podmiotu" else "Herb lub znak identyfikacyjny Rodu"
+            )
             Text(doc.note, style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
             if (isBankRegister) {
                 Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Każdy rachunek jest osobnym wpisem, a numer IBAN i dane właściciela są przechowywane w zaszyfrowanym archiwum lokalnym.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1769AA))
@@ -166,7 +175,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             }
             DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
-            })
+            }, documentType = if (entityMode) "entity" else "family", ownerDefault = brandOwner)
             if (preview) Text("PODGLĄD EWIDENCYJNY — dokument prywatny / roboczy. Nie stanowi samodzielnie urzędowego odpisu, wpisu rejestrowego ani poświadczenia.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj dane" else "Podgląd") }
