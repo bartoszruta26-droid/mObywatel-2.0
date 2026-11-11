@@ -82,6 +82,21 @@ internal val documentBrandTargets = listOf(
     "imported" to "Dokumenty własne — pliki",
     "loyalty_cards" to "Karty lojalnościowe",
     "official" to "Pozostałe dokumenty urzędowe",
+    "birth_extract" to "Akt urodzenia",
+    "marriage_extract" to "Akt małżeństwa",
+    "death_extract" to "Odpis aktu zgonu",
+    "large_family" to "Karta Dużej Rodziny",
+    "blood_donor" to "Legitymacja Honorowego Dawcy Krwi",
+    "disability_card" to "Legitymacja osoby z niepełnosprawnością",
+    "vehicle_registration" to "Dowód rejestracyjny pojazdu",
+    "insurance_vehicle" to "Ubezpieczenie OC pojazdu",
+    "insurance_professional" to "Ubezpieczenie OC zawodowe",
+    "insurance_private" to "Ubezpieczenie OC w życiu prywatnym",
+    "insurance_business" to "Ubezpieczenie OC działalności",
+    "criminal_record" to "Zaświadczenie o niekaralności",
+    "mission_travel" to "Dokument podróży służbowej / misyjnej",
+    "ehic" to "Europejska Karta Ubezpieczenia Zdrowotnego",
+    "eu_education" to "Zaświadczenie o zgodności kwalifikacji z UE",
     "profile" to "Dane osobowe i zdjęcie profilowe",
     "disability" to "Orzeczenia i zaświadczenia",
     "loyalty" to "Karty lojalnościowe",
@@ -297,6 +312,21 @@ internal fun AssignedDocumentBrandPreview(documentType: String, owner: String, t
 private fun documentTypeForTitle(title: String): String {
     val value = title.lowercase(Locale.ROOT)
     return when {
+        value.contains("akt urodzenia") -> "birth_extract"
+        value.contains("akt małżeństwa") || value.contains("akt malzenstwa") -> "marriage_extract"
+        value.contains("akt zgonu") || value.contains("odpis aktu zgonu") -> "death_extract"
+        value.contains("karta dużej rodziny") || value.contains("karta duzej rodziny") -> "large_family"
+        value.contains("honorowego dawcy krwi") || value.contains("dawcy krwi") -> "blood_donor"
+        value.contains("legitymacja osoby z niepełnosprawnością") || value.contains("legitymacja osoby z niepelnosprawnoscia") -> "disability_card"
+        value.contains("dowód rejestracyjny") || value.contains("dowod rejestracyjny") -> "vehicle_registration"
+        value.contains("oc pojazdu") -> "insurance_vehicle"
+        value.contains("oc zawod") -> "insurance_professional"
+        value.contains("oc w życiu prywatnym") || value.contains("oc w zyciu prywatnym") -> "insurance_private"
+        value.contains("oc działalności") || value.contains("oc dzialalnosci") -> "insurance_business"
+        value.contains("niekaralności") || value.contains("niekaralnosci") -> "criminal_record"
+        value.contains("podróży służbowej") || value.contains("podrozy sluzbowej") || value.contains("misji międzynarodowej") -> "mission_travel"
+        value.contains("europejska karta ubezpieczenia zdrowotnego") || value.contains("ekuz") -> "ehic"
+        value.contains("zgodności kwalifikacji") || value.contains("zgodnosci kwalifikacji") -> "eu_education"
         value.contains("odpis") && value.contains("rejestr") -> "registry"
         value.contains("spół") || value.contains("spol") || value.contains("firm") || value.contains("przedsięb") || value.contains("przedsieb") -> "business"
         value.contains("fundac") -> "organization_foundation"
