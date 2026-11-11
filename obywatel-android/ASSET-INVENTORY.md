@@ -112,7 +112,7 @@ Zasób godła państwowego powinien pozostać odrębny od autorskiego logo i by�
 
 ## Biblioteka heraldyczna i przypisania znaków do dokumentów
 
-Dodano katalog 14 wbudowanych ilustracji SVG w:
+Dodano katalog 16 wbudowanych ilustracji SVG w:
 `obywatel-android/app/src/main/assets/heraldry/`.
 
 Katalog obejmuje:
@@ -170,3 +170,24 @@ Oba zasoby są dostępne w katalogu identyfikacji dokumentów jako odrębne pozy
 ### Wyniki kontroli istniejących SVG
 
 W pierwotnych 14 ilustracjach wykryto zbędną pionową linię prowadzoną przez środek każdej tarczy. Linia nie wynikała z opisu żadnego herbu i wyglądała jak linia konstrukcyjna. Została usunięta. Pozostałe ścieżki pozostawiono bez zmian; pliki wymagają nadal przeglądu wizualnego w docelowych rozmiarach i kontroli licencyjnej przed zastosowaniem jako znaki historyczne lub instytucjonalne.
+
+
+## Audyt zasobów wektorowych i gałęzi — 11 listopada 2026
+
+Audyt drzewa Git dla `main` potwierdził następujący stan:
+
+- **16 plików SVG Android** w `app/src/main/assets/heraldry/` (14 wcześniejszych herbów i znaków oraz pełny herb biskupi i osobna tarcza).
+- **34 pliki XML Android** zawierające zasoby wektorowe, selektory, warstwy lub konfigurację ikon: `civic_service_illustration.xml`, `empty_documents_illustration.xml`, `ic_launcher_background.xml`, `ic_launcher_foreground.xml`, 11 ikon `mob_*.xml`, 10 ikon `nav_*.xml`, 6 ikon `service_*.xml`, `splash_screen.xml` oraz dwa pliki launchera w `mipmap-anydpi-v26/`.
+- **356 plików SVG iOS** w katalogu `iOS/Sources/Assets.xcassets`, obejmujących ikony usług, dokumentów, nawigacji, statusów, komponentów i ilustracje.
+
+### Wynik porównania gałęzi
+
+Porównano katalogi zasobów gałęzi `backup/main-before-master-sync-2026-11-10`, `ui/compose-visual-refresh-2026-11` i `integration/android-full-feature-set-2026-11` z `main`. Wszystkie znalezione w nich pliki wektorowe i pliki graficzne oznaczone jako ikony/logo mają już odpowiedniki na `main`; porównanie identyfikatorów blobów potwierdziło zgodność zawartości. W tych zakresach nie było brakujących zasobów do ponownego kopiowania.
+
+Gałęzie `feature/heraldic-document-assignments` i `feature/bishop-heraldry-full-and-shield-icons` również nie wymagają ponownego scalania grafik: katalog 16 SVG oraz aktualne mapowanie znaków są już obecne na `main`. Gałąź `feature/heraldic-dignity-specific-assignments` zawiera starszą wersję `DocumentBranding.kt`; aktualny plik na `main` ma szerszą obsługę przypisań i rozpoznawania godności, dlatego nie zastępujemy go starszą implementacją.
+
+### Odseparowane, historyczne szkielety Android
+
+Gałęzie `android-app-skeleton-refactor-8343a` i `refactoring-the-application-skeleton-3dc4f` zawierają dodatkowe XML-y w odrębnym katalogu głównym `app/src/main/res`, bez wspólnej historii z aktualnym projektem `obywatel-android`. Nie zostały scalone wprost, ponieważ reprezentują osobny, starszy szkielet aplikacji. Część ich zasobów ma jawnie tymczasowy charakter: uproszczona grafika orła jest opisana jako przybliżenie do zastąpienia oficjalnym wzorem, a flaga UE używa kół zamiast gwiazd. Nie kopiujemy takich placeholderów do aktywnej aplikacji jako gotowych symboli.
+
+**Wniosek:** zasoby wektorowe obecne w aktywnych gałęziach UI i heraldyki są już na `main`. Dalsze odzyskiwanie wymaga osobnego przeglądu historycznych szkieletów i źródłowych plików graficznych, a nie ponownego scalania tych samych zasobów.
