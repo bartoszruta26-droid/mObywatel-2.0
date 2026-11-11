@@ -652,7 +652,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = showCredentialAppearanceEditor || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
