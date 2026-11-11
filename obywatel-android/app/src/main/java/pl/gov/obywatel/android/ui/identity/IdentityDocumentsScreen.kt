@@ -66,37 +66,73 @@ import java.util.UUID
 private data class Org(val id:String,val name:String,val type:String,val registry:String)
 private data class BrandAsset(val id:String,val orgId:String,val name:String,val category:String,val file:String,val mime:String,val rights:String,val version:Int=1,val createdAt:Long=System.currentTimeMillis())
 
+private fun centralAssetKind(category: String): String = when (category) {
+    "Wzór podpisu" -> "Wzór podpisu odręcznego"
+    "Hologram / zabezpieczenie" -> "Grafika hologramu / zabezpieczenia"
+    "Tło / papier firmowy" -> "Tło dokumentu"
+    "Inne" -> "Załącznik"
+    else -> category
+}
+private fun identityAssetCategory(kind: String): String = when (kind) {
+    "Wzór podpisu odręcznego" -> "Wzór podpisu"
+    "Grafika hologramu / zabezpieczenia" -> "Hologram / zabezpieczenie"
+    "Tło dokumentu" -> "Tło / papier firmowy"
+    "Załącznik", "Załącznik tekstowy", "Certyfikat", "Ikona", "Ikona wektorowa" -> "Inne"
+    else -> kind
+}
+
 private object IdentityStore {
     private const val PREF="owd_identity_v1"
     fun orgs(c:Context):List<Org> = runCatching {
         val a=JSONArray(c.getSharedPreferences(PREF,0).getString("orgs","[]"))
         (0 until a.length()).map { val o=a.getJSONObject(it); Org(o.getString("id"),o.getString("name"),o.getString("type"),o.optString("registry")) }
     }.getOrDefault(emptyList())
-    fun assets(c:Context):List<BrandAsset> = runCatching {
-        val a=JSONArray(c.getSharedPreferences(PREF,0).getString("assets","[]"))
-        (0 until a.length()).map { val o=a.getJSONObject(it); BrandAsset(o.getString("id"),o.getString("org"),o.getString("name"),o.getString("category"),o.getString("file"),o.getString("mime"),o.optString("rights"),o.optInt("version",1),o.optLong("createdAt",0L)) }
-    }.getOrDefault(emptyList())
+    fun assets(c:Context):List<BrandAsset> {
+        val legacy = runCatching {
+            val a=JSONArray(c.getSharedPreferences(PREF,0).getString("assets","[]"))
+            (0 until a.length()).map { val o=a.getJSONObject(it); BrandAsset(o.getString("id"),o.getString("org"),o.getString("name"),o.getString("category"),o.getString("file"),o.getString("mime"),o.optString("rights"),o.optInt("version",1),o.optLong("createdAt",0L)) }
+        }.getOrDefault(emptyList())
+        legacy.forEach { old ->
+            runCatching {
+                if (pl.gov.obywatel.android.DocumentBrandStore.list(c).none { it.id == old.id }) {
+                    val source = File(File(c.filesDir,"owd-brand-assets"), old.file)
+                    if (source.isFile) pl.gov.obywatel.android.DocumentBrandStore.importBytes(
+                        c, old.orgId, centralAssetKind(old.category), old.name, source.readBytes(),
+                        old.rights, old.version, old.createdAt, old.mime, old.id
+                    )
+                }
+            }
+        }
+        val orgIds = orgs(c).map { it.id }.toSet()
+        return pl.gov.obywatel.android.DocumentBrandStore.list(c)
+            .filter { it.owner in orgIds }
+            .map { asset ->
+                BrandAsset(asset.id, asset.owner, asset.label, identityAssetCategory(asset.kind), asset.file,
+                    asset.mimeType.ifBlank { when {
+                        asset.file.endsWith(".svg.enc") -> "image/svg+xml"
+                        asset.file.endsWith(".pdf.enc") -> "application/pdf"
+                        else -> "application/octet-stream"
+                    } }, asset.rights, asset.version, asset.createdAt)
+            }
+    }
     fun saveOrgs(c:Context,items:List<Org>) {
         val a=JSONArray(); items.forEach { a.put(JSONObject().put("id",it.id).put("name",it.name).put("type",it.type).put("registry",it.registry)) }
         check(c.getSharedPreferences(PREF,0).edit().putString("orgs",a.toString()).commit())
     }
-    fun saveAssets(c:Context,items:List<BrandAsset>) {
-        val a=JSONArray(); items.forEach { a.put(JSONObject().put("id",it.id).put("org",it.orgId).put("name",it.name).put("category",it.category).put("file",it.file).put("mime",it.mime).put("rights",it.rights).put("version",it.version).put("createdAt",it.createdAt)) }
-        check(c.getSharedPreferences(PREF,0).edit().putString("assets",a.toString()).commit())
-    }
+    fun saveAssets(c:Context,items:List<BrandAsset>) = Unit
     fun file(c:Context,a:BrandAsset)=File(File(c.filesDir,"owd-brand-assets"),a.file)
 
     fun exportArchive(c: Context): String {
         val prefs = c.getSharedPreferences(PREF, 0)
         val assetItems = JSONArray()
         assets(c).forEach { asset ->
-            val file = file(c, asset)
-            require(file.isFile) { "Brak pliku zasobu identyfikacji: ${asset.name}" }
+            val bytes = pl.gov.obywatel.android.DocumentBrandStore.fileBytes(c, asset.id)
+                ?: error("Brak pliku zasobu identyfikacji: ${asset.name}")
             assetItems.put(JSONObject().put("id", asset.id).put("orgId", asset.orgId)
                 .put("name", asset.name).put("category", asset.category).put("file", asset.file)
                 .put("mime", asset.mime).put("rights", asset.rights).put("version", asset.version)
                 .put("createdAt", asset.createdAt)
-                .put("bytes", java.util.Base64.getEncoder().encodeToString(file.readBytes())))
+                .put("bytes", java.util.Base64.getEncoder().encodeToString(bytes)))
         }
         return JSONObject().put("version", 1)
             .put("orgs", prefs.getString("orgs", "[]"))
@@ -115,30 +151,24 @@ private object IdentityStore {
             val item = orgArray.getJSONObject(i)
             Org(item.getString("id"), item.getString("name"), item.getString("type"), item.optString("registry"))
         }
-        val directory = File(c.filesDir, "owd-brand-assets").apply { mkdirs() }
         val assetArray = root.optJSONArray("assets") ?: JSONArray()
-        val restoredAssets = (0 until assetArray.length()).map { i ->
-            val item = assetArray.getJSONObject(i)
-            val id = item.getString("id")
-            require(id.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu identyfikacji." }
-            val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
-            require(bytes.isNotEmpty() && bytes.size <= 20 * 1024 * 1024) { "Zasób identyfikacji przekracza limit 20 MB." }
-            val mime = item.getString("mime")
-            require(mime in listOf("image/png", "image/jpeg", "image/webp", "image/svg+xml", "application/pdf")) {
-                "Nieobsługiwany typ zasobu identyfikacji."
+        assetArray.let { array ->
+            for (i in 0 until array.length()) {
+                val item = array.getJSONObject(i)
+                val id = item.getString("id")
+                val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
+                val mime = item.getString("mime")
+                require(mime in listOf("image/png", "image/jpeg", "image/webp", "image/svg+xml", "application/pdf")) {
+                    "Nieobsługiwany typ zasobu identyfikacji."
+                }
+                pl.gov.obywatel.android.DocumentBrandStore.importBytes(
+                    c, item.getString("orgId"), centralAssetKind(item.getString("category")),
+                    item.getString("name"), bytes, item.optString("rights"), item.optInt("version", 1),
+                    item.optLong("createdAt", System.currentTimeMillis()), mime, id
+                )
             }
-            val ext = when (mime) {
-                "image/png" -> "png"; "image/jpeg" -> "jpg"; "image/webp" -> "webp"
-                "image/svg+xml" -> "svg"; else -> "pdf"
-            }
-            val fileName = "$id.$ext"
-            File(directory, fileName).writeBytes(bytes)
-            BrandAsset(id, item.getString("orgId"), item.getString("name").take(180),
-                item.getString("category").take(80), fileName, mime, item.optString("rights").take(500),
-                item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()))
         }
         saveOrgs(c, restoredOrgs)
-        saveAssets(c, restoredAssets)
         check(c.getSharedPreferences("owd_identity_signatures", 0).edit()
             .putString("records", root.optString("signatures", "[]")).commit())
         check(c.getSharedPreferences("owd_document_templates", 0).edit()
