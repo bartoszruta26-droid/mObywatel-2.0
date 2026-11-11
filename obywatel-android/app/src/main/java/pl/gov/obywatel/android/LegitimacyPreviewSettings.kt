@@ -554,8 +554,8 @@ internal fun UnifiedCredentialCard(
                 verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
                 LegitimacyHeraldry(settings, documentKey, vertical = true, assetRevision = assetRevision, title = title.uppercase(), subtitle = subtitle)
                 Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (settings.showPhoto) Box(Modifier.width(38.dp)
-                        .height(50.dp)
+                    if (settings.showPhoto) Box(Modifier.width(35.dp)
+                        .height(45.dp)
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center) {
