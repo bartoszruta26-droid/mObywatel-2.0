@@ -76,7 +76,7 @@ private data class SignedPdfRecord(
     val pdfHasSignatureField: Boolean
 )
 
-private object SignedPdfStore {
+internal object SignedPdfStore {
     private const val KEY_ALIAS = "obywatel_signed_pdf_store_key"
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
     private const val META_FILE = "signed-pdf-index.enc"
@@ -172,6 +172,62 @@ private object SignedPdfStore {
         File(directory(context), "$id.signature.enc").delete()
         File(context.cacheDir, "preview-$id.pdf").delete()
         save(context, list(context).filterNot { it.id == id })
+    }
+
+
+    /** Portable backup of original PDF bytes, detached signatures and metadata. */
+    @Synchronized
+    fun exportArchive(context: Context): String {
+        val root = JSONObject().put("version", 1)
+        val items = JSONArray()
+        list(context).forEach { record ->
+            val pdf = File(directory(context), "${record.id}.pdf.enc")
+            require(pdf.isFile) { "Brak pliku PDF dla dokumentu: ${record.name}" }
+            val item = JSONObject()
+                .put("id", record.id).put("name", record.name).put("importedAt", record.importedAt)
+                .put("signatureKind", record.signatureKind).put("signatureFileName", record.signatureFileName)
+                .put("pdfHasSignatureField", record.pdfHasSignatureField)
+                .put("pdf", java.util.Base64.getEncoder().encodeToString(decrypt(pdf.readBytes())))
+            val signature = File(directory(context), "${record.id}.signature.enc")
+            if (signature.isFile) item.put("signature",
+                java.util.Base64.getEncoder().encodeToString(decrypt(signature.readBytes())))
+            items.put(item)
+        }
+        root.put("documents", items)
+        return root.toString()
+    }
+
+    @Synchronized
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja archiwum PDF." }
+        val items = root.optJSONArray("documents") ?: JSONArray()
+        val restored = linkedMapOf<String, SignedPdfRecord>()
+        list(context).forEach { restored[it.id] = it }
+        for (index in 0 until items.length()) {
+            val item = items.getJSONObject(index)
+            val id = item.getString("id")
+            require(id.matches(Regex("[A-Fa-f0-9-]{16,64}"))) { "Nieprawidłowy identyfikator PDF." }
+            val pdf = java.util.Base64.getDecoder().decode(item.getString("pdf"))
+            require(pdf.size in 6..MAX_PDF_BYTES && String(pdf, 0, 5, Charsets.US_ASCII) == "%PDF-") {
+                "Nieprawidłowy plik PDF w archiwum."
+            }
+            File(directory(context), "$id.pdf.enc").writeBytes(encrypt(pdf))
+            val signatureName = item.optString("signatureFileName")
+            if (item.has("signature")) {
+                val signature = java.util.Base64.getDecoder().decode(item.getString("signature"))
+                require(signature.isNotEmpty() && signature.size <= MAX_SIGNATURE_BYTES) {
+                    "Nieprawidłowy plik podpisu w archiwum."
+                }
+                File(directory(context), "$id.signature.enc").writeBytes(encrypt(signature))
+            }
+            restored[id] = SignedPdfRecord(
+                id, item.getString("name").take(180), item.optLong("importedAt", System.currentTimeMillis()),
+                item.optString("signatureKind", "unknown").take(40), signatureName.take(180),
+                item.optBoolean("pdfHasSignatureField", false)
+            )
+        }
+        save(context, restored.values.toList())
     }
 
     private fun save(context: Context, records: List<SignedPdfRecord>) {
