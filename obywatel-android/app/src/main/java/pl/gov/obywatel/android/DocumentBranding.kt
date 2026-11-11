@@ -97,6 +97,8 @@ internal object DocumentBrandStore {
         BrandAsset("builtin_rodu_dab", "Katalog heraldyczny", "Herb", "Herb rodowy — dąb", "builtin:heraldry/herb-rodu-klasyczny.svg"),
         BrandAsset("builtin_rodu_lilia", "Katalog heraldyczny", "Herb", "Herb rodowy — lilia", "builtin:heraldry/herb-rodu-lilia.svg"),
         BrandAsset("builtin_biskupi", "Katalog heraldyczny", "Herb", "Herb biskupi", "builtin:heraldry/herb-biskupi.svg"),
+        BrandAsset("builtin_biskupi_pelny", "Katalog heraldyczny", "Herb", "Herb biskupi — pełny", "builtin:heraldry/herb-biskupi-pelny.svg"),
+        BrandAsset("builtin_tarcza_biskupia", "Katalog heraldyczny", "Herb", "Tarcza herbu biskupiego", "builtin:heraldry/tarcza-herbu-biskupiego.svg"),
         BrandAsset("builtin_arcybiskupi", "Katalog heraldyczny", "Herb", "Herb arcybiskupi", "builtin:heraldry/herb-arcybiskupi.svg"),
         BrandAsset("builtin_kardynalski", "Katalog heraldyczny", "Herb", "Herb kardynalski", "builtin:heraldry/herb-kardynalski.svg"),
         BrandAsset("builtin_opacki", "Katalog heraldyczny", "Herb", "Herb opacki", "builtin:heraldry/herb-opacki.svg"),

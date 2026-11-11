@@ -157,3 +157,16 @@ Grupy przypisań obejmują godności biskupią, arcybiskupią, kardynalską, opa
 ### Rozpoznawanie godności kościelnej
 
 Podgląd dokumentu kościelnego rozpoznaje wpisaną nazwę godności w polu tytułu / urzędu / stopnia święceń. Pozwala to zastosować osobne przypisanie dla biskupa, arcybiskupa, kardynała i opata. Dokumenty misyjne korzystają z przypisania posługi misyjnej, a dokumenty ekumeniczne z ogólnego znaku kościelnego. Rozpoznanie wpływa wyłącznie na prezentację znaku; nie weryfikuje ani nie ustanawia godności.
+
+
+### Herb biskupi przekazany jako wzór graficzny
+
+Dodano dwa osobne, autorskie zasoby SVG:
+- `herb-biskupi-pelny.svg` — pełna kompozycja: zielony galero i chwosty, krzyż, tarcza, dewiza;
+- `tarcza-herbu-biskupiego.svg` — sama niebieska tarcza ze złotym krzyżem głównym i trzema krzyżami jerozolimskimi.
+
+Oba zasoby są dostępne w katalogu identyfikacji dokumentów jako odrębne pozycje typu „Herb”. To wektorowa interpretacja dostarczonego obrazu, a nie potwierdzenie historycznego herbu, urzędu, święceń ani jurysdykcji. Przed użyciem jako oficjalnego herbu kościelnego należy potwierdzić wzór i uprawnienie do jego używania.
+
+### Wyniki kontroli istniejących SVG
+
+W pierwotnych 14 ilustracjach wykryto zbędną pionową linię prowadzoną przez środek każdej tarczy. Linia nie wynikała z opisu żadnego herbu i wyglądała jak linia konstrukcyjna. Została usunięta. Pozostałe ścieżki pozostawiono bez zmian; pliki wymagają nadal przeglądu wizualnego w docelowych rozmiarach i kontroli licencyjnej przed zastosowaniem jako znaki historyczne lub instytucjonalne.
