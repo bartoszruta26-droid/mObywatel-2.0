@@ -47,6 +47,11 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
     "children" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "childRelationship" to "Relacja", "guardianName" to "Opiekun")
     "vaccines" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "vaccineName" to "Preparat", "vaccineDate" to "Data szczepienia", "vaccineDose" to "Dawka")
     "civil" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "civilDocumentNumber" to "Numer dokumentu", "civilIssueDate" to "Data sporządzenia", "civilIssuer" to "Wystawca")
+    "profile" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "contactPhone" to "Telefon", "contactEmail" to "E-mail", "contactOrganization" to "Organizacja")
+    "business", "registry", "entity" -> listOf("entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP", "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant")
+    "organization_family" -> listOf("familyName" to "Nazwa Rodu", "familyRole" to "Miejsce w Rodzie", "familyDocNumber" to "Numer dokumentu", "familyIssueDate" to "Data sporządzenia")
+    "signed_pdf", "imported" -> listOf("documentTitle" to "Nazwa dokumentu", "documentNumber" to "Numer dokumentu", "documentIssuer" to "Wystawca", "documentDate" to "Data dokumentu")
+    "professional_other" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "professionalTitle" to "Tytuł / kwalifikacja", "professionalNumber" to "Numer dokumentu", "professionalIssuer" to "Wystawca", "professionalValidity" to "Termin ważności")
     else -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "documentNumber" to "Numer dokumentu", "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca")
 }) + listOf("details" to "Informacje dodatkowe")
 
@@ -419,8 +424,8 @@ internal fun UnifiedCredentialCard(
                 verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
                 LegitimacyHeraldry(settings, documentKey, vertical = true, title = title.uppercase(), subtitle = subtitle)
                 Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.width(if (horizontal) 48.dp else 58.dp)
-                        .height(if (horizontal) 64.dp else 78.dp)
+                    Box(Modifier.width(if (horizontal) 42.dp else 46.dp)
+                        .height(if (horizontal) 56.dp else 62.dp)
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center) {
