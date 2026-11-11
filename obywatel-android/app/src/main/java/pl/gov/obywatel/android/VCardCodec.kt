@@ -65,7 +65,7 @@ internal object VCardCodec {
     }
 
     fun decode(raw: String): Card {
-        require(raw.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) { "Plik vCard przekracza limit 10 MB." }
+        require(raw.toByteArray(Charsets.UTF_8).size <= 40 * 1024 * 1024) { "Plik vCard przekracza limit 10 MB." }
         val lines = unfold(raw)
         require(lines.size >= 3 && lines.first().equals("BEGIN:VCARD", true) &&
             lines.last().equals("END:VCARD", true)) { "Nieprawidłowa struktura vCard." }
@@ -118,7 +118,7 @@ internal object VCardCodec {
         }
         lines += "END:VCARD"
         val result = fold(lines).joinToString("\r\n") + "\r\n"
-        require(result.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) { "Archiwum przekracza limit 10 MB." }
+        require(result.toByteArray(Charsets.UTF_8).size <= 40 * 1024 * 1024) { "Archiwum przekracza limit 10 MB." }
         return result
     }
 
@@ -130,7 +130,7 @@ internal object VCardCodec {
     fun decodeForImport(raw: String): Map<String, String> {
         val normalized = normalizeLegacyExport(raw)
         runCatching { decodeArchive(normalized) }.getOrNull()?.let { return repairMojibake(it) }
-        require(normalized.toByteArray(Charsets.UTF_8).size <= 10 * 1024 * 1024) {
+        require(normalized.toByteArray(Charsets.UTF_8).size <= 40 * 1024 * 1024) {
             "Plik vCard przekracza limit 10 MB."
         }
         val lines = unfold(normalized)
