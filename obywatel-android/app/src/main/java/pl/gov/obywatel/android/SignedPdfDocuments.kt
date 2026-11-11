@@ -363,7 +363,7 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
                 Text("Strona ${pageIndex + 1}", color = Color(0xFF344054))
                 OutlinedButton(onClick = { pageIndex++ }) { Text("Następna") }
             }
-            OutlinedButton(onClick = { pendingId = selected.id; signaturePicker.launch(arrayOf("application/xml", "text/xml", "application/octet-stream", "*/*")) },
+            if (!readOnly) OutlinedButton(onClick = { pendingId = selected.id; signaturePicker.launch(arrayOf("application/xml", "text/xml", "application/octet-stream", "*/*")) },
                 modifier = Modifier.fillMaxWidth()) { Text(if (selected.signatureFileName.isBlank()) "Dołącz plik podpisu XML/XAdES" else "Zmień dołączony plik podpisu") }
             if (selected.signatureFileName.isNotBlank()) Text("Dołączono: ${selected.signatureFileName}", color = Color(0xFF475467))
             OutlinedButton(onClick = { showSignatureChoice = true; pendingRecord = selected }, modifier = Modifier.fillMaxWidth()) {
