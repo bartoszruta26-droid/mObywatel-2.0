@@ -117,8 +117,8 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "contactPhone" to "Telefon", "contactEmail" to "E-mail", "contactOrganization" to "Organizacja",
         "contactTitle" to "Stanowisko", "contactUrl" to "Strona internetowa", "contactAddress" to "Adres"
     )
-    "birth_extract" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "civilDocumentNumber" to "Numer aktu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
-    "marriage_extract" -> listOf("spouseNames" to "Małżonkowie", "civilDocumentNumber" to "Numer aktu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
+    "birth_extract" -> listOf("civilActType" to "Rodzaj aktu", "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "civilDocumentNumber" to "Numer aktu", "civilExtractType" to "Rodzaj odpisu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
+    "marriage_extract" -> listOf("civilActType" to "Rodzaj aktu", "spouseNames" to "Małżonkowie", "marriageDate" to "Data zawarcia małżeństwa", "civilDocumentNumber" to "Numer aktu", "civilExtractType" to "Rodzaj odpisu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
     "death_extract" -> listOf("deceasedName" to "Osoba zmarła", "deathDate" to "Data zgonu", "civilDocumentNumber" to "Numer aktu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
     "large_family" -> listOf("firstNames" to "Imię i nazwisko", "largeFamilyNumber" to "Numer karty", "largeFamilyType" to "Typ karty", "largeFamilyIssueDate" to "Data wydania", "largeFamilyExpiry" to "Ważna do", "issuer" to "Organ wydający")
     "blood_donor" -> listOf("firstNames" to "Imię i nazwisko", "bloodDonorNumber" to "Numer legitymacji", "bloodDonorTitle" to "Stopień / tytuł", "bloodDonorLitres" to "Liczba oddanych litrów", "bloodDonorIssueDate" to "Data przyznania", "issuer" to "Organ wydający")
