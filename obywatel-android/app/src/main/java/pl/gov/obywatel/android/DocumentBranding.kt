@@ -34,10 +34,25 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 internal data class BrandAsset(val id: String, val owner: String, val kind: String, val label: String, val file: String)
+internal data class BrandAssignment(val documentType: String, val kind: String, val assetId: String)
+
+private val documentBrandTargets = listOf(
+    "identity" to "Dowód tożsamości",
+    "passport" to "Paszport",
+    "parliament" to "Legitymacja poselska",
+    "training" to "Legitymacja uczestnika kursu",
+    "student" to "Legitymacja ucznia / studenta",
+    "church" to "Dokumenty i legitymacje kościelne",
+    "professional" to "Dokumenty kwalifikacji zawodowych",
+    "family" to "Dokumenty rodowe",
+    "entity" to "Dokumenty organizacji i podmiotów",
+    "official" to "Pozostałe dokumenty urzędowe"
+)
 
 internal object DocumentBrandStore {
     private const val ALIAS = "document_brand_assets_aes"
     private const val INDEX = "document-brand-assets.enc"
+    private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
     private val kinds = listOf("Logo", "Godło", "Herb", "Flaga", "Pieczęć", "Wzór podpisu odręcznego", "Tło dokumentu", "Znak wodny", "Grafika hologramu / zabezpieczenia")
     fun assetKinds() = kinds
@@ -70,6 +85,40 @@ internal object DocumentBrandStore {
         assets.forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file) }) }
         File(dir(context), INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
+    @Synchronized fun assignments(context: Context): List<BrandAssignment> = runCatching {
+        val f = File(dir(context), ASSIGNMENTS_INDEX)
+        if (!f.exists()) return emptyList()
+        val a = JSONArray(String(crypt(f.readBytes(), false), Charsets.UTF_8))
+        (0 until a.length()).map { i -> a.getJSONObject(i).let { o ->
+            BrandAssignment(o.getString("documentType"), o.getString("kind"), o.getString("assetId"))
+        } }
+    }.getOrDefault(emptyList())
+    @Synchronized fun assign(context: Context, documentType: String, kind: String, assetId: String) {
+        require(documentBrandTargets.any { it.first == documentType }) { "Nieznany rodzaj dokumentu." }
+        require(kind in kinds) { "Nieznany rodzaj zasobu." }
+        require(list(context).any { it.id == assetId && it.kind == kind }) { "Wybrany zasób nie istnieje lub ma inny rodzaj." }
+        val next = assignments(context).filterNot { it.documentType == documentType && it.kind == kind } +
+            BrandAssignment(documentType, kind, assetId)
+        val a = JSONArray()
+        next.forEach { x -> a.put(JSONObject().put("documentType", x.documentType).put("kind", x.kind).put("assetId", x.assetId)) }
+        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+    }
+    @Synchronized fun unassign(context: Context, documentType: String, kind: String) {
+        val a = JSONArray()
+        assignments(context).filterNot { it.documentType == documentType && it.kind == kind }.forEach { x ->
+            a.put(JSONObject().put("documentType", x.documentType).put("kind", x.kind).put("assetId", x.assetId))
+        }
+        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+    }
+    private fun imageById(context: Context, assetId: String): android.graphics.Bitmap? = runCatching {
+        val asset = list(context).firstOrNull { it.id == assetId } ?: return null
+        BitmapFactory.decodeByteArray(crypt(File(dir(context), asset.file).readBytes(), false), 0,
+            crypt(File(dir(context), asset.file).readBytes(), false).size)
+    }.getOrNull()
+    fun imageForDocument(context: Context, documentType: String, owner: String, kind: String): android.graphics.Bitmap? {
+        val assigned = assignments(context).lastOrNull { it.documentType == documentType && it.kind == kind }
+        return assigned?.let { imageById(context, it.assetId) } ?: image(context, owner, kind)
+    }
     @Synchronized fun import(context: Context, uri: Uri, owner: String, kind: String, label: String) {
         val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
             val out = java.io.ByteArrayOutputStream(); val buffer = ByteArray(8192); var total = 0
@@ -95,6 +144,9 @@ internal object DocumentBrandStore {
 @Composable
 internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
     val context= LocalContext.current
+    var target by remember { mutableStateOf(documentBrandTargets.first().first) }
+    var targetMenuExpanded by remember { mutableStateOf(false) }
+    var assignments by remember { mutableStateOf(DocumentBrandStore.assignments(context)) }
     var owner by remember { mutableStateOf("") }
     var kind by remember { mutableStateOf(DocumentBrandStore.assetKinds().first()) }
     var label by remember { mutableStateOf("") }
@@ -110,6 +162,17 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
         Text("Zasoby identyfikacji dokumentów", style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
         Text("Dodawaj osobne zestawy znaków dla każdego prowadzonego podmiotu, Kościoła, Rodu, firmy lub działalności zawodowej. Pliki są przechowywane lokalnie i szyfrowane.", style=MaterialTheme.typography.bodySmall)
         OutlinedTextField(owner,{owner=it},label={Text("Podmiot / właściciel zestawu")},modifier=Modifier.fillMaxWidth())
+        Text("Przypisanie do dokumentu",fontWeight=FontWeight.SemiBold)
+        Box {
+            OutlinedButton(onClick={targetMenuExpanded=true},modifier=Modifier.fillMaxWidth()) {
+                Text(documentBrandTargets.firstOrNull { it.first==target }?.second ?: target)
+            }
+            DropdownMenu(expanded=targetMenuExpanded,onDismissRequest={targetMenuExpanded=false}) {
+                documentBrandTargets.forEach { (id,title) ->
+                    DropdownMenuItem(text={Text(title)},onClick={target=id;targetMenuExpanded=false})
+                }
+            }
+        }
         Text("Rodzaj zasobu",fontWeight=FontWeight.SemiBold)
         DocumentBrandStore.assetKinds().forEach { k ->
             Row(Modifier.fillMaxWidth().clickable { kind=k }, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -122,12 +185,27 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
         if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA))
         HorizontalDivider()
         Text("Zapisane zasoby",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
+        assignments.forEach { assignment ->
+            val asset = assets.firstOrNull { it.id == assignment.assetId }
+            Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall)
+        }
         assets.forEach { asset ->
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp)) {
                     Text(asset.kind,fontWeight=FontWeight.SemiBold)
                     Text(asset.owner+" · "+asset.label,style=MaterialTheme.typography.bodySmall)
-                    TextButton(onClick={DocumentBrandStore.delete(context,asset.id);assets=DocumentBrandStore.list(context)}) { Text("Usuń zasób") }
+                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick={
+                            runCatching { DocumentBrandStore.assign(context,target,asset.kind,asset.id) }
+                                .onSuccess { assignments=DocumentBrandStore.assignments(context); status="Przypisano ${asset.kind} do wybranego rodzaju dokumentu." }
+                                .onFailure { status="Nie udało się przypisać zasobu: ${it.message}" }
+                        }) { Text("Przypisz do dokumentu") }
+                        TextButton(onClick={
+                            DocumentBrandStore.delete(context,asset.id)
+                            assets=DocumentBrandStore.list(context)
+                            assignments=DocumentBrandStore.assignments(context)
+                        }) { Text("Usuń zasób") }
+                    }
                 }
             }
         }
@@ -136,12 +214,12 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, modifier: Modifier = Modifier) {
+internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, modifier: Modifier = Modifier, documentType: String = "official") {
     val context= LocalContext.current
     var owner by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     val create= rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
-        if(uri!=null) runCatching { DocumentPdfRenderer.write(context,uri,title,owner,values) }
+        if(uri!=null) runCatching { DocumentPdfRenderer.write(context,uri,title,owner,documentType,values) }
             .onSuccess { status="Utworzono PDF. Plik można teraz podpisać obsługiwanym podpisem elektronicznym." }
             .onFailure { status="Eksport PDF nie powiódł się: "+(it.message ?: "błąd") }
     }
@@ -151,15 +229,15 @@ internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, 
 }
 
 private object DocumentPdfRenderer {
-    fun write(context: Context, uri: Uri, title: String, owner: String, values: Map<String,String>) {
+    fun write(context: Context, uri: Uri, title: String, owner: String, documentType: String, values: Map<String,String>) {
         val pdf=PdfDocument()
         val pageW=595; val pageH=842; val margin=48f
         val body=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(35,48,60); textSize=10.5f; typeface=Typeface.create("sans-serif",Typeface.NORMAL) }
         val heading=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(20,45,78); textSize=19f; typeface=Typeface.create("sans-serif",Typeface.BOLD) }
         val small=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(95,108,120); textSize=8f }
         val line=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(210,220,230); strokeWidth=0.7f }
-        val logo=DocumentBrandStore.image(context,owner,"Logo")
-        val crest=DocumentBrandStore.image(context,owner,"Herb") ?: DocumentBrandStore.image(context,owner,"Godło")
+        val logo=DocumentBrandStore.imageForDocument(context,documentType,owner,"Logo")
+        val crest=DocumentBrandStore.imageForDocument(context,documentType,owner,"Herb") ?: DocumentBrandStore.imageForDocument(context,documentType,owner,"Godło")
         val seal=DocumentBrandStore.image(context,owner,"Pieczęć")
         val signature=DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
         val background=DocumentBrandStore.image(context,owner,"Tło dokumentu")
