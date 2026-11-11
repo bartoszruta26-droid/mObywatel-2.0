@@ -1279,6 +1279,7 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
         "Data weryfikacji" to "disabilityExtraVerifiedAt", "Podmiot weryfikujący" to "disabilityExtraVerifiedBy", "Uwagi" to "disabilityExtraNotes"))
 )
 
+
 @Composable
 private fun DocumentDetailsScreen(
     documentId: String,
