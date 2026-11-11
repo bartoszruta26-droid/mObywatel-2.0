@@ -6,6 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
+import java.io.File
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * Minimalny magazyn lokalnych odwołań do plików wybranych przez użytkownika.
@@ -78,20 +82,76 @@ object ImportedDocumentStore {
         }
     }
 
+
+    fun exportArchive(context: Context): String {
+        val items = JSONArray()
+        list(context).forEach { document ->
+            val bytes = context.contentResolver.openInputStream(document.uri)?.use { input ->
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                var total = 0
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    total += count
+                    require(total <= 25 * 1024 * 1024) { "Załącznik przekracza limit 25 MB: ${document.title}" }
+                    output.write(buffer, 0, count)
+                }
+                output.toByteArray()
+            } ?: error("Nie można odczytać załącznika: ${document.title}")
+            items.put(JSONObject().put("title", document.title).put("mimeType", document.mimeType)
+                .put("bytes", java.util.Base64.getEncoder().encodeToString(bytes)))
+        }
+        return JSONObject().put("version", 1).put("documents", items).toString()
+    }
+
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja załączników." }
+        val directory = File(context.filesDir, "imported-documents").apply { mkdirs() }
+        val uris = HashSet(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getStringSet(KEY_URIS, emptySet()) ?: emptySet())
+        val items = root.optJSONArray("documents") ?: JSONArray()
+        for (index in 0 until items.length()) {
+            val item = items.getJSONObject(index)
+            val mime = item.getString("mimeType").lowercase()
+            require(isSupportedDocumentMimeType(mime)) { "Nieobsługiwany typ załącznika: $mime" }
+            val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
+            require(bytes.isNotEmpty() && bytes.size <= 25 * 1024 * 1024) { "Załącznik przekracza limit 25 MB." }
+            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.take(12) ?: "bin"
+            val target = File(directory, "${java.util.UUID.randomUUID()}.$extension")
+            target.writeBytes(bytes)
+            uris.add(Uri.fromFile(target).toString())
+        }
+        check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putStringSet(KEY_URIS, uris).commit()) { "Nie udało się zapisać listy załączników." }
+    }
+
     private fun fromUri(context: Context, uri: Uri): ImportedDocument {
-        require(uri.scheme == "content" && !uri.authority.isNullOrBlank()) {
-            "Dokument musi pochodzić z dostawcy plików systemu Android."
+        val isPrivateFile = uri.scheme == "file"
+        if (isPrivateFile) {
+            val base = File(context.filesDir, "imported-documents").canonicalFile
+            val file = File(uri.path.orEmpty()).canonicalFile
+            require(file.path.startsWith(base.path + File.separator) && file.isFile) {
+                "Odwołanie do załącznika lokalnego jest nieprawidłowe."
+            }
+        } else {
+            require(uri.scheme == "content" && !uri.authority.isNullOrBlank()) {
+                "Dokument musi pochodzić z dostawcy plików systemu Android."
+            }
         }
 
-        val queriedTitle = context.contentResolver.query(
+        val queriedTitle = if (isPrivateFile) null else context.contentResolver.query(
             uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) cursor.getString(0) else null
-        }
+        )?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
         val title = queriedTitle?.trim()?.takeIf { it.isNotEmpty() }
-            ?: uri.lastPathSegment?.trim()?.takeIf { it.isNotEmpty() }
+            ?: uri.lastPathSegment?.substringAfterLast('/')?.trim()?.takeIf { it.isNotEmpty() }
             ?: "Dokument"
-        val mime = context.contentResolver.getType(uri).orEmpty().trim().lowercase()
+        val inferredMime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+            title.substringAfterLast('.', "").lowercase()
+        )
+        val mime = (if (isPrivateFile) inferredMime else context.contentResolver.getType(uri))
+            .orEmpty().trim().lowercase()
         require(isSupportedDocumentMimeType(mime)) {
             "Obsługiwane są pliki PDF, DOCX oraz obrazy rastrowe (JPEG, PNG, WebP, GIF, BMP)."
         }
