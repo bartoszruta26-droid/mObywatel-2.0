@@ -634,8 +634,8 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         OutlinedTextField(label,{label=it},label={Text("Opis / nazwa pliku (opcjonalnie)")},modifier=Modifier.fillMaxWidth())
         Button(onClick={picker.launch(arrayOf("image/png","image/jpeg","image/webp","image/svg+xml"))},enabled=owner.isNotBlank(),modifier=Modifier.fillMaxWidth()) { Text("Wgraj wybrany zasób") }
         if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA))
-        if (fixedTarget != null && fixedTarget in setOf("parliament", "training", "student")) {
-            Text("Ustawienia wyglądu legitymacji", fontWeight=FontWeight.SemiBold)
+        if (fixedTarget != null) {
+            Text("Ustawienia wyglądu i zawartości dokumentu", fontWeight=FontWeight.SemiBold)
             LegitimacyPreviewSettingsPanel(fixedTarget!!, legitimacySettingsState.value) {
                 legitimacySettingsState.value = it
             }
