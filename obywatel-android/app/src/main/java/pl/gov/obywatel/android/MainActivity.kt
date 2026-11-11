@@ -350,10 +350,115 @@ private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bit
     }.getOrNull()
 }
 
+
+@Composable
+private fun ApplicationEntryFlow() {
+    var stage by remember { mutableIntStateOf(0) }
+    var accepted by remember { mutableStateOf(false) }
+    when (stage) {
+        0 -> EntryWelcomeScreen(
+            onStart = { stage = 1 },
+            onSkip = { stage = 2 }
+        )
+        1 -> EntryPreparationScreen(
+            accepted = accepted,
+            onAccepted = { accepted = it },
+            onContinue = { stage = 2 },
+            onBack = { stage = 0 }
+        )
+        2 -> EntryLoginScreen(
+            onDemo = { stage = 3 },
+            onBack = { stage = 1 }
+        )
+        else -> HomeScreen()
+    }
+}
+
+@Composable
+private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().background(AppSurface).padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(Icons.Filled.Shield, contentDescription = null, tint = Blue, modifier = Modifier.size(64.dp))
+        Spacer(Modifier.height(24.dp))
+        Text("Aplikacja Obywatelska", color = Navy, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text("Twoje prywatne miejsce do porządkowania dokumentów, danych i spraw obywatelskich.",
+            color = Muted, style = MaterialTheme.typography.bodyLarge)
+        Spacer(Modifier.height(18.dp))
+        Card(colors = CardDefaults.cardColors(containerColor = White)) {
+            Text("Niezależny projekt obywatelski. Aplikacja nie jest oficjalnym mObywatelem ani systemem administracji publicznej.",
+                Modifier.padding(16.dp), color = Navy, style = MaterialTheme.typography.bodyMedium)
+        }
+        Spacer(Modifier.height(24.dp))
+        Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) { Text("Rozpocznij") }
+        TextButton(onClick = onSkip) { Text("Pomiń wprowadzenie") }
+    }
+}
+
+@Composable
+private fun EntryPreparationScreen(
+    accepted: Boolean,
+    onAccepted: (Boolean) -> Unit,
+    onContinue: () -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        Modifier.fillMaxSize().background(AppSurface).verticalScroll(rememberScrollState()).padding(24.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text("Przygotowanie aplikacji", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Przed rozpoczęciem sprawdź podstawowe informacje dotyczące prywatności i statusu dokumentów.",
+            color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(16.dp))
+        listOf(
+            "Dane są wprowadzane przez użytkownika; aplikacja nie potwierdza ich w rejestrach państwowych.",
+            "Wzory dokumentów i legitymacji mają charakter prywatny i demonstracyjny.",
+            "Nie ma tu aktywnego logowania do rządowego mObywatela ani potwierdzania tożsamości."
+        ).forEach { item ->
+            Card(Modifier.fillMaxWidth().padding(vertical = 5.dp), colors = CardDefaults.cardColors(containerColor = White)) {
+                Text("•  $item", Modifier.padding(14.dp), color = Navy)
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.material3.Checkbox(checked = accepted, onCheckedChange = onAccepted)
+            Text("Zapoznałem się z informacjami o charakterze prototypu.", color = Navy)
+        }
+        Button(onClick = onContinue, enabled = accepted, modifier = Modifier.fillMaxWidth()) { Text("Przejdź do logowania") }
+        TextButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Wstecz") }
+    }
+}
+
+@Composable
+private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().background(AppSurface).padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Blue, modifier = Modifier.size(58.dp))
+        Spacer(Modifier.height(18.dp))
+        Text("Logowanie", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Moduł uwierzytelniania zewnętrznego nie jest jeszcze podłączony. Nie wpisuj tutaj haseł ani danych logowania do usług publicznych.",
+            color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(18.dp))
+        Card(colors = CardDefaults.cardColors(containerColor = White)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Tryb demonstracyjny", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Pozwala otworzyć lokalne funkcje aplikacji. Nie potwierdza tożsamości i nie tworzy konta użytkownika.",
+                    color = Muted, style = MaterialTheme.typography.bodySmall)
+                Button(onClick = onDemo, modifier = Modifier.fillMaxWidth()) { Text("Wejdź w trybie demonstracyjnym") }
+            }
+        }
+        TextButton(onClick = onBack) { Text("Wstecz") }
+    }
+}
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { ObywatelTheme { HomeScreen() } }
+        setContent { ObywatelTheme { ApplicationEntryFlow() } }
     }
 }
 
