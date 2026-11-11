@@ -748,83 +748,225 @@ internal fun DocumentIdentityTemplate(
 
 @Composable
 internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null) {
-    val context= LocalContext.current
+    val context = LocalContext.current
     var assignments by remember { mutableStateOf(DocumentBrandStore.assignments(context)) }
-    var owner by remember { mutableStateOf("") }
-    var kind by remember { mutableStateOf(DocumentBrandStore.assetKinds().first()) }
+    var owner by remember(fixedTarget) {
+        mutableStateOf(if (fixedTarget == null) "Biblioteka użytkownika" else "legitymacja:$fixedTarget")
+    }
+    var kind by remember { mutableStateOf("Fotografia") }
     var label by remember { mutableStateOf("") }
     var assets by remember { mutableStateOf(DocumentBrandStore.list(context)) }
     var status by remember { mutableStateOf("") }
     var assetRevision by remember { mutableIntStateOf(0) }
+    var search by remember { mutableStateOf("") }
+    var kindFilter by remember { mutableStateOf("Wszystkie") }
+    var kindMenuExpanded by remember { mutableStateOf(false) }
+    var uploadKindExpanded by remember { mutableStateOf(false) }
     val legitimacySettingsState = rememberLegitimacyPreviewSettings(fixedTarget ?: "asset-library")
-    val picker= rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if(uri!=null) runCatching { DocumentBrandStore.import(context,uri,owner,kind,label) }
-            .onSuccess { assets=DocumentBrandStore.list(context); status="Zapisano zasób identyfikacji wizualnej." }
-            .onFailure { status="Nie udało się zapisać pliku: "+(it.message ?: "błąd") }
+    val availableKinds = DocumentBrandStore.assetKinds()
+    val filteredAssets = assets.filter { asset ->
+        (kindFilter == "Wszystkie" || asset.kind == kindFilter) &&
+            (search.isBlank() || listOf(asset.label, asset.owner, asset.kind, asset.file)
+                .any { it.contains(search, ignoreCase = true) })
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
-        Text("‹  Powrót", color=Color(0xFF1769AA), modifier=Modifier.clickable(onClick=onBack).padding(vertical=5.dp))
-        Text(if (fixedTarget == null) "Biblioteka zasobów graficznych" else "Wygląd dokumentu: " + (documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget), style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
-        Text(if (fixedTarget == null) "Dodawaj zasoby do biblioteki. Flagi, logo, godła, herby i tła przypisuj wyłącznie w ustawieniach konkretnego dokumentu. Obsługiwane są SVG, PNG, JPEG i WebP; pliki są przechowywane lokalnie i szyfrowane." else "Dodawaj i przypisuj flagi, logo, godła, herby oraz tła wyłącznie dla wybranego dokumentu. Obsługiwane są SVG, PNG, JPEG i WebP; pliki są przechowywane lokalnie i szyfrowane.", style=MaterialTheme.typography.bodySmall)
-        OutlinedTextField(owner,{owner=it},label={Text("Podmiot / właściciel zestawu")},modifier=Modifier.fillMaxWidth())
+
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) runCatching {
+            val targetOwner = owner.trim().ifBlank { "Biblioteka użytkownika" }
+            DocumentBrandStore.import(context, uri, targetOwner, kind, label)
+            assets = DocumentBrandStore.list(context)
+            val imported = assets.lastOrNull { it.owner == targetOwner && it.kind == kind }
+            if (fixedTarget != null && imported != null) {
+                DocumentBrandStore.assign(context, fixedTarget, kind, imported.id)
+                assignments = DocumentBrandStore.assignments(context)
+                assetRevision++
+            }
+            status = if (fixedTarget == null) "Zapisano zasób w bibliotece."
+                else "Zapisano zasób i przypisano go do wybranego dokumentu."
+            label = ""
+        }.onFailure { status = "Nie udało się zapisać pliku: ${it.message ?: "błąd"}" }
+    }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("‹  Powrót", color = Color(0xFF1769AA),
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text(
+            if (fixedTarget == null) "Biblioteka zasobów graficznych"
+            else "Wygląd dokumentu: " + (documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            "Zasoby są uporządkowane według kategorii. Możesz wyszukiwać, podglądać i przypisywać fotografie, flagi, godła, herby, logotypy oraz tła. Pliki są przechowywane lokalnie i szyfrowane.",
+            style = MaterialTheme.typography.bodySmall
+        )
         if (fixedTarget != null) {
-            Text("Dokument",fontWeight=FontWeight.SemiBold)
-            Text(documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget, color=Color(0xFF173B58), fontWeight=FontWeight.Medium)
+            Text("Dokument", fontWeight = FontWeight.SemiBold)
+            Text(documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget,
+                color = Color(0xFF173B58), fontWeight = FontWeight.Medium)
         }
-        Text("Rodzaj zasobu",fontWeight=FontWeight.SemiBold)
-        DocumentBrandStore.assetKinds().forEach { k ->
-            Row(Modifier.fillMaxWidth().clickable { kind=k }, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                RadioButton(selected=kind==k,onClick={kind=k})
-                Text(if (k == "Wzór podpisu odręcznego") "Podpis odręczny" else k, modifier=Modifier.padding(top=12.dp))
+
+        Text("Dodawanie zasobu", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        OutlinedTextField(
+            value = owner,
+            onValueChange = { owner = it },
+            label = { Text("Właściciel / zestaw (opcjonalnie)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Box {
+            OutlinedButton(onClick = { uploadKindExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Rodzaj dodawanego zasobu: ${if (kind == "Wzór podpisu odręcznego") "Podpis odręczny" else kind}")
+            }
+            DropdownMenu(expanded = uploadKindExpanded, onDismissRequest = { uploadKindExpanded = false }) {
+                availableKinds.forEach { assetKind ->
+                    DropdownMenuItem(
+                        text = { Text(if (assetKind == "Wzór podpisu odręcznego") "Podpis odręczny" else assetKind) },
+                        onClick = { kind = assetKind; uploadKindExpanded = false }
+                    )
+                }
             }
         }
-        OutlinedTextField(label,{label=it},label={Text("Opis / nazwa pliku (opcjonalnie)")},modifier=Modifier.fillMaxWidth())
-        Button(onClick={picker.launch(arrayOf("image/png","image/jpeg","image/webp","image/svg+xml"))},enabled=owner.isNotBlank(),modifier=Modifier.fillMaxWidth()) { Text("Wgraj wybrany zasób") }
-        if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA))
+        OutlinedTextField(
+            value = label,
+            onValueChange = { label = it },
+            label = { Text("Opis zasobu (opcjonalnie)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Button(
+            onClick = { picker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Wybierz plik i zapisz zasób") }
+        if (status.isNotBlank()) Text(status, color = Color(0xFF1769AA))
+
         if (fixedTarget != null) {
-            Text("Ustawienia wyglądu i zawartości dokumentu", fontWeight=FontWeight.SemiBold)
-            LegitimacyPreviewSettingsPanel(fixedTarget!!, legitimacySettingsState.value, onChange = {
-                legitimacySettingsState.value = it
-            }, assetRevision = assetRevision)
+            Text("Ustawienia wyglądu i zawartości dokumentu", fontWeight = FontWeight.SemiBold)
+            LegitimacyPreviewSettingsPanel(
+                fixedTarget,
+                legitimacySettingsState.value,
+                onChange = { legitimacySettingsState.value = it },
+                assetRevision = assetRevision
+            )
+            Text("Przypisane zasoby", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            val targetAssignments = assignments.filter { it.documentType == fixedTarget }
+            if (targetAssignments.isEmpty()) {
+                Text("Dokument korzysta obecnie z domyślnych zasobów.", style = MaterialTheme.typography.bodySmall)
+            }
+            targetAssignments.forEach { assignment ->
+                val asset = assets.firstOrNull { it.id == assignment.assetId }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${assignment.kind}: ${asset?.label ?: "brak zasobu"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = {
+                        DocumentBrandStore.unassign(context, assignment.documentType, assignment.kind)
+                        assignments = DocumentBrandStore.assignments(context)
+                        assetRevision++
+                    }) { Text("Odłącz") }
+                }
+            }
         }
+
         HorizontalDivider()
-        Text("Zapisane zasoby",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        if (fixedTarget != null) {
-            assignments.filter { it.documentType == fixedTarget }.forEach { assignment ->
-            val asset = assets.firstOrNull { it.id == assignment.assetId }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
-                Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${if (assignment.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall, modifier=Modifier.weight(1f))
-                TextButton(onClick={ DocumentBrandStore.unassign(context,assignment.documentType,assignment.kind); assignments=DocumentBrandStore.assignments(context); assetRevision++ }) { Text("Odłącz") }
+        Text("Biblioteka zasobów", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        OutlinedTextField(
+            value = search,
+            onValueChange = { search = it },
+            label = { Text("Szukaj po nazwie, właścicielu lub typie") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+        Box {
+            OutlinedButton(onClick = { kindMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Filtr kategorii: $kindFilter")
+            }
+            DropdownMenu(expanded = kindMenuExpanded, onDismissRequest = { kindMenuExpanded = false }) {
+                (listOf("Wszystkie") + availableKinds).forEach { filter ->
+                    DropdownMenuItem(
+                        text = { Text(if (filter == "Wzór podpisu odręcznego") "Podpis odręczny" else filter) },
+                        onClick = { kindFilter = filter; kindMenuExpanded = false }
+                    )
+                }
             }
         }
+        Text("Znalezione zasoby: ${filteredAssets.size}", style = MaterialTheme.typography.labelMedium,
+            color = Color(0xFF667788))
+        if (filteredAssets.isEmpty()) {
+            Text("Brak zasobów spełniających kryteria. Zmień filtr lub dodaj nowy plik.",
+                style = MaterialTheme.typography.bodySmall)
         }
-        assets.forEach { asset ->
-            val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context,asset.id) }
-            Card(Modifier.fillMaxWidth()) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                    if (assetPreview != null) Image(assetPreview.asImageBitmap(), contentDescription=asset.label, modifier=Modifier.size(54.dp), contentScale=ContentScale.Fit)
-                    Column(Modifier.weight(1f), verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                    Text(if (asset.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else asset.kind,fontWeight=FontWeight.SemiBold)
-                    Text(asset.owner+" · "+asset.label,style=MaterialTheme.typography.bodySmall)
-                    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                        if (fixedTarget != null) TextButton(onClick={
-                            runCatching { DocumentBrandStore.assign(context,fixedTarget,asset.kind,asset.id) }
-                                .onSuccess { assignments=DocumentBrandStore.assignments(context); assetRevision++; status="Zapisano zasób dla wybranego dokumentu." }
-                                .onFailure { status="Nie udało się przypisać zasobu: " + (it.message ?: "błąd") }
-                        }) { Text("Ustaw dla tego dokumentu") }
-                        if (asset.file.startsWith("builtin:")) {
-                            Text("Wbudowany SVG", color=Color(0xFF667788), style=MaterialTheme.typography.labelSmall, modifier=Modifier.padding(top=10.dp))
-                        } else TextButton(onClick={
-                            DocumentBrandStore.delete(context,asset.id)
-                            assets=DocumentBrandStore.list(context)
-                            assignments=DocumentBrandStore.assignments(context)
-                        }) { Text("Usuń zasób") }
-                    }
+        filteredAssets.groupBy { it.kind }.forEach { (assetKind, grouped) ->
+            Text(
+                if (assetKind == "Wzór podpisu odręcznego") "Podpisy odręczne" else assetKind,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF173B58)
+            )
+            grouped.forEach { asset ->
+                val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context, asset.id) }
+                Card(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (assetPreview != null) {
+                            Image(
+                                assetPreview.asImageBitmap(),
+                                contentDescription = asset.label,
+                                modifier = Modifier.size(64.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        } else {
+                            Box(Modifier.size(64.dp).background(Color(0xFFF0F3F6)),
+                                contentAlignment = Alignment.Center) {
+                                Text("SVG / plik", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(asset.label, fontWeight = FontWeight.SemiBold)
+                            Text("${asset.owner} · ${asset.kind}", style = MaterialTheme.typography.bodySmall)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (fixedTarget != null) {
+                                    TextButton(onClick = {
+                                        runCatching { DocumentBrandStore.assign(context, fixedTarget, asset.kind, asset.id) }
+                                            .onSuccess {
+                                                assignments = DocumentBrandStore.assignments(context)
+                                                assetRevision++
+                                                status = "Przypisano zasób do dokumentu."
+                                            }
+                                            .onFailure { status = "Nie udało się przypisać zasobu: ${it.message ?: "błąd"}" }
+                                    }) { Text("Przypisz") }
+                                }
+                                if (asset.file.startsWith("builtin:")) {
+                                    Text("Wbudowany", color = Color(0xFF667788),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.padding(top = 10.dp))
+                                } else {
+                                    TextButton(onClick = {
+                                        DocumentBrandStore.delete(context, asset.id)
+                                        assets = DocumentBrandStore.list(context)
+                                        assignments = DocumentBrandStore.assignments(context)
+                                    }) { Text("Usuń") }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        Text("Hologram i znak wodny w eksporcie są elementami graficznymi. Nie stanowią zabezpieczenia antyfałszerskiego ani urzędowego poświadczenia. Wgrywaj wyłącznie znaki, do których używania masz uprawnienie.",style=MaterialTheme.typography.labelSmall,color=Color(0xFF9A5B00))
+        Text(
+            "Hologram i znak wodny są elementami graficznymi. Nie stanowią zabezpieczenia antyfałszerskiego ani urzędowego poświadczenia. Wgrywaj wyłącznie znaki, do których używania masz uprawnienie.",
+            style = MaterialTheme.typography.labelSmall,
+            color = Color(0xFF9A5B00)
+        )
     }
 }
 
