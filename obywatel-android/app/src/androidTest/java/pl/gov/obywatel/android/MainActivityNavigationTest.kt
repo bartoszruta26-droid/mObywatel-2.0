@@ -148,6 +148,6 @@ class MainActivityNavigationTest {
     @Test
     fun qrNavigationRemainsAvailable() {
         selectBottomTab(3)
-        composeRule.onNodeWithText("Skanuj kod QR").assertIsDisplayed()
+        composeRule.onNodeWithText("Obywatelska Wymiana Danych").assertIsDisplayed()
     }
 }
