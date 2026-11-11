@@ -28,6 +28,19 @@ class ImagePreviewSizingTest {
     }
 
     @Test
+    fun handlesMaximumIntegerDimensionsWithoutOverflow() {
+        assertEquals(
+            1 shl 30,
+            calculateInSampleSize(Int.MAX_VALUE, Int.MAX_VALUE, 1)
+        )
+    }
+
+    @Test
+    fun respectsExactMaximumDimensionBoundary() {
+        assertEquals(4, calculateInSampleSize(8192, 4096, 2048))
+    }
+
+    @Test
     fun rejectsInvalidDimensions() {
         assertThrows(IllegalArgumentException::class.java) {
             calculateInSampleSize(0, 100, 2048)
