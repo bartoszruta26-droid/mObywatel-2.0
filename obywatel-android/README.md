@@ -219,6 +219,61 @@ Główne pliki funkcjonalne:
 6. Przed produkcyjnym użyciem należy przeprowadzić audyt bezpieczeństwa, prywatności, uprawnień, szyfrowania, kopii zapasowych, usuwania danych i zgodności prawnej.
 7. Nie umieszczać w repozytorium rzeczywistych danych osobowych, numerów dokumentów, danych zdrowotnych, kluczy ani sekretów.
 
+## Informacje prawne i status zgodności
+
+Aplikacja jest niezależnym projektem obywatelskim. Nazwa „Aplikacja Obywatelska” opisuje jej przeznaczenie i nie oznacza statusu urzędowego. Projekt nie jest oficjalną aplikacją mObywatel, nie jest wydawany ani zatwierdzony przez Ministerstwo Cyfryzacji, Centralny Ośrodek Informatyki lub inny organ administracji publicznej. Nie należy używać oznaczeń ani komunikatów sugerujących takie powiązanie.
+
+### Operator i administrator danych — wymagane uzupełnienie
+
+Przed publicznym udostępnieniem należy jednoznacznie wskazać podmiot odpowiedzialny za dystrybucję i świadczenie usług, jego pełną nazwę, adres i dane kontaktowe. Trzeba również ustalić administratora danych dla każdego procesu przetwarzania, jego dane kontaktowe, ewentualny kontakt do inspektora ochrony danych, cele i podstawy prawne, kategorie danych, odbiorców, okresy przechowywania, transfery poza EOG oraz sposób realizacji praw osób. Tych danych nie wolno zastępować fikcyjnymi danymi ani pozostawiać w formie ogólnego oświadczenia.
+
+Rola administratora zależy od tego, kto faktycznie ustala cele i sposoby przetwarzania. Operator może być administratorem danych związanych z udostępnianiem, utrzymaniem i obsługą aplikacji, a w określonym modelu może działać jako podmiot przetwarzający. Rola użytkownika wobec danych wprowadzanych do prywatnych ewidencji wymaga oceny konkretnego kontekstu; samo korzystanie z aplikacji nie przesądza automatycznie o kwalifikacji prawnej.
+
+### Dane osobowe i szczególne kategorie danych
+
+Aplikacja umożliwia prowadzenie ewidencji zawierających potencjalnie dane identyfikacyjne, rodzinne, edukacyjne, zawodowe, organizacyjne i zdrowotne. Dane o zdrowiu należą do szczególnych kategorii danych z art. 9 RODO. Dane dzieci i informacje dotyczące innych osób wymagają szczególnej ostrożności. Należy wprowadzać wyłącznie dane, do których przetwarzania istnieje odpowiednie uprawnienie i podstawa prawna.
+
+RODO wymaga między innymi przejrzystości, ograniczenia celu, minimalizacji danych, prawidłowości, ograniczenia przechowywania, integralności i poufności oraz rozliczalności. Osobom, których dane dotyczą, przysługują — z uwzględnieniem warunków i wyjątków ustawowych — prawa określone w art. 15–22 RODO, w tym dostęp, sprostowanie, usunięcie, ograniczenie przetwarzania, przenoszenie danych i sprzeciw. Mogą one również wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych.
+
+### Rzeczywiste granice przechowywania i transmisji
+
+Wybrane dane i zasoby są zapisywane lokalnie. Mechanizm AES-GCM opisany w dokumentacji dotyczy zasobów identyfikacji dokumentów i indeksów przypisań; nie jest deklaracją, że wszystkie dane aplikacji są szyfrowane w ten sam sposób. Manifest Androida deklaruje uprawnienie `INTERNET`. Przed wydaniem należy zatem przeprowadzić audyt ruchu sieciowego, bibliotek, dzienników, kopii zapasowych, usług zewnętrznych i odbiorców danych. Nie wolno deklarować, że aplikacja jest całkowicie offline lub że żadne dane nie opuszczają urządzenia bez potwierdzenia testami.
+
+### Usługi drogą elektroniczną i regulamin
+
+Jeżeli operator będzie świadczył usługi drogą elektroniczną, należy ocenić zastosowanie ustawy z 18 lipca 2002 r. o świadczeniu usług drogą elektroniczną, w tym obowiązków informacyjnych z art. 5 oraz obowiązku określenia i udostępnienia regulaminu z art. 8. Regulamin powinien opisywać rzeczywisty zakres usług, warunki techniczne, zasady zawierania i rozwiązywania umów oraz tryb reklamacyjny — w zakresie wymaganym przez aktualne przepisy. Przed uruchomieniem trzeba zweryfikować tekst ustawy wraz z późniejszymi nowelizacjami.
+
+### Dokumenty, podpisy i oznaczenia
+
+Wygenerowany PDF, podgląd legitymacji, wpis w ewidencji, kod QR, herb, godło, logo, pieczęć lub graficzny wzór podpisu nie stanowią same przez się urzędowego poświadczenia, uwierzytelnienia ani dowodu posiadania określonej godności, kwalifikacji, mandatu lub upoważnienia. Kwalifikowany podpis elektroniczny ma skutek prawny równoważny podpisowi własnoręcznemu na zasadach art. 25 rozporządzenia eIDAS. Aplikacja nie świadczy w obecnej wersji usługi kwalifikowanego podpisu ani kwalifikowanej pieczęci elektronicznej.
+
+### Własność intelektualna i symbole
+
+Każdy zasób musi mieć udokumentowane źródło, autora lub podmiot uprawniony, licencję i warunki wykorzystania. Piktogramy pochodzące z zasobów COI zachowują oznaczenie `LicenseRef-COI-MIT-PL`; obowiązuje konieczność przestrzegania warunków tej licencji. Autorskie ilustracje heraldyczne są koncepcjami graficznymi, a nie potwierdzonymi historycznymi herbami lub oficjalnymi znakami. Użytkownik importujący zasób powinien posiadać prawo do jego użycia. Symbole państwowe, herby i znaki instytucji wymagają odrębnej weryfikacji podstawy oraz dopuszczalnego sposobu wykorzystania.
+
+### Wymagane działania przed wydaniem produkcyjnym
+
+1. Wskazać operatora, administratora danych i dane kontaktowe.
+2. Sporządzić mapę przepływów danych oraz rejestr czynności przetwarzania odpowiednio do ról i obowiązków.
+3. Opublikować kompletną politykę prywatności i — gdy jest wymagany — regulamin usługi.
+4. Ustalić podstawy prawne, retencję, odbiorców, transfery i procedury realizacji praw osób.
+5. Przeprowadzić analizę ryzyka, ocenę potrzeby DPIA, testy bezpieczeństwa i audyt transmisji sieciowej.
+6. Zweryfikować licencje, prawa do znaków i legalność wykorzystania każdego oficjalnego symbolu.
+7. Oddzielić dane demonstracyjne, lokalne wpisy użytkownika i dane potwierdzone przez zewnętrznego wystawcę.
+8. Zaktualizować niniejszą informację po każdej istotnej zmianie funkcji, operatora lub przepływu danych.
+
+Ekran „Więcej → Informacje prawne” w aplikacji prezentuje te zasady i ograniczenia. Ma charakter informacyjny. Nie zastępuje indywidualnej informacji o przetwarzaniu danych, polityki prywatności, regulaminu ani audytu prawnego i bezpieczeństwa.
+
+### Źródła urzędowe
+
+- [RODO — rozporządzenie (UE) 2016/679, EUR-Lex](https://eur-lex.europa.eu/eli/reg/2016/679/oj?locale=PL)
+- [Ustawa o świadczeniu usług drogą elektroniczną — ELI](https://eli.gov.pl/api/acts/DU/2024/1513/text.html)
+- [Rozporządzenie eIDAS (UE) nr 910/2014 — EUR-Lex](https://eur-lex.europa.eu/eli/reg/2014/910/oj?locale=PL)
+- [Ustawa o prawie autorskim i prawach pokrewnych — ELI](https://eli.gov.pl/eli/DU/1994/83)
+- [UODO — prawa osób, których dane dotyczą](https://uodo.gov.pl/pl/493/2254)
+
+Stan informacji: 11 listopada 2026 r. Przed wdrożeniem należy sprawdzić aktualne brzmienie aktów prawnych, w tym nowelizacje ogłoszone po tekstach jednolitych.
+
 ## Ograniczenia integracji państwowych
 
 Aplikacja jest niezależną aplikacją obywatelską. Nie należy przedstawiać jej jako oficjalnego klienta administracji publicznej ani jako zamiennika rządowego mObywatela.
