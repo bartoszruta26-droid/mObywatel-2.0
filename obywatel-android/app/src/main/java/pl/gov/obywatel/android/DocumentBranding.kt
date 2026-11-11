@@ -84,7 +84,7 @@ internal object DocumentBrandStore {
     private const val INDEX = "document-brand-assets.enc"
     private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
-    private val kinds = listOf("Fotografia", "Logo", "Godło", "Herb", "Flaga", "Pieczęć", "Podpis odręczny", "Tło dokumentu", "Znak wodny", "Grafika hologramu / zabezpieczenia")
+    private val kinds = listOf("Fotografia", "Logo", "Godło", "Herb", "Flaga", "Pieczęć", "Wzór podpisu odręcznego", "Tło dokumentu", "Znak wodny", "Grafika hologramu / zabezpieczenia")
     fun assetKinds() = kinds
     private fun dir(context: Context) = File(context.noBackupFilesDir, "document-brand-assets").apply { mkdirs() }
     private fun key(): SecretKey {
@@ -604,7 +604,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
         DocumentBrandStore.assetKinds().forEach { k ->
             Row(Modifier.fillMaxWidth().clickable { kind=k }, horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 RadioButton(selected=kind==k,onClick={kind=k})
-                Text(k, modifier=Modifier.padding(top=12.dp))
+                Text(if (k == "Wzór podpisu odręcznego") "Podpis odręczny" else k, modifier=Modifier.padding(top=12.dp))
             }
         }
         OutlinedTextField(label,{label=it},label={Text("Opis / nazwa pliku (opcjonalnie)")},modifier=Modifier.fillMaxWidth())
@@ -675,7 +675,7 @@ private object DocumentPdfRenderer {
         val logo=DocumentBrandStore.imageForDocument(context,documentType,owner,"Logo")
         val crest=DocumentBrandStore.imageForDocument(context,documentType,owner,"Herb") ?: DocumentBrandStore.imageForDocument(context,documentType,owner,"Godło")
         val seal=DocumentBrandStore.image(context,owner,"Pieczęć")
-        val signature=DocumentBrandStore.image(context,owner,"Podpis odręczny")
+        val signature=DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
         val background=DocumentBrandStore.image(context,owner,"Tło dokumentu")
         val watermark=DocumentBrandStore.image(context,owner,"Znak wodny") ?: DocumentBrandStore.image(context,owner,"Grafika hologramu / zabezpieczenia")
         var pageNo=0; var y=0f; var page: PdfDocument.Page?=null
