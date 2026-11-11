@@ -85,7 +85,69 @@ private object IdentityStore {
         check(c.getSharedPreferences(PREF,0).edit().putString("assets",a.toString()).commit())
     }
     fun file(c:Context,a:BrandAsset)=File(File(c.filesDir,"owd-brand-assets"),a.file)
+
+    fun exportArchive(c: Context): String {
+        val prefs = c.getSharedPreferences(PREF, 0)
+        val assetItems = JSONArray()
+        assets(c).forEach { asset ->
+            val file = file(c, asset)
+            require(file.isFile) { "Brak pliku zasobu identyfikacji: ${asset.name}" }
+            assetItems.put(JSONObject().put("id", asset.id).put("orgId", asset.orgId)
+                .put("name", asset.name).put("category", asset.category).put("file", asset.file)
+                .put("mime", asset.mime).put("rights", asset.rights).put("version", asset.version)
+                .put("createdAt", asset.createdAt)
+                .put("bytes", java.util.Base64.getEncoder().encodeToString(file.readBytes())))
+        }
+        return JSONObject().put("version", 1)
+            .put("orgs", prefs.getString("orgs", "[]"))
+            .put("assets", assetItems)
+            .put("signatures", c.getSharedPreferences("owd_identity_signatures", 0).getString("records", "[]"))
+            .put("templates", c.getSharedPreferences("owd_document_templates", 0).getString("templates", "[]"))
+            .toString()
+    }
+
+    fun importArchive(c: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja dokumentów identyfikacji." }
+        val orgsRaw = root.optString("orgs", "[]")
+        val orgArray = JSONArray(orgsRaw)
+        val restoredOrgs = (0 until orgArray.length()).map { i ->
+            val item = orgArray.getJSONObject(i)
+            Org(item.getString("id"), item.getString("name"), item.getString("type"), item.optString("registry"))
+        }
+        val directory = File(c.filesDir, "owd-brand-assets").apply { mkdirs() }
+        val assetArray = root.optJSONArray("assets") ?: JSONArray()
+        val restoredAssets = (0 until assetArray.length()).map { i ->
+            val item = assetArray.getJSONObject(i)
+            val id = item.getString("id")
+            require(id.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu identyfikacji." }
+            val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
+            require(bytes.isNotEmpty() && bytes.size <= 20 * 1024 * 1024) { "Zasób identyfikacji przekracza limit 20 MB." }
+            val mime = item.getString("mime")
+            require(mime in listOf("image/png", "image/jpeg", "image/webp", "image/svg+xml", "application/pdf")) {
+                "Nieobsługiwany typ zasobu identyfikacji."
+            }
+            val ext = when (mime) {
+                "image/png" -> "png"; "image/jpeg" -> "jpg"; "image/webp" -> "webp"
+                "image/svg+xml" -> "svg"; else -> "pdf"
+            }
+            val fileName = "$id.$ext"
+            File(directory, fileName).writeBytes(bytes)
+            BrandAsset(id, item.getString("orgId"), item.getString("name").take(180),
+                item.getString("category").take(80), fileName, mime, item.optString("rights").take(500),
+                item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()))
+        }
+        saveOrgs(c, restoredOrgs)
+        saveAssets(c, restoredAssets)
+        check(c.getSharedPreferences("owd_identity_signatures", 0).edit()
+            .putString("records", root.optString("signatures", "[]")).commit())
+        check(c.getSharedPreferences("owd_document_templates", 0).edit()
+            .putString("templates", root.optString("templates", "[]")).commit())
+    }
 }
+
+internal fun exportIdentityDocumentsArchive(context: Context): String = IdentityStore.exportArchive(context)
+internal fun importIdentityDocumentsArchive(context: Context, raw: String) = IdentityStore.importArchive(context, raw)
 
 private val kinds=listOf("Fundacja","Stowarzyszenie","Podmiot kościelny","Jednostka organizacyjna","Przedsiębiorstwo / spółka","Podmiot rodowy","Działalność osoby fizycznej","Inny")
 private val categories=listOf("Logo","Herb","Godło","Flaga","Pieczęć","Wzór podpisu","Hologram / zabezpieczenie","Znak wodny","Tło / papier firmowy","Inne")
