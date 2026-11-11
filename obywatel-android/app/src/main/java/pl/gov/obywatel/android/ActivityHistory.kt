@@ -94,6 +94,34 @@ internal object ActivityHistoryStore {
         }
     }.getOrDefault(emptyList())
 
+
+    @Synchronized
+    fun exportArchive(context: Context): String {
+        val items = JSONArray()
+        load(context).forEach { entry ->
+            items.put(JSONObject().put("id", entry.id).put("timestamp", entry.timestamp)
+                .put("category", entry.category).put("action", entry.action).put("details", entry.details))
+        }
+        return JSONObject().put("version", 1).put("entries", items).toString()
+    }
+
+    @Synchronized
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja historii aktywności." }
+        val items = root.optJSONArray("entries") ?: JSONArray()
+        val merged = load(context).associateBy { it.id }.toMutableMap()
+        for (i in 0 until items.length()) {
+            val item = items.getJSONObject(i)
+            val id = item.getString("id")
+            require(id.matches(Regex("[A-Fa-f0-9-]{16,64}"))) { "Nieprawidłowy identyfikator wpisu historii." }
+            merged[id] = ActivityHistoryEntry(id, item.optLong("timestamp", 0L),
+                item.optString("category").take(60), item.optString("action").take(160),
+                item.optString("details").take(500))
+        }
+        save(context, merged.values.sortedByDescending { it.timestamp }.take(300))
+    }
+
     @Synchronized
     fun clear(context: Context) {
         File(context.noBackupFilesDir, FILE_NAME).delete()
@@ -134,6 +162,9 @@ internal object ActivityHistoryStore {
         return generator.generateKey()
     }
 }
+
+internal fun exportActivityHistoryArchive(context: Context): String = ActivityHistoryStore.exportArchive(context)
+internal fun importActivityHistoryArchive(context: Context, raw: String) = ActivityHistoryStore.importArchive(context, raw)
 
 @Composable
 internal fun ActivityHistoryScreen(onBack: () -> Unit) {
