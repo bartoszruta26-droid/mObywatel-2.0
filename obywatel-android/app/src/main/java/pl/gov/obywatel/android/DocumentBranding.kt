@@ -465,6 +465,24 @@ private fun defaultDocumentBackground(context: Context, title: String): Bitmap? 
     return BitmapFactory.decodeResource(context.resources, resourceId)
 }
 
+private fun decodeCredentialPhoto(encoded: String?): Bitmap? = runCatching {
+    val source = encoded?.trim().orEmpty()
+    if (source.isBlank()) return null
+    val payload = source.substringAfter("base64,", source)
+        .filterNot(Char::isWhitespace)
+    val bytes = android.util.Base64.decode(payload, android.util.Base64.DEFAULT)
+    require(bytes.isNotEmpty() && bytes.size <= 5 * 1024 * 1024)
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+    var sample = 1
+    while (bounds.outWidth / sample > 900 || bounds.outHeight / sample > 900) sample *= 2
+    BitmapFactory.decodeByteArray(
+        bytes, 0, bytes.size,
+        BitmapFactory.Options().apply { inSampleSize = sample }
+    )
+}.getOrNull()
+
 private fun createDocumentQr(payload: String): Bitmap? = runCatching {
     val hints = mapOf(
         EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
@@ -492,8 +510,9 @@ internal fun DocumentIdentityTemplate(
 ) {
     val context = LocalContext.current
     val settings = rememberLegitimacyPreviewSettings(documentType).value
-    val photo = remember(owner, photoOverride, assetRevision) {
-        photoOverride ?: DocumentBrandStore.image(context, owner, "Fotografia")
+    val photo = remember(owner, photoOverride, assetRevision, values["photo"]) {
+        photoOverride ?: decodeCredentialPhoto(values["photo"])
+            ?: DocumentBrandStore.image(context, owner, "Fotografia")
     }
     val fieldOptions = credentialFieldOptions(documentType)
     fun stableFieldKey(label: String): String {
@@ -664,11 +683,11 @@ internal fun DocumentIdentityTemplate(
             value.contains("rachun") || value.contains("iban") -> "accountNumber"
             value.contains("szczep") || value.contains("preparat") -> "vaccineName"
             value.contains("tytuł") -> "professionalTitle"
-            else -> "details"
+            else -> "custom:$label"
         }
     }
     val optionLabels = fieldOptions.toMap()
-    val cardFields = values.entries.filter { it.value.isNotBlank() }.map { (key, value) ->
+    val cardFields = values.entries.filter { it.value.isNotBlank() && it.key !in setOf("photo", "photoBase64") }.map { (key, value) ->
         val stableKey = stableFieldKey(key)
         Triple(stableKey, optionLabels[stableKey] ?: key, value)
     }
@@ -703,6 +722,10 @@ internal fun DocumentIdentityTemplate(
             settings = settings,
             photo = photo
         )
+    }
+    // Status ważności jest zawsze nad kodem QR, zgodnie z układem legitymacji.
+    CredentialValidityTile(valid)
+    if (settings.showCard) {
         if (showReverse || settings.showReverse) {
             LegitimacyReverseSide(
                 title = "$title — rewers",
@@ -714,11 +737,10 @@ internal fun DocumentIdentityTemplate(
         } else if (qrBitmap != null) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR dokumentu",
-                    modifier = Modifier.size(112.dp))
+                    modifier = Modifier.size(176.dp))
             }
         }
     }
-    CredentialValidityTile(valid)
 }
 
 @Composable
