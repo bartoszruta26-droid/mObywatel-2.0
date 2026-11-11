@@ -123,7 +123,7 @@ internal object FamilyEntityDocumentStore {
             val item = root.getJSONObject(documentId)
             val fields = linkedMapOf<String, String>()
             item.keys().forEach { key ->
-                require(key.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowa nazwa pola dokumentu." }
+                require(key.isNotBlank() && key.length <= 256) { "Nieprawidłowa nazwa pola dokumentu." }
                 fields[key] = item.getString(key)
             }
             restored[documentId] = fields
