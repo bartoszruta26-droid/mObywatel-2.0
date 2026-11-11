@@ -227,7 +227,7 @@ internal object DocumentBrandStore {
         val bytes = if (asset.file.startsWith("builtin:")) {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
         } else crypt(File(dir(context),asset.file).readBytes(),false)
-        decodeImage(context, bytes)
+        decodeImage(bytes)
     }.getOrNull()
     @Synchronized fun delete(context: Context, id: String) {
         val old=list(context)
