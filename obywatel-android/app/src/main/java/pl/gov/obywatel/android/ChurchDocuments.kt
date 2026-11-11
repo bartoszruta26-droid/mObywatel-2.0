@@ -150,11 +150,11 @@ internal object ChurchDocumentStore {
 }
 
 @Composable
-internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
+internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var records by remember { mutableStateOf(ChurchDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
-    var preview by remember { mutableStateOf(false) }
+    var preview by remember { mutableStateOf(readOnly) }
     var message by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color = Color(0xFF1769AA), modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
@@ -165,7 +165,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
                 Text(section, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF173B58))
                 docs.forEach { doc ->
                     val filled = records[doc.id].orEmpty().values.any { it.isNotBlank() }
-                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id; preview = false }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id; preview = readOnly }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
                         Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column(Modifier.weight(1f)) {
                                 Text(doc.title, fontWeight = FontWeight.SemiBold, color = Color(0xFF173B58))
@@ -231,12 +231,17 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
                 if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
             }, documentType = brandDocumentType, ownerDefault = churchOwner)
             if (preview) Text("PODGLĄD EWIDENCYJNY — status dokumentu zależy od właściwego wystawcy, podpisu, pieczęci i kompetencji.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj" else "Podgląd") }
-                if (!preview) Button(onClick = {
-                    runCatching { ChurchDocumentStore.save(context, records + (doc.id to local)); records = ChurchDocumentStore.load(context); message = "Zapisano dane lokalnie." }
-                        .onFailure { message = "Błąd zapisu: ${it.message}" }
-                }, modifier = Modifier.weight(1f)) { Text("Zapisz") }
+            if (!readOnly) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj" else "Podgląd") }
+                    if (!preview) Button(onClick = {
+                        runCatching { ChurchDocumentStore.save(context, records + (doc.id to local)); records = ChurchDocumentStore.load(context); message = "Zapisano dane lokalnie." }
+                            .onFailure { message = "Błąd zapisu: ${it.message}" }
+                    }, modifier = Modifier.weight(1f)) { Text("Zapisz") }
+                }
+            } else {
+                Text("Widok tylko do odczytu. Edycja dokumentów jest dostępna w Więcej → Ustawienia.",
+                    color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
             }
             if (message.isNotBlank()) Text(message, color = Color(0xFF1769AA), style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = { selected = null; message = "" }) { Text("Wróć do katalogu") }
