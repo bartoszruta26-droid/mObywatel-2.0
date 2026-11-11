@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+# SPDX-License-Identifier: CC0-1.0
+name: Python regression tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "organize_files.py"
+      - "clean_line_numbers.py"
+      - "tests/**"
+      - ".github/workflows/python-regression.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "organize_files.py"
+      - "clean_line_numbers.py"
+      - "tests/**"
+      - ".github/workflows/python-regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Python regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Compile Python sources
+        run: python -m py_compile organize_files.py clean_line_numbers.py
