@@ -1280,7 +1280,6 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
 )
 
 @Composable
-@Composable
 private fun DocumentDetailsScreen(
     documentId: String,
     onBack: () -> Unit,
