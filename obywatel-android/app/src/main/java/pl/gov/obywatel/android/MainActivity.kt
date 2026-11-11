@@ -3295,6 +3295,7 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
     val context = LocalContext.current
     val backgroundBitmap = remember(settings.backgroundAssetId, documentKey, student) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, "legitimacy:$documentKey", "Tło dokumentu")
             ?: BitmapFactory.decodeResource(context.resources, if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe)
     }
     val photoBitmap = remember(photoBase64) {
@@ -3446,6 +3447,7 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
     val context = LocalContext.current
     val backgroundBitmap = remember(settings.backgroundAssetId, documentKey) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, "legitimacy:$documentKey", "Tło dokumentu")
             ?: BitmapFactory.decodeResource(context.resources, R.drawable.tlo_legitymacji_szare)
     }
     val photoBase64 = fields["photo"].orEmpty()
