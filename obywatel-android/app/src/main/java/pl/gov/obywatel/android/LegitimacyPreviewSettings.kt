@@ -306,24 +306,24 @@ internal fun LegitimacyReverseSide(title: String, issuer: String, number: String
         }.getOrNull()
     }
     Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
+        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(Modifier.fillMaxSize().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("REWERS", fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
-                Text(title, fontWeight = FontWeight.SemiBold)
-                HorizontalDivider()
-                Text("Wystawca: ${issuer.ifBlank { "Nie wskazano" }}")
-                Text("Numer dokumentu: ${number.ifBlank { "—" }}")
-                Text("Termin ważności: ${validity.ifBlank { "Nie określono" }}")
-                Spacer(Modifier.weight(1f))
-                Text("Kod demonstracyjny — nie potwierdza autentyczności ani ważności dokumentu.", style = MaterialTheme.typography.labelSmall)
-            }
+        Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("REWERS", fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
+            Text(title, fontWeight = FontWeight.SemiBold)
+            HorizontalDivider()
+            Text("Wystawca: ${issuer.ifBlank { "Nie wskazano" }}")
+            Text("Numer dokumentu: ${number.ifBlank { "—" }}")
+            Text("Termin ważności: ${validity.ifBlank { "Nie określono" }}")
+            Spacer(Modifier.weight(1f))
             if (qrBitmap != null) {
-                Image(qrBitmap.asImageBitmap(), contentDescription = "Demonstracyjny kod QR rewersu", modifier = Modifier.size(104.dp))
+                Image(qrBitmap.asImageBitmap(), contentDescription = "Demonstracyjny kod QR rewersu",
+                    modifier = Modifier.size(112.dp).align(Alignment.CenterHorizontally))
             }
+            Text("Kod demonstracyjny — nie potwierdza autentyczności ani ważności dokumentu.",
+                style = MaterialTheme.typography.labelSmall)
         }
     }
 }
