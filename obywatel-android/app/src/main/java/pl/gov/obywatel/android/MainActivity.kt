@@ -141,53 +141,73 @@ import pl.gov.obywatel.android.ui.services.PublicServicesScreen
 import kotlinx.coroutines.delay
 
 @Composable
-private fun GeneralDocumentOcrEditor(
-    categoryId: String,
-    fields: MutableMap<String, String>,
-    context: Context,
-    saveMessage: (String) -> Unit
-) {
+private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<String, String>, context: Context, saveMessage: (String) -> Unit) {
     var processing by remember { mutableStateOf(false) }
-    val key = "${categoryId}OcrText"
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) {
-            processing = true
-            // ML Kit odczytuje obraz bezpośrednio z URI. Nie tworzymy kopii pliku w pamięci aplikacji.
-            runCatching { InputImage.fromFilePath(context, uri) }
-                .onSuccess { image ->
-                    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-                    recognizer.process(image)
-                        .addOnSuccessListener { result ->
-                            fields[key] = result.text
-                            saveMessage("OCR zakończony. Zweryfikuj tekst i ręcznie przenieś właściwe dane do pól dokumentu.")
-                        }
-                        .addOnFailureListener { saveMessage("OCR nie powiódł się: ${it.localizedMessage ?: "błąd odczytu"}") }
-                        .addOnCompleteListener { recognizer.close(); processing = false }
+    var recognizedText by remember { mutableStateOf(fields["\${categoryId}OcrText"].orEmpty()) }
+    var mappedCount by remember { mutableIntStateOf(0) }
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    val key = "\${categoryId}OcrText"
+    fun recognize(uri: Uri) {
+        processing = true
+        runCatching { InputImage.fromFilePath(context, uri) }.onSuccess { image ->
+            val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+            recognizer.process(image).addOnSuccessListener { result ->
+                val raw = result.text.trim()
+                recognizedText = raw
+                fields[key] = raw
+                val suggestions = DocumentOcrParser.extract(categoryId, raw)
+                var applied = 0
+                suggestions.forEach { (field, value) ->
+                    if (value.isNotBlank() && fields[field].isNullOrBlank()) { fields[field] = value; applied++ }
                 }
-                .onFailure {
+                mappedCount = applied
+                saveMessage(if (raw.isBlank()) "Nie wykryto tekstu. Zrób wyraźniejsze zdjęcie, wypełniając kadr dokumentem."
+                    else "OCR rozpoznał tekst i zaproponował uzupełnienie $applied pól. Sprawdź każdą wartość przed zapisaniem.")
+            }.addOnFailureListener { saveMessage("OCR nie powiódł się: \${it.localizedMessage ?: "błąd odczytu"}") }
+                .addOnCompleteListener {
+                    recognizer.close()
                     processing = false
-                    saveMessage("Nie można otworzyć obrazu: ${it.localizedMessage ?: "błąd pliku"}")
+                    pendingCameraUri?.let { runCatching { context.contentResolver.delete(it, null, null) }; pendingCameraUri = null }
                 }
+        }.onFailure {
+            processing = false
+            pendingCameraUri?.let { runCatching { context.contentResolver.delete(it, null, null) }; pendingCameraUri = null }
+            saveMessage("Nie można otworzyć obrazu: \${it.localizedMessage ?: "błąd pliku"}")
+        }
+    }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri -> if (uri != null) recognize(uri) }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
+        val uri = pendingCameraUri
+        if (captured && uri != null) recognize(uri) else {
+            uri?.let { runCatching { context.contentResolver.delete(it, null, null) } }
+            pendingCameraUri = null
+            saveMessage("Robienie zdjęcia anulowano.")
         }
     }
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Odczyt tekstu dokumentu (OCR)", color = Navy, fontWeight = FontWeight.Bold)
-            Text("Dotyczy zdjęć i skanów dowodów, paszportów, legitymacji, orzeczeń i zaświadczeń. Obraz jest przetwarzany z URI w pamięci; aplikacja zapisuje wyłącznie rozpoznany tekst po zatwierdzeniu formularza. OCR nie weryfikuje autentyczności dokumentu.",
+            Text("Odczyt dokumentu przez OCR", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Zrób zdjęcie aparatem albo wybierz skan. Aplikacja rozpozna tekst i zaproponuje wartości w odpowiednich polach. Pełny odczyt pozostaje dostępny do kontroli. OCR nie potwierdza autentyczności dokumentu.",
                 color = Muted, style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(onClick = { picker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
-                Text("Wybierz zdjęcie lub skan do OCR")
+            OutlinedButton(onClick = {
+                runCatching {
+                    val file = File.createTempFile("document-ocr-", ".jpg", context.cacheDir)
+                    androidx.core.content.FileProvider.getUriForFile(context, "\${context.packageName}.ocrfiles", file)
+                }.onSuccess { pendingCameraUri = it; camera.launch(it) }
+                    .onFailure { saveMessage("Nie można uruchomić aparatu: \${it.localizedMessage ?: "błąd przygotowania zdjęcia"}") }
+            }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Zrób zdjęcie aparatem") }
+            OutlinedButton(onClick = { picker.launch("image/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) {
+                Text("Wybierz zdjęcie lub skan")
             }
-            if (processing) Text("Rozpoznawanie tekstu…", color = Blue)
-            val recognized = fields[key].orEmpty()
-            if (recognized.isNotBlank()) {
-                Text("Rozpoznany tekst — sprawdź i popraw", color = Navy, fontWeight = FontWeight.SemiBold)
-                Text(recognized, color = Muted, style = MaterialTheme.typography.bodySmall)
+            if (processing) Text("Rozpoznawanie tekstu i dopasowywanie pól…", color = Blue)
+            if (mappedCount > 0) Text("Wstępnie uzupełniono $mappedCount pustych pól", color = Blue, fontWeight = FontWeight.SemiBold)
+            if (recognizedText.isNotBlank()) {
+                Text("Pełny tekst rozpoznany — sprawdź", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text(recognizedText, color = Muted, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
 }
-
 @Composable
 private fun LoyaltyCardsEditor(
     fields: MutableMap<String, String>,
