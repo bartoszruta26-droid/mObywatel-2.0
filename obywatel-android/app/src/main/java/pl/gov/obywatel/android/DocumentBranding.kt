@@ -228,7 +228,8 @@ internal object DocumentBrandStore {
                     "herald" in lower || "coat_of_arms" in lower || "herb" in lower -> "Herb"
                     "eagle" in lower || "emblem" in lower || "godlo" in lower -> "Godło"
                     "logo" in lower -> "Logo"
-                    lower.startsWith("ic_") || lower.startsWith("icon_") || lower.startsWith("mob_") -> "Ikona"
+                    lower.startsWith("lib_ic_") || lower.startsWith("ic_") || lower.startsWith("icon_") -> "Ikona wektorowa"
+                    lower.startsWith("mob_") -> "Ikona"
                     else -> "Ikona"
                 }
                 field.getInt(null)
