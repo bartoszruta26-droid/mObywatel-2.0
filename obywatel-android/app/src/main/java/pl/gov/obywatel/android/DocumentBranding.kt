@@ -605,7 +605,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color=Color(0xFF1769AA), modifier=Modifier.clickable(onClick=onBack).padding(vertical=5.dp))
         Text(if (fixedTarget == null) "Biblioteka zasobów graficznych" else "Wygląd dokumentu: " + (documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget), style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
-        Text("Dodawaj osobne zestawy znaków dla każdego podmiotu, Rodu, Kościoła i zawodu. Możesz przypisywać logo, godło i herb do dokumentów oraz godności. Obsługiwane są SVG, PNG, JPEG i WebP; pliki są przechowywane lokalnie i szyfrowane.", style=MaterialTheme.typography.bodySmall)
+        Text(if (fixedTarget == null) "Dodawaj zasoby do biblioteki. Flagi, logo, godła, herby i tła przypisuj wyłącznie w ustawieniach konkretnego dokumentu. Obsługiwane są SVG, PNG, JPEG i WebP; pliki są przechowywane lokalnie i szyfrowane." else "Dodawaj i przypisuj flagi, logo, godła, herby oraz tła wyłącznie dla wybranego dokumentu. Obsługiwane są SVG, PNG, JPEG i WebP; pliki są przechowywane lokalnie i szyfrowane.", style=MaterialTheme.typography.bodySmall)
         OutlinedTextField(owner,{owner=it},label={Text("Podmiot / właściciel zestawu")},modifier=Modifier.fillMaxWidth())
         if (fixedTarget != null) {
             Text("Dokument",fontWeight=FontWeight.SemiBold)
@@ -629,12 +629,14 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         }
         HorizontalDivider()
         Text("Zapisane zasoby",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        assignments.filter { fixedTarget == null || it.documentType == fixedTarget }.forEach { assignment ->
+        if (fixedTarget != null) {
+            assignments.filter { it.documentType == fixedTarget }.forEach { assignment ->
             val asset = assets.firstOrNull { it.id == assignment.assetId }
             Row(Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
                 Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${if (assignment.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall, modifier=Modifier.weight(1f))
                 TextButton(onClick={ DocumentBrandStore.unassign(context,assignment.documentType,assignment.kind); assignments=DocumentBrandStore.assignments(context) }) { Text("Odłącz") }
             }
+        }
         }
         assets.forEach { asset ->
             val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context,asset.id) }
