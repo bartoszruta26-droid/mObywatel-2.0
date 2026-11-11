@@ -241,15 +241,15 @@ internal object LegitimacyPreviewSettingsStore {
                 is Set<*> -> "a:" + org.json.JSONArray(value.filterIsInstance<String>()).toString()
                 else -> null
             }
-            encoded?.let { "credentialSetting_$key" to it }
+            encoded?.let { "cs_$key" to it }
         }.toMap()
     }
 
     /** Restores only recognized credential-setting values; unrelated profile fields are untouched. */
     fun importAll(context: Context, values: Map<String, String>) {
         val editor = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-        values.filterKeys { it.startsWith("credentialSetting_") }.forEach { (archiveKey, encoded) ->
-            val key = archiveKey.removePrefix("credentialSetting_")
+        values.filterKeys { it.startsWith("cs_") }.forEach { (archiveKey, encoded) ->
+            val key = archiveKey.removePrefix("cs_")
             require(key.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowy klucz ustawienia legitymacji." }
             when {
                 encoded.startsWith("b:") -> editor.putBoolean(key, encoded.removePrefix("b:").toBooleanStrict())
