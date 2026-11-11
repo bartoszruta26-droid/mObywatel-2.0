@@ -5,12 +5,13 @@ package pl.gov.obywatel.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Paleta prototypu inspirowana neutralnym, urzędowym interfejsem; do czasu walidacji assetów publicznego design systemu.
-val Navy = Color(0xFF102B46)
-val Blue = Color(0xFF075DA8)
-val BlueLight = Color(0xFFE8F2FA)
-val Surface = Color(0xFFF3F6F9)
-val Ink = Color(0xFF162B40)
-val Muted = Color(0xFF607487)
+// Jasna, chłodna paleta portfela obywatelskiego: błękitne akcenty,
+// neutralne tło i białe powierzchnie. Identyfikacja marki pozostaje odrębna.
+val Navy = Color(0xFF123B65)
+val Blue = Color(0xFF0757A6)
+val BlueLight = Color(0xFFE8F1FB)
+val Surface = Color(0xFFF3F5FA)
+val Ink = Color(0xFF172B3D)
+val Muted = Color(0xFF64748B)
 val White = Color(0xFFFFFFFF)
-val Border = Color(0xFFDCE5EC)
+val Border = Color(0xFFE1E8F0)
