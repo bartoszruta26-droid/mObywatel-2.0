@@ -3264,6 +3264,11 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
     val documentKey = if (student) "student" else "training"
     val settingsState = rememberLegitimacyPreviewSettings(documentKey)
     val settings = settingsState.value
+    val context = LocalContext.current
+    val backgroundBitmap = remember(settings.backgroundAssetId, documentKey, student) {
+        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: BitmapFactory.decodeResource(context.resources, if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe)
+    }
     val photoBitmap = remember(photoBase64) {
         runCatching {
             if (photoBase64.isBlank()) null else {
@@ -3311,9 +3316,9 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Box(Modifier.fillMaxSize()) {
-                Image(
-                    painter = painterResource(if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe),
-                    contentDescription = null,
+                if (backgroundBitmap != null) Image(
+                    backgroundBitmap.asImageBitmap(),
+                    contentDescription = "Tło legitymacji",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
                     alpha = 0.52f
@@ -3411,6 +3416,11 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
     val documentKey = "parliament"
     val settingsState = rememberLegitimacyPreviewSettings(documentKey)
     val settings = settingsState.value
+    val context = LocalContext.current
+    val backgroundBitmap = remember(settings.backgroundAssetId, documentKey) {
+        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: BitmapFactory.decodeResource(context.resources, R.drawable.tlo_legitymacji_szare)
+    }
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
@@ -3448,9 +3458,9 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Box(Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(R.drawable.tlo_legitymacji_szare),
-                contentDescription = null,
+            if (backgroundBitmap != null) Image(
+                backgroundBitmap.asImageBitmap(),
+                contentDescription = "Tło legitymacji poselskiej",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
                 alpha = 0.46f
