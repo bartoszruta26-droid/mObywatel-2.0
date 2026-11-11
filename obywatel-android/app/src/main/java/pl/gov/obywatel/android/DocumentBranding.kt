@@ -621,6 +621,7 @@ internal fun DocumentIdentityTemplate(
                 "blood_donor" -> "bloodDonorIssueDate"
                 "disability_card" -> "disabilityCardIssueDate"
                 "ehic" -> "ehicIssueDate"
+                "eu_education" -> "educationIssueDate"
                 "criminal_record" -> "criminalRecordIssueDate"
                 "church" -> "churchIssueDate"
                 else -> if (documentType.startsWith("church")) "churchIssueDate" else "issueDate"
