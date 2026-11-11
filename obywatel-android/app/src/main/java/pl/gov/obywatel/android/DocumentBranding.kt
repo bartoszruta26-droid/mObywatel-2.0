@@ -191,6 +191,7 @@ internal object DocumentBrandStore {
         }
         return assigned?.let { imageById(context, it.assetId) } ?: image(context, owner, kind)
     }
+    fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
     private fun decodeImage(context: Context, bytes: ByteArray): android.graphics.Bitmap {
         BitmapFactory.decodeByteArray(bytes,0,bytes.size)?.let { return it }
         val svg = com.caverock.androidsvg.SVG.getFromString(String(bytes, Charsets.UTF_8))
@@ -269,7 +270,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color=Color(0xFF1769AA), modifier=Modifier.clickable(onClick=onBack).padding(vertical=5.dp))
         Text("Zasoby identyfikacji dokumentów", style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
-        Text("Dodawaj osobne zestawy znaków dla każdego prowadzonego podmiotu, Kościoła, Rodu, firmy lub działalności zawodowej. Pliki są przechowywane lokalnie i szyfrowane.", style=MaterialTheme.typography.bodySmall)
+        Text("Dodawaj osobne zestawy znaków dla każdego podmiotu, Rodu, Kościoła i zawodu. Możesz przypisywać logo, godło i herb do dokumentów oraz godności. Obsługiwane są SVG, PNG, JPEG i WebP; pliki są przechowywane lokalnie i szyfrowane.", style=MaterialTheme.typography.bodySmall)
         OutlinedTextField(owner,{owner=it},label={Text("Podmiot / właściciel zestawu")},modifier=Modifier.fillMaxWidth())
         Text("Przypisanie do dokumentu",fontWeight=FontWeight.SemiBold)
         Box {
@@ -296,11 +297,17 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
         Text("Zapisane zasoby",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
         assignments.forEach { assignment ->
             val asset = assets.firstOrNull { it.id == assignment.assetId }
-            Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
+                Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall, modifier=Modifier.weight(1f))
+                TextButton(onClick={ DocumentBrandStore.unassign(context,assignment.documentType,assignment.kind); assignments=DocumentBrandStore.assignments(context) }) { Text("Odłącz") }
+            }
         }
         assets.forEach { asset ->
+            val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context,asset.id) }
             Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(12.dp)) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                    if (assetPreview != null) Image(assetPreview.asImageBitmap(), contentDescription=asset.label, modifier=Modifier.size(54.dp), contentScale=ContentScale.Fit)
+                    Column(Modifier.weight(1f), verticalArrangement=Arrangement.spacedBy(4.dp)) {
                     Text(asset.kind,fontWeight=FontWeight.SemiBold)
                     Text(asset.owner+" · "+asset.label,style=MaterialTheme.typography.bodySmall)
                     Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -316,6 +323,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
                             assets=DocumentBrandStore.list(context)
                             assignments=DocumentBrandStore.assignments(context)
                         }) { Text("Usuń zasób") }
+                    }
                     }
                 }
             }
