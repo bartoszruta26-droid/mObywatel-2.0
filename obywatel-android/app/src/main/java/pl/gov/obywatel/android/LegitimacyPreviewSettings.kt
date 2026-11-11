@@ -3,7 +3,12 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -262,20 +267,43 @@ internal fun LegitimacyHeraldry(settings: LegitimacyPreviewSettings, documentKey
 
 @Composable
 internal fun LegitimacyReverseSide(title: String, issuer: String, number: String, validity: String) {
+    val payload = remember(title, issuer, number, validity) {
+        "OWD-DEMO|${title.take(80)}|${number.take(48)}|${validity.take(32)}"
+    }
+    val qrBitmap = remember(payload) {
+        runCatching {
+            val hints = mapOf(
+                EncodeHintType.ERROR_CORCTION to ErrorCorrectionLevel.M,
+                EncodeHintType.CHARACTER_SET to "UTF-8",
+                EncodeHintType.MARGIN to 1
+            )
+            val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, 240, 240, hints)
+            Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+                    bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+            }
+        }.getOrNull()
+    }
     Card(
         modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("REWERS", fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
-            Text(title, fontWeight = FontWeight.SemiBold)
-            HorizontalDivider()
-            Text("Wystawca: ${issuer.ifBlank { "Nie wskazano" }}")
-            Text("Numer dokumentu: ${number.ifBlank { "—" }}")
-            Text("Termin ważności: ${validity.ifBlank { "Nie określono" }}")
-            Spacer(Modifier.weight(1f))
-            Text("Strona informacyjna wzoru — dane wymagają potwierdzenia przez właściwego wystawcę.", style = MaterialTheme.typography.labelSmall)
+        Row(Modifier.fillMaxSize().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("REWERS", fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
+                Text(title, fontWeight = FontWeight.SemiBold)
+                HorizontalDivider()
+                Text("Wystawca: ${issuer.ifBlank { "Nie wskazano" }}")
+                Text("Numer dokumentu: ${number.ifBlank { "—" }}")
+                Text("Termin ważności: ${validity.ifBlank { "Nie określono" }}")
+                Spacer(Modifier.weight(1f))
+                Text("Kod demonstracyjny — nie potwierdza autentyczności ani ważności dokumentu.", style = MaterialTheme.typography.labelSmall)
+            }
+            if (qrBitmap != null) {
+                Image(qrBitmap.asImageBitmap(), contentDescription = "Demonstracyjny kod QR rewersu", modifier = Modifier.size(104.dp))
+            }
         }
     }
 }
