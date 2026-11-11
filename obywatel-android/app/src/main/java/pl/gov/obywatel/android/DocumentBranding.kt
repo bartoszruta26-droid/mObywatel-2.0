@@ -51,7 +51,7 @@ import javax.crypto.spec.GCMParameterSpec
 
 internal data class BrandAsset(
     val id: String, val owner: String, val kind: String, val label: String, val file: String,
-    val rights: String = "", val version: Int = 1, val createdAt: Long = 0L
+    val rights: String = "", val version: Int = 1, val createdAt: Long = 0L, val mimeType: String = ""
 )
 internal data class BrandAssignment(val documentType: String, val kind: String, val assetId: String)
 
@@ -196,7 +196,7 @@ internal object DocumentBrandStore {
                 val a = JSONArray(String(crypt(f.readBytes(), false), Charsets.UTF_8))
                 (0 until a.length()).map { i -> a.getJSONObject(i).let { o ->
                     BrandAsset(o.getString("id"), o.getString("owner"), o.getString("kind"), o.getString("label"), o.getString("file"),
-                        o.optString("rights"), o.optInt("version", 1), o.optLong("createdAt", 0L))
+                        o.optString("rights"), o.optInt("version", 1), o.optLong("createdAt", 0L), o.optString("mimeType"))
                 } }
             }
         }.getOrDefault(emptyList())
@@ -205,7 +205,7 @@ internal object DocumentBrandStore {
     private fun save(context: Context, assets: List<BrandAsset>) {
         val a = JSONArray()
         assets.filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
-            .forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file); put("rights",x.rights); put("version",x.version); put("createdAt",x.createdAt) }) }
+            .forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file); put("rights",x.rights); put("version",x.version); put("createdAt",x.createdAt); put("mimeType",x.mimeType) }) }
         File(dir(context), INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
     @Synchronized fun assignments(context: Context): List<BrandAssignment> = runCatching {
@@ -319,7 +319,8 @@ internal object DocumentBrandStore {
                 .put("id", asset.id).put("owner", asset.owner).put("kind", asset.kind)
                 .put("label", asset.label)
                 .put("bytes", java.util.Base64.getEncoder().encodeToString(bytes))
-                .put("rights", asset.rights).put("version", asset.version).put("createdAt", asset.createdAt))
+                .put("rights", asset.rights).put("version", asset.version).put("createdAt", asset.createdAt)
+                .put("mimeType", asset.mimeType))
         }
         val assigned = JSONArray()
         assignments(context).forEach { item ->
@@ -360,7 +361,8 @@ internal object DocumentBrandStore {
             File(dir(context), file).writeBytes(crypt(bytes, true))
             restored[id] = BrandAsset(id, item.optString("owner").take(120), kind,
                 item.optString("label").take(180), file, item.optString("rights").take(500),
-                item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()))
+                item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()),
+                item.optString("mimeType").take(120))
         }
         save(context, restored.values.toList())
         val validIds = restored.keys
@@ -400,7 +402,7 @@ internal object DocumentBrandStore {
     @Synchronized
     fun importBytes(
         context: Context, owner: String, kind: String, label: String, bytes: ByteArray,
-        rights: String = "", version: Int = 1, createdAt: Long = System.currentTimeMillis(),
+        rights: String = "", version: Int = 1, createdAt: Long = System.currentTimeMillis(), mimeType: String = "",
         assetId: String = UUID.randomUUID().toString()
     ): BrandAsset {
         require(kind in kinds) { "Nieznany rodzaj zasobu." }
@@ -418,7 +420,7 @@ internal object DocumentBrandStore {
         val file = assetId + extension
         File(dir(context), file).writeBytes(crypt(bytes, true))
         val asset = BrandAsset(assetId, owner.trim(), kind, label.trim().ifBlank { kind }, file,
-            rights.take(500), version.coerceAtLeast(1), createdAt)
+            rights.take(500), version.coerceAtLeast(1), createdAt, mimeType.take(120))
         save(context, list(context).filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
             .filterNot { it.id == assetId } + asset)
         return asset
@@ -432,19 +434,8 @@ internal object DocumentBrandStore {
         } ?: error("Nie można odczytać pliku.")
         require(bytes.isNotEmpty()) { "Wybrany zasób jest pusty." }
         if (kind in imageKinds) decodeImage(bytes).recycle()
-        val header = String(bytes, 0, minOf(bytes.size, 512), Charsets.UTF_8)
-        val isSvg = header.contains("<svg", ignoreCase = true)
-        val extension = when {
-            isSvg -> ".svg.enc"
-            kind == "Certyfikat" && header.startsWith("-----BEGIN CERTIFICATE") -> ".pem.enc"
-            kind == "Certyfikat" -> ".cer.enc"
-            kind == "Załącznik tekstowy" -> ".txt.enc"
-            kind == "Załącznik" -> ".bin.enc"
-            else -> ".asset.enc"
-        }
-        val id=UUID.randomUUID().toString(); val file=id+extension
-        File(dir(context),file).writeBytes(crypt(bytes,true))
-        save(context,list(context).filterNot { it.file.startsWith("builtin:") }+BrandAsset(id,owner.trim(),kind,label.trim().ifBlank { kind },file))
+        val mime = context.contentResolver.getType(uri).orEmpty()
+        importBytes(context, owner, kind, label, bytes, mimeType = mime)
     }
     fun image(context: Context, owner: String, kind: String) : android.graphics.Bitmap? = runCatching {
         val asset=list(context).lastOrNull { it.owner.equals(owner,true) && it.kind==kind } ?: return null
