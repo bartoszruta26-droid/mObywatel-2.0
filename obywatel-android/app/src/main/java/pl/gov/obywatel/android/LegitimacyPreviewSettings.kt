@@ -166,6 +166,7 @@ private object LegitimacyPreviewSettingsStore {
 
     fun load(context: Context, key: String): LegitimacyPreviewSettings {
         val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val storedVisibleFields = p.getStringSet("${key}_visible_fields", emptySet())?.toSet().orEmpty()
         return LegitimacyPreviewSettings(
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
@@ -176,8 +177,8 @@ private object LegitimacyPreviewSettingsStore {
             crestCaption = p.getString("${key}_caption", "").orEmpty(),
             captionPosition = p.getString("${key}_caption_position", "Pod herbem").orEmpty(),
             orientation = p.getString("${key}_orientation", "PIONOWA").orEmpty(),
-            visibleFields = p.getStringSet("${key}_visible_fields", emptySet())?.toSet().orEmpty(),
-            visibleFieldsConfigured = p.getBoolean("${key}_visible_fields_configured", false),
+            visibleFields = storedVisibleFields,
+            visibleFieldsConfigured = p.getBoolean("${key}_visible_fields_configured", storedVisibleFields.isNotEmpty()),
             showPhoto = p.getBoolean("${key}_show_photo", true),
             showFlag = p.getBoolean("${key}_show_flag", true),
             showCrest = p.getBoolean("${key}_show_crest", true),
