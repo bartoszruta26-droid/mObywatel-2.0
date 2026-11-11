@@ -124,7 +124,7 @@ object ImportedDocumentStore {
             require(isSupportedDocumentMimeType(mime)) { "Nieobsługiwany typ załącznika: $mime" }
             val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
             require(bytes.isNotEmpty() && bytes.size <= 25 * 1024 * 1024) { "Załącznik przekracza limit 25 MB." }
-            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.take(12) ?: "bin"
+            val extension = when (mime) {\n                "application/vnd.oasis.opendocument.text" -> "odt"\n                "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "docx"\n                "application/pdf" -> "pdf"\n                else -> MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.take(12) ?: "bin"\n            }
             val target = File(directory, "${java.util.UUID.randomUUID()}.$extension")
             target.writeBytes(bytes)
             uris.add(Uri.fromFile(target).toString())

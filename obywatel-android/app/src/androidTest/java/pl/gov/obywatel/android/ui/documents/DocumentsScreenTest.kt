@@ -39,7 +39,7 @@ class DocumentsScreenTest {
         }
         composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
         composeRule.onNodeWithText("Brak dokumentów. Dodaj plik, aby rozpocząć.").assertIsDisplayed()
-        composeRule.onNodeWithText("Dodaj PDF, DOCX lub obraz").assertIsEnabled()
+        composeRule.onNodeWithText("Dodaj PDF, DOCX, ODT lub obraz").assertIsEnabled()
     }
 
     @Test
