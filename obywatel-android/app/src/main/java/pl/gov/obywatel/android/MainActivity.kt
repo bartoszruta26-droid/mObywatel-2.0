@@ -1896,6 +1896,10 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         "Środowisko" to "Informacje środowiskowe i lokalne materiały edukacyjne.",
         "Pozostałe" to "Katalog dodatkowych modułów i informacji."
     )
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalCredentialFieldVisibility provides if (categoryId == "all") null
+            else CredentialFieldVisibilityBinding(credentialKey, appearance, fields)
+    ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2497,6 +2501,13 @@ private fun ReadOnlyAdditionalInformationSection(fields: Map<String, String>, pr
     }
 }
 
+private data class CredentialFieldVisibilityBinding(
+    val documentKey: String,
+    val settings: MutableState<LegitimacyPreviewSettings>,
+    val fields: MutableMap<String, String>
+)
+private val LocalCredentialFieldVisibility = androidx.compose.runtime.compositionLocalOf<CredentialFieldVisibilityBinding?> { null }
+
 @Composable
 private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) {
     val context = LocalContext.current
@@ -2518,6 +2529,19 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         "passport" -> "Dane paszportowe"
         else -> "Wszystkie dane i dokumenty"
     }
+    val credentialKey = when (categoryId) {
+        "identity_card" -> "identity"
+        "profile" -> "profile"
+        "family" -> "family"
+        "parliament" -> "parliament"
+        "training" -> "training"
+        "student" -> "student"
+        "disability" -> "disability"
+        "passport" -> "passport"
+        "loyalty_cards" -> "loyalty_cards"
+        else -> categoryId
+    }
+    val appearance = rememberLegitimacyPreviewSettings(credentialKey)
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             runCatching {
@@ -2997,19 +3021,6 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             }
         }
         if (categoryId != "all") {
-            val credentialKey = when (categoryId) {
-                "identity_card" -> "identity"
-                "profile" -> "profile"
-                "family" -> "family"
-                "parliament" -> "parliament"
-                "training" -> "training"
-                "student" -> "student"
-                "disability" -> "disability"
-                "passport" -> "passport"
-                "loyalty_cards" -> "loyalty_cards"
-                else -> categoryId
-            }
-            val appearance = rememberLegitimacyPreviewSettings(credentialKey)
             Text("Wygląd i układ tego dokumentu", color = Navy, fontWeight = FontWeight.Bold)
             LegitimacyPreviewSettingsPanel(
                 documentKey = credentialKey,
@@ -3023,6 +3034,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(Modifier.height(12.dp))
+    }
     }
 }
 
@@ -3448,14 +3460,37 @@ private fun AdditionalInformationSection(
 
 @Composable
 private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane") {
-    OutlinedTextField(
-        value = fields[key] ?: "",
-        onValueChange = { fields[key] = it },
-        modifier = Modifier.fillMaxWidth(),
-        label = { Text(label) },
-        placeholder = { Text(placeholder) },
-        singleLine = true
-    )
+    val binding = LocalCredentialFieldVisibility.current
+    val settings = binding?.settings?.value
+    val checked = settings?.let { !it.visibleFieldsConfigured || key in it.visibleFields } ?: true
+    val context = LocalContext.current
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(
+            value = fields[key] ?: "",
+            onValueChange = { fields[key] = it },
+            modifier = Modifier.weight(1f),
+            label = { Text(label) },
+            placeholder = { Text(placeholder) },
+            singleLine = true
+        )
+        if (binding != null && binding.documentKey.isNotBlank()) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = { selected ->
+                    val current = if (settings?.visibleFieldsConfigured == true) settings.visibleFields
+                        else (binding.fields.keys + credentialFieldOptions(binding.documentKey).map { it.first }).toSet()
+                    val next = if (selected) current + key else current - key
+                    val updated = (settings ?: LegitimacyPreviewSettings()).copy(
+                        visibleFields = next,
+                        visibleFieldsConfigured = true
+                    )
+                    LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
+                    binding.settings.value = updated
+                }
+            )
+        }
+    }
 }
 
 private object DemoIdentityStore {
