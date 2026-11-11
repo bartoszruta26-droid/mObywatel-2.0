@@ -471,108 +471,58 @@ internal fun LegitimacyHeraldry(
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
     }
     val horizontal = settings.orientation == "POZIOMA"
-    Row(
+    Column(
         Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(if (horizontal) 2.dp else 3.dp)
     ) {
+        // Jedna flaga zajmuje osobny górny wiersz. Godło znajduje się pod nią,
+        // a dwurzędowy nagłówek jest ustawiony obok godła, nie obok flagi.
         if (settings.showFlag) {
-            val flagModifier = Modifier.size(width = if (horizontal) 34.dp else 42.dp, height = if (horizontal) 18.dp else 22.dp)
-            if (selectedFlag != null) Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu", modifier = flagModifier, contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            else Image(painterResource(R.drawable.institutions_polish_flag), contentDescription = "Flaga dokumentu", modifier = flagModifier, contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            Spacer(Modifier.width(6.dp))
-        }
-        if (settings.showCrest) {
-            if (selectedCrest != null) Image(selectedCrest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu", modifier = Modifier.size(if (horizontal) 32.dp else 40.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            else Image(painterResource(R.drawable.institutions_eagle_emblem), contentDescription = "Godło lub herb dokumentu", modifier = Modifier.size(if (horizontal) 32.dp else 40.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            Spacer(Modifier.width(6.dp))
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(title, fontWeight = FontWeight.ExtraBold, style = if (horizontal) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall, maxLines = if (horizontal) 1 else 2)
-            if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-            if (settings.crestCaption.isNotBlank()) Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-        }
-        if (settings.showLogo && assignedLogo != null) {
-            Spacer(Modifier.width(6.dp))
-            Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy", modifier = Modifier.size(width = if (horizontal) 38.dp else 46.dp, height = if (horizontal) 20.dp else 24.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-        }
-    }
-}
-@Composable
-private fun CredentialFieldValue(item: Triple<String, String, String>) {
-    Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(item.second.uppercase(), style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium, maxLines = 1)
-        Text(item.third.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.SemiBold, maxLines = 2)
-    }
-}
-
-@Composable
-internal fun UnifiedCredentialCard(
-    documentKey: String,
-    title: String,
-    subtitle: String,
-    holderName: String,
-    fields: List<Triple<String, String, String>>,
-    settings: LegitimacyPreviewSettings,
-    photo: Bitmap? = null,
-    fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare,
-    assetRevision: Int = 0
-) {
-    val context = LocalContext.current
-    val horizontal = settings.orientation == "POZIOMA"
-    // Wspólny wzór nie dziedziczy dawnych teł graficznych poszczególnych dokumentów.
-    // Zapobiega to powielaniu flag, godeł i napisów zaszytych w historycznych grafikach.
-    val background = remember(settings.backgroundAssetId, documentKey, assetRevision) {
-        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-            ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
-    }
-    val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter { it.first in settings.visibleFields }
-    Card(
-        Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Box(Modifier.fillMaxSize()) {
-            if (settings.showBackground && background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
-                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
-            Column(Modifier.fillMaxSize().padding(if (horizontal) 8.dp else 11.dp),
-                verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
-                LegitimacyHeraldry(settings, documentKey, vertical = true, assetRevision = assetRevision, title = title.uppercase(), subtitle = subtitle)
-                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (settings.showPhoto) Box(Modifier.width(38.dp)
-                        .height(50.dp)
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center) {
-                        if (photo != null) Image(photo.asImageBitmap(), contentDescription = "Fotografia posiadacza",
-                            modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
-                        else Text("FOTO", style = MaterialTheme.typography.labelSmall)
-                    }
-                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(if (horizontal) 2.dp else 4.dp)) {
-                        Text(holderName.ifBlank { "IMIĘ I NAZWISKO" }, fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall, maxLines = 1)
-                        if (horizontal) {
-                            Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach { CredentialFieldValue(it) }
-                                }
-                                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach { CredentialFieldValue(it) }
-                                }
-                            }
-                        } else {
-                            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                visible.forEach { CredentialFieldValue(it) }
-                            }
-                        }
-                    }
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                val flagModifier = Modifier.size(
+                    width = if (horizontal) 34.dp else 42.dp,
+                    height = if (horizontal) 18.dp else 22.dp
+                )
+                if (selectedFlag != null) {
+                    Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu",
+                        modifier = flagModifier, contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                } else {
+                    Image(painterResource(R.drawable.institutions_polish_flag), contentDescription = "Flaga dokumentu",
+                        modifier = flagModifier, contentScale = androidx.compose.ui.layout.ContentScale.Fit)
                 }
+            }
+        }
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (settings.showCrest) {
+                if (selectedCrest != null) {
+                    Image(selectedCrest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
+                        modifier = Modifier.size(if (horizontal) 32.dp else 40.dp),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                } else {
+                    Image(painterResource(R.drawable.institutions_eagle_emblem), contentDescription = "Godło lub herb dokumentu",
+                        modifier = Modifier.size(if (horizontal) 32.dp else 40.dp),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                }
+                Spacer(Modifier.width(6.dp))
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(title, fontWeight = FontWeight.ExtraBold,
+                    style = if (horizontal) MaterialTheme.typography.labelLarge else MaterialTheme.typography.titleSmall,
+                    maxLines = 2)
+                if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                if (settings.crestCaption.isNotBlank()) Text(settings.crestCaption,
+                    style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            }
+            if (settings.showLogo && assignedLogo != null) {
+                Spacer(Modifier.width(6.dp))
+                Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
+                    modifier = Modifier.size(width = if (horizontal) 38.dp else 46.dp,
+                        height = if (horizontal) 20.dp else 24.dp),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit)
             }
         }
     }
