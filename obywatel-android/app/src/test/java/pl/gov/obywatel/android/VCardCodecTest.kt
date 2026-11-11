@@ -152,7 +152,7 @@ END:VCARD
             "passportNumber" to "PA1234567",
             "trainingCourseName" to "Kurs kwalifikacyjny",
             "cs_identity_orientation" to "s:POZIOMA",
-            "cs_identity_visible_fields" to "a:[\\"firstNames\\",\\"lastName\\",\\"idNumber\\"]",
+            "cs_identity_visible_fields" to """a:["firstNames","lastName","idNumber"]""",
             "dp_identity" to "dashboard"
         )
         assertEquals(fields, VCardCodec.decodeForImport(VCardCodec.encodeArchive(fields)))
