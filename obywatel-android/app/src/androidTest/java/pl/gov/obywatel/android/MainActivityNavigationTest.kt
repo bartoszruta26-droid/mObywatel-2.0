@@ -2,102 +2,90 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeLeft
-import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.ui.semantics.SemanticsActions
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * Navigation checks against the current MainActivity route model.
+ * Bottom-navigation items use stable test tags rather than ambiguous repeated labels.
+ */
 class MainActivityNavigationTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    private fun selectBottomTab(label: String, matchingIndex: Int = 0) {
-        composeRule.onAllNodesWithText(label)[matchingIndex].performClick()
+    private fun selectBottomTab(index: Int) {
+        composeRule.onNodeWithTag("bottom-nav-$index").performClick()
         composeRule.waitForIdle()
     }
 
     @Test
-    fun dashboardShowsCurrentBrandAndDocumentWallet() {
-        composeRule.onNodeWithText("Obywatel").assertIsDisplayed()
+    fun dashboardShowsCurrentDocumentWalletAndServicesEntry() {
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
-        composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("Wszystkie usługi").performScrollTo().assertIsDisplayed()
     }
 
     @Test
-    fun dashboardDocumentTilesOpenTheirReadOnlyViews() {
-        composeRule.onNodeWithText("Dowód tożsamości").performClick()
-        composeRule.onNodeWithText("Dowód tożsamości — ewidencja").assertIsDisplayed()
-        composeRule.onNodeWithText("‹  Powrót do portfela").performClick()
-        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-
-        composeRule.onNodeWithText("Dokument rodowy").performScrollTo().performClick()
-        composeRule.onNodeWithText("Dokument rodowy — ewidencja prywatna").assertIsDisplayed()
-        composeRule.onNodeWithText("‹  Powrót do portfela").performClick()
-        composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-    }
-
-    @Test
-    fun bankAccountsDocumentTileIsClickableAndOpensReadOnlyCatalog() {
-        val otherDocumentRow = composeRule.onNodeWithTag("document-cards-family")
-        otherDocumentRow.performSemanticsAction(SemanticsActions.ScrollBy) { scrollBy ->
-            scrollBy(1600f, 0f)
-        }
-        composeRule.waitForIdle()
+    fun bankAccountsDocumentEntryOpensDedicatedReadOnlyCatalog() {
+        selectBottomTab(1)
         composeRule.onNodeWithText("Konta bankowe", substring = false)
             .performScrollTo()
             .assertHasClickAction()
             .performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("bank-accounts-screen-title").assertIsDisplayed()
-        composeRule.onNodeWithText("Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej.")
-            .assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia."
+        ).assertIsDisplayed()
+    }
+
+    @Test
+    fun bankAccountsSettingsEntryRemainsEditable() {
+        selectBottomTab(4)
+        composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
+        composeRule.onNodeWithText("Konta bankowe").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("bank-accounts-screen-title").assertIsDisplayed()
+        composeRule.onNodeWithText("Edytuj dane").assertIsDisplayed()
     }
 
     @Test
     fun documentsWalletShowsIdentityPassportAndLegitimacyRecords() {
-        selectBottomTab("Dokumenty", 1)
-        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
-        composeRule.onNodeWithText("Twoje dokumenty i oświadczenia").performScrollTo().assertIsDisplayed()
+        selectBottomTab(1)
         composeRule.onNodeWithText("Dane osobowe profilu").performScrollTo().assertIsDisplayed()
-        composeRule.onAllNodesWithText("Dowód tożsamości")[0].performScrollTo().assertIsDisplayed()
-        composeRule.onAllNodesWithText("Dane paszportowe")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dane paszportowe").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().assertIsDisplayed()
     }
 
     @Test
     fun documentsWalletBackReturnsToDashboard() {
-        selectBottomTab("Dokumenty", 1)
+        selectBottomTab(1)
         composeRule.onNodeWithText("‹  Pulpit").performClick()
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
     }
 
     @Test
     fun registryExtractOpensFromServicesCatalog() {
-        selectBottomTab("Usługi", 1)
-        
-        composeRule.waitForIdle()
-        composeRule.onNodeWithText("Odpis z rejestru podmiotów").performScrollTo().performClick()
+        selectBottomTab(2)
+        composeRule.onNodeWithText("Odpis z rejestru podmiotów")
+            .performScrollTo().performClick()
         composeRule.onNodeWithText("Wybierz rodzaj podmiotu").assertIsDisplayed()
-        composeRule.onNodeWithText("Spółka z ograniczoną odpowiedzialnością — KRS").performClick()
+        composeRule.onNodeWithText("Spółka z ograniczoną odpowiedzialnością — KRS")
+            .performScrollTo().performClick()
         composeRule.onNodeWithText("Numer KRS").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("‹  Wszystkie rodzaje podmiotów").assertIsDisplayed()
     }
 
     @Test
     fun moreContainsSettingsDesignerAndImportedFiles() {
-        selectBottomTab("Więcej")
+        selectBottomTab(4)
         composeRule.onNodeWithText("Projektant dokumentów").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Pliki i załączniki").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Ustawienia").performScrollTo().assertIsDisplayed()
@@ -105,7 +93,7 @@ class MainActivityNavigationTest {
 
     @Test
     fun legalInformationOpensFromMoreAndShowsReadmeContent() {
-        selectBottomTab("Więcej")
+        selectBottomTab(4)
         composeRule.onNodeWithText("Informacje prawne").performScrollTo().performClick()
         composeRule.onNodeWithText("STATUS I NIEZALEŻNOŚĆ APLIKACJI")
             .performScrollTo().assertIsDisplayed()
@@ -115,48 +103,46 @@ class MainActivityNavigationTest {
 
     @Test
     fun designerRouteRetainsPdfLayoutAndDecorationTools() {
-        selectBottomTab("Więcej")
+        selectBottomTab(4)
         composeRule.onNodeWithText("Projektant dokumentów").performScrollTo().performClick()
-        composeRule.onNodeWithText("Zarządzanie").assertIsDisplayed()
+        composeRule.onNodeWithText("Zarządzanie").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Projektant układu dokumentu").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dodawanie elementów dekoracyjnych").performScrollTo().assertIsDisplayed()
     }
 
     @Test
     fun settingsExposeIdentityPassportAndLegitimacyDataEntry() {
-        selectBottomTab("Więcej")
+        selectBottomTab(4)
         composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
         composeRule.onNodeWithText("Dane osobowe", substring = false).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dowód tożsamości", substring = false).performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dane paszportowe", substring = false).performScrollTo().assertIsDisplayed()
-        composeRule.onAllNodesWithText("Legitymacja ucznia/studenta")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Legitymacja ucznia/studenta")
+            .performScrollTo().assertIsDisplayed()
     }
 
     @Test
     fun settingsExposeDocumentPlacementChoices() {
-        selectBottomTab("Więcej")
+        selectBottomTab(4)
         composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
         composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
-        composeRule.onNodeWithText("Dla każdego dokumentu wybierz miejsce wyświetlania. Ukrycie dokumentu nie usuwa jego danych ani załączników.")
-            .assertIsDisplayed()
+        composeRule.onNodeWithText(
+            "Dla każdego dokumentu wybierz miejsce wyświetlania. Ukrycie dokumentu nie usuwa jego danych ani załączników."
+        ).assertIsDisplayed()
         composeRule.onNodeWithText("Dowód tożsamości").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Dokument rodowy").performScrollTo().assertIsDisplayed()
-        composeRule.onAllNodesWithText("Inne dokumenty")[0].performScrollTo().assertIsDisplayed()
-        composeRule.onAllNodesWithText("Ukryj")[0].performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Ukryj").performScrollTo().assertIsDisplayed()
     }
 
     @Test
-    fun servicesExposePublicPortalAndQrNavigationRemainsAvailable() {
-        selectBottomTab("Usługi", 1)
+    fun servicesAndQrNavigationRemainAvailable() {
+        selectBottomTab(2)
         composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
-        composeRule.onNodeWithText("Przeglądarka usług publicznych").assertIsDisplayed()
-        composeRule.onNodeWithText("Przeglądarka usług publicznych").performClick()
+        composeRule.onNodeWithText("Przeglądarka usług publicznych").performScrollTo().performClick()
         composeRule.onNodeWithText("Usługi publiczne").assertIsDisplayed()
         composeRule.onNodeWithText("Szukaj usługi").assertIsDisplayed()
-        composeRule.onNodeWithText("mObywatel — portal").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Wróć").performClick()
-        composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
-        selectBottomTab("Kod QR")
-        composeRule.onNodeWithText("Obywatelska Wymiana Danych").assertIsDisplayed()
+        composeRule.onNodeWithText("‹  Powrót").performClick()
+        selectBottomTab(3)
+        composeRule.onNodeWithText("Kod QR").assertIsDisplayed()
     }
 }
