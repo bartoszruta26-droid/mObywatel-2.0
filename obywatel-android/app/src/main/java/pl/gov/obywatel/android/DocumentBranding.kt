@@ -483,16 +483,11 @@ internal fun DocumentIdentityTemplate(
         ).firstNotNullOfOrNull { formatter -> runCatching { java.time.LocalDate.parse(expiry, formatter) }.getOrNull() }
     }.getOrNull()
     val expired = parsedExpiry?.isBefore(java.time.LocalDate.now()) == true
-    val state = when {
-        validity.contains("nieważ", true) || validity.contains("unvalid", true) || expired -> "Dokument nieważny"
-        validity.contains("aktywn", true) || validity.contains("ważny", true) || validity.contains("potwierdz", true) || validity.contains("valid", true) -> "Ważność potwierdzona"
-        else -> "Wymaga weryfikacji"
-    }
-    val stateColor = when (state) {
-        "Ważność potwierdzona" -> Color(0xFFE5F4EA)
-        "Dokument nieważny" -> Color(0xFFFCE8E6)
-        else -> Color(0xFFFFF4D6)
-    }
+    val explicitlyInvalid = validity.contains("nieważ", true) || validity.contains("unvalid", true) ||
+        validity.contains("utrac", true) || validity.contains("zwróc", true) || validity.contains("expired", true) ||
+        validity.contains("invalid", true)
+    val state = if (expired || explicitlyInvalid) "Dokument nieważny" else "Dokument ważny"
+    val stateColor = if (state == "Dokument ważny") Color(0xFFE5F4EA) else Color(0xFFFCE8E6)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Stan na: $now", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
         Box(
@@ -552,12 +547,11 @@ internal fun DocumentIdentityTemplate(
                         Text("Wystawca: " + effectiveOwner.ifBlank { "Nie wskazano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
                         Text("Numer: " + number.ifBlank { "Nie podano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
                         Text("Ważny do: " + expiry.ifBlank { "Nie podano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
-                        Text("Dane demonstracyjne. Kod nie potwierdza autentyczności ani statusu prawnego dokumentu.", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                     }
                     if (qrBitmap != null) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR na rewersie dokumentu", modifier = Modifier.size(104.dp))
-                            Text("KOD DEMONSTRACYJNY", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+
                         }
                     }
                 }
@@ -565,19 +559,14 @@ internal fun DocumentIdentityTemplate(
         }
         Card(colors = CardDefaults.cardColors(containerColor = stateColor)) {
             Text(
-                when (state) {
-                    "Ważność potwierdzona" -> "✓ Ważność potwierdzona"
-                    "Dokument nieważny" -> "✕ Dokument nieważny"
-                    else -> "⚠ Wymaga weryfikacji"
-                },
+                if (state == "Dokument ważny") "Dokument ważny" else "Dokument nieważny",
                 Modifier.padding(12.dp), color = Color(0xFF26384A), fontWeight = FontWeight.Bold
             )
         }
         if (qrBitmap != null) {
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
                 Column(Modifier.fillMaxWidth().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(qrBitmap.asImageBitmap(), contentDescription = "Demonstracyjny kod QR z danymi ewidencyjnymi", modifier = Modifier.size(112.dp))
-                    Text("Kod demonstracyjny — bez funkcji weryfikacji", style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788))
+                    Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR z danymi dokumentu", modifier = Modifier.size(112.dp))
                 }
             }
         }
