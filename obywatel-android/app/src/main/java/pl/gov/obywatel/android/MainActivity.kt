@@ -2045,11 +2045,11 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Odpis z rejestru podmiotów", "Wprowadzanie i aktualizacja danych podmiotów", Icons.Filled.AccountBalance, onEditRegistry)
         ProfileActionCard("Dane osobowe", "Zdjęcie profilowe, dane osoby i rodziców",
             Icons.Filled.AccountCircle, { onEditDocuments("profile") })
-        ProfileActionCard("Dowód tożsamości", "Prywatna ewidencja danych dokumentu tożsamości",
+        ProfileActionCard("Dowód tożsamości", "Dane dokumentu tożsamości",
             Icons.Filled.CreditCard, { onEditDocuments("identity_card") })
-        ProfileActionCard("Dane paszportowe", "Prywatna ewidencja dokumentu paszportowego",
+        ProfileActionCard("Dane paszportowe", "Dane dokumentu podróży",
             Icons.Filled.Public, { onEditDocuments("passport") })
-        ProfileActionCard("Dokument rodowy", "Dane prywatnej ewidencji rodowej",
+        ProfileActionCard("Dokument rodowy", "Dane ewidencji rodowej",
             Icons.Filled.Fingerprint, { onEditDocuments("family") })
         ProfileActionCard("Legitymacja poselska", "Ewidencja danych i źródeł potwierdzenia",
             Icons.Filled.AccountBalance, { onEditDocuments("parliament") })
@@ -2244,7 +2244,7 @@ private fun DocumentsWalletScreen(
         CatalogDocument("civil", "Dokumenty cywilne", "Formularze, oświadczenia i akty cywilne", listOf("Państwowe", "Cywilne", "Rodowe", "Osobiste", "Rejestry"), service = "Formularze dokumentów", icon = Icons.Filled.Description),
         CatalogDocument("business", "Dokumenty firmowe i podmiotowe", "Dane organizacji, firm i jednostek", listOf("Cywilne", "Kościelne", "Rodowe", "Zawodowe", "Rejestry"), service = "Dokumenty rejestru podmiotów", icon = Icons.Filled.Business),
         CatalogDocument("bank_accounts", "Konta bankowe", "Ewidencja rachunków bankowych", listOf("Państwowe", "Cywilne", "Osobiste", "Rejestry"), service = "Konta bankowe", icon = Icons.Filled.Payments),
-        CatalogDocument("vaccines", "Książeczka szczepień WHO", "Prywatna ewidencja szczepień i dawek", listOf("Zdrowotne", "Osobiste", "Rodowe"), service = "eKarta Szczepień", icon = Icons.Filled.HealthAndSafety),
+        CatalogDocument("vaccines", "Książeczka szczepień WHO", "Historia szczepień i dawek", listOf("Zdrowotne", "Osobiste", "Rodowe"), service = "eKarta Szczepień", icon = Icons.Filled.HealthAndSafety),
         CatalogDocument("signed_pdf", "Dokumenty PDF i podpisy", "Pliki PDF, podgląd oraz ewidencja importu podpisanych dokumentów", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty PDF i podpisy elektroniczne", icon = Icons.Filled.PictureAsPdf),
         CatalogDocument("branding", "Zasoby identyfikacji dokumentów", "Flagi, godła, herby, pieczęcie, logo i wzory dokumentów", listOf("Państwowe", "Kościelne", "Rodowe", "Zawodowe", "Rejestry"), service = "Zasoby identyfikacji dokumentów", icon = Icons.Filled.Description),
         CatalogDocument("imported", "Dokumenty własne — pliki", "Importowane pliki PDF, DOCX i obrazy", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty własne — pliki", icon = Icons.Filled.Description),
@@ -2384,7 +2384,7 @@ private fun OwdDocumentArtworkCard(
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Text(
-                    if (privateRecord) "WIDOK INFORMACYJNY • EWIDENCJA PRYWATNA" else "WIDOK INFORMACYJNY • DANE UŻYTKOWNIKA",
+                    if (privateRecord) "WIDOK INFORMACYJNY • WZÓR" else "WIDOK INFORMACYJNY • DANE UŻYTKOWNIKA",
                     color = Muted, style = MaterialTheme.typography.labelSmall
                 )
             }
@@ -2401,7 +2401,7 @@ private fun DocumentDetailsScreen(
     val context = LocalContext.current
     val fields = remember { DemoIdentityStore.load(context) }
     val sections = listOf(
-        Triple("Dane osobowe profilu", "Profil kontaktowy i dane rodzinne — ewidencja prywatna", listOf(
+        Triple("Dane osobowe profilu", "Profil kontaktowy i dane rodzinne", listOf(
             "Telefon" to "contactPhone", "E-mail" to "contactEmail", "Organizacja" to "contactOrganization",
             "Stanowisko" to "contactTitle", "Strona internetowa" to "contactUrl", "Adres kontaktowy" to "contactAddress",
             "Imiona ojca" to "fatherNames", "Nazwisko ojca" to "fatherSurname",
@@ -2419,7 +2419,7 @@ private fun DocumentDetailsScreen(
             "Obywatelstwo" to "passportCitizenship", "Status" to "passportStatus",
             "Państwo wydania" to "passportCountry", "Imiona i nazwisko w dokumencie" to "passportHolderNames", "Miejsce urodzenia" to "passportBirthPlace", "Płeć w dokumencie" to "passportSex", "Data wydania" to "passportIssueDate", "Data ważności" to "passportExpiryDate", "Organ wydający" to "passportIssuer", "Data utraty / unieważnienia" to "passportLossDate"
         )),
-        Triple("Dokument rodowy", "Prywatna karta ewidencji rodowej", listOf(
+        Triple("Dokument rodowy", "Karta ewidencji rodowej", listOf(
             "Numer dokumentu rodowego" to "familyDocNumber", "Nazwa rodu" to "familyName",
             "Linia / gałąź" to "familyLine", "Miejsce w strukturze rodu" to "familyRole",
             "Prowadzący ewidencję" to "familyRegistry", "Data sporządzenia" to "familyIssueDate", "Data przeglądu / aktualizacji" to "familyExpiryDate", "Miejsce prowadzenia ewidencji" to "familyRegistryPlace", "Miejsce zamieszkania — wpis dobrowolny" to "familyResidence", "Linia rodowa ojca" to "familyFatherLine", "Linia rodowa matki" to "familyMotherLine", "Podstawa wpisu" to "familySource", "Uwagi ewidencyjne" to "familyNotes"
@@ -2735,7 +2735,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 OwdDocumentArtworkCard(
                     imageRes = R.drawable.documents_family_record,
                     title = "Dokument rodowy",
-                    subtitle = "Prywatna ewidencja rodowa",
+                    subtitle = "Ewidencja rodowa",
                     holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane posiadacza" },
                     details = "Nr: ${fields["familyDocNumber"].orEmpty().ifBlank { "—" }} • Ród: ${fields["familyName"].orEmpty().ifBlank { "—" }}",
                     privateRecord = true
@@ -2770,14 +2770,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("idLossOrInvalidationDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
                 Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9))) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Status dokumentu prywatnego", color = Color(0xFF805000), fontWeight = FontWeight.Bold)
-                        Text("To prywatna karta danych identyfikacyjnych utworzona przez użytkownika. Nie jest dowodem osobistym wydanym przez państwo, nie potwierdza urzędowo tożsamości i nie zastępuje dokumentu z rejestru państwowego. Wiarygodność wpisów zależy od wskazanego źródła i jego niezależnej weryfikacji.", color = Ink, style = MaterialTheme.typography.bodySmall)
+                        Text("Dane identyfikacyjne i dokumentowe", color = Navy, fontWeight = FontWeight.SemiBold)
+                        Text("Uzupełnij dane zgodnie z dokumentem źródłowym, w tym numer, organ wydający i terminy ważności.", color = Muted, style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 OwdDocumentArtworkCard(
                     imageRes = R.drawable.karta_rodowa_jasna,
                     title = "Karta danych tożsamości",
-                    subtitle = "Prywatna ewidencja danych identyfikacyjnych",
+                    subtitle = "Dane identyfikacyjne",
                     holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane użytkownika" },
                     details = "Nr: ${fields["idNumber"].orEmpty().ifBlank { "—" }}",
                     privateRecord = true
@@ -3018,7 +3018,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 OwdDocumentArtworkCard(
                     imageRes = R.drawable.paszport_rodowy_jasny,
                     title = "Dane paszportowe",
-                    subtitle = "Prywatna ewidencja dokumentu podróży",
+                    subtitle = "Dane dokumentu podróży",
                     holder = fields["passportHolderNames"].orEmpty().ifBlank { "Dane posiadacza" },
                     details = "Nr paszportu: ${fields["passportNumber"].orEmpty().ifBlank { "—" }}",
                     privateRecord = true
@@ -3091,7 +3091,7 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                     }
                     Column(Modifier.padding(start = 8.dp)) {
                         Text("DOKUMENT RODOWY", color = Color(0xFF254B50), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.labelLarge)
-                        Text("DOKUMENT TOŻSAMOŚCI • EWIDENCJA PRYWATNA", color = Color(0xFF455A64), style = MaterialTheme.typography.labelSmall)
+                        Text("KARTA DANYCH TOŻSAMOŚCI • WZÓR", color = Color(0xFF455A64), style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 Row(
@@ -3156,8 +3156,7 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(5.dp))
                     .background(Color(0xFF254B50)).padding(horizontal = 7.dp, vertical = 5.dp)
             ) {
-                Text("DOKUMENT PRYWATNY • EWIDENCJA RODOWA", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
-                Text("Nie stanowi państwowego dokumentu tożsamości ani dokumentu podróży.", color = Color(0xFFE1ECEC), style = MaterialTheme.typography.labelSmall)
+                Text("WZÓR • EWIDENCJA RODOWA", color = White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
             }
         }
     }
