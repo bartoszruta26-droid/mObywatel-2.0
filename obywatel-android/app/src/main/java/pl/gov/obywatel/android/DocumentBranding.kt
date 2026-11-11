@@ -76,6 +76,11 @@ internal val documentBrandTargets = listOf(
     "organization_association" to "Stowarzyszenie / organizacja społeczna",
     "family" to "Dokumenty rodowe",
     "entity" to "Dokumenty organizacji i podmiotów",
+    "business" to "Dokumenty firmowe i przedsiębiorstwa",
+    "registry" to "Odpisy i dokumenty rejestrowe",
+    "signed_pdf" to "Dokumenty PDF i podpisy",
+    "imported" to "Dokumenty własne — pliki",
+    "loyalty_cards" to "Karty lojalnościowe",
     "official" to "Pozostałe dokumenty urzędowe",
     "profile" to "Dane osobowe i zdjęcie profilowe",
     "disability" to "Orzeczenia i zaświadczenia",
@@ -195,10 +200,10 @@ internal object DocumentBrandStore {
             documentType == "professional" && listOf("nauczyc", "pedagog", "wykładow", "szkol").any { lower.contains(it) } -> "professional_education"
             documentType == "professional" && listOf("terapeut", "masaż", "masaz", "naturop", "zielarz").any { lower.contains(it) } -> "professional_therapeutic"
             documentType == "professional" -> "professional_other"
-            documentType == "entity" && listOf("fundac").any { lower.contains(it) } -> "organization_foundation"
-            documentType == "entity" && listOf("koś", "kosci", "parafi", "wspólnot").any { lower.contains(it) } -> "organization_church"
-            documentType == "entity" && listOf("spół", "spol", "firma", "przedsięb").any { lower.contains(it) } -> "organization_company"
-            documentType == "entity" && listOf("stowarz", "organizac").any { lower.contains(it) } -> "organization_association"
+            documentType in setOf("entity", "business", "registry") && listOf("fundac").any { lower.contains(it) } -> "organization_foundation"
+            documentType in setOf("entity", "business", "registry") && listOf("koś", "kosci", "parafi", "wspólnot").any { lower.contains(it) } -> "organization_church"
+            documentType in setOf("entity", "business", "registry") && listOf("spół", "spol", "firma", "przedsięb").any { lower.contains(it) } -> "organization_company"
+            documentType in setOf("entity", "business", "registry") && listOf("stowarz", "organizac").any { lower.contains(it) } -> "organization_association"
             documentType == "family" -> "organization_family"
             else -> ""
         }
@@ -207,7 +212,7 @@ internal object DocumentBrandStore {
             documentType.startsWith("organization_") -> "entity"
             else -> ""
         }
-        val candidates = if (documentType == "professional" || documentType == "entity")
+        val candidates = if (documentType == "professional" || documentType in setOf("entity", "business", "registry"))
             listOf(role, documentType, fallback)
         else listOf(documentType, role, fallback)
         return candidates.filter { it.isNotBlank() }.distinct()
@@ -292,6 +297,11 @@ internal fun AssignedDocumentBrandPreview(documentType: String, owner: String, t
 private fun documentTypeForTitle(title: String): String {
     val value = title.lowercase(Locale.ROOT)
     return when {
+        value.contains("odpis") && value.contains("rejestr") -> "registry"
+        value.contains("firm") || value.contains("przedsięb") || value.contains("przedsieb") -> "business"
+        value.contains("pdf") || value.contains("podpis elektroniczn") -> "signed_pdf"
+        value.contains("importowan") || value.contains("własne — pliki") -> "imported"
+        value.contains("karta lojal") || value.contains("lojalności") -> "loyalty_cards"
         value.contains("paszport") -> "passport"
         value.contains("rodow") || value.contains("rodu") || value.contains("rodzinn") -> "family"
         value.contains("poselsk") || value.contains("parlament") -> "parliament"
