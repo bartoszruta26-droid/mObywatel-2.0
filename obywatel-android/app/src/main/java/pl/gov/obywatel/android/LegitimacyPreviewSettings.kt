@@ -369,19 +369,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                     Text(label, style = MaterialTheme.typography.bodyMedium)
                 }
             }
-            Text("Pola na legitymacji", fontWeight = FontWeight.SemiBold)
-            val fieldOptions = credentialFieldOptions(documentKey)
-            fieldOptions.forEach { (fieldKey, fieldLabel) ->
-                val checked = !settings.visibleFieldsConfigured || fieldKey in settings.visibleFields
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = checked, onCheckedChange = { selected ->
-                        val current = if (settings.visibleFieldsConfigured) settings.visibleFields else fieldOptions.map { it.first }.toSet()
-                        val next = if (selected) current + fieldKey else current - fieldKey
-                        update(settings.copy(visibleFields = next, visibleFieldsConfigured = true))
-                    })
-                    Text(fieldLabel, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
+            Text("Widoczność pól ustawiasz bezpośrednio przy odpowiednim polu danych.", style = MaterialTheme.typography.bodySmall)
             Text("Herb / godło / logo", fontWeight = FontWeight.SemiBold)
             Box {
                 OutlinedButton(onClick = { crestMenu = true }, modifier = Modifier.fillMaxWidth()) {
@@ -587,11 +575,8 @@ internal fun UnifiedCredentialCard(
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Logo")
     }
-    val configurableKeys = credentialFieldOptions(documentKey).map { it.first }.toSet()
     val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter {
-        // A field not yet represented in the settings catalogue keeps its
-        // original visibility instead of disappearing when another field is toggled.
-        it.first !in configurableKeys || it.first in settings.visibleFields
+        it.first in settings.visibleFields
     }
     Card(
         Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
