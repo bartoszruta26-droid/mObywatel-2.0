@@ -619,6 +619,7 @@ private fun HomeScreen() {
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
     var showIdentityDesigner by remember { mutableStateOf(false) }
+    var showCredentialAppearanceEditor by remember { mutableStateOf(false) }
     var showImportedDocuments by remember { mutableStateOf(false) }
     var showBankAccounts by remember { mutableStateOf(false) }
     var showPublicServicesBrowser by remember { mutableStateOf(false) }
@@ -628,6 +629,7 @@ private fun HomeScreen() {
 
     fun handleSystemBack() {
         when {
+            showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false }
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
@@ -696,6 +698,7 @@ private fun HomeScreen() {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {
+                    showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = { showCredentialAppearanceEditor = false })
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 }, readOnly = true)
@@ -813,6 +816,7 @@ private fun HomeScreen() {
                         onOpenHelp = { activeService = "Pomoc i informacje" },
                         onOpenHistory = { activeService = "Historia działań" },
                         onOpenIdentityDesigner = { showIdentityDesigner = true },
+                        onOpenCredentialAppearance = { showCredentialAppearanceEditor = true },
                         onOpenImportedDocuments = { showImportedDocuments = true },
                         onOpenLegalInformation = { activeService = "Informacje prawne" }
                     )
@@ -1804,6 +1808,7 @@ private fun MoreMenuScreen(
     onOpenHelp: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenIdentityDesigner: () -> Unit,
+    onOpenCredentialAppearance: () -> Unit,
     onOpenImportedDocuments: () -> Unit,
     onOpenLegalInformation: () -> Unit
 ) {
@@ -1818,6 +1823,7 @@ private fun MoreMenuScreen(
         ProfileActionCard("Wydane certyfikaty", "Informacje o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Projektant dokumentów", "Tworzenie dokumentów, układ, podgląd i eksport PDF", Icons.Filled.Description, onOpenIdentityDesigner)
+        ProfileActionCard("Domyślny wygląd legitymacji", "Edytuj osobno legitymacje pionowe i poziome: grafiki, położenie, obrót, rozmiar i czcionki", Icons.Filled.Badge, onOpenCredentialAppearance)
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
