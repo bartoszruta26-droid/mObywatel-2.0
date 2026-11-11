@@ -3319,7 +3319,14 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Box(Modifier.fillMaxSize()) {
-                Box(Modifier.fillMaxWidth().height(320.dp).background(Color(0xFFF8D9D1)))
+                Image(
+                    painter = painterResource(if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    alpha = 0.52f
+                )
+                Box(Modifier.fillMaxWidth().height(320.dp).background(Color(0xFFF8D9D1).copy(alpha = 0.48f)))
                 Column(Modifier.fillMaxSize().padding(13.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -3443,6 +3450,13 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Box(Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(R.drawable.tlo_legitymacji_szare),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.46f
+            )
             Column(Modifier.fillMaxSize().padding(15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("LEGITYMACJA POSELSKA", color = Color(0xFF28252A),
                     fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
