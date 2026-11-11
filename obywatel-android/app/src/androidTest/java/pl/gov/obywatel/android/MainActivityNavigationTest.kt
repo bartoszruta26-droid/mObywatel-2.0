@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -22,7 +23,7 @@ class MainActivityNavigationTest {
 
     private fun selectBottomTab(index: Int) {
         val label = listOf("Pulpit", "Dokumenty", "Usługi", "Kod QR", "Więcej")[index]
-        composeRule.onAllNodesWithText(label, substring = false)[0].performClick()
+        composeRule.onNodeWithContentDescription(label).performClick()
         composeRule.waitForIdle()
     }
 
