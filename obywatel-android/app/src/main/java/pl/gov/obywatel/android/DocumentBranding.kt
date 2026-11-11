@@ -52,7 +52,7 @@ import javax.crypto.spec.GCMParameterSpec
 internal data class BrandAsset(val id: String, val owner: String, val kind: String, val label: String, val file: String)
 internal data class BrandAssignment(val documentType: String, val kind: String, val assetId: String)
 
-private val documentBrandTargets = listOf(
+internal val documentBrandTargets = listOf(
     "identity" to "Dowód tożsamości",
     "passport" to "Paszport",
     "parliament" to "Legitymacja poselska",
