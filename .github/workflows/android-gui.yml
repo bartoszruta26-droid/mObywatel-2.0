@@ -50,7 +50,7 @@ jobs:
 
       - name: Run Android unit tests
         working-directory: obywatel-android
-        run: gradle --no-daemon :app:testDebugUnitTest
+        run: gradle --no-daemon :app:testDebugUnitTest :pades-validator:test
 
       - name: Enable KVM access for Android emulator
         run: |
