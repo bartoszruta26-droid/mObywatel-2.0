@@ -567,8 +567,10 @@ internal fun DocumentIdentityTemplate(
                 orientation = settings.orientation
             )
         } else if (qrBitmap != null) {
-            Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR dokumentu",
-                modifier = Modifier.size(112.dp).align(Alignment.CenterHorizontally))
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR dokumentu",
+                    modifier = Modifier.size(112.dp))
+            }
         }
     }
     CredentialValidityTile(valid)
