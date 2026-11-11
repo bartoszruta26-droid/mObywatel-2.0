@@ -298,7 +298,7 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
 @Composable
 private fun ChildField(label: String, value: String, singleLine: Boolean = true, readOnly: Boolean = false, onChange: (String) -> Unit) {
     OutlinedTextField(value = value, onValueChange = onChange, modifier = Modifier.fillMaxWidth(),
-        label = { Text(label) }, singleLine = singleLine, minLines = if (singleLine) 1 else 3)
+        label = { Text(label) }, singleLine = singleLine, minLines = if (singleLine) 1 else 3, readOnly = readOnly)
 }
 
 private object FamilyHealthStore {
