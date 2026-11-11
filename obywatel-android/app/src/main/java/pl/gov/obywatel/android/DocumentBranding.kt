@@ -684,7 +684,7 @@ internal fun DocumentIdentityTemplate(
         validity.contains("utrac", true) || validity.contains("zwróc", true) ||
         validity.contains("expired", true) || validity.contains("invalid", true)
     val valid = !explicitlyInvalid && isCredentialValidByExpiry(expiry)
-    val qrPayload = remember(title, values) { buildString { append("DEMO|"); append(title); values.forEach { (key, value) -> append("|").append(key).append("=").append(value) } } }
+    val qrPayload = remember(title, values) { buildString { append("OWD|"); append(title); values.forEach { (key, value) -> append("|").append(key).append("=").append(value) } } }
     val qrBitmap = remember(qrPayload) { createDocumentQr(qrPayload) }
 
     if (settings.showCard) {
