@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -189,7 +191,20 @@ internal data class LegitimacyPreviewSettings(
     val showFlag: Boolean = true,
     val showCrest: Boolean = true,
     val showLogo: Boolean = true,
-    val showBackground: Boolean = true
+    val showBackground: Boolean = true,
+    val graphicScale: Float = 1f,
+    val graphicRotation: Float = 0f,
+    val graphicOffsetX: Float = 0f,
+    val graphicOffsetY: Float = 0f,
+    val labelScale: Float = 1f,
+    val labelRotation: Float = 0f,
+    val labelOffsetX: Float = 0f,
+    val labelOffsetY: Float = 0f,
+    val valueScale: Float = 1f,
+    val valueRotation: Float = 0f,
+    val valueOffsetX: Float = 0f,
+    val valueOffsetY: Float = 0f,
+    val fontFamily: String = "sans"
 )
 
 internal object LegitimacyPreviewSettingsStore {
@@ -214,7 +229,20 @@ internal object LegitimacyPreviewSettingsStore {
             showFlag = p.getBoolean("${key}_show_flag", true),
             showCrest = p.getBoolean("${key}_show_crest", true),
             showLogo = p.getBoolean("${key}_show_logo", true),
-            showBackground = p.getBoolean("${key}_show_background", true)
+            showBackground = p.getBoolean("${key}_show_background", true),
+            graphicScale = p.getFloat("${key}_graphic_scale", 1f),
+            graphicRotation = p.getFloat("${key}_graphic_rotation", 0f),
+            graphicOffsetX = p.getFloat("${key}_graphic_x", 0f),
+            graphicOffsetY = p.getFloat("${key}_graphic_y", 0f),
+            labelScale = p.getFloat("${key}_label_scale", 1f),
+            labelRotation = p.getFloat("${key}_label_rotation", 0f),
+            labelOffsetX = p.getFloat("${key}_label_x", 0f),
+            labelOffsetY = p.getFloat("${key}_label_y", 0f),
+            valueScale = p.getFloat("${key}_value_scale", 1f),
+            valueRotation = p.getFloat("${key}_value_rotation", 0f),
+            valueOffsetX = p.getFloat("${key}_value_x", 0f),
+            valueOffsetY = p.getFloat("${key}_value_y", 0f),
+            fontFamily = p.getString("${key}_font_family", "sans").orEmpty()
         )
     }
 
@@ -236,6 +264,19 @@ internal object LegitimacyPreviewSettingsStore {
             .putBoolean("${key}_show_crest", value.showCrest)
             .putBoolean("${key}_show_logo", value.showLogo)
             .putBoolean("${key}_show_background", value.showBackground)
+            .putFloat("${key}_graphic_scale", value.graphicScale)
+            .putFloat("${key}_graphic_rotation", value.graphicRotation)
+            .putFloat("${key}_graphic_x", value.graphicOffsetX)
+            .putFloat("${key}_graphic_y", value.graphicOffsetY)
+            .putFloat("${key}_label_scale", value.labelScale)
+            .putFloat("${key}_label_rotation", value.labelRotation)
+            .putFloat("${key}_label_x", value.labelOffsetX)
+            .putFloat("${key}_label_y", value.labelOffsetY)
+            .putFloat("${key}_value_scale", value.valueScale)
+            .putFloat("${key}_value_rotation", value.valueRotation)
+            .putFloat("${key}_value_x", value.valueOffsetX)
+            .putFloat("${key}_value_y", value.valueOffsetY)
+            .putString("${key}_font_family", value.fontFamily)
             .apply()
     }
     
