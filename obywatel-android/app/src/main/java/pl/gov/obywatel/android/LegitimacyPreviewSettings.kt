@@ -30,29 +30,101 @@ import androidx.compose.ui.unit.dp
 internal data class CredentialFieldOption(val key: String, val label: String)
 
 internal fun credentialFieldOptions(documentKey: String): List<Pair<String, String>> = (when (documentKey) {
-    "parliament" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji", "mpCardIssueDate" to "Data wydania", "mpTerm" to "Numer kadencji", "mpEnd" to "Koniec okresu mandatu", "mpIssuer" to "Wystawca")
-    "training", "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" ->
-        listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "trainingInstitution" to "Instytucja", "trainingCourseName" to "Kurs / kwalifikacja", "trainingCardNumber" to "Numer legitymacji", "trainingIssueDate" to "Data wydania", "trainingValidUntil" to "Termin ważności")
-    "student" -> listOf("studentNames" to "Imię i nazwisko", "studentUniversity" to "Uczelnia", "studentProgramme" to "Kierunek", "studentCardNumber" to "Numer legitymacji", "studentIssueDate" to "Data wydania", "studentValidity" to "Termin ważności")
-    "identity" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "pesel" to "PESEL", "idNumber" to "Numer dokumentu", "idIssueDate" to "Data wydania", "idExpiryDate" to "Data ważności")
-    "passport" -> listOf("passportHolderNames" to "Imię i nazwisko", "passportNumber" to "Numer paszportu", "passportCitizenship" to "Obywatelstwo", "birthDate" to "Data urodzenia", "passportIssueDate" to "Data wydania", "passportExpiryDate" to "Data ważności")
-    "family" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "familyName" to "Nazwa Rodu", "familyRole" to "Miejsce w Rodzie", "familyDocNumber" to "Numer dokumentu", "familyIssueDate" to "Data sporządzenia", "familyExpiryDate" to "Data aktualizacji")
-    "disability" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "disabilityDecisionType" to "Rodzaj orzeczenia", "disabilityCaseNumber" to "Numer sprawy", "disabilityValidity" to "Okres obowiązywania", "disabilityIssuerName" to "Wystawca")
-    "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" ->
-        listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "churchRole" to "Posługa / godność", "churchDocumentNumber" to "Numer dokumentu", "churchIssueDate" to "Data wydania", "churchValidity" to "Okres obowiązywania", "churchIssuer" to "Wystawca")
-    "organization_foundation", "organization_association", "organization_church", "organization_company", "entity", "business", "registry" ->
-        listOf("entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP", "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant")
-    "loyalty", "loyalty_cards" -> listOf("loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz")
-    "bank_accounts" -> listOf("bankName" to "Bank", "accountName" to "Nazwa rachunku", "accountNumber" to "Numer rachunku", "accountOwner" to "Właściciel")
-    "children" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "childRelationship" to "Relacja", "guardianName" to "Opiekun")
-    "vaccines" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "vaccineName" to "Preparat", "vaccineDate" to "Data szczepienia", "vaccineDose" to "Dawka")
-    "civil" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "civilDocumentNumber" to "Numer dokumentu", "civilIssueDate" to "Data sporządzenia", "civilIssuer" to "Wystawca")
-    "profile" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "contactPhone" to "Telefon", "contactEmail" to "E-mail", "contactOrganization" to "Organizacja")
-    "business", "registry", "entity" -> listOf("entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP", "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant")
-    "organization_family" -> listOf("familyName" to "Nazwa Rodu", "familyRole" to "Miejsce w Rodzie", "familyDocNumber" to "Numer dokumentu", "familyIssueDate" to "Data sporządzenia")
-    "signed_pdf", "imported" -> listOf("documentTitle" to "Nazwa dokumentu", "documentNumber" to "Numer dokumentu", "documentIssuer" to "Wystawca", "documentDate" to "Data dokumentu")
-    "professional_other" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "professionalTitle" to "Tytuł / kwalifikacja", "professionalNumber" to "Numer dokumentu", "professionalIssuer" to "Wystawca", "professionalValidity" to "Termin ważności")
-    else -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "documentNumber" to "Numer dokumentu", "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca")
+    "parliament" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji",
+        "mpTerm" to "Kadencja", "mpDistrict" to "Okręg wyborczy", "mpStart" to "Początek mandatu",
+        "mpEnd" to "Koniec mandatu", "mpCardIssueDate" to "Data wydania", "mpIssuer" to "Wystawca"
+    )
+    "training" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "trainingInstitution" to "Instytucja",
+        "trainingCourseName" to "Kurs / kwalifikacja", "trainingCardNumber" to "Numer legitymacji",
+        "trainingIssueDate" to "Data wydania", "trainingValidUntil" to "Termin ważności",
+        "trainingCourseCode" to "Kod kursu", "trainingStartDate" to "Data rozpoczęcia",
+        "trainingEndDate" to "Data zakończenia", "trainingStatus" to "Status uczestnictwa",
+        "trainingIssuer" to "Wystawca", "trainingCompletionDate" to "Data ukończenia",
+        "trainingHours" to "Liczba godzin", "trainingAssessment" to "Wynik", "trainingCertificateNumber" to "Numer zaświadczenia"
+    )
+    "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "professionalTitle" to "Tytuł / kwalifikacja",
+        "professionalNumber" to "Numer dokumentu", "professionalIssuer" to "Wystawca",
+        "professionalValidity" to "Termin ważności", "professionalSpeciality" to "Specjalność",
+        "professionalQualification" to "Zakres kwalifikacji"
+    )
+    "student" -> listOf(
+        "studentNames" to "Imię i nazwisko", "studentUniversity" to "Uczelnia",
+        "studentProgramme" to "Kierunek", "studentCardNumber" to "Numer legitymacji",
+        "studentIssueDate" to "Data wydania", "studentValidity" to "Termin ważności",
+        "studentFaculty" to "Wydział", "studentLevel" to "Poziom studiów",
+        "studentProfile" to "Profil / forma", "studentYear" to "Rok i semestr",
+        "studentAcademicYear" to "Rok akademicki", "studentStatus" to "Status"
+    )
+    "identity" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
+        "birthPlace" to "Miejsce urodzenia", "citizenship" to "Obywatelstwo", "sex" to "Płeć",
+        "pesel" to "PESEL", "idNumber" to "Numer dokumentu", "idIssueDate" to "Data wydania",
+        "idExpiryDate" to "Data ważności", "idIssuer" to "Organ wydający"
+    )
+    "passport" -> listOf(
+        "passportHolderNames" to "Imię i nazwisko", "passportNumber" to "Numer paszportu",
+        "passportCitizenship" to "Obywatelstwo", "birthDate" to "Data urodzenia",
+        "passportIssueDate" to "Data wydania", "passportExpiryDate" to "Data ważności",
+        "passportType" to "Rodzaj paszportu", "passportCountry" to "Państwo wydania",
+        "passportIssuer" to "Organ wydający"
+    )
+    "family", "organization_family" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "familyName" to "Nazwa Rodu",
+        "familyLine" to "Linia / gałąź", "familyRole" to "Miejsce w Rodzie",
+        "familyDocNumber" to "Numer dokumentu", "familyIssueDate" to "Data sporządzenia",
+        "familyRegistry" to "Prowadzący ewidencję", "familySource" to "Podstawa wpisu"
+    )
+    "disability" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "disabilityDecisionType" to "Rodzaj orzeczenia",
+        "disabilityDecisionNumber" to "Numer orzeczenia", "disabilityCaseNumber" to "Numer sprawy",
+        "disabilityDegree" to "Stopień", "disabilityValidity" to "Okres obowiązywania",
+        "disabilityIssuerName" to "Wystawca", "disabilityLegalBasis" to "Podstawa prawna"
+    )
+    "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "churchRole" to "Posługa / godność",
+        "churchDocumentNumber" to "Numer dokumentu", "churchIssueDate" to "Data wydania",
+        "churchValidity" to "Okres obowiązywania", "churchIssuer" to "Wystawca"
+    )
+    "organization_foundation", "organization_association", "organization_church", "organization_company", "entity", "business", "registry" -> listOf(
+        "entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP",
+        "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant"
+    )
+    "loyalty", "loyalty_cards" -> listOf(
+        "loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz"
+    )
+    "bank_accounts" -> listOf(
+        "bankName" to "Bank", "accountName" to "Nazwa rachunku", "accountNumber" to "Numer rachunku",
+        "accountOwner" to "Właściciel", "accountCurrency" to "Waluta", "accountStatus" to "Status rachunku"
+    )
+    "children" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
+        "childRelationship" to "Relacja", "guardianName" to "Opiekun", "childDocumentNumber" to "Numer dokumentu"
+    )
+    "vaccines" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "vaccineName" to "Preparat",
+        "vaccineDate" to "Data szczepienia", "vaccineDose" to "Dawka", "vaccineBatch" to "Seria",
+        "vaccineIssuer" to "Podmiot wykonujący"
+    )
+    "civil" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "civilDocumentNumber" to "Numer dokumentu",
+        "civilIssueDate" to "Data sporządzenia", "civilIssuer" to "Wystawca"
+    )
+    "profile" -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
+        "contactPhone" to "Telefon", "contactEmail" to "E-mail", "contactOrganization" to "Organizacja",
+        "contactTitle" to "Stanowisko", "contactUrl" to "Strona internetowa", "contactAddress" to "Adres"
+    )
+    "signed_pdf", "imported" -> listOf(
+        "documentTitle" to "Nazwa dokumentu", "documentNumber" to "Numer dokumentu",
+        "documentIssuer" to "Wystawca", "documentDate" to "Data dokumentu"
+    )
+    else -> listOf(
+        "firstNames" to "Imiona", "lastName" to "Nazwisko", "documentNumber" to "Numer dokumentu",
+        "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca"
+    )
 }) + listOf("details" to "Informacje dodatkowe")
 
 internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
