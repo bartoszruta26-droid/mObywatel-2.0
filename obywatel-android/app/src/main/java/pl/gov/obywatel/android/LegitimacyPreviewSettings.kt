@@ -870,7 +870,7 @@ internal fun UnifiedCredentialCard(
                                         Modifier.weight(1f).verticalScroll(rememberScrollState()),
                                         verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
                                     ) {
-                                        visible.forEach { CredentialFieldValue(it, fieldLabelSize, fieldValueSize) }
+                                        visible.forEach { CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings) }
                                     }
                                 }
                             }
