@@ -3019,7 +3019,6 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
     val context = LocalContext.current
     val familyCrest = remember(fields["familyName"]) {
         DocumentBrandStore.imageForDocument(context, "family", fields["familyName"].orEmpty(), "Herb")
-            ?: DocumentBrandStore.imageForDocument(context, fields["familyName"].orEmpty(), "family", "Herb")
     }
     val photoBitmap = remember(photoBase64) {
         runCatching {
