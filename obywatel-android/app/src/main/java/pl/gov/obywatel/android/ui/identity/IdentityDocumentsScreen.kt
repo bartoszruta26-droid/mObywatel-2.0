@@ -174,9 +174,12 @@ private object IdentityStore {
             val imported = JSONArray(importedRaw)
             for (i in 0 until imported.length()) {
                 val item = imported.getJSONObject(i)
-                merged.putIfAbsent(identity(item), item)
+                val key = identity(item)
+                if (!merged.containsKey(key)) merged[key] = item
             }
-            return JSONArray().also { array -> merged.values.forEach(array::put) }.toString()
+            val result = JSONArray()
+            merged.values.forEach { result.put(it) }
+            return result.toString()
         }
 
         val signaturePrefs = c.getSharedPreferences("owd_identity_signatures", 0)
