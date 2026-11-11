@@ -275,7 +275,7 @@ internal fun exportSignedPdfArchive(context: Context): String = SignedPdfStore.e
 internal fun importSignedPdfArchive(context: Context, raw: String) = SignedPdfStore.importArchive(context, raw)
 
 @Composable
-internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean = true) {
+internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean = true, readOnly: Boolean = false) {
     val context = LocalContext.current
     var records by remember { mutableStateOf(SignedPdfStore.list(context)) }
     var selectedId by remember { mutableStateOf<String?>(null) }
@@ -322,7 +322,7 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
             }
         }
         if (selected == null) {
-            if (allowImport) {
+            if (allowImport && !readOnly) {
                 Button(onClick = { pdfPicker.launch(arrayOf("application/pdf")) }, modifier = Modifier.fillMaxWidth()) {
                     Text("Importuj dokument PDF")
                 }
