@@ -51,6 +51,7 @@ private val documentBrandTargets = listOf(
     "church_cardinal" to "Godność kardynalska",
     "church_abbot" to "Godność opacka",
     "church_minister" to "Posługa / urząd kościelny",
+    "church_missionary" to "Posługa misyjna",
     "professional" to "Dokumenty kwalifikacji zawodowych",
     "professional_medical" to "Godność / kwalifikacja medyczna",
     "professional_education" to "Godność / kwalifikacja edukacyjna",
@@ -166,6 +167,7 @@ internal object DocumentBrandStore {
             documentType.startsWith("church_cardinal") -> "church_cardinal"
             documentType.startsWith("church_abbot") -> "church_abbot"
             documentType.startsWith("church_minister") || documentType == "church_jurisdiction" -> "church_minister"
+            documentType.startsWith("missionary_") -> "church_missionary"
             documentType == "training" || documentType == "student" -> "professional_education"
             documentType == "professional" && listOf("lekar", "medycz", "fizjoter", "pielęg", "diagnost").any { lower.contains(it) } -> "professional_medical"
             documentType == "professional" && listOf("nauczyc", "pedagog", "wykładow", "szkol").any { lower.contains(it) } -> "professional_education"
@@ -179,7 +181,7 @@ internal object DocumentBrandStore {
             else -> ""
         }
         val fallback = when {
-            documentType.startsWith("church_") -> "church"
+            documentType.startsWith("church_") || documentType.startsWith("ecumenical_") || documentType.startsWith("missionary_") -> "church"
             documentType.startsWith("organization_") -> "entity"
             else -> ""
         }
