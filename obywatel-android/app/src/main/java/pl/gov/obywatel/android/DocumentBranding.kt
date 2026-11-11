@@ -3,6 +3,19 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.graphics.Bitmap
+import java.util.Locale
+import java.util.Date
+import java.text.SimpleDateFormat
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.EncodeHintType
+import com.google.zxing.BarcodeFormat
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -71,7 +84,7 @@ internal object DocumentBrandStore {
     private const val INDEX = "document-brand-assets.enc"
     private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
-    private val kinds = listOf("Logo", "Godło", "Herb", "Flaga", "Pieczęć", "Wzór podpisu odręcznego", "Tło dokumentu", "Znak wodny", "Grafika hologramu / zabezpieczenia")
+    private val kinds = listOf("Fotografia", "Logo", "Godło", "Herb", "Flaga", "Pieczęć", "Wzór podpisu odręcznego", "Tło dokumentu", "Znak wodny", "Grafika hologramu / zabezpieczenia")
     fun assetKinds() = kinds
     private fun dir(context: Context) = File(context.noBackupFilesDir, "document-brand-assets").apply { mkdirs() }
     private fun key(): SecretKey {
@@ -268,6 +281,221 @@ internal fun AssignedDocumentBrandPreview(documentType: String, owner: String, t
         }
     }
 }
+
+private fun isFamilyDocument(title: String): Boolean {
+    val t = title.lowercase(Locale.ROOT)
+    return t.contains("rodow") || t.contains("rodu") || t.contains("rodzinn")
+}
+
+private fun isChurchDocument(title: String): Boolean {
+    val t = title.lowercase(Locale.ROOT)
+    return listOf("kościel", "kosciel", "papiesk", "papież", "papiez", "misjon", "sakrament", "kanonicz", "biskup", "parafi", "szafarz", "liturg", "święce", "swiece", "konsekr", "jurysdykc", "diecez", "ekumen").any { t.contains(it) }
+}
+
+private fun defaultDocumentFlag(context: Context, title: String): Bitmap? =
+    if (isFamilyDocument(title) || isChurchDocument(title)) null
+    else BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
+
+private fun defaultDocumentEmblem(context: Context, title: String): Bitmap? =
+    if (isFamilyDocument(title) || isChurchDocument(title)) null
+    else BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+
+private fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
+    val normalized = title.lowercase(Locale.ROOT)
+    val resourceId = when {
+        // Dokumenty rodowe mają własną, odrębną identyfikację.
+        isFamilyDocument(title) && (normalized.contains("paszport") || normalized.contains("podróż") || normalized.contains("podroz")) ->
+            R.drawable.paszport_rodowy_jasny
+        isFamilyDocument(title) && (normalized.contains("orzeczenie") || normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw")) ->
+            R.drawable.orzeczenie_rodowe_jasne
+        isFamilyDocument(title) ->
+            R.drawable.karta_rodowa_jasna
+
+        // Dokumenty tożsamości i paszportowe.
+        normalized.contains("paszport") || normalized.contains("passport") ->
+            R.drawable.documents_passport
+        normalized.contains("dowód") || normalized.contains("dowod") ||
+            normalized.contains("tożsamo") || normalized.contains("tozsamos") ||
+            normalized.contains("dokument cywil") ->
+            R.drawable.bg_document_civic_identity
+
+        // Legitymacje edukacyjne, parlamentarne i szkoleniowe.
+        normalized.contains("poselsk") || normalized.contains("senatorsk") || normalized.contains("parlament") ->
+            R.drawable.documents_deputy_legitimacy
+        normalized.contains("uczn") || normalized.contains("student") || normalized.contains("szkoln") ||
+            normalized.contains("doktorant") ->
+            R.drawable.documents_student_legitimacy
+        normalized.contains("kursant") || normalized.contains("kursu") || normalized.contains("szkoleni") ||
+            normalized.contains("ukończenia kurs") || normalized.contains("ukonczenia kurs") ->
+            R.drawable.documents_course_legitimacy
+        normalized.contains("zawodow") || normalized.contains("pracown") || normalized.contains("wykonywania zawodu") ->
+            R.drawable.legitymacja_zawodowa
+
+        // Orzeczenia i dokumenty związane z niepełnosprawnością.
+        normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw") ||
+            normalized.contains("orzeczenie") || normalized.contains("disability") ->
+            R.drawable.bg_document_disability_certificate
+
+        // Dokumenty kościelne: misje mają dedykowane tło, pozostałe dokumenty kościelne własną ilustrację.
+        normalized.contains("misjon") || normalized.contains("papiesk") || normalized.contains("pdm") ||
+            normalized.contains("pum") ->
+            R.drawable.bg_document_missionary_pdm
+        isChurchDocument(title) || normalized.contains("kościo") || normalized.contains("kosció") ->
+            R.drawable.church_communities
+
+        // Pozostałe dokumenty cywilne, społeczne i podmiotowe.
+        normalized.contains("szczep") || normalized.contains("vaccin") ->
+            R.drawable.bg_document_vaccination_booklet
+        normalized.contains("cywil") || normalized.contains("urodzen") || normalized.contains("małżeń") ||
+            normalized.contains("malzen") || normalized.contains("zgon") || normalized.contains("meldun") ||
+            normalized.contains("obywatel") || normalized.contains("urzęd") || normalized.contains("urzed") ||
+            normalized.startsWith("akt ") || normalized.startsWith("odpis ") ||
+            normalized.contains("oświadczen") || normalized.contains("oswiadczen") ||
+            normalized.contains("zaświadczen") || normalized.contains("zaswiadczen") ->
+            R.drawable.bg_document_civic_identity
+        normalized.contains("fundac") || normalized.contains("stowarz") || normalized.contains("firm") ||
+            normalized.contains("spół") || normalized.contains("spol") || normalized.contains("rejestr podmiot") ->
+            R.drawable.documents_document_wallet_banner
+        else -> R.drawable.documents_document_wallet_banner
+    }
+    return BitmapFactory.decodeResource(context.resources, resourceId)
+}
+
+private fun createDocumentQr(payload: String): Bitmap? = runCatching {
+    val hints = mapOf(
+        EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
+        EncodeHintType.CHARACTER_SET to "UTF-8",
+        EncodeHintType.MARGIN to 1
+    )
+    val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, 360, 360, hints)
+    Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
+        for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+            bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+        }
+    }
+}.getOrNull()
+
+@Composable
+internal fun DocumentIdentityTemplate(
+    title: String,
+    values: Map<String, String>,
+    owner: String = "",
+    photoOverride: Bitmap? = null,
+    validity: String = values.entries.firstOrNull { it.key.contains("status", true) || it.key.contains("waż", true) }?.value.orEmpty()
+) {
+    val context = LocalContext.current
+    val qrPayload = remember(title, values) { buildString { append("DEMO|"); append(title); values.forEach { (key, value) -> append("|").append(key).append("=").append(value) } } }
+    val qrBitmap = remember(qrPayload) { createDocumentQr(qrPayload) }
+    val effectiveOwner = owner.ifBlank { values.entries.firstOrNull { it.key.contains("wystawc", true) || it.key.contains("nazwa", true) || it.key.contains("podmiot", true) || it.key.contains("kościół", true) || it.key.contains("rodu", true) }?.value.orEmpty() }
+    val photo = remember(effectiveOwner, photoOverride) { photoOverride ?: DocumentBrandStore.image(context, effectiveOwner, "Fotografia") }
+    val flag = remember(effectiveOwner, title) { DocumentBrandStore.image(context, effectiveOwner, "Flaga") ?: defaultDocumentFlag(context, title) }
+    val emblem = remember(effectiveOwner, title) {
+        val custom = if (isFamilyDocument(title) || isChurchDocument(title)) {
+            DocumentBrandStore.image(context, effectiveOwner, "Herb")
+                ?: DocumentBrandStore.image(context, effectiveOwner, "Godło")
+                ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
+        } else {
+            DocumentBrandStore.image(context, effectiveOwner, "Godło")
+                ?: DocumentBrandStore.image(context, effectiveOwner, "Herb")
+                ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
+        }
+        custom ?: defaultDocumentEmblem(context, title)
+    }
+    val background = remember(effectiveOwner, title) { DocumentBrandStore.image(context, effectiveOwner, "Tło dokumentu") ?: defaultDocumentBackground(context, title) }
+    val now = remember { SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date()) }
+    val name = values.entries.firstOrNull { it.key.contains("imię", true) || it.key.contains("nazw", true) || it.key.contains("posiadacz", true) || it.key.contains("osoba", true) }?.value.orEmpty()
+    val number = values.entries.firstOrNull { it.key.contains("numer", true) || it.key.contains("znak", true) || it.key.contains("nr ", true) }?.value.orEmpty()
+    val expiry = values.entries.firstOrNull { it.key.contains("ważn", true) || it.key.contains("do dnia", true) || it.key.contains("obowiązywania do", true) }?.value.orEmpty()
+    val parsedExpiry = runCatching {
+        listOf(
+            java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+            java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"),
+            java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+        ).firstNotNullOfOrNull { formatter -> runCatching { java.time.LocalDate.parse(expiry, formatter) }.getOrNull() }
+    }.getOrNull()
+    val expired = parsedExpiry?.isBefore(java.time.LocalDate.now()) == true
+    val state = when {
+        validity.contains("nieważ", true) || validity.contains("unvalid", true) || expired -> "Dokument nieważny"
+        validity.contains("aktywn", true) || validity.contains("ważny", true) || validity.contains("potwierdz", true) || validity.contains("valid", true) -> "Ważność potwierdzona"
+        else -> "Wymaga weryfikacji"
+    }
+    val stateColor = when (state) {
+        "Ważność potwierdzona" -> Color(0xFFE5F4EA)
+        "Dokument nieważny" -> Color(0xFFFCE8E6)
+        else -> Color(0xFFFFF4D6)
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Stan na: $now", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+        Box(
+            Modifier.fillMaxWidth().aspectRatio(1.586f).clip(RoundedCornerShape(14.dp))
+                .background(Color(0xFFF4F6F8)).border(1.dp, Color(0xFFD5DDE5), RoundedCornerShape(14.dp))
+        ) {
+            if (background != null) Image(background.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.16f)
+            Row(Modifier.fillMaxSize().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.weight(0.39f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.88f)),
+                        contentAlignment = Alignment.Center) {
+                        if (photo != null) Image(photo.asImageBitmap(), "Fotografia osoby", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        else Text("MIEJSCE NA\nFOTOGRAFIĘ", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    }
+                    Column(Modifier.fillMaxWidth().weight(0.34f), verticalArrangement = Arrangement.spacedBy(3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(Modifier.fillMaxWidth(0.72f).weight(1f), contentAlignment = Alignment.Center) {
+                            if (flag != null) Image(flag.asImageBitmap(), "Flaga", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
+                            else Text("FLAGA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                        }
+                        Box(Modifier.fillMaxWidth(0.72f).weight(1f), contentAlignment = Alignment.Center) {
+                            if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
+                            else Text("GODŁO /\nHERB / LOGO", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+                Column(Modifier.weight(0.61f).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(title.uppercase(), color = Color(0xFF173B58), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 2)
+                    Text(name.ifBlank { "MIEJSCE NA DANE POSIADACZA" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold, maxLines = 2)
+                    values.entries.filter { it.value.isNotBlank() }.take(3).forEach { (key, value) ->
+                        Text("$key: $value", color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Text("WZÓR DOKUMENTU / EWIDENCJA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = stateColor)) {
+            Text(
+                when (state) {
+                    "Ważność potwierdzona" -> "✓ Ważność potwierdzona"
+                    "Dokument nieważny" -> "✕ Dokument nieważny"
+                    else -> "⚠ Wymaga weryfikacji"
+                },
+                Modifier.padding(12.dp), color = Color(0xFF26384A), fontWeight = FontWeight.Bold
+            )
+        }
+        if (qrBitmap != null) {
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
+                Column(Modifier.fillMaxWidth().padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(qrBitmap.asImageBitmap(), contentDescription = "Demonstracyjny kod QR z danymi ewidencyjnymi", modifier = Modifier.size(112.dp))
+                    Text("Kod demonstracyjny — bez funkcji weryfikacji", style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788))
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
+                Column(Modifier.padding(10.dp)) {
+                    Text("Numer dokumentu", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    Text(number.ifBlank { "Nie podano" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold)
+                }
+            }
+            Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
+                Column(Modifier.padding(10.dp)) {
+                    Text("Data ważności", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    Text(expiry.ifBlank { "Nie podano" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+        Text("Ostatnia aktualizacja: $now", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+    }
+}
+
 
 @Composable
 internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
