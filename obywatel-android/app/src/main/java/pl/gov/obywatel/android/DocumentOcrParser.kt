@@ -63,7 +63,7 @@ internal object DocumentOcrParser {
         val mrz=lines.map{it.replace(" ","").uppercase()}
         val name=mrz.firstOrNull{it.startsWith("P<")&&it.length>=20}
         val data=mrz.firstOrNull{it.length>=28&&it.take(9).all{c->c.isLetterOrDigit()||c=='<'}&&it.substring(13,19).all(Char::isDigit)}
-        if(categoryId=="passport"&&name!=null){val p=name.drop(5).split("<<",limit=2);if(p.size==2)put("passportHolderNames",(p[1]+" "+p[0]).replace('<',' ').trim())}
+        if(categoryId=="passport"&&name!=null){val p=name.drop(5).split("<<",limit=2);if(p.size==2){ val given=p[1].replace(Regex("<+")," ").replace(Regex("\\s+")," ").trim(); val surname=p[0].replace(Regex("<+")," ").replace(Regex("\\s+")," ").trim(); put("passportHolderNames",(given+" "+surname).trim()) }}
         if(categoryId=="passport"&&data!=null){
             put("passportNumber",data.substring(0,9).trimEnd('<'));put("passportCitizenship",data.substring(10,13));put("passportSex",data.substring(20,21))
             fun date(s:String):String{val y=s.substring(0,2).toInt();return "%02d-%02d-%04d".format(s.substring(4,6).toInt(),s.substring(2,4).toInt(),if(y<=49)2000+y else 1900+y)}
