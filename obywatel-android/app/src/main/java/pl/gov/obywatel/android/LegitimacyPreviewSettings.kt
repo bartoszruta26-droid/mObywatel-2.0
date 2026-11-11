@@ -366,13 +366,15 @@ internal fun LegitimacyPreviewSettingsPanel(
             OutlinedButton(onClick = { crestPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własny herb")
             }
-            Text("Napis przy herbie", fontWeight = FontWeight.SemiBold)
+            Text("Dwuwierszowy napis obok godła / herbu", fontWeight = FontWeight.SemiBold)
             OutlinedTextField(
                 value = settings.crestCaption,
                 onValueChange = { update(settings.copy(crestCaption = it)) },
-                label = { Text("Własny napis (opcjonalnie)") },
+                label = { Text("Napis, np. Rzeczpospolita\\nPolska") },
+                placeholder = { Text("Rzeczpospolita\\nPolska") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = false
+                minLines = 2,
+                maxLines = 2
             )
             Box {
                 OutlinedButton(onClick = { positionMenu = true }, modifier = Modifier.fillMaxWidth()) {
