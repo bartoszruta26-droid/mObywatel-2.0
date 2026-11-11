@@ -93,7 +93,7 @@ private val churchDocs = listOf(
     churchDoc("interfaith_dialogue","5. Ekumenizm i współpraca międzykościelna","Dokument dialogu międzyreligijnego", listOf("Uczestniczące wspólnoty","Temat dialogu","Cel i zakres","Zasady wzajemnego poszanowania","Uzgodnienia","Osoby reprezentujące"))
 )
 
-private object ChurchDocumentStore {
+internal object ChurchDocumentStore {
     private const val ALIAS = "church_documents_aes"
     private const val FILE = "church-documents.enc"
     private fun key(): SecretKey {
@@ -120,6 +120,33 @@ private object ChurchDocumentStore {
         temp.writeBytes(crypt(root.toString().toByteArray(Charsets.UTF_8), true))
         if (!temp.renameTo(target)) { temp.copyTo(target, true); temp.delete() }
     }
+    
+    fun exportArchive(context: Context): String {
+        val root = org.json.JSONObject()
+        load(context).forEach { (documentId, fields) ->
+            val item = org.json.JSONObject()
+            fields.forEach { (key, value) -> item.put(key, value) }
+            root.put(documentId, item)
+        }
+        return root.toString()
+    }
+
+    fun importArchive(context: Context, raw: String) {
+        val root = org.json.JSONObject(raw)
+        val restored = linkedMapOf<String, Map<String, String>>()
+        root.keys().forEach { documentId ->
+            require(documentId.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowy identyfikator dokumentu." }
+            val item = root.getJSONObject(documentId)
+            val fields = linkedMapOf<String, String>()
+            item.keys().forEach { key ->
+                require(key.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowa nazwa pola dokumentu." }
+                fields[key] = item.getString(key)
+            }
+            restored[documentId] = fields
+        }
+        save(context, restored)
+    }
+
 }
 
 @Composable
