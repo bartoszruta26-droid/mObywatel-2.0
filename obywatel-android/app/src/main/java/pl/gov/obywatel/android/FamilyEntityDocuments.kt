@@ -77,7 +77,7 @@ private val entityDocs = listOf(
     RegistryDoc(if (title.contains("rachunków bankowych")) "entity_bank_accounts" else "entity_${section.hashCode().toUInt().toString(16)}_${index}", title, section, if (title.contains("rachunków bankowych")) emptyList() else fields.distinct(), "Ewidencja dokumentu podmiotu. Wpisane dane nie potwierdzają samodzielnie aktualnego stanu rejestru; dokument urzędowy należy dołączyć jako źródło.")
 } }
 
-private object FamilyEntityDocumentStore {
+internal object FamilyEntityDocumentStore {
     private const val ALIAS = "family_entity_docs_aes"
     private const val FILE = "family-entity-documents.enc"
     private fun key(): SecretKey {
@@ -104,6 +104,33 @@ private object FamilyEntityDocumentStore {
         temp.writeBytes(crypt(root.toString().toByteArray(Charsets.UTF_8), true))
         if (!temp.renameTo(target)) { temp.copyTo(target, true); temp.delete() }
     }
+    
+    fun exportArchive(context: Context): String {
+        val root = org.json.JSONObject()
+        load(context).forEach { (documentId, fields) ->
+            val item = org.json.JSONObject()
+            fields.forEach { (key, value) -> item.put(key, value) }
+            root.put(documentId, item)
+        }
+        return root.toString()
+    }
+
+    fun importArchive(context: Context, raw: String) {
+        val root = org.json.JSONObject(raw)
+        val restored = linkedMapOf<String, Map<String, String>>()
+        root.keys().forEach { documentId ->
+            require(documentId.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowy identyfikator dokumentu." }
+            val item = root.getJSONObject(documentId)
+            val fields = linkedMapOf<String, String>()
+            item.keys().forEach { key ->
+                require(key.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowa nazwa pola dokumentu." }
+                fields[key] = item.getString(key)
+            }
+            restored[documentId] = fields
+        }
+        save(context, restored)
+    }
+
 }
 
 @Composable
