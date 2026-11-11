@@ -3966,8 +3966,8 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
         items.forEach { (label, icon, index) ->
             val selected = selectedTab == index
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
-                    .clickable { onSelect(index) }.padding(vertical = 2.dp),
+                modifier = Modifier.weight(1f).testTag("bottom-nav-$index")
+                    .clip(RoundedCornerShape(14.dp)).clickable { onSelect(index) }.padding(vertical = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
