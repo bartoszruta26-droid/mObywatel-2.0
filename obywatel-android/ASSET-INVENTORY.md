@@ -203,3 +203,17 @@ Do aktywnego katalogu Android `app/src/main/res/drawable/` dodano 11 wektorowych
 - `legacy_ic_info.xml`, `legacy_ic_search.xml`, `legacy_ic_star.xml`, `legacy_ic_upload.xml` — informacja, wyszukiwanie, gwiazda i przesyłanie.
 
 Grafiki zachowano jako zasoby dostępne do przyszłego wykorzystania, również w edytorze dokumentów. Nie podłączano ich automatycznie do ekranów. Zależności kolorów w czterech ikonach zastąpiono wartościami bezpośrednimi, aby zasoby nie wymagały brakujących definicji `@color` w aktualnym module. Nie przeniesiono historycznej flagi UE z kółkami zamiast gwiazd ani przybliżonego godła opisanego w źródle jako placeholder — wymagają poprawnych, oficjalnych geometrii.
+
+
+
+### Biblioteka 55 ikon wektorowych z możliwością zmiany koloru — 11 listopada 2026
+
+Dodano 55 autorskich, monochromatycznych ikon Android Vector Drawable XML w katalogu `app/src/main/res/drawable/`, pod prefiksem `lib_ic_*.xml`. Są to odrębne zasoby biblioteczne przeznaczone do ponownego wykorzystania, także w przyszłym edytorze dokumentów. Nie podłączano ich automatycznie do ekranów.
+
+Ikony obejmują: profil i konto, pulpit, ustawienia, wyszukiwanie, powiadomienia, kalendarz, zegar, pocztę, telefon, lokalizację, mapę, dokument, folder, pobieranie, przesyłanie, udostępnianie, edycję, usuwanie, drukowanie, blokadę, ochronę, statusy, pomoc, widoczność, odświeżanie, filtrowanie, sortowanie, nawigację, łączność, portfel, kartę płatniczą, transport, medycynę, edukację, biuro, aparat, obraz, muzykę, język i flagę.
+
+Każdy plik ma pojedynczą ścieżkę z neutralnym wypełnieniem bazowym. Kolor nadaje się w miejscu użycia:
+- widoki Android XML: `app:tint`;
+- Jetpack Compose: parametr `tint` komponentu `Icon`.
+
+Pozwala to zmieniać kolor ikony bez duplikowania pliku XML. Szczegółowy spis nazw, zasady i przykłady użycia znajdują się w `VECTOR-ICON-LIBRARY.md`.
