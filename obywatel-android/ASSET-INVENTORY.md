@@ -108,3 +108,47 @@ W interfejsie należy odróżnić:
 - rzeczywiste uwierzytelnianie dokumentu, którego sama grafika w aplikacji nie zapewnia.
 
 Zasób godła państwowego powinien pozostać odrębny od autorskiego logo i być używany w zgodnym z prawem, niezmienionym wzorze.
+
+
+## Biblioteka heraldyczna i przypisania znaków do dokumentów
+
+Dodano katalog 14 wbudowanych ilustracji SVG w:
+`obywatel-android/app/src/main/assets/heraldry/`.
+
+Katalog obejmuje:
+- herb Ciechomskich — wąż jedzący jabłko;
+- dwa wzory herbów rodowych;
+- wzory biskupi, arcybiskupi, kardynalski, opacki i rycerski;
+- znaki medyczny, naukowy, fundacyjny, misyjny, samorządowy i zasługi.
+
+Są to autorskie ilustracje koncepcyjne, a nie urzędowe godła ani potwierdzone historyczne odwzorowania herbów. W szczególności zgodność herbu Ciechomskich z historycznym wzorem wymaga źródłowej weryfikacji.
+
+### Przypisywanie do dokumentów
+
+Ekran **Więcej → Ustawienia → Zasoby identyfikacji dokumentów** pozwala:
+- importować własne pliki SVG, PNG, JPEG i WebP;
+- wybrać rodzaj zasobu: logo, godło, herb, flaga, pieczęć i inne;
+- przypisać wybrany zasób do konkretnego typu dokumentu lub grupy godności;
+- zastąpić wcześniejsze przypisanie dla tego samego dokumentu i rodzaju znaku;
+- przejrzeć i usunąć własne zasoby.
+
+Przypisania są przechowywane w zaszyfrowanym indeksie lokalnym. Wbudowane SVG są zasobami aplikacji i nie można ich usunąć z poziomu ekranu.
+
+### Zakres podłączenia
+
+- legitymacja poselska — podgląd ewidencyjny;
+- legitymacja uczestnika kursu;
+- legitymacja ucznia / studenta;
+- dokument rodowy;
+- dokumenty kościelne — podgląd znaku i eksport PDF;
+- karty kwalifikacji zawodowych — podgląd znaku i eksport PDF;
+- eksport PDF obsługuje przypisane logo, herb/godło, pieczęć i pozostałe elementy identyfikacji.
+
+Grupy przypisań obejmują godności biskupią, arcybiskupią, kardynalską, opacką i posługę kościelną, a także kwalifikacje medyczne, edukacyjne i terapeutyczne oraz fundacje, Kościoły, przedsiębiorstwa i stowarzyszenia.
+
+### Zasady bezpieczeństwa i wiarygodności
+
+- Grafika herbu, godła, pieczęci ani logo nie potwierdza sama z siebie godności, urzędu, kwalifikacji, mandatu, członkostwa ani umocowania.
+- Przypisanie znaku ma charakter prezentacyjny i ewidencyjny.
+- Dokumenty prywatne i wzory legitymacji pozostają jednoznacznie oznaczone jako ewidencyjne.
+- Oficjalne godło RP i znaki innych instytucji muszą być wykorzystywane wyłącznie w prawidłowym wzorze i zgodnie z warunkami prawnymi.
