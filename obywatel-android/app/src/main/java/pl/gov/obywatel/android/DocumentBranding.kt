@@ -236,8 +236,8 @@ internal object DocumentBrandStore {
             val resourceId = context.resources.getIdentifier(name, "drawable", context.packageName)
             if (resourceId == 0) return null
             val drawable = context.getDrawable(resourceId) ?: return null
-            val width = drawable.intrinsicWidth.coerceIn(1, 1024)
-            val height = drawable.intrinsicHeight.coerceIn(1, 1024)
+            val width = drawable.intrinsicWidth.takeIf { it > 0 }?.coerceAtMost(1024) ?: 512
+            val height = drawable.intrinsicHeight.takeIf { it > 0 }?.coerceAtMost(1024) ?: 512
             return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
                 val canvas = Canvas(bitmap)
                 drawable.setBounds(0, 0, width, height)
@@ -418,8 +418,8 @@ internal object DocumentBrandStore {
             val resourceId = context.resources.getIdentifier(asset.file.removePrefix("resource:"), "drawable", context.packageName)
             if (resourceId == 0) return null
             val drawable = context.getDrawable(resourceId) ?: return null
-            val width = drawable.intrinsicWidth.coerceIn(1, 1024)
-            val height = drawable.intrinsicHeight.coerceIn(1, 1024)
+            val width = drawable.intrinsicWidth.takeIf { it > 0 }?.coerceAtMost(1024) ?: 512
+            val height = drawable.intrinsicHeight.takeIf { it > 0 }?.coerceAtMost(1024) ?: 512
             return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
                 val canvas = Canvas(bitmap)
                 drawable.setBounds(0, 0, width, height)
