@@ -818,6 +818,29 @@ internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, 
     if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=Color(0xFF1769AA))
 }
 
+private data class PdfBrandElement(val id:String,val x:Float,val y:Float,val width:Float,val height:Float)
+private object PdfBrandLayout {
+    val elements = listOf(
+        PdfBrandElement("header",42f,28f,511f,112f),
+        PdfBrandElement("flag",42f,35f,68f,34f),
+        PdfBrandElement("crest",120f,27f,54f,54f),
+        PdfBrandElement("logo",475f,30f,76f,68f),
+        PdfBrandElement("seal",390f,669f,82f,82f),
+        PdfBrandElement("signature",54f,714f,130f,28f)
+    )
+}
+private fun drawPdfBrandImage(canvas:android.graphics.Canvas,bitmap:Bitmap,element:PdfBrandElement,paint:Paint) {
+    val scale=minOf(element.width/bitmap.width.coerceAtLeast(1),element.height/bitmap.height.coerceAtLeast(1))
+    val width=bitmap.width*scale
+    val height=bitmap.height*scale
+    val target=Rect(
+        (element.x+(element.width-width)/2f).toInt(),
+        (element.y+(element.height-height)/2f).toInt(),
+        (element.x+(element.width+width)/2f).toInt(),
+        (element.y+(element.height+height)/2f).toInt()
+    )
+    canvas.drawBitmap(bitmap,null,target,paint)
+}
 private object DocumentPdfRenderer {
     fun write(context: Context, uri: Uri, title: String, owner: String, documentType: String, values: Map<String,String>) {
         val pdf=PdfDocument()
@@ -826,6 +849,7 @@ private object DocumentPdfRenderer {
         val heading=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(20,45,78); textSize=19f; typeface=Typeface.create("sans-serif",Typeface.BOLD) }
         val small=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(95,108,120); textSize=8f }
         val line=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(210,220,230); strokeWidth=0.7f }
+        val flag=DocumentBrandStore.imageForDocument(context,documentType,owner,"Flaga")
         val logo=DocumentBrandStore.imageForDocument(context,documentType,owner,"Logo")
         val crest=DocumentBrandStore.imageForDocument(context,documentType,owner,"Herb") ?: DocumentBrandStore.imageForDocument(context,documentType,owner,"Godło")
         val seal=DocumentBrandStore.image(context,owner,"Pieczęć")
@@ -839,17 +863,24 @@ private object DocumentPdfRenderer {
             val canvas=page!!.canvas
             background?.let { canvas.drawBitmap(it,null,Rect(0,0,pageW,pageH),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=42 }) }
             watermark?.let { canvas.save(); canvas.rotate(-28f,pageW/2f,pageH/2f); canvas.drawBitmap(it,null,Rect(95,330,500,735),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=24 }); canvas.restore() }
-            logo?.let { canvas.drawBitmap(it,null,Rect(margin.toInt(),28,margin.toInt()+58,86),Paint(Paint.ANTI_ALIAS_FLAG)) }
-            crest?.let { canvas.drawBitmap(it,null,Rect(pageW-105,28,pageW-48,86),Paint(Paint.ANTI_ALIAS_FLAG)) }
-            canvas.drawText(owner.ifBlank { "Dokument" },margin,105f,small)
-            canvas.drawText(title,margin,137f,heading)
-            canvas.drawLine(margin,151f,pageW-margin,151f,line)
-            y=176f
+            val header = PdfBrandLayout.elements.first { it.id == "header" }
+            val flagElement = PdfBrandLayout.elements.first { it.id == "flag" }
+            val crestElement = PdfBrandLayout.elements.first { it.id == "crest" }
+            val logoElement = PdfBrandLayout.elements.first { it.id == "logo" }
+            flag?.let { drawPdfBrandImage(canvas,it,flagElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
+            crest?.let { drawPdfBrandImage(canvas,it,crestElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
+            logo?.let { drawPdfBrandImage(canvas,it,logoElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
+            canvas.drawText(owner.ifBlank { "Dokument" },header.x,header.y+70f,small)
+            canvas.drawText(title,header.x,header.y+95f,heading)
+            canvas.drawLine(header.x,header.y+105f,header.x+header.width,header.y+105f,line)
+            y=header.y+128f
         }
         fun finishPage() {
             val c=page!!.canvas
-            seal?.let { c.drawBitmap(it,null,Rect(pageW-150,pageH-125,pageW-70,pageH-45),Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=220 }) }
-            signature?.let { c.drawBitmap(it,null,Rect(margin.toInt(),pageH-125,margin.toInt()+130,pageH-72),Paint(Paint.ANTI_ALIAS_FLAG)) }
+            val sealElement = PdfBrandLayout.elements.first { it.id == "seal" }
+            val signatureElement = PdfBrandLayout.elements.first { it.id == "signature" }
+            seal?.let { drawPdfBrandImage(c,it,sealElement,Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=220 }) }
+            signature?.let { drawPdfBrandImage(c,it,signatureElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
             c.drawLine(margin,pageH-145f,pageW-margin,pageH-145f,line)
             c.drawText("Miejsce na podpis / podpis elektroniczny · strona "+pageNo,margin,pageH-35f,small)
             pdf.finishPage(page!!)
