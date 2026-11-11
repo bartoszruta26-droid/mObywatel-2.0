@@ -184,10 +184,10 @@ Audyt drzewa Git dla `main` potwierdził następujący stan:
 
 Porównano katalogi zasobów gałęzi `backup/main-before-master-sync-2026-11-10`, `ui/compose-visual-refresh-2026-11` i `integration/android-full-feature-set-2026-11` z `main`. Wszystkie znalezione w nich pliki wektorowe i pliki graficzne oznaczone jako ikony/logo mają już odpowiedniki na `main`; porównanie identyfikatorów blobów potwierdziło zgodność zawartości. W tych zakresach nie było brakujących zasobów do ponownego kopiowania.
 
-Gałęzie `feature/heraldic-document-assignments` i `feature/bishop-heraldry-full-and-shield-icons` również nie wymagają ponownego scalania grafik: katalog 16 SVG oraz aktualne mapowanie znaków są już obecne na `main`. Gałąź `feature/heraldic-dignity-specific-assignments` zawiera starszą wersję `DocumentBranding.kt`; aktualny plik na `main` ma szerszą obsługę przypisań i rozpoznawania godności, dlatego nie zastępujemy go starszą implementacją.
+Z gałęzi `feature/bishop-heraldry-full-and-shield-icons` przeniesiono do `main` dwa brakujące zasoby SVG (`herb-biskupi-pelny.svg` i `tarcza-herbu-biskupiego.svg`) oraz odświeżono 14 istniejących herbów i znaków. Zmiany ograniczono do plików graficznych, bez zastępowania aktualnej implementacji `DocumentBranding.kt` starszym kodem z gałęzi. Gałąź `feature/heraldic-dignity-specific-assignments` zawiera starszą wersję logiki przypisań i nie wymaga scalania.
 
 ### Odseparowane, historyczne szkielety Android
 
 Gałęzie `android-app-skeleton-refactor-8343a` i `refactoring-the-application-skeleton-3dc4f` zawierają dodatkowe XML-y w odrębnym katalogu głównym `app/src/main/res`, bez wspólnej historii z aktualnym projektem `obywatel-android`. Nie zostały scalone wprost, ponieważ reprezentują osobny, starszy szkielet aplikacji. Część ich zasobów ma jawnie tymczasowy charakter: uproszczona grafika orła jest opisana jako przybliżenie do zastąpienia oficjalnym wzorem, a flaga UE używa kół zamiast gwiazd. Nie kopiujemy takich placeholderów do aktywnej aplikacji jako gotowych symboli.
 
-**Wniosek:** zasoby wektorowe obecne w aktywnych gałęziach UI i heraldyki są już na `main`. Dalsze odzyskiwanie wymaga osobnego przeglądu historycznych szkieletów i źródłowych plików graficznych, a nie ponownego scalania tych samych zasobów.
+**Wniosek:** biblioteka Android zawiera obecnie 16 zasobów heraldycznych SVG, a katalog iOS 356 plików SVG. Nie prowadzono audytu wykorzystania ikon w interfejsie — zasoby pozostają dostępne również do przyszłego wykorzystania w edytorze dokumentów.
