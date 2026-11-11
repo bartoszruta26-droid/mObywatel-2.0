@@ -779,7 +779,13 @@ private fun HomeScreen() {
                                 mapOf(
                                     "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
                                     "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
-                                    "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context)
+                                    "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
+                                    "signedPdfArchive" to SignedPdfStore.exportArchive(context),
+                                    "brandAssetArchive" to DocumentBrandStore.exportArchive(context),
+                                    "professionalQualificationArchive" to ProfessionalCredentialStore.exportArchive(context),
+                                    "familyHealthArchive" to FamilyHealthStore.exportArchive(context),
+                                    "medicalHistoryArchive" to MedicalHistoryStore.exportArchive(context),
+                                    "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context)
                                 )
                             runCatching {
                                 require(exportSnapshot.isNotEmpty()) {
@@ -1045,12 +1051,22 @@ private fun HomeScreen() {
                             val current = DemoIdentityStore.loadStrict(context)
                             val profileValues = incoming.filterKeys {
                                 !it.startsWith("cs_") && !it.startsWith("dp_") &&
-                                    it !in setOf("churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive")
+                                    it !in setOf(
+                                        "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
+                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive"
+                                    )
                             }
                             DemoIdentityStore.save(context, current.toMutableMap().apply { putAll(profileValues) })
                             incoming["churchDocumentArchive"]?.let { ChurchDocumentStore.importArchive(context, it) }
                             incoming["familyEntityDocumentArchive"]?.let { FamilyEntityDocumentStore.importArchive(context, it) }
                             incoming["officialDocumentArchive"]?.let { OfficialDocumentStore.importArchive(context, it) }
+                            incoming["signedPdfArchive"]?.let { SignedPdfStore.importArchive(context, it) }
+                            incoming["brandAssetArchive"]?.let { DocumentBrandStore.importArchive(context, it) }
+                            incoming["professionalQualificationArchive"]?.let { ProfessionalCredentialStore.importArchive(context, it) }
+                            incoming["familyHealthArchive"]?.let { FamilyHealthStore.importArchive(context, it) }
+                            incoming["medicalHistoryArchive"]?.let { MedicalHistoryStore.importArchive(context, it) }
+                            incoming["importedAttachmentArchive"]?.let { pl.gov.obywatel.android.data.ImportedDocumentStore.importArchive(context, it) }
                             LegitimacyPreviewSettingsStore.importAll(context, incoming)
                             val importedPlacements = incoming.filterKeys { it.startsWith("dp_") }
                                 .mapKeys { it.key.removePrefix("dp_") }
@@ -1068,7 +1084,11 @@ private fun HomeScreen() {
                             }
                             val auxiliaryCount = incoming.keys.count {
                                 it.startsWith("cs_") || it.startsWith("dp_") ||
-                                    it in setOf("churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive")
+                                    it in setOf(
+                                        "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
+                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive"
+                                    )
                             }
                             val changed = profileValues.keys.count { persisted[it] == profileValues[it] } + auxiliaryCount
                             require(changed == incoming.size) {
