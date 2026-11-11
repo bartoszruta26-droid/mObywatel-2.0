@@ -487,7 +487,7 @@ internal fun LegitimacyHeraldry(
                     Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu",
                         modifier = flagModifier, contentScale = androidx.compose.ui.layout.ContentScale.Fit)
                 } else {
-                    Image(painterResource(R.drawable.institutions_polish_flag), contentDescription = "Flaga dokumentu",
+                    Image(painterResource(R.drawable.institutions_polish_flag_vector), contentDescription = "Flaga dokumentu",
                         modifier = flagModifier, contentScale = androidx.compose.ui.layout.ContentScale.Fit)
                 }
             }
