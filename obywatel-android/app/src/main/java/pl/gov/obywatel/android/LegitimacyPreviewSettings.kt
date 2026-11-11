@@ -40,7 +40,7 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
     "disability" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "disabilityDecisionType" to "Rodzaj orzeczenia", "disabilityCaseNumber" to "Numer sprawy", "disabilityValidity" to "Okres obowiązywania", "disabilityIssuerName" to "Wystawca")
     "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" ->
         listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "churchRole" to "Posługa / godność", "churchDocumentNumber" to "Numer dokumentu", "churchIssueDate" to "Data wydania", "churchValidity" to "Okres obowiązywania", "churchIssuer" to "Wystawca")
-    "organization_foundation", "organization_association", "organization_church", "organization_company", "entity" ->
+    "organization_foundation", "organization_association", "organization_church", "organization_company", "entity", "business", "registry" ->
         listOf("entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP", "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant")
     "loyalty", "loyalty_cards" -> listOf("loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz")
     "bank_accounts" -> listOf("bankName" to "Bank", "accountName" to "Nazwa rachunku", "accountNumber" to "Numer rachunku", "accountOwner" to "Właściciel")
