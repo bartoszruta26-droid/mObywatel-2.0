@@ -773,7 +773,7 @@ private fun HomeScreen() {
                         onExportAll = {
                             exportSnapshot = DemoIdentityStore.load(context) +
                                 LegitimacyPreviewSettingsStore.exportAll(context) +
-                                documentPlacements.mapKeys { "documentPlacement_${it.key}" }
+                                loadDocumentPlacements(context).mapKeys { "documentPlacement_${it.key}" }
                             runCatching {
                                 require(exportSnapshot.isNotEmpty()) {
                                     "Brak zapisanych danych. Najpierw uzupełnij i zapisz dane w ustawieniach."
