@@ -69,6 +69,9 @@ private data class MedicalHistoryEntry(
     val images: List<String> = emptyList()
 )
 
+internal fun exportMedicalHistoryArchive(context: Context): String = MedicalHistoryStore.exportArchive(context)
+internal fun importMedicalHistoryArchive(context: Context, raw: String) = MedicalHistoryStore.importArchive(context, raw)
+
 @Composable
 internal fun MedicalHistoryRecordsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -262,7 +265,7 @@ internal fun MedicalHistoryRecordsScreen(onBack: () -> Unit) {
     }
 }
 
-internal object MedicalHistoryStore {
+private object MedicalHistoryStore {
     private const val FILE_NAME = "medical_history_archive.enc"
     private const val KEY_ALIAS = "obywatel_medical_history_aes"
 
