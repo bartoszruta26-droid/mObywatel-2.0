@@ -29,7 +29,7 @@ PREFIX_RE = re.compile(r"^(\d+)([ \t]+)(.*)$")
 
 def is_text_file(file_path: Path) -> bool:
     """Return whether a file is UTF-8 text and not a known binary or symlink."""
-    if file_path.suffix.lower() in BINARY_EXTENSIONS or file_path.is_symlink() or not file_path.is_file():
+    if file_path.suffix.lower() in BINARY_EXTENSIONS or file_path.name.endswith(".bak") or file_path.is_symlink() or not file_path.is_file():
         return False
     try:
         with file_path.open("r", encoding="utf-8") as stream:
@@ -96,7 +96,7 @@ def process_file(file_path: Path, dry_run: bool = True) -> tuple[bool, str]:
     try:
         if file_path.is_symlink() or not file_path.is_file():
             return False, "Refusing to process non-regular file or symlink"
-        original = file_path.read_text(encoding="utf-8")
+        with file_path.open("r", encoding="utf-8", newline="") as source_text:\n            original = source_text.read()
         if not has_line_numbers(original):
             return False, "No strict sequential line numbering detected"
         cleaned = remove_line_numbers(original)
