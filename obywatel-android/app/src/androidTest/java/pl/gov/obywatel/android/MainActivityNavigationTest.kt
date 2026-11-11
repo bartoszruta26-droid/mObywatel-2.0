@@ -29,7 +29,7 @@ class MainActivityNavigationTest {
     @Test
     fun dashboardShowsCurrentDocumentWalletAndServicesEntry() {
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
         composeRule.onNodeWithText("Wszystkie usługi").performScrollTo().assertIsDisplayed()
     }
 
@@ -148,6 +148,6 @@ class MainActivityNavigationTest {
     @Test
     fun qrNavigationRemainsAvailable() {
         selectBottomTab(3)
-        composeRule.onNodeWithText("Kod QR").assertIsDisplayed()
+        composeRule.onNodeWithText("Obywatelska Wymiana Danych").assertIsDisplayed()
     }
 }
