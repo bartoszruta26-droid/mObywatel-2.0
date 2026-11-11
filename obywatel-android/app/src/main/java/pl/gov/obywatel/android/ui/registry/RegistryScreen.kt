@@ -69,6 +69,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.InputStream
+import java.io.File
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -105,6 +106,62 @@ private object LocalRegistryStore {
         }.getOrDefault(emptyList()).sortedByDescending { it.createdAt }
     }
 
+
+    fun exportArchive(context: Context): String {
+        val items = JSONArray()
+        read(context).forEach { entry ->
+            val bytes = context.contentResolver.openInputStream(Uri.parse(entry.uri))?.use { input ->
+                val out = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                var total = 0
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    total += count
+                    require(total <= 50 * 1024 * 1024) { "Plik rejestrowy przekracza limit 50 MB: ${entry.title}" }
+                    out.write(buffer, 0, count)
+                }
+                out.toByteArray()
+            } ?: error("Nie można odczytać pliku rejestrowego: ${entry.title}")
+            items.put(JSONObject().put("id", entry.id).put("title", entry.title)
+                .put("createdAt", entry.createdAt).put("sha256", entry.sha256)
+                .put("bytes", java.util.Base64.getEncoder().encodeToString(bytes)))
+        }
+        return JSONObject().put("version", 1).put("entries", items).toString()
+    }
+
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja rejestru dokumentów." }
+        val directory = File(context.filesDir, "local-document-registry").apply { mkdirs() }
+        val merged = read(context).associateBy { it.id }.toMutableMap()
+        val items = root.optJSONArray("entries") ?: JSONArray()
+        for (i in 0 until items.length()) {
+            val item = items.getJSONObject(i)
+            val id = item.getString("id")
+            require(id.matches(Regex("[A-Fa-f0-9-]{16,64}"))) { "Nieprawidłowy identyfikator wpisu rejestrowego." }
+            val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
+            require(bytes.isNotEmpty() && bytes.size <= 50 * 1024 * 1024) { "Plik rejestrowy przekracza limit 50 MB." }
+            val digest = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+            require(digest.equals(item.getString("sha256"), ignoreCase = true)) {
+                "Suma SHA-256 pliku rejestrowego nie zgadza się z archiwum."
+            }
+            val target = File(directory, "$id.bin")
+            target.writeBytes(bytes)
+            merged[id] = RegistryEntry(id, item.getString("title").take(180),
+                item.optLong("createdAt", System.currentTimeMillis()), Uri.fromFile(target).toString(), digest)
+        }
+        val array = JSONArray()
+        merged.values.forEach { entry ->
+            array.put(JSONObject().put("id", entry.id).put("title", entry.title)
+                .put("createdAt", entry.createdAt).put("uri", entry.uri).put("sha256", entry.sha256))
+        }
+        check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putString(KEY_ENTRIES, array.toString()).commit()) {
+            "Nie udało się przywrócić rejestru dokumentów."
+        }
+    }
+
     fun add(context: Context, entry: RegistryEntry) {
         val entries = read(context).toMutableList()
         require(entries.none { it.id == entry.id })
@@ -124,6 +181,9 @@ private object LocalRegistryStore {
         }
     }
 }
+
+internal fun exportLocalRegistryArchive(context: Context): String = LocalRegistryStore.exportArchive(context)
+internal fun importLocalRegistryArchive(context: Context, raw: String) = LocalRegistryStore.importArchive(context, raw)
 
 @Composable
 fun RegistryScreen(onBack: () -> Unit) {
