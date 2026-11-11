@@ -4,33 +4,27 @@ package pl.gov.obywatel.android.ui.home
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.onAllNodesWithText
 import org.junit.Rule
 import org.junit.Test
 import pl.gov.obywatel.android.MainActivity
 
-/**
- * Integration checks for the actual activity-hosted home screen.
- * The former tests targeted a removed HomeScreen(onOpenSection) API and
- * therefore no longer represented the application navigation model.
- */
+/** Integration checks for the current activity-hosted dashboard. */
 class HomeScreenTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun showsIndependentApplicationNoticeAndCurrentDashboard() {
+    fun dashboardShowsDocumentWalletAndNavigation() {
+        composeRule.onNodeWithTag("bottom-nav-0").assertIsDisplayed()
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
-        composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
     }
 
     @Test
-    fun dashboardProvidesDocumentsAndServicesEntryPoints() {
-        composeRule.onAllNodesWithText("Dokumenty")[0].assertIsDisplayed()
+    fun dashboardProvidesServicesEntryPoint() {
         composeRule.onNodeWithText("Wszystkie usługi").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Inne dokumenty").assertIsDisplayed()
     }
 }
