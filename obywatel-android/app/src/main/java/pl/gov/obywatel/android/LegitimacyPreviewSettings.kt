@@ -861,7 +861,7 @@ internal fun UnifiedCredentialCard(
                                             verticalArrangement = Arrangement.spacedBy(2.dp)
                                         ) {
                                             visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach {
-                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
+                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
                                             }
                                         }
                                     }
