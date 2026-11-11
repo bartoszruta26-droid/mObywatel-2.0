@@ -469,6 +469,25 @@ internal fun DocumentIdentityTemplate(
     fun stableFieldKey(label: String): String {
         val value = label.lowercase(Locale.ROOT)
         return when {
+            value.contains("miejsce w rodzie") -> "familyRole"
+            value.contains("nazwa rodu") -> "familyName"
+            value.contains("początek mandatu") -> "mpStart"
+            value.contains("koniec mandatu") -> "mpEnd"
+            value.contains("kadencj") -> "mpTerm"
+            value.contains("okręg") -> "mpDistrict"
+            value.contains("kierunek") -> "studentProgramme"
+            value.contains("wydział") -> "studentFaculty"
+            value.contains("rok akademicki") -> "studentAcademicYear"
+            value.contains("rok i semestr") -> "studentYear"
+            value.contains("poziom studiów") -> "studentLevel"
+            value.contains("profil") || value.contains("forma studiów") -> "studentProfile"
+            value.contains("status uczestnictwa") -> "trainingStatus"
+            value.contains("status studenta") -> "studentStatus"
+            value.contains("stopień") -> "disabilityDegree"
+            value.contains("rodzaj orzeczenia") -> "disabilityDecisionType"
+            value.contains("numer sprawy") -> "disabilityCaseNumber"
+            value.contains("instytucja") -> "trainingInstitution"
+            value.contains("uczelnia") -> "studentUniversity"
             value.contains("krs") -> "entityKrs"
             value.contains("nip") -> "entityNip"
             value.contains("regon") -> "entityRegon"
@@ -508,7 +527,13 @@ internal fun DocumentIdentityTemplate(
                 "church" -> "churchDocumentNumber"
                 else -> if (documentType.startsWith("church")) "churchDocumentNumber" else "documentNumber"
             }
-            value.contains("wystawc") || value.contains("organ wydaj") -> if (documentType.startsWith("professional")) "professionalIssuer" else if (documentType.startsWith("church")) "churchIssuer" else "issuer"
+            value.contains("wystawc") || value.contains("organ wydaj") -> when {
+                documentType == "disability" -> "disabilityIssuerName"
+                documentType.startsWith("professional") -> "professionalIssuer"
+                documentType.startsWith("church") -> "churchIssuer"
+                documentType == "parliament" -> "mpIssuer"
+                else -> "issuer"
+            }
             value.contains("kurs") -> "trainingCourseName"
             value.contains("kwalifikac") -> if (documentType.startsWith("professional")) "professionalTitle" else "trainingCourseName"
             value.contains("uczeln") || value.contains("student") -> "studentUniversity"
