@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <!-- Obywatel -->
+    <path android:fillColor="#7A0026"
+        android:pathData="M12,3 a4,4 0 1,0 0.01,0 Z M4,21 C4,15 8,13 12,13 C16,13 20,15 20,21 Z" />
+    <path android:fillColor="#D4212D"
+        android:pathData="M12,15 a2,2 0 1,0 0.01,0 Z" />
+</vector>

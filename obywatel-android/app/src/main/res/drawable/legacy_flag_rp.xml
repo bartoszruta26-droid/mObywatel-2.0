@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Flagi państwowe / UE do banerów w aplikacji. Oficjalne pliki — patrz README § „Symbole państwowe”. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="40dp"
+    android:viewportWidth="64"
+    android:viewportHeight="40">
+    <!-- Pasek biały -->
+    <path android:fillColor="#FFFFFF" android:pathData="M0,0 H64 V20 H0 Z" />
+    <!-- Pasek czerwony (barwy RP) -->
+    <path android:fillColor="#D4212D" android:pathData="M0,20 H64 V40 H0 Z" />
+    <!-- Ramka -->
+    <path android:strokeColor="#9AA0A6" android:strokeWidth="1"
+        android:pathData="M0.5,0.5 H63.5 V39.5 H0.5 Z" />
+</vector>

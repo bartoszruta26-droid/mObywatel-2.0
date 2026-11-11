@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ikona listy dokumentów — pieczęć/sztandar -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#7A0026"
+        android:pathData="M4,3 H20 V18 L12,22 L4,18 Z M6,5 V16.6 L12,19.8 L18,16.6 V5 Z" />
+    <path android:fillColor="#D4212D"
+        android:pathData="M9,8 H15 V10 H9 Z M9,12 H15 V14 H9 Z" />
+</vector>
