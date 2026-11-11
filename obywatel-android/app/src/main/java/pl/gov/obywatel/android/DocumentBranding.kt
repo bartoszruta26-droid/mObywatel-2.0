@@ -235,6 +235,10 @@ internal object DocumentBrandStore {
         if (selected.file.startsWith("builtin:")) return
         File(dir(context),selected.file).delete()
         save(context,old.filterNot { it.id==id || it.file.startsWith("builtin:") })
+        val retained = assignments(context).filterNot { it.assetId == id }
+        val index = JSONArray()
+        retained.forEach { item -> index.put(JSONObject().put("documentType",item.documentType).put("kind",item.kind).put("assetId",item.assetId)) }
+        File(dir(context),ASSIGNMENTS_INDEX).writeBytes(crypt(index.toString().toByteArray(Charsets.UTF_8),true))
     }
 }
 
