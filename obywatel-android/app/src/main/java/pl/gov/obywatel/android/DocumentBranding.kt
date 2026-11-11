@@ -545,6 +545,8 @@ internal fun DocumentIdentityTemplate(
         validity.contains("utrac", true) || validity.contains("zwróc", true) ||
         validity.contains("expired", true) || validity.contains("invalid", true)
     val valid = !explicitlyInvalid && isCredentialValidByExpiry(expiry)
+    val qrPayload = remember(title, values) { buildString { append("DEMO|"); append(title); values.forEach { (key, value) -> append("|").append(key).append("=").append(value) } } }
+    val qrBitmap = remember(qrPayload) { createDocumentQr(qrPayload) }
 
     if (settings.showCard) {
         UnifiedCredentialCard(
@@ -564,6 +566,9 @@ internal fun DocumentIdentityTemplate(
                 validity = expiry,
                 orientation = settings.orientation
             )
+        } else if (qrBitmap != null) {
+            Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR dokumentu",
+                modifier = Modifier.size(112.dp).align(Alignment.CenterHorizontally))
         }
     }
     CredentialValidityTile(valid)
