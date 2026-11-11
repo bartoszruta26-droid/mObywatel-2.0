@@ -5,7 +5,7 @@ name: Android prototype build
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - "obywatel-android/**"
       - ".github/workflows/android-build.yml"
