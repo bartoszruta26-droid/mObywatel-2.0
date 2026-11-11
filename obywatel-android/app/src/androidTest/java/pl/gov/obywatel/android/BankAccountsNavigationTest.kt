@@ -43,9 +43,11 @@ class BankAccountsNavigationTest {
             .performScrollTo()
             .performClick()
         composeRule.waitForIdle()
+        // Ekran szczegółów jest przewijany; przewiń do komunikatu zamiast
+        // zakładać, że znajduje się on od razu w widocznym obszarze.
         composeRule.onNodeWithText(
             "Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia."
-        ).assertIsDisplayed()
+        ).performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -61,7 +63,8 @@ class BankAccountsNavigationTest {
             .performScrollTo()
             .performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Dodaj rachunek").assertIsDisplayed()
-        composeRule.onNodeWithText("Zapisz").assertIsDisplayed()
+        // Kontrolki formularza leżą niżej w przewijanym ekranie.
+        composeRule.onNodeWithText("Dodaj rachunek").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Zapisz").performScrollTo().assertIsDisplayed()
     }
 }
