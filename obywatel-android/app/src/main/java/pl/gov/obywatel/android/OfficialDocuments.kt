@@ -128,7 +128,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color=Color(0xFF1769AA), fontWeight=FontWeight.SemiBold, modifier=Modifier.clickable(onClick=onBack).padding(vertical=5.dp))
         Text(if(readOnly) "Dokumenty urzędowe i ubezpieczeniowe" else "Formularze i ewidencja dokumentów", style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
-        Text("Wpisy i załączniki są prywatną ewidencją użytkownika. Nie są urzędowym dokumentem, poświadczeniem, decyzją ani potwierdzeniem ważności.", style=MaterialTheme.typography.bodySmall, color=Color(0xFF667788))
+        Text("Wprowadzaj dane zgodnie z dokumentem źródłowym. Pliki i wpisy zachowują status nadany im przez właściwego wystawcę.", style=MaterialTheme.typography.bodySmall, color=Color(0xFF667788))
         if(selected==null) {
             officialDocTypes.forEach { type ->
                 val values=records[type.id].orEmpty()
