@@ -76,7 +76,14 @@ private val documentBrandTargets = listOf(
     "organization_association" to "Stowarzyszenie / organizacja społeczna",
     "family" to "Dokumenty rodowe",
     "entity" to "Dokumenty organizacji i podmiotów",
-    "official" to "Pozostałe dokumenty urzędowe"
+    "official" to "Pozostałe dokumenty urzędowe",
+    "profile" to "Dane osobowe i zdjęcie profilowe",
+    "disability" to "Orzeczenia i zaświadczenia",
+    "loyalty" to "Karty lojalnościowe",
+    "bank_accounts" to "Konta bankowe",
+    "children" to "Dokumentacja dzieci",
+    "vaccines" to "Karta szczepień",
+    "civil" to "Dokumenty cywilne"
 )
 
 internal object DocumentBrandStore {
@@ -468,42 +475,46 @@ internal fun DocumentIdentityTemplate(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Stan na: $now", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
         Box(
-            Modifier.fillMaxWidth().aspectRatio(1.586f).clip(RoundedCornerShape(14.dp))
+            Modifier.fillMaxWidth().aspectRatio(0.70f).clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFFF4F6F8)).border(1.dp, Color(0xFFD5DDE5), RoundedCornerShape(14.dp))
         ) {
             if (background != null) Image(background.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.34f)
-            Row(Modifier.fillMaxSize().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Column(Modifier.weight(0.39f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.88f)),
-                        contentAlignment = Alignment.Center) {
-                        if (photo != null) Image(photo.asImageBitmap(), "Fotografia osoby", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                        else Text("MIEJSCE NA\nFOTOGRAFIĘ", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+            Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                        if (flag != null) Image(flag.asImageBitmap(), "Flaga", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                        else Text("FL", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                     }
-                    Column(Modifier.fillMaxWidth().weight(0.34f), verticalArrangement = Arrangement.spacedBy(3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(Modifier.fillMaxWidth(0.72f).weight(1f), contentAlignment = Alignment.Center) {
-                            if (flag != null) Image(flag.asImageBitmap(), "Flaga", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
-                            else Text("FLAGA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                        }
-                        Box(Modifier.fillMaxWidth(0.72f).weight(1f), contentAlignment = Alignment.Center) {
-                            if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
-                            else Text("GODŁO /\nHERB / LOGO", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                        }
+                    Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
+                        if (emblem != null) Image(emblem.asImageBitmap(), "Godło, herb lub logo wystawcy", Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                        else Text("ZNAK", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                     }
+                    Text(title.uppercase(), modifier = Modifier.weight(1f), color = Color(0xFF173B58),
+                        fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 3)
                 }
-                Column(Modifier.weight(0.61f).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(title.uppercase(), color = Color(0xFF173B58), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 2)
-                    Text(name.ifBlank { "MIEJSCE NA DANE POSIADACZA" }, color = Color(0xFF173B58), fontWeight = FontWeight.SemiBold, maxLines = 2)
-                    values.entries.filter { it.value.isNotBlank() }.take(3).forEach { (key, value) ->
-                        Text("$key: $value", color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(Modifier.weight(0.42f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.88f)), contentAlignment = Alignment.Center) {
+                            if (photo != null) Image(photo.asImageBitmap(), "Fotografia osoby", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            else Text("MIEJSCE NA\nFOTOGRAFIĘ", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                        }
+                        Text("DOKUMENT / EWIDENCJA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
                     }
-                    Spacer(Modifier.weight(1f))
-                    Text("DOKUMENT / EWIDENCJA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    Column(Modifier.weight(0.58f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Text(name.ifBlank { "MIEJSCE NA DANE POSIADACZA" }, color = Color(0xFF173B58),
+                            fontWeight = FontWeight.SemiBold, maxLines = 3)
+                        values.entries.filter { it.value.isNotBlank() }.take(5).forEach { (key, value) ->
+                            Text("$key: $value", color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall, maxLines = 3)
+                        }
+                    }
                 }
             }
         }
         if (showReverse) {
             Box(
-                Modifier.fillMaxWidth().aspectRatio(1.586f).clip(RoundedCornerShape(14.dp))
+                Modifier.fillMaxWidth().aspectRatio(0.70f).clip(RoundedCornerShape(14.dp))
                     .border(1.dp, Color(0xFFD5DDE5), RoundedCornerShape(14.dp))
                     .background(Color(0xFFF4F6F8))
             ) {
@@ -569,9 +580,9 @@ internal fun DocumentIdentityTemplate(
 
 
 @Composable
-internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
+internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null) {
     val context= LocalContext.current
-    var target by remember { mutableStateOf(documentBrandTargets.first().first) }
+    var target by remember(fixedTarget) { mutableStateOf(fixedTarget ?: documentBrandTargets.first().first) }
     var targetMenuExpanded by remember { mutableStateOf(false) }
     var assignments by remember { mutableStateOf(DocumentBrandStore.assignments(context)) }
     var owner by remember { mutableStateOf("") }
@@ -586,19 +597,12 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color=Color(0xFF1769AA), modifier=Modifier.clickable(onClick=onBack).padding(vertical=5.dp))
-        Text("Zasoby identyfikacji dokumentów", style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
+        Text(if (fixedTarget == null) "Biblioteka zasobów graficznych" else "Wygląd dokumentu: " + (documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget), style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
         Text("Dodawaj osobne zestawy znaków dla każdego podmiotu, Rodu, Kościoła i zawodu. Możesz przypisywać logo, godło i herb do dokumentów oraz godności. Obsługiwane są SVG, PNG, JPEG i WebP; pliki są przechowywane lokalnie i szyfrowane.", style=MaterialTheme.typography.bodySmall)
         OutlinedTextField(owner,{owner=it},label={Text("Podmiot / właściciel zestawu")},modifier=Modifier.fillMaxWidth())
-        Text("Przypisanie do dokumentu",fontWeight=FontWeight.SemiBold)
-        Box {
-            OutlinedButton(onClick={targetMenuExpanded=true},modifier=Modifier.fillMaxWidth()) {
-                Text(documentBrandTargets.firstOrNull { it.first==target }?.second ?: target)
-            }
-            DropdownMenu(expanded=targetMenuExpanded,onDismissRequest={targetMenuExpanded=false}) {
-                documentBrandTargets.forEach { (id,title) ->
-                    DropdownMenuItem(text={Text(title)},onClick={target=id;targetMenuExpanded=false})
-                }
-            }
+        if (fixedTarget != null) {
+            Text("Dokument",fontWeight=FontWeight.SemiBold)
+            Text(documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget, color=Color(0xFF173B58), fontWeight=FontWeight.Medium)
         }
         Text("Rodzaj zasobu",fontWeight=FontWeight.SemiBold)
         DocumentBrandStore.assetKinds().forEach { k ->
@@ -612,7 +616,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
         if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA))
         HorizontalDivider()
         Text("Zapisane zasoby",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        assignments.forEach { assignment ->
+        assignments.filter { fixedTarget == null || it.documentType == fixedTarget }.forEach { assignment ->
             val asset = assets.firstOrNull { it.id == assignment.assetId }
             Row(Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
                 Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${if (assignment.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall, modifier=Modifier.weight(1f))
@@ -628,11 +632,11 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
                     Text(if (asset.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else asset.kind,fontWeight=FontWeight.SemiBold)
                     Text(asset.owner+" · "+asset.label,style=MaterialTheme.typography.bodySmall)
                     Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick={
-                            runCatching { DocumentBrandStore.assign(context,target,asset.kind,asset.id) }
-                                .onSuccess { assignments=DocumentBrandStore.assignments(context); status="Przypisano ${if (asset.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else asset.kind} do wybranego rodzaju dokumentu." }
-                                .onFailure { status="Nie udało się przypisać zasobu: ${it.message}" }
-                        }) { Text("Przypisz do dokumentu") }
+                        if (fixedTarget != null) TextButton(onClick={
+                            runCatching { DocumentBrandStore.assign(context,fixedTarget,asset.kind,asset.id) }
+                                .onSuccess { assignments=DocumentBrandStore.assignments(context); status="Zapisano zasób dla wybranego dokumentu." }
+                                .onFailure { status="Nie udało się przypisać zasobu: " + (it.message ?: "błąd") }
+                        }) { Text("Ustaw dla tego dokumentu") }
                         if (asset.file.startsWith("builtin:")) {
                             Text("Wbudowany SVG", color=Color(0xFF667788), style=MaterialTheme.typography.labelSmall, modifier=Modifier.padding(top=10.dp))
                         } else TextButton(onClick={
