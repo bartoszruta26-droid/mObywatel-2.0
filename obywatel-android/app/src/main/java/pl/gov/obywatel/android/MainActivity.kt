@@ -649,6 +649,7 @@ private fun HomeScreen() {
     var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
     var showDocumentVisibilitySettings by remember { mutableStateOf(false) }
+    var showDocumentBrandAssets by remember { mutableStateOf(false) }
     var showRegistryEditor by remember { mutableStateOf(false) }
     var settingsDocumentEditor by remember { mutableStateOf<String?>(null) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
@@ -672,6 +673,7 @@ private fun HomeScreen() {
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
             settingsDocumentEditor != null -> { settingsDocumentEditor = null; showSettingsMenu = true }
             showDocumentVisibilitySettings -> { showDocumentVisibilitySettings = false; showSettingsMenu = true }
+            showDocumentBrandAssets -> { showDocumentBrandAssets = false; showSettingsMenu = true }
             showSettingsMenu -> showSettingsMenu = false
             selectedDocumentId != null -> selectedDocumentId = null
             showDemoDocuments -> showDemoDocuments = false
@@ -684,7 +686,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -743,6 +745,7 @@ private fun HomeScreen() {
                     settingsDocumentEditor == "civil" -> OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     settingsDocumentEditor == "children_health" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     settingsDocumentEditor == "vaccines" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    showDocumentBrandAssets -> DocumentBrandAssetsScreen(onBack = { showDocumentBrandAssets = false; showSettingsMenu = true })
                     showDocumentVisibilitySettings -> DocumentVisibilitySettingsScreen(
                         documentPlacements = documentPlacements,
                         onDocumentPlacementsChange = { updated ->
@@ -759,6 +762,7 @@ private fun HomeScreen() {
                         },
                         onBack = { showSettingsMenu = false },
                         onManageDocumentVisibility = { showSettingsMenu = false; showDocumentVisibilitySettings = true },
+                        onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
@@ -1989,6 +1993,7 @@ private fun SettingsMenuScreen(
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit,
     onManageDocumentVisibility: () -> Unit,
+    onManageDocumentBrandAssets: () -> Unit,
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
     onEditRegistry: () -> Unit,
@@ -2024,6 +2029,12 @@ private fun SettingsMenuScreen(
             "Wybierz: Dokumenty, Inne dokumenty albo Ukryj",
             Icons.Filled.Security,
             onManageDocumentVisibility
+        )
+        ProfileActionCard(
+            "Zasoby graficzne dokumentów",
+            "Dodawanie i przypisywanie teł, herbów, godła, logo, flag oraz fotografii",
+            Icons.Filled.Image,
+            onManageDocumentBrandAssets
         )
         Text("Kopia danych vCard", color = Navy, fontWeight = FontWeight.Bold)
         Text("Eksport obejmuje pola profilu i ewidencji, w tym załączone dane tekstowe. Plik może zawierać dane wrażliwe — przechowuj go bezpiecznie.", color = Muted, style = MaterialTheme.typography.bodySmall)
