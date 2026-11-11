@@ -24,6 +24,7 @@ internal data class LegitimacyPreviewSettings(
     val showReverse: Boolean = false,
     val crestAssetId: String = "",
     val flagAssetId: String = "",
+    val backgroundAssetId: String = "",
     val crestCaption: String = "",
     val captionPosition: String = "Pod herbem"
 )
@@ -38,6 +39,7 @@ private object LegitimacyPreviewSettingsStore {
             showReverse = p.getBoolean("${key}_show_reverse", false),
             crestAssetId = p.getString("${key}_crest", "").orEmpty(),
             flagAssetId = p.getString("${key}_flag", "").orEmpty(),
+            backgroundAssetId = p.getString("${key}_background", "").orEmpty(),
             crestCaption = p.getString("${key}_caption", "").orEmpty(),
             captionPosition = p.getString("${key}_caption_position", "Pod herbem").orEmpty()
         )
@@ -49,6 +51,7 @@ private object LegitimacyPreviewSettingsStore {
             .putBoolean("${key}_show_reverse", value.showReverse)
             .putString("${key}_crest", value.crestAssetId)
             .putString("${key}_flag", value.flagAssetId)
+            .putString("${key}_background", value.backgroundAssetId)
             .putString("${key}_caption", value.crestCaption)
             .putString("${key}_caption_position", value.captionPosition)
             .apply()
@@ -72,6 +75,7 @@ internal fun LegitimacyPreviewSettingsPanel(
     var assets by remember(documentKey) { mutableStateOf(DocumentBrandStore.list(context)) }
     var crestMenu by remember { mutableStateOf(false) }
     var flagMenu by remember { mutableStateOf(false) }
+    var backgroundMenu by remember { mutableStateOf(false) }
     var positionMenu by remember { mutableStateOf(false) }
     var importKind by remember { mutableStateOf("Herb") }
     var message by remember { mutableStateOf("") }
@@ -100,6 +104,17 @@ internal fun LegitimacyPreviewSettingsPanel(
             if (imported != null) update(settings.copy(flagAssetId = imported.id))
             message = "Wczytano flagę. Ustawienie zapisano."
         }.onFailure { message = "Nie udało się wczytać flagi: ${it.message ?: "błąd"}" }
+    }
+
+    val backgroundPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) runCatching {
+            DocumentBrandStore.import(context, uri, "legitimacy:$documentKey", "Tło dokumentu", "Tło legitymacji")
+        }.onSuccess {
+            assets = DocumentBrandStore.list(context)
+            val imported = assets.lastOrNull { it.owner == "legitimacy:$documentKey" && it.kind == "Tło dokumentu" }
+            if (imported != null) update(settings.copy(backgroundAssetId = imported.id))
+            message = "Wczytano tło legitymacji. Ustawienie zapisano."
+        }.onFailure { message = "Nie udało się wczytać tła: ${it.message ?: "błąd"}" }
     }
 
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
@@ -166,6 +181,23 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             OutlinedButton(onClick = { flagPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własną flagę")
+            }
+            Text("Tło legitymacji", fontWeight = FontWeight.SemiBold)
+            Box {
+                OutlinedButton(onClick = { backgroundMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(assets.firstOrNull { it.id == settings.backgroundAssetId }?.label ?: "Wybierz tło z katalogu")
+                }
+                DropdownMenu(expanded = backgroundMenu, onDismissRequest = { backgroundMenu = false }) {
+                    DropdownMenuItem(text = { Text("Domyślne tło") }, onClick = { update(settings.copy(backgroundAssetId = "")); backgroundMenu = false })
+                    assets.filter { it.kind == "Tło dokumentu" }.forEach { asset ->
+                        DropdownMenuItem(text = { Text("${asset.label} · ${asset.owner}") }, onClick = {
+                            update(settings.copy(backgroundAssetId = asset.id)); backgroundMenu = false
+                        })
+                    }
+                }
+            }
+            OutlinedButton(onClick = { backgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Wczytaj własne tło")
             }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             Text("Ustawienia są zapisywane lokalnie i pozostają zachowane po ponownym uruchomieniu aplikacji.", style = MaterialTheme.typography.labelSmall)
