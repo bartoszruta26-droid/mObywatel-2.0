@@ -622,131 +622,215 @@ internal fun UnifiedCredentialCard(
     ) {
         Column(Modifier.fillMaxWidth()) {
             BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f)) {
-            Box(Modifier.fillMaxSize()) {
-                if (settings.showBackground && background != null) {
-                    Image(
-                        background.asImageBitmap(),
-                        contentDescription = "Tło dokumentu",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
-                        alpha = 0.48f
-                    )
-                }
-                Column(
-                    Modifier.fillMaxSize().padding(horizontalPadding, verticalPadding),
-                    verticalArrangement = Arrangement.spacedBy((cardWidth * 0.018f).coerceIn(3.dp, 7.dp))
-                ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                val cardWidth = maxWidth
+                val horizontalPadding = (cardWidth * 0.05f).coerceIn(8.dp, 20.dp)
+                val verticalPadding = (cardWidth * 0.05f).coerceIn(8.dp, 20.dp)
+                val photoWidth = (cardWidth * if (horizontal) 0.31f else 0.33f).coerceAtLeast(46.dp)
+                val photoHeight = photoWidth * (45f / 35f)
+                val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
+                val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
+                val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
+                Box(Modifier.fillMaxSize()) {
+                    if (settings.showBackground && background != null) {
+                        Image(
+                            background.asImageBitmap(),
+                            contentDescription = "Tło dokumentu",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                            alpha = 0.48f
+                        )
+                    }
+                    Column(
+                        Modifier.fillMaxSize().padding(horizontalPadding, verticalPadding),
+                        verticalArrangement = Arrangement.spacedBy((cardWidth * 0.018f).coerceIn(3.dp, 7.dp))
                     ) {
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                            Text(
-                                title.uppercase(),
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = (cardWidth.value * 0.038f).coerceIn(10f, 22f).sp,
-                                maxLines = 2
-                            )
-                            if (subtitle.isNotBlank()) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                                 Text(
-                                    subtitle,
-                                    fontSize = (cardWidth.value * 0.027f).coerceIn(8f, 14f).sp,
+                                    title.uppercase(),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = (cardWidth.value * 0.038f).coerceIn(10f, 22f).sp,
                                     maxLines = 2
+                                )
+                                if (subtitle.isNotBlank()) {
+                                    Text(
+                                        subtitle,
+                                        fontSize = (cardWidth.value * 0.027f).coerceIn(8f, 14f).sp,
+                                        maxLines = 2
+                                    )
+                                }
+                            }
+                            if (settings.showLogo && logo != null) {
+                                Image(
+                                    logo.asImageBitmap(),
+                                    contentDescription = "Logo wystawcy",
+                                    modifier = Modifier.size((cardWidth * 0.13f).coerceIn(30.dp, 46.dp)),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Fit
                                 )
                             }
                         }
-                        if (settings.showLogo && logo != null) {
-                            Image(
-                                logo.asImageBitmap(),
-                                contentDescription = "Logo wystawcy",
-                                modifier = Modifier.size((cardWidth * 0.13f).coerceIn(30.dp, 46.dp)),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Fit
-                            )
-                        }
-                    }
-                    Row(
-                        Modifier.fillMaxWidth().weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.025f).coerceIn(5.dp, 10.dp))
-                    ) {
-                        Column(
-                            Modifier.width(photoWidth),
-                            verticalArrangement = Arrangement.spacedBy((cardWidth * 0.012f).coerceIn(3.dp, 6.dp)),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            Modifier.fillMaxWidth().weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.025f).coerceIn(5.dp, 10.dp))
                         ) {
-                            if (settings.showPhoto) {
-                                Box(
-                                    Modifier.fillMaxWidth()
-                                        .height(photoHeight)
-                                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (photo != null) {
-                                        Image(
-                                            photo.asImageBitmap(),
-                                            contentDescription = "Fotografia posiadacza",
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                                        )
-                                    } else {
-                                        Text("FOTO", fontSize = fieldLabelSize)
+                            Column(
+                                Modifier.width(photoWidth),
+                                verticalArrangement = Arrangement.spacedBy((cardWidth * 0.012f).coerceIn(3.dp, 6.dp)),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                if (settings.showPhoto) {
+                                    Box(
+                                        Modifier.fillMaxWidth()
+                                            .height(photoHeight)
+                                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (photo != null) {
+                                            Image(
+                                                photo.asImageBitmap(),
+                                                contentDescription = "Fotografia posiadacza",
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                            )
+                                        } else {
+                                            Text("FOTO", fontSize = fieldLabelSize)
+                                        }
                                     }
                                 }
+                                LegitimacyHeraldry(
+                                    settings = settings,
+                                    documentKey = documentKey,
+                                    vertical = !horizontal,
+                                    assetRevision = assetRevision,
+                                    title = title
+                                )
                             }
-                            LegitimacyHeraldry(
-                                settings = settings,
-                                documentKey = documentKey,
-                                vertical = !horizontal,
-                                assetRevision = assetRevision,
-                                title = title
-                            )
-                        }
-                        Column(
-                            Modifier.weight(1f).fillMaxHeight(),
-                            verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
-                        ) {
-                            Text(
-                                holderName.ifBlank { "IMIĘ I NAZWISKO" },
-                                fontWeight = FontWeight.Bold,
-                                fontSize = holderSize,
-                                maxLines = 2
-                            )
-                            if (horizontal) {
-                                Row(
-                                    Modifier.fillMaxWidth().weight(1f),
-                                    horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.02f).coerceIn(4.dp, 10.dp))
-                                ) {
-                                    Column(
-                                        Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                            Column(
+                                Modifier.weight(1f).fillMaxHeight(),
+                                verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
+                            ) {
+                                Text(
+                                    holderName.ifBlank { "IMIĘ I NAZWISKO" },
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = holderSize,
+                                    maxLines = 2
+                                )
+                                if (horizontal) {
+                                    Row(
+                                        Modifier.fillMaxWidth().weight(1f),
+                                        horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.02f).coerceIn(4.dp, 10.dp))
                                     ) {
-                                        visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach {
-                                            CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
+                                        Column(
+                                            Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach {
+                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
+                                            }
+                                        }
+                                        Column(
+                                            Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach {
+                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
+                                            }
                                         }
                                     }
+                                } else {
                                     Column(
                                         Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
                                     ) {
-                                        visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach {
-                                            CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
-                                        }
+                                        visible.forEach { CredentialFieldValue(it, fieldLabelSize, fieldValueSize) }
                                     }
-                                }
-                            } else {
-                                Column(
-                                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                    verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
-                                ) {
-                                    visible.forEach { CredentialFieldValue(it, fieldLabelSize, fieldValueSize) }
                                 }
                             }
                         }
                     }
                 }
             }
+            if (validity != null) {
+                val statusColor = if (validity) Color(0xFF237A35) else Color(0xFFB3261E)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    Icon(
+                        imageVector = if (validity) Icons.Filled.CheckCircle else Icons.Filled.Error,
+                        contentDescription = if (validity) "Dokument ważny" else "Dokument nieważny",
+                        tint = statusColor,
+                        modifier = Modifier.size(25.dp)
+                    )
+                    Text(
+                        if (validity) "Dokument ważny" else "Dokument nieważny",
+                        fontSize = 14.sp,
+                        color = statusColor,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 3.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { showQr = true }) {
+                        Icon(Icons.Filled.QrCode2, contentDescription = "Udostępnij dane legitymacji — pokaż kod QR")
+                    }
+                    IconButton(onClick = {
+                        runCatching {
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, title)
+                                putExtra(Intent.EXTRA_TEXT, sharePayload)
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, "Udostępnij dane legitymacji"))
+                        }
+                    }) {
+                        Icon(Icons.Filled.Share, contentDescription = "Udostępnij dane legitymacji")
+                    }
+                    IconButton(onClick = { showInfo = true }) {
+                        Icon(Icons.Filled.Info, contentDescription = "Informacje o danych legitymacji")
+                    }
+                }
+            }
         }
+    }
+    if (showQr) {
+        AlertDialog(
+            onDismissRequest = { showQr = false },
+            title = { Text("Kod QR danych legitymacji") },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (qrBitmap != null) {
+                        Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR zawierający dane legitymacji",
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f))
+                    } else {
+                        Text("Nie udało się utworzyć kodu QR. Ogranicz liczbę lub długość pól dokumentu.")
+                    }
+                    Text("Kod zawiera widoczne dane tej legitymacji i można go odczytać zgodnym skanerem QR. To lokalny zapis danych, a nie urzędowe potwierdzenie dokumentu.",
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = { TextButton(onClick = { showQr = false }) { Text("Zamknij") } }
+        )
+    }
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            title = { Text("Informacje o legitymacji") },
+            text = {
+                Text("Status ważności jest wyliczany lokalnie z wprowadzonych danych i terminu ważności. Kod QR oraz udostępniany opis zawierają dane zapisane w tej aplikacji; same w sobie nie potwierdzają autentyczności ani umocowania wystawcy.")
+            },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Rozumiem") } }
+        )
     }
 }
 
