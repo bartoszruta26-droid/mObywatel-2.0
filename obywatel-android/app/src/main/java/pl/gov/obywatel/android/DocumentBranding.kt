@@ -531,6 +531,8 @@ internal fun DocumentIdentityTemplate(
             value.contains("zakres informacji") -> "criminalRecordScope"
             value.contains("numer karty") -> when (documentType) {
                 "large_family" -> "largeFamilyNumber"
+                "blood_donor" -> "bloodDonorNumber"
+                "disability_card" -> "disabilityCardNumber"
                 "ehic" -> "ehicNumber"
                 else -> "documentNumber"
             }
@@ -599,7 +601,11 @@ internal fun DocumentIdentityTemplate(
                 "identity" -> "idNumber"
                 "passport" -> "passportNumber"
                 "family" -> "familyDocNumber"
+                "birth_extract", "marriage_extract", "death_extract" -> "civilDocumentNumber"
                 "large_family" -> "largeFamilyNumber"
+                "blood_donor" -> "bloodDonorNumber"
+                "disability_card" -> "disabilityCardNumber"
+                "vehicle_registration" -> "vehicleDocumentNumber"
                 "blood_donor" -> "bloodDonorNumber"
                 "disability_card" -> "disabilityCardNumber"
                 "vehicle_registration" -> "vehicleDocumentNumber"
@@ -653,7 +659,7 @@ internal fun DocumentIdentityTemplate(
     val subtitle = if (personHolder.isBlank() && holder.isNotBlank()) "DANE PODMIOTU" else owner
     val expiry = values.entries.firstOrNull {
         it.key.contains("ważn", true) || it.key.contains("do dnia", true) ||
-            it.key.contains("obowiązywania", true) || it.key.contains("expiry", true) || it.key.contains("validity", true)
+            it.key.contains("obowiązywania", true) || it.key.contains("ochrony do", true) || it.key.contains("ważna do", true) || it.key.contains("expiry", true) || it.key.contains("validity", true)
     }?.value.orEmpty()
     val explicitlyInvalid = validity.contains("nieważ", true) || validity.contains("unvalid", true) ||
         validity.contains("utrac", true) || validity.contains("zwróc", true) ||
