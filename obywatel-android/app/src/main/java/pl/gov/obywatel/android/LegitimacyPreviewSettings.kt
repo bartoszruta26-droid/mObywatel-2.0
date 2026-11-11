@@ -512,7 +512,7 @@ internal fun UnifiedCredentialCard(
 ) {
     val context = LocalContext.current
     val horizontal = settings.orientation == "POZIOMA"
-    val background = remember(settings.backgroundAssetId, documentKey, fallbackBackgroundRes) {
+    val background = remember(settings.backgroundAssetId, documentKey, fallbackBackgroundRes, assetRevision) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
             ?: BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
@@ -540,20 +540,25 @@ internal fun UnifiedCredentialCard(
                             modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
                         else Text("FOTO", style = MaterialTheme.typography.labelSmall)
                     }
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(if (horizontal) 2.dp else 4.dp)) {
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(if (horizontal) 2.dp else 4.dp)) {
                         Text(holderName.ifBlank { "IMIĘ I NAZWISKO" }, fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleSmall, maxLines = 1)
                         if (horizontal) {
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    visible.take(2).forEach { CredentialFieldValue(it) }
+                            Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach { CredentialFieldValue(it) }
                                 }
-                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    visible.drop(2).take(2).forEach { CredentialFieldValue(it) }
+                                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach { CredentialFieldValue(it) }
                                 }
                             }
                         } else {
-                            visible.take(7).forEach { CredentialFieldValue(it) }
+                            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                visible.forEach { CredentialFieldValue(it) }
+                            }
                         }
                     }
                 }
