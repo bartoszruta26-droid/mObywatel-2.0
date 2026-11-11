@@ -219,7 +219,8 @@ internal fun rememberLegitimacyPreviewSettings(documentKey: String): MutableStat
 internal fun LegitimacyPreviewSettingsPanel(
     documentKey: String,
     settings: LegitimacyPreviewSettings,
-    onChange: (LegitimacyPreviewSettings) -> Unit
+    onChange: (LegitimacyPreviewSettings) -> Unit,
+    assetRevision: Int = 0
 ) {
     val context = LocalContext.current
     var assets by remember(documentKey) { mutableStateOf(DocumentBrandStore.list(context)) }
@@ -413,7 +414,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Text("Wczytaj własne tło")
             }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-            CredentialTemplatePreview(documentKey, settings)
+            CredentialTemplatePreview(documentKey, settings, assetRevision)
             Text("Ustawienia są zapisywane lokalnie i pozostają zachowane po ponownym uruchomieniu aplikacji.", style = MaterialTheme.typography.labelSmall)
         }
     }
@@ -424,15 +425,16 @@ internal fun LegitimacyHeraldry(
     settings: LegitimacyPreviewSettings,
     documentKey: String,
     vertical: Boolean = false,
+    assetRevision: Int = 0,
     title: String = "DOKUMENT",
     subtitle: String = "DANE POSIADACZA"
 ) {
     val context = LocalContext.current
-    val assignedCrest = remember(documentKey) {
+    val assignedCrest = remember(documentKey, assetRevision) {
         DocumentBrandStore.imageForDocument(context, documentKey, "", "Herb")
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Godło")
     }
-    val assignedFlag = remember(documentKey) {
+    val assignedFlag = remember(documentKey, assetRevision) {
         DocumentBrandStore.imageForDocument(context, documentKey, "", "Flaga")
     }
     val selectedCrest = remember(settings.crestAssetId, assignedCrest) {
@@ -441,7 +443,7 @@ internal fun LegitimacyHeraldry(
     val selectedFlag = remember(settings.flagAssetId, assignedFlag) {
         settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedFlag
     }
-    val assignedLogo = remember(settings.logoAssetId, documentKey) {
+    val assignedLogo = remember(settings.logoAssetId, documentKey, assetRevision) {
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
     }
@@ -504,7 +506,8 @@ internal fun UnifiedCredentialCard(
     fields: List<Triple<String, String, String>>,
     settings: LegitimacyPreviewSettings,
     photo: Bitmap? = null,
-    fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare
+    fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare,
+    assetRevision: Int = 0
 ) {
     val context = LocalContext.current
     val horizontal = settings.orientation == "POZIOMA"
@@ -525,7 +528,7 @@ internal fun UnifiedCredentialCard(
                 modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
             Column(Modifier.fillMaxSize().padding(if (horizontal) 8.dp else 11.dp),
                 verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
-                LegitimacyHeraldry(settings, documentKey, vertical = true, title = title.uppercase(), subtitle = subtitle)
+                LegitimacyHeraldry(settings, documentKey, vertical = true, assetRevision = assetRevision, title = title.uppercase(), subtitle = subtitle)
                 Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (settings.showPhoto) Box(Modifier.width(if (horizontal) 42.dp else 46.dp)
                         .height(if (horizontal) 56.dp else 62.dp)
@@ -571,7 +574,7 @@ internal fun CredentialValidityTile(valid: Boolean) {
 }
 
 @Composable
-internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings) {
+internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings, assetRevision: Int = 0) {
     val title = documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
     val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
@@ -581,7 +584,8 @@ internal fun CredentialTemplatePreview(documentKey: String, settings: Legitimacy
         subtitle = "DOKUMENT",
         holderName = "IMIĘ I NAZWISKO",
         fields = selected.map { (key, label) -> Triple(key, label, "—") },
-        settings = settings
+        settings = settings,
+        assetRevision = assetRevision
     )
 }
 
