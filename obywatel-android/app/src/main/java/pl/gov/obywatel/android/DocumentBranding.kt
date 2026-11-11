@@ -473,7 +473,7 @@ internal fun DocumentIdentityTemplate(
             value.contains("nip") -> "entityNip"
             value.contains("regon") -> "entityRegon"
             value.contains("reprezent") || value.contains("zarząd") || value.contains("zarzad") -> "entityRepresentative"
-            value.contains("imię") || value.contains("imie") -> "firstNames"
+            value.contains("imię") || value.contains("imie") -> if (documentType == "student") "studentNames" else "firstNames"
             value.contains("nazwisko") -> "lastName"
             value.contains("pesel") -> "pesel"
             value.contains("data urodzenia") -> "birthDate"
@@ -486,7 +486,7 @@ internal fun DocumentIdentityTemplate(
                 "family" -> "familyExpiryDate"
                 "disability" -> "disabilityValidity"
                 "church" -> "churchValidity"
-                else -> "expiryDate"
+                else -> if (documentType.startsWith("church")) "churchValidity" else "expiryDate"
             }
             value.contains("data wyd") || value.contains("data sporządz") || value.contains("data sporząd") -> when (documentType) {
                 "parliament" -> "mpCardIssueDate"
@@ -496,7 +496,7 @@ internal fun DocumentIdentityTemplate(
                 "passport" -> "passportIssueDate"
                 "family" -> "familyIssueDate"
                 "church" -> "churchIssueDate"
-                else -> "issueDate"
+                else -> if (documentType.startsWith("church")) "churchIssueDate" else "issueDate"
             }
             value.contains("numer") || value.startsWith("nr ") -> when (documentType) {
                 "parliament" -> "mpCardNumber"
@@ -506,10 +506,11 @@ internal fun DocumentIdentityTemplate(
                 "passport" -> "passportNumber"
                 "family" -> "familyDocNumber"
                 "church" -> "churchDocumentNumber"
-                else -> "documentNumber"
+                else -> if (documentType.startsWith("church")) "churchDocumentNumber" else "documentNumber"
             }
-            value.contains("wystawc") || value.contains("organ wydaj") -> "issuer"
-            value.contains("kurs") || value.contains("kwalifikac") -> "trainingCourseName"
+            value.contains("wystawc") || value.contains("organ wydaj") -> if (documentType.startsWith("professional")) "professionalIssuer" else if (documentType.startsWith("church")) "churchIssuer" else "issuer"
+            value.contains("kurs") -> "trainingCourseName"
+            value.contains("kwalifikac") -> if (documentType.startsWith("professional")) "professionalTitle" else "trainingCourseName"
             value.contains("uczeln") || value.contains("student") -> "studentUniversity"
             value.contains("nazwa") || value.contains("firma") || value.contains("podmiot") -> when (documentType) {
                 "family" -> "familyName"
@@ -534,12 +535,12 @@ internal fun DocumentIdentityTemplate(
         Triple(stableKey, optionLabels[stableKey] ?: key, value)
     }
     val holder = values.entries.firstOrNull {
-        it.key.contains("imię", true) || it.key.contains("nazw", true) ||
+        it.key.contains("imię", true) || it.key.contains("imie", true) || it.key.contains("nazw", true) ||
             it.key.contains("posiadacz", true) || it.key.contains("osoba", true)
     }?.value.orEmpty()
     val expiry = values.entries.firstOrNull {
         it.key.contains("ważn", true) || it.key.contains("do dnia", true) ||
-            it.key.contains("obowiązywania do", true) || it.key.contains("expiry", true)
+            it.key.contains("obowiązywania", true) || it.key.contains("expiry", true) || it.key.contains("validity", true)
     }?.value.orEmpty()
     val explicitlyInvalid = validity.contains("nieważ", true) || validity.contains("unvalid", true) ||
         validity.contains("utrac", true) || validity.contains("zwróc", true) ||
