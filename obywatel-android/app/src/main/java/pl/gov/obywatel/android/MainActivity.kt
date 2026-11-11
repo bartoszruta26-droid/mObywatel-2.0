@@ -2106,6 +2106,11 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Wygląd — posługa kościelna", "Herb, godło, logo i tło dokumentu", Icons.Filled.AccountBalance, { onEditDocumentBranding("church_minister") })
         ProfileActionCard("Wygląd — posługa misyjna", "Herb, godło, logo i tło dokumentu", Icons.Filled.Public, { onEditDocumentBranding("church_missionary") })
         ProfileActionCard("Wygląd — pozostałe dokumenty", "Logo, godło, flaga i tło dokumentów pozostałych", Icons.Filled.Description, { onEditDocumentBranding("official") })
+        ProfileActionCard("Wygląd — odpisy rejestrowe", "Logo, godło, flaga i tło odpisów", Icons.Filled.AccountBalance, { onEditDocumentBranding("registry") })
+        ProfileActionCard("Wygląd — dokumenty firmowe", "Logo, godło, flaga i tło dokumentów firmowych", Icons.Filled.Business, { onEditDocumentBranding("business") })
+        ProfileActionCard("Wygląd — dokumenty PDF", "Tło, logo i znaki dokumentów PDF", Icons.Filled.Description, { onEditDocumentBranding("signed_pdf") })
+        ProfileActionCard("Wygląd — pliki własne", "Tło, logo i znaki dokumentów importowanych", Icons.Filled.Description, { onEditDocumentBranding("imported") })
+        ProfileActionCard("Wygląd — karty lojalnościowe", "Logo i tło kart lojalnościowych", Icons.Filled.CreditCard, { onEditDocumentBranding("loyalty_cards") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
