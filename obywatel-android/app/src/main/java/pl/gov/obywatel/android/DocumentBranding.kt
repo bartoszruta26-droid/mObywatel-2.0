@@ -535,7 +535,7 @@ internal fun DocumentIdentityTemplate(
             value.contains("państwo") && documentType == "mission_travel" -> "missionDestination"
             value.contains("organizacja") && documentType == "mission_travel" -> "missionOrganization"
             value.contains("funkcja") && documentType == "mission_travel" -> "missionRole"
-            value.contains("status weryfikacji") -> "status"
+            value.contains("status weryfikacji") || value == "status" || value.startsWith("status ") -> if (documentType.startsWith("insurance")) "insuranceStatus" else "status"
             value.contains("punkt informacyjny") || value.contains("organ rejestrujący") -> "issuer"
             value.contains("osoba zmarła") || value.contains("osoba zmarla") -> "deceasedName"
             value.contains("małżonkowie") || value.contains("malzonkowie") -> "spouseNames"
