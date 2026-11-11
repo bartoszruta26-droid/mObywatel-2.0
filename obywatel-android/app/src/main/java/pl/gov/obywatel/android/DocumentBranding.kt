@@ -188,6 +188,11 @@ internal object DocumentBrandStore {
         "file_00000000a704820a841a6bda2c3223cb",
         "file_00000000c0f081f5990d08be15bbf139",
         "file_00000000e92482108cb3b56796451794",
+        "file_00000000f5b0820a9499b70ab02da04b",
+        "tlo_pionowe_oryginal",
+        "tlo_poziome_oryginal",
+        "tlo_znak_wodny_pionowe",
+        "tlo_znak_wodny_poziome",
         "header_main_banner",
         "header_poland_banner",
         "karta_rodowa_jasna",
@@ -203,6 +208,11 @@ internal object DocumentBrandStore {
         "two_logo_assets_on_a_transparent_checkerboard_back"
     )
     private val opaqueBackgroundLabels = mapOf(
+        "file_00000000f5b0820a9499b70ab02da04b" to "Tło dokumentu — nowa grafika",
+        "tlo_pionowe_oryginal" to "Tło dokumentu — układ pionowy",
+        "tlo_poziome_oryginal" to "Tło dokumentu — układ poziomy",
+        "tlo_znak_wodny_pionowe" to "Tło dokumentu — znak wodny pionowy",
+        "tlo_znak_wodny_poziome" to "Tło dokumentu — znak wodny poziomy",
         "file_000000000480820ab196baceb9149967" to "Tło dokumentu — grafika 01",
         "file_000000007db0820a9085e7c796d4701a" to "Tło dokumentu — grafika 02",
         "file_000000007f3c820a942cfb69396276d6" to "Tło dokumentu — grafika 03",
@@ -218,6 +228,7 @@ internal object DocumentBrandStore {
                 val name = field.name
                 val lower = name.lowercase(Locale.ROOT)
                 val kind = when {
+                    name == "file_00000000532082108d561dcd2385f8f9" -> "Godło"
                     name in largeBackgroundDrawableNames -> "Tło dokumentu"
                     "flag" in lower || "flaga" in lower -> "Flaga"
                     "seal" in lower || "stamp" in lower || "piecz" in lower -> "Pieczęć"
