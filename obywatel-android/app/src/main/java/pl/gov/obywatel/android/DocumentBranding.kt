@@ -293,33 +293,41 @@ private fun isChurchDocument(title: String): Boolean {
 }
 
 private fun defaultDocumentFlag(context: Context, title: String): Bitmap? =
-    if (isFamilyDocument(title) || isChurchDocument(title)) null
-    else BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
+    BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
 
-private fun defaultDocumentEmblem(context: Context, title: String): Bitmap? =
-    if (isFamilyDocument(title) || isChurchDocument(title)) null
-    else BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+private fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
+    val normalized = title.lowercase(Locale.ROOT)
+    val assetId = when {
+        isFamilyDocument(title) -> "builtin_rodu_dab"
+        isChurchDocument(title) && listOf("biskup", "arcybiskup", "kardynał", "kardynal").any { normalized.contains(it) } -> "builtin_biskupi_pelny"
+        isChurchDocument(title) -> "builtin_misjonarski"
+        normalized.contains("medycz") || normalized.contains("pacjent") || normalized.contains("zdrow") -> "builtin_medyczny"
+        normalized.contains("nauk") || normalized.contains("doktor") -> "builtin_naukowy"
+        normalized.contains("fundac") || normalized.contains("organizac") -> "builtin_fundacyjny"
+        else -> ""
+    }
+    val selected = assetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+    return selected ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+}
 
 private fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
     val resourceId = when {
-        // Dokumenty rodowe mają własną, odrębną identyfikację.
+        // Dokumenty rodowe i rodzinne.
         isFamilyDocument(title) && (normalized.contains("paszport") || normalized.contains("podróż") || normalized.contains("podroz")) ->
-            R.drawable.paszport_rodowy_jasny
+            R.drawable.doc_02_paszport_rodowy_jasny
         isFamilyDocument(title) && (normalized.contains("orzeczenie") || normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw")) ->
-            R.drawable.orzeczenie_rodowe_jasne
-        isFamilyDocument(title) ->
-            R.drawable.karta_rodowa_jasna
+            R.drawable.doc_03_orzeczenie_rodowe_jasne
+        isFamilyDocument(title) -> R.drawable.doc_01_karta_rodowa_jasna
 
-        // Dokumenty tożsamości i paszportowe.
-        normalized.contains("paszport") || normalized.contains("passport") ->
-            R.drawable.documents_passport
+        // Dokumenty tożsamości i podróży.
+        normalized.contains("paszport") || normalized.contains("passport") -> R.drawable.doc_02_paszport_rodowy_jasny
         normalized.contains("dowód") || normalized.contains("dowod") ||
             normalized.contains("tożsamo") || normalized.contains("tozsamos") ||
-            normalized.contains("dokument cywil") ->
-            R.drawable.bg_document_civic_identity
+            normalized.contains("profil") || normalized.contains("obywatel") ->
+            R.drawable.doc_01_dowod_tozsamosci_obywatelski
 
-        // Legitymacje edukacyjne, parlamentarne i szkoleniowe.
+        // Legitymacje i dokumenty zawodowe.
         normalized.contains("poselsk") || normalized.contains("senatorsk") || normalized.contains("parlament") ->
             R.drawable.documents_deputy_legitimacy
         normalized.contains("uczn") || normalized.contains("student") || normalized.contains("szkoln") ||
@@ -328,33 +336,39 @@ private fun defaultDocumentBackground(context: Context, title: String): Bitmap? 
         normalized.contains("kursant") || normalized.contains("kursu") || normalized.contains("szkoleni") ||
             normalized.contains("ukończenia kurs") || normalized.contains("ukonczenia kurs") ->
             R.drawable.documents_course_legitimacy
-        normalized.contains("zawodow") || normalized.contains("pracown") || normalized.contains("wykonywania zawodu") ->
-            R.drawable.legitymacja_zawodowa
+        normalized.contains("zawodow") || normalized.contains("pracown") ||
+            normalized.contains("wykonywania zawodu") || normalized.contains("kwalifikac") ->
+            R.drawable.doc_02_legitymacja_zawodowa
 
-        // Orzeczenia i dokumenty związane z niepełnosprawnością.
+        // Zdrowie, niepełnosprawność i dokumentacja medyczna.
         normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw") ||
             normalized.contains("orzeczenie") || normalized.contains("disability") ->
-            R.drawable.bg_document_disability_certificate
+            R.drawable.doc_02_orzeczenie_niepelnosprawnosc_niebieskie
+        normalized.contains("szczep") || normalized.contains("vaccin") ->
+            R.drawable.doc_04_ksiazeczka_szczepien
+        normalized.contains("pacjent") || normalized.contains("medycz") || normalized.contains("zdrow") ->
+            R.drawable.art_05_karta_pacjenta
 
-        // Dokumenty kościelne: misje mają dedykowane tło, pozostałe dokumenty kościelne własną ilustrację.
+        // Dokumenty kościelne i misyjne.
         normalized.contains("misjon") || normalized.contains("papiesk") || normalized.contains("pdm") ||
-            normalized.contains("pum") ->
-            R.drawable.bg_document_missionary_pdm
+            normalized.contains("pum") -> R.drawable.doc_03_misjonarstwo_pdm_pum
         isChurchDocument(title) || normalized.contains("kościo") || normalized.contains("kosció") ->
             R.drawable.church_communities
 
-        // Pozostałe dokumenty cywilne, społeczne i podmiotowe.
-        normalized.contains("szczep") || normalized.contains("vaccin") ->
-            R.drawable.bg_document_vaccination_booklet
+        // Dokumenty cywilne, rejestrowe, organizacyjne i zaświadczenia.
         normalized.contains("cywil") || normalized.contains("urodzen") || normalized.contains("małżeń") ||
             normalized.contains("malzen") || normalized.contains("zgon") || normalized.contains("meldun") ||
-            normalized.contains("obywatel") || normalized.contains("urzęd") || normalized.contains("urzed") ||
-            normalized.startsWith("akt ") || normalized.startsWith("odpis ") ||
-            normalized.contains("oświadczen") || normalized.contains("oswiadczen") ||
-            normalized.contains("zaświadczen") || normalized.contains("zaswiadczen") ->
+            normalized.contains("urzęd") || normalized.contains("urzed") || normalized.startsWith("akt ") ||
+            normalized.startsWith("odpis ") || normalized.contains("rejestr") ->
             R.drawable.bg_document_civic_identity
         normalized.contains("fundac") || normalized.contains("stowarz") || normalized.contains("firm") ||
-            normalized.contains("spół") || normalized.contains("spol") || normalized.contains("rejestr podmiot") ->
+            normalized.contains("spół") || normalized.contains("spol") || normalized.contains("organizac") ->
+            R.drawable.doc_06_przynaleznosc_rodowa_organizacyjna
+        normalized.contains("certyfikat") || normalized.contains("ukończenia") || normalized.contains("ukonczenia") ->
+            R.drawable.doc_03_certyfikat_ukonczenia_kursu
+        normalized.contains("zaświadczen") || normalized.contains("zaswiadczen") ->
+            R.drawable.doc_04_zaswiadczenie
+        normalized.contains("lojalno") || normalized.contains("karta") ->
             R.drawable.documents_document_wallet_banner
         else -> R.drawable.documents_document_wallet_banner
     }
@@ -430,7 +444,7 @@ internal fun DocumentIdentityTemplate(
             Modifier.fillMaxWidth().aspectRatio(1.586f).clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFFF4F6F8)).border(1.dp, Color(0xFFD5DDE5), RoundedCornerShape(14.dp))
         ) {
-            if (background != null) Image(background.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.16f)
+            if (background != null) Image(background.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.34f)
             Row(Modifier.fillMaxSize().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Column(Modifier.weight(0.39f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.88f)),
