@@ -153,7 +153,10 @@ internal object DocumentBrandStore {
                 val kind = when {
                     "flag" in lower || "flaga" in lower -> "Flaga"
                     "seal" in lower || "stamp" in lower || "piecz" in lower -> "Pieczęć"
-                    lower.startsWith("bg_") || "background" in lower || "tlo_" in lower -> "Tło dokumentu"
+                    lower.startsWith("bg_") || "background" in lower || "tlo_" in lower ||
+                        lower.startsWith("doc_") || lower.startsWith("art_") ||
+                        lower.startsWith("karta_") || lower.startsWith("orzeczenie_") ||
+                        lower.startsWith("paszport_rodowy") || "legitymacja" in lower -> "Tło dokumentu"
                     "herald" in lower || "coat_of_arms" in lower || "herb" in lower -> "Herb"
                     "eagle" in lower || "emblem" in lower || "godlo" in lower -> "Godło"
                     "logo" in lower -> "Logo"
