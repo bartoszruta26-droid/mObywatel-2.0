@@ -370,8 +370,8 @@ internal fun LegitimacyPreviewSettingsPanel(
             OutlinedTextField(
                 value = settings.crestCaption,
                 onValueChange = { update(settings.copy(crestCaption = it)) },
-                label = { Text("Napis, np. Rzeczpospolita\\nPolska") },
-                placeholder = { Text("Rzeczpospolita\\nPolska") },
+                label = { Text("Napis, np. Rzeczpospolita\nPolska") },
+                placeholder = { Text("Rzeczpospolita\nPolska") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 maxLines = 2
@@ -471,7 +471,7 @@ internal fun LegitimacyHeraldry(
     val selectedFlag = remember(settings.flagAssetId, assignedFlag) {
         settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedFlag
     }
-    val caption = settings.crestCaption.ifBlank { "Rzeczpospolita\\nPolska" }
+    val caption = settings.crestCaption.ifBlank { "Rzeczpospolita\nPolska" }
     Column(
         Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
