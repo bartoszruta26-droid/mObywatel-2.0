@@ -649,6 +649,7 @@ private fun HomeScreen() {
     var showSettingsMenu by remember { mutableStateOf(false) }
     var showDocumentVisibilitySettings by remember { mutableStateOf(false) }
     var showDocumentBrandAssets by remember { mutableStateOf(false) }
+    var documentBrandTarget by remember { mutableStateOf<String?>(null) }
     var showRegistryEditor by remember { mutableStateOf(false) }
     var settingsDocumentEditor by remember { mutableStateOf<String?>(null) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
@@ -672,6 +673,7 @@ private fun HomeScreen() {
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
             settingsDocumentEditor != null -> { settingsDocumentEditor = null; showSettingsMenu = true }
             showDocumentVisibilitySettings -> { showDocumentVisibilitySettings = false; showSettingsMenu = true }
+            documentBrandTarget != null -> { documentBrandTarget = null; showSettingsMenu = true }
             showDocumentBrandAssets -> { showDocumentBrandAssets = false; showSettingsMenu = true }
             showSettingsMenu -> showSettingsMenu = false
             selectedDocumentId != null -> selectedDocumentId = null
@@ -685,7 +687,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -744,6 +746,7 @@ private fun HomeScreen() {
                     settingsDocumentEditor == "civil" -> OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     settingsDocumentEditor == "children_health" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     settingsDocumentEditor == "vaccines" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    documentBrandTarget != null -> DocumentBrandAssetsScreen(onBack = { documentBrandTarget = null; showSettingsMenu = true }, fixedTarget = documentBrandTarget!!)
                     showDocumentBrandAssets -> DocumentBrandAssetsScreen(onBack = { showDocumentBrandAssets = false; showSettingsMenu = true })
                     showDocumentVisibilitySettings -> DocumentVisibilitySettingsScreen(
                         documentPlacements = documentPlacements,
@@ -762,6 +765,7 @@ private fun HomeScreen() {
                         onBack = { showSettingsMenu = false },
                         onManageDocumentVisibility = { showSettingsMenu = false; showDocumentVisibilitySettings = true },
                         onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
+                        onEditDocumentBranding = { target -> showSettingsMenu = false; documentBrandTarget = target },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
@@ -1993,6 +1997,7 @@ private fun SettingsMenuScreen(
     onBack: () -> Unit,
     onManageDocumentVisibility: () -> Unit,
     onManageDocumentBrandAssets: () -> Unit,
+    onEditDocumentBranding: (String) -> Unit,
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
     onEditRegistry: () -> Unit,
@@ -2067,6 +2072,24 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Dane karty szczepień", "Edycja historii dawek, preparatów, serii, placówek i terminów kolejnych szczepień", Icons.Filled.HealthAndSafety, { onEditOtherDocuments("vaccines") })
         ProfileActionCard("Dokumenty firmowe i podmiotowe", "Dokumenty spółek, fundacji i organizacji", Icons.Filled.Business, { onEditOtherDocuments("business") })
         ProfileActionCard("Konta bankowe", "Osobna ewidencja rachunków prywatnych i podmiotowych", Icons.Filled.AccountBalance, { onEditOtherDocuments("bank_accounts") })
+        Text("Wygląd graficzny — ustawienia poszczególnych dokumentów", color = Navy, fontWeight = FontWeight.Bold)
+        Text("Flaga, logo, godło/herb i tło są przypisywane osobno dla każdego dokumentu. Zmiany wykonuje się tutaj, a podgląd pozostaje tylko do odczytu.",
+            color = Muted, style = MaterialTheme.typography.bodySmall)
+        ProfileActionCard("Wygląd — dane osobowe", "Znaki graficzne dokumentu profilu", Icons.Filled.AccountCircle, { onEditDocumentBranding("profile") })
+        ProfileActionCard("Wygląd — dowód tożsamości", "Flaga, godło, logo i tło dowodu", Icons.Filled.CreditCard, { onEditDocumentBranding("identity") })
+        ProfileActionCard("Wygląd — paszport", "Flaga, godło, logo i tło paszportu", Icons.Filled.Public, { onEditDocumentBranding("passport") })
+        ProfileActionCard("Wygląd — dokument rodowy", "Herb, logo, flaga i tło dokumentu Rodu", Icons.Filled.Fingerprint, { onEditDocumentBranding("family") })
+        ProfileActionCard("Wygląd — legitymacja poselska", "Godło, flaga, logo i tło legitymacji", Icons.Filled.AccountBalance, { onEditDocumentBranding("parliament") })
+        ProfileActionCard("Wygląd — legitymacja kursanta", "Znaki i tło legitymacji kursanta", Icons.Filled.Description, { onEditDocumentBranding("training") })
+        ProfileActionCard("Wygląd — legitymacja ucznia/studenta", "Znaki i tło legitymacji szkolnej", Icons.Filled.Badge, { onEditDocumentBranding("student") })
+        ProfileActionCard("Wygląd — orzeczenia i zaświadczenia", "Znaki i tło dokumentów dotyczących orzeczeń", Icons.Filled.HealthAndSafety, { onEditDocumentBranding("disability") })
+        ProfileActionCard("Wygląd — karty lojalnościowe", "Logo i tło karty", Icons.Filled.CreditCard, { onEditDocumentBranding("loyalty") })
+        ProfileActionCard("Wygląd — dokumenty kościelne", "Herb, godło, logo, flaga i tło", Icons.Filled.AccountBalance, { onEditDocumentBranding("church") })
+        ProfileActionCard("Wygląd — dokumenty cywilne", "Znaki i tło dokumentów cywilnych", Icons.Filled.Description, { onEditDocumentBranding("civil") })
+        ProfileActionCard("Wygląd — dokumenty podmiotów", "Logo, herb, godło i tło podmiotów", Icons.Filled.Business, { onEditDocumentBranding("entity") })
+        ProfileActionCard("Wygląd — konta bankowe", "Logo i tło dokumentów rachunków", Icons.Filled.AccountBalance, { onEditDocumentBranding("bank_accounts") })
+        ProfileActionCard("Wygląd — dokumentacja dzieci", "Znaki i tło dokumentów dzieci", Icons.Filled.AccountCircle, { onEditDocumentBranding("children") })
+        ProfileActionCard("Wygląd — karta szczepień", "Znaki i tło karty szczepień", Icons.Filled.HealthAndSafety, { onEditDocumentBranding("vaccines") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
@@ -2343,7 +2366,7 @@ private fun OwdDocumentArtworkCard(
     privateRecord: Boolean
 ) {
     Box(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f)
+        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f)
             .clip(RoundedCornerShape(16.dp))
             .border(1.dp, Border, RoundedCornerShape(16.dp))
     ) {
@@ -3066,7 +3089,7 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
     val displayName = listOf(fields["firstNames"], fields["lastName"])
         .filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
     Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
+        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE7EDF0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -3124,7 +3147,7 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
     }
     Spacer(Modifier.height(8.dp))
     Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
+        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE7EDF0)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -3199,7 +3222,7 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
     val participantName = listOf(fields["firstNames"], fields["lastName"])
         .filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO UCZESTNIKA" }
     Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.586f),
+        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE8EAF4)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -3315,7 +3338,7 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
         LegitimacyPreviewSettingsPanel(documentKey, settings) { settingsState.value = it }
         if (settings.showCard) {
         Card(
-            modifier = Modifier.fillMaxWidth().height(320.dp),
+            modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE2D2)),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
