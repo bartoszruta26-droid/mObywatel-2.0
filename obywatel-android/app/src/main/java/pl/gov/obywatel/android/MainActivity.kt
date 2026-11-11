@@ -394,7 +394,7 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
         BrandMark(size = 112.dp)
         Spacer(Modifier.height(24.dp))
         Text("Aplikacja Obywatelska", color = Navy, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Twoje prywatne miejsce do porządkowania dokumentów, danych i spraw obywatelskich.",
+        Text("Miejsce do porządkowania dokumentów, danych i spraw obywatelskich.",
             color = Muted, style = MaterialTheme.typography.bodyLarge)
         Spacer(Modifier.height(18.dp))
         Card(colors = CardDefaults.cardColors(containerColor = White)) {
@@ -2245,7 +2245,7 @@ private fun DocumentsWalletScreen(
         CatalogDocument("bank_accounts", "Konta bankowe", "Ewidencja rachunków bankowych", listOf("Państwowe", "Cywilne", "Osobiste", "Rejestry"), service = "Konta bankowe", icon = Icons.Filled.Payments),
         CatalogDocument("vaccines", "Książeczka szczepień WHO", "Historia szczepień i dawek", listOf("Zdrowotne", "Osobiste", "Rodowe"), service = "eKarta Szczepień", icon = Icons.Filled.HealthAndSafety),
         CatalogDocument("signed_pdf", "Dokumenty PDF i podpisy", "Pliki PDF, podgląd oraz ewidencja importu podpisanych dokumentów", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty PDF i podpisy elektroniczne", icon = Icons.Filled.PictureAsPdf),
-        CatalogDocument("branding", "Zasoby identyfikacji dokumentów", "Flagi, godła, herby, pieczęcie, logo i wzory dokumentów", listOf("Państwowe", "Kościelne", "Rodowe", "Zawodowe", "Rejestry"), service = "Zasoby identyfikacji dokumentów", icon = Icons.Filled.Description),
+        CatalogDocument("branding", "Zasoby identyfikacji dokumentów", "Flagi, godła, herby, pieczęcie, logo i grafiki dokumentów", listOf("Państwowe", "Kościelne", "Rodowe", "Zawodowe", "Rejestry"), service = "Zasoby identyfikacji dokumentów", icon = Icons.Filled.Description),
         CatalogDocument("imported", "Dokumenty własne — pliki", "Importowane pliki PDF, DOCX i obrazy", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty własne — pliki", icon = Icons.Filled.Description),
         CatalogDocument("children", "Dokumentacja dzieci", "Rodzinna ewidencja danych i dokumentacji dzieci", listOf("Cywilne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Rejestry"), service = "Dane dzieci", icon = Icons.Filled.AccountCircle),
         CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
