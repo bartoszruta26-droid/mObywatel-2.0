@@ -145,64 +145,122 @@ private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Stri
     var processing by remember { mutableStateOf(false) }
     var recognizedText by remember { mutableStateOf(fields["${categoryId}OcrText"].orEmpty()) }
     var mappedCount by remember { mutableIntStateOf(0) }
-    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingVideoUri by remember { mutableStateOf<Uri?>(null) }
     val key = "${categoryId}OcrText"
-    fun recognize(uri: Uri) {
+
+    fun applyRecognizedText(rawText: String) {
+        val raw = rawText.lines().map { it.trim() }.filter { it.isNotBlank() }.distinct().joinToString("\n")
+        recognizedText = raw
+        fields[key] = raw
+        val suggestions = DocumentOcrParser.extract(categoryId, raw)
+        var applied = 0
+        suggestions.forEach { (field, value) ->
+            if (value.isNotBlank() && fields[field].isNullOrBlank()) { fields[field] = value; applied++ }
+        }
+        mappedCount = applied
+        saveMessage(if (raw.isBlank()) "Nie wykryto tekstu w nagraniu. Nagraj dokument ponownie, prowadząc kamerę powoli i utrzymując ostrość."
+            else "Analiza filmu zakończona. Rozpoznano tekst z klatek nagrania i zaproponowano uzupełnienie $applied pustych pól. Sprawdź każdą wartość przed zapisaniem.")
+    }
+
+    fun recognizeImage(uri: Uri) {
         processing = true
         runCatching { InputImage.fromFilePath(context, uri) }.onSuccess { image ->
             val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-            recognizer.process(image).addOnSuccessListener { result ->
-                val raw = result.text.trim()
-                recognizedText = raw
-                fields[key] = raw
-                val suggestions = DocumentOcrParser.extract(categoryId, raw)
-                var applied = 0
-                suggestions.forEach { (field, value) ->
-                    if (value.isNotBlank() && fields[field].isNullOrBlank()) { fields[field] = value; applied++ }
-                }
-                mappedCount = applied
-                saveMessage(if (raw.isBlank()) "Nie wykryto tekstu. Zrób wyraźniejsze zdjęcie, wypełniając kadr dokumentem."
-                    else "OCR rozpoznał tekst i zaproponował uzupełnienie $applied pól. Sprawdź każdą wartość przed zapisaniem.")
-            }.addOnFailureListener { saveMessage("OCR nie powiódł się: ${it.localizedMessage ?: "błąd odczytu"}") }
-                .addOnCompleteListener {
-                    recognizer.close()
+            recognizer.process(image).addOnSuccessListener { applyRecognizedText(it.text) }
+                .addOnFailureListener { saveMessage("OCR nie powiódł się: ${it.localizedMessage ?: "błąd odczytu"}") }
+                .addOnCompleteListener { recognizer.close(); processing = false }
+        }.onFailure { processing = false; saveMessage("Nie można otworzyć obrazu: ${it.localizedMessage ?: "błąd pliku"}") }
+    }
+
+    fun recognizeVideo(uri: Uri, deleteAfterProcessing: Boolean) {
+        processing = true
+        Thread {
+            val frames = mutableListOf<Bitmap>()
+            val extractionError = runCatching {
+                val retriever = android.media.MediaMetadataRetriever()
+                try {
+                    retriever.setDataSource(context, uri)
+                    val durationMs = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+                    require(durationMs > 0L) { "Nagranie jest puste albo ma nieprawidłowy format." }
+                    val sampleCount = minOf(24, maxOf(1, (durationMs / 650L).toInt() + 1))
+                    for (index in 0 until sampleCount) {
+                        val timeUs = ((durationMs * index / sampleCount).coerceAtLeast(0L)) * 1000L
+                        val original = retriever.getFrameAtTime(timeUs, android.media.MediaMetadataRetriever.OPTION_CLOSEST)
+                        if (original != null) {
+                            val bitmap = if (original.width > 1800) {
+                                val scaled = Bitmap.createScaledBitmap(original, 1800, (original.height * 1800f / original.width).toInt(), true)
+                                if (scaled !== original) original.recycle()
+                                scaled
+                            } else original
+                            frames.add(bitmap)
+                        }
+                    }
+                } finally { retriever.release() }
+                require(frames.isNotEmpty()) { "Nie udało się pobrać klatek z nagrania." }
+            }.exceptionOrNull()
+
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                if (extractionError != null) {
+                    frames.forEach { if (!it.isRecycled) it.recycle() }
                     processing = false
-                    pendingCameraUri?.let { runCatching { context.contentResolver.delete(it, null, null) }; pendingCameraUri = null }
+                    if (deleteAfterProcessing) runCatching { context.contentResolver.delete(uri, null, null) }
+                    pendingVideoUri = null
+                    saveMessage("Nie można odczytać filmu: ${extractionError.localizedMessage ?: "błąd nagrania"}")
+                    return@post
                 }
-        }.onFailure {
-            processing = false
-            pendingCameraUri?.let { runCatching { context.contentResolver.delete(it, null, null) }; pendingCameraUri = null }
-            saveMessage("Nie można otworzyć obrazu: ${it.localizedMessage ?: "błąd pliku"}")
-        }
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                val recognizedParts = mutableListOf<String>()
+                lateinit var processNextFrame: (Int) -> Unit
+                processNextFrame = { index ->
+                    if (index >= frames.size) {
+                        recognizer.close()
+                        frames.forEach { if (!it.isRecycled) it.recycle() }
+                        applyRecognizedText(recognizedParts.flatMap { it.lines() }.map { it.trim() }.filter { it.isNotBlank() }.distinct().joinToString("\n"))
+                        processing = false
+                        if (deleteAfterProcessing) runCatching { context.contentResolver.delete(uri, null, null) }
+                        pendingVideoUri = null
+                    } else {
+                        val frame = frames[index]
+                        recognizer.process(InputImage.fromBitmap(frame, 0))
+                            .addOnSuccessListener { if (it.text.isNotBlank()) recognizedParts.add(it.text) }
+                            .addOnFailureListener { /* Pojedyncza nieczytelna klatka nie przerywa analizy. */ }
+                            .addOnCompleteListener { if (!frame.isRecycled) frame.recycle(); processNextFrame(index + 1) }
+                    }
+                }
+                processNextFrame(0)
+            }
+        }.start()
     }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri -> if (uri != null) recognize(uri) }
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
-        val uri = pendingCameraUri
-        if (captured && uri != null) recognize(uri) else {
+
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { if (it != null) recognizeImage(it) }
+    val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { if (it != null) recognizeVideo(it, false) }
+    val videoCamera = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { captured ->
+        val uri = pendingVideoUri
+        if (captured && uri != null) recognizeVideo(uri, true) else {
             uri?.let { runCatching { context.contentResolver.delete(it, null, null) } }
-            pendingCameraUri = null
-            saveMessage("Robienie zdjęcia anulowano.")
+            pendingVideoUri = null
+            saveMessage("Nagrywanie filmu anulowano.")
         }
     }
+
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Odczyt dokumentu przez OCR", color = Navy, fontWeight = FontWeight.Bold)
-            Text("Zrób zdjęcie aparatem albo wybierz skan. Aplikacja rozpozna tekst i zaproponuje wartości w odpowiednich polach. Pełny odczyt pozostaje dostępny do kontroli. OCR nie potwierdza autentyczności dokumentu.",
+            Text("Odczyt dokumentu z filmu przez OCR", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Nagraj krótki film, powoli pokazując dokument z bliska. Aplikacja pobierze do 24 klatek nagrania, rozpozna tekst na każdej z nich i połączy wyniki, aby uzupełnić pasujące pola. Możesz też wybrać wcześniej nagrany film albo zdjęcie/skan. OCR nie potwierdza autentyczności dokumentu.",
                 color = Muted, style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = {
                 runCatching {
-                    val file = File.createTempFile("document-ocr-", ".jpg", context.cacheDir)
+                    val file = File.createTempFile("document-ocr-video-", ".mp4", context.cacheDir)
                     androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.ocrfiles", file)
-                }.onSuccess { pendingCameraUri = it; camera.launch(it) }
-                    .onFailure { saveMessage("Nie można uruchomić aparatu: ${it.localizedMessage ?: "błąd przygotowania zdjęcia"}") }
-            }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Zrób zdjęcie aparatem") }
-            OutlinedButton(onClick = { picker.launch("image/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) {
-                Text("Wybierz zdjęcie lub skan")
-            }
-            if (processing) Text("Rozpoznawanie tekstu i dopasowywanie pól…", color = Blue)
+                }.onSuccess { pendingVideoUri = it; videoCamera.launch(it) }
+                    .onFailure { saveMessage("Nie można uruchomić kamery wideo: ${it.localizedMessage ?: "błąd przygotowania nagrania"}") }
+            }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Nagraj film dokumentu") }
+            OutlinedButton(onClick = { videoPicker.launch("video/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz nagrany film") }
+            OutlinedButton(onClick = { photoPicker.launch("image/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz zdjęcie lub skan") }
+            if (processing) Text("Analiza klatek filmu i uzupełnianie pól…", color = Blue)
             if (mappedCount > 0) Text("Wstępnie uzupełniono $mappedCount pustych pól", color = Blue, fontWeight = FontWeight.SemiBold)
             if (recognizedText.isNotBlank()) {
-                Text("Pełny tekst rozpoznany — sprawdź", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text("Tekst rozpoznany z nagrania — sprawdź", color = Navy, fontWeight = FontWeight.SemiBold)
                 Text(recognizedText, color = Muted, style = MaterialTheme.typography.bodySmall)
             }
         }
