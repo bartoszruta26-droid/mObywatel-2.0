@@ -3,11 +3,13 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -16,6 +18,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -495,7 +503,7 @@ internal fun LegitimacyHeraldry(
     val caption = settings.crestCaption.ifBlank { "Rzeczpospolita\nPolska" }
     Column(
         Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         if (settings.showFlag && selectedFlag != null) {
@@ -508,7 +516,7 @@ internal fun LegitimacyHeraldry(
         }
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (settings.showCrest && selectedCrest != null) {
@@ -557,9 +565,12 @@ internal fun UnifiedCredentialCard(
     settings: LegitimacyPreviewSettings,
     photo: Bitmap? = null,
     fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare,
-    assetRevision: Int = 0
+    assetRevision: Int = 0,
+    validity: Boolean? = null
 ) {
     val context = LocalContext.current
+    var showQr by remember(documentKey) { mutableStateOf(false) }
+    var showInfo by remember(documentKey) { mutableStateOf(false) }
     val horizontal = settings.orientation == "POZIOMA"
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
@@ -578,28 +589,46 @@ internal fun UnifiedCredentialCard(
     val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter {
         it.first in settings.visibleFields
     }
+    val sharePayload = remember(documentKey, holderName, fields) {
+        buildString {
+            append("OWD-CREDENTIAL|1\n")
+            append("DOCUMENT=").append(documentKey).append('\n')
+            append("HOLDER=").append(holderName).append('\n')
+            fields.filter { it.third.isNotBlank() }.forEach { (key, label, value) ->
+                append(key).append('=').append(label).append(':').append(value).append('\n')
+            }
+        }
+    }
+    val qrBitmap = remember(sharePayload) {
+        runCatching {
+            val hints = mapOf<EncodeHintType, Any>(
+                EncodeHintType.CHARACTER_SET to "UTF-8",
+                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
+                EncodeHintType.MARGIN to 2
+            )
+            val matrix = QRCodeWriter().encode(sharePayload, BarcodeFormat.QR_CODE, 480, 480, hints)
+            Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+                    bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+            }
+        }.getOrNull()
+    }
     Card(
-        Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
+        Modifier.fillMaxWidth(),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val cardWidth = maxWidth
-            val horizontalPadding = (cardWidth * 0.035f).coerceIn(5.dp, 16.dp)
-            val verticalPadding = (cardWidth * 0.035f).coerceIn(5.dp, 16.dp)
-            val photoWidth = (cardWidth * if (horizontal) 0.29f else 0.31f).coerceAtLeast(46.dp)
-            val photoHeight = photoWidth * (45f / 35f)
-            val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
-            val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
-            val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
+        Column(Modifier.fillMaxWidth()) {
+            BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f)) {
             Box(Modifier.fillMaxSize()) {
                 if (settings.showBackground && background != null) {
                     Image(
                         background.asImageBitmap(),
                         contentDescription = "Tło dokumentu",
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
                         alpha = 0.48f
                     )
                 }
@@ -734,7 +763,7 @@ internal fun CredentialValidityTile(valid: Boolean) {
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Icon(
-                painter = painterResource(R.drawable.mob_document_check),
+                imageVector = if (valid) Icons.Filled.CheckCircle else Icons.Filled.Error,
                 contentDescription = if (valid) "Dokument ważny" else "Dokument nieważny",
                 tint = if (valid) Color(0xFF238548) else Color(0xFFB3261E),
                 modifier = Modifier.size(30.dp)
