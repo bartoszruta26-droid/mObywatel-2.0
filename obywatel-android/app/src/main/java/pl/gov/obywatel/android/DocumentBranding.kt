@@ -111,7 +111,17 @@ internal object DocumentBrandStore {
     private const val INDEX = "document-brand-assets.enc"
     private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
-    private val kinds = listOf("Fotografia", "Logo", "Godło", "Herb", "Flaga", "Pieczęć", "Wzór podpisu odręcznego", "Tło dokumentu", "Znak wodny", "Grafika hologramu / zabezpieczenia")
+    private val kinds = listOf(
+        "Ikona wektorowa", "Ikona", "Tło dokumentu", "Herb", "Godło", "Logo",
+        "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
+        "Załącznik tekstowy", "Załącznik", "Fotografia", "Znak wodny",
+        "Grafika hologramu / zabezpieczenia"
+    )
+    private val imageKinds = setOf(
+        "Ikona wektorowa", "Ikona", "Tło dokumentu", "Herb", "Godło", "Logo",
+        "Pieczęć", "Wzór podpisu odręcznego", "Flaga", "Fotografia", "Znak wodny",
+        "Grafika hologramu / zabezpieczenia"
+    )
     fun assetKinds() = kinds
     private fun dir(context: Context) = File(context.noBackupFilesDir, "document-brand-assets").apply { mkdirs() }
     private fun key(): SecretKey {
@@ -240,6 +250,12 @@ internal object DocumentBrandStore {
         return assigned?.let { imageById(context, it.assetId) } ?: image(context, owner, kind)
     }
     fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
+    fun fileBytes(context: Context, assetId: String): ByteArray? = runCatching {
+        val asset = list(context).firstOrNull { it.id == assetId } ?: return null
+        if (asset.file.startsWith("builtin:")) {
+            context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
+        } else crypt(File(dir(context), asset.file).readBytes(), false)
+    }.getOrNull()
     private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
         BitmapFactory.decodeByteArray(bytes,0,bytes.size)?.let { return it }
         val svg = com.caverock.androidsvg.SVG.getFromString(String(bytes, Charsets.UTF_8))
@@ -260,9 +276,19 @@ internal object DocumentBrandStore {
             while (true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=MAX_IMAGE) { "Plik przekracza limit 12 MB." }; out.write(buffer,0,n) }
             out.toByteArray()
         } ?: error("Nie można odczytać pliku.")
-        decodeImage(bytes).recycle()
-        val isSvg = String(bytes, 0, minOf(bytes.size, 256), Charsets.UTF_8).contains("<svg", ignoreCase = true)
-        val id=UUID.randomUUID().toString(); val file=id+(if (isSvg) ".svg.enc" else ".asset.enc")
+        require(bytes.isNotEmpty()) { "Wybrany zasób jest pusty." }
+        if (kind in imageKinds) decodeImage(bytes).recycle()
+        val header = String(bytes, 0, minOf(bytes.size, 512), Charsets.UTF_8)
+        val isSvg = header.contains("<svg", ignoreCase = true)
+        val extension = when {
+            isSvg -> ".svg.enc"
+            kind == "Certyfikat" && header.startsWith("-----BEGIN CERTIFICATE") -> ".pem.enc"
+            kind == "Certyfikat" -> ".cer.enc"
+            kind == "Załącznik tekstowy" -> ".txt.enc"
+            kind == "Załącznik" -> ".bin.enc"
+            else -> ".asset.enc"
+        }
+        val id=UUID.randomUUID().toString(); val file=id+extension
         File(dir(context),file).writeBytes(crypt(bytes,true))
         save(context,list(context).filterNot { it.file.startsWith("builtin:") }+BrandAsset(id,owner.trim(),kind,label.trim().ifBlank { kind },file))
     }
@@ -800,7 +826,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             fontWeight = FontWeight.Bold
         )
         Text(
-            "Zasoby są uporządkowane według kategorii. Możesz wyszukiwać, podglądać i przypisywać fotografie, flagi, godła, herby, logotypy oraz tła. Pliki są przechowywane lokalnie i szyfrowane.",
+            "Centralna biblioteka zasobów dla wszystkich edytorów. Katalog obejmuje ikony wektorowe i rastrowe, tła, herby, godła, logotypy, pieczęcie, wzory podpisów, certyfikaty, flagi, załączniki tekstowe i pliki dodatkowe. Zasoby są przechowywane lokalnie i szyfrowane.",
             style = MaterialTheme.typography.bodySmall
         )
         if (fixedTarget != null) {
@@ -838,7 +864,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             singleLine = true
         )
         Button(
-            onClick = { picker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
+            onClick = { picker.launch(arrayOf("image/*", "text/*", "application/pdf", "application/x-pkcs12", "application/pkix-cert", "application/octet-stream")) },
             modifier = Modifier.fillMaxWidth()
         ) { Text("Wybierz plik i zapisz zasób") }
         if (status.isNotBlank()) Text(status, color = Color(0xFF1769AA))
