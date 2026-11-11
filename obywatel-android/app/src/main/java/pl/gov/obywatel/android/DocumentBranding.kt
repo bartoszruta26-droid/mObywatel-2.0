@@ -208,7 +208,7 @@ internal object DocumentBrandStore {
         "two_logo_assets_on_a_transparent_checkerboard_back"
     )
     private val opaqueBackgroundLabels = mapOf(
-        "file_00000000f5b0820a9499b70ab02da04b" to "Tło dokumentu — nowa grafika",
+        "file_00000000f5b0820a9499b70ab02da04b" to "Tło dowodu tożsamości",
         "tlo_pionowe_oryginal" to "Tło dokumentu — układ pionowy",
         "tlo_poziome_oryginal" to "Tło dokumentu — układ poziomy",
         "tlo_znak_wodny_pionowe" to "Tło dokumentu — znak wodny pionowy",
@@ -375,7 +375,11 @@ internal object DocumentBrandStore {
         val assigned = assignmentKeys(documentType, owner).firstNotNullOfOrNull { key ->
             all.lastOrNull { it.documentType == key && it.kind == kind }
         }
-        return assigned?.let { imageById(context, it.assetId) } ?: image(context, owner, kind)
+        return assigned?.let { imageById(context, it.assetId) }
+            ?: if (documentType == "identity" && kind == "Tło dokumentu") {
+                imageById(context, "builtin_drawable_file_00000000f5b0820a9499b70ab02da04b")
+                    ?: image(context, owner, kind)
+            } else image(context, owner, kind)
     }
     fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
     fun fileBytes(context: Context, assetId: String): ByteArray? = runCatching {
