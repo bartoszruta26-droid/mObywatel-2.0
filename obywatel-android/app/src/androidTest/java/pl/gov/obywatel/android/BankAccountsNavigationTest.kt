@@ -18,8 +18,16 @@ class BankAccountsNavigationTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    private fun enterDemoMode() {
+        composeRule.onNodeWithText("Pomiń wprowadzenie").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Wejdź w trybie demonstracyjnym").performClick()
+        composeRule.waitForIdle()
+    }
+
     @Test
     fun documentWalletOpensBankAccountsInReadOnlyMode() {
+        enterDemoMode()
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
         composeRule.onAllNodesWithText("Konta bankowe", substring = false)[0]
@@ -35,6 +43,7 @@ class BankAccountsNavigationTest {
 
     @Test
     fun settingsKeepBankAccountsEditable() {
+        enterDemoMode()
         composeRule.onNodeWithContentDescription("Więcej").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
