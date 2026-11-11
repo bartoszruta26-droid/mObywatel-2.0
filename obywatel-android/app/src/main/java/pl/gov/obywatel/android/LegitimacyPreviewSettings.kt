@@ -1099,7 +1099,7 @@ internal fun CredentialAppearanceDefaultsScreen(onBack: () -> Unit) {
     ) {
         Text("‹  Powrót do zakładki Więcej", color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
-        Text("Domyślny wygląd legitymacji", style = MaterialTheme.typography.headlineSmall,
+        Text("Wspólny wygląd legitymacji", style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text("Jeden wspólny wzór obowiązuje wszystkie legitymacje. Tutaj ustawiasz orientację, rozmieszczenie elementów, skalę, obrót i typografię. Herby, flagi, tła oraz logo wybierasz osobno w ustawieniach każdego dokumentu.",
             style = MaterialTheme.typography.bodySmall)

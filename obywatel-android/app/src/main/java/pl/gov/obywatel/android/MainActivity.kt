@@ -3060,7 +3060,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             }
         }
         if (categoryId != "all") {
-            Text("Wygląd i układ tego dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Grafiki przypisane do tego dokumentu", color = Navy, fontWeight = FontWeight.Bold)
             LegitimacyPreviewSettingsPanel(
                 documentKey = credentialKey,
                 settings = appearance.value,
