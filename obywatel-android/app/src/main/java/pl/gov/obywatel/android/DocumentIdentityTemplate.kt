@@ -2,29 +2,29 @@
 // SPDX-License-Identifier: CC0-1.0
 package pl.gov.obywatel.android
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
-/** Local visual preview of user-entered identity data; it is not an official credential. */
+/** Local, editable identity-card preview. It is not an official credential. */
 @Composable
 internal fun DocumentIdentityTemplate(
     title: String,
@@ -32,37 +32,107 @@ internal fun DocumentIdentityTemplate(
     owner: String = "",
     photoOverride: ImageBitmap? = null
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F7FA)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(38.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF173B63)))
-                Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                    Text("DOKUMENT PRYWATNY", color = Color(0xFF173B63), fontWeight = FontWeight.Bold)
-                    Text(title, color = Color(0xFF33465B))
-                }
+    val context = LocalContext.current
+    val normalized = title.lowercase()
+    val documentType = when {
+        normalized.contains("paszport") -> "passport"
+        normalized.contains("rodow") || normalized.contains("rodu") || normalized.contains("rodzinn") -> "family"
+        normalized.contains("poselsk") || normalized.contains("parlament") -> "parliament"
+        normalized.contains("kursant") || normalized.contains("uczestnika kurs") || normalized.contains("kursu") -> "training"
+        normalized.contains("student") || normalized.contains("uczn") || normalized.contains("szkoln") -> "student"
+        normalized.contains("kościel") || normalized.contains("kosciel") || normalized.contains("misjon") -> "church"
+        normalized.contains("zawod") || normalized.contains("kwalifikac") -> "professional"
+        normalized.contains("fundac") || normalized.contains("stowarz") || normalized.contains("podmiot") || normalized.contains("organizac") -> "entity"
+        normalized.contains("tożsamo") || normalized.contains("tozsamos") || normalized.contains("dowód") || normalized.contains("dowod") -> "identity"
+        else -> "official"
+    }
+    var revision by remember(title, owner) { mutableIntStateOf(0) }
+    var showReverse by remember(title) { mutableStateOf(false) }
+    val assets = remember(revision) { DocumentBrandStore.list(context) }
+    val assignments = remember(revision) { DocumentBrandStore.assignments(context) }
+    val emblemKinds = listOf("Godło", "Herb", "Logo")
+    val selectedFlag = assignments.lastOrNull { it.documentType == documentType && it.kind == "Flaga" }?.assetId.orEmpty()
+    val selectedEmblem = assignments.lastOrNull { it.documentType == documentType && it.kind in emblemKinds }?.assetId.orEmpty()
+    val selectedBackground = assignments.lastOrNull { it.documentType == documentType && it.kind == "Tło dokumentu" }?.assetId.orEmpty()
+
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(Modifier.weight(1f)) {
+                Text("Awers i rewers dokumentu")
+                Text("Układ: fotografia, flaga i godło po lewej; dane po prawej.", style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (photoOverride != null) {
-                    androidx.compose.foundation.Image(photoOverride, contentDescription = "Zdjęcie w podglądzie dokumentu", modifier = Modifier.size(84.dp))
-                } else {
-                    Box(Modifier.size(84.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFE0E7EF)))
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(owner.ifBlank { fields.values.firstOrNull { it.isNotBlank() } ?: "Dane do uzupełnienia" },
-                        color = Color(0xFF172B45), fontWeight = FontWeight.Bold)
-                    fields.entries.filter { it.value.isNotBlank() }.take(4).forEach { (label, value) ->
-                        Text("$label: $value", color = Color(0xFF43566B), maxLines = 2)
-                    }
-                }
+            Switch(checked = showReverse, onCheckedChange = { showReverse = it })
+        }
+        Text(if (showReverse) "Rewers włączony" else "Rewers wyłączony", style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
+        DocumentAssetPicker(
+            label = "Flaga",
+            assets = assets.filter { it.kind == "Flaga" },
+            selectedId = selectedFlag,
+            onSelected = { asset ->
+                if (asset == null) DocumentBrandStore.unassign(context, documentType, "Flaga")
+                else DocumentBrandStore.assign(context, documentType, "Flaga", asset.id)
+                revision++
             }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFD5DEE8)))
-            Text("Podgląd graficzny danych wprowadzonych przez użytkownika. Nie potwierdza tożsamości ani statusu urzędowego.",
-                color = Color(0xFF6B7785))
+        )
+        DocumentAssetPicker(
+            label = "Godło / herb / logo",
+            assets = assets.filter { it.kind in emblemKinds },
+            selectedId = selectedEmblem,
+            onSelected = { asset ->
+                emblemKinds.forEach { DocumentBrandStore.unassign(context, documentType, it) }
+                if (asset != null) DocumentBrandStore.assign(context, documentType, asset.kind, asset.id)
+                revision++
+            }
+        )
+        DocumentAssetPicker(
+            label = "Tło legitymacji",
+            assets = assets.filter { it.kind == "Tło dokumentu" },
+            selectedId = selectedBackground,
+            onSelected = { asset ->
+                if (asset == null) DocumentBrandStore.unassign(context, documentType, "Tło dokumentu")
+                else DocumentBrandStore.assign(context, documentType, "Tło dokumentu", asset.id)
+                revision++
+            }
+        )
+        DocumentIdentityTemplate(
+            title = title,
+            values = fields,
+            owner = owner,
+            photoOverride = photoOverride?.asAndroidBitmap(),
+            documentType = documentType,
+            showReverse = showReverse,
+            assetRevision = revision
+        )
+    }
+}
+
+@Composable
+private fun DocumentAssetPicker(
+    label: String,
+    assets: List<BrandAsset>,
+    selectedId: String,
+    onSelected: (BrandAsset?) -> Unit
+) {
+    var expanded by remember(label) { mutableStateOf(false) }
+    val selected = assets.firstOrNull { it.id == selectedId }
+    Column(Modifier.fillMaxWidth()) {
+        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+            Text(if (selected == null) "$label — domyślny zasób" else "$label — ${selected.label}")
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("Domyślny zasób") },
+                onClick = { expanded = false; onSelected(null) }
+            )
+            assets.forEach { asset ->
+                DropdownMenuItem(
+                    text = { Text(asset.label + if (asset.file.startsWith("builtin:")) " · SVG" else "") },
+                    onClick = { expanded = false; onSelected(asset) }
+                )
+            }
+        }
+        if (assets.isEmpty()) {
+            Text("Brak własnych zasobów tej kategorii. Domyślna grafika pozostaje dostępna.", style = androidx.compose.material3.MaterialTheme.typography.labelSmall)
         }
     }
 }
