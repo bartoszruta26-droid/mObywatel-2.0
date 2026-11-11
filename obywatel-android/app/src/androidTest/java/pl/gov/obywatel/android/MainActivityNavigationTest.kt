@@ -53,7 +53,8 @@ class MainActivityNavigationTest {
         composeRule.onNodeWithText("Konta bankowe").performScrollTo().performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("bank-accounts-screen-title").assertIsDisplayed()
-        composeRule.onNodeWithText("Edytuj dane").assertIsDisplayed()
+        composeRule.onNodeWithText("Dodaj rachunek").assertIsDisplayed()
+        composeRule.onNodeWithText("Zapisz").assertIsDisplayed()
     }
 
     @Test
@@ -135,13 +136,16 @@ class MainActivityNavigationTest {
     }
 
     @Test
-    fun servicesAndQrNavigationRemainAvailable() {
+    fun servicesExposePublicPortalAndSearch() {
         selectBottomTab(2)
         composeRule.onNodeWithText("Katalog usług według kategorii").assertIsDisplayed()
         composeRule.onNodeWithText("Przeglądarka usług publicznych").performScrollTo().performClick()
         composeRule.onNodeWithText("Usługi publiczne").assertIsDisplayed()
         composeRule.onNodeWithText("Szukaj usługi").assertIsDisplayed()
-        composeRule.onNodeWithText("‹  Powrót").performClick()
+    }
+
+    @Test
+    fun qrNavigationRemainsAvailable() {
         selectBottomTab(3)
         composeRule.onNodeWithText("Kod QR").assertIsDisplayed()
     }
