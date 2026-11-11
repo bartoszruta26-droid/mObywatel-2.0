@@ -211,6 +211,61 @@ private object ProfessionalCredentialStore {
         ActivityHistoryStore.record(context, "Kwalifikacje", "Usunięto dokument kwalifikacyjny: " + record.name)
     }
 
+
+    @Synchronized
+    fun exportArchive(context: Context): String {
+        val root = JSONObject().put("version", 1)
+        val professionArray = JSONArray()
+        professions(context).forEach { p ->
+            professionArray.put(JSONObject().put("id", p.id).put("profession", p.profession)
+                .put("number", p.number).put("numberType", p.numberType).put("issuer", p.issuer)
+                .put("issueDate", p.issueDate).put("validUntil", p.validUntil)
+                .put("registerName", p.registerName).put("registerUrl", p.registerUrl)
+                .put("scope", p.scope).put("legalBasis", p.legalBasis).put("status", p.status))
+        }
+        val fileArray = JSONArray()
+        files(context).forEach { file ->
+            fileArray.put(JSONObject().put("id", file.id).put("name", file.name)
+                .put("mimeType", file.mimeType).put("profession", file.profession)
+                .put("addedAt", file.addedAt).put("size", file.size)
+                .put("bytes", java.util.Base64.getEncoder().encodeToString(readFile(context, file.id))))
+        }
+        root.put("professions", professionArray).put("files", fileArray)
+        return root.toString()
+    }
+
+    @Synchronized
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja archiwum kwalifikacji." }
+        val professionArray = root.optJSONArray("professions") ?: JSONArray()
+        val professionRecords = (0 until professionArray.length()).map { i ->
+            val o = professionArray.getJSONObject(i)
+            ProfessionCredential(o.getString("id"), o.getString("profession"), o.optString("number"),
+                o.optString("numberType", "other"), o.optString("issuer"), o.optString("issueDate"),
+                o.optString("validUntil"), o.optString("registerName"), o.optString("registerUrl"),
+                o.optString("scope"), o.optString("legalBasis"), o.optString("status", "Do uzupełnienia"))
+        }
+        val existingProfessions = professions(context).associateBy { it.id }.toMutableMap()
+        professionRecords.forEach { existingProfessions[it.id] = it }
+        saveProfessions(context, existingProfessions.values.toList())
+
+        val fileArray = root.optJSONArray("files") ?: JSONArray()
+        val existingFiles = files(context).associateBy { it.id }.toMutableMap()
+        for (i in 0 until fileArray.length()) {
+            val o = fileArray.getJSONObject(i)
+            val id = o.getString("id")
+            require(id.matches(Regex("[A-Fa-f0-9-]{16,64}"))) { "Nieprawidłowy identyfikator załącznika kwalifikacji." }
+            val bytes = java.util.Base64.getDecoder().decode(o.getString("bytes"))
+            require(bytes.isNotEmpty() && bytes.size <= MAX_FILE) { "Załącznik kwalifikacji przekracza limit 25 MB." }
+            atomicWrite(File(dir(context), "file-$id.enc"), encrypt(bytes))
+            existingFiles[id] = QualificationFile(id, o.getString("name").take(180),
+                o.getString("mimeType").take(120), o.optString("profession").take(180),
+                o.optLong("addedAt", System.currentTimeMillis()), bytes.size.toLong())
+        }
+        saveFiles(context, existingFiles.values.toList())
+    }
+
     private fun atomicWrite(target: File, bytes: ByteArray) {
         val temp = File(target.parentFile, target.name + ".tmp")
         temp.writeBytes(bytes)
