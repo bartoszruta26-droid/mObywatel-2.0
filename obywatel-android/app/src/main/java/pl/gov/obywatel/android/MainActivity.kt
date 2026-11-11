@@ -2726,7 +2726,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("studentIssuer", "Osoba / jednostka wydająca", fields)
                 Text("Podgląd legitymacji", color = Navy, fontWeight = FontWeight.Bold)
                 SchoolLegitimacyPreview(fields, photoBase64, student = true)
-                AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "studentExtra", "Ten formularz służy wyłącznie do ewidencji danych. Nie nadaje statusu studenta, nie potwierdza wpisu na listę studentów i nie zastępuje dokumentu ani certyfikatu wydanego przez uczelnię.")
+                AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "studentExtra", "")
             }
         }
         }
@@ -3320,7 +3320,7 @@ private fun AdditionalInformationSection(
                     style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
             }
             if (expanded) {
-                Text(explanation, color = Ink, style = MaterialTheme.typography.bodySmall)
+                if (explanation.isNotBlank()) Text(explanation, color = Ink, style = MaterialTheme.typography.bodySmall)
                 DemoDataField("${prefix}Source", "Źródło danych / dokument źródłowy", fields)
                 DemoDataField("${prefix}LegalBasis", "Podstawa prawna / regulaminowa", fields)
                 DemoDataField("${prefix}VerifiedAt", "Data ostatniej weryfikacji danych", fields, "DD-MM-RRRR")
