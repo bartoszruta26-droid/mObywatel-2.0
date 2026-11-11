@@ -3,25 +3,36 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -181,7 +192,20 @@ internal data class LegitimacyPreviewSettings(
     val showFlag: Boolean = true,
     val showCrest: Boolean = true,
     val showLogo: Boolean = true,
-    val showBackground: Boolean = true
+    val showBackground: Boolean = true,
+    val graphicScale: Float = 1f,
+    val graphicRotation: Float = 0f,
+    val graphicOffsetX: Float = 0f,
+    val graphicOffsetY: Float = 0f,
+    val labelScale: Float = 1f,
+    val labelRotation: Float = 0f,
+    val labelOffsetX: Float = 0f,
+    val labelOffsetY: Float = 0f,
+    val valueScale: Float = 1f,
+    val valueRotation: Float = 0f,
+    val valueOffsetX: Float = 0f,
+    val valueOffsetY: Float = 0f,
+    val fontFamily: String = "sans"
 )
 
 internal object LegitimacyPreviewSettingsStore {
@@ -206,7 +230,20 @@ internal object LegitimacyPreviewSettingsStore {
             showFlag = p.getBoolean("${key}_show_flag", true),
             showCrest = p.getBoolean("${key}_show_crest", true),
             showLogo = p.getBoolean("${key}_show_logo", true),
-            showBackground = p.getBoolean("${key}_show_background", true)
+            showBackground = p.getBoolean("${key}_show_background", true),
+            graphicScale = p.getFloat("${key}_graphic_scale", 1f),
+            graphicRotation = p.getFloat("${key}_graphic_rotation", 0f),
+            graphicOffsetX = p.getFloat("${key}_graphic_x", 0f),
+            graphicOffsetY = p.getFloat("${key}_graphic_y", 0f),
+            labelScale = p.getFloat("${key}_label_scale", 1f),
+            labelRotation = p.getFloat("${key}_label_rotation", 0f),
+            labelOffsetX = p.getFloat("${key}_label_x", 0f),
+            labelOffsetY = p.getFloat("${key}_label_y", 0f),
+            valueScale = p.getFloat("${key}_value_scale", 1f),
+            valueRotation = p.getFloat("${key}_value_rotation", 0f),
+            valueOffsetX = p.getFloat("${key}_value_x", 0f),
+            valueOffsetY = p.getFloat("${key}_value_y", 0f),
+            fontFamily = p.getString("${key}_font_family", "sans").orEmpty()
         )
     }
 
@@ -228,6 +265,19 @@ internal object LegitimacyPreviewSettingsStore {
             .putBoolean("${key}_show_crest", value.showCrest)
             .putBoolean("${key}_show_logo", value.showLogo)
             .putBoolean("${key}_show_background", value.showBackground)
+            .putFloat("${key}_graphic_scale", value.graphicScale)
+            .putFloat("${key}_graphic_rotation", value.graphicRotation)
+            .putFloat("${key}_graphic_x", value.graphicOffsetX)
+            .putFloat("${key}_graphic_y", value.graphicOffsetY)
+            .putFloat("${key}_label_scale", value.labelScale)
+            .putFloat("${key}_label_rotation", value.labelRotation)
+            .putFloat("${key}_label_x", value.labelOffsetX)
+            .putFloat("${key}_label_y", value.labelOffsetY)
+            .putFloat("${key}_value_scale", value.valueScale)
+            .putFloat("${key}_value_rotation", value.valueRotation)
+            .putFloat("${key}_value_x", value.valueOffsetX)
+            .putFloat("${key}_value_y", value.valueOffsetY)
+            .putString("${key}_font_family", value.fontFamily)
             .apply()
     }
     
@@ -291,7 +341,16 @@ internal fun LegitimacyPreviewSettingsPanel(
 
     fun update(value: LegitimacyPreviewSettings) {
         LegitimacyPreviewSettingsStore.save(context, documentKey, value)
+        val orientationKey = if (value.orientation == "POZIOMA") "horizontal" else "vertical"
+        LegitimacyPreviewSettingsStore.save(context, documentKey + "_" + orientationKey, value)
         onChange(value)
+    }
+
+    fun selectOrientation(target: String) {
+        val orientationKey = if (target == "POZIOMA") "horizontal" else "vertical"
+        val stored = LegitimacyPreviewSettingsStore.load(context, documentKey + "_" + orientationKey)
+        val next = stored.copy(orientation = target)
+        update(next)
     }
 
     val crestPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -342,10 +401,10 @@ internal fun LegitimacyPreviewSettingsPanel(
             Text("Ustawienia wyglądu dokumentu", fontWeight = FontWeight.Bold)
             Text("Orientacja", fontWeight = FontWeight.SemiBold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = settings.orientation == "PIONOWA", onClick = { update(settings.copy(orientation = "PIONOWA")) })
+                RadioButton(selected = settings.orientation == "PIONOWA", onClick = { selectOrientation("PIONOWA") })
                 Text("Pionowa")
                 Spacer(Modifier.width(12.dp))
-                RadioButton(selected = settings.orientation == "POZIOMA", onClick = { update(settings.copy(orientation = "POZIOMA")) })
+                RadioButton(selected = settings.orientation == "POZIOMA", onClick = { selectOrientation("POZIOMA") })
                 Text("Pozioma")
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -461,6 +520,58 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Text("Wczytaj własne tło")
             }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Text("Położenie i rozmiar grafiki", fontWeight = FontWeight.SemiBold)
+            Text("Skala grafiki: ${"%.2f".format(settings.graphicScale)}")
+            Slider(settings.graphicScale, { update(settings.copy(graphicScale = it)) }, valueRange = 0.5f..2.5f)
+            Text("Obrót grafiki: ${settings.graphicRotation.toInt()}°")
+            Slider(settings.graphicRotation, { update(settings.copy(graphicRotation = it)) }, valueRange = -180f..180f)
+            Text("Przesunięcie poziome grafiki: ${settings.graphicOffsetX.toInt()} dp")
+            Slider(settings.graphicOffsetX, { update(settings.copy(graphicOffsetX = it)) }, valueRange = -60f..60f)
+            Text("Przesunięcie pionowe grafiki: ${settings.graphicOffsetY.toInt()} dp")
+            Slider(settings.graphicOffsetY, { update(settings.copy(graphicOffsetY = it)) }, valueRange = -60f..60f)
+            Text("Typografia etykiet", fontWeight = FontWeight.SemiBold)
+            Text("Skala etykiet: ${"%.2f".format(settings.labelScale)}")
+            Slider(settings.labelScale, { update(settings.copy(labelScale = it)) }, valueRange = 0.6f..2f)
+            Text("Obrót etykiet: ${settings.labelRotation.toInt()}°")
+            Slider(settings.labelRotation, { update(settings.copy(labelRotation = it)) }, valueRange = -180f..180f)
+            Text("Przesunięcie etykiet X: ${settings.labelOffsetX.toInt()} dp")
+            Slider(settings.labelOffsetX, { update(settings.copy(labelOffsetX = it)) }, valueRange = -40f..40f)
+            Text("Przesunięcie etykiet Y: ${settings.labelOffsetY.toInt()} dp")
+            Slider(settings.labelOffsetY, { update(settings.copy(labelOffsetY = it)) }, valueRange = -40f..40f)
+            Text("Typografia danych", fontWeight = FontWeight.SemiBold)
+            Text("Skala danych: ${"%.2f".format(settings.valueScale)}")
+            Slider(settings.valueScale, { update(settings.copy(valueScale = it)) }, valueRange = 0.6f..2f)
+            Text("Obrót danych: ${settings.valueRotation.toInt()}°")
+            Slider(settings.valueRotation, { update(settings.copy(valueRotation = it)) }, valueRange = -180f..180f)
+            Text("Przesunięcie danych X: ${settings.valueOffsetX.toInt()} dp")
+            Slider(settings.valueOffsetX, { update(settings.copy(valueOffsetX = it)) }, valueRange = -40f..40f)
+            Text("Przesunięcie danych Y: ${settings.valueOffsetY.toInt()} dp")
+            Slider(settings.valueOffsetY, { update(settings.copy(valueOffsetY = it)) }, valueRange = -40f..40f)
+            var fontMenu by remember { mutableStateOf(false) }
+            Box {
+                OutlinedButton(onClick = { fontMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Krój pisma: " + when (settings.fontFamily) {
+                        "serif" -> "Szeryfowy"
+                        "mono" -> "Monospace"
+                        "cursive" -> "Ozdobny"
+                        else -> "Bezszeryfowy"
+                    })
+                }
+                DropdownMenu(expanded = fontMenu, onDismissRequest = { fontMenu = false }) {
+                    listOf("sans" to "Bezszeryfowy (systemowy)", "serif" to "Szeryfowy (systemowy)",
+                        "mono" to "Monospace (systemowy)", "cursive" to "Ozdobny (systemowy)").forEach { (id, label) ->
+                        DropdownMenuItem(text = { Text(label) }, onClick = {
+                            update(settings.copy(fontFamily = id)); fontMenu = false
+                        })
+                    }
+                }
+            }
+            OutlinedButton(onClick = {
+                update(settings.copy(graphicScale = 1f, graphicRotation = 0f, graphicOffsetX = 0f,
+                    graphicOffsetY = 0f, labelScale = 1f, labelRotation = 0f, labelOffsetX = 0f,
+                    labelOffsetY = 0f, valueScale = 1f, valueRotation = 0f, valueOffsetX = 0f,
+                    valueOffsetY = 0f, fontFamily = "sans"))
+            }, modifier = Modifier.fillMaxWidth()) { Text("Przywróć domyślne przekształcenia") }
             CredentialTemplatePreview(documentKey, settings, assetRevision)
             Text("Ustawienia są zapisywane lokalnie i pozostają zachowane po ponownym uruchomieniu aplikacji.", style = MaterialTheme.typography.labelSmall)
         }
@@ -495,27 +606,27 @@ internal fun LegitimacyHeraldry(
     val caption = settings.crestCaption.ifBlank { "Rzeczpospolita\nPolska" }
     Column(
         Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         if (settings.showFlag && selectedFlag != null) {
             Image(
                 selectedFlag.asImageBitmap(),
                 contentDescription = "Flaga dokumentu",
-                modifier = Modifier.fillMaxWidth(0.78f).height(19.dp),
+                modifier = Modifier.fillMaxWidth(0.78f).height(19.dp).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
         }
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (settings.showCrest && selectedCrest != null) {
                 Image(
                     selectedCrest.asImageBitmap(),
                     contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(31.dp),
+                    modifier = Modifier.size(31.dp).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
                     contentScale = androidx.compose.ui.layout.ContentScale.Fit
                 )
             }
@@ -537,13 +648,30 @@ internal fun LegitimacyHeraldry(
 private fun CredentialFieldValue(
     item: Triple<String, String, String>,
     labelFontSize: androidx.compose.ui.unit.TextUnit,
-    valueFontSize: androidx.compose.ui.unit.TextUnit
+    valueFontSize: androidx.compose.ui.unit.TextUnit,
+    settings: LegitimacyPreviewSettings
 ) {
+    val family = when (settings.fontFamily) {
+        "serif" -> FontFamily.Serif
+        "mono" -> FontFamily.Monospace
+        "cursive" -> FontFamily.Cursive
+        else -> FontFamily.SansSerif
+    }
     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(item.second.uppercase(), fontSize = labelFontSize,
-            fontWeight = FontWeight.Medium, maxLines = 1)
-        Text(item.third.ifBlank { "—" }, fontSize = valueFontSize,
-            fontWeight = FontWeight.SemiBold, maxLines = 2)
+        Text(item.second.uppercase(), fontSize = labelFontSize * settings.labelScale,
+            fontFamily = family, fontWeight = FontWeight.Medium, maxLines = 1,
+            modifier = Modifier.graphicsLayer {
+                rotationZ = settings.labelRotation
+                translationX = settings.labelOffsetX * density
+                translationY = settings.labelOffsetY * density
+            })
+        Text(item.third.ifBlank { "—" }, fontSize = valueFontSize * settings.valueScale,
+            fontFamily = family, fontWeight = FontWeight.SemiBold, maxLines = 2,
+            modifier = Modifier.graphicsLayer {
+                rotationZ = settings.valueRotation
+                translationX = settings.valueOffsetX * density
+                translationY = settings.valueOffsetY * density
+            })
     }
 }
 
@@ -557,9 +685,12 @@ internal fun UnifiedCredentialCard(
     settings: LegitimacyPreviewSettings,
     photo: Bitmap? = null,
     fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare,
-    assetRevision: Int = 0
+    assetRevision: Int = 0,
+    validity: Boolean? = null
 ) {
     val context = LocalContext.current
+    var showQr by remember(documentKey) { mutableStateOf(false) }
+    var showInfo by remember(documentKey) { mutableStateOf(false) }
     val horizontal = settings.orientation == "POZIOMA"
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
@@ -578,146 +709,250 @@ internal fun UnifiedCredentialCard(
     val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter {
         it.first in settings.visibleFields
     }
+    val sharePayload = remember(documentKey, holderName, fields) {
+        buildString {
+            append("OWD-CREDENTIAL|1\n")
+            append("DOCUMENT=").append(documentKey).append('\n')
+            append("HOLDER=").append(holderName).append('\n')
+            fields.filter { it.third.isNotBlank() }.forEach { (key, label, value) ->
+                append(key).append('=').append(label).append(':').append(value).append('\n')
+            }
+        }
+    }
+    val qrBitmap = remember(sharePayload) {
+        runCatching {
+            val hints = mapOf<EncodeHintType, Any>(
+                EncodeHintType.CHARACTER_SET to "UTF-8",
+                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
+                EncodeHintType.MARGIN to 2
+            )
+            val matrix = QRCodeWriter().encode(sharePayload, BarcodeFormat.QR_CODE, 480, 480, hints)
+            Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+                    bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+            }
+        }.getOrNull()
+    }
     Card(
-        Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
+        Modifier.fillMaxWidth(),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val cardWidth = maxWidth
-            val horizontalPadding = (cardWidth * 0.035f).coerceIn(5.dp, 16.dp)
-            val verticalPadding = (cardWidth * 0.035f).coerceIn(5.dp, 16.dp)
-            val photoWidth = (cardWidth * if (horizontal) 0.29f else 0.31f).coerceAtLeast(46.dp)
-            val photoHeight = photoWidth * (45f / 35f)
-            val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
-            val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
-            val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
-            Box(Modifier.fillMaxSize()) {
-                if (settings.showBackground && background != null) {
-                    Image(
-                        background.asImageBitmap(),
-                        contentDescription = "Tło dokumentu",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                        alpha = 0.48f
-                    )
-                }
-                Column(
-                    Modifier.fillMaxSize().padding(horizontalPadding, verticalPadding),
-                    verticalArrangement = Arrangement.spacedBy((cardWidth * 0.018f).coerceIn(3.dp, 7.dp))
-                ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        Column(Modifier.fillMaxWidth()) {
+            BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f)) {
+                val cardWidth = maxWidth
+                val horizontalPadding = (cardWidth * 0.05f).coerceIn(8.dp, 20.dp)
+                val verticalPadding = (cardWidth * 0.05f).coerceIn(8.dp, 20.dp)
+                val photoWidth = (cardWidth * if (horizontal) 0.31f else 0.33f).coerceAtLeast(46.dp)
+                val photoHeight = photoWidth * (45f / 35f)
+                val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
+                val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
+                val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
+                Box(Modifier.fillMaxSize()) {
+                    if (settings.showBackground && background != null) {
+                        Image(
+                            background.asImageBitmap(),
+                            contentDescription = "Tło dokumentu",
+                            modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
+                            contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                            alpha = 0.48f
+                        )
+                    }
+                    Column(
+                        Modifier.fillMaxSize().padding(horizontalPadding, verticalPadding),
+                        verticalArrangement = Arrangement.spacedBy((cardWidth * 0.018f).coerceIn(3.dp, 7.dp))
                     ) {
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                            Text(
-                                title.uppercase(),
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = (cardWidth.value * 0.038f).coerceIn(10f, 22f).sp,
-                                maxLines = 2
-                            )
-                            if (subtitle.isNotBlank()) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                                 Text(
-                                    subtitle,
-                                    fontSize = (cardWidth.value * 0.027f).coerceIn(8f, 14f).sp,
+                                    title.uppercase(),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = (cardWidth.value * 0.038f).coerceIn(10f, 22f).sp,
                                     maxLines = 2
+                                )
+                                if (subtitle.isNotBlank()) {
+                                    Text(
+                                        subtitle,
+                                        fontSize = (cardWidth.value * 0.027f).coerceIn(8f, 14f).sp,
+                                        maxLines = 2
+                                    )
+                                }
+                            }
+                            if (settings.showLogo && logo != null) {
+                                Image(
+                                    logo.asImageBitmap(),
+                                    contentDescription = "Logo wystawcy",
+                                    modifier = Modifier.size((cardWidth * 0.13f).coerceIn(30.dp, 46.dp)).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Fit
                                 )
                             }
                         }
-                        if (settings.showLogo && logo != null) {
-                            Image(
-                                logo.asImageBitmap(),
-                                contentDescription = "Logo wystawcy",
-                                modifier = Modifier.size((cardWidth * 0.13f).coerceIn(30.dp, 46.dp)),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Fit
-                            )
-                        }
-                    }
-                    Row(
-                        Modifier.fillMaxWidth().weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.025f).coerceIn(5.dp, 10.dp))
-                    ) {
-                        Column(
-                            Modifier.width(photoWidth),
-                            verticalArrangement = Arrangement.spacedBy((cardWidth * 0.012f).coerceIn(3.dp, 6.dp)),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            Modifier.fillMaxWidth().weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.025f).coerceIn(5.dp, 10.dp))
                         ) {
-                            if (settings.showPhoto) {
-                                Box(
-                                    Modifier.fillMaxWidth()
-                                        .height(photoHeight)
-                                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (photo != null) {
-                                        Image(
-                                            photo.asImageBitmap(),
-                                            contentDescription = "Fotografia posiadacza",
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                                        )
-                                    } else {
-                                        Text("FOTO", fontSize = fieldLabelSize)
+                            Column(
+                                Modifier.width(photoWidth),
+                                verticalArrangement = Arrangement.spacedBy((cardWidth * 0.012f).coerceIn(3.dp, 6.dp)),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                if (settings.showPhoto) {
+                                    Box(
+                                        Modifier.fillMaxWidth()
+                                            .height(photoHeight)
+                                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (photo != null) {
+                                            Image(
+                                                photo.asImageBitmap(),
+                                                contentDescription = "Fotografia posiadacza",
+                                                modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
+                                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                            )
+                                        } else {
+                                            Text("FOTO", fontSize = fieldLabelSize)
+                                        }
                                     }
                                 }
+                                LegitimacyHeraldry(
+                                    settings = settings,
+                                    documentKey = documentKey,
+                                    vertical = !horizontal,
+                                    assetRevision = assetRevision,
+                                    title = title
+                                )
                             }
-                            LegitimacyHeraldry(
-                                settings = settings,
-                                documentKey = documentKey,
-                                vertical = !horizontal,
-                                assetRevision = assetRevision,
-                                title = title
-                            )
-                        }
-                        Column(
-                            Modifier.weight(1f).fillMaxHeight(),
-                            verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
-                        ) {
-                            Text(
-                                holderName.ifBlank { "IMIĘ I NAZWISKO" },
-                                fontWeight = FontWeight.Bold,
-                                fontSize = holderSize,
-                                maxLines = 2
-                            )
-                            if (horizontal) {
-                                Row(
-                                    Modifier.fillMaxWidth().weight(1f),
-                                    horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.02f).coerceIn(4.dp, 10.dp))
-                                ) {
-                                    Column(
-                                        Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                            Column(
+                                Modifier.weight(1f).fillMaxHeight(),
+                                verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
+                            ) {
+                                Text(
+                                    holderName.ifBlank { "IMIĘ I NAZWISKO" },
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = holderSize * settings.valueScale,
+                                    fontFamily = when (settings.fontFamily) { "serif" -> FontFamily.Serif; "mono" -> FontFamily.Monospace; "cursive" -> FontFamily.Cursive; else -> FontFamily.SansSerif },
+                                    modifier = Modifier.graphicsLayer { rotationZ = settings.valueRotation; translationX = settings.valueOffsetX * density; translationY = settings.valueOffsetY * density },
+                                    maxLines = 2
+                                )
+                                if (horizontal) {
+                                    Row(
+                                        Modifier.fillMaxWidth().weight(1f),
+                                        horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.02f).coerceIn(4.dp, 10.dp))
                                     ) {
-                                        visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach {
-                                            CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
+                                        Column(
+                                            Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach {
+                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
+                                            }
+                                        }
+                                        Column(
+                                            Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach {
+                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
+                                            }
                                         }
                                     }
+                                } else {
                                     Column(
                                         Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
                                     ) {
-                                        visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach {
-                                            CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
-                                        }
+                                        visible.forEach { CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings) }
                                     }
-                                }
-                            } else {
-                                Column(
-                                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                    verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
-                                ) {
-                                    visible.forEach { CredentialFieldValue(it, fieldLabelSize, fieldValueSize) }
                                 }
                             }
                         }
                     }
                 }
             }
+            if (validity != null) {
+                val statusColor = if (validity) Color(0xFF237A35) else Color(0xFFB3261E)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    Icon(
+                        imageVector = if (validity) Icons.Filled.CheckCircle else Icons.Filled.Error,
+                        contentDescription = if (validity) "Dokument ważny" else "Dokument nieważny",
+                        tint = statusColor,
+                        modifier = Modifier.size(25.dp)
+                    )
+                    Text(
+                        if (validity) "Dokument ważny" else "Dokument nieważny",
+                        fontSize = 14.sp,
+                        color = statusColor,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 3.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { showQr = true }) {
+                        Icon(Icons.Filled.QrCode2, contentDescription = "Udostępnij dane legitymacji — pokaż kod QR")
+                    }
+                    IconButton(onClick = {
+                        runCatching {
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, title)
+                                putExtra(Intent.EXTRA_TEXT, sharePayload)
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, "Udostępnij dane legitymacji"))
+                        }
+                    }) {
+                        Icon(Icons.Filled.Share, contentDescription = "Udostępnij dane legitymacji")
+                    }
+                    IconButton(onClick = { showInfo = true }) {
+                        Icon(Icons.Filled.Info, contentDescription = "Informacje o danych legitymacji")
+                    }
+                }
+            }
         }
+    }
+    if (showQr) {
+        AlertDialog(
+            onDismissRequest = { showQr = false },
+            title = { Text("Kod QR danych legitymacji") },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (qrBitmap != null) {
+                        Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR zawierający dane legitymacji",
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f))
+                    } else {
+                        Text("Nie udało się utworzyć kodu QR. Ogranicz liczbę lub długość pól dokumentu.")
+                    }
+                    Text("Kod zawiera widoczne dane tej legitymacji i można go odczytać zgodnym skanerem QR. To lokalny zapis danych, a nie urzędowe potwierdzenie dokumentu.",
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = { TextButton(onClick = { showQr = false }) { Text("Zamknij") } }
+        )
+    }
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            title = { Text("Informacje o legitymacji") },
+            text = {
+                Text("Status ważności jest wyliczany lokalnie z wprowadzonych danych i terminu ważności. Kod QR oraz udostępniany opis zawierają dane zapisane w tej aplikacji; same w sobie nie potwierdzają autentyczności ani umocowania wystawcy.")
+            },
+            confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Rozumiem") } }
+        )
     }
 }
 
@@ -734,7 +969,7 @@ internal fun CredentialValidityTile(valid: Boolean) {
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Icon(
-                painter = painterResource(R.drawable.mob_document_check),
+                imageVector = if (valid) Icons.Filled.CheckCircle else Icons.Filled.Error,
                 contentDescription = if (valid) "Dokument ważny" else "Dokument nieważny",
                 tint = if (valid) Color(0xFF238548) else Color(0xFFB3261E),
                 modifier = Modifier.size(30.dp)
@@ -801,6 +1036,45 @@ internal fun LegitimacyReverseSide(title: String, issuer: String, number: String
                 Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR rewersu",
                     modifier = Modifier.size(168.dp).align(Alignment.CenterHorizontally))
             }
+        }
+    }
+}
+
+
+@Composable
+internal fun CredentialAppearanceDefaultsScreen(onBack: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("‹  Powrót do zakładki Więcej", color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
+        Text("Domyślny wygląd legitymacji", style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Ustaw osobny wzór dla każdego rodzaju legitymacji. W panelu wybierz orientację pionową lub poziomą, a następnie dostosuj grafiki, położenie, obrót, skalę i krój pisma. Zmiany są zapisywane lokalnie.",
+            style = MaterialTheme.typography.bodySmall)
+        CredentialAppearancePreset("student", "Legitymacja ucznia / studenta")
+        CredentialAppearancePreset("training", "Legitymacja uczestnika kursu")
+        CredentialAppearancePreset("parliament", "Legitymacja poselska")
+        CredentialAppearancePreset("church_bishop", "Legitymacja / dokument kościelny")
+        CredentialAppearancePreset("professional_medical", "Legitymacja zawodowa — medyczna")
+        CredentialAppearancePreset("identity", "Dokument tożsamości")
+        CredentialAppearancePreset("passport", "Paszport")
+    }
+}
+
+@Composable
+private fun CredentialAppearancePreset(documentKey: String, title: String) {
+    val state = rememberLegitimacyPreviewSettings(documentKey)
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(title, fontWeight = FontWeight.Bold)
+            LegitimacyPreviewSettingsPanel(
+                documentKey = documentKey,
+                settings = state.value,
+                onChange = { state.value = it }
+            )
         }
     }
 }

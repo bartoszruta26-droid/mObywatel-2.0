@@ -145,15 +145,86 @@ internal object DocumentBrandStore {
         cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, bytes.copyOfRange(0, 12)))
         return cipher.doFinal(bytes.copyOfRange(12, bytes.size))
     }
+    // Duże pliki rastrowe (>= 100 kB) z drawable traktujemy jako tła dokumentów.
+    // Zestaw jest jawny, ponieważ Android nie udostępnia rozmiaru źródłowego PNG przez R.drawable.
+    private val largeBackgroundDrawableNames = setOf(
+        "a_clean_vector_flat_gradient_illustration_asset_sh",
+        "a_clean_vector_flat_illustration_asset_sheet_for_a",
+        "a_clean_vector_illustration_asset_sheet_on_a_pale",
+        "a_clean_vector_style_logo_image_on_a_transparent_c",
+        "a_large_organized_graphic_asset_sheet_for_a_polis",
+        "art_01_karta_rodowa_jasna",
+        "art_02_legitymacja_zawodowa",
+        "art_02_paszport_rodowy_jasny",
+        "art_03_certyfikat_ukonczenia_kursu",
+        "art_03_orzeczenie_rodowe_jasne",
+        "art_03_orzeczenie_rodowe_o_niepelnosprawnosci",
+        "art_04_zaswiadczenie",
+        "art_05_karta_pacjenta",
+        "art_06_przynaleznosc_rodowa_organizacyjna",
+        "bg_document_civic_identity",
+        "bg_document_disability_certificate",
+        "bg_document_missionary_pdm",
+        "bg_document_vaccination_booklet",
+        "doc_01_dowod_tozsamosci_obywatelski",
+        "doc_01_karta_rodowa_jasna",
+        "doc_02_legitymacja_zawodowa",
+        "doc_02_orzeczenie_niepelnosprawnosc_niebieskie",
+        "doc_02_paszport_rodowy_jasny",
+        "doc_03_certyfikat_ukonczenia_kursu",
+        "doc_03_misjonarstwo_pdm_pum",
+        "doc_03_orzeczenie_rodowe_jasne",
+        "doc_03_orzeczenie_rodowe_o_niepelnosprawnosci",
+        "doc_04_ksiazeczka_szczepien",
+        "doc_04_zaswiadczenie",
+        "doc_05_karta_pacjenta",
+        "doc_06_przynaleznosc_rodowa_organizacyjna",
+        "documents_identity_card",
+        "file_000000000480820ab196baceb9149967",
+        "file_000000007db0820a9085e7c796d4701a",
+        "file_000000007f3c820a942cfb69396276d6",
+        "file_00000000818c8210b6fe5da7d5c5f9f1",
+        "file_000000009c9881f4815513656695564d",
+        "file_00000000a704820a841a6bda2c3223cb",
+        "file_00000000c0f081f5990d08be15bbf139",
+        "file_00000000e92482108cb3b56796451794",
+        "header_main_banner",
+        "header_poland_banner",
+        "karta_rodowa_jasna",
+        "legitymacja_zawodowa",
+        "navigation_mountain_landscape",
+        "orzeczenie_rodowe_jasne",
+        "orzeczenie_rodowe_o_niepelnosprawnosci",
+        "paszport_rodowy_jasny",
+        "tlo_legitymacji_brazowe",
+        "tlo_legitymacji_niebieskie",
+        "tlo_legitymacji_szare",
+        "tlo_legitymacji_zielone",
+        "two_logo_assets_on_a_transparent_checkerboard_back"
+    )
+    private val opaqueBackgroundLabels = mapOf(
+        "file_000000000480820ab196baceb9149967" to "Tło dokumentu — grafika 01",
+        "file_000000007db0820a9085e7c796d4701a" to "Tło dokumentu — grafika 02",
+        "file_000000007f3c820a942cfb69396276d6" to "Tło dokumentu — grafika 03",
+        "file_00000000818c8210b6fe5da7d5c5f9f1" to "Tło dokumentu — grafika 04",
+        "file_000000009c9881f4815513656695564d" to "Tło dokumentu — grafika 05",
+        "file_00000000a704820a841a6bda2c3223cb" to "Tło dokumentu — grafika 06",
+        "file_00000000c0f081f5990d08be15bbf139" to "Tło dokumentu — grafika 07",
+        "file_00000000e92482108cb3b56796451794" to "Tło dokumentu — grafika 08"
+    )
     private val generatedDrawableAssets: List<BrandAsset> by lazy {
         R.drawable::class.java.fields.mapNotNull { field ->
             runCatching {
                 val name = field.name
                 val lower = name.lowercase(Locale.ROOT)
                 val kind = when {
+                    name in largeBackgroundDrawableNames -> "Tło dokumentu"
                     "flag" in lower || "flaga" in lower -> "Flaga"
                     "seal" in lower || "stamp" in lower || "piecz" in lower -> "Pieczęć"
-                    lower.startsWith("bg_") || "background" in lower || "tlo_" in lower -> "Tło dokumentu"
+                    lower.startsWith("bg_") || "background" in lower || "tlo_" in lower ||
+                        lower.startsWith("doc_") || lower.startsWith("art_") ||
+                        lower.startsWith("karta_") || lower.startsWith("orzeczenie_") ||
+                        lower.startsWith("paszport_rodowy") || "legitymacja" in lower -> "Tło dokumentu"
                     "herald" in lower || "coat_of_arms" in lower || "herb" in lower -> "Herb"
                     "eagle" in lower || "emblem" in lower || "godlo" in lower -> "Godło"
                     "logo" in lower -> "Logo"
@@ -165,13 +236,14 @@ internal object DocumentBrandStore {
                     id = "builtin_drawable_$name",
                     owner = "Zasoby aplikacji",
                     kind = kind,
-                    label = name.replace('_', ' ').replaceFirstChar { it.uppercase() },
+                    label = opaqueBackgroundLabels[name] ?: name.replace('_', ' ').replaceFirstChar { it.uppercase() },
                     file = "resource:$name"
                 )
             }.getOrNull()
         }
     }
     private val builtInAssets = listOf(
+        BrandAsset("builtin_polish_emblem", "Zasoby aplikacji", "Godło", "Godło Polski — grafika zasobów aplikacji", "resource:institutions_eagle_emblem"),
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
         BrandAsset("builtin_rodu_dab", "Katalog heraldyczny", "Herb", "Herb rodowy — dąb", "builtin:heraldry/herb-rodu-klasyczny.svg"),
         BrandAsset("builtin_rodu_lilia", "Katalog heraldyczny", "Herb", "Herb rodowy — lilia", "builtin:heraldry/herb-rodu-lilia.svg"),
@@ -562,8 +634,16 @@ private fun isChurchDocument(title: String): Boolean {
     return listOf("kościel", "kosciel", "papiesk", "papież", "papiez", "misjon", "sakrament", "kanonicz", "biskup", "parafi", "szafarz", "liturg", "święce", "swiece", "konsekr", "jurysdykc", "diecez", "ekumen").any { t.contains(it) }
 }
 
-internal fun defaultDocumentFlag(context: Context, title: String): Bitmap? =
-    BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
+internal fun defaultDocumentFlag(context: Context, title: String): Bitmap? {
+    val normalized = title.lowercase(Locale.ROOT)
+    val assetId = when {
+        listOf("watykan", "papies", "stolica apostolska", "kościel", "kosciel", "biskup", "kardynał", "kardynal").any { normalized.contains(it) } ->
+            "builtin_drawable_flag_vatican_vector"
+        else -> "builtin_drawable_flag_poland_vector"
+    }
+    return DocumentBrandStore.preview(context, assetId)
+        ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
+}
 
 internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
@@ -577,7 +657,9 @@ internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
         else -> ""
     }
     val selected = assetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-    return selected ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+    return selected
+        ?: DocumentBrandStore.preview(context, "builtin_polish_emblem")
+        ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
 }
 
 internal fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
