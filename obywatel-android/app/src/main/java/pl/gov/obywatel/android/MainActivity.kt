@@ -1036,7 +1036,6 @@ private fun HomeScreen() {
                     TextButton(onClick = {
                         runCatching {
                             val current = DemoIdentityStore.loadStrict(context)
-                            val merged = current.toMutableMap().apply { putAll(incoming) }
                             val profileValues = incoming.filterKeys {
                                 !it.startsWith("cs_") && !it.startsWith("dp_")
                             }
@@ -3514,7 +3513,7 @@ private object DemoIdentityStore {
         val keys = json.keys()
         while (keys.hasNext()) {
             val key = keys.next()
-            require(key.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowa nazwa pola profilu." }
+            require(key.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Nieprawidłowa nazwa pola profilu." }
             require(!json.isNull(key)) { "Pole profilu zawiera wartość pustą typu null." }
             result[key] = json.getString(key)
         }
