@@ -1280,6 +1280,59 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
 )
 
 @Composable
+private fun DocumentDetailsScreen(
+    documentId: String,
+    onBack: () -> Unit,
+    onOpenService: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val allValues = remember { DemoIdentityStore.load(context) }
+    val group = remember(documentId) {
+        owdDocumentGroups().firstOrNull { it.id == documentId }
+            ?: when (documentId) {
+                "8" -> OwdDocumentGroup("loyalty", "Karty lojalnościowe", listOf(
+                    "Posiadacz" to "loyaltyHolder", "Nazwa programu" to "loyaltyName",
+                    "Numer karty" to "loyaltyNumber", "Status" to "status"
+                ))
+                else -> null
+            }
+    }
+    val title = group?.title ?: "Dokument"
+    val values = remember(allValues, group) {
+        group?.fields.orEmpty().mapNotNull { (label, key) ->
+            allValues[key]?.takeIf { it.isNotBlank() }?.let { label to it }
+        }.toMap()
+    }
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text(
+            "‹  Wróć do dokumentów",
+            color = Blue,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp)
+        )
+        Text(title, color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        if (values.isEmpty()) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = BlueLight)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Brak zapisanych danych tego dokumentu.", fontWeight = FontWeight.SemiBold, color = Navy)
+                    Text("Uzupełnij dane w ustawieniach, aby wyświetlić podgląd.", color = Muted)
+                    TextButton(onClick = { onOpenService("Dane dokumentów") }) { Text("Otwórz ustawienia danych") }
+                }
+            }
+        } else {
+            DocumentIdentityTemplate(
+                title = title,
+                values = values,
+                documentType = group?.id ?: "official"
+            )
+        }
+    }
+}
+
+@Composable
 private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
     val context = LocalContext.current
     val fields = remember { DemoIdentityStore.load(context) }
