@@ -2290,85 +2290,104 @@ private fun DocumentsWalletScreen(
         CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
     )
     val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry")
-    var expandedCategories by remember { mutableStateOf(categories.toSet()) }
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+
+    fun openDocument(document: CatalogDocument) {
+        when {
+            document.detailsIndex != null -> onOpenDetails(document.detailsIndex)
+            document.service != null -> onOpenService(document.service)
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("‹  Pulpit", color = Blue, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Dokumenty", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Katalog obejmuje wszystkie rodzaje dokumentów i ewidencji zaprogramowane w aplikacji. Ten sam dokument może występować w kilku grupach.", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Card(modifier = Modifier.weight(1f).clickable(onClick = onAddDocuments), colors = CardDefaults.cardColors(containerColor = White)) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
-                    Text("Dodaj / uzupełnij", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
-                }
-            }
-            Card(modifier = Modifier.weight(1f).clickable { expandedCategories = if (expandedCategories.size == categories.size) emptySet() else categories.toSet() },
-                colors = CardDefaults.cardColors(containerColor = BlueLight)) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    Icon(Icons.Filled.Description, contentDescription = null, tint = Blue, modifier = Modifier.size(18.dp))
-                    Text(if (expandedCategories.size == categories.size) "Zwiń grupy" else "Rozwiń grupy", color = Blue, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 7.dp))
-                }
-            }
-        }
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
-            Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(26.dp))
-                Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                    Text("Ewidencja dokumentów", color = Navy, fontWeight = FontWeight.Bold)
-                    Text("Katalog pokazuje moduły, formularze i ewidencje dostępne w kodzie. Sam wpis lub podgląd w aplikacji nie oznacza urzędowego wydania dokumentu ani potwierdzenia jego autentyczności.", color = Muted, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-        categories.forEach { category ->
-            val entries = documents.filter { category in it.categories }
+        Text(
+            if (selectedCategory == null) "‹  Pulpit" else "‹  Wszystkie grupy",
+            color = Blue, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable {
+                if (selectedCategory == null) onBack() else selectedCategory = null
+            }.padding(vertical = 5.dp)
+        )
+        Text(
+            if (selectedCategory == null) "Dokumenty" else selectedCategory!!,
+            color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold
+        )
+        if (selectedCategory == null) {
+            Text(
+                "Wybierz grupę dokumentów. Ten sam dokument może występować w kilku grupach.",
+                color = Muted, style = MaterialTheme.typography.bodySmall
+            )
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = White)
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onAddDocuments),
+                colors = CardDefaults.cardColors(containerColor = BlueLight)
             ) {
-                Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clickable {
-                            expandedCategories = if (category in expandedCategories) expandedCategories - category else expandedCategories + category
-                        },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(category, color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                        Text("${entries.size} dokumentów", color = Muted, style = MaterialTheme.typography.labelSmall)
-                        Text(if (category in expandedCategories) "  −" else "  +", color = Blue, fontWeight = FontWeight.Bold)
-                    }
-                    if (category in expandedCategories) {
-                        entries.forEach { document ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                                    .clickable {
-                                        when {
-                                            document.detailsIndex != null -> onOpenDetails(document.detailsIndex)
-                                            document.service == "Konta bankowe" -> onOpenService("Konta bankowe")
-                                            document.service != null -> onOpenService(document.service)
-                                        }
-                                    }.padding(vertical = 9.dp, horizontal = 5.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                Row(
+                    Modifier.fillMaxWidth().padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(Icons.Filled.Info, contentDescription = null, tint = Blue, modifier = Modifier.size(20.dp))
+                    Text("Dodaj / uzupełnij dane", color = Blue, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+            categories.chunked(2).forEach { pair ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    pair.forEach { category ->
+                        val count = documents.count { category in it.categories }
+                        Card(
+                            modifier = Modifier.weight(1f).clickable { selectedCategory = category },
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = White)
+                        ) {
+                            Column(
+                                Modifier.fillMaxWidth().padding(15.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(25.dp))
-                                Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
-                                    Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                                    Text(document.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
-                                }
-                                Text("Otwórz  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
+                                Icon(Icons.Filled.Description, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
+                                Text(category, color = Navy, fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall)
+                                Text("$count dokumentów", color = Muted, style = MaterialTheme.typography.labelSmall)
+                                Text("Otwórz grupę  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+        } else {
+            val entries = documents.filter { selectedCategory in it.categories }
+            if (entries.isEmpty()) {
+                Card(colors = CardDefaults.cardColors(containerColor = White)) {
+                    Text("W tej grupie nie ma jeszcze przypisanych dokumentów.",
+                        modifier = Modifier.padding(16.dp), color = Muted)
+                }
+            }
+            entries.forEach { document ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable { openDocument(document) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = White)
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(13.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(11.dp)
+                    ) {
+                        Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium)
+                            Text(document.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Text("Otwórz  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }
-        Text("Wszystkie pozycje są dostępne jako moduły, formularze lub ewidencje. Zakres danych i możliwość edycji zależą od danego modułu oraz uprawnień użytkownika.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 
