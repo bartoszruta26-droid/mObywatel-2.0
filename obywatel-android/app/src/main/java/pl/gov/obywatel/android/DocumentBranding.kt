@@ -929,7 +929,7 @@ internal fun DocumentIdentityTemplate(
 }
 
 @Composable
-internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null) {
+internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null, readOnly: Boolean = false) {
     val context = LocalContext.current
     var assignments by remember { mutableStateOf(DocumentBrandStore.assignments(context)) }
     var owner by remember(fixedTarget) {
@@ -985,12 +985,13 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             "Centralna biblioteka zasobów dla wszystkich edytorów. Katalog obejmuje ikony wektorowe i rastrowe, tła, herby, godła, logotypy, pieczęcie, wzory podpisów, certyfikaty, flagi, załączniki tekstowe i pliki dodatkowe. Zasoby są przechowywane lokalnie i szyfrowane.",
             style = MaterialTheme.typography.bodySmall
         )
-        if (fixedTarget != null) {
+        if (fixedTarget != null && !readOnly) {
             Text("Dokument", fontWeight = FontWeight.SemiBold)
             Text(documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget,
                 color = Color(0xFF173B58), fontWeight = FontWeight.Medium)
         }
 
+        if (!readOnly) {
         Text("Dodawanie zasobu", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         OutlinedTextField(
             value = owner,
@@ -1025,7 +1026,8 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         ) { Text("Wybierz plik i zapisz zasób") }
         if (status.isNotBlank()) Text(status, color = Color(0xFF1769AA))
 
-        if (fixedTarget != null) {
+        }
+        if (fixedTarget != null && !readOnly) {
             Text("Ustawienia wyglądu i zawartości dokumentu", fontWeight = FontWeight.SemiBold)
             LegitimacyPreviewSettingsPanel(
                 fixedTarget,
@@ -1131,7 +1133,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                     Text("Wbudowany", color = Color(0xFF667788),
                                         style = MaterialTheme.typography.labelSmall,
                                         modifier = Modifier.padding(top = 10.dp))
-                                } else {
+                                } else if (!readOnly) {
                                     TextButton(onClick = {
                                         DocumentBrandStore.delete(context, asset.id)
                                         assets = DocumentBrandStore.list(context)
