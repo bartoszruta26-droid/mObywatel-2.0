@@ -23,6 +23,44 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+internal data class CredentialFieldOption(val key: String, val label: String)
+
+internal fun credentialFieldOptions(documentKey: String): List<Pair<String, String>> = when (documentKey) {
+    "parliament" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji", "mpCardIssueDate" to "Data wydania", "mpTerm" to "Numer kadencji", "mpIssuer" to "Wystawca")
+    "training", "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" ->
+        listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "trainingInstitution" to "Instytucja", "trainingCourseName" to "Kurs / kwalifikacja", "trainingCardNumber" to "Numer legitymacji", "trainingIssueDate" to "Data wydania", "trainingValidUntil" to "Termin ważności")
+    "student" -> listOf("studentNames" to "Imię i nazwisko", "studentUniversity" to "Uczelnia", "studentProgramme" to "Kierunek", "studentCardNumber" to "Numer legitymacji", "studentIssueDate" to "Data wydania", "studentValidity" to "Termin ważności")
+    "identity" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "pesel" to "PESEL", "idNumber" to "Numer dokumentu", "idIssueDate" to "Data wydania", "idExpiryDate" to "Data ważności")
+    "passport" -> listOf("passportHolderNames" to "Imię i nazwisko", "passportNumber" to "Numer paszportu", "passportCitizenship" to "Obywatelstwo", "birthDate" to "Data urodzenia", "passportIssueDate" to "Data wydania", "passportExpiryDate" to "Data ważności")
+    "family" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "familyName" to "Nazwa Rodu", "familyRole" to "Miejsce w Rodzie", "familyDocNumber" to "Numer dokumentu", "familyIssueDate" to "Data sporządzenia", "familyExpiryDate" to "Data aktualizacji")
+    "disability" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "disabilityDecisionType" to "Rodzaj orzeczenia", "disabilityCaseNumber" to "Numer sprawy", "disabilityValidity" to "Okres obowiązywania", "disabilityIssuerName" to "Wystawca")
+    "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" ->
+        listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "churchRole" to "Posługa / godność", "churchDocumentNumber" to "Numer dokumentu", "churchIssueDate" to "Data wydania", "churchValidity" to "Okres obowiązywania", "churchIssuer" to "Wystawca")
+    "organization_foundation", "organization_association", "organization_church", "organization_company", "entity" ->
+        listOf("entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP", "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant")
+    "loyalty" -> listOf("loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz")
+    "bank_accounts" -> listOf("bankName" to "Bank", "accountName" to "Nazwa rachunku", "accountNumber" to "Numer rachunku", "accountOwner" to "Właściciel")
+    "children" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "childRelationship" to "Relacja", "guardianName" to "Opiekun")
+    "vaccines" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "vaccineName" to "Preparat", "vaccineDate" to "Data szczepienia", "vaccineDose" to "Dawka")
+    "civil" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "civilDocumentNumber" to "Numer dokumentu", "civilIssueDate" to "Data sporządzenia", "civilIssuer" to "Wystawca")
+    else -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "documentNumber" to "Numer dokumentu", "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca")
+}
+
+internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
+    val value = rawExpiry.trim()
+    if (value.isEmpty()) return true
+    val formats = listOf(
+        java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+        java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"),
+        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+        java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+    )
+    val parsed = formats.firstNotNullOfOrNull { formatter ->
+        runCatching { java.time.LocalDate.parse(value, formatter) }.getOrNull()
+    }
+    return parsed == null || !parsed.isBefore(java.time.LocalDate.now())
+}
+
 internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
@@ -30,7 +68,9 @@ internal data class LegitimacyPreviewSettings(
     val flagAssetId: String = "",
     val backgroundAssetId: String = "",
     val crestCaption: String = "",
-    val captionPosition: String = "Pod herbem"
+    val captionPosition: String = "Pod herbem",
+    val orientation: String = "PIONOWA",
+    val visibleFields: Set<String> = emptySet()
 )
 
 private object LegitimacyPreviewSettingsStore {
@@ -45,7 +85,9 @@ private object LegitimacyPreviewSettingsStore {
             flagAssetId = p.getString("${key}_flag", "").orEmpty(),
             backgroundAssetId = p.getString("${key}_background", "").orEmpty(),
             crestCaption = p.getString("${key}_caption", "").orEmpty(),
-            captionPosition = p.getString("${key}_caption_position", "Pod herbem").orEmpty()
+            captionPosition = p.getString("${key}_caption_position", "Pod herbem").orEmpty(),
+            orientation = p.getString("${key}_orientation", "PIONOWA").orEmpty(),
+            visibleFields = p.getStringSet("${key}_visible_fields", emptySet())?.toSet().orEmpty()
         )
     }
 
@@ -58,6 +100,8 @@ private object LegitimacyPreviewSettingsStore {
             .putString("${key}_background", value.backgroundAssetId)
             .putString("${key}_caption", value.crestCaption)
             .putString("${key}_caption_position", value.captionPosition)
+            .putString("${key}_orientation", value.orientation)
+            .putStringSet("${key}_visible_fields", value.visibleFields)
             .apply()
     }
 }
@@ -123,7 +167,15 @@ internal fun LegitimacyPreviewSettingsPanel(
 
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Ustawienia podglądu legitymacji", fontWeight = FontWeight.Bold)
+            Text("Ustawienia wyglądu dokumentu", fontWeight = FontWeight.Bold)
+            Text("Orientacja", fontWeight = FontWeight.SemiBold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(selected = settings.orientation == "PIONOWA", onClick = { update(settings.copy(orientation = "PIONOWA")) })
+                Text("Pionowa")
+                Spacer(Modifier.width(12.dp))
+                RadioButton(selected = settings.orientation == "POZIOMA", onClick = { update(settings.copy(orientation = "POZIOMA")) })
+                Text("Pozioma")
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = settings.showCard, onCheckedChange = { update(settings.copy(showCard = it)) })
                 Text("Wyświetlaj całą legitymację w podglądzie")
@@ -132,7 +184,20 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Checkbox(checked = settings.showReverse, onCheckedChange = { update(settings.copy(showReverse = it)) })
                 Text("Wyświetlaj rewers (domyślnie ukryty)")
             }
-            Text("Herb", fontWeight = FontWeight.SemiBold)
+            Text("Pola na legitymacji", fontWeight = FontWeight.SemiBold)
+            val fieldOptions = credentialFieldOptions(documentKey)
+            fieldOptions.forEach { (fieldKey, fieldLabel) ->
+                val checked = settings.visibleFields.isEmpty() || fieldKey in settings.visibleFields
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = checked, onCheckedChange = { selected ->
+                        val current = if (settings.visibleFields.isEmpty()) fieldOptions.map { it.first }.toSet() else settings.visibleFields
+                        val next = if (selected) current + fieldKey else current - fieldKey
+                        update(settings.copy(visibleFields = next))
+                    })
+                    Text(fieldLabel, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            Text("Herb / godło / logo", fontWeight = FontWeight.SemiBold)
             Box {
                 OutlinedButton(onClick = { crestMenu = true }, modifier = Modifier.fillMaxWidth()) {
                     Text(assets.firstOrNull { it.id == settings.crestAssetId }?.label ?: "Wybierz herb z katalogu")
@@ -322,8 +387,6 @@ internal fun LegitimacyReverseSide(title: String, issuer: String, number: String
                 Image(qrBitmap.asImageBitmap(), contentDescription = "Demonstracyjny kod QR rewersu",
                     modifier = Modifier.size(112.dp).align(Alignment.CenterHorizontally))
             }
-            Text("Kod demonstracyjny — nie potwierdza autentyczności ani ważności dokumentu.",
-                style = MaterialTheme.typography.labelSmall)
         }
     }
 }
