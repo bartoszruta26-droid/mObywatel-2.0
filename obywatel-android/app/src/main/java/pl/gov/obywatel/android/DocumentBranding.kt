@@ -342,7 +342,8 @@ private fun defaultDocumentBackground(context: Context, title: String): Bitmap? 
 
         // Zdrowie, niepełnosprawność i dokumentacja medyczna.
         normalized.contains("niepełnospraw") || normalized.contains("niepelnospraw") ||
-            normalized.contains("orzeczenie") || normalized.contains("disability") ->
+            normalized.contains("orzeczenie") || normalized.contains("orzeczenia") ||
+            normalized.contains("disability") ->
             R.drawable.doc_02_orzeczenie_niepelnosprawnosc_niebieskie
         normalized.contains("szczep") || normalized.contains("vaccin") ->
             R.drawable.doc_04_ksiazeczka_szczepien
@@ -356,14 +357,15 @@ private fun defaultDocumentBackground(context: Context, title: String): Bitmap? 
             R.drawable.church_communities
 
         // Dokumenty cywilne, rejestrowe, organizacyjne i zaświadczenia.
+        normalized.contains("fundac") || normalized.contains("stowarz") || normalized.contains("firm") ||
+            normalized.contains("spół") || normalized.contains("spol") || normalized.contains("organizac") ||
+            normalized.contains("rejestr podmiot") || normalized.contains("odpis rejestru") ->
+            R.drawable.doc_06_przynaleznosc_rodowa_organizacyjna
         normalized.contains("cywil") || normalized.contains("urodzen") || normalized.contains("małżeń") ||
             normalized.contains("malzen") || normalized.contains("zgon") || normalized.contains("meldun") ||
             normalized.contains("urzęd") || normalized.contains("urzed") || normalized.startsWith("akt ") ||
             normalized.startsWith("odpis ") || normalized.contains("rejestr") ->
             R.drawable.bg_document_civic_identity
-        normalized.contains("fundac") || normalized.contains("stowarz") || normalized.contains("firm") ||
-            normalized.contains("spół") || normalized.contains("spol") || normalized.contains("organizac") ->
-            R.drawable.doc_06_przynaleznosc_rodowa_organizacyjna
         normalized.contains("certyfikat") || normalized.contains("ukończenia") || normalized.contains("ukonczenia") ->
             R.drawable.doc_03_certyfikat_ukonczenia_kursu
         normalized.contains("zaświadczen") || normalized.contains("zaswiadczen") ->
