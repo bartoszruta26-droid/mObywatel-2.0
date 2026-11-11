@@ -6,5 +6,5 @@
 <path d="M28 24H228V157C228 216 183 258 128 282C73 258 28 216 28 157Z" fill="#233d68" stroke="#f4ead5" stroke-width="3"/>
 <g clip-path="url(#shield)"><g fill="none" stroke="#d8b45a" stroke-width="4" opacity=".8"><path d="M38 45H218M38 255H218"/></g><path d="M79 105L128 54L177 105L166 149H90Z" fill="#f4ead5" stroke="#d8b45a" stroke-width="6"/><path d="M128 57V146M83 105H173" stroke="#9e3438" stroke-width="6"/><path d="M183 83V221Q183 241 164 241Q147 241 147 225Q147 211 161 207" fill="none" stroke="#d8b45a" stroke-width="10" stroke-linecap="round"/><path d="M66 160V225" stroke="#f4ead5" stroke-width="8"/><path d="M49 176H83" stroke="#f4ead5" stroke-width="8"/></g>
 <path d="M28 24H228V157C228 216 183 258 128 282C73 258 28 216 28 157Z" fill="none" stroke="#392d25" stroke-width="5"/>
-<path d="M128 30V275" stroke="#f4ead5" stroke-width="1.5" opacity=".5"/>
+
 </svg>
