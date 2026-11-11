@@ -822,14 +822,14 @@ private fun HomeScreen() {
                     activeService == "Odpis z rejestru podmiotów" -> EntityRegistryExtractScreen(
                         onBack = { activeService = null }
                     )
-                    activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null })
-                    activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { activeService = null })
-                    activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null })
-                    activeService == "Zasoby identyfikacji dokumentów" -> DocumentBrandAssetsScreen(onBack = { activeService = null })
-                    activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false)
-                    activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null })
-                    activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null })
-                    activeService == "Dokumenty Rodowe" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { activeService = null })
+                    activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null }, readOnly = true)
+                    activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, readOnly = true, onBack = { activeService = null })
+                    activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null }, readOnly = true)
+                    activeService == "Zasoby identyfikacji dokumentów" -> DocumentBrandAssetsScreen(onBack = { activeService = null }, readOnly = true)
+                    activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false, readOnly = true)
+                    activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null }, readOnly = true)
+                    activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null }, readOnly = true)
+                    activeService == "Dokumenty Rodowe" -> FamilyEntityDocumentsScreen(entityMode = false, readOnly = true, onBack = { activeService = null })
                     activeService != null -> ServiceDetailScreen(
                         title = activeService!!,
                         onBack = { activeService = null },
