@@ -667,8 +667,6 @@ private fun CredentialFieldValue(
         Text(item.third.ifBlank { "—" }, fontSize = valueFontSize * settings.valueScale,
             fontFamily = family, fontWeight = FontWeight.SemiBold, maxLines = 2,
             modifier = Modifier.graphicsLayer {
-                scaleX = settings.valueScale
-                scaleY = settings.valueScale
                 rotationZ = settings.valueRotation
                 translationX = settings.valueOffsetX * density
                 translationY = settings.valueOffsetY * density
