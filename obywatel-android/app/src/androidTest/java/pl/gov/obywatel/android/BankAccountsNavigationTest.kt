@@ -39,6 +39,10 @@ class BankAccountsNavigationTest {
             .performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("bank-accounts-screen-title").assertIsDisplayed()
+        composeRule.onNodeWithText("Rejestr posiadanych rachunków bankowych (PLN i waluty obce)")
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
         composeRule.onNodeWithText(
             "Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia."
         ).assertIsDisplayed()
@@ -53,6 +57,10 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText("Konta bankowe").performScrollTo().performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("bank-accounts-screen-title").assertIsDisplayed()
+        composeRule.onNodeWithText("Rejestr posiadanych rachunków bankowych (PLN i waluty obce)")
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
         composeRule.onNodeWithText("Dodaj rachunek").assertIsDisplayed()
         composeRule.onNodeWithText("Zapisz").assertIsDisplayed()
     }
