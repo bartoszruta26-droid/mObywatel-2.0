@@ -227,12 +227,13 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     require(bytes.isNotEmpty() && bytes.size<=20*1024*1024) { "Plik pusty lub większy niż 20 MB." }
                     require(rights.isNotBlank()) { "Podaj podstawę prawa do używania zasobu (np. własność, licencja, zgoda)." }
                     val id=UUID.randomUUID().toString()
-                    val ext=when(mime){"image/png"->"png";"image/jpeg"->"jpg";"image/webp"->"webp";"image/svg+xml"->"svg";else->"pdf"}
-                    val f=id+"."+ext
-                    File(File(c.filesDir,"owd-brand-assets").apply{mkdirs()},f).writeBytes(bytes)
                     val finalName=assetName.ifBlank{"Zasób "+(assets.size+1)}
                     val version=assets.filter{it.orgId==orgId&&it.name.equals(finalName,true)}.maxOfOrNull{it.version}?.plus(1) ?: 1
-                    BrandAsset(id,orgId,finalName,category,f,mime,rights,version,System.currentTimeMillis())
+                    val stored=pl.gov.obywatel.android.DocumentBrandStore.importBytes(
+                        c, orgId, centralAssetKind(category), finalName, bytes, rights, version,
+                        System.currentTimeMillis(), mime, id
+                    )
+                    BrandAsset(stored.id,orgId,finalName,category,stored.file,mime,rights,version,stored.createdAt)
                 }
                 IdentityStore.saveAssets(c,assets.toList()+asset); assets.add(0,asset)
                 assetName=""; rights=""; message="Zasób dodany do biblioteki podmiotu."
@@ -823,8 +824,8 @@ private fun drawLines(canvas:android.graphics.Canvas,text:String,x:Float,start:F
     }
 }
 private fun drawImage(c:Context,canvas:android.graphics.Canvas,a:BrandAsset,x:Float,y:Float,w:Float,h:Float){
-    if(a.mime !in listOf("image/png","image/jpeg","image/webp"))return
-    val b=BitmapFactory.decodeFile(File(File(c.filesDir,"owd-brand-assets"),a.file).absolutePath)?:return
+    if(a.mime !in listOf("image/png","image/jpeg","image/webp","image/svg+xml"))return
+    val b=pl.gov.obywatel.android.DocumentBrandStore.preview(c,a.id)?:return
     val s=minOf(w/b.width,h/b.height);val dw=b.width*s;val dh=b.height*s
     canvas.drawBitmap(b,null,android.graphics.RectF(x+(w-dw)/2,y+(h-dh)/2,x+(w+dw)/2,y+(h+dh)/2),Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG));b.recycle()
 }
