@@ -202,6 +202,16 @@ internal object DocumentBrandStore {
         "tlo_legitymacji_zielone",
         "two_logo_assets_on_a_transparent_checkerboard_back"
     )
+    private val opaqueBackgroundLabels = mapOf(
+        "file_000000000480820ab196baceb9149967" to "Tło dokumentu — grafika 01",
+        "file_000000007db0820a9085e7c796d4701a" to "Tło dokumentu — grafika 02",
+        "file_000000007f3c820a942cfb69396276d6" to "Tło dokumentu — grafika 03",
+        "file_00000000818c8210b6fe5da7d5c5f9f1" to "Tło dokumentu — grafika 04",
+        "file_000000009c9881f4815513656695564d" to "Tło dokumentu — grafika 05",
+        "file_00000000a704820a841a6bda2c3223cb" to "Tło dokumentu — grafika 06",
+        "file_00000000c0f081f5990d08be15bbf139" to "Tło dokumentu — grafika 07",
+        "file_00000000e92482108cb3b56796451794" to "Tło dokumentu — grafika 08"
+    )
     private val generatedDrawableAssets: List<BrandAsset> by lazy {
         R.drawable::class.java.fields.mapNotNull { field ->
             runCatching {
@@ -226,7 +236,7 @@ internal object DocumentBrandStore {
                     id = "builtin_drawable_$name",
                     owner = "Zasoby aplikacji",
                     kind = kind,
-                    label = if (name.startsWith("file_")) "Tło dokumentu — grafika z biblioteki" else name.replace('_', ' ').replaceFirstChar { it.uppercase() },
+                    label = opaqueBackgroundLabels[name] ?: name.replace('_', ' ').replaceFirstChar { it.uppercase() },
                     file = "resource:$name"
                 )
             }.getOrNull()
