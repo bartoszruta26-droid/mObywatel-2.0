@@ -340,7 +340,16 @@ internal fun LegitimacyPreviewSettingsPanel(
 
     fun update(value: LegitimacyPreviewSettings) {
         LegitimacyPreviewSettingsStore.save(context, documentKey, value)
+        val orientationKey = if (value.orientation == "POZIOMA") "horizontal" else "vertical"
+        LegitimacyPreviewSettingsStore.save(context, documentKey + "_" + orientationKey, value)
         onChange(value)
+    }
+
+    fun selectOrientation(target: String) {
+        val orientationKey = if (target == "POZIOMA") "horizontal" else "vertical"
+        val stored = LegitimacyPreviewSettingsStore.load(context, documentKey + "_" + orientationKey)
+        val next = stored.copy(orientation = target)
+        update(next)
     }
 
     val crestPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -391,10 +400,10 @@ internal fun LegitimacyPreviewSettingsPanel(
             Text("Ustawienia wyglądu dokumentu", fontWeight = FontWeight.Bold)
             Text("Orientacja", fontWeight = FontWeight.SemiBold)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = settings.orientation == "PIONOWA", onClick = { update(settings.copy(orientation = "PIONOWA")) })
+                RadioButton(selected = settings.orientation == "PIONOWA", onClick = { selectOrientation("PIONOWA") })
                 Text("Pionowa")
                 Spacer(Modifier.width(12.dp))
-                RadioButton(selected = settings.orientation == "POZIOMA", onClick = { update(settings.copy(orientation = "POZIOMA")) })
+                RadioButton(selected = settings.orientation == "POZIOMA", onClick = { selectOrientation("POZIOMA") })
                 Text("Pozioma")
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
