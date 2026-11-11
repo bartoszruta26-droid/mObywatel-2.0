@@ -497,7 +497,7 @@ internal fun LegitimacyHeraldry(
             Column(Modifier.weight(1f).padding(start = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleSmall,
                     maxLines = 2)
-                Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 2)
                 if (settings.showLogo && assignedLogo != null) {
                     Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
                         modifier = Modifier.size(width = 54.dp, height = 24.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
@@ -534,10 +534,11 @@ internal fun UnifiedCredentialCard(
 ) {
     val context = LocalContext.current
     val horizontal = settings.orientation == "POZIOMA"
-    val background = remember(settings.backgroundAssetId, documentKey, fallbackBackgroundRes, assetRevision) {
+    // Wspólny wzór nie dziedziczy dawnych teł graficznych poszczególnych dokumentów.
+    // Zapobiega to powielaniu flag, godeł i napisów zaszytych w historycznych grafikach.
+    val background = remember(settings.backgroundAssetId, documentKey, assetRevision) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
-            ?: BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
     }
     val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter { it.first in settings.visibleFields }
     Card(
@@ -553,8 +554,8 @@ internal fun UnifiedCredentialCard(
                 verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
                 LegitimacyHeraldry(settings, documentKey, vertical = true, assetRevision = assetRevision, title = title.uppercase(), subtitle = subtitle)
                 Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (settings.showPhoto) Box(Modifier.width(if (horizontal) 42.dp else 46.dp)
-                        .height(if (horizontal) 56.dp else 62.dp)
+                    if (settings.showPhoto) Box(Modifier.width(38.dp)
+                        .height(50.dp)
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center) {
@@ -609,7 +610,7 @@ internal fun CredentialTemplatePreview(documentKey: String, settings: Legitimacy
     UnifiedCredentialCard(
         documentKey = documentKey,
         title = title,
-        subtitle = "DOKUMENT",
+        subtitle = "",
         holderName = "IMIĘ I NAZWISKO",
         fields = selected.map { (key, label) -> Triple(key, label, "—") },
         settings = settings,
