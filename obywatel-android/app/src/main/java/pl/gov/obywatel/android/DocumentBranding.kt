@@ -559,10 +559,16 @@ internal fun DocumentIdentityTemplate(
         val stableKey = stableFieldKey(key)
         Triple(stableKey, optionLabels[stableKey] ?: key, value)
     }
-    val holder = values.entries.firstOrNull {
+    val personHolder = values.entries.firstOrNull {
         it.key.contains("imię", true) || it.key.contains("imie", true) || it.key.contains("nazw", true) ||
             it.key.contains("posiadacz", true) || it.key.contains("osoba", true)
     }?.value.orEmpty()
+    val holder = personHolder.ifBlank {
+        values.entries.firstOrNull {
+            it.key.contains("nazwa", true) || it.key.contains("firma", true) || it.key.contains("podmiot", true)
+        }?.value.orEmpty().ifBlank { owner }
+    }
+    val subtitle = if (personHolder.isBlank() && holder.isNotBlank()) "DANE PODMIOTU" else owner
     val expiry = values.entries.firstOrNull {
         it.key.contains("ważn", true) || it.key.contains("do dnia", true) ||
             it.key.contains("obowiązywania", true) || it.key.contains("expiry", true) || it.key.contains("validity", true)
@@ -578,7 +584,7 @@ internal fun DocumentIdentityTemplate(
         UnifiedCredentialCard(
             documentKey = documentType,
             title = title,
-            subtitle = owner,
+            subtitle = subtitle,
             holderName = holder,
             fields = cardFields,
             settings = settings,
