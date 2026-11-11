@@ -787,7 +787,8 @@ private fun HomeScreen() {
                                     "medicalHistoryArchive" to exportMedicalHistoryArchive(context),
                                     "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context),
                                     "identityDocumentsArchive" to pl.gov.obywatel.android.ui.identity.exportIdentityDocumentsArchive(context),
-                                    "localRegistryArchive" to pl.gov.obywatel.android.ui.registry.exportLocalRegistryArchive(context)
+                                    "localRegistryArchive" to pl.gov.obywatel.android.ui.registry.exportLocalRegistryArchive(context),
+                                    "activityHistoryArchive" to exportActivityHistoryArchive(context)
                                 )
                             runCatching {
                                 require(exportSnapshot.isNotEmpty()) {
@@ -1057,7 +1058,7 @@ private fun HomeScreen() {
                                         "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive",
-                                        "identityDocumentsArchive", "localRegistryArchive"
+                                        "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
                                     )
                             }
                             DemoIdentityStore.save(context, current.toMutableMap().apply { putAll(profileValues) })
@@ -1072,6 +1073,7 @@ private fun HomeScreen() {
                             incoming["importedAttachmentArchive"]?.let { pl.gov.obywatel.android.data.ImportedDocumentStore.importArchive(context, it) }
                             incoming["identityDocumentsArchive"]?.let { pl.gov.obywatel.android.ui.identity.importIdentityDocumentsArchive(context, it) }
                             incoming["localRegistryArchive"]?.let { pl.gov.obywatel.android.ui.registry.importLocalRegistryArchive(context, it) }
+                            incoming["activityHistoryArchive"]?.let { importActivityHistoryArchive(context, it) }
                             LegitimacyPreviewSettingsStore.importAll(context, incoming)
                             val importedPlacements = incoming.filterKeys { it.startsWith("dp_") }
                                 .mapKeys { it.key.removePrefix("dp_") }
