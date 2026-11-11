@@ -142,6 +142,32 @@ internal object DocumentBrandStore {
         cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, bytes.copyOfRange(0, 12)))
         return cipher.doFinal(bytes.copyOfRange(12, bytes.size))
     }
+    private val generatedDrawableAssets: List<BrandAsset> by lazy {
+        R.drawable::class.java.fields.mapNotNull { field ->
+            runCatching {
+                val name = field.name
+                val lower = name.lowercase(Locale.ROOT)
+                val kind = when {
+                    "flag" in lower || "flaga" in lower -> "Flaga"
+                    "seal" in lower || "stamp" in lower || "piecz" in lower -> "Pieczęć"
+                    lower.startsWith("bg_") || "background" in lower || "tlo_" in lower -> "Tło dokumentu"
+                    "herald" in lower || "coat_of_arms" in lower || "herb" in lower -> "Herb"
+                    "eagle" in lower || "emblem" in lower || "godlo" in lower -> "Godło"
+                    "logo" in lower -> "Logo"
+                    lower.startsWith("ic_") || lower.startsWith("icon_") || lower.startsWith("mob_") -> "Ikona"
+                    else -> "Ikona"
+                }
+                field.getInt(null)
+                BrandAsset(
+                    id = "builtin_drawable_$name",
+                    owner = "Zasoby aplikacji",
+                    kind = kind,
+                    label = name.replace('_', ' ').replaceFirstChar { it.uppercase() },
+                    file = "resource:$name"
+                )
+            }.getOrNull()
+        }
+    }
     private val builtInAssets = listOf(
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
         BrandAsset("builtin_rodu_dab", "Katalog heraldyczny", "Herb", "Herb rodowy — dąb", "builtin:heraldry/herb-rodu-klasyczny.svg"),
@@ -170,7 +196,7 @@ internal object DocumentBrandStore {
                 } }
             }
         }.getOrDefault(emptyList())
-        return builtInAssets + stored
+        return builtInAssets + generatedDrawableAssets + stored
     }
     private fun save(context: Context, assets: List<BrandAsset>) {
         val a = JSONArray()
@@ -204,6 +230,19 @@ internal object DocumentBrandStore {
     }
     private fun imageById(context: Context, assetId: String): android.graphics.Bitmap? = runCatching {
         val asset = list(context).firstOrNull { it.id == assetId } ?: return null
+        if (asset.file.startsWith("resource:")) {
+            val name = asset.file.removePrefix("resource:")
+            val resourceId = context.resources.getIdentifier(name, "drawable", context.packageName)
+            if (resourceId == 0) return null
+            val drawable = context.getDrawable(resourceId) ?: return null
+            val width = drawable.intrinsicWidth.coerceIn(1, 1024)
+            val height = drawable.intrinsicHeight.coerceIn(1, 1024)
+            return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                val canvas = Canvas(bitmap)
+                drawable.setBounds(0, 0, width, height)
+                drawable.draw(canvas)
+            }
+        }
         val bytes = if (asset.file.startsWith("builtin:")) {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
         } else {
@@ -252,7 +291,12 @@ internal object DocumentBrandStore {
     fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
     fun fileBytes(context: Context, assetId: String): ByteArray? = runCatching {
         val asset = list(context).firstOrNull { it.id == assetId } ?: return null
-        if (asset.file.startsWith("builtin:")) {
+        if (asset.file.startsWith("resource:")) {
+            val name = asset.file.removePrefix("resource:")
+            val id = context.resources.getIdentifier(name, "drawable", context.packageName)
+            if (id == 0) return null
+            return null // Android drawable resources are referenced by stable resource name, not exported as opaque files.
+        } else if (asset.file.startsWith("builtin:")) {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
         } else crypt(File(dir(context), asset.file).readBytes(), false)
     }.getOrNull()
@@ -294,6 +338,18 @@ internal object DocumentBrandStore {
     }
     fun image(context: Context, owner: String, kind: String) : android.graphics.Bitmap? = runCatching {
         val asset=list(context).lastOrNull { it.owner.equals(owner,true) && it.kind==kind } ?: return null
+        if (asset.file.startsWith("resource:")) {
+            val resourceId = context.resources.getIdentifier(asset.file.removePrefix("resource:"), "drawable", context.packageName)
+            if (resourceId == 0) return null
+            val drawable = context.getDrawable(resourceId) ?: return null
+            val width = drawable.intrinsicWidth.coerceIn(1, 1024)
+            val height = drawable.intrinsicHeight.coerceIn(1, 1024)
+            return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                val canvas = Canvas(bitmap)
+                drawable.setBounds(0, 0, width, height)
+                drawable.draw(canvas)
+            }
+        }
         val bytes = if (asset.file.startsWith("builtin:")) {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
         } else crypt(File(dir(context),asset.file).readBytes(),false)
