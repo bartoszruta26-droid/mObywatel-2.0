@@ -124,19 +124,12 @@ private object IdentityStore {
 
     fun exportArchive(c: Context): String {
         val prefs = c.getSharedPreferences(PREF, 0)
-        val assetItems = JSONArray()
-        assets(c).forEach { asset ->
-            val bytes = pl.gov.obywatel.android.DocumentBrandStore.fileBytes(c, asset.id)
-                ?: error("Brak pliku zasobu identyfikacji: ${asset.name}")
-            assetItems.put(JSONObject().put("id", asset.id).put("orgId", asset.orgId)
-                .put("name", asset.name).put("category", asset.category).put("file", asset.file)
-                .put("mime", asset.mime).put("rights", asset.rights).put("version", asset.version)
-                .put("createdAt", asset.createdAt)
-                .put("bytes", java.util.Base64.getEncoder().encodeToString(bytes)))
-        }
+        // Trigger one-time migration of legacy organization assets to the central catalog.
+        assets(c)
         return JSONObject().put("version", 1)
             .put("orgs", prefs.getString("orgs", "[]"))
-            .put("assets", assetItems)
+            // Binary asset data and assignments are carried once by brandAssetArchive.
+            .put("assets", JSONArray())
             .put("signatures", c.getSharedPreferences("owd_identity_signatures", 0).getString("records", "[]"))
             .put("templates", c.getSharedPreferences("owd_document_templates", 0).getString("templates", "[]"))
             .toString()
