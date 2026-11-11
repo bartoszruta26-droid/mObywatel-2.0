@@ -25,7 +25,7 @@ class OdtTextExtractorTest {
                 <text:p>Drugi<text:line-break/>ciąg<text:s text:c="3"/>dalszy</text:p>
               </office:text></office:body>
             </office:document-content>""".trimIndent()
-        assertEquals("Pierwszy\\twiersz\\nDrugi\\nciąg   dalszy",
+        assertEquals("Pierwszy\twiersz\nDrugi\nciąg   dalszy",
             OdtTextExtractor.extract(odt(xml.toByteArray())))
     }
 

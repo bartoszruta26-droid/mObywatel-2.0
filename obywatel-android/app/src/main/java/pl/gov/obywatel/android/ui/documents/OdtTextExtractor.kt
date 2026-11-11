@@ -75,8 +75,8 @@ internal object OdtTextExtractor {
             when (event) {
                 XmlPullParser.START_TAG -> when (parser.name) {
                     "p", "h" -> paragraphDepth++
-                    "tab" -> if (paragraphDepth > 0) appendBounded(result, "\\t")
-                    "line-break" -> if (paragraphDepth > 0) appendBounded(result, "\\n")
+                    "tab" -> if (paragraphDepth > 0) appendBounded(result, "\t")
+                    "line-break" -> if (paragraphDepth > 0) appendBounded(result, "\n")
                     "s" -> if (paragraphDepth > 0) {
                         val count = (0 until parser.attributeCount)
                             .firstOrNull { parser.getAttributeName(it) == "c" }
@@ -90,7 +90,7 @@ internal object OdtTextExtractor {
                 }
                 XmlPullParser.END_TAG -> if (parser.name == "p" || parser.name == "h") {
                     if (paragraphDepth > 0) paragraphDepth--
-                    appendBounded(result, "\\n")
+                    appendBounded(result, "\n")
                 }
             }
             event = parser.next()
