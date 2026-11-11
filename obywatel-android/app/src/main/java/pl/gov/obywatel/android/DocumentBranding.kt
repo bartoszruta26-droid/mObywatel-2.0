@@ -1118,7 +1118,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                             Text(asset.label, fontWeight = FontWeight.SemiBold)
                             Text("${asset.owner} · ${asset.kind}", style = MaterialTheme.typography.bodySmall)
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (fixedTarget != null) {
+                                if (fixedTarget != null && !readOnly) {
                                     TextButton(onClick = {
                                         runCatching { DocumentBrandStore.assign(context, fixedTarget, asset.kind, asset.id) }
                                             .onSuccess {
