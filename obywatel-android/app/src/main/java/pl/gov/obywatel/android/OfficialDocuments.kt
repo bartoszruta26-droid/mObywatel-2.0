@@ -52,7 +52,7 @@ private val officialDocTypes = listOf(
     OfficialDocType("eu_education","Zaświadczenie o zgodności wykształcenia z wymogami UE", listOf("Imię i nazwisko","Kwalifikacja / zawód","Nazwa i kraj instytucji kształcącej","Poziom i czas kształcenia","Numer dyplomu / świadectwa","Organ wydający zaświadczenie","Podstawa prawna / dyrektywa","Państwo docelowe","Data wydania","Numer sprawy / zaświadczenia","Zakres potwierdzenia","Status"))
 )
 
-private object OfficialDocumentStore {
+internal object OfficialDocumentStore {
     private const val ALIAS = "obywatel_official_docs_aes"
     private const val INDEX = "official-documents.enc"
     private const val DIR = "official-document-files"
@@ -181,4 +181,31 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
         }
         Text("Dane są szyfrowane lokalnie w pamięci aplikacji. Aplikacja nie pobiera danych z rejestrów państwowych i nie wystawia dokumentów w imieniu organów.",color=Color(0xFF667788),style=MaterialTheme.typography.labelSmall)
     }
+    
+    fun exportArchive(context: Context): String {
+        val root = org.json.JSONObject()
+        load(context).forEach { (documentId, fields) ->
+            val item = org.json.JSONObject()
+            fields.forEach { (key, value) -> item.put(key, value) }
+            root.put(documentId, item)
+        }
+        return root.toString()
+    }
+
+    fun importArchive(context: Context, raw: String) {
+        val root = org.json.JSONObject(raw)
+        val restored = linkedMapOf<String, Map<String, String>>()
+        root.keys().forEach { documentId ->
+            require(documentId.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowy identyfikator dokumentu." }
+            val item = root.getJSONObject(documentId)
+            val fields = linkedMapOf<String, String>()
+            item.keys().forEach { key ->
+                require(key.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowa nazwa pola dokumentu." }
+                fields[key] = item.getString(key)
+            }
+            restored[documentId] = fields
+        }
+        save(context, restored)
+    }
+
 }
