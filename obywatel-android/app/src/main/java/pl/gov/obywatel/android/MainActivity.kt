@@ -375,13 +375,31 @@ private fun ApplicationEntryFlow() {
 }
 
 @Composable
+private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
+    Box(
+        Modifier.size(size).clip(RoundedCornerShape(size * 0.24f))
+            .background(Color.White)
+            .border(1.dp, Color(0xFFD8E1EA), RoundedCornerShape(size * 0.24f))
+            .padding(size * 0.13f),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(R.drawable.institutions_eagle_emblem),
+            contentDescription = "Godło Polski",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit
+        )
+    }
+}
+
+@Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
     Column(
         Modifier.fillMaxSize().background(AppSurface).padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(Icons.Filled.Shield, contentDescription = null, tint = Blue, modifier = Modifier.size(64.dp))
+        BrandMark(size = 112.dp)
         Spacer(Modifier.height(24.dp))
         Text("Aplikacja Obywatelska", color = Navy, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text("Twoje prywatne miejsce do porządkowania dokumentów, danych i spraw obywatelskich.",
@@ -437,7 +455,7 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Blue, modifier = Modifier.size(58.dp))
+        BrandMark(size = 88.dp)
         Spacer(Modifier.height(18.dp))
         Text("Logowanie", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Moduł uwierzytelniania zewnętrznego nie jest jeszcze podłączony. Nie wpisuj tutaj haseł ani danych logowania do usług publicznych.",
@@ -458,6 +476,8 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Ten sam znak i tło są wyświetlane przez okno startowe oraz ekran powitalny.
+        window.setBackgroundDrawableResource(R.drawable.splash_screen)
         setContent { ObywatelTheme { ApplicationEntryFlow() } }
     }
 }
