@@ -528,6 +528,7 @@ internal fun DocumentIdentityTemplate(
             value == "vin" || value.contains(" vin") -> "vehicleVin"
             value.contains("marka i model") -> "vehicleMakeModel"
             value.contains("numer dowodu") -> "vehicleDocumentNumber"
+            value.contains("posiadacz") && documentType in setOf("loyalty", "loyalty_cards") -> "loyaltyHolder"
             value.contains("właściciel") || value.contains("współwłaściciel") -> if (documentType == "vehicle_registration") "vehicleOwner" else "accountOwner"
             value.contains("data pierwszej rejestracji") -> "vehicleFirstRegistration"
             value.contains("termin badania technicznego") -> "vehicleInspectionDue"
@@ -573,7 +574,8 @@ internal fun DocumentIdentityTemplate(
             value.contains("koniec mandatu") -> "mpEnd"
             value.contains("kadencj") -> "mpTerm"
             value.contains("okręg") -> "mpDistrict"
-            value.contains("numer karty") -> when (documentType) { "large_family" -> "largeFamilyNumber"; "blood_donor" -> "bloodDonorNumber"; "disability_card" -> "disabilityCardNumber"; "ehic" -> "ehicNumber"; else -> "documentNumber" }
+            value.contains("numer karty") -> when (documentType) {
+                "loyalty", "loyalty_cards" -> "loyaltyNumber" "large_family" -> "largeFamilyNumber"; "blood_donor" -> "bloodDonorNumber"; "disability_card" -> "disabilityCardNumber"; "ehic" -> "ehicNumber"; else -> "documentNumber" }
             value.contains("typ karty") || value.startsWith("typ:") -> "largeFamilyType"
             value.contains("krs") -> "entityKrs"
             value.contains("nip") -> "entityNip"
