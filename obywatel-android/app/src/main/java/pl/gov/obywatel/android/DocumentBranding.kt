@@ -332,10 +332,10 @@ private fun defaultDocumentBackground(context: Context, title: String): Bitmap? 
             R.drawable.documents_deputy_legitimacy
         normalized.contains("uczn") || normalized.contains("student") || normalized.contains("szkoln") ||
             normalized.contains("doktorant") ->
-            R.drawable.documents_student_legitimacy
+            R.drawable.documents_course_legitimacy
         normalized.contains("kursant") || normalized.contains("kursu") || normalized.contains("szkoleni") ||
             normalized.contains("ukończenia kurs") || normalized.contains("ukonczenia kurs") ->
-            R.drawable.documents_course_legitimacy
+            R.drawable.documents_student_legitimacy
         normalized.contains("zawodow") || normalized.contains("pracown") ||
             normalized.contains("wykonywania zawodu") || normalized.contains("kwalifikac") ->
             R.drawable.doc_02_legitymacja_zawodowa
