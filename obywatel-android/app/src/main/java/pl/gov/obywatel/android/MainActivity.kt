@@ -2033,7 +2033,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard(
             "Zasoby graficzne dokumentów",
             "Dodawanie i przypisywanie teł, herbów, godła, logo, flag oraz fotografii",
-            Icons.Filled.Image,
+            Icons.Filled.Description,
             onManageDocumentBrandAssets
         )
         Text("Kopia danych vCard", color = Navy, fontWeight = FontWeight.Bold)
