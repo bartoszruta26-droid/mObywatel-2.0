@@ -286,8 +286,7 @@ internal fun LegitimacyReverseSide(title: String, issuer: String, number: String
     }
     val qrBitmap = remember(payload) {
         runCatching {
-            val hints = mapOf(
-                EncodeHintType.ERROR_CORCTION to ErrorCorrectionLevel.M,
+            val hints = mapOf<EncodeHintType, Any>(
                 EncodeHintType.CHARACTER_SET to "UTF-8",
                 EncodeHintType.MARGIN to 1
             )
