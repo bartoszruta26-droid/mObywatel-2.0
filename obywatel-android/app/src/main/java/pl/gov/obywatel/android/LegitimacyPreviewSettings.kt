@@ -543,8 +543,12 @@ internal fun UnifiedCredentialCard(
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Tło dokumentu")
-            ?: defaultDocumentBackground(context, title)
-            ?: BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
+            ?: if (fallbackBackgroundRes != R.drawable.tlo_legitymacji_szare) {
+                BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
+            } else {
+                defaultDocumentBackground(context, title)
+                    ?: BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
+            }
     }
     val logo = remember(settings.logoAssetId, documentKey, assetRevision, title) {
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
