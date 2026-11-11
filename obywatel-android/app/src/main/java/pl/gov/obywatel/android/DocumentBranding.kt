@@ -455,7 +455,7 @@ internal fun DocumentIdentityTemplate(
     values: Map<String, String>,
     owner: String = "",
     photoOverride: Bitmap? = null,
-    validity: String = values.entries.firstOrNull { it.key.contains("status", true) || it.key.contains("waż", true) }?.value.orEmpty(),
+    validity: String = values.entries.firstOrNull { it.key.contains("status", true) }?.value.orEmpty(),
     documentType: String = documentTypeForTitle(title),
     showReverse: Boolean = false,
     assetRevision: Int = 0
