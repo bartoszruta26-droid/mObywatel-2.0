@@ -3309,11 +3309,6 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
     val settingsState = rememberLegitimacyPreviewSettings(documentKey)
     val settings = settingsState.value
     val context = LocalContext.current
-    val backgroundBitmap = remember(settings.backgroundAssetId, documentKey, student) {
-        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-            ?: DocumentBrandStore.imageForDocument(context, documentKey, "legitimacy:$documentKey", "Tło dokumentu")
-            ?: BitmapFactory.decodeResource(context.resources, if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe)
-    }
     val photoBitmap = remember(photoBase64) {
         runCatching {
             if (photoBase64.isBlank()) null else {
@@ -3321,7 +3316,7 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                 val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
                 var sample = 1
-                while (bounds.outWidth / sample > 600 || bounds.outHeight / sample > 600) sample *= 2
+                while (bounds.outWidth / sample > 500 || bounds.outHeight / sample > 500) sample *= 2
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
             }
         }.getOrNull()
@@ -3330,128 +3325,44 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
         listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
     } else listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
     val institution = if (student) fields["studentUniversity"].orEmpty() else fields["trainingInstitution"].orEmpty()
-    val number = if (student) fields["studentCardNumber"].orEmpty() else fields["trainingCardNumber"].orEmpty()
     val validity = if (student) fields["studentValidity"].orEmpty() else fields["trainingValidUntil"].orEmpty()
-    val status = if (student) fields["studentStatus"].orEmpty() else fields["trainingStatus"].orEmpty()
-    val course = if (student) fields["studentProgramme"].orEmpty() else fields["trainingCourseName"].orEmpty()
-    val issueDate = if (student) fields["studentIssueDate"].orEmpty() else fields["trainingIssueDate"].orEmpty()
-    val expiry = runCatching {
-        val normalized = validity.trim()
-        val parsed = java.time.LocalDate.parse(normalized, java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-        parsed
-    }.recoverCatching {
-        java.time.LocalDate.parse(validity.trim())
-    }.getOrNull()
-    val activeStatus = status.trim().lowercase() in setOf("aktywny", "aktywna", "active", "ważny", "wazny")
-    val valid = activeStatus && (validity.isBlank() || (expiry != null && !expiry.isBefore(java.time.LocalDate.now())))
-    val statusLabel = when {
-        status.isBlank() -> "Status do uzupełnienia"
-        !activeStatus -> "Status: ${status}"
-        validity.isNotBlank() && expiry == null -> "Nieprawidłowa data ważności"
-        valid -> "Dokument ważny"
-        else -> "Dokument po terminie"
-    }
+    val status = if (student) fields["studentStatus"].orEmpty().trim().lowercase() else fields["trainingStatus"].orEmpty().trim().lowercase()
+    val explicitlyInvalid = status in setOf("nieważny", "nieważna", "unieważniony", "unieważniona", "zwrócony", "zwrócona", "utracony", "utracona", "expired", "invalid")
+    val valid = !explicitlyInvalid && isCredentialValidByExpiry(validity)
+    val cardFields = if (student) listOf(
+        Triple("studentUniversity", "UCZELNIA", institution),
+        Triple("studentProgramme", "KIERUNEK", fields["studentProgramme"].orEmpty()),
+        Triple("studentCardNumber", "NUMER LEGITYMACJI", fields["studentCardNumber"].orEmpty()),
+        Triple("studentIssueDate", "DATA WYDANIA", fields["studentIssueDate"].orEmpty()),
+        Triple("studentValidity", "WAŻNA DO", validity)
+    ) else listOf(
+        Triple("trainingInstitution", "INSTYTUCJA", institution),
+        Triple("trainingCourseName", "KURS / KWALIFIKACJA", fields["trainingCourseName"].orEmpty()),
+        Triple("trainingCardNumber", "NUMER LEGITYMACJI", fields["trainingCardNumber"].orEmpty()),
+        Triple("trainingIssueDate", "DATA WYDANIA", fields["trainingIssueDate"].orEmpty()),
+        Triple("trainingValidUntil", "WAŻNA DO", validity)
+    )
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.showCard) {
-        Card(
-            modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE2D2)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Box(Modifier.fillMaxSize()) {
-                if (backgroundBitmap != null) Image(
-                    backgroundBitmap.asImageBitmap(),
-                    contentDescription = "Tło legitymacji",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    alpha = 0.52f
-                )
-                Column(Modifier.fillMaxSize().padding(13.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                        // Grafika wzoru legitymacji z katalogu zasobów; obrazy zawierają właściwy czerwony znak Orła.
-                        Image(
-                            painter = painterResource(if (student) R.drawable.documents_course_legitimacy else R.drawable.documents_student_legitimacy),
-                            contentDescription = if (student) "Legitymacja studencka" else "Legitymacja kursanta",
-                            modifier = Modifier.size(54.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                        Column(Modifier.weight(1f)) {
-                            Text(if (student) "LEGITYMACJA SZKOLNA / STUDENCKA" else "LEGITYMACJA UCZESTNIKA KURSU",
-                                color = Color(0xFF392B35), fontWeight = FontWeight.ExtraBold,
-                                style = MaterialTheme.typography.titleSmall)
-                            Text(institution.ifBlank { "NAZWA SZKOŁY / INSTYTUCJI" },
-                                color = Color(0xFF62535A), style = MaterialTheme.typography.labelSmall,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Column(Modifier.width(100.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                            Box(
-                                Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0xFFE8D6D0)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (photoBitmap != null) {
-                                    Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie posiadacza legitymacji",
-                                        modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                                } else {
-                                    Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie",
-                                        tint = Color(0xFF8A777B), modifier = Modifier.size(54.dp))
-                                }
-                            }
-                            LegitimacyHeraldry(settings, documentKey, vertical = true)
-                        }
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                            @Composable fun data(label: String, value: String) {
-                                Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                                    Text(label, color = Color(0xFF705D62), style = MaterialTheme.typography.labelSmall)
-                                    Text(value.ifBlank { "—" }, color = Color(0xFF29252A),
-                                        fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodySmall,
-                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                }
-                            }
-                            data("IMIĘ I NAZWISKO", name.ifBlank { "Dane ucznia" })
-                            data(if (student) "KLASA / KIERUNEK" else "KURS", course)
-                            data("NUMER LEGITYMACJI", number)
-                            data("DATA WYDANIA", issueDate)
-                            data("WAŻNA DO", validity)
-                        }
-                    }
-                    Text("DOKUMENT EWIDENCYJNY • WYSTAWCA: ${institution.ifBlank { "NIE WSKAZANO" }}",
-                        color = Color(0xFF59434B), style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
+            UnifiedCredentialCard(
+                documentKey = documentKey,
+                title = if (student) "LEGITYMACJA UCZNIA / STUDENTA" else "LEGITYMACJA KURSANTA",
+                subtitle = institution,
+                holderName = name,
+                fields = cardFields,
+                settings = settings,
+                photo = photoBitmap,
+                fallbackBackgroundRes = if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe
+            )
+            if (settings.showReverse) LegitimacyReverseSide(
+                title = if (student) "Legitymacja szkolna — rewers" else "Legitymacja uczestnika kursu — rewers",
+                issuer = institution,
+                number = if (student) fields["studentCardNumber"].orEmpty() else fields["trainingCardNumber"].orEmpty(),
+                validity = validity,
+                orientation = settings.orientation
+            )
         }
-        if (settings.showReverse) LegitimacyReverseSide(
-            title = if (student) "Legitymacja szkolna — rewers" else "Legitymacja uczestnika kursu — rewers",
-            issuer = institution, number = number, validity = validity
-        )
-        } else {
-            Text("Podgląd całej legitymacji jest wyłączony w ustawieniach powyżej.", color = Muted, style = MaterialTheme.typography.bodySmall)
-        }
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = White)
-        ) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (valid) {
-                    Box(Modifier.size(28.dp).clip(CircleShape).border(2.dp, Color(0xFF27833B), CircleShape),
-                        contentAlignment = Alignment.Center) {
-                        Text("✓", color = Color(0xFF27833B), fontWeight = FontWeight.Bold)
-                    }
-                } else {
-                    Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFF9A6A16))
-                }
-                Text(statusLabel, color = if (valid) Color(0xFF237A35) else Color(0xFF805000),
-                    fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-        Text("Wizualizacja informacyjna własnego dokumentu szkolnego. Status jest obliczany wyłącznie z danych zapisanych przez wystawcę; nie stanowi zewnętrznej walidacji.",
-            color = Muted, style = MaterialTheme.typography.bodySmall)
+        CredentialValidityTile(valid)
     }
 }
 
@@ -3460,12 +3371,6 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
     val documentKey = "parliament"
     val settingsState = rememberLegitimacyPreviewSettings(documentKey)
     val settings = settingsState.value
-    val context = LocalContext.current
-    val backgroundBitmap = remember(settings.backgroundAssetId, documentKey) {
-        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-            ?: DocumentBrandStore.imageForDocument(context, documentKey, "legitimacy:$documentKey", "Tło dokumentu")
-            ?: BitmapFactory.decodeResource(context.resources, R.drawable.tlo_legitymacji_szare)
-    }
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
@@ -3474,128 +3379,44 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
                 val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
                 var sample = 1
-                while (bounds.outWidth / sample > 700 || bounds.outHeight / sample > 700) sample *= 2
+                while (bounds.outWidth / sample > 500 || bounds.outHeight / sample > 500) sample *= 2
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
             }
         }.getOrNull()
     }
-    val firstNames = fields["firstNames"].orEmpty()
-    val lastName = fields["lastName"].orEmpty()
-    val fullName = listOf(firstNames, lastName).filter { it.isNotBlank() }.joinToString(" ")
-    val authority = fields["mpIssuer"].orEmpty()
-    val status = fields["mpStatus"].orEmpty().trim().lowercase()
-    val mandateActive = status in setOf("aktywna", "aktywny", "active", "ważna", "wazna")
+    val fullName = listOf(fields["firstNames"], fields["lastName"])
+        .filterNot { it.isNullOrBlank() }.joinToString(" ")
+    val issuer = fields["mpIssuer"].orEmpty()
+    val number = fields["mpCardNumber"].orEmpty()
     val term = fields["mpTerm"].orEmpty()
-    val issueDate = fields["mpCardIssueDate"].orEmpty()
-    val cardNumber = fields["mpCardNumber"].orEmpty()
-    val statusLabel = when {
-        status.isBlank() -> "Status do uzupełnienia"
-        mandateActive -> "Status wpisany: aktywna"
-        else -> "Status wpisany: ${fields["mpStatus"].orEmpty()}"
-    }
+    val expiry = fields["mpEnd"].orEmpty()
+    val status = fields["mpStatus"].orEmpty().trim().lowercase()
+    val explicitlyInvalid = status in setOf("nieważny", "nieważna", "unieważniony", "unieważniona", "zwrócony", "zwrócona", "utracony", "utracona", "expired", "invalid")
+    val valid = !explicitlyInvalid && isCredentialValidByExpiry(expiry)
+    val cardFields = listOf(
+        Triple("mpCardNumber", "NUMER LEGITYMACJI", number),
+        Triple("mpTerm", "KADENCJA", term),
+        Triple("mpCardIssueDate", "DATA WYDANIA", fields["mpCardIssueDate"].orEmpty()),
+        Triple("mpEnd", "KONIEC OKRESU", expiry),
+        Triple("mpIssuer", "WYSTAWCA", issuer)
+    )
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    if (settings.showCard) {
-    Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F2EF)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
-    ) {
-        Box(Modifier.fillMaxSize()) {
-            if (backgroundBitmap != null) Image(
-                backgroundBitmap.asImageBitmap(),
-                contentDescription = "Tło legitymacji poselskiej",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = 0.46f
+        if (settings.showCard) {
+            UnifiedCredentialCard(
+                documentKey = documentKey,
+                title = "LEGITYMACJA POSELSKA",
+                subtitle = "SEJM RZECZYPOSPOLITEJ POLSKIEJ",
+                holderName = fullName,
+                fields = cardFields,
+                settings = settings,
+                photo = photoBitmap,
+                fallbackBackgroundRes = R.drawable.tlo_legitymacji_szare
             )
-            Column(Modifier.fillMaxSize().padding(15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Image(
-                        painter = painterResource(R.drawable.documents_deputy_legitimacy),
-                        contentDescription = "Graficzna legitymacja poselska z godłem",
-                        modifier = Modifier.size(76.dp),
-                        contentScale = ContentScale.Fit
-                    )
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("LEGITYMACJA POSELSKA", color = Color(0xFF28252A),
-                            fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
-                        Text("WIZUALIZACJA DOKUMENTU • EWIDENCJA INFORMACYJNA",
-                            color = Color(0xFF6C6260), style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-                Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Column(Modifier.weight(0.92f).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Box(
-                            Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFFE8E4E1)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (photoBitmap != null) {
-                                Image(photoBitmap.asImageBitmap(), contentDescription = "Zdjęcie osoby w legitymacji poselskiej",
-                                    modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                            } else {
-                                Icon(Icons.Filled.AccountCircle, contentDescription = "Miejsce na zdjęcie",
-                                    tint = Color(0xFF9A918D), modifier = Modifier.size(64.dp))
-                            }
-                        }
-                        LegitimacyHeraldry(settings, documentKey, vertical = true)
-                    }
-                    Column(Modifier.weight(1.18f).fillMaxSize(), verticalArrangement = Arrangement.SpaceEvenly) {
-                        @Composable fun detail(label: String, value: String) {
-                            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                Text(label, color = Color(0xFF716966), style = MaterialTheme.typography.labelSmall)
-                                Text(value.ifBlank { "—" }, color = Color(0xFF302B2A),
-                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            }
-                        }
-                        detail("IMIĘ (IMIONA)", firstNames)
-                        detail("NAZWISKO", lastName)
-                        detail("RODZAJ UPRAWNIENIA", "Poseł na Sejm RP")
-                        detail("DATA WYDANIA", issueDate)
-                        detail("NUMER LEGITYMACJI", cardNumber)
-                        detail("NUMER KADENCJI", term)
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(Modifier.size(width = 54.dp, height = 34.dp).clip(RoundedCornerShape(5.dp))
-                        .border(1.dp, Color(0xFFD6D0CB), RoundedCornerShape(5.dp))) {
-                        Column(Modifier.fillMaxSize()) {
-                            Box(Modifier.weight(1f).fillMaxWidth().background(Color.White))
-                            Box(Modifier.weight(1f).fillMaxWidth().background(Color(0xFFDC143C)))
-                        }
-                    }
-                    Column(Modifier.weight(1f)) {
-                        Text("SEJM RZECZYPOSPOLITEJ POLSKIEJ", color = Color(0xFF5E5552),
-                            fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
-                        Text(authority.ifBlank { "Organ wystawiający do uzupełnienia" },
-                            color = Color(0xFF786E6A), style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            }
+            if (settings.showReverse) LegitimacyReverseSide(
+                "Legitymacja poselska — rewers", issuer, number, expiry, settings.orientation
+            )
         }
-    }
-    if (settings.showReverse) LegitimacyReverseSide("Legitymacja poselska — rewers", authority, cardNumber, "")
-    } else {
-        Text("Podgląd całej legitymacji jest wyłączony w ustawieniach powyżej.", color = Muted, style = MaterialTheme.typography.bodySmall)
-    }
-    Card(colors = CardDefaults.cardColors(containerColor = if (mandateActive) Color(0xFFE5F4EA) else Color(0xFFFFF4D6))) {
-        Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (mandateActive) {
-                Box(Modifier.size(28.dp).clip(CircleShape).border(2.dp, Color(0xFF27833B), CircleShape),
-                    contentAlignment = Alignment.Center) {
-                    Text("✓", color = Color(0xFF27833B), fontWeight = FontWeight.Bold)
-                }
-            } else {
-                Icon(Icons.Filled.Info, contentDescription = null, tint = Blue)
-            }
-            Text(statusLabel + ". Status wynika z wpisu użytkownika i nie potwierdza mandatu ani autentyczności legitymacji.",
-                color = Muted, style = MaterialTheme.typography.bodySmall)
-        }
-    }
+        CredentialValidityTile(valid)
     }
 }
 
