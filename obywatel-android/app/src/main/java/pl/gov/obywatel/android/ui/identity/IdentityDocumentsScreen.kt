@@ -104,8 +104,8 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     var assetName by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(categories.first()) }
     var rights by remember { mutableStateOf("") }
-    var templateName by remember { mutableStateOf("Mój szablon") }
-    val documentGroups = listOf("Kościelne", "Fundacyjne", "Stowarzyszeniowe", "Firmowe", "Rodowe", "Cywilne", "Zawodowe", "Urzędowe", "Ogólne")
+    var templateName by remember { mutableStateOf("Dokument") }
+    val documentGroups = listOf("Ogólne")
     var documentGroup by remember { mutableStateOf("Ogólne") }
     var layout by remember { mutableStateOf(DocumentLayout()) }
     var title by remember { mutableStateOf("Zaświadczenie") }
@@ -222,20 +222,12 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     OrgChoice(orgs,orgId){orgId=it}
                     SimpleChoice("Grupa dokumentu",documentGroup,documentGroups){ documentGroup=it }
                     OutlinedButton(onClick={
-                        when(documentGroup) {
-                            "Kościelne" -> { templateName="Dokument kościelny"; title="Zaświadczenie kościelne"; role="Osoba uprawniona do reprezentacji podmiotu kościelnego"; watermark="DOKUMENT KOŚCIELNY"; body="Niniejszym zaświadcza się, że…\n\nPodstawa wydania: …\nData i miejsce: …" }
-                            "Fundacyjne" -> { templateName="Dokument fundacji"; title="Zaświadczenie / potwierdzenie fundacji"; role="Zarząd Fundacji"; watermark="FUNDACJA"; body="Dane fundacji: …\nCel i przedmiot dokumentu: …\nPodstawa statutowa / uchwała: …\nRozstrzygnięcie lub potwierdzenie: …" }
-                            "Stowarzyszeniowe" -> { templateName="Dokument stowarzyszenia"; title="Zaświadczenie stowarzyszenia"; role="Zarząd Stowarzyszenia"; watermark="STOWARZYSZENIE"; body="Dane stowarzyszenia: …\nCzłonek / adresat: …\nPodstawa statutowa / uchwała: …\nTreść zaświadczenia: …" }
-                            "Firmowe" -> { templateName="Dokument firmowy"; title="Pismo firmowe"; role="Zarząd / właściciel"; watermark="DOKUMENT FIRMOWY"; body="Dane rejestrowe podmiotu: …\nAdresat: …\nPrzedmiot sprawy: …\nTreść: …\nOsoba do kontaktu: …" }
-                            "Rodowe" -> { templateName="Dokument rodowy"; title="Oświadczenie rodowe"; role="Przedstawiciel rodu"; watermark="DOKUMENT RODOWY"; body="Oznaczenie rodu: …\nOsoby, których dotyczy dokument: …\nPrzedmiot oświadczenia: …\nTreść i podstawa ustaleń: …" }
-                            "Cywilne" -> { templateName="Dokument cywilny"; title="Oświadczenie"; role="Osoba składająca oświadczenie"; watermark="DOKUMENT CYWILNY"; body="Dane osoby składającej oświadczenie: …\nTreść oświadczenia: …\nMiejsce i data: …\nZałączniki: …" }
-                            "Zawodowe" -> { templateName="Dokument zawodowy"; title="Zaświadczenie zawodowe"; role="Osoba uprawniona / pracodawca"; watermark="DOKUMENT ZAWODOWY"; body="Dane osoby: …\nKwalifikacje / stanowisko: …\nZakres czynności lub potwierdzenia: …\nOkres / data: …" }
-                            "Urzędowe" -> { templateName="Wzór pisma urzędowego"; title="Pismo"; role="Organ / osoba upoważniona"; watermark="WZÓR"; body="Oznaczenie podmiotu i znak sprawy: …\nAdresat: …\nPodstawa prawna: …\nUzasadnienie: …\nRozstrzygnięcie / pouczenie: …" }
-                            else -> { templateName="Dokument ogólny"; title="Dokument"; role="Osoba uprawniona"; watermark="WZÓR"; body="Treść dokumentu…\n\nZałączniki: …" }
-                        }
-                        layout = DocumentLayout.forGroup(documentGroup)
-                        message="Zastosowano odrębny układ graficzny grupy: "+documentGroup+". Uzupełnij dane i sprawdź podstawę prawną przed wydaniem."
-                    },modifier=Modifier.fillMaxWidth()){ Text("Zastosuj wzorzec grupy") }
+                        templateName = "Dokument"
+                        role = "Osoba uprawniona"
+                        watermark = "WZÓR"
+                        layout = DocumentLayout()
+                        message = "Zastosowano wspólny układ dokumentu A4. Rodzaj dokumentu określają treść, pola i dane wystawcy."
+                    },modifier=Modifier.fillMaxWidth()){ Text("Przywróć wspólny układ") }
                     OutlinedTextField(templateName,{templateName=it},label={Text("Nazwa szablonu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(title,{title=it},label={Text("Tytuł dokumentu")},modifier=Modifier.fillMaxWidth())
                     OutlinedTextField(number,{number=it},label={Text("Numer dokumentu / rejestru")},modifier=Modifier.fillMaxWidth())
@@ -553,17 +545,9 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     val burgundy=android.graphics.Color.rgb(105,34,54)
     val forest=android.graphics.Color.rgb(37,83,66)
     val slate=android.graphics.Color.rgb(65,76,91)
-    val accent=when(group) {
-        "Kościelne" -> burgundy
-        "Fundacyjne","Stowarzyszeniowe" -> forest
-        "Firmowe" -> navy
-        "Rodowe" -> android.graphics.Color.rgb(105,79,39)
-        "Cywilne" -> slate
-        "Zawodowe" -> android.graphics.Color.rgb(31,91,112)
-        "Urzędowe" -> android.graphics.Color.rgb(35,55,82)
-        else -> navy
-    }
-    val margin=if(group=="Urzędowe")52f else 42f
+    val accent=android.graphics.Color.rgb(28,48,76)
+    val margin=42f
+
     // User-created geometry and ornaments are rendered into the actual PDF page.
     layout.elements.filter { it.page == pageNumber + 1 && it.visible && it.kind in setOf("line", "frame", "ornament") }.forEach { e ->
         p.color=accent
@@ -601,26 +585,20 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
     p.color=android.graphics.Color.LTGRAY;p.textSize=48f;p.typeface=Typeface.DEFAULT_BOLD
     canvas.save();canvas.rotate(-30f,295f,420f);layout.element("watermark",pageNumber+1)?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(watermark.take(20),element.x,element.y,p) };canvas.restore()
     p.color=accent;p.textSize=21f
-    val titleY=layout.element("title",pageNumber+1)?.y ?: when(group){"Kościelne"->190f;"Urzędowe"->188f;"Rodowe"->198f;else->184f}
+    val titleY=layout.element("title",pageNumber+1)?.y ?: 184f
     layout.element("title",pageNumber+1)?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; canvas.drawText(title.take(48),element.x,element.y+element.height.coerceAtMost(element.fontSize),p) }
     p.color=android.graphics.Color.DKGRAY;p.textSize=9.5f;p.typeface=Typeface.DEFAULT
     canvas.drawText("Numer: "+number,margin,titleY+24f,p)
     canvas.drawText("Data wystawienia: "+java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date()),margin,titleY+40f,p)
     canvas.drawText("Identyfikator OWD: "+number,margin,titleY+56f,p)
-    val recipientLabel=when(group) {
-        "Firmowe" -> "ADRESAT / KONTRAHENT:"
-        "Rodowe" -> "OSOBY, KTÓRYCH DOTYCZY DOKUMENT:"
-        "Urzędowe" -> "ADRESAT:"
-        "Zawodowe" -> "OSOBA / PODMIOT:"
-        else -> "ADRESAT / PRZEDMIOT:"
-    }
+    val recipientLabel="ADRESAT / PRZEDMIOT:"
     layout.element("recipient",pageNumber+1)?.takeIf { it.visible }?.let { element ->
         p.color=accent;p.typeface=Typeface.DEFAULT_BOLD;p.textSize=9f
         canvas.drawText(recipientLabel,element.x,element.y,p)
         p.color=android.graphics.Color.DKGRAY;p.typeface=Typeface.DEFAULT;p.textSize=element.fontSize
         drawLines(canvas,recipient,element.x,element.y+20f,element.width,p)
     }
-    val bodyY=layout.element("body",pageNumber+1)?.y ?: when(group){"Urzędowe"->titleY+170f;"Firmowe"->titleY+155f;"Kościelne"->titleY+150f;else->titleY+148f}
+    val bodyY=layout.element("body",pageNumber+1)?.y ?: titleY+166f
     p.color=android.graphics.Color.DKGRAY;p.textSize=layout.element("body",pageNumber+1)?.fontSize ?: 10f
     layout.element("body",pageNumber+1)?.takeIf { it.visible }?.let { element -> p.textSize=element.fontSize; drawLines(canvas,bodyPages.getOrElse(pageNumber){""},element.x,element.y,element.width,p) }
     // Group-specific reference fields and separators establish a distinct formal hierarchy.
@@ -628,16 +606,7 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
         p.color=accent;p.strokeWidth=0.8f
         canvas.drawLine(e.x,e.y,e.x+e.width,e.y,p)
         p.textSize=e.fontSize;p.typeface=Typeface.DEFAULT;p.color=android.graphics.Color.DKGRAY
-        val referenceLabel=when(group) {
-            "Kościelne" -> "MIEJSCE I DATA • PODSTAWA WYDANIA"
-            "Fundacyjne","Stowarzyszeniowe" -> "PODSTAWA STATUTOWA / UCHWAŁA"
-            "Firmowe" -> "DANE REJESTROWE • ZNAK SPRAWY"
-            "Rodowe" -> "PODSTAWA USTALEŃ RODOWYCH"
-            "Cywilne" -> "MIEJSCE I DATA • ZAŁĄCZNIKI"
-            "Zawodowe" -> "PODSTAWA KWALIFIKACJI / UPRAWNIEŃ"
-            "Urzędowe" -> "PODSTAWA PRAWNA • ZNAK SPRAWY"
-            else -> "INFORMACJE UZUPEŁNIAJĄCE"
-        }
+        val referenceLabel="PODSTAWA / INFORMACJE UZUPEŁNIAJĄCE"
         canvas.drawText(referenceLabel,e.x,e.y+16f,p)
         canvas.drawText("………………………………………………………………………………",e.x,e.y+34f,p)
     }
@@ -654,28 +623,25 @@ private fun renderPdf(c:Context,title:String,number:String,recipient:String,body
         canvas.drawText(signer.take(65),signX,signY+37f,p)
         canvas.drawLine(signX,signY+66f,signX+175f,signY+66f,p)
         canvas.drawText("Podpis osoby uprawnionej",signX,signY+79f,p)
-        seal?.let{drawImage(c,canvas,it,390f,signY-6f,82f,82f)}
-        security?.let{drawImage(c,canvas,it,490f,signY-4f,54f,54f)}
-        signature?.let{drawImage(c,canvas,it,signX+12f,signY+39f,130f,28f)}
+        layout.element("seal",pageNumber+1)?.takeIf { it.visible }?.let { e -> seal?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
+        layout.element("security",pageNumber+1)?.takeIf { it.visible }?.let { e -> security?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
+        layout.element("signatureGraphic",pageNumber+1)?.takeIf { it.visible }?.let { e -> signature?.let { drawImage(c,canvas,it,e.x,e.y,e.width,e.height) } }
     }
     runCatching {
         val matrix=QRCodeWriter().encode("urn:owd:document:"+number,BarcodeFormat.QR_CODE,72,72)
         val qr=android.graphics.Bitmap.createBitmap(72,72,android.graphics.Bitmap.Config.ARGB_8888)
         for(y in 0 until 72) for(x in 0 until 72) qr.setPixel(x,y,if(matrix[x,y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
-        canvas.drawBitmap(qr,500f,745f,null);qr.recycle()
+        layout.element("qr",pageNumber+1)?.takeIf { it.visible }?.let { e ->
+            val scale=minOf(e.width/qr.width,e.height/qr.height)
+            val width=qr.width*scale
+            val height=qr.height*scale
+            val target=android.graphics.RectF(e.x+(e.width-width)/2f,e.y+(e.height-height)/2f,e.x+(e.width+width)/2f,e.y+(e.height+height)/2f)
+            canvas.drawBitmap(qr,null,target,null)
+        }
+        qr.recycle()
     }
     p.textSize=7.2f;p.color=android.graphics.Color.GRAY
-    val footer=when(group) {
-        "Kościelne" -> "Dokument podmiotu kościelnego • skuteczność zależy od umocowania wystawcy"
-        "Fundacyjne" -> "Dokument fundacji • podstawa statutowa i reprezentacja wymagają weryfikacji"
-        "Stowarzyszeniowe" -> "Dokument stowarzyszenia • podstawa statutowa i reprezentacja wymagają weryfikacji"
-        "Firmowe" -> "Dokument podmiotu gospodarczego • dane rejestrowe należy zweryfikować"
-        "Rodowe" -> "Dokument prywatny/rodowy • nie zastępuje dokumentów urzędowych"
-        "Cywilne" -> "Oświadczenie prywatne • skutki prawne zależą od treści i formy"
-        "Zawodowe" -> "Dokument zawodowy • nie zastępuje urzędowego potwierdzenia kwalifikacji"
-        "Urzędowe" -> "WZÓR dokumentu • nie jest dokumentem organu administracji"
-        else -> "Dokument wygenerowany w OWD"
-    }
+    val footer="Dokument wygenerowany w edytorze OWD · dane i umocowanie wystawcy wymagają weryfikacji"
     layout.element("footer",pageNumber+1)?.takeIf { it.visible }?.let { e ->
         canvas.drawText(footer.take(100),e.x,e.y+10f,p)
         canvas.drawText("Grafika pieczęci i wzór podpisu nie stanowią podpisu elektronicznego.",e.x,e.y+24f,p)

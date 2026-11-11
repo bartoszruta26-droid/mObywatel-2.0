@@ -47,28 +47,7 @@ internal data class DocumentLayout(
         })
 
     companion object {
-        fun forGroup(group: String): DocumentLayout {
-            val base = defaults()
-            val (titleY, bodyY, accentX) = when (group) {
-                "Kościelne" -> Triple(190f, 350f, 42f)
-                "Fundacyjne" -> Triple(178f, 330f, 48f)
-                "Stowarzyszeniowe" -> Triple(184f, 340f, 48f)
-                "Firmowe" -> Triple(172f, 320f, 42f)
-                "Rodowe" -> Triple(198f, 360f, 52f)
-                "Cywilne" -> Triple(184f, 350f, 42f)
-                "Zawodowe" -> Triple(180f, 338f, 46f)
-                "Urzędowe" -> Triple(188f, 358f, 52f)
-                else -> Triple(184f, 350f, 42f)
-            }
-            return DocumentLayout(elements = base.map { element ->
-                when (element.id) {
-                    "title" -> element.copy(x = accentX, y = titleY)
-                    "body" -> element.copy(x = accentX, y = bodyY)
-                    "recipient" -> element.copy(x = accentX, y = titleY + 108f)
-                    else -> element
-                }
-            })
-        }
+        fun forGroup(group: String): DocumentLayout = DocumentLayout()
 
         fun defaults() = listOf(
             DocumentLayoutElement("header", "Nagłówek", 42f, 42f, 511f, 72f, 15f),
@@ -84,7 +63,8 @@ internal data class DocumentLayout(
             DocumentLayoutElement("body", "Treść", 42f, 350f, 511f, 285f, 10f),
             DocumentLayoutElement("signature", "Podpis", 42f, 675f, 511f, 100f, 9f),
             DocumentLayoutElement("watermark", "Znak wodny", 105f, 390f, 385f, 80f, 48f),
-            DocumentLayoutElement("footer", "Stopka", 42f, 790f, 511f, 30f, 7f)
+            DocumentLayoutElement("footer", "Stopka", 42f, 790f, 511f, 30f, 7f),
+            DocumentLayoutElement("qr", "Kod QR", 500f, 745f, 48f, 48f)
         )
 
         fun fromJson(json: JSONObject?): DocumentLayout {

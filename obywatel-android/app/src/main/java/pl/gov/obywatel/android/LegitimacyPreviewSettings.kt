@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 internal data class CredentialFieldOption(val key: String, val label: String)
 
@@ -470,40 +471,61 @@ internal fun LegitimacyHeraldry(
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
     }
-    Column(
-        Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        if (settings.showFlag && selectedFlag != null) {
-            Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu",
-                modifier = Modifier.size(width = 46.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-        } else if (settings.showFlag) {
-            Image(painterResource(R.drawable.institutions_polish_flag), contentDescription = "Flaga dokumentu",
-                modifier = Modifier.size(width = 46.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-        }
-        Row(
+    val horizontal = settings.orientation == "POZIOMA"
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val availableWidth = maxWidth
+        val flagWidth = (availableWidth * 0.13f).coerceAtLeast(24.dp)
+        val flagHeight = flagWidth * 0.625f
+        val crestSize = (availableWidth * 0.12f).coerceAtLeast(24.dp)
+        val logoWidth = (availableWidth * 0.14f).coerceAtLeast(28.dp)
+        val logoHeight = logoWidth * 0.55f
+        val titleSize = (availableWidth.value * 0.038f).coerceIn(10f, 24f).sp
+        val subtitleSize = (availableWidth.value * 0.027f).coerceIn(8f, 16f).sp
+        Column(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy((availableWidth * 0.008f).coerceIn(1.dp, 4.dp))
         ) {
-            if (settings.showCrest && selectedCrest != null) {
-                Image(selectedCrest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(42.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            } else if (settings.showCrest) {
-                Image(painterResource(R.drawable.institutions_eagle_emblem), contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(42.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            }
-            Column(Modifier.weight(1f).padding(start = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2)
-                if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 2)
-                if (settings.showLogo && assignedLogo != null) {
-                    Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
-                        modifier = Modifier.size(width = 54.dp, height = 24.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+            // Jedna flaga w osobnym górnym wierszu; godło poniżej, napis obok godła.
+            if (settings.showFlag) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    if (selectedFlag != null) {
+                        Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu",
+                            modifier = Modifier.size(flagWidth, flagHeight),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                    } else {
+                        Image(painterResource(R.drawable.institutions_polish_flag_vector), contentDescription = "Flaga dokumentu",
+                            modifier = Modifier.size(flagWidth, flagHeight),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                    }
                 }
-                if (settings.crestCaption.isNotBlank()) {
-                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (settings.showCrest) {
+                    if (selectedCrest != null) {
+                        Image(selectedCrest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
+                            modifier = Modifier.size(crestSize),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                    } else {
+                        Image(painterResource(R.drawable.institutions_eagle_emblem), contentDescription = "Godło lub herb dokumentu",
+                            modifier = Modifier.size(crestSize),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                    }
+                    Spacer(Modifier.width((availableWidth * 0.018f).coerceIn(3.dp, 8.dp)))
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text(title, fontWeight = FontWeight.ExtraBold, fontSize = titleSize, maxLines = 2)
+                    if (subtitle.isNotBlank()) Text(subtitle, fontSize = subtitleSize, maxLines = 1)
+                    if (settings.crestCaption.isNotBlank()) Text(settings.crestCaption, fontSize = subtitleSize, maxLines = 1)
+                }
+                if (settings.showLogo && assignedLogo != null) {
+                    Spacer(Modifier.width((availableWidth * 0.015f).coerceIn(3.dp, 7.dp)))
+                    Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
+                        modifier = Modifier.size(logoWidth, logoHeight),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit)
                 }
             }
         }
@@ -511,11 +533,15 @@ internal fun LegitimacyHeraldry(
 }
 
 @Composable
-private fun CredentialFieldValue(item: Triple<String, String, String>) {
+private fun CredentialFieldValue(
+    item: Triple<String, String, String>,
+    labelFontSize: androidx.compose.ui.unit.TextUnit,
+    valueFontSize: androidx.compose.ui.unit.TextUnit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(item.second.uppercase(), style = MaterialTheme.typography.labelSmall,
+        Text(item.second.uppercase(), fontSize = labelFontSize,
             fontWeight = FontWeight.Medium, maxLines = 1)
-        Text(item.third.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall,
+        Text(item.third.ifBlank { "—" }, fontSize = valueFontSize,
             fontWeight = FontWeight.SemiBold, maxLines = 2)
     }
 }
@@ -534,8 +560,6 @@ internal fun UnifiedCredentialCard(
 ) {
     val context = LocalContext.current
     val horizontal = settings.orientation == "POZIOMA"
-    // Wspólny wzór nie dziedziczy dawnych teł graficznych poszczególnych dokumentów.
-    // Zapobiega to powielaniu flag, godeł i napisów zaszytych w historycznych grafikach.
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
@@ -547,40 +571,54 @@ internal fun UnifiedCredentialCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(Modifier.fillMaxSize()) {
-            if (settings.showBackground && background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
-                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
-            Column(Modifier.fillMaxSize().padding(if (horizontal) 8.dp else 11.dp),
-                verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
-                LegitimacyHeraldry(settings, documentKey, vertical = true, assetRevision = assetRevision, title = title.uppercase(), subtitle = subtitle)
-                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (settings.showPhoto) Box(Modifier.width(38.dp)
-                        .height(50.dp)
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center) {
-                        if (photo != null) Image(photo.asImageBitmap(), contentDescription = "Fotografia posiadacza",
-                            modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
-                        else Text("FOTO", style = MaterialTheme.typography.labelSmall)
-                    }
-                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(if (horizontal) 2.dp else 4.dp)) {
-                        Text(holderName.ifBlank { "IMIĘ I NAZWISKO" }, fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall, maxLines = 1)
-                        if (horizontal) {
-                            Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach { CredentialFieldValue(it) }
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val cardWidth = maxWidth
+            val horizontalPadding = (cardWidth * 0.035f).coerceIn(5.dp, 16.dp)
+            val verticalPadding = (cardWidth * 0.035f).coerceIn(5.dp, 16.dp)
+            val photoWidth = (cardWidth * if (horizontal) 0.18f else 0.20f).coerceAtLeast(30.dp)
+            val photoHeight = photoWidth * (45f / 35f)
+            val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
+            val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
+            val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
+            Box(Modifier.fillMaxSize()) {
+                if (settings.showBackground && background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
+                    modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
+                Column(Modifier.fillMaxSize().padding(horizontalPadding, verticalPadding),
+                    verticalArrangement = Arrangement.spacedBy((cardWidth * if (horizontal) 0.012f else 0.02f).coerceIn(2.dp, 8.dp))) {
+                    LegitimacyHeraldry(settings, documentKey, vertical = !horizontal, assetRevision = assetRevision, title = title.uppercase(), subtitle = subtitle)
+                    Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.02f).coerceIn(4.dp, 10.dp))) {
+                        if (settings.showPhoto) Box(Modifier.width(photoWidth)
+                            .height(photoHeight)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center) {
+                            if (photo != null) Image(photo.asImageBitmap(), contentDescription = "Fotografia posiadacza",
+                                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+                            else Text("FOTO", fontSize = fieldLabelSize)
+                        }
+                        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))) {
+                            Text(holderName.ifBlank { "IMIĘ I NAZWISKO" }, fontWeight = FontWeight.Bold,
+                                fontSize = holderSize, maxLines = 1)
+                            if (horizontal) {
+                                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.02f).coerceIn(4.dp, 10.dp))) {
+                                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach {
+                                            CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
+                                        }
+                                    }
+                                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach {
+                                            CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
+                                        }
+                                    }
                                 }
+                            } else {
                                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach { CredentialFieldValue(it) }
+                                    verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))) {
+                                    visible.forEach { CredentialFieldValue(it, fieldLabelSize, fieldValueSize) }
                                 }
-                            }
-                        } else {
-                            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                visible.forEach { CredentialFieldValue(it) }
                             }
                         }
                     }
@@ -590,15 +628,20 @@ internal fun UnifiedCredentialCard(
     }
 }
 
+
 @Composable
 internal fun CredentialValidityTile(valid: Boolean) {
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
         containerColor = if (valid) Color(0xFFE5F4EA) else Color(0xFFFCE8E6)
     )) {
-        Text(if (valid) "Dokument ważny" else "Dokument nieważny",
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            color = if (valid) Color(0xFF237A35) else Color(0xFFB3261E),
-            fontWeight = FontWeight.SemiBold)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val statusSize = (maxWidth.value * 0.038f).coerceIn(12f, 20f).sp
+            Text(if (valid) "Dokument ważny" else "Dokument nieważny",
+                modifier = Modifier.fillMaxWidth().padding(horizontal = maxWidth * 0.035f, vertical = maxWidth * 0.025f),
+                fontSize = statusSize,
+                color = if (valid) Color(0xFF237A35) else Color(0xFFB3261E),
+                fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 

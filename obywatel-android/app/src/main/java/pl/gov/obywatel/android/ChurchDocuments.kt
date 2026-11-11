@@ -170,12 +170,24 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit) {
                 dignityValue.contains("biskup") -> "church_bishop"
                 else -> doc.id
             }
+            if (preview) {
+                val previewValues = local.mapKeys { (key, _) ->
+                    if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
+                }
+                DocumentIdentityTemplate(
+                    title = doc.title,
+                    values = previewValues,
+                    owner = churchOwner,
+                    documentType = brandDocumentType
+                )
+            } else {
             AssignedDocumentBrandPreview(
                 documentType = brandDocumentType,
                 owner = churchOwner,
                 title = "Znak przypisany do dokumentu",
                 subtitle = "Herb, godło lub logo wystawcy"
             )
+            }
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
                 Text(doc.note, Modifier.padding(12.dp), color = Color(0xFF284B64), style = MaterialTheme.typography.bodySmall)
             }
