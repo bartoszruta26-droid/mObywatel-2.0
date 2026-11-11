@@ -13,6 +13,9 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -43,7 +46,20 @@ private val documentBrandTargets = listOf(
     "training" to "Legitymacja uczestnika kursu",
     "student" to "Legitymacja ucznia / studenta",
     "church" to "Dokumenty i legitymacje kościelne",
+    "church_bishop" to "Godność biskupia",
+    "church_archbishop" to "Godność arcybiskupia",
+    "church_cardinal" to "Godność kardynalska",
+    "church_abbot" to "Godność opacka",
+    "church_minister" to "Posługa / urząd kościelny",
     "professional" to "Dokumenty kwalifikacji zawodowych",
+    "professional_medical" to "Godność / kwalifikacja medyczna",
+    "professional_education" to "Godność / kwalifikacja edukacyjna",
+    "professional_therapeutic" to "Godność / kwalifikacja terapeutyczna",
+    "professional_other" to "Pozostałe godności zawodowe",
+    "organization_foundation" to "Fundacja",
+    "organization_church" to "Kościół / wspólnota",
+    "organization_company" to "Przedsiębiorstwo / osoba prawna",
+    "organization_association" to "Stowarzyszenie / organizacja społeczna",
     "family" to "Dokumenty rodowe",
     "entity" to "Dokumenty organizacji i podmiotów",
     "official" to "Pozostałe dokumenty urzędowe"
@@ -142,8 +158,36 @@ internal object DocumentBrandStore {
         }
         decodeImage(context, bytes)
     }.getOrNull()
+    private fun assignmentKeys(documentType: String, owner: String): List<String> {
+        val lower = owner.lowercase(java.util.Locale.ROOT)
+        val role = when {
+            documentType.startsWith("church_bishop") || documentType == "church_orders" -> "church_bishop"
+            documentType.startsWith("church_archbishop") -> "church_archbishop"
+            documentType.startsWith("church_cardinal") -> "church_cardinal"
+            documentType.startsWith("church_abbot") -> "church_abbot"
+            documentType.startsWith("church_minister") || documentType == "church_jurisdiction" -> "church_minister"
+            documentType == "training" || documentType == "student" -> "professional_education"
+            documentType == "professional" && listOf("lekar", "medycz", "fizjoter", "pielęg", "diagnost").any { lower.contains(it) } -> "professional_medical"
+            documentType == "professional" && listOf("nauczyc", "pedagog", "wykładow", "szkol").any { lower.contains(it) } -> "professional_education"
+            documentType == "professional" && listOf("terapeut", "masaż", "masaz", "naturop", "zielarz").any { lower.contains(it) } -> "professional_therapeutic"
+            documentType == "professional" -> "professional_other"
+            documentType == "entity" && listOf("fundac").any { lower.contains(it) } -> "organization_foundation"
+            documentType == "entity" && listOf("koś", "kosci", "parafi", "wspólnot").any { lower.contains(it) } -> "organization_church"
+            documentType == "entity" && listOf("spół", "spol", "firma", "przedsięb").any { lower.contains(it) } -> "organization_company"
+            documentType == "entity" && listOf("stowarz", "organizac").any { lower.contains(it) } -> "organization_association"
+            else -> ""
+        }
+        return listOf(documentType, role, when {
+            documentType.startsWith("church_") -> "church"
+            documentType.startsWith("organization_") -> "entity"
+            else -> ""
+        }).filter { it.isNotBlank() }.distinct()
+    }
     fun imageForDocument(context: Context, documentType: String, owner: String, kind: String): android.graphics.Bitmap? {
-        val assigned = assignments(context).lastOrNull { it.documentType == documentType && it.kind == kind }
+        val all = assignments(context)
+        val assigned = assignmentKeys(documentType, owner).firstNotNullOfOrNull { key ->
+            all.lastOrNull { it.documentType == key && it.kind == kind }
+        }
         return assigned?.let { imageById(context, it.assetId) } ?: image(context, owner, kind)
     }
     private fun decodeImage(context: Context, bytes: ByteArray): android.graphics.Bitmap {
@@ -179,6 +223,29 @@ internal object DocumentBrandStore {
         if (selected.file.startsWith("builtin:")) return
         File(dir(context),selected.file).delete()
         save(context,old.filterNot { it.id==id || it.file.startsWith("builtin:") })
+    }
+}
+
+@Composable
+internal fun AssignedDocumentBrandPreview(documentType: String, owner: String, title: String, subtitle: String = "") {
+    val context = LocalContext.current
+    val brand = remember(documentType, owner) {
+        Pair(
+            DocumentBrandStore.imageForDocument(context, documentType, owner, "Logo"),
+            DocumentBrandStore.imageForDocument(context, documentType, owner, "Herb")
+                ?: DocumentBrandStore.imageForDocument(context, documentType, owner, "Godło")
+        )
+    }
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+        Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (brand.first != null) Image(brand.first!!.asImageBitmap(), contentDescription = "Logo przypisane do dokumentu", modifier = Modifier.size(42.dp), contentScale = ContentScale.Fit)
+            if (brand.second != null) Image(brand.second!!.asImageBitmap(), contentDescription = "Herb lub godło przypisane do dokumentu", modifier = Modifier.size(42.dp), contentScale = ContentScale.Fit)
+            Column(Modifier.weight(1f)) {
+                Text(title, fontWeight = FontWeight.SemiBold, color = Color(0xFF173B58))
+                if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
+                if (brand.first == null && brand.second == null) Text("Brak przypisanego logo, herbu lub godła", style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
+            }
+        }
     }
 }
 
