@@ -683,6 +683,7 @@ internal fun DocumentIdentityTemplate(
             value.contains("rachun") || value.contains("iban") -> "accountNumber"
             value.contains("szczep") || value.contains("preparat") -> "vaccineName"
             value.contains("tytuł") -> "professionalTitle"
+            value == "details" || value == "informacje dodatkowe" -> "details"
             else -> "custom:$label"
         }
     }
