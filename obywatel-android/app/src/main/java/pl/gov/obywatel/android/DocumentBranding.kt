@@ -298,6 +298,14 @@ private fun documentTypeForTitle(title: String): String {
         value.contains("kursant") || value.contains("uczestnika kurs") || value.contains("kursu") -> "training"
         value.contains("student") || value.contains("uczn") || value.contains("szkoln") -> "student"
         value.contains("kościel") || value.contains("kosciel") || value.contains("misjon") -> "church"
+        value.contains("orzeczen") || value.contains("niepełnospraw") || value.contains("niepelnospraw") ||
+            value.contains("zaświadczen") || value.contains("zaswiadczen") -> "disability"
+        value.contains("lojalności") || value.contains("lojalnosci") -> "loyalty"
+        value.contains("rachunk") || value.contains("bankow") -> "bank_accounts"
+        value.contains("szczepien") || value.contains("szczepień") -> "vaccines"
+        value.contains("dzieci") || value.contains("dziecka") -> "children"
+        value.contains("cywil") || value.contains("urodzen") || value.contains("małżeń") ||
+            value.contains("malzen") || value.contains("zgon") || value.contains("meldun") -> "civil"
         value.contains("zawod") || value.contains("kwalifikac") -> "professional"
         value.contains("fundac") || value.contains("stowarz") || value.contains("podmiot") || value.contains("organizac") -> "entity"
         value.contains("tożsamo") || value.contains("tozsamos") || value.contains("dowód") || value.contains("dowod") -> "identity"
@@ -582,8 +590,6 @@ internal fun DocumentIdentityTemplate(
 @Composable
 internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null) {
     val context= LocalContext.current
-    var target by remember(fixedTarget) { mutableStateOf(fixedTarget ?: documentBrandTargets.first().first) }
-    var targetMenuExpanded by remember { mutableStateOf(false) }
     var assignments by remember { mutableStateOf(DocumentBrandStore.assignments(context)) }
     var owner by remember { mutableStateOf("") }
     var kind by remember { mutableStateOf(DocumentBrandStore.assetKinds().first()) }
