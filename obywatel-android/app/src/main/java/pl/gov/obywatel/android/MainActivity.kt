@@ -2608,6 +2608,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpIssuer", "Organ / osoba wystawiająca", fields)
                 DemoDataField("mpStatus", "Status legitymacji", fields, "aktywna / zwrócona / unieważniona")
                 DemoDataField("mpMandateSource", "Źródło potwierdzenia mandatu", fields)
+                Text("Podgląd legitymacji — wzór ewidencyjny", color = Navy, fontWeight = FontWeight.Bold)
+                ParliamentCredentialCard(fields = fields, photoBase64 = photoBase64)
                 Text("Dane dotyczące ślubowania — oświadczenie własne", color = Navy, fontWeight = FontWeight.Bold)
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
@@ -3014,6 +3016,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
 
 @Composable
 private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: String) {
+    val context = LocalContext.current
+    val familyCrest = remember(fields["familyName"]) {
+        DocumentBrandStore.imageForDocument(context, "family", fields["familyName"].orEmpty(), "Herb")
+            ?: DocumentBrandStore.imageForDocument(context, fields["familyName"].orEmpty(), "family", "Herb")
+    }
     val photoBitmap = remember(photoBase64) {
         runCatching {
             if (photoBase64.isBlank()) null else {
@@ -3045,7 +3052,8 @@ private fun RodowyDocumentPreview(fields: Map<String, String>, photoBase64: Stri
                             .background(Color(0xFF254B50)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Filled.AccountCircle, contentDescription = "Znak ewidencji rodowej", tint = White)
+                        if (familyCrest != null) Image(familyCrest.asImageBitmap(), contentDescription = "Herb rodu", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                        else Icon(Icons.Filled.AccountCircle, contentDescription = "Znak ewidencji rodowej", tint = White)
                     }
                     Column(Modifier.padding(start = 8.dp)) {
                         Text("DOKUMENT RODOWY", color = Color(0xFF254B50), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.labelLarge)
@@ -3391,6 +3399,32 @@ private fun CredentialCardPreview(
             }
         }
     }
+}
+
+@Composable
+private fun ParliamentCredentialCard(fields: Map<String, String>, photoBase64: String) {
+    val issuer = fields["mpIssuer"].orEmpty()
+    CredentialCardPreview(
+        title = "LEGITYMACJA POSELSKA — WZÓR EWIDENCYJNY",
+        holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" "),
+        institution = issuer,
+        documentType = "parliament",
+        number = fields["mpCardNumber"].orEmpty(),
+        program = fields["mpTerm"].orEmpty().let { term ->
+            listOf(term, fields["mpDistrict"].orEmpty().let { if (it.isBlank()) "" else "Okręg $it" }).filter(String::isNotBlank).joinToString(" · ")
+        },
+        status = fields["mpStatus"].orEmpty(),
+        validUntil = fields["mpEnd"].orEmpty(),
+        photoBase64 = photoBase64,
+        backgroundRes = R.drawable.tlo_legitymacji_niebieskie,
+        backDetails = listOf(
+            "Kadencja" to fields["mpTerm"].orEmpty(),
+            "Okręg wyborczy" to fields["mpDistrict"].orEmpty(),
+            "Data wydania" to fields["mpCardIssueDate"].orEmpty(),
+            "Organ / wystawca" to issuer,
+            "Źródło potwierdzenia mandatu" to fields["mpMandateSource"].orEmpty()
+        )
+    )
 }
 
 @Composable
