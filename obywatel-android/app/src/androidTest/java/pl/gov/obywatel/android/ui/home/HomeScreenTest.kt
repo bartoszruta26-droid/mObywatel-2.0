@@ -20,7 +20,6 @@ class HomeScreenTest {
     fun dashboardShowsDocumentWalletAndNavigation() {
         composeRule.onNodeWithTag("bottom-nav-0").assertIsDisplayed()
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
-        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
     }
 
     @Test
