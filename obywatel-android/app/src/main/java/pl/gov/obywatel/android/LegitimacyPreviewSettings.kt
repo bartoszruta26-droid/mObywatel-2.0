@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 internal data class CredentialFieldOption(val key: String, val label: String)
 
 internal fun credentialFieldOptions(documentKey: String): List<Pair<String, String>> = when (documentKey) {
-    "parliament" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji", "mpCardIssueDate" to "Data wydania", "mpTerm" to "Numer kadencji", "mpIssuer" to "Wystawca")
+    "parliament" -> listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji", "mpCardIssueDate" to "Data wydania", "mpTerm" to "Numer kadencji", "mpEnd" to "Koniec okresu mandatu", "mpIssuer" to "Wystawca")
     "training", "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" ->
         listOf("firstNames" to "Imiona", "lastName" to "Nazwisko", "trainingInstitution" to "Instytucja", "trainingCourseName" to "Kurs / kwalifikacja", "trainingCardNumber" to "Numer legitymacji", "trainingIssueDate" to "Data wydania", "trainingValidUntil" to "Termin ważności")
     "student" -> listOf("studentNames" to "Imię i nazwisko", "studentUniversity" to "Uczelnia", "studentProgramme" to "Kierunek", "studentCardNumber" to "Numer legitymacji", "studentIssueDate" to "Data wydania", "studentValidity" to "Termin ważności")
