@@ -161,11 +161,33 @@ private object IdentityStore {
                 )
             }
         }
-        saveOrgs(c, restoredOrgs)
-        check(c.getSharedPreferences("owd_identity_signatures", 0).edit()
-            .putString("records", root.optString("signatures", "[]")).commit())
-        check(c.getSharedPreferences("owd_document_templates", 0).edit()
-            .putString("templates", root.optString("templates", "[]")).commit())
+        val mergedOrgs = (orgs(c).associateBy { it.id } + restoredOrgs.associateBy { it.id }).values.toList()
+        saveOrgs(c, mergedOrgs)
+
+        fun mergeJsonArrays(existingRaw: String?, importedRaw: String, identity: (JSONObject) -> String): String {
+            val merged = linkedMapOf<String, JSONObject>()
+            val existing = JSONArray(existingRaw ?: "[]")
+            for (i in 0 until existing.length()) {
+                val item = existing.getJSONObject(i)
+                merged[identity(item)] = item
+            }
+            val imported = JSONArray(importedRaw)
+            for (i in 0 until imported.length()) {
+                val item = imported.getJSONObject(i)
+                merged.putIfAbsent(identity(item), item)
+            }
+            return JSONArray().also { array -> merged.values.forEach(array::put) }.toString()
+        }
+
+        val signaturePrefs = c.getSharedPreferences("owd_identity_signatures", 0)
+        val signatures = mergeJsonArrays(signaturePrefs.getString("records", "[]"),
+            root.optString("signatures", "[]")) { it.optString("sha256") + ":" + it.optLong("importedAt") }
+        check(signaturePrefs.edit().putString("records", signatures).commit())
+
+        val templatePrefs = c.getSharedPreferences("owd_document_templates", 0)
+        val templates = mergeJsonArrays(templatePrefs.getString("templates", "[]"),
+            root.optString("templates", "[]")) { it.optString("name") + ":" + it.optLong("savedAt") }
+        check(templatePrefs.edit().putString("templates", templates).commit())
     }
 }
 
