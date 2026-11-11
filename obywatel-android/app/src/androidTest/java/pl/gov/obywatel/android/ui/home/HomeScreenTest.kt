@@ -4,7 +4,7 @@ package pl.gov.obywatel.android.ui.home
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import org.junit.Rule
@@ -18,7 +18,7 @@ class HomeScreenTest {
 
     @Test
     fun dashboardShowsDocumentWalletAndNavigation() {
-        composeRule.onAllNodesWithText("Pulpit", substring = false)[0].assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Pulpit").assertIsDisplayed()
         composeRule.onNodeWithText("Portfel dokumentów").assertIsDisplayed()
     }
 
