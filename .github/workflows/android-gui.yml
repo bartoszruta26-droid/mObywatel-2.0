@@ -52,10 +52,6 @@ jobs:
         working-directory: obywatel-android
         run: gradle --no-daemon :app:testDebugUnitTest
 
-      - name: Build DSS PAdES validation module
-        working-directory: obywatel-android
-        run: gradle --no-daemon :pades-validator:build
-
       - name: Enable KVM access for Android emulator
         run: |
           if [ -e /dev/kvm ]; then
