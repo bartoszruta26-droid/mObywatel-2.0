@@ -355,14 +355,24 @@ internal fun UnifiedCredentialCard(
     fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare
 ) {
     val context = LocalContext.current
+    val horizontal = settings.orientation == "POZIOMA"
     val background = remember(settings.backgroundAssetId, documentKey, fallbackBackgroundRes) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
             ?: BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
     }
     val visible = if (settings.visibleFields.isEmpty()) fields else fields.filter { it.first in settings.visibleFields }
+    @Composable
+    fun field(item: Triple<String, String, String>) {
+        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            Text(item.second.uppercase(), style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium, maxLines = 1)
+            Text(item.third.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold, maxLines = 2)
+        }
+    }
     Card(
-        Modifier.fillMaxWidth().aspectRatio(if (settings.orientation == "POZIOMA") 1.586f else 0.70f),
+        Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -370,10 +380,12 @@ internal fun UnifiedCredentialCard(
         Box(Modifier.fillMaxSize()) {
             if (background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
                 modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.48f)
-            Column(Modifier.fillMaxSize().padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.fillMaxSize().padding(if (horizontal) 8.dp else 11.dp),
+                verticalArrangement = Arrangement.spacedBy(if (horizontal) 4.dp else 8.dp)) {
                 LegitimacyHeraldry(settings, documentKey, vertical = true, title = title.uppercase(), subtitle = subtitle)
-                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Box(Modifier.width(58.dp).height(78.dp)
+                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.width(if (horizontal) 48.dp else 58.dp)
+                        .height(if (horizontal) 64.dp else 78.dp)
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center) {
@@ -381,16 +393,20 @@ internal fun UnifiedCredentialCard(
                             modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
                         else Text("FOTO", style = MaterialTheme.typography.labelSmall)
                     }
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(if (horizontal) 2.dp else 4.dp)) {
                         Text(holderName.ifBlank { "IMIĘ I NAZWISKO" }, fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall, maxLines = 2)
-                        visible.take(if (settings.orientation == "POZIOMA") 5 else 7).forEach { (_, label, value) ->
-                            Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                                Text(label.uppercase(), style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Medium, maxLines = 1)
-                                Text(value.ifBlank { "—" }, style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold, maxLines = 2)
+                            style = MaterialTheme.typography.titleSmall, maxLines = 1)
+                        if (horizontal) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    visible.take(2).forEach { field(it) }
+                                }
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    visible.drop(2).take(2).forEach { field(it) }
+                                }
                             }
+                        } else {
+                            visible.take(7).forEach { field(it) }
                         }
                     }
                 }
@@ -413,46 +429,17 @@ internal fun CredentialValidityTile(valid: Boolean) {
 
 @Composable
 internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings) {
-    val context = LocalContext.current
     val title = documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
     val selected = if (settings.visibleFields.isEmpty()) options else options.filter { it.first in settings.visibleFields }
-    val background = remember(settings.backgroundAssetId, documentKey) {
-        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-            ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
-            ?: BitmapFactory.decodeResource(context.resources, R.drawable.tlo_legitymacji_szare)
-    }
-    Card(
-        Modifier.fillMaxWidth().aspectRatio(if (settings.orientation == "POZIOMA") 1.586f else 0.70f),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Box(Modifier.fillMaxSize()) {
-            if (background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
-                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.42f)
-            Column(Modifier.fillMaxSize().padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                LegitimacyHeraldry(settings, documentKey, vertical = true,
-                    title = title.uppercase(), subtitle = "DOKUMENT")
-                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Card(Modifier.width(54.dp).fillMaxHeight(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("FOTO", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        selected.take(if (settings.orientation == "POZIOMA") 5 else 7).forEach { (key, label) ->
-                            Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                                Text(label.uppercase(), style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Medium, maxLines = 1)
-                                Text("—", style = MaterialTheme.typography.bodySmall, maxLines = 1)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    UnifiedCredentialCard(
+        documentKey = documentKey,
+        title = title,
+        subtitle = "DOKUMENT",
+        holderName = "IMIĘ I NAZWISKO",
+        fields = selected.map { (key, label) -> Triple(key, label, "—") },
+        settings = settings
+    )
 }
 
 @Composable
