@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="720" viewBox="0 0 600 720" role="img" aria-labelledby="title desc">
+<title>Tarcza herbu biskupiego — krzyż i trzy krzyże jerozolimskie</title>
+<desc>Niebieska tarcza ze złotym obramowaniem, centralnym złotym krzyżem oraz trzema mniejszymi krzyżami z krzyżykami w polach górnych i dolnym lewym.</desc>
+<defs><linearGradient id="blue" x2="0" y2="1"><stop stop-color="#1555bd"/><stop offset="1" stop-color="#063b91"/></linearGradient><linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe15a"/><stop offset="1" stop-color="#e9a900"/></linearGradient></defs>
+<path d="M24 24 H576 V350 Q576 566 300 696 Q24 566 24 350Z" fill="url(#blue)" stroke="#101010" stroke-width="14"/>
+<path d="M42 42 H558 V348 Q558 551 300 674 Q42 551 42 348Z" fill="none" stroke="#ffd12c" stroke-width="10"/>
+<path d="M276 92 H324 V328 H532 V376 H324 V620 H276 V376 H68 V328 H276Z" fill="url(#gold)" stroke="#171717" stroke-width="5" stroke-linejoin="round"/>
+<g fill="url(#gold)" stroke="#171717" stroke-width="4" stroke-linejoin="round">
+ <path d="M126 78 H158 V128 H208 V160 H158 V210 H126 V160 H76 V128 H126Z"/>
+ <path d="M442 78 H474 V128 H524 V160 H474 V210 H442 V160 H392 V128 H442Z"/>
+ <path d="M126 420 H158 V470 H208 V502 H158 V552 H126 V502 H76 V470 H126Z"/>
+</g>
+<g fill="none" stroke="#ffd12c" stroke-width="7" stroke-linecap="square">
+ <path d="M96 106V130 M84 118H108 M176 106V130 M164 118H188 M96 184V208 M84 196H108"/>
+ <path d="M412 106V130 M400 118H424 M492 106V130 M480 118H504 M412 184V208 M400 196H424"/>
+ <path d="M96 448V472 M84 460H108 M176 448V472 M164 460H188 M96 526V550 M84 538H108"/>
+</g>
+</svg>
