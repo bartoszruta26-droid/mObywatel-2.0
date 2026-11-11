@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -269,6 +270,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Text("Wczytaj własne tło")
             }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            CredentialTemplatePreview(documentKey, settings)
             Text("Ustawienia są zapisywane lokalnie i pozostają zachowane po ponownym uruchomieniu aplikacji.", style = MaterialTheme.typography.labelSmall)
         }
     }
@@ -278,7 +280,9 @@ internal fun LegitimacyPreviewSettingsPanel(
 internal fun LegitimacyHeraldry(
     settings: LegitimacyPreviewSettings,
     documentKey: String,
-    vertical: Boolean = false
+    vertical: Boolean = false,
+    title: String = "DOKUMENT",
+    subtitle: String = "DANE POSIADACZA"
 ) {
     val context = LocalContext.current
     val assignedCrest = remember(documentKey) {
@@ -297,55 +301,85 @@ internal fun LegitimacyHeraldry(
     val assignedLogo = remember(documentKey) {
         DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
     }
-    val defaultCrest = remember { BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem) }
-    val defaultFlag = remember { BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag) }
-    val crest = selectedCrest ?: defaultCrest
-    val flag = selectedFlag ?: defaultFlag
-
-    if (vertical) {
-        Column(
-            Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            if (flag != null) Image(flag.asImageBitmap(), contentDescription = "Flaga dokumentu",
-                modifier = Modifier.size(width = 58.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            if (assignedLogo != null) Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
-                modifier = Modifier.size(30.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            if (settings.captionPosition == "Nad herbem" && settings.crestCaption.isNotBlank()) {
-                Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-            }
-            if (crest != null) Image(crest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
-                modifier = Modifier.size(40.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            if (settings.captionPosition == "Pod herbem" && settings.crestCaption.isNotBlank()) {
-                Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-            }
+    Column(
+        Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        if (selectedFlag != null) {
+            Image(selectedFlag.asImageBitmap(), contentDescription = "Flaga dokumentu",
+                modifier = Modifier.size(width = 46.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+        } else {
+            Image(painterResource(R.drawable.institutions_polish_flag), contentDescription = "Flaga dokumentu",
+                modifier = Modifier.size(width = 46.dp, height = 25.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
         }
-    } else {
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (flag != null) Image(flag.asImageBitmap(), contentDescription = "Flaga dokumentu",
-                modifier = Modifier.size(width = 42.dp, height = 27.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            if (assignedLogo != null) Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
-                modifier = Modifier.size(36.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-            if (settings.captionPosition == "Po lewej" && settings.crestCaption.isNotBlank()) {
-                Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+            if (selectedCrest != null) {
+                Image(selectedCrest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
+                    modifier = Modifier.size(42.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+            } else {
+                Image(painterResource(R.drawable.institutions_eagle_emblem), contentDescription = "Godło lub herb dokumentu",
+                    modifier = Modifier.size(42.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
             }
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                if (settings.captionPosition == "Nad herbem" && settings.crestCaption.isNotBlank()) {
-                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
+            Column(Modifier.weight(1f).padding(start = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleSmall,
+                    maxLines = 2)
+                Text(subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                if (assignedLogo != null) {
+                    Image(assignedLogo.asImageBitmap(), contentDescription = "Logo wystawcy",
+                        modifier = Modifier.size(width = 54.dp, height = 24.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
                 }
-                if (crest != null) Image(crest.asImageBitmap(), contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(48.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-                if (settings.captionPosition == "Pod herbem" && settings.crestCaption.isNotBlank()) {
-                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall)
+                if (settings.crestCaption.isNotBlank()) {
+                    Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, maxLines = 2)
                 }
             }
-            if (settings.captionPosition == "Po prawej" && settings.crestCaption.isNotBlank()) {
-                Text(settings.crestCaption, style = MaterialTheme.typography.labelSmall, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings) {
+    val context = LocalContext.current
+    val title = documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
+    val options = credentialFieldOptions(documentKey)
+    val selected = if (settings.visibleFields.isEmpty()) options else options.filter { it.first in settings.visibleFields }
+    val background = remember(settings.backgroundAssetId, documentKey) {
+        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Tło dokumentu")
+            ?: BitmapFactory.decodeResource(context.resources, R.drawable.tlo_legitymacji_szare)
+    }
+    Card(
+        Modifier.fillMaxWidth().aspectRatio(if (settings.orientation == "POZIOMA") 1.586f else 0.70f),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            if (background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
+                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.42f)
+            Column(Modifier.fillMaxSize().padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                LegitimacyHeraldry(settings, documentKey, vertical = true,
+                    title = title.uppercase(), subtitle = "DOKUMENT")
+                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Card(Modifier.width(54.dp).fillMaxHeight(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("FOTO", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        selected.take(if (settings.orientation == "POZIOMA") 5 else 7).forEach { (key, label) ->
+                            Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                                Text(label.uppercase(), style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Medium, maxLines = 1)
+                                Text("—", style = MaterialTheme.typography.bodySmall, maxLines = 1)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
