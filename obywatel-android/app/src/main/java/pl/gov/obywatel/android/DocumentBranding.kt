@@ -690,7 +690,9 @@ internal fun DocumentIdentityTemplate(
     val optionLabels = fieldOptions.toMap()
     val cardFields = values.entries.filter { it.value.isNotBlank() && it.key !in setOf("photo", "photoBase64") }.map { (key, value) ->
         val stableKey = stableFieldKey(key)
-        Triple(stableKey, optionLabels[stableKey] ?: key, value)
+        // Preserve the source label when the editor supplied a human-readable
+        // caption; use the canonical label only for raw profile keys.
+        Triple(stableKey, optionLabels[key] ?: key, value)
     }
     val personHolder = values.entries.firstOrNull {
         it.key.contains("imię", true) || it.key.contains("imie", true) || it.key.contains("nazw", true) ||
