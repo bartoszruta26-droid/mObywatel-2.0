@@ -85,6 +85,7 @@ import pl.gov.obywatel.android.data.ImportedDocumentStore
 private const val MAX_IMAGE_PREVIEW_DIMENSION = 2048
 private const val MAX_PDF_PREVIEW_DIMENSION = 1800
 private const val DOCX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+private const val ODT_MIME_TYPE = "application/vnd.oasis.opendocument.text"
 
 private data class DocumentPreview(
     val bitmap: Bitmap,
@@ -182,6 +183,7 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
                             arrayOf(
                                 "application/pdf",
                                 DOCX_MIME_TYPE,
+                                ODT_MIME_TYPE,
                                 "image/jpeg",
                                 "image/png",
                                 "image/webp",
@@ -195,7 +197,7 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
                 ) {
                     Icon(Icons.Filled.FileOpen, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
-                    Text("Dodaj PDF, DOCX lub obraz")
+                    Text("Dodaj PDF, DOCX, ODT lub obraz")
                 }
                 errorMessage?.let {
                     Text(
@@ -255,7 +257,7 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
                                     Icon(
                                         when (document.mimeType) {
                                             "application/pdf" -> Icons.Filled.PictureAsPdf
-                                            DOCX_MIME_TYPE -> Icons.Filled.Description
+                                            DOCX_MIME_TYPE, ODT_MIME_TYPE -> Icons.Filled.Description
                                             else -> Icons.Filled.Image
                                         },
                                         contentDescription = null,
@@ -267,7 +269,8 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
                                         Text(
                                             when (document.mimeType) {
                                                 "application/pdf" -> "PDF"
-                                                DOCX_MIME_TYPE -> "Dokument Word"
+                                                DOCX_MIME_TYPE -> "Dokument Word (DOCX)"
+                                                ODT_MIME_TYPE -> "Dokument OpenDocument (ODT)"
                                                 else -> document.mimeType
                                             },
                                             style = MaterialTheme.typography.bodySmall
@@ -304,6 +307,8 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
             } else {
                 if (selected!!.mimeType == DOCX_MIME_TYPE) {
                     DocxPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
+                } else if (selected!!.mimeType == ODT_MIME_TYPE) {
+                    OdtPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
                 } else {
                     DocumentPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
                 }
@@ -387,6 +392,40 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
                 TextButton(onClick = { showSigningOptions = false }) { Text("Anuluj") }
             }
         )
+    }
+}
+
+private data class OdtPreview(val text: String = "", val error: String? = null)
+
+@Composable
+private fun OdtPreviewPane(document: ImportedDocument, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val preview by produceState<OdtPreview?>(initialValue = null, document.uri) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                val input = checkNotNull(context.contentResolver.openInputStream(document.uri)) {
+                    "Nie można otworzyć dokumentu ODT."
+                }
+                OdtPreview(text = input.use { OdtTextExtractor.extract(it) })
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                OdtPreview(error = failure.message ?: "Nie udało się odczytać dokumentu ODT.")
+            }
+        }
+    }
+    when {
+        preview == null -> Box(modifier, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        preview?.error != null -> Box(modifier.padding(20.dp), contentAlignment = Alignment.Center) {
+            Text(preview?.error.orEmpty(), color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        }
+        else -> Column(modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Text("Podgląd tekstu ODT", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text("Układ, tabele, obrazy i formatowanie mogą różnić się od oryginału.",
+                style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+            Text(preview?.text.orEmpty(), style = MaterialTheme.typography.bodyLarge)
+        }
     }
 }
 

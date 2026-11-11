@@ -12,6 +12,7 @@ internal fun isSupportedDocumentMimeType(mimeType: String): Boolean {
     val normalized = mimeType.trim().lowercase()
     return normalized == "application/pdf" ||
         normalized == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        normalized == "application/vnd.oasis.opendocument.text" ||
         normalized in RASTER_IMAGE_MIME_TYPES
 }
 

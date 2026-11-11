@@ -8,10 +8,11 @@ import org.junit.Test
 
 class DocumentMimeTypesTest {
     @Test
-    fun acceptsPdfDocxAndRasterFormatsSupportedByPreviewDecoder() {
+    fun acceptsPdfDocxOdtAndRasterFormatsSupportedByPreviewDecoder() {
         listOf(
             "application/pdf",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.oasis.opendocument.text",
             "image/jpeg",
             "image/png",
             "image/webp",
