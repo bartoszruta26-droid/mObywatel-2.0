@@ -3249,6 +3249,9 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
 
 @Composable
 private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: String, student: Boolean) {
+    val documentKey = if (student) "student" else "training"
+    val settingsState = rememberLegitimacyPreviewSettings(documentKey)
+    val settings = settingsState.value
     val photoBitmap = remember(photoBase64) {
         runCatching {
             if (photoBase64.isBlank()) null else {
@@ -3287,6 +3290,8 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
         else -> "Dokument po terminie"
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LegitimacyPreviewSettingsPanel(documentKey, settings) { settingsState.value = it }
+        if (settings.showCard) {
         Card(
             modifier = Modifier.fillMaxWidth().height(320.dp),
             shape = RoundedCornerShape(18.dp),
@@ -3308,6 +3313,7 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                         Text("WZÓR", color = Color(0xFF7B4B58), fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.labelSmall)
                     }
+                    LegitimacyHeraldry(settings, documentKey)
                     Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Box(
                             Modifier.width(100.dp).fillMaxSize().clip(RoundedCornerShape(10.dp))
@@ -3344,6 +3350,13 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                 }
             }
         }
+        if (settings.showReverse) LegitimacyReverseSide(
+            title = if (student) "Legitymacja szkolna — rewers" else "Legitymacja uczestnika kursu — rewers",
+            issuer = institution, number = number, validity = validity
+        )
+        } else {
+            Text("Podgląd całej legitymacji jest wyłączony w ustawieniach powyżej.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        }
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
@@ -3370,6 +3383,9 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
 
 @Composable
 private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
+    val documentKey = "parliament"
+    val settingsState = rememberLegitimacyPreviewSettings(documentKey)
+    val settings = settingsState.value
     val photoBase64 = fields["photo"].orEmpty()
     val photoBitmap = remember(photoBase64) {
         runCatching {
@@ -3397,6 +3413,9 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
         mandateActive -> "Status wpisany: aktywna"
         else -> "Status wpisany: ${fields["mpStatus"].orEmpty()}"
     }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LegitimacyPreviewSettingsPanel(documentKey, settings) { settingsState.value = it }
+    if (settings.showCard) {
     Card(
         modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
         shape = RoundedCornerShape(20.dp),
@@ -3409,6 +3428,7 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
                     fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
                 Text("WIZUALIZACJA DOKUMENTU • EWIDENCJA INFORMACYJNA",
                     color = Color(0xFF6C6260), style = MaterialTheme.typography.labelSmall)
+                LegitimacyHeraldry(settings, documentKey)
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(
                         Modifier.weight(0.92f).fillMaxSize().clip(RoundedCornerShape(12.dp))
@@ -3459,6 +3479,8 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
             }
         }
     }
+    if (settings.showReverse) LegitimacyReverseSide("Legitymacja poselska — rewers", authority, cardNumber, "")
+    }
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F5F8))) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -3466,6 +3488,7 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
             Text(statusLabel + ". Dane wpisane przez użytkownika nie potwierdzają mandatu ani autentyczności legitymacji.",
                 color = Muted, style = MaterialTheme.typography.bodySmall)
         }
+    }
     }
 }
 
