@@ -1095,7 +1095,7 @@ private fun HomeScreen() {
                                         "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive",
-                                        "identityDocumentsArchive", "localRegistryArchive"
+                                        "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
                                     )
                             }
                             val changed = profileValues.keys.count { persisted[it] == profileValues[it] } + auxiliaryCount
