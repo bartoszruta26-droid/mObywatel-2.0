@@ -510,6 +510,58 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Text("Wczytaj własne tło")
             }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Text("Położenie i rozmiar grafiki", fontWeight = FontWeight.SemiBold)
+            Text("Skala grafiki: ${"%.2f".format(settings.graphicScale)}")
+            Slider(settings.graphicScale, { update(settings.copy(graphicScale = it)) }, valueRange = 0.5f..2.5f)
+            Text("Obrót grafiki: ${settings.graphicRotation.toInt()}°")
+            Slider(settings.graphicRotation, { update(settings.copy(graphicRotation = it)) }, valueRange = -180f..180f)
+            Text("Przesunięcie poziome grafiki: ${settings.graphicOffsetX.toInt()} dp")
+            Slider(settings.graphicOffsetX, { update(settings.copy(graphicOffsetX = it)) }, valueRange = -60f..60f)
+            Text("Przesunięcie pionowe grafiki: ${settings.graphicOffsetY.toInt()} dp")
+            Slider(settings.graphicOffsetY, { update(settings.copy(graphicOffsetY = it)) }, valueRange = -60f..60f)
+            Text("Typografia etykiet", fontWeight = FontWeight.SemiBold)
+            Text("Skala etykiet: ${"%.2f".format(settings.labelScale)}")
+            Slider(settings.labelScale, { update(settings.copy(labelScale = it)) }, valueRange = 0.6f..2f)
+            Text("Obrót etykiet: ${settings.labelRotation.toInt()}°")
+            Slider(settings.labelRotation, { update(settings.copy(labelRotation = it)) }, valueRange = -180f..180f)
+            Text("Przesunięcie etykiet X: ${settings.labelOffsetX.toInt()} dp")
+            Slider(settings.labelOffsetX, { update(settings.copy(labelOffsetX = it)) }, valueRange = -40f..40f)
+            Text("Przesunięcie etykiet Y: ${settings.labelOffsetY.toInt()} dp")
+            Slider(settings.labelOffsetY, { update(settings.copy(labelOffsetY = it)) }, valueRange = -40f..40f)
+            Text("Typografia danych", fontWeight = FontWeight.SemiBold)
+            Text("Skala danych: ${"%.2f".format(settings.valueScale)}")
+            Slider(settings.valueScale, { update(settings.copy(valueScale = it)) }, valueRange = 0.6f..2f)
+            Text("Obrót danych: ${settings.valueRotation.toInt()}°")
+            Slider(settings.valueRotation, { update(settings.copy(valueRotation = it)) }, valueRange = -180f..180f)
+            Text("Przesunięcie danych X: ${settings.valueOffsetX.toInt()} dp")
+            Slider(settings.valueOffsetX, { update(settings.copy(valueOffsetX = it)) }, valueRange = -40f..40f)
+            Text("Przesunięcie danych Y: ${settings.valueOffsetY.toInt()} dp")
+            Slider(settings.valueOffsetY, { update(settings.copy(valueOffsetY = it)) }, valueRange = -40f..40f)
+            var fontMenu by remember { mutableStateOf(false) }
+            Box {
+                OutlinedButton(onClick = { fontMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Krój pisma: " + when (settings.fontFamily) {
+                        "serif" -> "Szeryfowy"
+                        "mono" -> "Monospace"
+                        "cursive" -> "Ozdobny"
+                        else -> "Bezszeryfowy"
+                    })
+                }
+                DropdownMenu(expanded = fontMenu, onDismissRequest = { fontMenu = false }) {
+                    listOf("sans" to "Bezszeryfowy (systemowy)", "serif" to "Szeryfowy (systemowy)",
+                        "mono" to "Monospace (systemowy)", "cursive" to "Ozdobny (systemowy)").forEach { (id, label) ->
+                        DropdownMenuItem(text = { Text(label) }, onClick = {
+                            update(settings.copy(fontFamily = id)); fontMenu = false
+                        })
+                    }
+                }
+            }
+            OutlinedButton(onClick = {
+                update(settings.copy(graphicScale = 1f, graphicRotation = 0f, graphicOffsetX = 0f,
+                    graphicOffsetY = 0f, labelScale = 1f, labelRotation = 0f, labelOffsetX = 0f,
+                    labelOffsetY = 0f, valueScale = 1f, valueRotation = 0f, valueOffsetX = 0f,
+                    valueOffsetY = 0f, fontFamily = "sans"))
+            }, modifier = Modifier.fillMaxWidth()) { Text("Przywróć domyślne przekształcenia") }
             CredentialTemplatePreview(documentKey, settings, assetRevision)
             Text("Ustawienia są zapisywane lokalnie i pozostają zachowane po ponownym uruchomieniu aplikacji.", style = MaterialTheme.typography.labelSmall)
         }
