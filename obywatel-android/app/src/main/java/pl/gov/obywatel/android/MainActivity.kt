@@ -612,7 +612,7 @@ private fun HomeScreen() {
                     val count = input.read(buffer)
                     if (count < 0) break
                     total += count
-                    require(total <= 10 * 1024 * 1024) { "Plik przekracza limit 10 MB." }
+                    require(total <= 64 * 1024 * 1024) { "Plik przekracza limit 10 MB." }
                     output.write(buffer, 0, count)
                 }
                 output.toByteArray()
