@@ -550,7 +550,12 @@ internal fun UnifiedCredentialCard(
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Logo")
     }
-    val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter { it.first in settings.visibleFields }
+    val configurableKeys = credentialFieldOptions(documentKey).map { it.first }.toSet()
+    val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter {
+        // A field not yet represented in the settings catalogue keeps its
+        // original visibility instead of disappearing when another field is toggled.
+        it.first !in configurableKeys || it.first in settings.visibleFields
+    }
     Card(
         Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f),
         shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
