@@ -69,6 +69,21 @@ internal object DocumentOcrParser {
             fun date(s:String):String{val y=s.substring(0,2).toInt();return "%02d-%02d-%04d".format(s.substring(4,6).toInt(),s.substring(2,4).toInt(),if(y<=49)2000+y else 1900+y)}
             runCatching{put("birthDate",date(data.substring(13,19)))};runCatching{put("passportExpiryDate",date(data.substring(21,27)))}
         }
+        // ICAO TD1 MRZ on identity cards: three 30-character lines.
+        if(categoryId=="identity_card") {
+            val td1=mrz.filter{it.length>=30}.take(3)
+            if(td1.size==3 && (td1[0].startsWith("ID") || td1[0].startsWith("I<")) &&
+                td1[1].substring(0,6).all(Char::isDigit) && td1[1].substring(8,14).all(Char::isDigit)) {
+                put("idNumber",td1[0].substring(5,14).trimEnd('<'))
+                fun td1Date(raw:String):String { val yy=raw.substring(0,2).toInt(); return "%02d-%02d-%04d".format(raw.substring(4,6).toInt(),raw.substring(2,4).toInt(),if(yy<=49)2000+yy else 1900+yy) }
+                runCatching{put("birthDate",td1Date(td1[1].substring(0,6)))}
+                runCatching{put("idExpiryDate",td1Date(td1[1].substring(8,14)))}
+                put("sex",td1[1].substring(7,8))
+                put("citizenship",td1[1].substring(15,18))
+                val nameParts=td1[2].split("<<",limit=2)
+                if(nameParts.size==2) { put("lastName",nameParts[0].replace('<',' ').trim()); put("firstNames",nameParts[1].replace('<',' ').trim()) }
+            }
+        }
         return out
     }
 }
