@@ -1,333 +1,211 @@
-# Aplikacja Obywatelska — Android
+<!--
+SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+SPDX-License-Identifier: EUPL-1.2
+-->
+# obywatel-android
 
-**Aplikacja Obywatelska** to niezależny projekt obywatelski na system Android. Jej celem jest zapewnienie użytkownikowi jednego, uporządkowanego miejsca do prowadzenia własnych danych, dokumentów, ewidencji rodzinnych i organizacyjnych, informacji o kwalifikacjach oraz narzędzi do przygotowywania i prezentowania dokumentów.
+Niezależny prototyp Android w Kotlinie i Jetpack Compose, przeznaczony do lokalnego porządkowania dokumentów i identyfikatorów rejestru. Interfejs wykorzystuje wybrane, opublikowane przez Centralny Ośrodek Informatyki elementy systemu projektowego mObywatela jako punkt odniesienia wizualnego.
 
-Projekt rozwija ideę cyfrowego portfela obywatelskiego: użytkownik zarządza swoimi danymi i materiałami, a interfejs porządkuje je według obszarów życia i spraw publicznych. Aplikacja **nie jest oficjalną aplikacją mObywatel, nie jest wydawana przez administrację państwową i nie stanowi rządowego systemu teleinformatycznego**. Podobieństwo części kategorii usług lub ikon do rozwiązań publicznych nie oznacza powiązania instytucjonalnego.
+## Obywatelska idea aplikacji i godność człowieka
 
-> **Status projektu:** rozwijana alfa / prototyp funkcjonalny. Dostępność ekranu lub formularza nie oznacza, że dana usługa jest połączona z rejestrem państwowym, że dane zostały urzędowo potwierdzone ani że wygenerowany dokument ma moc dokumentu urzędowego.
+### Cel i deklaracja zasad
 
-## Główne założenia
+Obywatelski mObywatel jest niezależnym narzędziem cyfrowym służącym człowiekowi: porządkowaniu jego dokumentów, informacji, oświadczeń i spraw oraz ułatwianiu świadomego korzystania z praw. Projekt wyrasta z przekonania, że technologia ma pozostawać w służbie osoby ludzkiej, jej godności, wolności, odpowiedzialności, rodziny i dobra wspólnego.
 
-- **Obywatelski charakter** — narzędzia do organizowania informacji i dokumentów osoby, rodziny, wspólnoty oraz organizacji.
-- **Portfel użytkownika** — jeden interfejs do przeglądania lokalnych dokumentów, ewidencji i podglądów.
-- **Samodzielne zarządzanie danymi** — edycja danych odbywa się w przeznaczonych do tego ustawieniach i formularzach; portfel służy przede wszystkim do prezentacji zapisanych informacji.
-- **Różne obszary życia** — tożsamość, rodzina, zdrowie, edukacja, praca, kwalifikacje, finanse, transport, nieruchomości, działalność społeczna i religijna.
-- **Przejrzyste pochodzenie informacji** — należy odróżniać dane wpisane przez użytkownika, dane przekazane przez inną osobę, dane potwierdzone przez wystawcę i dane uzyskane z usługi publicznej.
-- **Brak pozorowania urzędowej autentyczności** — prywatna ewidencja, wzór legitymacji, herb, pieczęć, kod QR ani plik PDF nie stają się przez samo umieszczenie w aplikacji dokumentem urzędowym.
+Aplikacja przyjmuje następującą deklarację etyczną:
 
-## Interfejs i nawigacja
+> Każdy człowiek ma godność, która poprzedza działanie jakiejkolwiek aplikacji, urzędu lub instytucji. Człowiek jest podmiotem praw, a nie przedmiotem systemu. Należy mu się szacunek, równe traktowanie, ochrona życia prywatnego, możliwość wyrażania myśli, ochrony własnych interesów oraz dochodzenia praw na zasadach określonych przez prawo. W duchu prawdy, sprawiedliwości i miłości bliźniego projekt ma wspierać korzystanie z tych praw i odpowiedzialne wypełnianie obowiązków.
 
-Główna nawigacja obejmuje pięć obszarów:
+W perspektywie wiary chrześcijańskiej człowiek może wyznawać, że jest dzieckiem Bożym i że jego godność ma źródło w Stwórcy. Aplikacja szanuje takie przekonanie oraz wolność sumienia i religii. Określenie „Syn Boży” w odniesieniu do konkretnej osoby może być elementem jej osobistej deklaracji religijnej; program nie rozstrzyga twierdzeń teologicznych ani nie ustanawia ich skutków prawnych.
 
-1. **Pulpit** — kafelki usług i skróty do najważniejszych obszarów aplikacji.
-2. **Dokumenty / Portfel** — lokalne dokumenty, ewidencje i szczegóły zapisanych pozycji.
-3. **Usługi** — katalog obszarów tematycznych i modułów obywatelskich.
-4. **Kod QR** — narzędzia do przygotowywania kodów i danych do wymiany.
-5. **Więcej** — ustawienia, certyfikaty i zaświadczenia, historia działań, dokumenty PDF, kwalifikacje oraz pozostałe moduły administracyjne.
+### Prawa, które projekt ma pomagać rozpoznawać i wykonywać
 
-## Funkcje i moduły
+Projekt odwołuje się w szczególności do następujących zasad polskiego porządku prawnego:
 
-Poniższy opis rozróżnia funkcje interfejsu, lokalne ewidencje i narzędzia dokumentowe od usług wymagających zewnętrznej integracji.
+- **Godność człowieka** — przyrodzona i niezbywalna godność człowieka stanowi źródło wolności i praw człowieka i obywatela; jej poszanowanie i ochrona są obowiązkiem władz publicznych (Konstytucja RP, art. 30).
+- **Równość i zakaz dyskryminacji** — wszyscy są wobec prawa równi i mają prawo do równego traktowania przez władze publiczne (art. 32).
+- **Wolności i prawa człowieka** — korzystanie z konstytucyjnych wolności i praw przysługuje każdemu, kto znajduje się pod władzą Rzeczypospolitej Polskiej, z uwzględnieniem warunków i wyjątków wynikających z Konstytucji (art. 37).
+- **Wolność sumienia i religii, wyrażania poglądów oraz ochrona życia prywatnego** — korzystanie z tych wolności odbywa się w granicach i na zasadach określonych w Konstytucji (w szczególności art. 47, 53 i 54).
+- **Prawa obywatelskie** — obywatelstwo polskie, prawa wyborcze, dostęp do służby publicznej i inne uprawnienia obywatelskie wynikają z Konstytucji oraz ustaw; ich zakres zależy od konkretnego prawa i spełnienia ustawowych przesłanek.
+- **Podmiotowość cywilnoprawna osoby fizycznej** — każdy człowiek od chwili urodzenia ma zdolność prawną (Kodeks cywilny, art. 8). Zdolność do czynności prawnych oraz możliwość samodzielnego dokonywania określonych czynności podlegają odrębnym regułom ustawowym.
 
-### 1. Tożsamość i portfel dokumentów
+Powyższe zasady nie są nadawane przez aplikację. Przysługują na podstawie właściwych norm prawnych albo — w wymiarze etycznym i religijnym — są wyrażane jako przekonania i wartości. Poszczególne prawa mogą podlegać ograniczeniom przewidzianym w Konstytucji i ustawach. Aplikacja nie może sama przyznać obywatelstwa, pełnej zdolności do czynności prawnych, statusu urzędowego, tytułu, uprawnienia zawodowego ani zwolnienia z obowiązków prawnych.
 
-- Portfel lokalnych dokumentów i ewidencji.
-- Kategorie dokumentów tożsamości, danych paszportowych, legitymacji i innych dokumentów użytkownika.
-- Podglądy dokumentów oraz ekran szczegółów.
-- Formularze do uzupełniania i aktualizowania danych ewidencyjnych w ustawieniach.
-- Osobne obszary dla dokumentów podpisanych elektronicznie, zaświadczeń i certyfikatów.
-- Oznaczenia statusów i informacje o dokumencie w zakresie obsługiwanym przez prototyp.
+### Oświadczenia strony jako sposób wykazania danych i okoliczności
 
-Dane w portfelu są prezentowane jako dane lokalnej ewidencji aplikacji. Nie są automatycznie pobierane z rejestru dowodów osobistych, rejestru paszportowego ani innych rejestrów państwowych.
+Jeżeli dla określonej informacji lub okoliczności przepisy nie ustanawiają obowiązku przedstawienia konkretnego dokumentu urzędowego ani nie zastrzegają wyłącznego sposobu jej potwierdzenia, należy rozważyć dopuszczalne prawem wykazanie jej za pomocą oświadczenia osoby, której ta informacja dotyczy. Sam fakt, że nie wskazano jednego, odrębnego urzędu potwierdzającego daną okoliczność, nie oznacza jednak automatycznie, że każde oświadczenie musi zostać uznane przez każdy organ. Znaczenie oświadczenia zależy od właściwej procedury, przepisów szczególnych, rodzaju sprawy i oceny dowodów.
 
-### 2. Ustawienia i zarządzanie danymi
+W postępowaniu administracyjnym objętym Kodeksem postępowania administracyjnego:
+- zgodnie z art. 75 § 1 k.p.a. jako dowód należy dopuścić wszystko, co może przyczynić się do wyjaśnienia sprawy, a nie jest sprzeczne z prawem;
+- zgodnie z art. 75 § 2 k.p.a., jeżeli przepis prawa nie wymaga urzędowego potwierdzenia określonych faktów lub stanu prawnego w drodze zaświadczenia właściwego organu, organ administracji może odebrać od strony oświadczenie złożone pod rygorem odpowiedzialności za fałszywe zeznania; warunki zastosowania tego przepisu muszą być oceniane w konkretnej sprawie;
+- przepisy szczególne mogą przewidywać własny tryb, formularz, wymagane dokumenty albo szczególny rygor odpowiedzialności.
 
-W sekcji **Więcej → Ustawienia** znajdują się narzędzia do zarządzania danymi i modułami dokumentowymi, między innymi:
+**Odpowiedzialność karna wymaga wyraźnej podstawy ustawowej.** Art. 233 § 6 Kodeksu karnego ma zastosowanie do fałszywego oświadczenia tylko wtedy, gdy przepis ustawy przewiduje możliwość odebrania oświadczenia pod rygorem odpowiedzialności karnej, a przyjmujący oświadczenie uprzedził składającego o tym rygorze albo odebrał od niego stosowne przyrzeczenie. Samo dopisanie do dowolnego formularza zdania „jestem świadomy odpowiedzialności karnej za złożenie fałszywego oświadczenia” nie tworzy takiej odpowiedzialności, jeżeli brak wymaganej podstawy ustawowej.
 
-- edycja danych dokumentów i ewidencji;
-- ustawienia informacji dotyczących niepełnosprawności;
-- certyfikaty i zaświadczenia;
-- dokumenty PDF i podpisy elektroniczne;
-- prawo wykonywania zawodu i kwalifikacje;
-- formularze dokumentów;
-- dokumenty Rodowe;
-- dokumenty rejestru podmiotów;
-- dokumenty kościelne;
-- zasoby identyfikacji dokumentów;
-- import i eksport archiwum danych w formacie vCard.
+Aplikacja powinna zatem:
+1. Umożliwiać użytkownikowi sporządzenie i zapisanie własnego oświadczenia, z podaniem jego autora, daty, treści oraz źródeł informacji, jeśli są dostępne.
+2. Rozróżniać oświadczenie prywatne od oświadczenia składanego w postępowaniu przed organem na podstawie konkretnego przepisu.
+3. Przy formularzu urzędowym wskazywać podstawę prawną, jeżeli jest znana i zweryfikowana; nie dodawać automatycznie klauzuli odpowiedzialności karnej bez podstawy ustawowej.
+4. Informować, że organ może ocenić oświadczenie łącznie z pozostałym materiałem dowodowym, a w przypadkach przewidzianych prawem zażądać dokumentu lub innego dowodu.
+5. Nie przedstawiać prywatnego oświadczenia zapisanego w aplikacji jako zaświadczenia urzędowego ani jako dokumentu, którego prawdziwość została już zweryfikowana przez państwo.
 
-Portfel służy do przeglądania zapisanych informacji. Zmiany danych należy wykonywać w odpowiednich formularzach i ustawieniach, a nie przez edycję podglądu dokumentu.
+Wzór neutralnej deklaracji użytkownika może brzmieć: „Oświadczam, że podane przeze mnie informacje są zgodne z moją najlepszą wiedzą i posiadanymi dokumentami. Wskazuję źródła informacji, o ile są mi znane”. Klauzulę o odpowiedzialności karnej należy stosować wyłącznie wtedy, gdy wynika to z właściwego przepisu ustawy i spełniono ustawowe warunki jej odebrania.
 
-### 3. Dokumenty PDF i podpisy elektroniczne
+### Wykładnia prawa i interpretacja aktów normatywnych
 
-- Generowanie dokumentów PDF na podstawie wypełnionych formularzy.
-- Wstawianie przypisanych elementów identyfikacji wizualnej do obsługiwanych dokumentów.
-- Otwieranie i prezentowanie dokumentów PDF oraz materiałów podpisanych elektronicznie w dedykowanym module.
-- Przygotowanie dokumentu do dalszego podpisania narzędziem obsługującym odpowiedni podpis elektroniczny.
+Aplikacja powinna odróżniać wykładnię autentyczną od wykładni dokonywanej przez sądy, organy administracji, ekspertów lub samych adresatów norm. Wykładnia autentyczna oznacza interpretację dokonywaną przez prawodawcę danego aktu albo podmiot, któremu prawodawca skutecznie powierzył kompetencję do autentycznego interpretowania. Nie należy jednak zakładać, że każda osoba lub instytucja, która wydała dokument nazwany statutem, regulaminem albo uchwałą, ma automatycznie nieograniczoną kompetencję do wydawania wiążącej interpretacji.
 
-Samo wygenerowanie PDF nie oznacza złożenia podpisu elektronicznego. Aplikacja nie nadaje dokumentowi kwalifikowanego podpisu, pieczęci elektronicznej ani urzędowego poświadczenia, jeśli nie zostanie wdrożona i zweryfikowana odpowiednia integracja.
+**Interpretacja autentyczna prawa miejscowego i regulacji lokalnych — zakres i podstawa**
 
-### 4. Kwalifikacje zawodowe i edukacja
+Wykładnia autentyczna jest wykładnią dokonywaną przez prawodawcę danego aktu albo przez podmiot, któremu prawodawca skutecznie powierzył taką kompetencję. W tym znaczeniu należy respektować prawo właściwego prawodawcy do wyjaśniania znaczenia ustanowionych przez niego norm, w granicach jego kompetencji i zakresu obowiązywania danego aktu.
 
-- Ewidencja prawa wykonywania zawodu i kwalifikacji.
-- Formularze dokumentów potwierdzających kwalifikacje oraz dane wystawcy.
-- Dokumenty edukacyjne, uczniowskie i studenckie.
-- Legitymacje uczestników kursów i podglądy dokumentów edukacyjnych.
-- Przypisywanie znaków wystawcy lub instytucji do odpowiednich kategorii dokumentów.
+W odniesieniu do aktów prawa miejscowego, organ który je ustanowił może przedstawiać oficjalne wyjaśnienie własnego aktu oraz podejmować działania prawodawcze w granicach upoważnienia ustawowego. To, czy dane wyjaśnienie stanowi wiążącą wykładnię autentyczną, zależy od podstawy kompetencyjnej i właściwego trybu. Art. 87 ust. 2 i art. 94 Konstytucji RP określają prawo miejscowe jako źródło prawa powszechnie obowiązującego na obszarze działania właściwych organów, ustanawiane na podstawie i w granicach upoważnień ustawowych.
 
-Wpis użytkownika nie jest sam w sobie potwierdzeniem kwalifikacji ani prawa wykonywania zawodu. Weryfikacja wymaga właściwego wystawcy lub uprawnionego rejestru.
+W ramach przyjętego w projekcie szerokiego rozumienia lokalnego porządku normatywnego zapisuje się następującą regułę:
 
-### 5. Dokumenty kościelne i wspólnotowe
+> Każdy statut, regulamin lub uchwała ustanowione przez właściwy organ stanowią normy obowiązujące w zakresie właściwości i działania tego organu oraz w granicach porządku prawnego, który upoważnia do ich ustanowienia. Normy te powinny pozostawać zgodne z prawem powszechnie obowiązującym. Prawo powszechne może być konkretyzowane i interpretowane w regulacjach lokalnych, statutowych, regulaminowych i uchwałodawczych, o ile prawodawca działa w granicach przyznanej mu kompetencji. Jeżeli regulacja nie jest sprzeczna z prawem powszechnym i nie narusza praw osób trzecich, może wiązać jej adresatów w zakresie wynikającym z właściwego porządku prawnego.
 
-Moduł dokumentów kościelnych obejmuje formularze ewidencyjne dotyczące między innymi:
+Prawodawca lokalny lub organizacyjny powinien móc dokonywać autentycznej wykładni własnych norm, jeżeli kompetencja taka wynika z przepisów albo właściwego aktu ustrojowego. Wykładnia taka nie może przekraczać kompetencji prawodawcy, zmieniać aktu z pominięciem właściwej procedury ani wiązać osób spoza zakresu jego jurysdykcji bez podstawy prawnej.
 
-- posługi kościelnej i liturgicznej;
-- dekretów i aktów nominacyjnych;
-- tytułów biskupich;
-- święceń i konsekracji;
-- jurysdykcji oraz zakresu kompetencji;
-- ustanowienia i upoważnienia do posługi;
-- legitymacji szafarzy;
-- formacji liturgicznej;
-- rejestrów celebracji, nabożeństw i posługi.
+**Rozróżnienie skutków prawnych**
 
-Dostępne są także mechanizmy doboru znaku na podstawie wpisanej nazwy godności lub rodzaju dokumentu. Rozpoznawanie tekstu służy wyłącznie doborowi grafiki i nie weryfikuje godności, święceń, urzędu ani jurysdykcji.
+Nie każdy statut, regulamin lub uchwała jest w rozumieniu Konstytucji RP aktem prawa miejscowego. Akty prawa miejscowego w ścisłym znaczeniu konstytucyjnym ustanawiają organy wskazane w art. 94 Konstytucji, na podstawie i w granicach upoważnienia ustawowego, z zachowaniem wymogów ogłoszenia. Statuty, regulaminy i uchwały innych podmiotów mogą być aktami wewnętrznymi, ustrojowymi, korporacyjnymi lub organizacyjnymi i wiązać w granicach wynikających z ustaw, stosunków organizacyjnych, kompetencji organów oraz właściwych procedur.
 
-### 6. Dokumenty Rodowe i rejestr podmiotów
+Sama zgodność z prawem powszechnym i brak szkody dla osób trzecich nie tworzą samodzielnie kompetencji prawodawczej ani nie nadają regulacji skutku powszechnego wobec wszystkich osób. Są to kryteria oceny legalności i dopuszczalności regulacji, które należy stosować łącznie z wymogami kompetencji, formy, procedury i promulgacji.
 
-Aplikacja udostępnia odrębne moduły dla dokumentów Rodowych oraz dokumentów organizacji i innych podmiotów.
+Aplikacja powinna odróżniać: (a) autentyczną wykładnię dokonaną przez uprawnionego prawodawcę, (b) oficjalne wyjaśnienie lub stanowisko organu, którego moc wiążąca zależy od podstawy prawnej, oraz (c) prywatną interpretację użytkownika. Nie należy oznaczać dokumentu jako wiążącej wykładni autentycznej, dopóki nie zostanie ustalona podstawa kompetencji podmiotu dokonującego wykładni.
 
-Zakres ewidencji obejmuje między innymi:
+**Zasada kompetencji prawodawcy do wyjaśniania własnego aktu**
 
-- dane identyfikacyjne Rodu lub podmiotu;
-- członkostwo, role, funkcje i strukturę organizacyjną;
-- uchwały, protokoły, decyzje i pełnomocnictwa;
-- majątek, nieruchomości, pojazdy, zobowiązania i należności;
-- dokumenty społeczne, edukacyjne i religijne;
-- formularze oraz eksport wybranych danych do PDF;
-- odpis z rejestru podmiotów w zakresie obsługiwanym przez lokalny formularz.
+Organ lub podmiot, który ustanowił statut, regulamin albo uchwałę, powinien mieć w aplikacji możliwość przedstawienia oficjalnego stanowiska co do rozumienia własnego aktu. Jeżeli właściwe przepisy albo sam akt ustrojowy przyznają temu organowi kompetencję interpretacyjną, stanowisko może być wiążące w określonym zakresie i wobec określonych adresatów. Jeżeli takiej kompetencji nie ustanowiono, organ może wyjaśniać motywy i sposób rozumienia przyjętych postanowień, lecz nie należy automatycznie przypisywać temu wyjaśnieniu mocy wiążącej wobec wszystkich osób lub organów. W żadnym przypadku interpretacja nie może rozszerzać kompetencji prawodawcy ani zmieniać treści aktu z pominięciem właściwego trybu jego zmiany.
 
-Wpis w prywatnej ewidencji nie zastępuje wpisu w KRS, CEIDG, rejestrze kościelnym, akcie notarialnym ani innej wymaganej prawem czynności lub formy dokumentu.
+Konstytucyjna podstawa stanowienia prawa miejscowego z art. 94 dotyczy wyłącznie organów samorządu terytorialnego oraz terenowych organów administracji rządowej, działających na podstawie i w granicach upoważnienia ustawowego. Nie każdy statut, regulamin ani uchwała jest zatem aktem prawa miejscowego. W szczególności wewnętrzne akty fundacji, stowarzyszeń, spółek, wspólnot i innych podmiotów nie stają się prawem miejscowym tylko dlatego, że ustanowił je właściwy organ danego podmiotu. Ich moc wynika z ustaw, umów, statutów i reguł właściwych dla danego rodzaju organizacji.
 
-### 7. Biblioteka herbów, godeł, logo i pieczęci
+**Prawo Rzeczypospolitej Polskiej i prawo miejscowe**
+- Konstytucja określa źródła powszechnie obowiązującego prawa oraz zasady stanowienia aktów prawa miejscowego (art. 87, 88 i 94). Akty prawa miejscowego ustanawiają właściwe organy samorządu terytorialnego lub terenowe organy administracji rządowej, na podstawie i w granicach upoważnienia ustawowego; obowiązują one na obszarze działania organu, który je ustanowił.
+- Organ, który ustanowił akt prawa miejscowego, może wyjaśniać swoje stanowisko co do jego znaczenia oraz podejmować działania prawodawcze w granicach przyznanej kompetencji. Nie oznacza to jednak, że każda uchwała interpretacyjna stanowi powszechnie wiążącą wykładnię autentyczną. Jej moc i skutki zależą od podstawy prawnej, formy, właściwości organu oraz trybu podjęcia i ogłoszenia.
+- Ostateczna kontrola legalności aktów prawa miejscowego oraz rozstrzyganie sporów prawnych należą do właściwych organów i sądów w granicach ich ustawowych kompetencji. Wyjaśnienie organu, który wydał akt, nie może zmienić ustawy, przekroczyć delegacji ustawowej ani wyłączyć kontroli sądowej.
 
-W **Więcej → Ustawienia → Zasoby identyfikacji dokumentów** można:
+**Statuty, regulaminy i uchwały**
+- W przypadku statutu, regulaminu lub uchwały organizacji, stowarzyszenia, fundacji, osoby prawnej albo innej jednostki należy najpierw ustalić, kto jest autorem aktu, jaki organ jest uprawniony do jego zmiany lub interpretacji oraz co stanowią przepisy powszechnie obowiązujące i sam dokument ustrojowy.
+- Autentyczne wyjaśnienie postanowień wewnętrznych może pochodzić od organu, któremu statut lub właściwe przepisy przyznają taką kompetencję. Jeżeli kompetencji takiej nie przyznano, stanowisko organu jest stanowiskiem interpretacyjnym, a nie automatycznie wiążącą wykładnią autentyczną.
+- Regulamin ani uchwała wewnętrzna nie mogą być interpretowane w sposób sprzeczny z ustawą, statutem nadrzędnym lub bezwzględnie obowiązującymi przepisami. Sama nazwa aktu nie przesądza o jego randze ani skutkach prawnych.
 
-- przeglądać wbudowany katalog znaków;
-- importować własne grafiki SVG, PNG, JPEG i WebP;
-- przypisywać logo, godło, herb, flagę, pieczęć i inne rodzaje zasobów do określonych dokumentów lub grup;
-- odłączać i zastępować przypisania;
-- przeglądać podgląd zasobu;
-- usuwać własne zasoby.
+**Prawo kanoniczne i ustawy kanoniczne**
+- W prawie kanonicznym Kościoła łacińskiego regułę wykładni autentycznej określa kan. 16 Kodeksu Prawa Kanonicznego: ustawy interpretuje autentycznie ustawodawca oraz ten, komu ustawodawca powierzył władzę autentycznego interpretowania.
+- Zgodnie z kan. 16 § 2 interpretacja autentyczna przedłożona w formie ustawy ma taką samą moc jak ustawa i wymaga promulgacji. Interpretacja dokonana wyrokiem sądowym lub aktem administracyjnym w konkretnej sprawie, o której mowa w kan. 16 § 3, nie ma mocy ustawy i wiąże w granicach wskazanych w tym kanonie.
+- Kan. 17 wskazuje reguły rozumienia ustaw kościelnych, w tym znaczenie słów, kontekst, miejsca paralelne, cel i okoliczności ustawy oraz zamysł ustawodawcy. Reguły te należy stosować z uwzględnieniem właściwego obrządku, Kościoła sui iuris i obowiązującego w nim porządku kanonicznego; nie wolno automatycznie przenosić przepisów KPK Kościoła łacińskiego na wszystkie Kościoły i wspólnoty.
 
-Wbudowany katalog zawiera 14 wcześniejszych ilustracji heraldycznych oraz dwa dodatkowe zasoby przygotowane na podstawie wzoru przekazanego przez użytkownika:
+**Zasada dokumentowania interpretacji w aplikacji**
 
-- pełny herb biskupi — galero, chwosty, krzyż, tarcza i dewiza;
-- osobna tarcza herbu biskupiego.
+Dla każdej zapisanej interpretacji aplikacja powinna umożliwiać wskazanie: aktu i konkretnego przepisu, jego autora lub prawodawcy, organu/podmiotu interpretującego, podstawy jego kompetencji, daty, formy i miejsca promulgacji lub ogłoszenia (jeżeli jest wymagana), zakresu podmiotowego i terytorialnego oraz informacji, czy interpretacja jest wiążąca, czy jedynie pomocnicza. Gdy kompetencja lub moc prawna nie została potwierdzona, interfejs powinien oznaczyć zapis jako „stanowisko interpretacyjne — moc wiążąca niezweryfikowana”, a nie jako wykładnię autentyczną.
 
-Katalog obejmuje także koncepcyjne znaki rodowe, kościelne, zawodowe, fundacyjne, misyjne, samorządowe i inne. Są to ilustracje do zastosowań prezentacyjnych, a nie automatycznie zatwierdzone historyczne herby lub oficjalne znaki instytucji.
+### Udział w służbie publicznej, działalności społecznej i trosce o dobro wspólne
 
-Przypisania mogą być używane w podglądach dokumentów oraz w obsługiwanym eksporcie PDF. Własne pliki i indeksy przypisań są przechowywane lokalnie z użyciem szyfrowania AES-GCM. Wbudowane grafiki są częścią zasobów aplikacji.
+Projekt rozumie aktywność obywatelską szeroko: jako możliwość służenia innym ludziom, podejmowania inicjatyw społecznych, udzielania pomocy, działania na rzecz wspólnoty, przedstawiania spraw ważnych dla społeczeństwa oraz troski o dobro wspólne i dziedzictwo narodowe. Takie zaangażowanie ma wymiar obywatelski i społeczny, a jego podejmowanie powinno odbywać się z poszanowaniem godności, praw innych osób oraz obowiązującego prawa.
 
-**Ważne:** grafika nie potwierdza mandatu, urzędu, godności kościelnej, kwalifikacji, członkostwa, prawa reprezentacji ani autentyczności dokumentu. Oficjalne godła i herby wolno stosować wyłącznie w prawidłowej postaci i z poszanowaniem właściwych przepisów oraz licencji.
+Dla ścisłości prawnej należy rozróżnić kilka konstytucyjnych instytucji:
 
-### 8. Rodzina i zdrowie
+- **Równe prawo dostępu do służby publicznej — art. 60 Konstytucji RP.** Obywatele polscy korzystający z pełni praw publicznych mają prawo ubiegać się o dostęp do służby publicznej na jednakowych zasadach. Jest to gwarancja równego dostępu, a nie automatyczne przyznanie stanowiska, funkcji, urzędu ani upoważnienia do działania w imieniu państwa.
+- **Dobro wspólne — art. 1 Konstytucji RP.** Rzeczpospolita Polska jest dobrem wspólnym wszystkich obywateli. Przepis ten stanowi konstytucyjną podstawę rozumienia odpowiedzialności za państwo i wspólnotę, ale samodzielnie nie nadaje konkretnej osobie urzędowego mandatu do reprezentowania państwa lub Narodu.
+- **Zwierzchnictwo Narodu — art. 4 Konstytucji RP.** Władza zwierzchnia należy do Narodu, który sprawuje ją przez swoich przedstawicieli lub bezpośrednio. Formalne reprezentowanie Narodu w organach państwa następuje w trybach i na zasadach konstytucyjnych, w szczególności poprzez wybory i mandat przedstawicielski. Osobista deklaracja służby Narodowi nie jest równoznaczna z uzyskaniem takiego mandatu.
+- **Działanie w interesie publicznym — art. 63 Konstytucji RP.** Każdy ma prawo składać petycje, wnioski i skargi w interesie publicznym, własnym lub innej osoby za jej zgodą, na zasadach określonych ustawą. To konstytucyjna podstawa występowania do władz i właściwych instytucji w sprawach społecznych.
+- **Udział w życiu publicznym i społecznym.** Wolność wyrażania poglądów (art. 54), pokojowych zgromadzeń (art. 57) i zrzeszania się (art. 58), a także prawo dostępu do informacji publicznej (art. 61) umożliwiają obywatelom i innym uprawnionym osobom zabieranie głosu, organizowanie się, kontrolę społeczną i podejmowanie inicjatyw.
+- **Świadczenia publiczne i pomoc społeczna.** Konstytucyjne prawo do zabezpieczenia społecznego (art. 67), ochrony zdrowia (art. 68) oraz pomoc osobom z niepełnosprawnościami (art. 69) dotyczą przede wszystkim gwarancji i uprawnień określonych w ustawach. Nie należy utożsamiać ich z art. 60, który dotyczy dostępu do służby publicznej. Udzielanie pomocy innym osobom, działalność charytatywna, wolontariat i praca społeczna są odrębnymi formami aktywności, wykonywanymi na podstawie właściwych przepisów i zasad.
 
-Dostępne moduły obejmują lokalne ewidencje i archiwa:
+W konsekwencji aplikacja może wspierać użytkownika w dokumentowaniu jego działalności społecznej, wolontariatu, inicjatyw obywatelskich, udzielonej pomocy, petycji, wniosków, wystąpień w interesie publicznym oraz działań na rzecz dobra wspólnego i dziedzictwa narodowego. Może również prezentować osobistą deklarację gotowości do służby społecznej i troski o Naród. Takie wpisy powinny być oznaczane jako oświadczenia lub dokumentacja aktywności użytkownika, a nie jako urzędowe nadanie funkcji, statusu przedstawiciela Narodu, mandatu publicznego albo upoważnienia do reprezentowania państwa.
 
-- dane dzieci;
-- rodzinne rejestry i dokumenty;
-- prywatną kartę szczepień dziecka;
-- historię chorób i archiwum dokumentacji medycznej;
-- informacje zdrowotne;
-- ustawienia danych dotyczących niepełnosprawności.
+### Samodzielność obywatelska i bezpośrednie uczestnictwo w sprawowaniu władzy
 
-Są to narzędzia do prowadzenia własnej dokumentacji. Nie należy utożsamiać ich z Internetowym Kontem Pacjenta, e-receptą, systemem e-zdrowia ani państwowym rejestrem orzeczeń. Aplikacja nie potwierdza statusu zdrowotnego lub orzeczniczego bez odpowiedniej, rzeczywistej integracji i źródła danych.
+Obywatel jest członkiem Narodu, do którego należy władza zwierzchnia w Rzeczypospolitej Polskiej (art. 4 Konstytucji RP). Korzysta z konstytucyjnych wolności i praw, może bezpośrednio uczestniczyć w sprawowaniu władzy w formach przewidzianych Konstytucją i ustawami oraz samodzielnie podejmować decyzje w sprawach własnych, rodzinnych, majątkowych i społecznych.
 
-### 9. Kody QR i wymiana danych
+Obywatel może działać we własnym imieniu, z własnej inicjatywy i na własną odpowiedzialność, bez przypisywania sobie statusu urzędu państwowego. Może ustanawiać zasady dotyczące własnych spraw i organizowanych przez siebie wspólnot, w granicach prawa i z poszanowaniem praw innych osób.
 
-Moduł kodów QR udostępnia narzędzia związane z:
+Bezpośrednie uczestnictwo w życiu publicznym nie jest tożsame z przejęciem kompetencji konstytucyjnych organów państwowych. Zakres skutków prawnych poszczególnych działań wynika z ich podstawy prawnej. Art. 4 Konstytucji wyraża zasadę zwierzchnictwa Narodu; wykonywanie władzy bezpośrednio przez obywateli odbywa się w konstytucyjnych i ustawowych formach, a nie przez indywidualne przejęcie wszystkich kompetencji organów państwowych.
 
-- własnymi schematami danych OWD;
-- przygotowaniem danych kontaktowych vCard;
-- generowaniem kodów QR dla adresów internetowych;
-- dzieleniem większego zaszyfrowanego ładunku na ramki QR;
-- oznaczeniem pochodzenia danych i kontrolą zgody na transfer w modelu OWD.
+W praktyce aplikacja może służyć do:
+- dokumentowania samodzielnych decyzji, oświadczeń i działań obywatelskich;
+- porządkowania spraw osobistych, rodzinnych, majątkowych i wspólnotowych;
+- przygotowywania petycji, wniosków, skarg i wystąpień w interesie publicznym;
+- dokumentowania działalności społecznej, wolontariatu i inicjatyw na rzecz dobra wspólnego;
+- przechowywania statutów, regulaminów, uchwał i innych zasad przyjętych dla organizowanych wspólnot, z oznaczeniem ich autorów, adresatów i podstawy obowiązywania.
 
-Identyfikatory schematów `pl.owd.*` są identyfikatorami własnymi projektu. Nie są schematami mObywatela ani urzędowym standardem wymiany danych. Integracja z systemem rządowym wymaga zatwierdzonego schematu, jawnego mapowania pól, uzgodnionego interfejsu i odpowiednich uprawnień. W obecnej wersji nie ma aktywnego adaptera rządowego ani potwierdzonego połączenia z rządowym mObywatelem.
+Wpisy i dokumenty tworzone przez użytkownika nie stają się z samego faktu zapisania w aplikacji aktami urzędowymi ani powszechnie obowiązującymi. Ich skutki zależą od właściwej podstawy prawnej, kompetencji autora, kręgu adresatów i zachowania wymaganej procedury.
 
-### 10. Usługi i informacje obywatelskie
+### Znaczenie określeń używanych w projekcie
 
-Pulpit i katalog usług porządkują obszary takie jak:
+- **Człowiek** — osoba ludzka, której godność i prawa wymagają poszanowania.
+- **Obywatel** — osoba posiadająca obywatelstwo określonego państwa; w tej aplikacji pojęcie to oznacza użytkownika i uczestnika życia publicznego, a nie urzędowo potwierdzony status.
+- **Osoba fizyczna** — człowiek będący podmiotem prawa cywilnego, w zakresie określonym przez przepisy.
+- **Cywil** — określenie używane potocznie na oznaczenie osoby niebędącej członkiem sił zbrojnych; samo w sobie nie stanowi odrębnego dokumentu ani uniwersalnej kategorii zdolności prawnej.
+- **Dziecko Boże / Syn Boży** — określenie o znaczeniu religijnym i teologicznym, którego aplikacja nie przedstawia jako urzędowego statusu ani dowodu prawnego.
 
-- sprawy publiczne i przeglądarka usług publicznych;
-- Polak za granicą i informacje konsularne;
-- płatności i finanse;
-- transport i bilety;
-- mandaty i informacje dla kierowców;
-- PESEL i bezpieczeństwo;
-- środowisko;
-- edukacja, praca i nieruchomości;
-- prawo i informacje obywatelskie;
-- kultura, sport i organizacje społeczne;
-- Kościół i wspólnoty.
+### Granice działania i uczciwość wobec użytkownika
 
-Część pozycji jest na tym etapie katalogiem, ekranem informacyjnym lub lokalnym modułem ewidencyjnym. Widoczność kafelka nie oznacza, że aplikacja wykonuje płatność, sprawdza mandat, zastrzega PESEL, pobiera bilet, odczytuje dane konsularne lub łączy się z odpowiednim rejestrem.
+Aplikacja ma wspierać samodzielność, przejrzystość i świadome działanie. Może przechowywać dane podane przez użytkownika, tworzyć projekty dokumentów, porządkować informacje oraz ułatwiać dotarcie do usług publicznych. Nie zastępuje organów administracji, sądów, rejestrów państwowych ani profesjonalnych systemów identyfikacji i zaufania.
 
-### 11. Historia działań i archiwizacja
+W szczególności:
 
-- Rejestrowanie wybranych działań nawigacyjnych i operacji w historii aplikacji.
-- Import i eksport archiwum danych użytkownika w formacie vCard.
-- Kontrola zapisu eksportowanego archiwum.
-- Lokalne przechowywanie wybranych ewidencji i zasobów.
+1. Wpisanie danych, deklaracji, tytułu lub statusu do aplikacji nie jest urzędowym potwierdzeniem ich prawdziwości.
+2. Dokument wygenerowany przez użytkownika jest dokumentem prywatnym lub wzorem, chyba że właściwe przepisy i właściwy organ nadają mu inny status.
+3. Kod QR, grafika pieczęci, wzór podpisu i identyfikator lokalny nie są same w sobie podpisem elektronicznym, pieczęcią elektroniczną ani urzędowym poświadczeniem.
+4. Podpis elektroniczny ma skutki prawne wyłącznie w zakresie wynikającym z właściwych przepisów i zastosowanej usługi zaufania.
+5. Dane z rejestrów publicznych wymagają weryfikacji w źródle właściwym dla danego rejestru.
+6. Projekt nie sugeruje afiliacji z administracją państwową ani upoważnienia do wydawania dokumentów urzędowych.
 
-Zakres historii i archiwizacji zależy od konkretnego modułu. Nie należy zakładać, że wszystkie dane aplikacji są objęte jednym mechanizmem kopii zapasowej lub szyfrowania.
+### Podstawowe źródła prawne
 
-## Architektura i technologie
+- [Konstytucja Rzeczypospolitej Polskiej](https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19970780483) — w szczególności art. 30, 32, 37, 47, 53 i 54.
+- [Kodeks cywilny](https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19640160093) — w szczególności art. 8 i przepisy o zdolności do czynności prawnych.
 
-- Kotlin.
-- Android SDK.
-- Jetpack Compose i Material 3.
-- Gradle Kotlin DSL.
-- AndroidSVG — renderowanie importowanych i wbudowanych grafik SVG.
-- ZXing — generowanie kodów QR.
-- Android Keystore / AES-GCM — ochrona lokalnych zasobów identyfikacji dokumentów i indeksów przypisań.
-- Android PdfDocument — generowanie plików PDF.
-- Android Storage Access Framework — wybór plików do importu i miejsca zapisu eksportu.
+Treść przepisów należy odczytywać w aktualnym brzmieniu, łącznie z właściwymi ustawami szczególnymi i orzecznictwem.
 
-Główne pliki funkcjonalne:
+---
 
-| Plik | Odpowiedzialność |
-|---|---|
-| `MainActivity.kt` | Pulpit, nawigacja, portfel i uruchamianie modułów |
-| `DocumentBranding.kt` | Katalog znaków, import, przypisania, podgląd i eksport PDF |
-| `ChurchDocuments.kt` | Formularze i ewidencje dokumentów kościelnych |
-| `ProfessionalQualifications.kt` | Kwalifikacje zawodowe i dokumenty edukacyjno-zawodowe |
-| `FamilyEntityDocuments.kt` | Dokumenty Rodowe i dokumenty podmiotów |
-| `OwdSchemaRegistry.kt` | Własne wersjonowane schematy OWD i walidacja rekordów |
-| `OwdQrFrames.kt` | Ramkowanie ładunków na serię kodów QR |
-| `OwdIntegration.kt` | Pochodzenie danych, zgoda na transfer i granica mapowania do schematów zewnętrznych |
-| `ASSET-INVENTORY.md` | Inwentarz zasobów graficznych i zasady ich użycia |
+## Warstwa wizualna
 
-## Bezpieczeństwo, prywatność i granice zaufania
+- Przebudowany ekran główny z jasną hierarchią nagłówka, kartami usług, zaokrągleniami i spokojną paletą błękitów.
+- Stały dolny pasek pięciu sekcji: Dokumenty, Usługi, Szukaj, Skanuj i Więcej.
+- Oryginalne piktogramy COI z katalogu iOS przeniesione do natywnych zasobów Android VectorDrawable: ikony paska dolnego (warianty zwykłe i zaznaczone), a także piktogramy profilu, usług, zabezpieczenia PESEL, e-Recepty i biletu.
+- Zasoby wektorowe są skalowalne i barwione przez motyw Compose; nie są zrzutami ekranu ani ręcznie odrysowanymi zamiennikami.
+- Znak w nagłówku i adaptacyjna ikona uruchomieniowa są własnymi znakami graficznymi tego prototypu, a nie oficjalnym logo mObywatela.
+- Repozytorium nie zawiera zweryfikowanego oficjalnego logo mObywatela ani pliku godła RP przeznaczonego do użycia w tym prototypie. Nie dodano imitacji godła, pieczęci ani urzędowego oznaczenia. Włączenie godła wymaga osobnej weryfikacji wzoru, źródła i zasad jego użycia.
 
-1. Dane wpisane lokalnie przez użytkownika należy odróżniać od informacji pochodzących od wystawcy lub usługi publicznej.
-2. Nie oznaczać danych jako urzędowo potwierdzonych bez weryfikowalnego źródła i poprawnej integracji.
-3. Nie traktować grafiki, kodu QR, PDF ani podglądu legitymacji jako zabezpieczenia dokumentu.
-4. Nie odtwarzać ani nie symulować zabezpieczeń dokumentów państwowych, w tym hologramów, mikrodruku, MRZ i urzędowych kodów weryfikacyjnych.
-5. Dane zdrowotne, rodzinne i identyfikacyjne wymagają szczególnej ochrony, minimalizacji zakresu, kontroli dostępu i przemyślanej polityki retencji.
-6. Przed produkcyjnym użyciem należy przeprowadzić audyt bezpieczeństwa, prywatności, uprawnień, szyfrowania, kopii zapasowych, usuwania danych i zgodności prawnej.
-7. Nie umieszczać w repozytorium rzeczywistych danych osobowych, numerów dokumentów, danych zdrowotnych, kluczy ani sekretów.
+### Pochodzenie i licencja piktogramów
 
-## Informacje prawne i status zgodności
+Piktogramy pochodzą z repozytorium źródłowego mObywatela, z katalogu `iOS/Sources/Assets.xcassets/Icons`, opublikowanego przez Centralny Ośrodek Informatyki. Pliki są oznaczone w pliku `REUSE.toml` źródła jako `LicenseRef-COI-MIT-PL`, Copyright (c) 2025 Centralny Ośrodek Informatyki. Kopia licencji znajduje się w `obywatel-android/LICENSES/LicenseRef-COI-MIT-PL.txt`. Zachowano informacje o prawach autorskich i oznaczenia SPDX w każdym przeniesionym zasobie.
 
-Aplikacja jest niezależnym projektem obywatelskim. Nazwa „Aplikacja Obywatelska” opisuje jej przeznaczenie i nie oznacza statusu urzędowego. Projekt nie jest oficjalną aplikacją mObywatel, nie jest wydawany ani zatwierdzony przez Ministerstwo Cyfryzacji, Centralny Ośrodek Informatyki lub inny organ administracji publicznej. Nie należy używać oznaczeń ani komunikatów sugerujących takie powiązanie.
+Źródła:
+- https://github.com/bartoszruta26-droid/mObywatel-2.0/tree/main/iOS/Sources/Assets.xcassets/Icons/Lift/BottomBar
+- https://github.com/bartoszruta26-droid/mObywatel-2.0/tree/main/iOS/Sources/Assets.xcassets/Icons/Brand/Services
+- https://github.com/bartoszruta26-droid/mObywatel-2.0/tree/main/iOS/Sources/Assets.xcassets/Icons/Filled
 
-### Operator i administrator danych — wymagane uzupełnienie
+## Zakres funkcjonalny
 
-Przed publicznym udostępnieniem należy jednoznacznie wskazać podmiot odpowiedzialny za dystrybucję i świadczenie usług, jego pełną nazwę, adres i dane kontaktowe. Trzeba również ustalić administratora danych dla każdego procesu przetwarzania, jego dane kontaktowe, ewentualny kontakt do inspektora ochrony danych, cele i podstawy prawne, kategorie danych, odbiorców, okresy przechowywania, transfery poza EOG oraz sposób realizacji praw osób. Tych danych nie wolno zastępować fikcyjnymi danymi ani pozostawiać w formie ogólnego oświadczenia.
+- Ekran główny z nawigacją do wszystkich widocznych sekcji.
+- Lokalny portfel plików: import PDF/DOCX/obrazów przez Storage Access Framework (SAF), trwałe URI, lista, usuwanie i podgląd.
+- Lokalny rejestr metadanych dokumentów: tytuł, identyfikator, data utworzenia, URI źródła i SHA-256 pliku.
+- Generowanie kodu QR zawierającego lokalny identyfikator wpisu w formacie `urn:rp:local-document-registry:<UUID>`.
+- Odczyt kodu QR z wybranego obrazu i porównanie aktualnego skrótu pliku ze skrótem zapisanym w lokalnym rejestrze.
+- Ekrany informacyjne profilu, bezpieczeństwa, płatności i zdrowia.
+- Dostępność: semantyczne tytuły paneli, nagłówki, opisy kontrolek i obsługa systemowego przycisku Wstecz.
 
-Rola administratora zależy od tego, kto faktycznie ustala cele i sposoby przetwarzania. Operator może być administratorem danych związanych z udostępnianiem, utrzymaniem i obsługą aplikacji, a w określonym modelu może działać jako podmiot przetwarzający. Rola użytkownika wobec danych wprowadzanych do prywatnych ewidencji wymaga oceny konkretnego kontekstu; samo korzystanie z aplikacji nie przesądza automatycznie o kwalifikacji prawnej.
+## Ograniczenia i status prawny
 
-### Dane osobowe i szczególne kategorie danych
+To niezależna aplikacja demonstracyjna. Nie jest oficjalną aplikacją mObywatel, systemem Sejmu, urzędu ani administracji państwowej. Zastosowanie piktogramów z opublikowanego systemu projektowego nie oznacza afiliacji z COI ani administracją publiczną. Znak prototypu nie jest godłem państwowym ani urzędową pieczęcią.
 
-Aplikacja umożliwia prowadzenie ewidencji zawierających potencjalnie dane identyfikacyjne, rodzinne, edukacyjne, zawodowe, organizacyjne i zdrowotne. Dane o zdrowiu należą do szczególnych kategorii danych z art. 9 RODO. Dane dzieci i informacje dotyczące innych osób wymagają szczególnej ostrożności. Należy wprowadzać wyłącznie dane, do których przetwarzania istnieje odpowiednie uprawnienie i podstawa prawna.
+Lokalny rejestr nie publikuje wpisów w sieci i nie zapewnia zewnętrznej weryfikacji. Kod QR identyfikuje wpis lokalny; nie jest podpisem elektronicznym, pieczęcią elektroniczną ani urzędowym poświadczeniem. Odczyt kodu z obrazu nie jest skanowaniem aparatem na żywo. Porównanie SHA-256 wykrywa zmianę zawartości pliku względem lokalnie zapisanego skrótu, ale nie uwierzytelnia wystawcy ani pochodzenia dokumentu.
 
-RODO wymaga między innymi przejrzystości, ograniczenia celu, minimalizacji danych, prawidłowości, ograniczenia przechowywania, integralności i poufności oraz rozliczalności. Osobom, których dane dotyczą, przysługują — z uwzględnieniem warunków i wyjątków ustawowych — prawa określone w art. 15–22 RODO, w tym dostęp, sprostowanie, usunięcie, ograniczenie przetwarzania, przenoszenie danych i sprzeciw. Mogą one również wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych.
+Ekrany profilu, bezpieczeństwa, płatności i zdrowia są informacyjne. Nie ma logowania do usług państwowych ani integracji z ich API. Nie należy używać prototypu do przedstawiania dokumentów jako wydanych lub zatwierdzonych przez organ państwowy.
 
-### Rzeczywiste granice przechowywania i transmisji
+## Uruchomienie
 
-Wybrane dane i zasoby są zapisywane lokalnie. Mechanizm AES-GCM opisany w dokumentacji dotyczy zasobów identyfikacji dokumentów i indeksów przypisań; nie jest deklaracją, że wszystkie dane aplikacji są szyfrowane w ten sam sposób. Manifest Androida deklaruje uprawnienie `INTERNET`. Przed wydaniem należy zatem przeprowadzić audyt ruchu sieciowego, bibliotek, dzienników, kopii zapasowych, usług zewnętrznych i odbiorców danych. Nie wolno deklarować, że aplikacja jest całkowicie offline lub że żadne dane nie opuszczają urządzenia bez potwierdzenia testami.
+Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Projekt korzysta z Gradle Kotlin DSL, Jetpack Compose oraz ZXing Core do lokalnego generowania i odczytu kodów QR.
 
-### Usługi drogą elektroniczną i regulamin
+## Następne kroki techniczne
 
-Jeżeli operator będzie świadczył usługi drogą elektroniczną, należy ocenić zastosowanie ustawy z 18 lipca 2002 r. o świadczeniu usług drogą elektroniczną, w tym obowiązków informacyjnych z art. 5 oraz obowiązku określenia i udostępnienia regulaminu z art. 8. Regulamin powinien opisywać rzeczywisty zakres usług, warunki techniczne, zasady zawierania i rozwiązywania umów oraz tryb reklamacyjny — w zakresie wymaganym przez aktualne przepisy. Przed uruchomieniem trzeba zweryfikować tekst ustawy wraz z późniejszymi nowelizacjami.
-
-### Dokumenty, podpisy i oznaczenia
-
-Wygenerowany PDF, podgląd legitymacji, wpis w ewidencji, kod QR, herb, godło, logo, pieczęć lub graficzny wzór podpisu nie stanowią same przez się urzędowego poświadczenia, uwierzytelnienia ani dowodu posiadania określonej godności, kwalifikacji, mandatu lub upoważnienia. Kwalifikowany podpis elektroniczny ma skutek prawny równoważny podpisowi własnoręcznemu na zasadach art. 25 rozporządzenia eIDAS. Aplikacja nie świadczy w obecnej wersji usługi kwalifikowanego podpisu ani kwalifikowanej pieczęci elektronicznej.
-
-### Własność intelektualna i symbole
-
-Każdy zasób musi mieć udokumentowane źródło, autora lub podmiot uprawniony, licencję i warunki wykorzystania. Piktogramy pochodzące z zasobów COI zachowują oznaczenie `LicenseRef-COI-MIT-PL`; obowiązuje konieczność przestrzegania warunków tej licencji. Autorskie ilustracje heraldyczne są koncepcjami graficznymi, a nie potwierdzonymi historycznymi herbami lub oficjalnymi znakami. Użytkownik importujący zasób powinien posiadać prawo do jego użycia. Symbole państwowe, herby i znaki instytucji wymagają odrębnej weryfikacji podstawy oraz dopuszczalnego sposobu wykorzystania.
-
-### Wymagane działania przed wydaniem produkcyjnym
-
-1. Wskazać operatora, administratora danych i dane kontaktowe.
-2. Sporządzić mapę przepływów danych oraz rejestr czynności przetwarzania odpowiednio do ról i obowiązków.
-3. Opublikować kompletną politykę prywatności i — gdy jest wymagany — regulamin usługi.
-4. Ustalić podstawy prawne, retencję, odbiorców, transfery i procedury realizacji praw osób.
-5. Przeprowadzić analizę ryzyka, ocenę potrzeby DPIA, testy bezpieczeństwa i audyt transmisji sieciowej.
-6. Zweryfikować licencje, prawa do znaków i legalność wykorzystania każdego oficjalnego symbolu.
-7. Oddzielić dane demonstracyjne, lokalne wpisy użytkownika i dane potwierdzone przez zewnętrznego wystawcę.
-8. Zaktualizować niniejszą informację po każdej istotnej zmianie funkcji, operatora lub przepływu danych.
-
-Ekran „Więcej → Informacje prawne” w aplikacji prezentuje te zasady i ograniczenia. Ma charakter informacyjny. Nie zastępuje indywidualnej informacji o przetwarzaniu danych, polityki prywatności, regulaminu ani audytu prawnego i bezpieczeństwa.
-
-### Źródła urzędowe
-
-- [RODO — rozporządzenie (UE) 2016/679, EUR-Lex](https://eur-lex.europa.eu/eli/reg/2016/679/oj?locale=PL)
-- [Ustawa o świadczeniu usług drogą elektroniczną — ELI](https://eli.gov.pl/api/acts/DU/2024/1513/text.html)
-- [Rozporządzenie eIDAS (UE) nr 910/2014 — EUR-Lex](https://eur-lex.europa.eu/eli/reg/2014/910/oj?locale=PL)
-- [Ustawa o prawie autorskim i prawach pokrewnych — ELI](https://eli.gov.pl/eli/DU/1994/83)
-- [UODO — prawa osób, których dane dotyczą](https://uodo.gov.pl/pl/493/2254)
-
-Stan informacji: 11 listopada 2026 r. Przed wdrożeniem należy sprawdzić aktualne brzmienie aktów prawnych, w tym nowelizacje ogłoszone po tekstach jednolitych.
-
-## Ograniczenia integracji państwowych
-
-Aplikacja jest niezależną aplikacją obywatelską. Nie należy przedstawiać jej jako oficjalnego klienta administracji publicznej ani jako zamiennika rządowego mObywatela.
-
-W szczególności obecna wersja nie zapewnia sama z siebie:
-
-- logowania do systemów administracji państwowej;
-- dostępu do rejestru dowodów osobistych lub paszportów;
-- pobierania danych z rejestrów PESEL, KRS, CEIDG lub rejestrów medycznych;
-- urzędowego potwierdzania niepełnosprawności, kwalifikacji, mandatu lub godności;
-- przekazywania danych do rządowego mObywatela;
-- urzędowego uwierzytelniania dokumentów, kodów QR ani podpisów.
-
-Przyszła współpraca z usługami publicznymi może być realizowana wyłącznie przez udokumentowane i dozwolone interfejsy, po uzyskaniu wymaganych zgód, uprawnień, certyfikacji i zatwierdzeniu modelu bezpieczeństwa. Do tego czasu wszystkie funkcje lokalne należy opisywać jako prywatne narzędzia obywatelskie lub ewidencyjne.
-
-## Pochodzenie ikon i licencje
-
-Część piktogramów usług Androida została przeniesiona z zasobów iOS znajdujących się w tym repozytorium: `iOS/Sources/Assets.xcassets/Icons/Brand/Services/`. Zasoby źródłowe są oznaczone w nadrzędnym `REUSE.toml` jako © 2025 Centralny Ośrodek Informatyki, `LicenseRef-COI-MIT-PL`. Wersje Android VectorDrawable zachowują oznaczenia pochodzenia. Przed dystrybucją należy przestrzegać warunków licencji i zachować wymagane informacje.
-
-Własne ilustracje heraldyczne i znaki koncepcyjne są odrębnymi zasobami. Ich źródło, charakter i ograniczenia opisuje `ASSET-INVENTORY.md`. Nie należy utożsamiać ich z oficjalnymi znakami państwowymi, kościelnymi lub samorządowymi.
-
-## Uruchomienie i kompilacja
-
-Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Projekt korzysta z Gradle Kotlin DSL i Jetpack Compose.
-
-Kompilacja z zainstalowanym Gradle 8.9:
-
-```bash
-cd obywatel-android
-gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
-```
-
-APK wariantu debug powstaje w:
-
-```
-app/build/outputs/apk/debug/app-debug.apk
-```
-
-Repozytorium zawiera workflow GitHub Actions `.github/workflows/android-build.yml`, który uruchamia testy JVM, buduje debug APK i publikuje artefakt CI.
-
-## Stan projektu i dalszy rozwój
-
-Projekt jest rozwijany etapami. Przed wydaniem produkcyjnym należy w szczególności:
-
-1. Ukończyć audyt bezpieczeństwa i prywatności wszystkich modułów przechowujących dane osobowe i zdrowotne.
-2. Ujednolicić walidację, wersjonowanie i migracje lokalnych schematów danych.
-3. Rozbudować testy jednostkowe, testy UI, testy dostępności i testy importu/eksportu.
-4. Zweryfikować wszystkie licencje, źródła i uprawnienia do wykorzystania znaków oraz piktogramów.
-5. Rozdzielić dane demonstracyjne, dane użytkownika i dane pochodzące od zaufanych wystawców.
-6. Udokumentować każdą przyszłą integrację z usługą zewnętrzną, w tym jej zakres, uprawnienia, zgodę użytkownika i model bezpieczeństwa.
-7. Zachować jasne oznaczenie aplikacji jako niezależnego projektu obywatelskiego, dopóki nie zostaną formalnie uzgodnione ewentualne integracje z administracją publiczną.
-
-## Dokumentacja dodatkowa
-
-- `ASSET-INVENTORY.md` — katalog i zasady wykorzystania ikon, herbów, godeł i logo.
-- `UI-DESIGN-NOTES.md` — notatki dotyczące interfejsu i pochodzenia zasobów.
-- `../REUSE.toml` oraz `../LICENSES/` — oznaczenia prawno-licencyjne repozytorium.
+1. Dokończyć wizualne odwzorowanie kart dokumentów i szczegółów dokumentu na podstawie dostępnych wzorców design systemu.
+2. Zweryfikować i ewentualnie dołączyć oficjalny wzór godła RP z odrębnego, autorytatywnego źródła oraz opisać zasady użycia.
+3. Dodać skaner QR aparatem i walidację identyfikatorów w obrębie lokalnego rejestru.
+4. Zaprojektować kontrolowany eksport i kopię zapasową rejestru.
+5. Dodać ochronę lokalnego profilu oraz kontrolę dostępu do danych.

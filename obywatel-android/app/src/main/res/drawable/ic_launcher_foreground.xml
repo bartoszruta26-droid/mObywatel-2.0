@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors -->
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <group android:pivotX="12" android:pivotY="12" android:scaleX="0.82" android:scaleY="0.82">
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M12,2 L14.4,3.1 L17,2.7 L18.5,5 L21,6.2 L20.7,8.8 L22,11.1 L20.6,13.4 L20.9,16 L18.5,17.4 L17.4,20 L14.8,19.8 L12,22 L9.2,19.8 L6.6,20 L5.5,17.4 L3.1,16 L3.4,13.4 L2,11.1 L3.3,8.8 L3,6.2 L5.5,5 L7,2.7 L9.6,3.1 Z"/>
+        <path android:fillColor="#FF075DA8"
+            android:pathData="M12,4.2 L13.8,5.1 L15.8,4.9 L16.9,6.7 L18.8,7.7 L18.6,9.7 L19.5,11.4 L18.4,13.2 L18.6,15.2 L16.8,16.3 L16,18.2 L14,18 L12,19.6 L10,18 L8,18.2 L7.2,16.3 L5.4,15.2 L5.6,13.2 L4.5,11.4 L5.4,9.7 L5.2,7.7 L7.1,6.7 L8.2,4.9 L10.2,5.1 Z"/>
+        <path android:fillColor="#FFFFD65A"
+            android:pathData="M12,6.2 L12.7,8 L14.6,7.4 L13.8,9.2 L15.6,10.1 L13.6,10.4 L14.2,12.4 L12.4,11.4 L11.2,13.1 L11.1,11.1 L9.1,11.2 L10.5,9.8 L9.2,8.3 L11.1,8.6 Z"/>
+    </group>
+</vector>
