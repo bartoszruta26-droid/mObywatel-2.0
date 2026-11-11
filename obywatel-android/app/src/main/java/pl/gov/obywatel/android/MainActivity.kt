@@ -771,7 +771,9 @@ private fun HomeScreen() {
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
                         onEditOtherDocuments = { key -> settingsDocumentEditor = key; showSettingsMenu = false },
                         onExportAll = {
-                            exportSnapshot = DemoIdentityStore.load(context)
+                            exportSnapshot = DemoIdentityStore.load(context) +
+                                LegitimacyPreviewSettingsStore.exportAll(context) +
+                                documentPlacements.mapKeys { "documentPlacement_${it.key}" }
                             runCatching {
                                 require(exportSnapshot.isNotEmpty()) {
                                     "Brak zapisanych danych. Najpierw uzupełnij i zapisz dane w ustawieniach."
@@ -1035,16 +1037,33 @@ private fun HomeScreen() {
                         runCatching {
                             val current = DemoIdentityStore.loadStrict(context)
                             val merged = current.toMutableMap().apply { putAll(incoming) }
-                            DemoIdentityStore.save(context, merged)
+                            val profileValues = incoming.filterKeys {
+                                !it.startsWith("credentialSetting_") && !it.startsWith("documentPlacement_")
+                            }
+                            DemoIdentityStore.save(context, current.toMutableMap().apply { putAll(profileValues) })
+                            LegitimacyPreviewSettingsStore.importAll(context, incoming)
+                            val importedPlacements = incoming.filterKeys { it.startsWith("documentPlacement_") }
+                                .mapKeys { it.key.removePrefix("documentPlacement_") }
+                                .mapValues { (_, value) -> value }
+                            if (importedPlacements.isNotEmpty()) {
+                                val mergedPlacements = loadDocumentPlacements(context).toMutableMap().apply {
+                                    putAll(importedPlacements.filterValues { it in setOf("dashboard", "other", "hidden") })
+                                }
+                                saveDocumentPlacements(context, mergedPlacements)
+                                documentPlacements = mergedPlacements
+                            }
                             val persisted = DemoIdentityStore.loadStrict(context)
-                            require(persisted == merged) {
-                                "Weryfikacja zapisu nie powiodła się. Dane lokalne nie odpowiadają importowi."
+                            require(profileValues.all { (key, value) -> persisted[key] == value }) {
+                                "Weryfikacja zapisu nie powiodła się. Dane profilu nie odpowiadają importowi."
                             }
-                            val changed = incoming.keys.count { persisted[it] == incoming[it] }
+                            val settingsCount = incoming.keys.count {
+                                it.startsWith("credentialSetting_") || it.startsWith("documentPlacement_")
+                            }
+                            val changed = profileValues.keys.count { persisted[it] == profileValues[it] } + settingsCount
                             require(changed == incoming.size) {
-                                "Weryfikacja importu wykazała niezgodność części pól."
+                                "Weryfikacja importu wykazała niezgodność części pól lub ustawień."
                             }
-                            "Zaimportowano i zweryfikowano ${changed} pól. Łącznie zapisano ${persisted.size} pól."
+                            "Zaimportowano i zweryfikowano ${changed} pól oraz ustawień. Łącznie zapisano ${persisted.size} pól profilu."
                         }.onSuccess { importStatus = it }
                             .onFailure { importStatus = "Błąd importu lub weryfikacji: ${it.message ?: "nieznany błąd"}" }
                         pendingImport = null
@@ -2134,63 +2153,6 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Dane karty szczepień", "Edycja historii dawek, preparatów, serii, placówek i terminów kolejnych szczepień", Icons.Filled.HealthAndSafety, { onEditOtherDocuments("vaccines") })
         ProfileActionCard("Dokumenty firmowe i podmiotowe", "Dokumenty spółek, fundacji i organizacji", Icons.Filled.Business, { onEditOtherDocuments("business") })
         ProfileActionCard("Konta bankowe", "Osobna ewidencja rachunków prywatnych i podmiotowych", Icons.Filled.AccountBalance, { onEditOtherDocuments("bank_accounts") })
-        Text("Wygląd graficzny — ustawienia poszczególnych dokumentów", color = Navy, fontWeight = FontWeight.Bold)
-        Text("Flaga, logo, godło/herb i tło są przypisywane osobno dla każdego dokumentu. Zmiany wykonuje się tutaj, a podgląd pozostaje tylko do odczytu.",
-            color = Muted, style = MaterialTheme.typography.bodySmall)
-        ProfileActionCard("Wygląd — dane osobowe", "Znaki graficzne dokumentu profilu", Icons.Filled.AccountCircle, { onEditDocumentBranding("profile") })
-        ProfileActionCard("Wygląd — dowód tożsamości", "Flaga, godło, logo i tło dowodu", Icons.Filled.CreditCard, { onEditDocumentBranding("identity") })
-        ProfileActionCard("Wygląd — paszport", "Flaga, godło, logo i tło paszportu", Icons.Filled.Public, { onEditDocumentBranding("passport") })
-        ProfileActionCard("Wygląd — dokument rodowy", "Herb, logo, flaga i tło dokumentu Rodu", Icons.Filled.Fingerprint, { onEditDocumentBranding("family") })
-        ProfileActionCard("Wygląd — legitymacja poselska", "Godło, flaga, logo i tło legitymacji", Icons.Filled.AccountBalance, { onEditDocumentBranding("parliament") })
-        ProfileActionCard("Wygląd — legitymacja kursanta", "Znaki i tło legitymacji kursanta", Icons.Filled.Description, { onEditDocumentBranding("training") })
-        ProfileActionCard("Wygląd — legitymacja ucznia/studenta", "Znaki i tło legitymacji szkolnej", Icons.Filled.Badge, { onEditDocumentBranding("student") })
-        ProfileActionCard("Wygląd — orzeczenia i zaświadczenia", "Znaki i tło dokumentów dotyczących orzeczeń", Icons.Filled.HealthAndSafety, { onEditDocumentBranding("disability") })
-        ProfileActionCard("Wygląd — karty lojalnościowe", "Logo i tło karty", Icons.Filled.CreditCard, { onEditDocumentBranding("loyalty") })
-        ProfileActionCard("Wygląd — dokumenty kościelne", "Herb, godło, logo, flaga i tło", Icons.Filled.AccountBalance, { onEditDocumentBranding("church") })
-        ProfileActionCard("Wygląd — dokumenty cywilne", "Znaki i tło dokumentów cywilnych", Icons.Filled.Description, { onEditDocumentBranding("civil") })
-        ProfileActionCard("Wygląd — dokumenty podmiotów", "Logo, herb, godło i tło podmiotów", Icons.Filled.Business, { onEditDocumentBranding("entity") })
-        ProfileActionCard("Wygląd — konta bankowe", "Logo i tło dokumentów rachunków", Icons.Filled.AccountBalance, { onEditDocumentBranding("bank_accounts") })
-        ProfileActionCard("Wygląd — dokumentacja dzieci", "Znaki i tło dokumentów dzieci", Icons.Filled.AccountCircle, { onEditDocumentBranding("children") })
-        ProfileActionCard("Wygląd — karta szczepień", "Znaki i tło karty szczepień", Icons.Filled.HealthAndSafety, { onEditDocumentBranding("vaccines") })
-        ProfileActionCard("Wygląd — dokumenty zawodowe", "Znaki i tła dokumentów kwalifikacji", Icons.Filled.Description, { onEditDocumentBranding("professional") })
-        ProfileActionCard("Wygląd — kwalifikacje medyczne", "Znaki i tła dokumentów medycznych", Icons.Filled.HealthAndSafety, { onEditDocumentBranding("professional_medical") })
-        ProfileActionCard("Wygląd — kwalifikacje edukacyjne", "Znaki i tła dokumentów edukacyjnych", Icons.Filled.Badge, { onEditDocumentBranding("professional_education") })
-        ProfileActionCard("Wygląd — kwalifikacje terapeutyczne", "Znaki i tła dokumentów terapeutycznych", Icons.Filled.HealthAndSafety, { onEditDocumentBranding("professional_therapeutic") })
-        ProfileActionCard("Wygląd — pozostałe kwalifikacje", "Znaki i tła pozostałych dokumentów zawodowych", Icons.Filled.Description, { onEditDocumentBranding("professional_other") })
-        ProfileActionCard("Wygląd — fundacja", "Logo, godło i tło dokumentów fundacji", Icons.Filled.Business, { onEditDocumentBranding("organization_foundation") })
-        ProfileActionCard("Wygląd — Kościół / wspólnota", "Herb, logo i tło dokumentów wspólnoty", Icons.Filled.AccountBalance, { onEditDocumentBranding("organization_church") })
-        ProfileActionCard("Wygląd — przedsiębiorstwo", "Logo i tło dokumentów przedsiębiorstwa", Icons.Filled.Business, { onEditDocumentBranding("organization_company") })
-        ProfileActionCard("Wygląd — stowarzyszenie", "Logo i tło dokumentów stowarzyszenia", Icons.Filled.Business, { onEditDocumentBranding("organization_association") })
-        ProfileActionCard("Wygląd — godność biskupia", "Herb, godło, logo i tło dokumentu", Icons.Filled.AccountBalance, { onEditDocumentBranding("church_bishop") })
-        ProfileActionCard("Wygląd — godność arcybiskupia", "Herb, godło, logo i tło dokumentu", Icons.Filled.AccountBalance, { onEditDocumentBranding("church_archbishop") })
-        ProfileActionCard("Wygląd — godność kardynalska", "Herb, godło, logo i tło dokumentu", Icons.Filled.AccountBalance, { onEditDocumentBranding("church_cardinal") })
-        ProfileActionCard("Wygląd — godność opacka", "Herb, godło, logo i tło dokumentu", Icons.Filled.AccountBalance, { onEditDocumentBranding("church_abbot") })
-        ProfileActionCard("Wygląd — posługa kościelna", "Herb, godło, logo i tło dokumentu", Icons.Filled.AccountBalance, { onEditDocumentBranding("church_minister") })
-        ProfileActionCard("Wygląd — posługa misyjna", "Herb, godło, logo i tło dokumentu", Icons.Filled.Public, { onEditDocumentBranding("church_missionary") })
-        ProfileActionCard("Wygląd — pozostałe dokumenty", "Logo, godło, flaga i tło dokumentów pozostałych", Icons.Filled.Description, { onEditDocumentBranding("official") })
-        ProfileActionCard("Wygląd — akt urodzenia", "Godło, logo, flaga, tło i pola aktu", Icons.Filled.Description, { onEditDocumentBranding("birth_extract") })
-        ProfileActionCard("Wygląd — akt małżeństwa", "Godło, logo, flaga, tło i pola aktu", Icons.Filled.Description, { onEditDocumentBranding("marriage_extract") })
-        ProfileActionCard("Wygląd — akt zgonu", "Godło, logo, flaga, tło i pola odpisu", Icons.Filled.Description, { onEditDocumentBranding("death_extract") })
-        ProfileActionCard("Wygląd — Karta Dużej Rodziny", "Znaki, tło i pola karty", Icons.Filled.CreditCard, { onEditDocumentBranding("large_family") })
-        ProfileActionCard("Wygląd — legitymacja dawcy krwi", "Znaki, tło i pola legitymacji", Icons.Filled.Badge, { onEditDocumentBranding("blood_donor") })
-        ProfileActionCard("Wygląd — legitymacja osoby z niepełnosprawnością", "Znaki, tło i pola legitymacji", Icons.Filled.HealthAndSafety, { onEditDocumentBranding("disability_card") })
-        ProfileActionCard("Wygląd — dowód rejestracyjny", "Znaki, tło i pola dokumentu pojazdu", Icons.Filled.Description, { onEditDocumentBranding("vehicle_registration") })
-        ProfileActionCard("Wygląd — OC pojazdu", "Logo, tło i pola polisy", Icons.Filled.Description, { onEditDocumentBranding("insurance_vehicle") })
-        ProfileActionCard("Wygląd — OC zawodowe", "Logo, tło i pola polisy", Icons.Filled.Description, { onEditDocumentBranding("insurance_professional") })
-        ProfileActionCard("Wygląd — OC prywatne", "Logo, tło i pola polisy", Icons.Filled.Description, { onEditDocumentBranding("insurance_private") })
-        ProfileActionCard("Wygląd — OC działalności", "Logo, tło i pola polisy", Icons.Filled.Business, { onEditDocumentBranding("insurance_business") })
-        ProfileActionCard("Wygląd — zaświadczenie KRK", "Znaki, tło i pola zaświadczenia", Icons.Filled.Description, { onEditDocumentBranding("criminal_record") })
-        ProfileActionCard("Wygląd — dokument podróży / misji", "Znaki, tło i pola dokumentu", Icons.Filled.Public, { onEditDocumentBranding("mission_travel") })
-        ProfileActionCard("Wygląd — EKUZ", "Znaki, tło i pola karty", Icons.Filled.HealthAndSafety, { onEditDocumentBranding("ehic") })
-        ProfileActionCard("Wygląd — kwalifikacje UE", "Znaki, tło i pola zaświadczenia", Icons.Filled.Badge, { onEditDocumentBranding("eu_education") })
-        ProfileActionCard("Wygląd — odpisy rejestrowe", "Logo, godło, flaga i tło odpisów", Icons.Filled.AccountBalance, { onEditDocumentBranding("registry") })
-        ProfileActionCard("Wygląd — dokumenty firmowe", "Logo, godło, flaga i tło dokumentów firmowych", Icons.Filled.Business, { onEditDocumentBranding("business") })
-        ProfileActionCard("Wygląd — dokumenty PDF i podpisy", "Wzór, tło i znaki dokumentów PDF", Icons.Filled.PictureAsPdf, { onEditDocumentBranding("signed_pdf") })
-        ProfileActionCard("Wygląd — dokumenty własne", "Wzór, tło i znaki importowanych dokumentów", Icons.Filled.Description, { onEditDocumentBranding("imported") })
-        ProfileActionCard("Wygląd — karty lojalnościowe", "Logo i tło kart lojalnościowych", Icons.Filled.CreditCard, { onEditDocumentBranding("loyalty_cards") })
-        ProfileActionCard("Wygląd — dokumenty PDF", "Tło, logo i znaki dokumentów PDF", Icons.Filled.Description, { onEditDocumentBranding("signed_pdf") })
-        ProfileActionCard("Wygląd — pliki własne", "Tło, logo i znaki dokumentów importowanych", Icons.Filled.Description, { onEditDocumentBranding("imported") })
-        ProfileActionCard("Wygląd — karty lojalnościowe", "Logo i tło kart lojalnościowych", Icons.Filled.CreditCard, { onEditDocumentBranding("loyalty_cards") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
@@ -2542,6 +2504,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
     }
     var photoBase64 by remember { mutableStateOf(fields["photo"] ?: "") }
+    var selectedPhotoField by remember { mutableStateOf("photo") }
     var saveMessage by remember { mutableStateOf("") }
     val editorTitle = when (categoryId) {
         "profile" -> "Dane osobowe i zdjęcie profilowe"
@@ -2564,9 +2527,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 if (bytes.size > 5 * 1024 * 1024) {
                     saveMessage = "Zdjęcie przekracza limit 5 MB. Wybierz mniejszy plik."
                 } else {
-                    photoBase64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-                    fields["photo"] = photoBase64
-                    saveMessage = "Zdjęcie dodane. Zapisz zmiany."
+                    val encoded = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                    fields[selectedPhotoField] = encoded
+                    if (selectedPhotoField == "photo") photoBase64 = encoded
+                    saveMessage = "Zdjęcie zapisane w polu: $selectedPhotoField. Zapisz zmiany."
                 }
             }.onFailure { saveMessage = "Nie udało się wczytać zdjęcia: ${it.localizedMessage ?: "błąd odczytu"}" }
         }
@@ -2630,8 +2594,29 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Wybierz zdjęcie", color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoPicker.launch("image/*") }.padding(vertical = 8.dp))
+                    Text("Wybierz zdjęcie", color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { selectedPhotoField = "photo"; photoPicker.launch("image/*") }.padding(vertical = 8.dp))
                     if (photoBase64.isNotBlank()) Text("Usuń zdjęcie", color = Color(0xFF9B2C2C), fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoBase64 = ""; fields["photo"] = "" }.padding(vertical = 8.dp))
+                }
+                Text("Pozostałe fotografie", color = Navy, fontWeight = FontWeight.Bold)
+                listOf(
+                    "photoAlternative1" to "Zdjęcie alternatywne 1",
+                    "photoAlternative2" to "Zdjęcie alternatywne 2",
+                    "wifePhoto" to "Zdjęcie żony",
+                    "child1Photo" to "Zdjęcie dziecka 1",
+                    "child2Photo" to "Zdjęcie dziecka 2",
+                    "familyMember1Photo" to "Zdjęcie członka rodziny 1",
+                    "familyMember2Photo" to "Zdjęcie członka rodziny 2"
+                ).forEach { (photoKey, photoLabel) ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(photoLabel, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                        TextButton(onClick = { selectedPhotoField = photoKey; photoPicker.launch("image/*") }) {
+                            Text(if (fields[photoKey].isNullOrBlank()) "Dodaj" else "Zmień")
+                        }
+                        if (!fields[photoKey].isNullOrBlank()) {
+                            TextButton(onClick = { fields[photoKey] = "" }) { Text("Usuń") }
+                        }
+                    }
                 }
                 Text("Dane osobowe", color = Navy, fontWeight = FontWeight.Bold)
                 DemoDataField("firstNames", "Imię / imiona", fields)
@@ -3010,6 +2995,27 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 ) { Text("Zapisz dane i zdjęcie") }
                 if (saveMessage.isNotBlank()) Text(saveMessage, color = Blue, style = MaterialTheme.typography.bodySmall)
             }
+        }
+        if (categoryId != "all") {
+            val credentialKey = when (categoryId) {
+                "identity_card" -> "identity"
+                "profile" -> "profile"
+                "family" -> "family"
+                "parliament" -> "parliament"
+                "training" -> "training"
+                "student" -> "student"
+                "disability" -> "disability"
+                "passport" -> "passport"
+                "loyalty_cards" -> "loyalty_cards"
+                else -> categoryId
+            }
+            val appearance = rememberLegitimacyPreviewSettings(credentialKey)
+            Text("Wygląd i układ tego dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+            LegitimacyPreviewSettingsPanel(
+                documentKey = credentialKey,
+                settings = appearance.value,
+                onChange = { appearance.value = it }
+            )
         }
         Text(
             "Dane są zabezpieczane z użyciem mechanizmów systemu Android. Zachowaj ostrożność: mogą zawierać informacje wrażliwe.",
