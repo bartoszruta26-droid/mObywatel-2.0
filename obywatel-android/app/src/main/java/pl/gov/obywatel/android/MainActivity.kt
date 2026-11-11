@@ -780,11 +780,11 @@ private fun HomeScreen() {
                                     "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
                                     "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
                                     "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
-                                    "signedPdfArchive" to SignedPdfStore.exportArchive(context),
+                                    "signedPdfArchive" to exportSignedPdfArchive(context),
                                     "brandAssetArchive" to DocumentBrandStore.exportArchive(context),
-                                    "professionalQualificationArchive" to ProfessionalCredentialStore.exportArchive(context),
-                                    "familyHealthArchive" to FamilyHealthStore.exportArchive(context),
-                                    "medicalHistoryArchive" to MedicalHistoryStore.exportArchive(context),
+                                    "professionalQualificationArchive" to exportProfessionalQualificationArchive(context),
+                                    "familyHealthArchive" to exportFamilyHealthArchive(context),
+                                    "medicalHistoryArchive" to exportMedicalHistoryArchive(context),
                                     "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context)
                                 )
                             runCatching {
@@ -1061,11 +1061,11 @@ private fun HomeScreen() {
                             incoming["churchDocumentArchive"]?.let { ChurchDocumentStore.importArchive(context, it) }
                             incoming["familyEntityDocumentArchive"]?.let { FamilyEntityDocumentStore.importArchive(context, it) }
                             incoming["officialDocumentArchive"]?.let { OfficialDocumentStore.importArchive(context, it) }
-                            incoming["signedPdfArchive"]?.let { SignedPdfStore.importArchive(context, it) }
+                            incoming["signedPdfArchive"]?.let { importSignedPdfArchive(context, it) }
                             incoming["brandAssetArchive"]?.let { DocumentBrandStore.importArchive(context, it) }
-                            incoming["professionalQualificationArchive"]?.let { ProfessionalCredentialStore.importArchive(context, it) }
-                            incoming["familyHealthArchive"]?.let { FamilyHealthStore.importArchive(context, it) }
-                            incoming["medicalHistoryArchive"]?.let { MedicalHistoryStore.importArchive(context, it) }
+                            incoming["professionalQualificationArchive"]?.let { importProfessionalQualificationArchive(context, it) }
+                            incoming["familyHealthArchive"]?.let { importFamilyHealthArchive(context, it) }
+                            incoming["medicalHistoryArchive"]?.let { importMedicalHistoryArchive(context, it) }
                             incoming["importedAttachmentArchive"]?.let { pl.gov.obywatel.android.data.ImportedDocumentStore.importArchive(context, it) }
                             LegitimacyPreviewSettingsStore.importAll(context, incoming)
                             val importedPlacements = incoming.filterKeys { it.startsWith("dp_") }
