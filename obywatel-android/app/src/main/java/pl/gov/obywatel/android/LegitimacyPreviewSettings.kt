@@ -70,6 +70,7 @@ internal data class LegitimacyPreviewSettings(
     val crestAssetId: String = "",
     val flagAssetId: String = "",
     val backgroundAssetId: String = "",
+    val logoAssetId: String = "",
     val crestCaption: String = "",
     val captionPosition: String = "Pod herbem",
     val orientation: String = "PIONOWA",
@@ -87,6 +88,7 @@ private object LegitimacyPreviewSettingsStore {
             crestAssetId = p.getString("${key}_crest", "").orEmpty(),
             flagAssetId = p.getString("${key}_flag", "").orEmpty(),
             backgroundAssetId = p.getString("${key}_background", "").orEmpty(),
+            logoAssetId = p.getString("${key}_logo", "").orEmpty(),
             crestCaption = p.getString("${key}_caption", "").orEmpty(),
             captionPosition = p.getString("${key}_caption_position", "Pod herbem").orEmpty(),
             orientation = p.getString("${key}_orientation", "PIONOWA").orEmpty(),
@@ -101,6 +103,7 @@ private object LegitimacyPreviewSettingsStore {
             .putString("${key}_crest", value.crestAssetId)
             .putString("${key}_flag", value.flagAssetId)
             .putString("${key}_background", value.backgroundAssetId)
+            .putString("${key}_logo", value.logoAssetId)
             .putString("${key}_caption", value.crestCaption)
             .putString("${key}_caption_position", value.captionPosition)
             .putString("${key}_orientation", value.orientation)
@@ -127,6 +130,7 @@ internal fun LegitimacyPreviewSettingsPanel(
     var crestMenu by remember { mutableStateOf(false) }
     var flagMenu by remember { mutableStateOf(false) }
     var backgroundMenu by remember { mutableStateOf(false) }
+    var logoMenu by remember { mutableStateOf(false) }
     var positionMenu by remember { mutableStateOf(false) }
     var importKind by remember { mutableStateOf("Herb") }
     var message by remember { mutableStateOf("") }
@@ -300,8 +304,9 @@ internal fun LegitimacyHeraldry(
     val selectedFlag = remember(settings.flagAssetId, assignedFlag) {
         settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedFlag
     }
-    val assignedLogo = remember(documentKey) {
-        DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
+    val assignedLogo = remember(settings.logoAssetId, documentKey) {
+        settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, "", "Logo")
     }
     Column(
         Modifier.fillMaxWidth(),
