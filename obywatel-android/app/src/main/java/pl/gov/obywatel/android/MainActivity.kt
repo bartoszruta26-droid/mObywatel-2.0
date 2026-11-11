@@ -3263,6 +3263,9 @@ private fun CredentialCardPreview(
                 ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
         )
     }
+    val brandLogo = brand.first
+    val brandCrest = brand.second
+    val brandFlag = brand.third
     val qrPayload = remember(title, number, institution, validUntil) {
         listOf("CREDENTIAL", title, number, institution, validUntil).joinToString("|")
     }
@@ -3293,8 +3296,8 @@ private fun CredentialCardPreview(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    if (brand.first != null) {
-                        Image(brand.first.asImageBitmap(), contentDescription = "Logo instytucji",
+                    if (brandLogo != null) {
+                        Image(brandLogo.asImageBitmap(), contentDescription = "Logo instytucji",
                             modifier = Modifier.size(34.dp), contentScale = ContentScale.Fit)
                     } else {
                         Icon(Icons.Filled.AccountBalance, contentDescription = "Miejsce na logo instytucji",
@@ -3306,12 +3309,12 @@ private fun CredentialCardPreview(
                         Text(title, color = accent, fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    if (brand.third != null) {
-                        Image(brand.third.asImageBitmap(), contentDescription = "Flaga",
+                    if (brandFlag != null) {
+                        Image(brandFlag.asImageBitmap(), contentDescription = "Flaga",
                             modifier = Modifier.width(36.dp).height(24.dp), contentScale = ContentScale.Fit)
                     }
-                    if (brand.second != null) {
-                        Image(brand.second.asImageBitmap(), contentDescription = "Herb lub godło instytucji",
+                    if (brandCrest != null) {
+                        Image(brandCrest.asImageBitmap(), contentDescription = "Herb lub godło instytucji",
                             modifier = Modifier.size(31.dp), contentScale = ContentScale.Fit)
                     }
                 }
