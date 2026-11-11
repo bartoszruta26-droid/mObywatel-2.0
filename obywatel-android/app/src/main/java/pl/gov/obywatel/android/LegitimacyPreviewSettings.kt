@@ -603,7 +603,7 @@ internal fun LegitimacyHeraldry(
             Image(
                 selectedFlag.asImageBitmap(),
                 contentDescription = "Flaga dokumentu",
-                modifier = Modifier.fillMaxWidth(0.78f).height(19.dp),
+                modifier = Modifier.fillMaxWidth(0.78f).height(19.dp).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
         }
@@ -616,7 +616,7 @@ internal fun LegitimacyHeraldry(
                 Image(
                     selectedCrest.asImageBitmap(),
                     contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(31.dp),
+                    modifier = Modifier.size(31.dp).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
                     contentScale = androidx.compose.ui.layout.ContentScale.Fit
                 )
             }
@@ -638,13 +638,32 @@ internal fun LegitimacyHeraldry(
 private fun CredentialFieldValue(
     item: Triple<String, String, String>,
     labelFontSize: androidx.compose.ui.unit.TextUnit,
-    valueFontSize: androidx.compose.ui.unit.TextUnit
+    valueFontSize: androidx.compose.ui.unit.TextUnit,
+    settings: LegitimacyPreviewSettings
 ) {
+    val family = when (settings.fontFamily) {
+        "serif" -> FontFamily.Serif
+        "mono" -> FontFamily.Monospace
+        "cursive" -> FontFamily.Cursive
+        else -> FontFamily.SansSerif
+    }
     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(item.second.uppercase(), fontSize = labelFontSize,
-            fontWeight = FontWeight.Medium, maxLines = 1)
-        Text(item.third.ifBlank { "—" }, fontSize = valueFontSize,
-            fontWeight = FontWeight.SemiBold, maxLines = 2)
+        Text(item.second.uppercase(), fontSize = labelFontSize * settings.labelScale,
+            fontFamily = family, fontWeight = FontWeight.Medium, maxLines = 1,
+            modifier = Modifier.graphicsLayer {
+                rotationZ = settings.labelRotation
+                translationX = settings.labelOffsetX * density
+                translationY = settings.labelOffsetY * density
+            })
+        Text(item.third.ifBlank { "—" }, fontSize = valueFontSize * settings.valueScale,
+            fontFamily = family, fontWeight = FontWeight.SemiBold, maxLines = 2,
+            modifier = Modifier.graphicsLayer {
+                scaleX = settings.valueScale
+                scaleY = settings.valueScale
+                rotationZ = settings.valueRotation
+                translationX = settings.valueOffsetX * density
+                translationY = settings.valueOffsetY * density
+            })
     }
 }
 
@@ -728,7 +747,7 @@ internal fun UnifiedCredentialCard(
                         Image(
                             background.asImageBitmap(),
                             contentDescription = "Tło dokumentu",
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
                             contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
                             alpha = 0.48f
                         )
@@ -761,7 +780,7 @@ internal fun UnifiedCredentialCard(
                                 Image(
                                     logo.asImageBitmap(),
                                     contentDescription = "Logo wystawcy",
-                                    modifier = Modifier.size((cardWidth * 0.13f).coerceIn(30.dp, 46.dp)),
+                                    modifier = Modifier.size((cardWidth * 0.13f).coerceIn(30.dp, 46.dp)).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
                                     contentScale = androidx.compose.ui.layout.ContentScale.Fit
                                 )
                             }
@@ -787,7 +806,7 @@ internal fun UnifiedCredentialCard(
                                             Image(
                                                 photo.asImageBitmap(),
                                                 contentDescription = "Fotografia posiadacza",
-                                                modifier = Modifier.fillMaxSize(),
+                                                modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
                                                 contentScale = androidx.compose.ui.layout.ContentScale.Crop
                                             )
                                         } else {
@@ -810,7 +829,9 @@ internal fun UnifiedCredentialCard(
                                 Text(
                                     holderName.ifBlank { "IMIĘ I NAZWISKO" },
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = holderSize,
+                                    fontSize = holderSize * settings.valueScale,
+                                    fontFamily = when (settings.fontFamily) { "serif" -> FontFamily.Serif; "mono" -> FontFamily.Monospace; "cursive" -> FontFamily.Cursive; else -> FontFamily.SansSerif },
+                                    modifier = Modifier.graphicsLayer { rotationZ = settings.valueRotation; translationX = settings.valueOffsetX * density; translationY = settings.valueOffsetY * density },
                                     maxLines = 2
                                 )
                                 if (horizontal) {
@@ -823,7 +844,7 @@ internal fun UnifiedCredentialCard(
                                             verticalArrangement = Arrangement.spacedBy(2.dp)
                                         ) {
                                             visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach {
-                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize)
+                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
                                             }
                                         }
                                         Column(
