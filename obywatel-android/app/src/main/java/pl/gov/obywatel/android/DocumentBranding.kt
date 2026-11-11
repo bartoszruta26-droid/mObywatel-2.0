@@ -380,10 +380,10 @@ private fun isChurchDocument(title: String): Boolean {
     return listOf("kościel", "kosciel", "papiesk", "papież", "papiez", "misjon", "sakrament", "kanonicz", "biskup", "parafi", "szafarz", "liturg", "święce", "swiece", "konsekr", "jurysdykc", "diecez", "ekumen").any { t.contains(it) }
 }
 
-private fun defaultDocumentFlag(context: Context, title: String): Bitmap? =
+internal fun defaultDocumentFlag(context: Context, title: String): Bitmap? =
     BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
 
-private fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
+internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
     val assetId = when {
         isFamilyDocument(title) -> "builtin_rodu_dab"
@@ -398,7 +398,7 @@ private fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
     return selected ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
 }
 
-private fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
+internal fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
     val normalized = title.lowercase(Locale.ROOT)
     val resourceId = when {
         // Dokumenty rodowe i rodzinne.
