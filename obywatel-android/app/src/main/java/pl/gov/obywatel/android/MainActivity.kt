@@ -2379,10 +2379,14 @@ private fun OwdDocumentArtworkCard(
     subtitle: String,
     holder: String,
     details: String,
-    privateRecord: Boolean
+    privateRecord: Boolean,
+    credentialFields: List<Triple<String, String, String>> = emptyList()
 ) {
     val documentKey = when {
         title.contains("rodow", true) -> "family"
+        title.contains("tożsamo", true) || title.contains("tozsamos", true) -> "identity"
+        title.contains("paszport", true) -> "passport"
+        title.contains("niepełnospraw", true) || title.contains("orzeczen", true) -> "disability"
         title.contains("kościel", true) || title.contains("kosciel", true) -> "church"
         title.contains("cywil", true) -> "civil"
         title.contains("podmiot", true) || title.contains("firm", true) -> "entity"
@@ -2392,7 +2396,7 @@ private fun OwdDocumentArtworkCard(
     if (settings.showCard) {
         UnifiedCredentialCard(
             documentKey = documentKey, title = title, subtitle = subtitle, holderName = holder,
-            fields = listOf(Triple("details", "DANE DOKUMENTU", details)), settings = settings,
+            fields = credentialFields.ifEmpty { listOf(Triple("details", "DANE DOKUMENTU", details)) }, settings = settings,
             fallbackBackgroundRes = imageRes
         )
     }
@@ -2571,7 +2575,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     subtitle = "Ewidencja rodowa",
                     holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane posiadacza" },
                     details = "Nr: ${fields["familyDocNumber"].orEmpty().ifBlank { "—" }} • Ród: ${fields["familyName"].orEmpty().ifBlank { "—" }}",
-                    privateRecord = true
+                    privateRecord = true,
+                    credentialFields = listOf(
+                        Triple("familyName", "NAZWA RODU", fields["familyName"].orEmpty()),
+                        Triple("familyRole", "MIEJSCE W RODZIE", fields["familyRole"].orEmpty()),
+                        Triple("familyDocNumber", "NUMER DOKUMENTU", fields["familyDocNumber"].orEmpty()),
+                        Triple("familyIssueDate", "DATA SPORZĄDZENIA", fields["familyIssueDate"].orEmpty()),
+                        Triple("familyExpiryDate", "DATA AKTUALIZACJI", fields["familyExpiryDate"].orEmpty())
+                    )
                 )
             }
         }
@@ -2613,7 +2624,16 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     subtitle = "Dane identyfikacyjne",
                     holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Dane użytkownika" },
                     details = "Nr: ${fields["idNumber"].orEmpty().ifBlank { "—" }}",
-                    privateRecord = true
+                    privateRecord = true,
+                    credentialFields = listOf(
+                        Triple("firstNames", "IMIONA", fields["firstNames"].orEmpty()),
+                        Triple("lastName", "NAZWISKO", fields["lastName"].orEmpty()),
+                        Triple("birthDate", "DATA URODZENIA", fields["birthDate"].orEmpty()),
+                        Triple("pesel", "PESEL", fields["pesel"].orEmpty()),
+                        Triple("idNumber", "NUMER DOKUMENTU", fields["idNumber"].orEmpty()),
+                        Triple("idIssueDate", "DATA WYDANIA", fields["idIssueDate"].orEmpty()),
+                        Triple("idExpiryDate", "DATA WAŻNOŚCI", fields["idExpiryDate"].orEmpty())
+                    )
                 )
                 AdditionalInformationSection("Źródła i weryfikacja danych identyfikacyjnych", fields, "idExtra", "Wskaż dokument źródłowy i datę jego sprawdzenia. Sam wpis użytkownika nie stanowi potwierdzenia urzędowego.")
             }
@@ -2854,7 +2874,15 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     subtitle = "Dane dokumentu podróży",
                     holder = fields["passportHolderNames"].orEmpty().ifBlank { "Dane posiadacza" },
                     details = "Nr paszportu: ${fields["passportNumber"].orEmpty().ifBlank { "—" }}",
-                    privateRecord = true
+                    privateRecord = true,
+                    credentialFields = listOf(
+                        Triple("passportHolderNames", "IMIĘ I NAZWISKO", fields["passportHolderNames"].orEmpty()),
+                        Triple("passportNumber", "NUMER PASZPORTU", fields["passportNumber"].orEmpty()),
+                        Triple("passportCitizenship", "OBYWATELSTWO", fields["passportCitizenship"].orEmpty()),
+                        Triple("birthDate", "DATA URODZENIA", fields["birthDate"].orEmpty()),
+                        Triple("passportIssueDate", "DATA WYDANIA", fields["passportIssueDate"].orEmpty()),
+                        Triple("passportExpiryDate", "DATA WAŻNOŚCI", fields["passportExpiryDate"].orEmpty())
+                    )
                 )
                 AdditionalInformationSection("Informacje dodatkowe — dane paszportowe", fields, "passportExtra", "Jest to ewidencja danych wpisanych przez użytkownika, a nie dokument paszportowy ani jego cyfrowy odpowiednik. Nie odtwarzamy strefy MRZ, kodów ani zabezpieczeń dokumentu.")
             }
@@ -2903,7 +2931,14 @@ private fun DisabilityDecisionPreview(fields: Map<String, String>) {
         subtitle = label,
         holder = fields["disabilityPersonName"].orEmpty().ifBlank { "Dane osoby" },
         details = "Nr: ${fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" }} • Stopień: ${fields["disabilityDegree"].orEmpty().ifBlank { "—" }}",
-        privateRecord = true
+        privateRecord = true,
+        credentialFields = listOf(
+            Triple("disabilityDecisionType", "RODZAJ ORZECZENIA", fields["disabilityDecisionType"].orEmpty()),
+            Triple("disabilityDecisionNumber", "NUMER ORZECZENIA", fields["disabilityDecisionNumber"].orEmpty()),
+            Triple("disabilityDegree", "STOPIEŃ", fields["disabilityDegree"].orEmpty()),
+            Triple("disabilityValidity", "OKRES OBOWIĄZYWANIA", fields["disabilityValidity"].orEmpty()),
+            Triple("disabilityIssuerName", "WYSTAWCA", fields["disabilityIssuerName"].orEmpty())
+        )
     )
 }
 
