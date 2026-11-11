@@ -3480,6 +3480,8 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
         }
     }
     if (settings.showReverse) LegitimacyReverseSide("Legitymacja poselska — rewers", authority, cardNumber, "")
+    } else {
+        Text("Podgląd całej legitymacji jest wyłączony w ustawieniach powyżej.", color = Muted, style = MaterialTheme.typography.bodySmall)
     }
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F5F8))) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
