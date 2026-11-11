@@ -348,7 +348,7 @@ internal object DocumentBrandStore {
             require(kind in kinds) { "Nieznana kategoria zasobu: $kind" }
             val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
             require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Zasób przekracza limit 12 MB." }
-            if (kind in imageKinds) decodeImage(bytes).recycle()
+            if (kind in imageKinds && item.optString("mimeType") != "application/pdf") decodeImage(bytes).recycle()
             val header = String(bytes, 0, minOf(bytes.size, 512), Charsets.UTF_8)
             val extension = when {
                 header.contains("<svg", true) -> ".svg.enc"
@@ -433,7 +433,7 @@ internal object DocumentBrandStore {
             out.toByteArray()
         } ?: error("Nie można odczytać pliku.")
         require(bytes.isNotEmpty()) { "Wybrany zasób jest pusty." }
-        if (kind in imageKinds) decodeImage(bytes).recycle()
+        if (kind in imageKinds && item.optString("mimeType") != "application/pdf") decodeImage(bytes).recycle()
         val mime = context.contentResolver.getType(uri).orEmpty()
         importBytes(context, owner, kind, label, bytes, mimeType = mime)
     }
