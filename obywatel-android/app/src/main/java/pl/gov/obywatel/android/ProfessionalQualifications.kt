@@ -87,7 +87,7 @@ private data class QualificationFile(
     val size: Long
 )
 
-internal object ProfessionalCredentialStore {
+private object ProfessionalCredentialStore {
     private const val KEY_ALIAS = "obywatel_professional_credentials_aes"
     private const val INDEX = "professional-credentials.enc"
     private const val MAX_FILE = 25 * 1024 * 1024
@@ -283,6 +283,9 @@ internal object ProfessionalCredentialStore {
         return name.take(180)
     }
 }
+
+internal fun exportProfessionalQualificationArchive(context: Context): String = ProfessionalCredentialStore.exportArchive(context)
+internal fun importProfessionalQualificationArchive(context: Context, raw: String) = ProfessionalCredentialStore.importArchive(context, raw)
 
 @Composable
 internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
