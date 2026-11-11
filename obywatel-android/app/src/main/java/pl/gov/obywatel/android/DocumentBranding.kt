@@ -615,7 +615,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
         assignments.forEach { assignment ->
             val asset = assets.firstOrNull { it.id == assignment.assetId }
             Row(Modifier.fillMaxWidth(), horizontalArrangement=Arrangement.SpaceBetween) {
-                Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall, modifier=Modifier.weight(1f))
+                Text("Przypisanie: ${documentBrandTargets.firstOrNull { it.first==assignment.documentType }?.second ?: assignment.documentType} · ${if (assignment.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else assignment.kind} · ${asset?.label ?: "brak zasobu"}", style=MaterialTheme.typography.bodySmall, modifier=Modifier.weight(1f))
                 TextButton(onClick={ DocumentBrandStore.unassign(context,assignment.documentType,assignment.kind); assignments=DocumentBrandStore.assignments(context) }) { Text("Odłącz") }
             }
         }
@@ -625,12 +625,12 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
                 Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement=Arrangement.spacedBy(10.dp)) {
                     if (assetPreview != null) Image(assetPreview.asImageBitmap(), contentDescription=asset.label, modifier=Modifier.size(54.dp), contentScale=ContentScale.Fit)
                     Column(Modifier.weight(1f), verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                    Text(asset.kind,fontWeight=FontWeight.SemiBold)
+                    Text(if (asset.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else asset.kind,fontWeight=FontWeight.SemiBold)
                     Text(asset.owner+" · "+asset.label,style=MaterialTheme.typography.bodySmall)
                     Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick={
                             runCatching { DocumentBrandStore.assign(context,target,asset.kind,asset.id) }
-                                .onSuccess { assignments=DocumentBrandStore.assignments(context); status="Przypisano ${asset.kind} do wybranego rodzaju dokumentu." }
+                                .onSuccess { assignments=DocumentBrandStore.assignments(context); status="Przypisano ${if (asset.kind == "Wzór podpisu odręcznego") "Podpis odręczny" else asset.kind} do wybranego rodzaju dokumentu." }
                                 .onFailure { status="Nie udało się przypisać zasobu: ${it.message}" }
                         }) { Text("Przypisz do dokumentu") }
                         if (asset.file.startsWith("builtin:")) {
