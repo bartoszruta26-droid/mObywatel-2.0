@@ -184,7 +184,7 @@ internal data class LegitimacyPreviewSettings(
     val showBackground: Boolean = true
 )
 
-private object LegitimacyPreviewSettingsStore {
+internal object LegitimacyPreviewSettingsStore {
     private const val PREFS = "legitimacy_preview_preferences"
 
     fun load(context: Context, key: String): LegitimacyPreviewSettings {
@@ -229,6 +229,39 @@ private object LegitimacyPreviewSettingsStore {
             .putBoolean("${key}_show_logo", value.showLogo)
             .putBoolean("${key}_show_background", value.showBackground)
             .apply()
+    }
+    
+    /** Serializes every per-document layout preference into the vCard archive. */
+    fun exportAll(context: Context): Map<String, String> {
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return preferences.all.mapNotNull { (key, value) ->
+            val encoded = when (value) {
+                is Boolean -> "b:" + value.toString()
+                is String -> "s:" + value
+                is Set<*> -> "a:" + org.json.JSONArray(value.filterIsInstance<String>()).toString()
+                else -> null
+            }
+            encoded?.let { "credentialSetting_$key" to it }
+        }.toMap()
+    }
+
+    /** Restores only recognized credential-setting values; unrelated profile fields are untouched. */
+    fun importAll(context: Context, values: Map<String, String>) {
+        val editor = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        values.filterKeys { it.startsWith("credentialSetting_") }.forEach { (archiveKey, encoded) ->
+            val key = archiveKey.removePrefix("credentialSetting_")
+            require(key.matches(Regex("[A-Za-z0-9_-]{1,96}"))) { "Nieprawidłowy klucz ustawienia legitymacji." }
+            when {
+                encoded.startsWith("b:") -> editor.putBoolean(key, encoded.removePrefix("b:").toBooleanStrict())
+                encoded.startsWith("s:") -> editor.putString(key, encoded.removePrefix("s:"))
+                encoded.startsWith("a:") -> {
+                    val json = org.json.JSONArray(encoded.removePrefix("a:"))
+                    editor.putStringSet(key, (0 until json.length()).map { json.getString(it) }.toSet())
+                }
+                else -> error("Nieobsługiwany format ustawienia legitymacji: $key")
+            }
+        }
+        check(editor.commit()) { "Nie udało się przywrócić ustawień legitymacji." }
     }
 }
 
