@@ -161,6 +161,17 @@ internal fun LegitimacyPreviewSettingsPanel(
         }.onFailure { message = "Nie udało się wczytać flagi: ${it.message ?: "błąd"}" }
     }
 
+    val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) runCatching {
+            DocumentBrandStore.import(context, uri, "legitimacy:${documentKey}", "Logo", "Logo wystawcy")
+        }.onSuccess {
+            assets = DocumentBrandStore.list(context)
+            val imported = assets.lastOrNull { it.owner == "legitimacy:${documentKey}" && it.kind == "Logo" }
+            if (imported != null) update(settings.copy(logoAssetId = imported.id))
+            message = "Wczytano logo. Ustawienie zapisano."
+        }.onFailure { message = "Nie udało się wczytać logo." }
+    }
+
     val backgroundPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
             DocumentBrandStore.import(context, uri, "legitimacy:$documentKey", "Tło dokumentu", "Tło legitymacji")
@@ -257,6 +268,23 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             OutlinedButton(onClick = { flagPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własną flagę")
+            }
+            Text("Logo wystawcy", fontWeight = FontWeight.SemiBold)
+            Box {
+                OutlinedButton(onClick = { logoMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(assets.firstOrNull { it.id == settings.logoAssetId }?.label ?: "Wybierz logo z katalogu")
+                }
+                DropdownMenu(expanded = logoMenu, onDismissRequest = { logoMenu = false }) {
+                    DropdownMenuItem(text = { Text("Brak własnego logo") }, onClick = { update(settings.copy(logoAssetId = "")); logoMenu = false })
+                    assets.filter { it.kind == "Logo" }.forEach { asset ->
+                        DropdownMenuItem(text = { Text(asset.label + " · " + asset.owner) }, onClick = {
+                            update(settings.copy(logoAssetId = asset.id)); logoMenu = false
+                        })
+                    }
+                }
+            }
+            OutlinedButton(onClick = { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Wczytaj własne logo")
             }
             Text("Tło legitymacji", fontWeight = FontWeight.SemiBold)
             Box {
