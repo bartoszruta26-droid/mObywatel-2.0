@@ -630,6 +630,14 @@ internal fun UnifiedCredentialCard(
                 val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
                 val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
                 val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
+                val cardWidth = maxWidth
+                val horizontalPadding = (cardWidth * 0.05f).coerceIn(8.dp, 20.dp)
+                val verticalPadding = (cardWidth * 0.05f).coerceIn(8.dp, 20.dp)
+                val photoWidth = (cardWidth * if (horizontal) 0.31f else 0.33f).coerceAtLeast(46.dp)
+                val photoHeight = photoWidth * (45f / 35f)
+                val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
+                val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
+                val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
                 Box(Modifier.fillMaxSize()) {
                     if (settings.showBackground && background != null) {
                         Image(
