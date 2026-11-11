@@ -282,6 +282,22 @@ internal fun AssignedDocumentBrandPreview(documentType: String, owner: String, t
     }
 }
 
+private fun documentTypeForTitle(title: String): String {
+    val value = title.lowercase(Locale.ROOT)
+    return when {
+        value.contains("paszport") -> "passport"
+        value.contains("rodow") || value.contains("rodu") || value.contains("rodzinn") -> "family"
+        value.contains("poselsk") || value.contains("parlament") -> "parliament"
+        value.contains("kursant") || value.contains("uczestnika kurs") || value.contains("kursu") -> "training"
+        value.contains("student") || value.contains("uczn") || value.contains("szkoln") -> "student"
+        value.contains("kościel") || value.contains("kosciel") || value.contains("misjon") -> "church"
+        value.contains("zawod") || value.contains("kwalifikac") -> "professional"
+        value.contains("fundac") || value.contains("stowarz") || value.contains("podmiot") || value.contains("organizac") -> "entity"
+        value.contains("tożsamo") || value.contains("tozsamos") || value.contains("dowód") || value.contains("dowod") -> "identity"
+        else -> "official"
+    }
+}
+
 private fun isFamilyDocument(title: String): Boolean {
     val t = title.lowercase(Locale.ROOT)
     return t.contains("rodow") || t.contains("rodu") || t.contains("rodzinn")
@@ -397,27 +413,36 @@ internal fun DocumentIdentityTemplate(
     values: Map<String, String>,
     owner: String = "",
     photoOverride: Bitmap? = null,
-    validity: String = values.entries.firstOrNull { it.key.contains("status", true) || it.key.contains("waż", true) }?.value.orEmpty()
+    validity: String = values.entries.firstOrNull { it.key.contains("status", true) || it.key.contains("waż", true) }?.value.orEmpty(),
+    documentType: String = documentTypeForTitle(title),
+    showReverse: Boolean = false,
+    assetRevision: Int = 0
 ) {
     val context = LocalContext.current
     val qrPayload = remember(title, values) { buildString { append("DEMO|"); append(title); values.forEach { (key, value) -> append("|").append(key).append("=").append(value) } } }
     val qrBitmap = remember(qrPayload) { createDocumentQr(qrPayload) }
     val effectiveOwner = owner.ifBlank { values.entries.firstOrNull { it.key.contains("wystawc", true) || it.key.contains("nazwa", true) || it.key.contains("podmiot", true) || it.key.contains("kościół", true) || it.key.contains("rodu", true) }?.value.orEmpty() }
-    val photo = remember(effectiveOwner, photoOverride) { photoOverride ?: DocumentBrandStore.image(context, effectiveOwner, "Fotografia") }
-    val flag = remember(effectiveOwner, title) { DocumentBrandStore.image(context, effectiveOwner, "Flaga") ?: defaultDocumentFlag(context, title) }
-    val emblem = remember(effectiveOwner, title) {
-        val custom = if (isFamilyDocument(title) || isChurchDocument(title)) {
-            DocumentBrandStore.image(context, effectiveOwner, "Herb")
-                ?: DocumentBrandStore.image(context, effectiveOwner, "Godło")
-                ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
-        } else {
-            DocumentBrandStore.image(context, effectiveOwner, "Godło")
-                ?: DocumentBrandStore.image(context, effectiveOwner, "Herb")
-                ?: DocumentBrandStore.image(context, effectiveOwner, "Logo")
-        }
-        custom ?: defaultDocumentEmblem(context, title)
+    val photo = remember(effectiveOwner, photoOverride, assetRevision) {
+        photoOverride ?: DocumentBrandStore.image(context, effectiveOwner, "Fotografia")
     }
-    val background = remember(effectiveOwner, title) { DocumentBrandStore.image(context, effectiveOwner, "Tło dokumentu") ?: defaultDocumentBackground(context, title) }
+    val flag = remember(effectiveOwner, title, documentType, assetRevision) {
+        DocumentBrandStore.imageForDocument(context, documentType, effectiveOwner, "Flaga")
+            ?: defaultDocumentFlag(context, title)
+    }
+    val emblem = remember(effectiveOwner, title, documentType, assetRevision) {
+        val kinds = if (isFamilyDocument(title) || isChurchDocument(title)) {
+            listOf("Herb", "Godło", "Logo")
+        } else {
+            listOf("Godło", "Herb", "Logo")
+        }
+        kinds.firstNotNullOfOrNull { kind ->
+            DocumentBrandStore.imageForDocument(context, documentType, effectiveOwner, kind)
+        } ?: defaultDocumentEmblem(context, title)
+    }
+    val background = remember(effectiveOwner, title, documentType, assetRevision) {
+        DocumentBrandStore.imageForDocument(context, documentType, effectiveOwner, "Tło dokumentu")
+            ?: defaultDocumentBackground(context, title)
+    }
     val now = remember { SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date()) }
     val name = values.entries.firstOrNull { it.key.contains("imię", true) || it.key.contains("nazw", true) || it.key.contains("posiadacz", true) || it.key.contains("osoba", true) }?.value.orEmpty()
     val number = values.entries.firstOrNull { it.key.contains("numer", true) || it.key.contains("znak", true) || it.key.contains("nr ", true) }?.value.orEmpty()
@@ -473,6 +498,36 @@ internal fun DocumentIdentityTemplate(
                     }
                     Spacer(Modifier.weight(1f))
                     Text("WZÓR DOKUMENTU / EWIDENCJA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+        if (showReverse) {
+            Box(
+                Modifier.fillMaxWidth().aspectRatio(1.586f).clip(RoundedCornerShape(14.dp))
+                    .border(1.dp, Color(0xFFD5DDE5), RoundedCornerShape(14.dp))
+                    .background(Color(0xFFF4F6F8))
+            ) {
+                if (background != null) {
+                    Image(background.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.24f)
+                }
+                Row(
+                    Modifier.fillMaxSize().padding(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("REWERS DOKUMENTU", color = Color(0xFF173B58), fontWeight = FontWeight.Bold)
+                        Text("Wystawca: " + effectiveOwner.ifBlank { "Nie wskazano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
+                        Text("Numer: " + number.ifBlank { "Nie podano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
+                        Text("Ważny do: " + expiry.ifBlank { "Nie podano" }, color = Color(0xFF34495E), style = MaterialTheme.typography.labelSmall)
+                        Text("Dane demonstracyjne. Kod nie potwierdza autentyczności ani statusu prawnego dokumentu.", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    }
+                    if (qrBitmap != null) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR na rewersie dokumentu", modifier = Modifier.size(104.dp))
+                            Text("KOD DEMONSTRACYJNY", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
             }
         }
