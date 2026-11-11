@@ -408,7 +408,7 @@ internal object DocumentBrandStore {
         require(kind in kinds) { "Nieznany rodzaj zasobu." }
         require(assetId.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu." }
         require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Plik zasobu przekracza limit 12 MB." }
-        if (kind in imageKinds) decodeImage(bytes).recycle()
+        if (kind in imageKinds && mimeType != "application/pdf") decodeImage(bytes).recycle()
         val header = String(bytes, 0, minOf(bytes.size, 512), Charsets.UTF_8)
         val extension = when {
             header.contains("<svg", true) -> ".svg.enc"
