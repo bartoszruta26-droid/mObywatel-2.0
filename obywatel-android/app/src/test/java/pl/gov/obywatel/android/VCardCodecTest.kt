@@ -134,6 +134,31 @@ END:VCARD
     }
 
     @Test
+    fun archiveRoundTripsAlternativeSpouseChildrenAndFamilyPhotosWithCredentialSettings() {
+        fun photo(seed: Int): String = java.util.Base64.getEncoder().encodeToString(
+            byteArrayOf(0xFF.toByte(), 0xD8.toByte(), seed.toByte(), 0x01, 0x02)
+        )
+        val fields = linkedMapOf(
+            "firstNames" to "Jan",
+            "lastName" to "Kowalski",
+            "photo" to photo(1),
+            "photoAlternative1" to photo(2),
+            "photoAlternative2" to photo(3),
+            "wifePhoto" to photo(4),
+            "child1Photo" to photo(5),
+            "child2Photo" to photo(6),
+            "familyMember1Photo" to photo(7),
+            "familyMember2Photo" to photo(8),
+            "passportNumber" to "PA1234567",
+            "trainingCourseName" to "Kurs kwalifikacyjny",
+            "cs_identity_orientation" to "s:POZIOMA",
+            "cs_identity_visible_fields" to "a:[\\"firstNames\\",\\"lastName\\",\\"idNumber\\"]",
+            "dp_identity" to "dashboard"
+        )
+        assertEquals(fields, VCardCodec.decodeForImport(VCardCodec.encodeArchive(fields)))
+    }
+
+    @Test
     fun owdRecordRoundTripsThroughVCardExtensions() {
         val record = ShareableRecord(
             schema = OwdSchemaRegistry.DISABILITY_STATUS,
