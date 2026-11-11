@@ -175,6 +175,7 @@ internal object DocumentBrandStore {
             documentType == "entity" && listOf("koś", "kosci", "parafi", "wspólnot").any { lower.contains(it) } -> "organization_church"
             documentType == "entity" && listOf("spół", "spol", "firma", "przedsięb").any { lower.contains(it) } -> "organization_company"
             documentType == "entity" && listOf("stowarz", "organizac").any { lower.contains(it) } -> "organization_association"
+            documentType == "family" -> "organization_family"
             else -> ""
         }
         return listOf(documentType, role, when {
@@ -324,9 +325,9 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, modifier: Modifier = Modifier, documentType: String = "official") {
+internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, modifier: Modifier = Modifier, documentType: String = "official", ownerDefault: String = "") {
     val context= LocalContext.current
-    var owner by remember { mutableStateOf("") }
+    var owner by remember(title, ownerDefault) { mutableStateOf(ownerDefault) }
     var status by remember { mutableStateOf("") }
     val create= rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         if(uri!=null) runCatching { DocumentPdfRenderer.write(context,uri,title,owner,documentType,values) }
