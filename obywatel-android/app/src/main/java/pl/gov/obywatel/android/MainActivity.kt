@@ -785,7 +785,9 @@ private fun HomeScreen() {
                                     "professionalQualificationArchive" to exportProfessionalQualificationArchive(context),
                                     "familyHealthArchive" to exportFamilyHealthArchive(context),
                                     "medicalHistoryArchive" to exportMedicalHistoryArchive(context),
-                                    "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context)
+                                    "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context),
+                                    "identityDocumentsArchive" to pl.gov.obywatel.android.ui.identity.exportIdentityDocumentsArchive(context),
+                                    "localRegistryArchive" to pl.gov.obywatel.android.ui.registry.exportLocalRegistryArchive(context)
                                 )
                             runCatching {
                                 require(exportSnapshot.isNotEmpty()) {
@@ -1054,7 +1056,8 @@ private fun HomeScreen() {
                                     it !in setOf(
                                         "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
-                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive"
+                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive",
+                                        "identityDocumentsArchive", "localRegistryArchive"
                                     )
                             }
                             DemoIdentityStore.save(context, current.toMutableMap().apply { putAll(profileValues) })
@@ -1067,6 +1070,8 @@ private fun HomeScreen() {
                             incoming["familyHealthArchive"]?.let { importFamilyHealthArchive(context, it) }
                             incoming["medicalHistoryArchive"]?.let { importMedicalHistoryArchive(context, it) }
                             incoming["importedAttachmentArchive"]?.let { pl.gov.obywatel.android.data.ImportedDocumentStore.importArchive(context, it) }
+                            incoming["identityDocumentsArchive"]?.let { pl.gov.obywatel.android.ui.identity.importIdentityDocumentsArchive(context, it) }
+                            incoming["localRegistryArchive"]?.let { pl.gov.obywatel.android.ui.registry.importLocalRegistryArchive(context, it) }
                             LegitimacyPreviewSettingsStore.importAll(context, incoming)
                             val importedPlacements = incoming.filterKeys { it.startsWith("dp_") }
                                 .mapKeys { it.key.removePrefix("dp_") }
@@ -1087,7 +1092,8 @@ private fun HomeScreen() {
                                     it in setOf(
                                         "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
-                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive"
+                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive",
+                                        "identityDocumentsArchive", "localRegistryArchive"
                                     )
                             }
                             val changed = profileValues.keys.count { persisted[it] == profileValues[it] } + auxiliaryCount
