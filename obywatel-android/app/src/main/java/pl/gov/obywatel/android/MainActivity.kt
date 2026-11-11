@@ -3199,6 +3199,7 @@ private fun CredentialCardPreview(
     title: String,
     holder: String,
     institution: String,
+    documentType: String,
     number: String,
     program: String,
     status: String,
@@ -3220,11 +3221,12 @@ private fun CredentialCardPreview(
             }
         }.getOrNull()
     }
-    val brand = remember(institution) {
+    val brand = remember(institution, documentType) {
         Triple(
-            DocumentBrandStore.image(context, institution, "Logo"),
-            DocumentBrandStore.image(context, institution, "Herb") ?: DocumentBrandStore.image(context, institution, "Godło"),
-            DocumentBrandStore.image(context, institution, "Flaga")
+            DocumentBrandStore.imageForDocument(context, documentType, institution, "Logo"),
+            DocumentBrandStore.imageForDocument(context, documentType, institution, "Herb")
+                ?: DocumentBrandStore.imageForDocument(context, documentType, institution, "Godło"),
+            DocumentBrandStore.imageForDocument(context, documentType, institution, "Flaga")
                 ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_polish_flag)
         )
     }
@@ -3397,6 +3399,7 @@ private fun TrainingParticipantCard(fields: Map<String, String>, photoBase64: St
         title = "LEGITYMACJA UCZESTNIKA KURSU",
         holder = listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" "),
         institution = fields["trainingInstitution"].orEmpty(),
+        documentType = "training",
         number = fields["trainingCardNumber"].orEmpty(),
         program = fields["trainingCourseName"].orEmpty(),
         status = fields["trainingStatus"].orEmpty(),
@@ -3423,6 +3426,7 @@ private fun StudentCardPreview(fields: Map<String, String>, photoBase64: String)
             listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
         },
         institution = fields["studentUniversity"].orEmpty(),
+        documentType = "student",
         number = fields["studentCardNumber"].orEmpty(),
         program = fields["studentProgramme"].orEmpty(),
         status = fields["studentStatus"].orEmpty(),
