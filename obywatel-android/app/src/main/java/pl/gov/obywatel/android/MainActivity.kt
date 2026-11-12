@@ -1501,7 +1501,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                                 },
                                                 onClick = { openService(service.title) }
                                             )
-                                            Spacer(Modifier.height(8.dp))
+                                            Spacer(Modifier.height(4.dp))
                                         }
                                     }
                                 }
@@ -2559,7 +2559,7 @@ private fun IdentityDashboardCard(onOpen: () -> Unit, tileStyle: String = "large
                     Image(
                         painter = painterResource(R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg),
                         contentDescription = "Godło Polski — czysty znak wektorowy na przezroczystym tle",
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(if (tileStyle == "small") 16.dp else 20.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
@@ -2591,9 +2591,9 @@ private fun ServiceCard(
     val compact = tileStyle == "small"
     val list = tileStyle == "list"
     val cardModifier = when {
-        list -> Modifier.fillMaxWidth().height(72.dp)
-        compact -> Modifier.fillMaxWidth().height(88.dp)
-        else -> Modifier.fillMaxWidth().height(108.dp)
+        list -> Modifier.fillMaxWidth().height(64.dp)
+        compact -> Modifier.fillMaxWidth().height(76.dp)
+        else -> Modifier.fillMaxWidth().height(92.dp)
     }
     Card(
         modifier = cardModifier.clickable(onClick = onClick)
@@ -3051,6 +3051,7 @@ private fun DocumentsWalletScreen(
             id in setOf("mission_travel") -> listOf("Misyjne", "Kościelne", "Zawodowe", "Osobiste")
             id in setOf("eu_education") -> listOf("Edukacja", "Zawodowe", "Państwowe")
             id == "criminal_record" -> listOf("Państwowe", "Cywilne", "Rejestry", "Osobiste")
+            id == "official" -> listOf("Państwowe", "Cywilne", "Rejestry")
             else -> listOf("Pozostałe")
         }
         val service = when {
