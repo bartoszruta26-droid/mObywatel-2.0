@@ -79,6 +79,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Description
@@ -1037,6 +1038,18 @@ private fun HomeScreen() {
                         onOpenDocuments = { activeService = null; showDemoDocuments = true }
                     )
                     selectedTab == 1 -> {
+                        val query = serviceSearch.trim()
+                        val matchingDocuments = if (query.isBlank()) emptyList() else
+                            documentDisplayOptions.filter { (id, title, _) ->
+                                title.contains(query, ignoreCase = true) ||
+                                    id.contains(query, ignoreCase = true)
+                            }
+                        val matchingServices = if (query.isBlank()) emptyList() else
+                            services.filter { item ->
+                                item.title.contains(query, ignoreCase = true) ||
+                                    item.subtitle.contains(query, ignoreCase = true) ||
+                                    item.category.contains(query, ignoreCase = true)
+                            }
                         Column(
                             Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                                 .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -1049,29 +1062,69 @@ private fun HomeScreen() {
                                 onValueChange = { serviceSearch = it },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
-                                label = { Text("Szukaj") },
-                                leadingIcon = { Icon(painterResource(R.drawable.nav_search), contentDescription = null) }
+                                label = { Text("Szukaj dokumentu, usługi lub funkcji") },
+                                leadingIcon = { Icon(painterResource(R.drawable.nav_search), contentDescription = null) },
+                                trailingIcon = {
+                                    if (serviceSearch.isNotEmpty()) {
+                                        IconButton(onClick = { serviceSearch = "" }) {
+                                            Icon(painterResource(R.drawable.lib_ic_close), contentDescription = "Wyczyść wyszukiwanie")
+                                        }
+                                    }
+                                }
                             )
-                            services.filter { serviceSearch.isBlank() ||
-                                it.title.contains(serviceSearch, ignoreCase = true) ||
-                                it.subtitle.contains(serviceSearch, ignoreCase = true)
-                            }.forEach { item ->
-                                Card(
-                                    modifier = Modifier.fillMaxWidth().clickable { openService(item.title) },
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                                ) {
-                                    Row(
-                                        Modifier.fillMaxWidth().padding(14.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                            if (query.isBlank()) {
+                                Text(
+                                    "Wpisz nazwę dokumentu, usługi, modułu lub kategorii. Wyniki obejmują dokumenty i funkcje dostępne w aplikacji.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            } else {
+                                Text("Dokumenty (\${matchingDocuments.size})",
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                if (matchingDocuments.isEmpty()) {
+                                    Text("Brak pasujących dokumentów.", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.bodySmall)
+                                } else matchingDocuments.forEach { (id, title, iconRes) ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().clickable { openDocumentCard(id) },
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
-                                        Icon(item.fallbackIcon ?: Icons.Filled.Description, contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurface)
-                                        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                                            Text(item.title, color = MaterialTheme.colorScheme.onSurface,
-                                                fontWeight = FontWeight.SemiBold)
-                                            Text(item.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                style = MaterialTheme.typography.bodySmall, maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis)
+                                        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            Image(painter = painterResource(iconRes), contentDescription = null,
+                                                modifier = Modifier.size(38.dp), contentScale = ContentScale.Fit)
+                                            Text(title, modifier = Modifier.weight(1f).padding(start = 12.dp),
+                                                color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                                            Icon(Icons.Filled.ChevronRight, contentDescription = "Otwórz")
+                                        }
+                                    }
+                                }
+                                Text("Usługi i funkcje (\${matchingServices.size})",
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                if (matchingServices.isEmpty()) {
+                                    Text("Brak pasujących usług i funkcji.", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.bodySmall)
+                                } else matchingServices.forEach { item ->
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().clickable { openService(item.title) },
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                    ) {
+                                        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                            if (item.icon != null) {
+                                                Icon(painterResource(item.icon), contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(26.dp))
+                                            } else {
+                                                Icon(item.fallbackIcon ?: Icons.Filled.Description, contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(26.dp))
+                                            }
+                                            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                                                Text(item.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                                                Text(item.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    style = MaterialTheme.typography.bodySmall, maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis)
+                                            }
+                                            Icon(Icons.Filled.ChevronRight, contentDescription = "Otwórz")
                                         }
                                     }
                                 }
@@ -2249,12 +2302,11 @@ private fun Header(
                 tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
         }
         IconButton(onClick = onOpenMessages) {
-            Icon(painterResource(R.drawable.lib_ic_mail), contentDescription = "Wiadomości",
+            Icon(painterResource(R.drawable.ic_header_mail), contentDescription = "Wiadomości",
                 tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
         }
         IconButton(onClick = onOpenNotifications) {
-            Icon(painterResource(R.drawable.lib_ic_bell_badge), contentDescription = "Powiadomienia",
-                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
+            Image(painterResource(R.drawable.ic_header_bell), contentDescription = "Powiadomienia", modifier = Modifier.size(29.dp))
         }
     }
 }
@@ -2293,21 +2345,24 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
             Box(
-                modifier = Modifier.align(Alignment.TopEnd).padding(14.dp)
-                    .size(48.dp).clip(RoundedCornerShape(10.dp))
-                    .background(Color(0x557AA8C6)),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp).size(72.dp)
             ) {
-                Image(
-                    painter = painterResource(R.drawable.dashboard_eagle_vector),
-                    contentDescription = "Orzeł",
-                    modifier = Modifier.size(34.dp),
-                    contentScale = ContentScale.Fit
-                )
+                Box(
+                    modifier = Modifier.align(Alignment.TopCenter).size(58.dp)
+                        .clip(RoundedCornerShape(12.dp)).background(Color(0x557AA8C6)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.dashboard_eagle_vector),
+                        contentDescription = "Biały orzeł w koronie",
+                        modifier = Modifier.size(54.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                }
                 Image(
                     painter = painterResource(R.drawable.ic_verified_green),
                     contentDescription = "Dokument zweryfikowany",
-                    modifier = Modifier.align(Alignment.BottomEnd).size(21.dp)
+                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = 3.dp, y = 3.dp).size(24.dp)
                 )
             }
         }
