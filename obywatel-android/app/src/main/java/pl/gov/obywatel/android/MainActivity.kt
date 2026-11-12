@@ -1911,7 +1911,7 @@ private fun DocumentDetailsScreen(
         }
     }
     val options = credentialFieldOptions(normalizedId)
-    val selectedOptions = if (!settings.visibleFieldsConfigured) options
+    val selectedOptions = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) options
         else options.filter { it.first in settings.visibleFields }
     val previewFields = selectedOptions.map { (key, label) ->
         Triple(key, label.uppercase(), previewValues[key].orEmpty().ifBlank { "—" })
@@ -4220,9 +4220,9 @@ private fun CredentialAppearanceSettingsScreen(
                 options.forEach { (key, label) ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
-                            checked = !state.value.visibleFieldsConfigured || key in state.value.visibleFields,
+                            checked = !state.value.visibleFieldsConfigured || state.value.visibleFields.isEmpty() || key in state.value.visibleFields,
                             onCheckedChange = { checked ->
-                                val current = if (state.value.visibleFieldsConfigured) state.value.visibleFields
+                                val current = if (state.value.visibleFieldsConfigured && state.value.visibleFields.isNotEmpty()) state.value.visibleFields
                                     else options.map { it.first }.toSet()
                                 val updated = state.value.copy(
                                     visibleFields = if (checked) current + key else current - key,
@@ -4673,7 +4673,7 @@ private fun AdditionalInformationSection(
 private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane") {
     val binding = LocalCredentialFieldVisibility.current
     val settings = binding?.settings?.value
-    val checked = settings?.let { !it.visibleFieldsConfigured || key in it.visibleFields } ?: true
+    val checked = settings?.let { !it.visibleFieldsConfigured || it.visibleFields.isEmpty() || key in it.visibleFields } ?: true
     val context = LocalContext.current
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -4689,7 +4689,7 @@ private fun DemoDataField(key: String, label: String, fields: MutableMap<String,
             Checkbox(
                 checked = checked,
                 onCheckedChange = { selected ->
-                    val current = if (settings?.visibleFieldsConfigured == true) settings.visibleFields
+                    val current = if (settings?.visibleFieldsConfigured == true && settings.visibleFields.isNotEmpty()) settings.visibleFields
                         else (binding.fields.keys + credentialFieldOptions(binding.documentKey).map { it.first }).toSet()
                     val next = if (selected) current + key else current - key
                     val updated = (settings ?: LegitimacyPreviewSettings()).copy(
