@@ -12,6 +12,8 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,12 +25,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -206,7 +211,8 @@ internal data class LegitimacyPreviewSettings(
     val valueRotation: Float = 0f,
     val valueOffsetX: Float = 0f,
     val valueOffsetY: Float = 0f,
-    val fontFamily: String = "sans"
+    val fontFamily: String = "sans",
+    val imageFilter: String = "none"
 )
 
 private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
@@ -235,7 +241,8 @@ internal fun mergeSharedLegitimacyAppearance(
     valueRotation = shared.valueRotation,
     valueOffsetX = shared.valueOffsetX,
     valueOffsetY = shared.valueOffsetY,
-    fontFamily = shared.fontFamily
+    fontFamily = shared.fontFamily,
+    imageFilter = shared.imageFilter
 )
 
 internal object LegitimacyPreviewSettingsStore {
@@ -273,7 +280,8 @@ internal object LegitimacyPreviewSettingsStore {
             valueRotation = p.getFloat("${key}_value_rotation", 0f),
             valueOffsetX = p.getFloat("${key}_value_x", 0f),
             valueOffsetY = p.getFloat("${key}_value_y", 0f),
-            fontFamily = p.getString("${key}_font_family", "sans").orEmpty()
+            fontFamily = p.getString("${key}_font_family", "sans").orEmpty(),
+            imageFilter = p.getString("${key}_image_filter", "none").orEmpty()
         )
     }
 
@@ -302,6 +310,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putFloat("${key}_value_x", value.valueOffsetX)
                 .putFloat("${key}_value_y", value.valueOffsetY)
                 .putString("${key}_font_family", value.fontFamily)
+                .putString("${key}_image_filter", value.imageFilter)
             listOf("crest", "flag", "background", "logo", "caption", "caption_position").forEach {
                 editor.remove("${key}_$it")
             }
@@ -318,7 +327,7 @@ internal object LegitimacyPreviewSettingsStore {
             listOf("show_card", "show_reverse", "orientation", "show_photo", "show_flag", "show_crest",
                 "show_logo", "show_background", "graphic_scale", "graphic_rotation", "graphic_x", "graphic_y",
                 "label_scale", "label_rotation", "label_x", "label_y", "value_scale", "value_rotation",
-                "value_x", "value_y", "font_family").forEach { editor.remove("${key}_$it") }
+                "value_x", "value_y", "font_family", "image_filter").forEach { editor.remove("${key}_$it") }
         }
         check(editor.commit()) { "Nie udało się zapisać ustawień wyglądu legitymacji." }
     }
@@ -468,6 +477,26 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Checkbox(checked = settings.showReverse, onCheckedChange = { update(settings.copy(showReverse = it)) })
                 Text("Wyświetlaj rewers (domyślnie ukryty)")
             }
+            Text("Filtr fotografii i godła", fontWeight = FontWeight.SemiBold)
+            listOf(
+                "none" to "Oryginał / brak filtra",
+                "grayscale" to "Czerń i biel",
+                "sepia" to "Sepia"
+            ).forEach { (value, label) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
+                        .clickable { update(settings.copy(imageFilter = value)) }
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(selected = settings.imageFilter == value, onClick = {
+                        update(settings.copy(imageFilter = value))
+                    })
+                    Text(label, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            Text("Filtr dotyczy wyłącznie fotografii posiadacza i godła / herbu. Pozostałe grafiki zachowują oryginalne kolory.",
+                style = MaterialTheme.typography.bodySmall)
             Text("Elementy wzoru", fontWeight = FontWeight.SemiBold)
             listOf(
                 Triple(settings.showPhoto, "Fotografia", { v: Boolean -> update(settings.copy(showPhoto = v)) }),
@@ -665,6 +694,7 @@ internal fun LegitimacyHeraldry(
         settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedFlag
     }
     val caption = settings.crestCaption.ifBlank { "Rzeczpospolita\nPolska" }
+    val imageFilter = remember(settings.imageFilter) { credentialImageColorFilter(settings.imageFilter) }
     Column(
         Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start,
@@ -701,7 +731,8 @@ internal fun LegitimacyHeraldry(
                         translationX = settings.graphicOffsetX * density
                         translationY = settings.graphicOffsetY * density
                     },
-                    contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                    colorFilter = imageFilter
                 )
             }
             if (settings.showCrest) Spacer(Modifier.width(6.dp))
@@ -749,6 +780,20 @@ private fun CredentialFieldValue(
     }
 }
 
+private fun credentialImageColorFilter(mode: String): ColorFilter? {
+    val matrix = when (mode) {
+        "grayscale" -> ColorMatrix().apply { setToSaturation(0f) }
+        "sepia" -> ColorMatrix(floatArrayOf(
+            0.393f, 0.769f, 0.189f, 0f, 0f,
+            0.349f, 0.686f, 0.168f, 0f, 0f,
+            0.272f, 0.534f, 0.131f, 0f, 0f,
+            0f, 0f, 0f, 1f, 0f
+        ))
+        else -> return null
+    }
+    return ColorFilter.colorMatrix(matrix)
+}
+
 @Composable
 internal fun UnifiedCredentialCard(
     documentKey: String,
@@ -765,6 +810,15 @@ internal fun UnifiedCredentialCard(
     val context = LocalContext.current
     var showQr by remember(documentKey) { mutableStateOf(false) }
     var showInfo by remember(documentKey) { mutableStateOf(false) }
+    var showIdentityDetails by remember(documentKey) { mutableStateOf(false) }
+    var showShortcuts by remember(documentKey) { mutableStateOf(false) }
+    var animationEnabled by remember(documentKey) { mutableStateOf(false) }
+    val animationRotation by animateFloatAsState(
+        targetValue = if (animationEnabled) 7f else 0f,
+        animationSpec = tween(durationMillis = 650),
+        label = "credential-card-animation"
+    )
+    val imageFilter = remember(settings.imageFilter) { credentialImageColorFilter(settings.imageFilter) }
     val horizontal = settings.orientation == "POZIOMA"
     val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp)
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
@@ -811,7 +865,10 @@ internal fun UnifiedCredentialCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().graphicsLayer {
+            rotationY = animationRotation
+            cameraDistance = 24f * density
+        },
         shape = cardShape,
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F3EF)),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
@@ -886,7 +943,8 @@ internal fun UnifiedCredentialCard(
                                             photo.asImageBitmap(),
                                             contentDescription = "Fotografia posiadacza",
                                             modifier = Modifier.fillMaxSize(),
-                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                            colorFilter = imageFilter
                                         )
                                     } else {
                                         Text("FOTOGRAFIA", fontSize = fieldLabelSize, color = Color(0xFF59616A))
@@ -989,26 +1047,43 @@ internal fun UnifiedCredentialCard(
             }
         }
         if (validity != null) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+            Button(
+                onClick = { animationEnabled = !animationEnabled },
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2879D8)),
+                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp)
             ) {
-                IconButton(onClick = { showQr = true }) {
-                    Icon(Icons.Filled.QrCode2, contentDescription = "Udostępnij dane legitymacji — pokaż kod QR")
-                }
-                IconButton(onClick = {
-                    runCatching {
-                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_SUBJECT, title)
-                            putExtra(Intent.EXTRA_TEXT, sharePayload)
+                Text(if (animationEnabled) "Wyłącz animację" else "Włącz animację",
+                    color = Color.White, fontWeight = FontWeight.SemiBold)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Top
+            ) {
+                CredentialRoundAction(
+                    label = "Potwierdź\nswoje dane",
+                    icon = { Icon(Icons.Filled.QrCode2, contentDescription = null, tint = Color(0xFFB9E9FF), modifier = Modifier.size(29.dp)) },
+                    onClick = { showQr = true }
+                )
+                CredentialRoundAction(
+                    label = "Dane dowodu\ntożsamości",
+                    icon = {
+                        androidx.compose.foundation.Canvas(Modifier.size(30.dp)) {
+                            val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.4.dp.toPx())
+                            drawRoundRect(Color(0xFFFFB6E8), style = stroke, cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
+                            drawCircle(Color(0xFFFFB6E8), radius = 2.2.dp.toPx(), center = androidx.compose.ui.geometry.Offset(size.width * 0.72f, size.height * 0.28f))
+                            drawLine(Color(0xFFFFB6E8), androidx.compose.ui.geometry.Offset(size.width * 0.22f, size.height * 0.72f), androidx.compose.ui.geometry.Offset(size.width * 0.78f, size.height * 0.72f), strokeWidth = 2.dp.toPx())
                         }
-                        context.startActivity(Intent.createChooser(sendIntent, "Udostępnij dane legitymacji"))
-                    }
-                }) {
-                    Icon(Icons.Filled.Share, contentDescription = "Udostępnij dane legitymacji")
-                }
+                    },
+                    onClick = { showIdentityDetails = true }
+                )
+                CredentialRoundAction(
+                    label = "Pozostałe\nskróty",
+                    icon = { Icon(Icons.Filled.MoreVert, contentDescription = null, tint = Color(0xFFB9E9FF), modifier = Modifier.size(29.dp)) },
+                    onClick = { showShortcuts = true }
+                )
             }
         }
     }
@@ -1032,6 +1107,52 @@ internal fun UnifiedCredentialCard(
             confirmButton = { TextButton(onClick = { showQr = false }) { Text("Zamknij") } }
         )
     }
+    if (showIdentityDetails) {
+        AlertDialog(
+            onDismissRequest = { showIdentityDetails = false },
+            title = { Text("Dane dowodu tożsamości") },
+            text = {
+                Column(
+                    modifier = Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    visible.forEach { (_, label, value) ->
+                        if (value.isNotBlank()) {
+                            Text(label, style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(value, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showIdentityDetails = false }) { Text("Zamknij") } }
+        )
+    }
+    if (showShortcuts) {
+        AlertDialog(
+            onDismissRequest = { showShortcuts = false },
+            title = { Text("Pozostałe skróty") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = {
+                        showShortcuts = false
+                        runCatching {
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, title)
+                                putExtra(Intent.EXTRA_TEXT, sharePayload)
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, "Udostępnij dane legitymacji"))
+                        }
+                    }) { Icon(Icons.Filled.Share, contentDescription = null); Spacer(Modifier.width(8.dp)); Text("Udostępnij dane") }
+                    TextButton(onClick = { showShortcuts = false; showInfo = true }) {
+                        Icon(Icons.Filled.Info, contentDescription = null); Spacer(Modifier.width(8.dp)); Text("Informacje o dokumencie")
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showShortcuts = false }) { Text("Zamknij") } }
+        )
+    }
     if (showInfo) {
         AlertDialog(
             onDismissRequest = { showInfo = false },
@@ -1041,6 +1162,29 @@ internal fun UnifiedCredentialCard(
             },
             confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Rozumiem") } }
         )
+    }
+}
+
+@Composable
+private fun CredentialRoundAction(
+    label: String,
+    icon: @Composable () -> Unit,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.width(104.dp).clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick).padding(vertical = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+        Box(
+            Modifier.size(66.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                .background(Color(0xFF747780)),
+            contentAlignment = Alignment.Center
+        ) { icon() }
+        Text(label, color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 }
 
