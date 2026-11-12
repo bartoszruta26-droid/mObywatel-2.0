@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso
+import org.junit.Before
+
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -17,6 +22,21 @@ import org.junit.Test
 class BankAccountsNavigationTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @Before
+    fun resetDocumentDisplayPreferences() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.getSharedPreferences("document_display_preferences", Context.MODE_PRIVATE)
+            .edit().clear().commit()
+    }
+
+    private fun openSettingsMenu() {
+        enterDemoMode()
+        composeRule.onNodeWithContentDescription("Więcej").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
+        composeRule.waitForIdle()
+    }
 
     private fun enterDemoMode() {
         // Plansza z godłem jest wyświetlana przez 1,5 s przed ekranem powitalnym.
@@ -70,5 +90,38 @@ class BankAccountsNavigationTest {
         // Kontrolki formularza leżą niżej w przewijanym ekranie.
         composeRule.onNodeWithText("Dodaj rachunek").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Zapisz").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun androidBackReturnsFromApplicationAppearanceToSettingsMenu() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Ustawienia aplikacji").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Motyw i kolory").assertIsDisplayed()
+
+        Espresso.pressBack()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Wspólny wygląd legitymacji")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun documentIconsCanBeSelectedGloballyAndPerDocument() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Domyślna ikona dokumentów").assertIsDisplayed()
+        composeRule.onNodeWithText("Automatycznie — ikona przypisana do dokumentu").performClick()
+        composeRule.onNodeWithText("Karta").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo()
+        composeRule.onNodeWithText("Ikona domyślna: Karta").performScrollTo().performClick()
+        composeRule.onNodeWithText("Paszport").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Paszport").assertIsDisplayed()
     }
 }
