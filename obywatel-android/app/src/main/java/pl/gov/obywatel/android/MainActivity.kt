@@ -1080,7 +1080,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     fun openDocumentCard(documentId: String) {
         when (documentId) {
             "registry" -> activeService = "Odpis z rejestru podmiotów"
-            "family" -> activeService = "Dokumenty Rodowe"
             "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
             "church_minister", "church_missionary", "organization_church" -> activeService = "Dokumenty Kościelne"
             "civil", "birth_extract", "marriage_extract", "death_extract", "official",
