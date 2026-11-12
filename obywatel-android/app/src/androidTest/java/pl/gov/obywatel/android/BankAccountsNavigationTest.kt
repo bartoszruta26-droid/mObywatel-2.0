@@ -75,7 +75,11 @@ class BankAccountsNavigationTest {
         // znajduje się pod nagłówkiem „Zarządzaj” na tym pulpicie.
         composeRule.onNodeWithText("Zarządzaj").performScrollTo().performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Konta bankowe", substring = false)
+        // Na pulpicie występuje kilka kart „Konta bankowe” (różne miejsca
+        // prezentacji tego samego dokumentu). Wybierz pierwszą kartę w sekcji
+        // „Zarządzaj”, zamiast wymagać globalnej unikalności tekstu.
+        composeRule.onAllNodesWithText("Konta bankowe", substring = false)
+            .get(0)
             .performScrollTo()
             .assertHasClickAction()
             .performClick()
