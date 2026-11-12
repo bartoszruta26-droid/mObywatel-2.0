@@ -53,10 +53,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import pl.gov.obywatel.android.ui.theme.Blue
-import pl.gov.obywatel.android.ui.theme.Muted
-import pl.gov.obywatel.android.ui.theme.Navy
-import pl.gov.obywatel.android.ui.theme.White
 
 private data class PublicServiceLink(
     val title: String,
@@ -136,7 +132,7 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFF4F7FB)).padding(horizontal = 16.dp)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 10.dp),
@@ -148,18 +144,18 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
                 Text(" Wróć")
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text("Usługi publiczne", color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text("Inteligentna przeglądarka", color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Usługi publiczne", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Inteligentna przeglądarka", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
-            Icon(Icons.Default.Public, contentDescription = null, tint = Blue, modifier = Modifier.size(28.dp))
+            Icon(Icons.Default.Public, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
         }
         Card(
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(18.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Znajdź sprawę urzędową", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text("Znajdź sprawę urzędową", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
@@ -168,7 +164,7 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
                     placeholder = { Text("Np. dowód, PESEL, recepta, firma, podatek…") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
                 )
-                Text("Wyszukiwanie obejmuje nazwy, opisy, kategorie i słowa powiązane.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Wyszukiwanie obejmuje nazwy, opisy, kategorie i słowa powiązane.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -186,14 +182,14 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
         }
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(if (selectedCategory == "Ulubione") "Ulubione usługi" else "Dostępne usługi", color = Navy, fontWeight = FontWeight.Bold)
-            Text("${filtered.size} usług", color = Muted, style = MaterialTheme.typography.labelMedium)
+            Text(if (selectedCategory == "Ulubione") "Ulubione usługi" else "Dostępne usługi", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            Text("${filtered.size} usług", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
         }
         if (filtered.isEmpty()) {
             Column(Modifier.fillMaxWidth().padding(vertical = 36.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = Muted, modifier = Modifier.size(36.dp))
-                Text("Brak pasujących usług", color = Navy, fontWeight = FontWeight.SemiBold)
-                Text("Zmień wyszukiwaną frazę lub kategorię.", color = Muted)
+                Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(36.dp))
+                Text("Brak pasujących usług", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                Text("Zmień wyszukiwaną frazę lub kategorię.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             LazyVerticalGrid(
@@ -211,17 +207,17 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
                             runCatching { context.startActivity(intent) }
                         },
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = White),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Public, contentDescription = null, tint = Blue, modifier = Modifier.size(25.dp))
+                                Icon(Icons.Default.Public, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(25.dp))
                                 Spacer(Modifier.weight(1f))
                                 Icon(
                                     if (favorites[service.title] == true) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                                     contentDescription = if (favorites[service.title] == true) "Usuń z ulubionych" else "Dodaj do ulubionych",
-                                    tint = Blue,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(22.dp).clickable {
                                         val next = favorites[service.title] != true
                                         favorites[service.title] = next
@@ -229,13 +225,13 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
                                     }
                                 )
                             }
-                            Text(service.title, color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            Text(service.description, color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                            Text(service.category, color = Blue, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                            Text(service.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Text(service.description, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                            Text(service.category, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Otwórz serwis", color = Blue, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                Text("Otwórz serwis", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.size(4.dp))
-                                Icon(Icons.Default.OpenInNew, contentDescription = null, tint = Blue, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Default.OpenInNew, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                             }
                         }
                     }
@@ -244,7 +240,7 @@ internal fun PublicServicesBrowserScreen(onBack: () -> Unit) {
         }
         Text(
             "OWD jest katalogiem odnośników. Logowanie, składanie wniosków i podpisywanie odbywa się w oficjalnym serwisie wskazanym na kafelku.",
-            color = Muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
         )
