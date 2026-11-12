@@ -3073,9 +3073,12 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                         Triple("idIssueDate", "DATA WYDANIA", fields["idIssueDate"].orEmpty()),
                         Triple("idExpiryDate", "DATA WAŻNOŚCI", fields["idExpiryDate"].orEmpty())
                     ),
-                    validity = fields["idStatus"].orEmpty().trim().lowercase() !in
-                        setOf("nieważny", "nieważna", "unieważniony", "unieważniona", "utracony", "utracona", "expired", "invalid") &&
-                        isCredentialValidByExpiry(fields["idExpiryDate"].orEmpty())
+                    validity = when (fields["idStatus"].orEmpty().trim().lowercase()) {
+                        "nieważny", "nieważna", "unieważniony", "unieważniona", "utracony", "utracona", "expired", "invalid" -> false
+                        "ważny", "ważna", "aktywny", "aktywna", "valid" -> true
+                        else -> fields["idExpiryDate"].orEmpty().takeIf { it.isNotBlank() }
+                            ?.let(::isCredentialValidByExpiry)
+                    }
                 )
                 AdditionalInformationSection("Źródła i weryfikacja danych identyfikacyjnych", fields, "idExtra", "Wskaż dokument źródłowy i datę jego sprawdzenia. Sam wpis użytkownika nie stanowi potwierdzenia urzędowego.")
             }
