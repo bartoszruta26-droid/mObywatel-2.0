@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -239,7 +240,8 @@ internal fun DocumentGraphicEditorScreen(
             documentKey = documentKey,
             settings = appearance.value,
             onChange = { appearance.value = it },
-            assetSelectionOnly = true
+            assetSelectionOnly = false,
+            showCredentialPreview = definition.kind == DocumentPreviewKind.CREDENTIAL
         )
 
         Text(if (definition.kind == DocumentPreviewKind.CREDENTIAL) "Podgląd legitymacji / karty"
@@ -276,35 +278,88 @@ private fun DocumentRecordGraphicPreview(
     val context = LocalContext.current
     val crest = remember(settings.crestAssetId) { settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
     val flag = remember(settings.flagAssetId) { settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
-    val background = remember(settings.backgroundAssetId) { settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
+    val background = remember(settings.backgroundAssetId) {
+        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { selected ->
+            credentialBackgroundResourceId(context, selected)?.let { android.graphics.BitmapFactory.decodeResource(context.resources, it) }
+                ?: DocumentBrandStore.preview(context, selected)
+        }
+    }
     val logo = remember(settings.logoAssetId) { settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
-    val sourceImage = remember(values["photo"]) { runCatching { val bytes = Base64.decode(values["photo"].orEmpty(), Base64.DEFAULT); android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size) }.getOrNull() }
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(definition.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Podgląd danych ewidencyjnych. Oryginalny dokument lub plik źródłowy pozostaje odrębnym załącznikiem.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (sourceImage != null) Image(sourceImage.asImageBitmap(), contentDescription = definition.photoLabel, modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                if (settings.showCrest && crest != null) Image(crest.asImageBitmap(), contentDescription = "Herb dokumentu", modifier = Modifier.size(52.dp))
-                if (settings.showFlag && flag != null) Image(flag.asImageBitmap(), contentDescription = "Flaga dokumentu", modifier = Modifier.size(52.dp))
-                if (settings.showBackground && background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu", modifier = Modifier.size(52.dp))
-                if (settings.showLogo && logo != null) Image(logo.asImageBitmap(), contentDescription = "Logo wystawcy", modifier = Modifier.size(52.dp))
+    val sourceImage = remember(values["photo"]) {
+        runCatching {
+            val bytes = Base64.decode(values["photo"].orEmpty(), Base64.DEFAULT)
+            android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        }.getOrNull()
+    }
+    val textColor = runCatching {
+        androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(settings.fontColor.ifBlank { "#FF202A35" }))
+    }.getOrDefault(MaterialTheme.colorScheme.onSurface)
+    Card(
+        Modifier.fillMaxWidth().aspectRatio(if (settings.orientation == "POZIOMA") 1.414f else 0.707f),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            if (settings.showBackground && background != null) {
+                Image(background.asImageBitmap(), contentDescription = "Tło dokumentu",
+                    modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop, alpha = 0.24f)
             }
-            HorizontalDivider()
-            options.filter { !settings.visibleFieldsConfigured || settings.visibleFields.isEmpty() || it.first in settings.visibleFields }
-                .forEach { (key, label) ->
-                    val value = values[key].orEmpty().ifBlank { "—" }
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(label, style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(value, style = MaterialTheme.typography.bodyMedium,
-                            color = runCatching { androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(settings.fontColor)) }
-                                .getOrDefault(MaterialTheme.colorScheme.onSurface))
-                    }
+            Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (settings.showCrest && crest != null) Image(crest.asImageBitmap(), contentDescription = "Herb dokumentu",
+                        modifier = Modifier.size(48.dp).graphicsLayer {
+                            scaleX = settings.crestScale; scaleY = settings.crestScale
+                            rotationZ = settings.crestRotation
+                            translationX = settings.crestOffsetX * density; translationY = settings.crestOffsetY * density
+                        })
+                    if (settings.showFlag && flag != null) Image(flag.asImageBitmap(), contentDescription = "Flaga dokumentu",
+                        modifier = Modifier.size(48.dp).graphicsLayer {
+                            scaleX = settings.flagScale; scaleY = settings.flagScale
+                            rotationZ = settings.flagRotation
+                            translationX = settings.flagOffsetX * density; translationY = settings.flagOffsetY * density
+                        })
+                    if (settings.showLogo && logo != null) Image(logo.asImageBitmap(), contentDescription = "Logo wystawcy",
+                        modifier = Modifier.size(48.dp).graphicsLayer {
+                            scaleX = settings.graphicScale; scaleY = settings.graphicScale
+                            rotationZ = settings.graphicRotation
+                            translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density
+                        })
+                    Spacer(Modifier.weight(1f))
+                    Text("WZÓR EWIDENCYJNY", style = MaterialTheme.typography.labelSmall, color = textColor)
                 }
+                Text(definition.title, style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, color = textColor)
+                Text("Podgląd danych ewidencyjnych. Oryginalny dokument lub plik źródłowy pozostaje odrębnym załącznikiem.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (sourceImage != null) {
+                    Image(sourceImage.asImageBitmap(), contentDescription = definition.photoLabel,
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                }
+                HorizontalDivider()
+                Column(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    options.filter { !settings.visibleFieldsConfigured || settings.visibleFields.isEmpty() || it.first in settings.visibleFields }
+                        .forEach { (key, label) ->
+                            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                                Text(label, style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.graphicsLayer {
+                                        scaleX = settings.labelScale; scaleY = settings.labelScale
+                                        rotationZ = settings.labelRotation
+                                        translationX = settings.labelOffsetX * density; translationY = settings.labelOffsetY * density
+                                    })
+                                Text(values[key].orEmpty().ifBlank { "—" }, style = MaterialTheme.typography.bodyMedium,
+                                    color = textColor, fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.graphicsLayer {
+                                        scaleX = settings.valueScale; scaleY = settings.valueScale
+                                        rotationZ = settings.valueRotation
+                                        translationX = settings.valueOffsetX * density; translationY = settings.valueOffsetY * density
+                                    })
+                            }
+                        }
+                }
+            }
         }
     }
 }

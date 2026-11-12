@@ -695,7 +695,8 @@ internal fun LegitimacyPreviewSettingsPanel(
     settings: LegitimacyPreviewSettings,
     onChange: (LegitimacyPreviewSettings) -> Unit,
     assetRevision: Int = 0,
-    assetSelectionOnly: Boolean = false
+    assetSelectionOnly: Boolean = false,
+    showCredentialPreview: Boolean = true
 ) {
     val context = LocalContext.current
     var individualFontColor by remember(documentKey) { mutableStateOf(LegitimacyPreviewSettingsStore.load(context, documentKey).fontColor) }
@@ -1076,8 +1077,10 @@ internal fun LegitimacyPreviewSettingsPanel(
                     labelOffsetY = 0f, valueScale = 1f, valueRotation = 0f, valueOffsetX = 0f,
                     valueOffsetY = 0f, fontFamily = "sans"))
             }, modifier = Modifier.fillMaxWidth()) { Text("Przywróć domyślne przekształcenia") }
-            CredentialTemplatePreview(documentKey, settings, assetRevision)
-            Text("Wspólny wzór jest stosowany do wszystkich legitymacji. Zasoby graficzne pozostają przypisane do wybranego dokumentu.", style = MaterialTheme.typography.labelSmall)
+            if (showCredentialPreview) {
+                CredentialTemplatePreview(documentKey, settings, assetRevision)
+                Text("Wspólny schemat edycji zachowuje indywidualne zasoby i dane wybranego dokumentu.", style = MaterialTheme.typography.labelSmall)
+            }
             } else {
                 Text("Przypisanie grafiki dotyczy wyłącznie tego dokumentu i nie zmienia pozostałych legitymacji.", style = MaterialTheme.typography.labelSmall)
             }

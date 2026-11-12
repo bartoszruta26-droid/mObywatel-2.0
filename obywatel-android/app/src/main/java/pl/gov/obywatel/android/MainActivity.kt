@@ -2954,7 +2954,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Konta bankowe", "Osobna ewidencja rachunków prywatnych i podmiotowych", Icons.Filled.AccountBalance, { onEditOtherDocuments("bank_accounts") })
         ProfileActionCard("Dokumenty własne — pliki", "Dodawanie, porządkowanie i usuwanie importowanych plików", Icons.Filled.Description, { onEditOtherDocuments("imported") })
         ProfileActionCard("Pliki PDF i podpisy", "Import dokumentów, dołączanie plików podpisów i zarządzanie ewidencją", Icons.Filled.PictureAsPdf, { onEditOtherDocuments("signed_pdf") })
-        ProfileActionCard("Indywidualna edycja pozostałych dokumentów", "Osobny podgląd, fotografia lub skan, flaga, godło, herb, logo, tło i pola każdego dokumentu",
+        ProfileActionCard("Indywidualna edycja wszystkich dokumentów", "Osobny podgląd, fotografia lub skan, flaga, godło, herb, logo, tło i pola każdego dokumentu",
             Icons.Filled.Description, { onEditOtherDocuments("graphic_catalog") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
