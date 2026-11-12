@@ -740,22 +740,25 @@ private val services = listOf(
 private const val DOCUMENT_DISPLAY_PREFS = "document_display_preferences"
 private const val DOCUMENT_DISPLAY_KEY_PREFIX = "placement_"
 private val documentDisplayOptions = listOf(
-    Triple("identity", "Dowód tożsamości", R.drawable.bg_document_civic_identity),
-    Triple("passport", "Dane paszportowe", R.drawable.art_02_paszport_rodowy_jasny),
-    Triple("registry", "Odpis z rejestru podmiotów", R.drawable.art_06_przynaleznosc_rodowa_organizacyjna),
-    Triple("family", "Dokument rodowy", R.drawable.art_01_karta_rodowa_jasna),
+    Triple("profile", "Dane osobowe profilu", R.drawable.lib_ic_account),
+    Triple("identity", "Dowód tożsamości", R.drawable.documents_identity_card),
+    Triple("passport", "Dane paszportowe", R.drawable.documents_passport),
+    Triple("registry", "Odpis z rejestru podmiotów", R.drawable.court_registry_icon),
+    Triple("family", "Dokument rodowy", R.drawable.documents_family_record),
     Triple("parliament", "Legitymacja poselska", R.drawable.documents_deputy_legitimacy),
-    Triple("training", "Legitymacja kursanta", R.drawable.art_02_legitymacja_zawodowa),
+    Triple("training", "Legitymacja kursanta", R.drawable.documents_course_legitimacy),
     Triple("student", "Legitymacja ucznia/studenta", R.drawable.documents_student_legitimacy),
-    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.bg_document_disability_certificate),
-    Triple("church", "Dokumenty kościelne", R.drawable.bg_document_missionary_pdm),
-    Triple("civil", "Dokumenty cywilne", R.drawable.bg_document_civic_identity),
-    Triple("business", "Dokumenty firmowe i podmiotowe", R.drawable.business_registry_icon),
-    Triple("bank_accounts", "Konta bankowe", R.drawable.mob_payments),
-    Triple("vaccines", "Książeczka szczepień WHO", R.drawable.bg_document_vaccination_booklet),
-    Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.documents_document_wallet_banner),
-    Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.documents_family_record),
-    Triple("loyalty_cards", "Karty lojalnościowe sklepów", R.drawable.documents_course_legitimacy)
+    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.documents_medical_certificates),
+    Triple("church", "Dokumenty kościelne", R.drawable.church_communities),
+    Triple("civil", "Dokumenty cywilne", R.drawable.civic_service_illustration),
+    Triple("business", "Dokumenty firmowe i podmiotowe", R.drawable.lib_ic_building),
+    Triple("bank_accounts", "Konta bankowe", R.drawable.lib_ic_wallet),
+    Triple("vaccines", "Książeczka szczepień WHO", R.drawable.lib_ic_medical_record),
+    Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
+    Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
+    Triple("children", "Dokumentacja dzieci", R.drawable.family),
+    Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.lib_ic_image),
+    Triple("loyalty", "Karty lojalnościowe sklepów", R.drawable.lib_ic_credit_card)
 )
 private val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
     id to if (id == "identity") "dashboard" else "hidden"
@@ -783,7 +786,9 @@ private fun loadDocumentPlacements(context: Context): Map<String, String> {
         check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności dokumentów." }
     }
     return documentDisplayOptions.associate { (id, _, _) ->
-        id to (prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + id, null) ?: defaultDocumentPlacements[id] ?: "hidden")
+        val savedPlacement = prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + id, null)
+            ?: if (id == "loyalty") prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + "loyalty_cards", null) else null
+        id to (savedPlacement ?: defaultDocumentPlacements[id] ?: "hidden")
     }
 }
 private fun saveDocumentPlacements(context: Context, placements: Map<String, String>) {
