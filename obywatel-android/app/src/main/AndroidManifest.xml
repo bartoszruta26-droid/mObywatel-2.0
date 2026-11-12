@@ -3,7 +3,7 @@
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
-        android:label="Aplikacja Obywatelska"
+        android:label="aplikacja mObywatelska 2.0"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <provider
@@ -18,7 +18,7 @@
             android:name=".LauncherIconDefault"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/ic_launcher"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -30,7 +30,7 @@
             android:name=".LauncherIcon_civic_service_illustration"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_civic_service_illustration"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -42,7 +42,7 @@
             android:name=".LauncherIcon_dashboard_eagle_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_dashboard_eagle_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -54,7 +54,7 @@
             android:name=".LauncherIcon_empty_documents_illustration"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_empty_documents_illustration"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -66,7 +66,7 @@
             android:name=".LauncherIcon_file_5320_eagle_background_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_file_5320_eagle_background_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -78,7 +78,7 @@
             android:name=".LauncherIcon_file_5320_eagle_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_file_5320_eagle_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -90,7 +90,7 @@
             android:name=".LauncherIcon_flag_austria_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_austria_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -102,7 +102,7 @@
             android:name=".LauncherIcon_flag_czechia_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_czechia_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -114,7 +114,7 @@
             android:name=".LauncherIcon_flag_estonia_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_estonia_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -126,7 +126,7 @@
             android:name=".LauncherIcon_flag_eu_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_eu_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -138,7 +138,7 @@
             android:name=".LauncherIcon_flag_france_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_france_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -150,7 +150,7 @@
             android:name=".LauncherIcon_flag_germany_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_germany_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -162,7 +162,7 @@
             android:name=".LauncherIcon_flag_italy_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_italy_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -174,7 +174,7 @@
             android:name=".LauncherIcon_flag_latvia_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_latvia_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -186,7 +186,7 @@
             android:name=".LauncherIcon_flag_lithuania_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_lithuania_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -198,7 +198,7 @@
             android:name=".LauncherIcon_flag_poland_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_poland_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -210,7 +210,7 @@
             android:name=".LauncherIcon_flag_portugal_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_portugal_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -222,7 +222,7 @@
             android:name=".LauncherIcon_flag_slovakia_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_slovakia_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -234,7 +234,7 @@
             android:name=".LauncherIcon_flag_spain_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_spain_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -246,7 +246,7 @@
             android:name=".LauncherIcon_flag_switzerland_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_switzerland_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -258,7 +258,7 @@
             android:name=".LauncherIcon_flag_uk_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_uk_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -270,7 +270,7 @@
             android:name=".LauncherIcon_flag_ukraine_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_ukraine_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -282,7 +282,7 @@
             android:name=".LauncherIcon_flag_vatican_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_flag_vatican_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -294,7 +294,7 @@
             android:name=".LauncherIcon_header_brand_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_header_brand_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -306,7 +306,7 @@
             android:name=".LauncherIcon_ic_header_bell"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_ic_header_bell"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -318,7 +318,7 @@
             android:name=".LauncherIcon_ic_header_mail"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_ic_header_mail"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -330,7 +330,7 @@
             android:name=".LauncherIcon_ic_header_robot"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_ic_header_robot"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -342,7 +342,7 @@
             android:name=".LauncherIcon_ic_header_robot_head"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_ic_header_robot_head"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -354,7 +354,7 @@
             android:name=".LauncherIcon_ic_launcher_foreground"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_ic_launcher_foreground"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -366,7 +366,7 @@
             android:name=".LauncherIcon_ic_verified_green"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_ic_verified_green"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -378,7 +378,7 @@
             android:name=".LauncherIcon_institutions_eagle_emblem_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_institutions_eagle_emblem_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -390,7 +390,7 @@
             android:name=".LauncherIcon_institutions_polish_flag_vector"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_institutions_polish_flag_vector"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -402,7 +402,7 @@
             android:name=".LauncherIcon_legacy_flag_rp"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_flag_rp"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -414,7 +414,7 @@
             android:name=".LauncherIcon_legacy_ic_chevron_left"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_chevron_left"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -426,7 +426,7 @@
             android:name=".LauncherIcon_legacy_ic_chevron_right"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_chevron_right"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -438,7 +438,7 @@
             android:name=".LauncherIcon_legacy_ic_info"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_info"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -450,7 +450,7 @@
             android:name=".LauncherIcon_legacy_ic_portfolio"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_portfolio"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -462,7 +462,7 @@
             android:name=".LauncherIcon_legacy_ic_profile"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_profile"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -474,7 +474,7 @@
             android:name=".LauncherIcon_legacy_ic_register"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_register"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -486,7 +486,7 @@
             android:name=".LauncherIcon_legacy_ic_search"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_search"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -498,7 +498,7 @@
             android:name=".LauncherIcon_legacy_ic_star"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_star"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -510,7 +510,7 @@
             android:name=".LauncherIcon_legacy_ic_upload"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_upload"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -522,7 +522,7 @@
             android:name=".LauncherIcon_legacy_ic_viewer"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_legacy_ic_viewer"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -534,7 +534,7 @@
             android:name=".LauncherIcon_lib_ic_accessibility"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_accessibility"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -546,7 +546,7 @@
             android:name=".LauncherIcon_lib_ic_account"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_account"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -558,7 +558,7 @@
             android:name=".LauncherIcon_lib_ic_arrow_back"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_arrow_back"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -570,7 +570,7 @@
             android:name=".LauncherIcon_lib_ic_arrow_forward"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_arrow_forward"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -582,7 +582,7 @@
             android:name=".LauncherIcon_lib_ic_bell"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_bell"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -594,7 +594,7 @@
             android:name=".LauncherIcon_lib_ic_bell_badge"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_bell_badge"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -606,7 +606,7 @@
             android:name=".LauncherIcon_lib_ic_bluetooth"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_bluetooth"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -618,7 +618,7 @@
             android:name=".LauncherIcon_lib_ic_briefcase"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_briefcase"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -630,7 +630,7 @@
             android:name=".LauncherIcon_lib_ic_building"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_building"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -642,7 +642,7 @@
             android:name=".LauncherIcon_lib_ic_calendar"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_calendar"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -654,7 +654,7 @@
             android:name=".LauncherIcon_lib_ic_calendar_check"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_calendar_check"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -666,7 +666,7 @@
             android:name=".LauncherIcon_lib_ic_camera"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_camera"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -678,7 +678,7 @@
             android:name=".LauncherIcon_lib_ic_car"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_car"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -690,7 +690,7 @@
             android:name=".LauncherIcon_lib_ic_check"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_check"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -702,7 +702,7 @@
             android:name=".LauncherIcon_lib_ic_check_circle"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_check_circle"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -714,7 +714,7 @@
             android:name=".LauncherIcon_lib_ic_clock"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_clock"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -726,7 +726,7 @@
             android:name=".LauncherIcon_lib_ic_close"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_close"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -738,7 +738,7 @@
             android:name=".LauncherIcon_lib_ic_cloud"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_cloud"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -750,7 +750,7 @@
             android:name=".LauncherIcon_lib_ic_credit_card"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_credit_card"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -762,7 +762,7 @@
             android:name=".LauncherIcon_lib_ic_database"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_database"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -774,7 +774,7 @@
             android:name=".LauncherIcon_lib_ic_delete"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_delete"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -786,7 +786,7 @@
             android:name=".LauncherIcon_lib_ic_document"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_document"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -798,7 +798,7 @@
             android:name=".LauncherIcon_lib_ic_document_signed"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_document_signed"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -810,7 +810,7 @@
             android:name=".LauncherIcon_lib_ic_download"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_download"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -822,7 +822,7 @@
             android:name=".LauncherIcon_lib_ic_download_done"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_download_done"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -834,7 +834,7 @@
             android:name=".LauncherIcon_lib_ic_edit"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_edit"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -846,7 +846,7 @@
             android:name=".LauncherIcon_lib_ic_error_circle"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_error_circle"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -858,7 +858,7 @@
             android:name=".LauncherIcon_lib_ic_filter"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_filter"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -870,7 +870,7 @@
             android:name=".LauncherIcon_lib_ic_fingerprint"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_fingerprint"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -882,7 +882,7 @@
             android:name=".LauncherIcon_lib_ic_flag"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_flag"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -894,7 +894,7 @@
             android:name=".LauncherIcon_lib_ic_folder"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_folder"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -906,7 +906,7 @@
             android:name=".LauncherIcon_lib_ic_group"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_group"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -918,7 +918,7 @@
             android:name=".LauncherIcon_lib_ic_heart"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_heart"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -930,7 +930,7 @@
             android:name=".LauncherIcon_lib_ic_help"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_help"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -942,7 +942,7 @@
             android:name=".LauncherIcon_lib_ic_home"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_home"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -954,7 +954,7 @@
             android:name=".LauncherIcon_lib_ic_home_work"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_home_work"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -966,7 +966,7 @@
             android:name=".LauncherIcon_lib_ic_image"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_image"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -978,7 +978,7 @@
             android:name=".LauncherIcon_lib_ic_info"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_info"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -990,7 +990,7 @@
             android:name=".LauncherIcon_lib_ic_language"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_language"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1002,7 +1002,7 @@
             android:name=".LauncherIcon_lib_ic_location"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_location"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1014,7 +1014,7 @@
             android:name=".LauncherIcon_lib_ic_lock"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_lock"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1026,7 +1026,7 @@
             android:name=".LauncherIcon_lib_ic_lock_open"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_lock_open"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1038,7 +1038,7 @@
             android:name=".LauncherIcon_lib_ic_mail"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_mail"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1050,7 +1050,7 @@
             android:name=".LauncherIcon_lib_ic_map"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_map"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1062,7 +1062,7 @@
             android:name=".LauncherIcon_lib_ic_medical"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_medical"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1074,7 +1074,7 @@
             android:name=".LauncherIcon_lib_ic_medical_record"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_medical_record"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1086,7 +1086,7 @@
             android:name=".LauncherIcon_lib_ic_menu"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_menu"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1098,7 +1098,7 @@
             android:name=".LauncherIcon_lib_ic_minus"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_minus"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1110,7 +1110,7 @@
             android:name=".LauncherIcon_lib_ic_more"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_more"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1122,7 +1122,7 @@
             android:name=".LauncherIcon_lib_ic_music"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_music"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1134,7 +1134,7 @@
             android:name=".LauncherIcon_lib_ic_pending"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_pending"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1146,7 +1146,7 @@
             android:name=".LauncherIcon_lib_ic_person_add"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_person_add"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1158,7 +1158,7 @@
             android:name=".LauncherIcon_lib_ic_phone"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_phone"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1170,7 +1170,7 @@
             android:name=".LauncherIcon_lib_ic_plus"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_plus"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1182,7 +1182,7 @@
             android:name=".LauncherIcon_lib_ic_print"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_print"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1194,7 +1194,7 @@
             android:name=".LauncherIcon_lib_ic_qr_code"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_qr_code"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1206,7 +1206,7 @@
             android:name=".LauncherIcon_lib_ic_refresh"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_refresh"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1218,7 +1218,7 @@
             android:name=".LauncherIcon_lib_ic_school"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_school"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1230,7 +1230,7 @@
             android:name=".LauncherIcon_lib_ic_search"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_search"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1242,7 +1242,7 @@
             android:name=".LauncherIcon_lib_ic_settings"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_settings"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1254,7 +1254,7 @@
             android:name=".LauncherIcon_lib_ic_share"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_share"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1266,7 +1266,7 @@
             android:name=".LauncherIcon_lib_ic_shield"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_shield"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1278,7 +1278,7 @@
             android:name=".LauncherIcon_lib_ic_sort"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_sort"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1290,7 +1290,7 @@
             android:name=".LauncherIcon_lib_ic_star"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_star"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1302,7 +1302,7 @@
             android:name=".LauncherIcon_lib_ic_support"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_support"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1314,7 +1314,7 @@
             android:name=".LauncherIcon_lib_ic_sync"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_sync"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1326,7 +1326,7 @@
             android:name=".LauncherIcon_lib_ic_train"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_train"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1338,7 +1338,7 @@
             android:name=".LauncherIcon_lib_ic_unlock"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_unlock"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1350,7 +1350,7 @@
             android:name=".LauncherIcon_lib_ic_upload"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_upload"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1362,7 +1362,7 @@
             android:name=".LauncherIcon_lib_ic_verified"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_verified"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1374,7 +1374,7 @@
             android:name=".LauncherIcon_lib_ic_visibility"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_visibility"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1386,7 +1386,7 @@
             android:name=".LauncherIcon_lib_ic_visibility_off"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_visibility_off"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1398,7 +1398,7 @@
             android:name=".LauncherIcon_lib_ic_wallet"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_wallet"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1410,7 +1410,7 @@
             android:name=".LauncherIcon_lib_ic_wallet_check"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_wallet_check"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1422,7 +1422,7 @@
             android:name=".LauncherIcon_lib_ic_warning"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_warning"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1434,7 +1434,7 @@
             android:name=".LauncherIcon_lib_ic_wifi"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_lib_ic_wifi"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1446,7 +1446,7 @@
             android:name=".LauncherIcon_mob_abroad"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_abroad"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1458,7 +1458,7 @@
             android:name=".LauncherIcon_mob_cyber_safety"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_cyber_safety"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1470,7 +1470,7 @@
             android:name=".LauncherIcon_mob_document_check"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_document_check"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1482,7 +1482,7 @@
             android:name=".LauncherIcon_mob_environment"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_environment"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1494,7 +1494,7 @@
             android:name=".LauncherIcon_mob_health"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_health"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1506,7 +1506,7 @@
             android:name=".LauncherIcon_mob_payments"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_payments"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1518,7 +1518,7 @@
             android:name=".LauncherIcon_mob_penalties"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_penalties"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1530,7 +1530,7 @@
             android:name=".LauncherIcon_mob_pesel_check"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_pesel_check"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1542,7 +1542,7 @@
             android:name=".LauncherIcon_mob_pesel_lock"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_pesel_lock"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1554,7 +1554,7 @@
             android:name=".LauncherIcon_mob_ticket"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_ticket"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1566,7 +1566,7 @@
             android:name=".LauncherIcon_mob_transport"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_mob_transport"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1578,7 +1578,7 @@
             android:name=".LauncherIcon_nav_documents"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_documents"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1590,7 +1590,7 @@
             android:name=".LauncherIcon_nav_documents_selected"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_documents_selected"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1602,7 +1602,7 @@
             android:name=".LauncherIcon_nav_more"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_more"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1614,7 +1614,7 @@
             android:name=".LauncherIcon_nav_more_selected"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_more_selected"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1626,7 +1626,7 @@
             android:name=".LauncherIcon_nav_scan"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_scan"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1638,7 +1638,7 @@
             android:name=".LauncherIcon_nav_scan_selected"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_scan_selected"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1650,7 +1650,7 @@
             android:name=".LauncherIcon_nav_search"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_search"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1662,7 +1662,7 @@
             android:name=".LauncherIcon_nav_search_selected"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_search_selected"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1674,7 +1674,7 @@
             android:name=".LauncherIcon_nav_services"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_services"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1686,7 +1686,7 @@
             android:name=".LauncherIcon_nav_services_selected"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_nav_services_selected"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1698,7 +1698,7 @@
             android:name=".LauncherIcon_service_folder"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_service_folder"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1710,7 +1710,7 @@
             android:name=".LauncherIcon_service_pesel_check"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_service_pesel_check"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1722,7 +1722,7 @@
             android:name=".LauncherIcon_service_pesel_lock"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_service_pesel_lock"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1734,7 +1734,7 @@
             android:name=".LauncherIcon_service_prescription"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_service_prescription"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1746,7 +1746,7 @@
             android:name=".LauncherIcon_service_profile"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_service_profile"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1758,7 +1758,7 @@
             android:name=".LauncherIcon_service_ticket"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/launcher_service_ticket"
-            android:label="Aplikacja Obywatelska"
+            android:label="aplikacja mObywatelska 2.0"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
