@@ -189,6 +189,55 @@ internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
     return parsed == null || !parsed.isBefore(java.time.LocalDate.now())
 }
 
+/** Resolves a document-specific status/expiry pair without treating missing data as proof of validity. */
+internal fun credentialValidityForDocument(documentKey: String, values: Map<String, String>): Boolean? {
+    val statusKeys = when (documentKey) {
+        "identity" -> listOf("idStatus", "status")
+        "passport" -> listOf("passportStatus", "status")
+        "parliament" -> listOf("mpStatus", "status")
+        "training" -> listOf("trainingStatus", "status")
+        "student" -> listOf("studentStatus", "status")
+        "disability" -> listOf("disabilityStatus", "status")
+        "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf("professionalStatus", "status")
+        "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" -> listOf("churchStatus", "status")
+        "family", "organization_family" -> listOf("familyStatus", "status")
+        "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business" -> listOf("insuranceStatus", "status")
+        "mission_travel" -> listOf("missionStatus", "status")
+        "ehic" -> listOf("ehicStatus", "status")
+        "vaccines" -> listOf("vaccineStatus", "status")
+        "loyalty", "loyalty_cards" -> listOf("loyaltyStatus", "status")
+        else -> listOf("status")
+    }
+    val expiryKeys = when (documentKey) {
+        "identity" -> listOf("idExpiryDate", "expiryDate")
+        "passport" -> listOf("passportExpiryDate", "expiryDate")
+        "parliament" -> listOf("mpEnd", "expiryDate")
+        "training" -> listOf("trainingValidUntil", "expiryDate")
+        "student" -> listOf("studentValidity", "expiryDate")
+        "disability" -> listOf("disabilityValidity", "expiryDate")
+        "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf("professionalValidity", "expiryDate")
+        "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" -> listOf("churchValidity", "expiryDate")
+        "family", "organization_family" -> listOf("familyExpiryDate", "expiryDate")
+        "large_family" -> listOf("largeFamilyExpiry", "expiryDate")
+        "disability_card" -> listOf("disabilityCardExpiry", "expiryDate")
+        "vehicle_registration" -> listOf("vehicleInspectionDue", "expiryDate")
+        "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business" -> listOf("insuranceEnd", "expiryDate")
+        "mission_travel" -> listOf("missionEnd", "expiryDate")
+        "ehic" -> listOf("ehicExpiry", "expiryDate")
+        "vaccines" -> listOf("vaccineExpiry", "expiryDate")
+        "loyalty", "loyalty_cards" -> listOf("loyaltyExpiry", "expiryDate")
+        else -> listOf("expiryDate", "validUntil", "documentExpiryDate")
+    }
+    val status = statusKeys.firstNotNullOfOrNull { key -> values[key]?.trim()?.takeIf { it.isNotEmpty() } }.orEmpty()
+    val expiry = expiryKeys.firstNotNullOfOrNull { key -> values[key]?.trim()?.takeIf { it.isNotEmpty() } }.orEmpty()
+    if (status.isBlank() && expiry.isBlank()) return null
+    val normalized = status.lowercase(java.util.Locale.forLanguageTag("pl-PL"))
+    val explicitlyInvalid = listOf(
+        "nieważ", "unieważ", "utrac", "zwróc", "wygas", "zawies", "expired", "invalid", "revoked", "cancelled"
+    ).any(normalized::contains)
+    return !explicitlyInvalid && isCredentialValidByExpiry(expiry)
+}
+
 internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
