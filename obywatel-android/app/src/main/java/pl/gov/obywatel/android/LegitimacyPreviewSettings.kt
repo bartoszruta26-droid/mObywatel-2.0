@@ -302,6 +302,14 @@ private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global
 
 private const val BUILTIN_BACKGROUND_PREFIX = "builtin:"
 private val builtInCredentialBackgrounds = listOf(
+    "tlo_legitymacji_brazowe" to "Tło legitymacji — brązowe",
+    "tlo_legitymacji_niebieskie" to "Tło legitymacji — niebieskie",
+    "tlo_legitymacji_szare" to "Tło legitymacji — szare",
+    "tlo_legitymacji_zielone" to "Tło legitymacji — zielone",
+    "tlo_pionowe_oryginal" to "Tło pionowe — oryginalne",
+    "tlo_poziome_oryginal" to "Tło poziome — oryginalne",
+    "tlo_znak_wodny_pionowe" to "Znak wodny — pionowy",
+    "tlo_znak_wodny_poziome" to "Znak wodny — poziomy",
     "file_000000000480820ab196baceb9149967" to "Wzór firmowy 01",
     "file_0000000009b8820abb055566e7a0d510" to "Wzór firmowy 02",
     "file_000000000fcc820a9f7e3c368750a9f5" to "Wzór firmowy 03",
@@ -618,13 +626,23 @@ private fun GraphicAssetPreviewGrid(
     }
 }
 
-private fun builtinGraphicPreview(context: Context, assetId: String): Bitmap? {
-    val resourceName = assetId.removePrefix(BUILTIN_BACKGROUND_PREFIX)
-    if (!assetId.startsWith(BUILTIN_BACKGROUND_PREFIX)) return null
-    val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
-    return resourceId.takeIf { it != 0 }?.let { BitmapFactory.decodeResource(context.resources, it) }
+private fun previewThumbnail(context: Context, assetId: String): Bitmap? {
+    val bitmap = if (assetId.startsWith(BUILTIN_BACKGROUND_PREFIX)) {
+        val resourceName = assetId.removePrefix(BUILTIN_BACKGROUND_PREFIX)
+        val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+        resourceId.takeIf { it != 0 }?.let {
+            BitmapFactory.decodeResource(context.resources, it, BitmapFactory.Options().apply { inSampleSize = 4 })
+        }
+    } else DocumentBrandStore.preview(context, assetId)
+    bitmap ?: return null
+    val maxEdge = 480
+    if (bitmap.width <= maxEdge && bitmap.height <= maxEdge) return bitmap
+    val scale = maxEdge.toFloat() / maxOf(bitmap.width, bitmap.height)
+    val thumbnail = Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt().coerceAtLeast(1),
+        (bitmap.height * scale).toInt().coerceAtLeast(1), true)
+    if (thumbnail !== bitmap) bitmap.recycle()
+    return thumbnail
 }
-
 @Composable
 internal fun LegitimacyPreviewSettingsPanel(
     documentKey: String,
@@ -796,7 +814,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 title = "Herb / godło — wybierz podgląd",
                 selectedId = settings.crestAssetId,
                 choices = listOf(Triple("", "Brak herbu", null)) + assets.filter { it.kind == "Herb" || it.kind == "Godło" }
-                    .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) },
+                    .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
                 onSelect = { update(settings.copy(crestAssetId = it)) }
             )
             OutlinedButton(onClick = { crestPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
@@ -828,7 +846,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 title = "Flaga — wybierz podgląd",
                 selectedId = settings.flagAssetId,
                 choices = listOf(Triple("", "Brak własnej flagi", null)) + assets.filter { it.kind == "Flaga" }
-                    .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) },
+                    .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
                 onSelect = { update(settings.copy(flagAssetId = it)) }
             )
             OutlinedButton(onClick = { flagPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
@@ -838,7 +856,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 title = "Logo wystawcy — wybierz podgląd",
                 selectedId = settings.logoAssetId,
                 choices = listOf(Triple("", "Brak własnego logo", null)) + assets.filter { it.kind == "Logo" }
-                    .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) },
+                    .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
                 onSelect = { update(settings.copy(logoAssetId = it)) }
             )
             OutlinedButton(onClick = { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
@@ -847,9 +865,9 @@ internal fun LegitimacyPreviewSettingsPanel(
             val backgroundChoices = listOf(Triple("", "Domyślne tło", null)) +
                 builtInCredentialBackgrounds.map { (resourceName, label) ->
                     val id = BUILTIN_BACKGROUND_PREFIX + resourceName
-                    Triple(id, label, builtinGraphicPreview(context, id))
+                    Triple(id, label, previewThumbnail(context, id))
                 } + assets.filter { it.kind == "Tło dokumentu" }
-                    .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) }
+                    .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
             GraphicAssetPreviewGrid(
                 title = "Tło legitymacji — wybierz podgląd",
                 selectedId = settings.backgroundAssetId,
@@ -865,9 +883,9 @@ internal fun LegitimacyPreviewSettingsPanel(
                 choices = listOf(Triple("", "Domyślne tło kafelka", null)) +
                     builtInCredentialBackgrounds.map { (resourceName, label) ->
                         val id = BUILTIN_BACKGROUND_PREFIX + resourceName
-                        Triple(id, label, builtinGraphicPreview(context, id))
+                        Triple(id, label, previewThumbnail(context, id))
                     } + assets.filter { it.kind == "Tło kafelka" || it.kind == "Tło dokumentu" }
-                        .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) },
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
                 onSelect = { update(settings.copy(tileBackgroundAssetId = it)) }
             )
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
