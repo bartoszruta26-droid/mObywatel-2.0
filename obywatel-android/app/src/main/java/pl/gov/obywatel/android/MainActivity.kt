@@ -1081,9 +1081,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             "civil" -> activeService = "Formularze dokumentów"
             "business" -> activeService = "Dokumenty rejestru podmiotów"
             "bank_accounts" -> showBankAccounts = true
+            "children" -> activeService = "Dane dzieci"
+            "imported" -> showImportedDocuments = true
             "vaccines" -> activeService = "eKarta Szczepień"
             "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
             "branding" -> activeService = "Zasoby identyfikacji dokumentów"
+            "professional" -> activeService = "Dokumenty kwalifikacji zawodowych"
+            "official" -> activeService = "Formularze dokumentów"
             "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
             "church_minister", "church_missionary" -> activeService = "Dokumenty Kościelne"
             "professional_medical", "professional_education", "professional_therapeutic",
