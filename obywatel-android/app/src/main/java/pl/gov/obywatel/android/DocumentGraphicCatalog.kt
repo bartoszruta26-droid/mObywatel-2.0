@@ -249,12 +249,14 @@ private fun DocumentRecordGraphicPreview(
     val flag = remember(settings.flagAssetId) { settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
     val background = remember(settings.backgroundAssetId) { settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
     val logo = remember(settings.logoAssetId) { settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
+    val sourceImage = remember(values["photo"]) { runCatching { val bytes = Base64.decode(values["photo"].orEmpty(), Base64.DEFAULT); android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size) }.getOrNull() }
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(definition.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text("Podgląd danych ewidencyjnych. Oryginalny dokument lub plik źródłowy pozostaje odrębnym załącznikiem.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (sourceImage != null) Image(sourceImage.asImageBitmap(), contentDescription = definition.photoLabel, modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 if (settings.showCrest && crest != null) Image(crest.asImageBitmap(), contentDescription = "Herb dokumentu", modifier = Modifier.size(52.dp))
