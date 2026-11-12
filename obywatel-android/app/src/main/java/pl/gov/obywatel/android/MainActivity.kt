@@ -60,6 +60,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.asImageBitmap
@@ -2260,7 +2261,16 @@ private fun Header(
                 tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
         }
         IconButton(onClick = onOpenNotifications) {
-            Image(painterResource(R.drawable.ic_header_bell), contentDescription = "Powiadomienia", modifier = Modifier.size(29.dp))
+            Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+            IconButton(onClick = onOpenNotifications) {
+                Icon(painterResource(R.drawable.ic_header_bell), contentDescription = "Powiadomienia",
+                    tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(29.dp))
+            }
+            Box(
+                modifier = Modifier.align(Alignment.TopEnd).size(10.dp)
+                    .clip(CircleShape).background(Color(0xFFFF3028))
+            )
+        }
         }
     }
 }
