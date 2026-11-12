@@ -494,14 +494,14 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
             Spacer(Modifier.height(34.dp))
             Text(
                 "Dzień dobry!",
-                color = cream,
+                color = foreground,
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(10.dp))
             Text(
                 "Zaloguj się do aplikacji",
-                color = cream,
+                color = foreground,
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(Modifier.weight(1f))
@@ -525,13 +525,13 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
                 Text(
                     "Więcej o Krajowym Planie\nOdbudowy",
                     modifier = Modifier.weight(1f),
-                    color = cream,
+                    color = foreground,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     "wersja\n4.93.1\n(6704)",
-                    color = cream,
+                    color = foreground,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
@@ -641,15 +641,15 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().height(64.dp),
                 shape = RoundedCornerShape(17.dp),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF9FD5FF),
-                    contentColor = Color(0xFF062A59)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
                 Text("Zaloguj się", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
             }
             Spacer(Modifier.height(18.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(64.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
