@@ -45,7 +45,7 @@ object DocumentRouteRegistry {
         specialized("vaccines", "vaccines"),
         specialized("signed_pdf", "signed_pdf"),
         specialized("imported", "imported"),
-        group("children", "Dane dzieci"),
+        specialized("children", "children"),
         specialized("branding", "branding"),
         document("loyalty"),
         document("birth_extract"),
