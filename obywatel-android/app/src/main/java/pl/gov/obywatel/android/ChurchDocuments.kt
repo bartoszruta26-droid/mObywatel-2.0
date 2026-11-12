@@ -188,20 +188,9 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
             var local by remember(doc.id) { mutableStateOf(saved) }
             val churchNameIndex = doc.fields.indexOfFirst { it.contains("Pełna nazwa Kościoła", ignoreCase = true) || it.contains("nazwa wspólnoty", ignoreCase = true) }
             val churchOwner = if (churchNameIndex >= 0) local["f$churchNameIndex"].orEmpty() else ""
-            val dignityFieldIndex = doc.fields.indexOfFirst {
-                it.contains("urzędu / tytułu", ignoreCase = true) ||
-                    it.contains("tytuł biskupi", ignoreCase = true) ||
-                    it.contains("stopień święceń", ignoreCase = true)
-            }
-            val dignityValue = if (dignityFieldIndex >= 0) local["f$dignityFieldIndex"].orEmpty().lowercase(java.util.Locale.ROOT) else ""
-            val brandDocumentType = when {
-                doc.id.startsWith("missionary_") -> "church_missionary"
-                dignityValue.contains("arcybiskup") -> "church_archbishop"
-                dignityValue.contains("kardyn") -> "church_cardinal"
-                dignityValue.contains("opat") -> "church_abbot"
-                dignityValue.contains("biskup") -> "church_bishop"
-                else -> doc.id
-            }
+            // Każdy dokument podrzędny ma własny klucz wyglądu; DocumentBrandStore
+            // samodzielnie stosuje przypisania odziedziczone z typu nadrzędnego.
+            val brandDocumentType = doc.id
             val previewFields = doc.fields.mapIndexed { index, label ->
                 Triple("churchField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
             }
