@@ -283,9 +283,8 @@ internal fun mergeSharedLegitimacyAppearance(
     document: LegitimacyPreviewSettings,
     shared: LegitimacyPreviewSettings
 ): LegitimacyPreviewSettings {
-    if (document.individualAppearanceConfigured) return document.copy(
-        fontColor = document.fontColor.ifBlank { shared.fontColor }
-    )
+    // Wspólny układ i geometria są nadrzędne dla każdej legitymacji.
+    // Indywidualne ustawienia zachowują przypisane zasoby i ewentualny kolor tekstu.
     return document.copy(
         showCard = shared.showCard,
         showReverse = shared.showReverse,
