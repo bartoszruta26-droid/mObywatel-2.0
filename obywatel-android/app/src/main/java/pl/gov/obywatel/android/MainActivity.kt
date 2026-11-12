@@ -4479,10 +4479,17 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                 )
             Text(entityTitle, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             if (!editable) {
-                DocumentIdentityTemplate(
-                    entityTitle,
-                    entityValues,
-                    owner = entityFields.firstOrNull()?.let { fields[it.first].orEmpty() }.orEmpty()
+                val previewSettings = rememberLegitimacyPreviewSettings("entity").value.copy(visibleFieldsConfigured = false)
+                val previewFields = entityValues.entries.take(12).mapIndexed { index, entry ->
+                    Triple("registryField_$index", entry.key.uppercase(), entry.value.ifBlank { "—" })
+                }
+                UnifiedCredentialCard(
+                    documentKey = "entity",
+                    title = entityTitle.uppercase(),
+                    subtitle = "PODGLĄD DANYCH REJESTROWYCH",
+                    holderName = entityFields.firstOrNull()?.let { fields[it.first].orEmpty() }.orEmpty().ifBlank { "DANE PODMIOTU" },
+                    fields = previewFields,
+                    settings = previewSettings
                 )
             }
             entityFields.forEach { (key, label, placeholder) ->
