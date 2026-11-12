@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.ui.documents
 
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -37,7 +38,7 @@ class DocumentsScreenTest {
         composeRule.waitUntil(timeoutMillis = 5_000) {
             composeRule.onAllNodes(androidx.compose.ui.test.hasText("Brak dokumentów do wyświetlenia.")).fetchSemanticsNodes().isNotEmpty()
         }
-        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
         composeRule.onNodeWithText("Brak dokumentów do wyświetlenia.").assertIsDisplayed()
         composeRule.onNodeWithText("Dodaj PDF, DOCX, ODT lub obraz").assertDoesNotExist()
         composeRule.onNodeWithText("Dodawanie i usuwanie plików jest dostępne w Więcej → Ustawienia → Dokumenty własne — pliki.", substring = true)
@@ -53,7 +54,7 @@ class DocumentsScreenTest {
             }
         }
 
-        composeRule.onNodeWithContentDescription("Powrót").performClick()
+        composeRule.onNodeWithContentDescription("Wróć do poprzedniego ekranu").performClick()
         org.junit.Assert.assertEquals(1, backCount)
     }
 }
