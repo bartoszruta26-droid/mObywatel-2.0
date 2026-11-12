@@ -994,6 +994,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var documentBrandTarget by remember { mutableStateOf<String?>(null) }
     var showRegistryEditor by remember { mutableStateOf(false) }
     var settingsDocumentEditor by remember { mutableStateOf<String?>(null) }
+    var graphicEditorReturnTarget by remember { mutableStateOf("graphic_catalog") }
     var credentialAppearanceTarget by remember { mutableStateOf<String?>(null) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
@@ -1128,19 +1129,24 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
                     settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }) {
-                        FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                        FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
                     }
                     settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }) {
-                        FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                        FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
                     }
                     settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }) {
-                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
                     }
                     settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }) {
-                        ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                        ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
                     }
                     settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }) {
-                        OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                        OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
                     }
                     settingsDocumentEditor == "children_health" -> CredentialAppearanceEditorEntry("children", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
@@ -1150,11 +1156,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     }
                     settingsDocumentEditor == "graphic_catalog" -> DocumentGraphicCatalogScreen(
                         onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                        onSelect = { key -> settingsDocumentEditor = "graphic:$key" }
+                        onSelect = { key -> graphicEditorReturnTarget = "graphic_catalog"; settingsDocumentEditor = "graphic:$key" }
                     )
                     settingsDocumentEditor?.startsWith("graphic:") == true -> DocumentGraphicEditorScreen(
                         documentKey = settingsDocumentEditor!!.substringAfter("graphic:"),
-                        onBack = { settingsDocumentEditor = "graphic_catalog" }
+                        onBack = {
+                            if (graphicEditorReturnTarget == "disability") {
+                                settingsDocumentEditor = null
+                                showDisabilitySettings = true
+                            } else settingsDocumentEditor = graphicEditorReturnTarget
+                        }
                     )
                     documentBrandTarget != null -> DocumentBrandAssetsScreen(onBack = { documentBrandTarget = null; showSettingsMenu = true }, fixedTarget = documentBrandTarget!!)
                     showDocumentBrandAssets -> DocumentBrandAssetsScreen(onBack = { showDocumentBrandAssets = false; showSettingsMenu = true })
@@ -1244,7 +1255,14 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     )
                     showDisabilitySettings -> CredentialAppearanceEditorEntry("disability", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         CompositionLocalProvider(LocalDocumentScreenMode provides DocumentScreenMode.EDITOR) {
-                            DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
+                            DisabilitySettingsScreen(
+                                onBack = { showDisabilitySettings = false; showSettingsMenu = true },
+                                onEditGraphic = {
+                                    graphicEditorReturnTarget = "disability"
+                                    showDisabilitySettings = false
+                                    settingsDocumentEditor = "graphic:disability"
+                                }
+                            )
                         }
                     }
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
@@ -2939,7 +2957,7 @@ private fun SettingsMenuScreen(
 }
 
 @Composable
-private fun DisabilitySettingsScreen(onBack: () -> Unit) {
+private fun DisabilitySettingsScreen(onBack: () -> Unit, onEditGraphic: () -> Unit = {}) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
@@ -2959,6 +2977,9 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
         Text("Ustawienia danych o niepełnosprawności", color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Uzupełnij dane zgodnie z posiadanym dokumentem lub informacją źródłową.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        OutlinedButton(onClick = onEditGraphic, modifier = Modifier.fillMaxWidth()) {
+            Text("Edytuj wygląd graficzny i podgląd orzeczenia / zaświadczenia")
+        }
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text("Źródło dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)

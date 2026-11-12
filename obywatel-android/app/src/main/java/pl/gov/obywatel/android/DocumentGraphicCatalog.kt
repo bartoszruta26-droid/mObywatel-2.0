@@ -144,6 +144,90 @@ internal fun DocumentGraphicCatalogScreen(
     }
 }
 
+private val bankGraphicFieldKeys = listOf(
+    "account_name", "account_bank", "account_currency", "account_iban", "account_bic",
+    "account_holder", "account_type", "account_country", "account_status",
+    "account_open_date", "account_close_date", "account_purpose", "account_notes"
+)
+
+private fun loadSubdocumentGraphicValues(context: android.content.Context, documentKey: String): Map<String, String> {
+    if (documentKey == "disability") {
+        val stored = DemoIdentityStore.load(context)
+        return mapOf(
+            "firstNames" to stored["disabilityPersonName"].orEmpty(),
+            "disabilityDecisionType" to stored["disabilityCategory"].orEmpty(),
+            "disabilityDecisionNumber" to stored["disabilityDecisionNumber"].orEmpty(),
+            "disabilityCaseNumber" to stored["disabilityCaseNumber"].orEmpty(),
+            "disabilityDegree" to stored["disabilityDegree"].orEmpty(),
+            "disabilityValidity" to stored["disabilityValidity"].orEmpty(),
+            "disabilityIssuerName" to stored["disabilityIssuerName"].orEmpty(),
+            "disabilityLegalBasis" to stored["disabilityLegalBasis"].orEmpty()
+        ).filterValues { it.isNotBlank() }
+    }
+    val source = when {
+        churchGraphicDocumentTargets().any { it.first == documentKey } ->
+            ChurchDocumentStore.load(context)[documentKey].orEmpty()
+        familyEntityGraphicDocumentTargets().any { it.first == documentKey } ->
+            FamilyEntityDocumentStore.load(context)[documentKey].orEmpty()
+        officialGraphicDocumentTargets().any { it.first == documentKey } ->
+            OfficialDocumentStore.load(context)[documentKey].orEmpty()
+        else -> emptyMap()
+    }
+    if (documentKey == "rod_bank_accounts" || documentKey == "entity_bank_accounts") {
+        return bankGraphicFieldKeys.mapIndexedNotNull { index, key ->
+            source["account_0_$index"]?.let { key to it }
+        }.toMap()
+    }
+    return source.mapNotNull { (key, value) ->
+        key.removePrefix("f").toIntOrNull()?.let { "field_$it" to value }
+    }.toMap()
+}
+
+private fun saveSubdocumentGraphicValues(
+    context: android.content.Context,
+    documentKey: String,
+    values: Map<String, String>
+) {
+    if (documentKey == "disability") {
+        val current = DemoIdentityStore.load(context)
+        val mapped = mapOf(
+            "disabilityPersonName" to values["firstNames"].orEmpty(),
+            "disabilityCategory" to values["disabilityDecisionType"].orEmpty(),
+            "disabilityDecisionNumber" to values["disabilityDecisionNumber"].orEmpty(),
+            "disabilityCaseNumber" to values["disabilityCaseNumber"].orEmpty(),
+            "disabilityDegree" to values["disabilityDegree"].orEmpty(),
+            "disabilityValidity" to values["disabilityValidity"].orEmpty(),
+            "disabilityIssuerName" to values["disabilityIssuerName"].orEmpty(),
+            "disabilityLegalBasis" to values["disabilityLegalBasis"].orEmpty()
+        )
+        DemoIdentityStore.save(context, current + mapped)
+        return
+    }
+    val sourceValues = if (documentKey == "rod_bank_accounts" || documentKey == "entity_bank_accounts") {
+        bankGraphicFieldKeys.mapIndexedNotNull { index, key ->
+            values[key]?.let { "account_0_$index" to it }
+        }.toMap()
+    } else {
+        values.mapNotNull { (key, value) ->
+            key.removePrefix("field_").toIntOrNull()?.let { "f$it" to value }
+        }.toMap()
+    }
+    when {
+        churchGraphicDocumentTargets().any { it.first == documentKey } -> {
+            val current = ChurchDocumentStore.load(context)
+            ChurchDocumentStore.save(context, current + (documentKey to (current[documentKey].orEmpty() + sourceValues)))
+        }
+        familyEntityGraphicDocumentTargets().any { it.first == documentKey } -> {
+            val current = FamilyEntityDocumentStore.load(context)
+            FamilyEntityDocumentStore.save(context, current + (documentKey to (current[documentKey].orEmpty() + sourceValues)))
+        }
+        officialGraphicDocumentTargets().any { it.first == documentKey } -> {
+            val current = OfficialDocumentStore.load(context)
+            OfficialDocumentStore.save(context, current + (documentKey to (current[documentKey].orEmpty() + sourceValues)))
+        }
+    }
+}
+
 @Composable
 internal fun DocumentGraphicEditorScreen(
     documentKey: String,
@@ -154,9 +238,10 @@ internal fun DocumentGraphicEditorScreen(
     val prefix = "graphic_document:$documentKey:"
     val options = remember(documentKey) { credentialFieldOptions(documentKey).distinctBy { it.first } }
     val stored = remember(documentKey) { DemoIdentityStore.load(context) }
+    val sourceValues = remember(documentKey) { loadSubdocumentGraphicValues(context, documentKey) }
     val values = remember(documentKey) {
         mutableStateMapOf<String, String>().apply {
-            options.forEach { (key, _) -> put(key, stored[prefix + key].orEmpty()) }
+            options.forEach { (key, _) -> put(key, sourceValues[key] ?: stored[prefix + key].orEmpty()) }
             put("photo", stored[prefix + "photo"].orEmpty())
         }
     }
@@ -281,6 +366,7 @@ internal fun DocumentGraphicEditorScreen(
                 options.forEach { (key, _) -> updated[prefix + key] = values[key].orEmpty() }
                 updated[prefix + "photo"] = values["photo"].orEmpty()
                 DemoIdentityStore.save(context, updated)
+                saveSubdocumentGraphicValues(context, documentKey, values.toMap())
                 LegitimacyPreviewSettingsStore.save(context, documentKey, appearance.value)
             }.onSuccess { message = "Zapisano dane, fotografię i ustawienia graficzne dokumentu." }
                 .onFailure { message = "Błąd zapisu: ${it.localizedMessage ?: "nieznany błąd"}" }

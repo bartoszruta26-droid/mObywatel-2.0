@@ -157,7 +157,7 @@ internal object ChurchDocumentStore {
 }
 
 @Composable
-internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
+internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false, onEditGraphic: (String) -> Unit = {}) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var records by remember { mutableStateOf(ChurchDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
@@ -177,7 +177,10 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                                 Text(doc.title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                                 Text(if (filled) "Dane zapisane" else "Brak zapisanych danych", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("Otwórz", color = MaterialTheme.colorScheme.primary)
+                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                if (!readOnly) TextButton(onClick = { onEditGraphic(doc.id) }) { Text("Wygląd") }
+                                Text("Otwórz", color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
@@ -195,6 +198,9 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                 Triple("churchField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            if (!readOnly) OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Edytuj wygląd graficzny i podgląd tego dokumentu")
+            }
             if (readOnly) {
                 val settings = rememberLegitimacyPreviewSettings(brandDocumentType).value.copy(visibleFieldsConfigured = false)
                 UnifiedCredentialCard(

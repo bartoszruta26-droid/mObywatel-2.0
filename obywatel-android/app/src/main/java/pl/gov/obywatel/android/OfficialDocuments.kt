@@ -145,7 +145,7 @@ internal object OfficialDocumentStore {
 }
 
 @Composable
-internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
+internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, onEditGraphic:(String)->Unit = {}) {
     val context= LocalContext.current
     var records by remember { mutableStateOf(OfficialDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
@@ -173,7 +173,10 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                             Text(type.title,fontWeight=FontWeight.SemiBold,color=MaterialTheme.colorScheme.onSurface)
                             Text(if(populated) "Dane zapisane" else "Brak danych",color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
                         }
-                        Text("Otwórz",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelMedium)
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            if (!readOnly) TextButton(onClick = { onEditGraphic(type.id) }) { Text("Wygląd") }
+                            Text("Otwórz",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelMedium)
+                        }
                     }
                 }
             }
@@ -182,6 +185,9 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
             val values=records[type.id].orEmpty()
             var local by remember(type.id, records) { mutableStateOf(values) }
             Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
+            if (!readOnly) OutlinedButton(onClick = { onEditGraphic(type.id) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Edytuj wygląd graficzny i podgląd tego dokumentu")
+            }
             if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.secondaryContainer)) {
                 Text(type.note,Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.bodySmall)
             }
