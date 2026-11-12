@@ -117,6 +117,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -439,7 +440,7 @@ private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bit
 
 
 @Composable
-private fun ApplicationEntryFlow() {
+private fun ApplicationEntryFlow(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var stage by remember { mutableIntStateOf(0) }
     var showIntro by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
@@ -451,8 +452,11 @@ private fun ApplicationEntryFlow() {
             modifier = Modifier.fillMaxSize().background(Color(0xFFF4F6F8)),
             contentAlignment = Alignment.Center
         ) {
+            val appearance = LocalApplicationAppearance.current
+            val context = LocalContext.current
             Image(
-                painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
+                painter = painterResource(applicationDrawable(context, appearance.introEmblem,
+                    R.drawable.file_00000000532082108d561dcd2385f8f9)),
                 contentDescription = "Godło aplikacji — plansza wprowadzająca",
                 modifier = Modifier.size(184.dp),
                 contentScale = ContentScale.Fit
@@ -468,15 +472,18 @@ private fun ApplicationEntryFlow() {
                 onDemo = { stage = 2 },
                 onBack = { stage = 0 }
             )
-            else -> HomeScreen()
+            else -> HomeScreen(onAppearanceChange = onAppearanceChange)
         }
     }
 }
 
 @Composable
 private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
+    val context = LocalContext.current
+    val appearance = LocalApplicationAppearance.current
     Image(
-        painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
+        painter = painterResource(applicationDrawable(context, appearance.headerEmblem,
+            R.drawable.file_00000000532082108d561dcd2385f8f9)),
         contentDescription = "Godło aplikacji",
         modifier = Modifier.size(size),
         contentScale = ContentScale.Fit
@@ -486,9 +493,12 @@ private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
 @Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
     val cream = Color(0xFFFFF1D1)
+    val context = LocalContext.current
+    val appearance = LocalApplicationAppearance.current
     Box(Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.drawable.file_00000000e0e4820a839fa3184993f41b),
+            painter = painterResource(applicationDrawable(context, appearance.welcomeBackground,
+                R.drawable.file_00000000e0e4820a839fa3184993f41b)),
             contentDescription = "Polska flaga na maszcie na tle nieba",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -564,10 +574,13 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
     var passwordVisible by remember { mutableStateOf(false) }
     val cream = Color(0xFFFFF1D1)
     val skyBlue = Color(0xFF9EDCFF)
+    val context = LocalContext.current
+    val appearance = LocalApplicationAppearance.current
 
     Box(Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.drawable.file_00000000e0e4820a839fa3184993f41b),
+            painter = painterResource(applicationDrawable(context, appearance.loginBackground,
+                R.drawable.file_00000000e0e4820a839fa3184993f41b)),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -688,7 +701,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Ten sam znak i tło są wyświetlane przez okno startowe oraz ekran powitalny.
         window.setBackgroundDrawableResource(R.drawable.splash_screen)
-        setContent { ObywatelTheme { ApplicationEntryFlow() } }
+        setContent {
+            var appearance by remember { mutableStateOf(ApplicationAppearanceStore.load(this@MainActivity)) }
+            ObywatelTheme(themeMode = appearance.theme) {
+                CompositionLocalProvider(LocalApplicationAppearance provides appearance) {
+                    ApplicationEntryFlow(onAppearanceChange = { updated ->
+                        ApplicationAppearanceStore.save(this@MainActivity, updated)
+                        appearance = updated
+                    })
+                }
+            }
+        }
     }
 }
 
@@ -802,7 +825,7 @@ private fun saveDocumentPlacements(context: Context, placements: Map<String, Str
 }
 
 @Composable
-private fun HomeScreen() {
+private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     val context = LocalContext.current
     var pendingImport by remember { mutableStateOf<Map<String, String>?>(null) }
     var importStatus by remember { mutableStateOf("") }
@@ -877,6 +900,7 @@ private fun HomeScreen() {
     var showDocumentsEditor by remember { mutableStateOf(false) }
     var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
+    var showApplicationAppearanceSettings by remember { mutableStateOf(false) }
     var showDocumentVisibilitySettings by remember { mutableStateOf(false) }
     var showDocumentBrandAssets by remember { mutableStateOf(false) }
     var documentBrandTarget by remember { mutableStateOf<String?>(null) }
@@ -897,6 +921,7 @@ private fun HomeScreen() {
     fun handleSystemBack() {
         when {
             showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false }
+            showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
@@ -919,7 +944,7 @@ private fun HomeScreen() {
     }
 
     BackHandler(
-        enabled = showCredentialAppearanceEditor || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -966,6 +991,11 @@ private fun HomeScreen() {
             Box(modifier = Modifier.weight(1f)) {
                 when {
                     showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = { showCredentialAppearanceEditor = false })
+                    showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
+                        appearance = LocalApplicationAppearance.current,
+                        onChange = onAppearanceChange,
+                        onBack = { showApplicationAppearanceSettings = false; showSettingsMenu = true }
+                    )
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 }, readOnly = true)
@@ -1003,6 +1033,7 @@ private fun HomeScreen() {
                             documentPlacements = updated
                         },
                         onBack = { showSettingsMenu = false },
+                        onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
                         onManageDocumentVisibility = { showSettingsMenu = false; showDocumentVisibilitySettings = true },
                         onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
                         onEditDocumentBranding = { target -> showSettingsMenu = false; documentBrandTarget = target },
@@ -2327,8 +2358,11 @@ private fun Header(
 
 @Composable
 private fun BrandMark() {
+    val context = LocalContext.current
+    val appearance = LocalApplicationAppearance.current
     Image(
-        painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
+        painter = painterResource(applicationDrawable(context, appearance.headerEmblem,
+            R.drawable.file_00000000532082108d561dcd2385f8f9)),
         contentDescription = "Godło aplikacji",
         modifier = Modifier.size(48.dp),
         contentScale = ContentScale.Fit
@@ -2494,6 +2528,7 @@ private fun DocumentVisibilitySettingsScreen(
 @Composable
 private fun SettingsMenuScreen(
     documentPlacements: Map<String, String>,
+    onManageApplicationAppearance: () -> Unit,
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit,
     onManageDocumentVisibility: () -> Unit,
@@ -2529,6 +2564,12 @@ private fun SettingsMenuScreen(
                     color = Muted, style = MaterialTheme.typography.bodySmall)
             }
         }
+        ProfileActionCard(
+            "Ustawienia aplikacji",
+            "Motyw kolorystyczny, godło oraz tła ekranów uruchamiania i logowania",
+            Icons.Filled.Settings,
+            onManageApplicationAppearance
+        )
         ProfileActionCard(
             "Widoczność dokumentów",
             "Wybierz: Dokumenty, Inne dokumenty albo Ukryj",
