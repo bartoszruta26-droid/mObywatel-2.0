@@ -801,6 +801,71 @@ private fun saveDocumentCardStyle(context: Context, style: String) {
         "Nie udało się zapisać układu kafelków dokumentów."
     }
 }
+
+private const val DOCUMENT_DEFAULT_ICON_KEY = "default_document_icon"
+private const val DOCUMENT_ICON_OVERRIDE_PREFIX = "document_icon_"
+private val documentIconChoices = listOf(
+    "lib_ic_document" to "Dokument",
+    "lib_ic_account" to "Osoba",
+    "lib_ic_credit_card" to "Karta",
+    "lib_ic_folder" to "Folder",
+    "lib_ic_medical_record" to "Dokument medyczny",
+    "lib_ic_school" to "Edukacja",
+    "lib_ic_building" to "Budynek",
+    "lib_ic_wallet" to "Portfel",
+    "lib_ic_fingerprint" to "Odcisk palca",
+    "lib_ic_flag" to "Flaga",
+    "documents_identity_card" to "Dowód tożsamości",
+    "documents_passport" to "Paszport",
+    "documents_family_record" to "Dokument rodowy",
+    "documents_student_legitimacy" to "Legitymacja uczniowska"
+)
+private fun loadDefaultDocumentIcon(context: Context): String =
+    context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+        .getString(DOCUMENT_DEFAULT_ICON_KEY, "automatic")
+        ?.takeIf { it == "automatic" || documentIconChoices.any { choice -> choice.first == it } }
+        ?: "automatic"
+private fun saveDefaultDocumentIcon(context: Context, value: String) {
+    require(value == "automatic" || documentIconChoices.any { it.first == value })
+    check(context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+        .edit().putString(DOCUMENT_DEFAULT_ICON_KEY, value).commit()) {
+        "Nie udało się zapisać domyślnej ikony dokumentów."
+    }
+}
+private fun loadDocumentIconOverrides(context: Context): Map<String, String> {
+    val prefs = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+    return documentDisplayOptions.mapNotNull { (id, _, _) ->
+        prefs.getString(DOCUMENT_ICON_OVERRIDE_PREFIX + id, null)
+            ?.takeIf { selected -> documentIconChoices.any { it.first == selected } }
+            ?.let { id to it }
+    }.toMap()
+}
+private fun saveDocumentIconOverrides(context: Context, values: Map<String, String>) {
+    val editor = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE).edit()
+    documentDisplayOptions.forEach { (id, _, _) ->
+        val value = values[id]
+        if (value.isNullOrBlank()) editor.remove(DOCUMENT_ICON_OVERRIDE_PREFIX + id)
+        else {
+            require(documentIconChoices.any { it.first == value }) { "Nieprawidłowa ikona dokumentu: $id" }
+            editor.putString(DOCUMENT_ICON_OVERRIDE_PREFIX + id, value)
+        }
+    }
+    check(editor.commit()) { "Nie udało się zapisać indywidualnych ikon dokumentów." }
+}
+private fun resolveDocumentIconResource(
+    context: Context,
+    documentId: String,
+    defaultIcon: String,
+    overrides: Map<String, String>
+): Int {
+    val selected = overrides[documentId] ?: defaultIcon
+    if (selected != "automatic") {
+        context.resources.getIdentifier(selected, "drawable", context.packageName)
+            .takeIf { it != 0 }?.let { return it }
+    }
+    return documentDisplayOptions.firstOrNull { it.first == documentId }?.third
+        ?: R.drawable.lib_ic_document
+}
 private fun loadDocumentPlacements(context: Context): Map<String, String> {
     val prefs = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
     if (!prefs.getBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, false)) {
@@ -903,6 +968,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
     var documentPlacements by remember(context) { mutableStateOf(loadDocumentPlacements(context)) }
     var documentCardStyle by remember(context) { mutableStateOf(loadDocumentCardStyle(context)) }
+    var defaultDocumentIcon by remember(context) { mutableStateOf(loadDefaultDocumentIcon(context)) }
+    var documentIconOverrides by remember(context) { mutableStateOf(loadDocumentIconOverrides(context)) }
     var selectedTab by remember { mutableIntStateOf(0) }
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
@@ -1038,6 +1105,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             saveDocumentCardStyle(context, style)
                             documentCardStyle = style
                         },
+                        defaultDocumentIcon = defaultDocumentIcon,
+                        onDefaultDocumentIconChange = { selected ->
+                            saveDefaultDocumentIcon(context, selected)
+                            defaultDocumentIcon = selected
+                        },
+                        documentIconOverrides = documentIconOverrides,
+                        onDocumentIconOverridesChange = { updated ->
+                            saveDocumentIconOverrides(context, updated)
+                            documentIconOverrides = updated
+                        },
                         onBack = { showDocumentVisibilitySettings = false; showSettingsMenu = true }
                     )
                     showSettingsMenu -> SettingsMenuScreen(
@@ -1095,6 +1172,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onAddDocuments = { showDemoDocuments = false; showDocumentVisibilitySettings = true },
                         documentPlacements = documentPlacements,
                         documentCardStyle = documentCardStyle,
+                        defaultDocumentIcon = defaultDocumentIcon,
+                        documentIconOverrides = documentIconOverrides,
                         onOpenDetails = { selectedDocumentId = it },
                         onOpenService = { title ->
                             when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
@@ -2509,8 +2588,14 @@ private fun DocumentVisibilitySettingsScreen(
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     documentCardStyle: String,
     onDocumentCardStyleChange: (String) -> Unit,
+    defaultDocumentIcon: String,
+    onDefaultDocumentIconChange: (String) -> Unit,
+    documentIconOverrides: Map<String, String>,
+    onDocumentIconOverridesChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit
 ) {
+    var defaultIconMenu by remember { mutableStateOf(false) }
+    var expandedDocumentIcon by remember { mutableStateOf<String?>(null) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2524,6 +2609,25 @@ private fun DocumentVisibilitySettingsScreen(
             color = Muted, style = MaterialTheme.typography.bodyMedium)
         Text("Wygląd kafelków w oknie Dokumenty", color = Navy, fontWeight = FontWeight.Bold)
         Text("Wybierz sposób prezentacji dokumentów.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Domyślna ikona dokumentów", color = Navy, fontWeight = FontWeight.Bold)
+        Text("Ustawienie obejmuje wszystkie dokumenty. Ikona indywidualna wybrana niżej ma pierwszeństwo.", color = Muted,
+            style = MaterialTheme.typography.bodySmall)
+        Box {
+            OutlinedButton(onClick = { defaultIconMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(if (defaultDocumentIcon == "automatic") "Automatycznie — ikona przypisana do dokumentu"
+                    else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second ?: "Wybierz ikonę")
+            }
+            DropdownMenu(expanded = defaultIconMenu, onDismissRequest = { defaultIconMenu = false }) {
+                DropdownMenuItem(text = { Text("Automatycznie — ikona przypisana do dokumentu") }, onClick = {
+                    onDefaultDocumentIconChange("automatic"); defaultIconMenu = false
+                })
+                documentIconChoices.forEach { (resource, label) ->
+                    DropdownMenuItem(text = { Text(label) }, onClick = {
+                        onDefaultDocumentIconChange(resource); defaultIconMenu = false
+                    })
+                }
+            }
+        }
         listOf("large" to "Duże kafelki", "small" to "Małe kafelki", "list" to "Kafelki listy").forEach { (value, label) ->
             Row(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
@@ -2540,8 +2644,29 @@ private fun DocumentVisibilitySettingsScreen(
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Image(painter = painterResource(iconRes), contentDescription = null, modifier = Modifier.size(42.dp))
+                        Image(painter = painterResource(resolveDocumentIconResource(
+                            LocalContext.current, id, defaultDocumentIcon, documentIconOverrides
+                        )), contentDescription = null, modifier = Modifier.size(42.dp))
                         Text(title, color = Navy, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    }
+                    Box {
+                        OutlinedButton(onClick = { expandedDocumentIcon = id }, modifier = Modifier.fillMaxWidth()) {
+                            val selected = documentIconOverrides[id]
+                            Text(if (selected == null) "Ikona domyślna: " +
+                                (if (defaultDocumentIcon == "automatic") "automatyczna" else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second.orEmpty())
+                                else documentIconChoices.firstOrNull { it.first == selected }?.second ?: "Ikona indywidualna")
+                        }
+                        DropdownMenu(expanded = expandedDocumentIcon == id, onDismissRequest = { expandedDocumentIcon = null }) {
+                            DropdownMenuItem(text = { Text("Użyj ikony domyślnej") }, onClick = {
+                                onDocumentIconOverridesChange(documentIconOverrides - id); expandedDocumentIcon = null
+                            })
+                            documentIconChoices.forEach { (resource, label) ->
+                                DropdownMenuItem(text = { Text(label) }, onClick = {
+                                    onDocumentIconOverridesChange(documentIconOverrides + (id to resource))
+                                    expandedDocumentIcon = null
+                                })
+                            }
+                        }
                     }
                     listOf("dashboard" to "Dokumenty", "other" to "Inne dokumenty", "hidden" to "Ukryj").forEach { (value, label) ->
                         Row(
@@ -2813,6 +2938,8 @@ private fun DocumentsWalletScreen(
     onAddDocuments: () -> Unit,
     documentPlacements: Map<String, String>,
     documentCardStyle: String,
+    defaultDocumentIcon: String,
+    documentIconOverrides: Map<String, String>,
     onOpenDetails: (String) -> Unit,
     onOpenService: (String) -> Unit
 ) {
@@ -2894,7 +3021,8 @@ private fun DocumentsWalletScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(11.dp)
                             ) {
-                                Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
+                                Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
+                                    contentDescription = document.title, modifier = Modifier.size(27.dp))
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                     Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
                                         style = MaterialTheme.typography.bodyMedium)
@@ -2920,7 +3048,8 @@ private fun DocumentsWalletScreen(
                                     )
                                 ) {
                                     Box(Modifier.fillMaxSize().padding(10.dp)) {
-                                        Icon(document.icon, contentDescription = null, tint = Blue,
+                                        Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
+                                            contentDescription = document.title,
                                             modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 23.dp else 30.dp))
                                         DocumentCardEmblem(
                                             documentKey = document.id,
