@@ -1019,6 +1019,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var documentBrandTarget by remember { mutableStateOf<String?>(null) }
     var showRegistryEditor by remember { mutableStateOf(false) }
     var settingsDocumentEditor by remember { mutableStateOf<String?>(null) }
+    var credentialAppearanceTarget by remember { mutableStateOf<String?>(null) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
@@ -1033,6 +1034,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun handleSystemBack() {
         when {
+            credentialAppearanceTarget != null -> credentialAppearanceTarget = null
             showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
@@ -1057,7 +1059,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1108,6 +1110,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {
+                    credentialAppearanceTarget != null -> CredentialAppearanceSettingsScreen(
+                        documentKey = credentialAppearanceTarget!!,
+                        onBack = { credentialAppearanceTarget = null }
+                    )
                     showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = { showCredentialAppearanceEditor = false; showSettingsMenu = true })
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
@@ -1124,17 +1130,39 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
-                    showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
-                    settingsDocumentEditor == "imported" -> DocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
-                    settingsDocumentEditor == "signed_pdf" -> SignedPdfDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, allowImport = true, readOnly = false)
-                    settingsDocumentEditor == "professional" -> ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
-                    settingsDocumentEditor == "family" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "business" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "bank_accounts" -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "church" -> ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "civil" -> OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "children_health" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "vaccines" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
+                    }
+                    settingsDocumentEditor == "imported" -> CredentialAppearanceEditorEntry("imported", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        DocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
+                    }
+                    settingsDocumentEditor == "signed_pdf" -> CredentialAppearanceEditorEntry("signed_pdf", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        SignedPdfDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, allowImport = true, readOnly = false)
+                    }
+                    settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
+                    }
+                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "children_health" -> CredentialAppearanceEditorEntry("children", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "vaccines" -> CredentialAppearanceEditorEntry("vaccines", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
                     documentBrandTarget != null -> DocumentBrandAssetsScreen(onBack = { documentBrandTarget = null; showSettingsMenu = true }, fixedTarget = documentBrandTarget!!)
                     showDocumentBrandAssets -> DocumentBrandAssetsScreen(onBack = { showDocumentBrandAssets = false; showSettingsMenu = true })
                     showDocumentVisibilitySettings -> DocumentVisibilitySettingsScreen(
@@ -4150,6 +4178,76 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         )
         Spacer(Modifier.height(12.dp))
     }
+    }
+}
+
+@Composable
+private fun CredentialAppearanceEditorEntry(
+    documentKey: String,
+    onOpenAppearance: (String) -> Unit,
+    content: @Composable () -> Unit
+) {
+    Column(Modifier.fillMaxSize()) {
+        Box(Modifier.weight(1f)) { content() }
+        OutlinedButton(
+            onClick = { onOpenAppearance(documentKey) },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Text("Wygląd legitymacji i widoczność pól podglądu")
+        }
+    }
+}
+
+@Composable
+private fun CredentialAppearanceSettingsScreen(
+    documentKey: String,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val state = rememberLegitimacyPreviewSettings(documentKey)
+    val options = remember(documentKey) { credentialFieldOptions(documentKey) }
+    val title = documentDisplayOptions.firstOrNull { it.first == documentKey }?.second
+        ?: documentKey.replace('_', ' ').replaceFirstChar { it.uppercase() }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("‹  Powrót do edycji dokumentu", color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Wygląd podglądu — $title", style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Zaznacz pola, które mają być widoczne na karcie. Ustawienia wyglądu dotyczą tego dokumentu, a wspólny wzór pozostaje punktem wyjścia.",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Pola wyświetlane na legitymacji", fontWeight = FontWeight.Bold)
+                options.forEach { (key, label) ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = !state.value.visibleFieldsConfigured || key in state.value.visibleFields,
+                            onCheckedChange = { checked ->
+                                val current = if (state.value.visibleFieldsConfigured) state.value.visibleFields
+                                    else options.map { it.first }.toSet()
+                                val updated = state.value.copy(
+                                    visibleFields = if (checked) current + key else current - key,
+                                    visibleFieldsConfigured = true
+                                )
+                                LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                                state.value = updated
+                            }
+                        )
+                        Text(label, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
+        LegitimacyPreviewSettingsPanel(
+            documentKey = documentKey,
+            settings = state.value,
+            onChange = { state.value = it }
+        )
     }
 }
 
