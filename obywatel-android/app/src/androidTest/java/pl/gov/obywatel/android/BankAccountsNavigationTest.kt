@@ -90,8 +90,10 @@ class BankAccountsNavigationTest {
             .performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText(
-            "Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia."
+            "Podgląd wyłącznie do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia → konkretny dokument."
         ).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Dodaj rachunek").assertDoesNotExist()
+        composeRule.onNodeWithText("Zapisz dane").assertDoesNotExist()
     }
 
     @Test
@@ -109,7 +111,8 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
         // Kontrolki formularza leżą niżej w przewijanym ekranie.
         composeRule.onNodeWithText("Dodaj rachunek").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Zapisz").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Zapisz dane").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Podgląd wyłącznie do odczytu.", substring = true).assertDoesNotExist()
     }
 
     @Test
