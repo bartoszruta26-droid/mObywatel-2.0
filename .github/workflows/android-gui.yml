@@ -107,3 +107,5 @@ jobs:
           make_latest: false
           files: obywatel-android/app/build/outputs/apk/debug/app-debug.apk
           fail_on_unmatched_files: true
+
+# Validation rerun: 2026-11-12 — run emulator UI tests on current integrated main.
