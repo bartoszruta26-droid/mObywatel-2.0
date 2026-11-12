@@ -228,7 +228,13 @@ internal object DocumentBrandStore {
                 val name = field.name
                 val lower = name.lowercase(Locale.ROOT)
                 val kind = when {
-                    name == "file_00000000532082108d561dcd2385f8f9" -> "Godło"
+                    name in setOf(
+                        "file_00000000532082108d561dcd2385f8f9",
+                        "file_0000000077d4820aa3b7115d85ab9a7d",
+                        "file_000000008f308246bca605513033d0ea",
+                        "file_00000000a074820a9361a6e3226f2341",
+                        "a_clean_vector_style_emblem_on_a_transparent_backg"
+                    ) -> "Godło"
                     name in largeBackgroundDrawableNames -> "Tło dokumentu"
                     "flag" in lower || "flaga" in lower -> "Flaga"
                     "seal" in lower || "stamp" in lower || "piecz" in lower -> "Pieczęć"
@@ -675,7 +681,7 @@ internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
     val selected = assetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
     return selected
         ?: DocumentBrandStore.preview(context, "builtin_polish_emblem")
-        ?: BitmapFactory.decodeResource(context.resources, R.drawable.institutions_eagle_emblem)
+        ?: BitmapFactory.decodeResource(context.resources, R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg)
 }
 
 internal fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
@@ -1045,6 +1051,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     var uploadKindExpanded by remember { mutableStateOf(false) }
     val legitimacySettingsState = rememberLegitimacyPreviewSettings(fixedTarget ?: "asset-library")
     val availableKinds = DocumentBrandStore.assetKinds()
+    var expandedAssetKinds by remember { mutableStateOf(setOf("Godło", "Herb", "Tło dokumentu")) }
     val filteredAssets = assets.filter { asset ->
         (kindFilter == "Wszystkie" || asset.kind == kindFilter) &&
             (search.isBlank() || listOf(asset.label, asset.owner, asset.kind, asset.file)
@@ -1186,61 +1193,71 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                 style = MaterialTheme.typography.bodySmall)
         }
         filteredAssets.groupBy { it.kind }.forEach { (assetKind, grouped) ->
-            Text(
-                if (assetKind == "Wzór podpisu odręcznego") "Podpisy odręczne" else assetKind,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF173B58)
-            )
-            grouped.forEach { asset ->
-                val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context, asset.id) }
-                Card(Modifier.fillMaxWidth()) {
+            val expanded = assetKind in expandedAssetKinds
+            Card(Modifier.fillMaxWidth()) {
+                Column {
                     Row(
-                        Modifier.fillMaxWidth().padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        Modifier.fillMaxWidth().clickable {
+                            expandedAssetKinds = if (expanded) expandedAssetKinds - assetKind
+                                else expandedAssetKinds + assetKind
+                        }.padding(horizontal = 14.dp, vertical = 13.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (assetPreview != null) {
-                            Image(
-                                assetPreview.asImageBitmap(),
-                                contentDescription = asset.label,
-                                modifier = Modifier.size(64.dp),
-                                contentScale = ContentScale.Fit
-                            )
-                        } else {
-                            Box(Modifier.size(64.dp).background(Color(0xFFF0F3F6)),
-                                contentAlignment = Alignment.Center) {
-                                Text("SVG / plik", style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(asset.label, fontWeight = FontWeight.SemiBold)
-                            Text("${asset.owner} · ${asset.kind}", style = MaterialTheme.typography.bodySmall)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (fixedTarget != null && !readOnly) {
-                                    TextButton(onClick = {
-                                        runCatching { DocumentBrandStore.assign(context, fixedTarget, asset.kind, asset.id) }
-                                            .onSuccess {
-                                                assignments = DocumentBrandStore.assignments(context)
-                                                assetRevision++
-                                                status = "Przypisano zasób do dokumentu."
-                                            }
-                                            .onFailure { status = "Nie udało się przypisać zasobu: ${it.message ?: "błąd"}" }
-                                    }) { Text("Przypisz") }
-                                }
-                                if (asset.file.startsWith("builtin:")) {
-                                    Text("Wbudowany", color = Color(0xFF667788),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(top = 10.dp))
-                                } else if (!readOnly) {
-                                    TextButton(onClick = {
-                                        DocumentBrandStore.delete(context, asset.id)
-                                        assets = DocumentBrandStore.list(context)
-                                        assignments = DocumentBrandStore.assignments(context)
-                                    }) { Text("Usuń") }
+                        Text(
+                            (if (assetKind == "Wzór podpisu odręcznego") "Podpisy odręczne" else assetKind) + " · ${grouped.size}",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (expanded) grouped.forEachIndexed { index, asset ->
+                        val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context, asset.id) }
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (assetPreview != null) {
+                                Image(assetPreview.asImageBitmap(), contentDescription = asset.label,
+                                    modifier = Modifier.size(64.dp), contentScale = ContentScale.Fit)
+                            } else {
+                                Box(Modifier.size(64.dp).background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center) {
+                                    Text("SVG / plik", style = MaterialTheme.typography.labelSmall)
                                 }
                             }
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(asset.label, fontWeight = FontWeight.SemiBold)
+                                Text("${asset.owner} · ${asset.kind}", style = MaterialTheme.typography.bodySmall)
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    if (fixedTarget != null && !readOnly) {
+                                        TextButton(onClick = {
+                                            runCatching { DocumentBrandStore.assign(context, fixedTarget, asset.kind, asset.id) }
+                                                .onSuccess {
+                                                    assignments = DocumentBrandStore.assignments(context)
+                                                    assetRevision++
+                                                    status = "Przypisano zasób do dokumentu."
+                                                }
+                                                .onFailure { status = "Nie udało się przypisać zasobu: ${it.message ?: "błąd"}" }
+                                        }) { Text("Przypisz") }
+                                    }
+                                    if (asset.file.startsWith("builtin:")) {
+                                        Text("Wbudowany", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.padding(top = 10.dp))
+                                    } else if (!readOnly) {
+                                        TextButton(onClick = {
+                                            DocumentBrandStore.delete(context, asset.id)
+                                            assets = DocumentBrandStore.list(context)
+                                            assignments = DocumentBrandStore.assignments(context)
+                                        }) { Text("Usuń") }
+                                    }
+                                }
+                            }
                         }
+                        if (index < grouped.lastIndex) HorizontalDivider()
                     }
                 }
             }
