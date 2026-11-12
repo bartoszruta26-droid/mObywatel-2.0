@@ -1450,7 +1450,25 @@ internal fun UnifiedCredentialCard(
                         style = MaterialTheme.typography.bodySmall)
                 }
             },
-            confirmButton = { TextButton(onClick = { showQr = false }) { Text("Zamknij") } }
+            confirmButton = {
+                Row {
+                    TextButton(onClick = {
+                        runCatching {
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, title)
+                                putExtra(Intent.EXTRA_TEXT, sharePayload)
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, "Udostępnij dane kodu QR"))
+                        }
+                    }) {
+                        Icon(Icons.Filled.Share, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Udostępnij")
+                    }
+                    TextButton(onClick = { showQr = false }) { Text("Zamknij") }
+                }
+            }
         )
     }
     if (showIdentityDetails) {
