@@ -1188,13 +1188,6 @@ internal fun UnifiedCredentialCard(
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(Modifier.weight(1f))
-                        IconButton(
-                            onClick = { showInfo = true },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(Icons.Filled.Info, contentDescription = "Informacje o ważności dokumentu",
-                                tint = Color.White.copy(alpha = 0.82f), modifier = Modifier.size(18.dp))
-                        }
                     }
                 }
             }
