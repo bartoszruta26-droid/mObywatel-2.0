@@ -1516,7 +1516,8 @@ internal fun CredentialTemplatePreview(documentKey: String, settings: Legitimacy
         holderName = "IMIĘ I NAZWISKO",
         fields = selected.map { (key, label) -> Triple(key, label, "—") },
         settings = settings,
-        assetRevision = assetRevision
+        assetRevision = assetRevision,
+        validity = true
     )
 }
 
