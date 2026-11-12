@@ -1112,7 +1112,11 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 when {
                     credentialAppearanceTarget != null -> CredentialAppearanceSettingsScreen(
                         documentKey = credentialAppearanceTarget!!,
-                        onBack = { credentialAppearanceTarget = null }
+                        onBack = { credentialAppearanceTarget = null },
+                        onOpenSharedAppearance = {
+                            credentialAppearanceTarget = null
+                            showCredentialAppearanceEditor = true
+                        }
                     )
                     showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = { showCredentialAppearanceEditor = false; showSettingsMenu = true })
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
@@ -4180,7 +4184,8 @@ private fun CredentialAppearanceEditorEntry(
 @Composable
 private fun CredentialAppearanceSettingsScreen(
     documentKey: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenSharedAppearance: () -> Unit
 ) {
     val context = LocalContext.current
     val state = rememberLegitimacyPreviewSettings(documentKey)
@@ -4197,8 +4202,11 @@ private fun CredentialAppearanceSettingsScreen(
             fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Wygląd podglądu — $title", style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Zaznacz pola, które mają być widoczne na karcie. Ustawienia wyglądu dotyczą tego dokumentu, a wspólny wzór pozostaje punktem wyjścia.",
+        Text("Zaznacz pola, które mają być widoczne na karcie. Herby, flagi, logo, tło i kolor tekstu przypisujesz osobno do tego dokumentu. Orientacja, filtry zdjęcia, widoczność całej karty oraz rozmieszczenie i rozmiar elementów pozostają wspólne dla wszystkich legitymacji.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        OutlinedButton(onClick = onOpenSharedAppearance, modifier = Modifier.fillMaxWidth()) {
+            Text("Edytuj wspólny wzór wszystkich legitymacji")
+        }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Pola wyświetlane na legitymacji", fontWeight = FontWeight.Bold)
@@ -4225,8 +4233,10 @@ private fun CredentialAppearanceSettingsScreen(
         LegitimacyPreviewSettingsPanel(
             documentKey = documentKey,
             settings = state.value,
-            onChange = { state.value = it }
+            onChange = { state.value = it },
+            assetSelectionOnly = true
         )
+        CredentialTemplatePreview(documentKey, state.value)
     }
 }
 
