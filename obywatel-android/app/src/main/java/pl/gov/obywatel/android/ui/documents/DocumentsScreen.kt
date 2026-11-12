@@ -252,6 +252,14 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
                         }
                     }
                 }
+                if (readOnly) {
+                    Text(
+                        "Podgląd wyłącznie do odczytu. Dodawanie i usuwanie plików jest dostępne w Więcej → Ustawienia → Dokumenty własne — pliki.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                }
             }
         }
     }
