@@ -994,7 +994,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
-            showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
+            showImportedDocuments -> showImportedDocuments = false
             showBankAccounts -> showBankAccounts = false
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
@@ -1073,7 +1073,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     )
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
-                    showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 }, readOnly = true)
+                    showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
