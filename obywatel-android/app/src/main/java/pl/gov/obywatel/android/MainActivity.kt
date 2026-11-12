@@ -3437,7 +3437,7 @@ private fun DocumentCardEmblem(documentKey: String, modifier: Modifier = Modifie
     if (selected != null) {
         Box(
             modifier.clip(RoundedCornerShape(5.dp))
-                .background(if (assigned == null) Color(0xFFC90018) else Color.Transparent),
+                .background(if (assigned == null) Color.White.copy(alpha = 0.16f) else Color.Transparent),
             contentAlignment = Alignment.Center
         ) {
             Image(
