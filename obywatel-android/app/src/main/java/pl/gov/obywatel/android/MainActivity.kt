@@ -3538,11 +3538,13 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         }
         if (categoryId != "all") {
             Text("Grafiki przypisane do tego dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Indywidualny wzór graficzny legitymacji", fontWeight = FontWeight.Bold)
+            Text("Ustawienia poniżej dotyczą wyłącznie tego dokumentu i zastępują w nim odpowiednie parametry wzoru wspólnego.",
+                style = MaterialTheme.typography.bodySmall)
             LegitimacyPreviewSettingsPanel(
                 documentKey = credentialKey,
                 settings = appearance.value,
-                onChange = { appearance.value = it },
-                assetSelectionOnly = true
+                onChange = { appearance.value = it }
             )
         }
         Text(
