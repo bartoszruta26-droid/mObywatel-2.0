@@ -1324,7 +1324,7 @@ internal fun UnifiedCredentialCard(
                 verticalAlignment = Alignment.Top
             ) {
                 CredentialRoundAction(
-                    label = "Potwierdź\nswoje dane",
+                    label = "Udostępnij\nkod QR",
                     icon = {
                         androidx.compose.foundation.Canvas(Modifier.size(30.dp)) {
                             val c = Color(0xFFB9E9FF)
@@ -1355,7 +1355,7 @@ internal fun UnifiedCredentialCard(
                     onClick = { showQr = true }
                 )
                 CredentialRoundAction(
-                    label = "Dane dowodu\ntożsamości",
+                    label = "Dane\ndokumentu",
                     icon = {
                         androidx.compose.foundation.Canvas(Modifier.size(width = 36.dp, height = 25.dp)) {
                             val cardBrush = Brush.horizontalGradient(
@@ -1378,7 +1378,7 @@ internal fun UnifiedCredentialCard(
                     onClick = { showIdentityDetails = true }
                 )
                 CredentialRoundAction(
-                    label = "Pozostałe\nskróty",
+                    label = "Opcje\ndodatkowe",
                     icon = { Icon(Icons.Filled.MoreVert, contentDescription = null, tint = Color(0xFFB9E9FF), modifier = Modifier.size(29.dp)) },
                     onClick = { showShortcuts = true }
                 )
