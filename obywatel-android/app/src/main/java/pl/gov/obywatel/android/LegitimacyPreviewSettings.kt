@@ -631,11 +631,11 @@ private fun previewThumbnail(context: Context, assetId: String): Bitmap? {
         val resourceName = assetId.removePrefix(BUILTIN_BACKGROUND_PREFIX)
         val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
         resourceId.takeIf { it != 0 }?.let {
-            BitmapFactory.decodeResource(context.resources, it, BitmapFactory.Options().apply { inSampleSize = 4 })
+            BitmapFactory.decodeResource(context.resources, it, BitmapFactory.Options().apply { inSampleSize = 8 })
         }
     } else DocumentBrandStore.preview(context, assetId)
     bitmap ?: return null
-    val maxEdge = 480
+    val maxEdge = 360
     if (bitmap.width <= maxEdge && bitmap.height <= maxEdge) return bitmap
     val scale = maxEdge.toFloat() / maxOf(bitmap.width, bitmap.height)
     val thumbnail = Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt().coerceAtLeast(1),
@@ -824,8 +824,10 @@ internal fun LegitimacyPreviewSettingsPanel(
             GraphicAssetPreviewGrid(
                 title = "Herb / godło — wybierz podgląd",
                 selectedId = settings.crestAssetId,
-                choices = listOf(Triple("", "Brak herbu", null)) + assets.filter { it.kind == "Herb" || it.kind == "Godło" }
-                    .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
+                choices = remember(documentKey, assets) {
+                    listOf(Triple("", "Brak herbu", null)) + assets.filter { it.kind == "Herb" || it.kind == "Godło" }
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                },
                 onSelect = { update(settings.copy(crestAssetId = it)) }
             )
             OutlinedButton(onClick = { crestPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
@@ -856,8 +858,10 @@ internal fun LegitimacyPreviewSettingsPanel(
             GraphicAssetPreviewGrid(
                 title = "Flaga — wybierz podgląd",
                 selectedId = settings.flagAssetId,
-                choices = listOf(Triple("", "Brak własnej flagi", null)) + assets.filter { it.kind == "Flaga" }
-                    .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
+                choices = remember(documentKey, assets) {
+                    listOf(Triple("", "Brak własnej flagi", null)) + assets.filter { it.kind == "Flaga" }
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                },
                 onSelect = { update(settings.copy(flagAssetId = it)) }
             )
             OutlinedButton(onClick = { flagPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
@@ -866,19 +870,22 @@ internal fun LegitimacyPreviewSettingsPanel(
             GraphicAssetPreviewGrid(
                 title = "Logo wystawcy — wybierz podgląd",
                 selectedId = settings.logoAssetId,
-                choices = listOf(Triple("", "Brak własnego logo", null)) + assets.filter { it.kind == "Logo" }
-                    .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
+                choices = remember(documentKey, assets) {
+                    listOf(Triple("", "Brak własnego logo", null)) + assets.filter { it.kind == "Logo" }
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                },
                 onSelect = { update(settings.copy(logoAssetId = it)) }
             )
             OutlinedButton(onClick = { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własne logo")
             }
-            val backgroundChoices = listOf(Triple("", "Domyślne tło", null)) +
+            val backgroundChoices = remember(documentKey, assets) { listOf(Triple("", "Domyślne tło", null)) +
                 builtInCredentialBackgrounds.map { (resourceName, label) ->
                     val id = BUILTIN_BACKGROUND_PREFIX + resourceName
                     Triple(id, label, previewThumbnail(context, id))
                 } + assets.filter { it.kind == "Tło dokumentu" }
                     .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+            }
             GraphicAssetPreviewGrid(
                 title = "Tło legitymacji — wybierz podgląd",
                 selectedId = settings.backgroundAssetId,
@@ -891,12 +898,12 @@ internal fun LegitimacyPreviewSettingsPanel(
             GraphicAssetPreviewGrid(
                 title = "Tło kafelka dokumentu — wybierz podgląd",
                 selectedId = settings.tileBackgroundAssetId,
-                choices = listOf(Triple("", "Domyślne tło kafelka", null)) +
+                choices = remember(documentKey, assets) { listOf(Triple("", "Domyślne tło kafelka", null)) +
                     builtInCredentialBackgrounds.map { (resourceName, label) ->
                         val id = BUILTIN_BACKGROUND_PREFIX + resourceName
                         Triple(id, label, previewThumbnail(context, id))
                     } + assets.filter { it.kind == "Tło kafelka" || it.kind == "Tło dokumentu" }
-                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) } },
                 onSelect = { update(settings.copy(tileBackgroundAssetId = it)) }
             )
             OutlinedButton(onClick = { tileBackgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
