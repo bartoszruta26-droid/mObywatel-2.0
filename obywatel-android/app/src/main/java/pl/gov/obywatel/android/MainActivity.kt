@@ -4301,7 +4301,7 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
     val validity = if (student) fields["studentValidity"].orEmpty() else fields["trainingValidUntil"].orEmpty()
     val status = if (student) fields["studentStatus"].orEmpty().trim().lowercase() else fields["trainingStatus"].orEmpty().trim().lowercase()
     val explicitlyInvalid = status in setOf("nieważny", "nieważna", "unieważniony", "unieważniona", "zwrócony", "zwrócona", "utracony", "utracona", "expired", "invalid")
-    val valid = !explicitlyInvalid && isCredentialValidByExpiry(validity)
+    val valid = credentialValidityForDocument(documentKey, fields)
     val cardFields = if (student) listOf(
         Triple("studentUniversity", "UCZELNIA", institution),
         Triple("studentProgramme", "KIERUNEK", fields["studentProgramme"].orEmpty()),
@@ -4366,7 +4366,7 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
     val expiry = fields["mpEnd"].orEmpty()
     val status = fields["mpStatus"].orEmpty().trim().lowercase()
     val explicitlyInvalid = status in setOf("nieważny", "nieważna", "unieważniony", "unieważniona", "zwrócony", "zwrócona", "utracony", "utracona", "expired", "invalid")
-    val valid = !explicitlyInvalid && isCredentialValidByExpiry(expiry)
+    val valid = credentialValidityForDocument(documentKey, fields)
     val cardFields = listOf(
         Triple("mpCardNumber", "NUMER LEGITYMACJI", number),
         Triple("mpTerm", "KADENCJA", term),
