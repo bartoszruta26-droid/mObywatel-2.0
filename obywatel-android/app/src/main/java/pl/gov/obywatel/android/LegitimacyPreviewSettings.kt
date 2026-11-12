@@ -882,10 +882,11 @@ internal fun LegitimacyHeraldry(
         if (settings.showFlag && selectedFlag != null) {
             Image(
                 selectedFlag.asImageBitmap(),
-                contentDescription = "Flaga dokumentu — pod fotografią, przy lewym marginesie",
+                contentDescription = "Flaga dokumentu — wyrównana do lewego marginesu zdjęcia i godła",
+                alignment = Alignment.CenterStart,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .fillMaxWidth(0.76f)
+                    .fillMaxWidth()
                     .height(48.dp)
                     .graphicsLayer {
                         // Flaga jest elementem kolumny zdjęcia: pozostaje przy jej lewym
@@ -1268,46 +1269,56 @@ internal fun UnifiedCredentialCard(
                 }
 
                 // Pasek statusu stanowi integralną część karty.
-                if (validity != null) {
-                    val statusColor = if (validity) Color(0xFF43D65F) else Color(0xFFFF6B6B)
-                    Row(
-                        Modifier.align(Alignment.BottomStart)
-                            .fillMaxWidth()
-                            .height(footerHeight)
-                            .background(Color(0xFF414047))
-                            .padding(horizontal = horizontalPadding, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (validity) Icons.Filled.CheckCircle else Icons.Filled.Error,
-                            contentDescription = if (validity) "Dokument ważny" else "Dokument nieważny",
-                            tint = statusColor,
-                            modifier = Modifier.size((cardWidth * 0.052f).coerceIn(22.dp, 30.dp))
-                        )
-                        Text(
-                            if (validity) "Dokument ważny" else "Dokument nieważny",
-                            fontSize = (cardWidth.value * 0.030f).coerceIn(12f, 16f).sp,
-                            color = statusColor,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.weight(1f))
-                    }
+                val statusColor = when (validity) {
+                    true -> Color(0xFF43D65F)
+                    false -> Color(0xFFFF6B6B)
+                    null -> Color(0xFFFFC857)
+                }
+                val statusLabel = when (validity) {
+                    true -> "Dokument ważny"
+                    false -> "Dokument nieważny"
+                    null -> "Ważność dokumentu nieustalona"
+                }
+                Row(
+                    Modifier.align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .height(footerHeight)
+                        .background(Color(0xFF414047))
+                        .padding(horizontal = horizontalPadding, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        imageVector = when (validity) {
+                            true -> Icons.Filled.CheckCircle
+                            false -> Icons.Filled.Error
+                            null -> Icons.Filled.Info
+                        },
+                        contentDescription = statusLabel,
+                        tint = statusColor,
+                        modifier = Modifier.size((cardWidth * 0.052f).coerceIn(22.dp, 30.dp))
+                    )
+                    Text(
+                        statusLabel,
+                        fontSize = (cardWidth.value * 0.030f).coerceIn(12f, 16f).sp,
+                        color = statusColor,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }
-        if (validity != null) {
-            Button(
-                onClick = { animationEnabled = !animationEnabled },
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2879D8)),
-                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp)
-            ) {
-                Text(if (animationEnabled) "Wyłącz animację" else "Włącz animację",
-                    color = Color.White, fontWeight = FontWeight.SemiBold)
-            }
-            Row(
+        Button(
+            onClick = { animationEnabled = !animationEnabled },
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2879D8)),
+            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp)
+        ) {
+            Text(if (animationEnabled) "Wyłącz animację" else "Włącz animację",
+                color = Color.White, fontWeight = FontWeight.SemiBold)
+        }
+        Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.Top
@@ -1371,7 +1382,6 @@ internal fun UnifiedCredentialCard(
                     icon = { Icon(Icons.Filled.MoreVert, contentDescription = null, tint = Color(0xFFB9E9FF), modifier = Modifier.size(29.dp)) },
                     onClick = { showShortcuts = true }
                 )
-            }
         }
     }
     if (showQr) {
@@ -1397,7 +1407,7 @@ internal fun UnifiedCredentialCard(
     if (showIdentityDetails) {
         AlertDialog(
             onDismissRequest = { showIdentityDetails = false },
-            title = { Text("Dane dowodu tożsamości") },
+            title = { Text("Dane dokumentu") },
             text = {
                 Column(
                     modifier = Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
