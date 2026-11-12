@@ -210,6 +210,14 @@ internal data class LegitimacyPreviewSettings(
     val graphicRotation: Float = 0f,
     val graphicOffsetX: Float = 0f,
     val graphicOffsetY: Float = 0f,
+    val crestScale: Float = 1f,
+    val crestRotation: Float = 0f,
+    val crestOffsetX: Float = 0f,
+    val crestOffsetY: Float = 0f,
+    val flagScale: Float = 1f,
+    val flagRotation: Float = 0f,
+    val flagOffsetX: Float = 0f,
+    val flagOffsetY: Float = 0f,
     val labelScale: Float = 1f,
     val labelRotation: Float = 0f,
     val labelOffsetX: Float = 0f,
@@ -291,6 +299,14 @@ internal fun mergeSharedLegitimacyAppearance(
         graphicRotation = shared.graphicRotation,
         graphicOffsetX = shared.graphicOffsetX,
         graphicOffsetY = shared.graphicOffsetY,
+        crestScale = shared.crestScale,
+        crestRotation = shared.crestRotation,
+        crestOffsetX = shared.crestOffsetX,
+        crestOffsetY = shared.crestOffsetY,
+        flagScale = shared.flagScale,
+        flagRotation = shared.flagRotation,
+        flagOffsetX = shared.flagOffsetX,
+        flagOffsetY = shared.flagOffsetY,
         labelScale = shared.labelScale,
         labelRotation = shared.labelRotation,
         labelOffsetX = shared.labelOffsetX,
@@ -332,6 +348,14 @@ internal object LegitimacyPreviewSettingsStore {
             graphicRotation = p.getFloat("${key}_graphic_rotation", 0f),
             graphicOffsetX = p.getFloat("${key}_graphic_x", 0f),
             graphicOffsetY = p.getFloat("${key}_graphic_y", 0f),
+            crestScale = p.getFloat("${key}_crest_scale", p.getFloat("${key}_graphic_scale", 1f)),
+            crestRotation = p.getFloat("${key}_crest_rotation", p.getFloat("${key}_graphic_rotation", 0f)),
+            crestOffsetX = p.getFloat("${key}_crest_x", p.getFloat("${key}_graphic_x", 0f)),
+            crestOffsetY = p.getFloat("${key}_crest_y", p.getFloat("${key}_graphic_y", 0f)),
+            flagScale = p.getFloat("${key}_flag_scale", p.getFloat("${key}_graphic_scale", 1f)),
+            flagRotation = p.getFloat("${key}_flag_rotation", p.getFloat("${key}_graphic_rotation", 0f)),
+            flagOffsetX = p.getFloat("${key}_flag_x", 0f),
+            flagOffsetY = p.getFloat("${key}_flag_y", 0f),
             labelScale = p.getFloat("${key}_label_scale", 1f),
             labelRotation = p.getFloat("${key}_label_rotation", 0f),
             labelOffsetX = p.getFloat("${key}_label_x", 0f),
@@ -363,6 +387,14 @@ internal object LegitimacyPreviewSettingsStore {
                 .putFloat("${key}_graphic_rotation", value.graphicRotation)
                 .putFloat("${key}_graphic_x", value.graphicOffsetX)
                 .putFloat("${key}_graphic_y", value.graphicOffsetY)
+                .putFloat("${key}_crest_scale", value.crestScale)
+                .putFloat("${key}_crest_rotation", value.crestRotation)
+                .putFloat("${key}_crest_x", value.crestOffsetX)
+                .putFloat("${key}_crest_y", value.crestOffsetY)
+                .putFloat("${key}_flag_scale", value.flagScale)
+                .putFloat("${key}_flag_rotation", value.flagRotation)
+                .putFloat("${key}_flag_x", value.flagOffsetX)
+                .putFloat("${key}_flag_y", value.flagOffsetY)
                 .putFloat("${key}_label_scale", value.labelScale)
                 .putFloat("${key}_label_rotation", value.labelRotation)
                 .putFloat("${key}_label_x", value.labelOffsetX)
@@ -401,6 +433,14 @@ internal object LegitimacyPreviewSettingsStore {
                 .putFloat("${key}_graphic_rotation", value.graphicRotation)
                 .putFloat("${key}_graphic_x", value.graphicOffsetX)
                 .putFloat("${key}_graphic_y", value.graphicOffsetY)
+                .putFloat("${key}_crest_scale", value.crestScale)
+                .putFloat("${key}_crest_rotation", value.crestRotation)
+                .putFloat("${key}_crest_x", value.crestOffsetX)
+                .putFloat("${key}_crest_y", value.crestOffsetY)
+                .putFloat("${key}_flag_scale", value.flagScale)
+                .putFloat("${key}_flag_rotation", value.flagRotation)
+                .putFloat("${key}_flag_x", value.flagOffsetX)
+                .putFloat("${key}_flag_y", value.flagOffsetY)
                 .putFloat("${key}_label_scale", value.labelScale)
                 .putFloat("${key}_label_rotation", value.labelRotation)
                 .putFloat("${key}_label_x", value.labelOffsetX)
@@ -735,15 +775,25 @@ internal fun LegitimacyPreviewSettingsPanel(
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
             if (!assetSelectionOnly) {
-            Text("Położenie i rozmiar grafiki", fontWeight = FontWeight.SemiBold)
-            Text("Skala grafiki: ${"%.2f".format(settings.graphicScale)}")
-            Slider(settings.graphicScale, { update(settings.copy(graphicScale = it)) }, valueRange = 0.5f..2.5f)
-            Text("Obrót grafiki: ${settings.graphicRotation.toInt()}°")
-            Slider(settings.graphicRotation, { update(settings.copy(graphicRotation = it)) }, valueRange = -180f..180f)
-            Text("Przesunięcie poziome grafiki: ${settings.graphicOffsetX.toInt()} dp")
-            Slider(settings.graphicOffsetX, { update(settings.copy(graphicOffsetX = it)) }, valueRange = -60f..60f)
-            Text("Przesunięcie pionowe grafiki: ${settings.graphicOffsetY.toInt()} dp")
-            Slider(settings.graphicOffsetY, { update(settings.copy(graphicOffsetY = it)) }, valueRange = -60f..60f)
+            Text("Godło / herb — położenie i rozmiar", fontWeight = FontWeight.SemiBold)
+            Text("Skala godła: ${"%.2f".format(settings.crestScale)}")
+            Slider(settings.crestScale, { update(settings.copy(crestScale = it)) }, valueRange = 0.25f..3f)
+            Text("Obrót godła: ${settings.crestRotation.toInt()}°")
+            Slider(settings.crestRotation, { update(settings.copy(crestRotation = it)) }, valueRange = -180f..180f)
+            Text("Przesunięcie poziome godła: ${settings.crestOffsetX.toInt()} dp")
+            Slider(settings.crestOffsetX, { update(settings.copy(crestOffsetX = it)) }, valueRange = -60f..60f)
+            Text("Przesunięcie pionowe godła: ${settings.crestOffsetY.toInt()} dp")
+            Slider(settings.crestOffsetY, { update(settings.copy(crestOffsetY = it)) }, valueRange = -60f..60f)
+
+            Text("Flaga — położenie i rozmiar", fontWeight = FontWeight.SemiBold)
+            Text("Skala flagi: ${"%.2f".format(settings.flagScale)}")
+            Slider(settings.flagScale, { update(settings.copy(flagScale = it)) }, valueRange = 0.25f..3f)
+            Text("Obrót flagi: ${settings.flagRotation.toInt()}°")
+            Slider(settings.flagRotation, { update(settings.copy(flagRotation = it)) }, valueRange = -180f..180f)
+            Text("Przesunięcie poziome flagi: ${settings.flagOffsetX.toInt()} dp")
+            Slider(settings.flagOffsetX, { update(settings.copy(flagOffsetX = it)) }, valueRange = -60f..60f)
+            Text("Przesunięcie pionowe flagi: ${settings.flagOffsetY.toInt()} dp")
+            Slider(settings.flagOffsetY, { update(settings.copy(flagOffsetY = it)) }, valueRange = -60f..60f)
             Text("Typografia etykiet", fontWeight = FontWeight.SemiBold)
             Text("Skala etykiet: ${"%.2f".format(settings.labelScale)}")
             Slider(settings.labelScale, { update(settings.copy(labelScale = it)) }, valueRange = 0.6f..2f)
@@ -783,7 +833,9 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             OutlinedButton(onClick = {
                 update(settings.copy(graphicScale = 1f, graphicRotation = 0f, graphicOffsetX = 0f,
-                    graphicOffsetY = 0f, labelScale = 1f, labelRotation = 0f, labelOffsetX = 0f,
+                    graphicOffsetY = 0f, crestScale = 1f, crestRotation = 0f, crestOffsetX = 0f,
+                    crestOffsetY = 0f, flagScale = 1f, flagRotation = 0f, flagOffsetX = 0f,
+                    flagOffsetY = 0f, labelScale = 1f, labelRotation = 0f, labelOffsetX = 0f,
                     labelOffsetY = 0f, valueScale = 1f, valueRotation = 0f, valueOffsetX = 0f,
                     valueOffsetY = 0f, fontFamily = "sans"))
             }, modifier = Modifier.fillMaxWidth()) { Text("Przywróć domyślne przekształcenia") }
@@ -840,11 +892,11 @@ internal fun LegitimacyHeraldry(
                         // Flaga jest elementem kolumny zdjęcia: pozostaje przy jej lewym
                         // marginesie i nie dziedziczy przesunięć używanych dla godła.
                         transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
-                        scaleX = settings.graphicScale
-                        scaleY = settings.graphicScale
-                        rotationZ = settings.graphicRotation
-                        translationX = 0f
-                        translationY = 0f
+                        scaleX = settings.flagScale
+                        scaleY = settings.flagScale
+                        rotationZ = settings.flagRotation
+                        translationX = settings.flagOffsetX * density
+                        translationY = settings.flagOffsetY * density
                     },
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
@@ -859,11 +911,11 @@ internal fun LegitimacyHeraldry(
                     selectedCrest.asImageBitmap(),
                     contentDescription = "Godło lub herb dokumentu",
                     modifier = Modifier.size(68.dp).graphicsLayer {
-                        scaleX = settings.graphicScale
-                        scaleY = settings.graphicScale
-                        rotationZ = settings.graphicRotation
-                        translationX = settings.graphicOffsetX * density
-                        translationY = settings.graphicOffsetY * density
+                        scaleX = settings.crestScale
+                        scaleY = settings.crestScale
+                        rotationZ = settings.crestRotation
+                        translationX = settings.crestOffsetX * density
+                        translationY = settings.crestOffsetY * density
                     },
                     contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                     colorFilter = imageFilter
@@ -897,25 +949,35 @@ private fun CredentialFieldValue(
         "cursive" -> FontFamily.Cursive
         else -> FontFamily.SansSerif
     }
-    Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(item.third.ifBlank { "—" }, fontSize = valueFontSize * settings.valueScale,
-            fontFamily = family,
-            color = if (settings.fontColor.isBlank()) MaterialTheme.colorScheme.onSurface else credentialFontColor(settings.fontColor),
-            fontWeight = FontWeight.SemiBold, maxLines = 2,
-            modifier = Modifier.graphicsLayer {
+    val reservedGap = (
+        4f +
+            kotlin.math.abs(settings.valueOffsetY - settings.labelOffsetY) +
+            (valueFontSize.value * (settings.valueScale - 1f).coerceAtLeast(0f)) +
+            (labelFontSize.value * (settings.labelScale - 1f).coerceAtLeast(0f))
+        ).coerceIn(4f, 96f).dp
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(reservedGap)) {
+        Text(item.third.ifBlank { "—" }, modifier = Modifier.fillMaxWidth().graphicsLayer {
                 rotationZ = settings.valueRotation
                 translationX = settings.valueOffsetX * density
                 translationY = settings.valueOffsetY * density
-            })
-        Text(item.second, fontSize = labelFontSize * settings.labelScale,
+            },
+            fontSize = valueFontSize * settings.valueScale,
+            lineHeight = valueFontSize * settings.valueScale * 1.2f,
             fontFamily = family,
-            color = if (settings.fontColor.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else credentialFontColor(settings.fontColor),
-            fontWeight = FontWeight.Medium, maxLines = 1,
-            modifier = Modifier.graphicsLayer {
+            color = if (settings.fontColor.isBlank()) MaterialTheme.colorScheme.onSurface else credentialFontColor(settings.fontColor),
+            fontWeight = FontWeight.SemiBold, maxLines = 2, softWrap = true,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Text(item.second, modifier = Modifier.fillMaxWidth().graphicsLayer {
                 rotationZ = settings.labelRotation
                 translationX = settings.labelOffsetX * density
                 translationY = settings.labelOffsetY * density
-            })
+            },
+            fontSize = labelFontSize * settings.labelScale,
+            lineHeight = labelFontSize * settings.labelScale * 1.2f,
+            fontFamily = family,
+            color = if (settings.fontColor.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else credentialFontColor(settings.fontColor),
+            fontWeight = FontWeight.Medium, maxLines = 2, softWrap = true,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 
