@@ -443,38 +443,18 @@ private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bit
 @Composable
 private fun ApplicationEntryFlow(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var stage by remember { mutableIntStateOf(0) }
-    var showIntro by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit) {
-        delay(1_500)
-        showIntro = false
-    }
-    if (showIntro) {
-        Box(
-            modifier = Modifier.fillMaxSize().background(Color(0xFFF4F6F8)),
-            contentAlignment = Alignment.Center
-        ) {
-            val appearance = LocalApplicationAppearance.current
-            val context = LocalContext.current
-            Image(
-                painter = painterResource(applicationDrawable(context, appearance.introEmblem,
-                    R.drawable.file_00000000532082108d561dcd2385f8f9)),
-                contentDescription = "Godło aplikacji — plansza wprowadzająca",
-                modifier = Modifier.size(184.dp),
-                contentScale = ContentScale.Fit
-            )
-        }
-    } else {
-        when (stage) {
-            0 -> EntryWelcomeScreen(
-                onStart = { stage = 1 },
-                onSkip = { stage = 1 }
-            )
-            1 -> EntryLoginScreen(
-                onDemo = { stage = 2 },
-                onBack = { stage = 0 }
-            )
-            else -> HomeScreen(onAppearanceChange = onAppearanceChange)
-        }
+    // The welcome screen is the first in-app screen; do not show a separate
+    // timed emblem-only intro before it.
+    when (stage) {
+        0 -> EntryWelcomeScreen(
+            onStart = { stage = 1 },
+            onSkip = { stage = 1 }
+        )
+        1 -> EntryLoginScreen(
+            onDemo = { stage = 2 },
+            onBack = { stage = 0 }
+        )
+        else -> HomeScreen(onAppearanceChange = onAppearanceChange)
     }
 }
 
@@ -493,18 +473,8 @@ private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
 
 @Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
-    val cream = Color(0xFFFFF1D1)
-    val context = LocalContext.current
-    val appearance = LocalApplicationAppearance.current
-    Box(Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(applicationDrawable(context, appearance.welcomeBackground,
-                R.drawable.file_00000000e0e4820a839fa3184993f41b)),
-            contentDescription = "Polska flaga na maszcie na tle nieba",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-        Box(Modifier.fillMaxSize().background(Color(0x55000000)))
+    val foreground = MaterialTheme.colorScheme.onBackground
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.Top
@@ -516,7 +486,7 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
                 BrandMark(size = 64.dp)
                 Text(
                     "mObywatel",
-                    color = cream,
+                    color = foreground,
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -537,18 +507,18 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
             Spacer(Modifier.weight(1f))
             Button(
                 onClick = onStart,
-                modifier = Modifier.fillMaxWidth().height(76.dp),
+                modifier = Modifier.fillMaxWidth().height(64.dp),
                 shape = RoundedCornerShape(17.dp),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF9FD5FF),
-                    contentColor = Color(0xFF062A59)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             ) {
                 Text("Zaloguj się", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(18.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(64.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
