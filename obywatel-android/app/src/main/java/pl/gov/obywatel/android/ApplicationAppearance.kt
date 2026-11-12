@@ -236,14 +236,34 @@ internal object ApplicationAppearanceStore {
         }
         val manager = context.packageManager
         val flags = android.content.pm.PackageManager.DONT_KILL_APP
+        // Nazwy klas w manifeście są rozwiązywane względem namespace aplikacji,
+        // który może różnić się od applicationId (np. wariant .prototype).
+        // PackageManager wymaga applicationId jako pakietu komponentu i pełnej
+        // nazwy klasy z namespace jako className.
+        fun component(alias: String) = android.content.ComponentName(
+            context.packageName,
+            "${MainActivity::class.java.packageName}.$alias"
+        )
+
+        val declaredAliases = aliases.filter { alias ->
+            runCatching {
+                manager.getActivityInfo(
+                    component(alias),
+                    android.content.pm.PackageManager.MATCH_DISABLED_COMPONENTS
+                )
+            }.isSuccess
+        }
+        val availableTarget = target.takeIf { it in declaredAliases } ?: "LauncherIconDefault"
+        if (availableTarget !in declaredAliases) return
+
         manager.setComponentEnabledSetting(
-            android.content.ComponentName(context, "${context.packageName}.$target"),
+            component(availableTarget),
             android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
             flags
         )
-        aliases.filterNot { it == target }.forEach { alias ->
+        declaredAliases.filterNot { it == availableTarget }.forEach { alias ->
             manager.setComponentEnabledSetting(
-                android.content.ComponentName(context, "${context.packageName}.$alias"),
+                component(alias),
                 android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 flags
             )
