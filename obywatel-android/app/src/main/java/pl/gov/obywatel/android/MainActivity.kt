@@ -3439,6 +3439,22 @@ private fun documentTileWatermarkResource(documentKey: String): Int = when {
 
 @Composable
 private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val tileBackgroundAssetId = remember(documentKey) {
+        context.getSharedPreferences("legitimacy_preview_preferences", android.content.Context.MODE_PRIVATE)
+            .getString("${documentKey}_tile_background", "").orEmpty()
+    }
+    val tileBackgroundBitmap = remember(documentKey, tileBackgroundAssetId) {
+        when {
+            tileBackgroundAssetId.isBlank() -> null
+            tileBackgroundAssetId.startsWith("builtin:") -> {
+                val resourceName = tileBackgroundAssetId.removePrefix("builtin:")
+                val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+                resourceId.takeIf { it != 0 }?.let { BitmapFactory.decodeResource(context.resources, it) }
+            }
+            else -> DocumentBrandStore.preview(context, tileBackgroundAssetId)
+        }
+    }
     val palette = when (documentKey) {
         "identity" -> listOf(Color(0xFF0756A5), Color(0xFF078FD0), Color(0xFF42B9D8))
         "profile" -> listOf(Color(0xFF3155A6), Color(0xFF527BCB), Color(0xFF70B7D8))
@@ -3478,12 +3494,16 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
         else -> documentKey.hashCode().ushr(1) % 8
     }
     Box(modifier.clip(RoundedCornerShape(13.dp))) {
+    if (tileBackgroundBitmap != null) {
+        Image(tileBackgroundBitmap.asImageBitmap(), contentDescription = "Indywidualne tło kafelka dokumentu",
+            modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+    }
     ComposeCanvas(Modifier.matchParentSize()) {
         drawRect(brush = Brush.linearGradient(
             colors = palette,
             start = Offset(0f, size.height),
             end = Offset(size.width, 0f)
-        ))
+        ), alpha = if (tileBackgroundBitmap != null) 0.22f else 1f)
         val cx = size.width * 0.82f
         val cy = size.height * 0.28f
         val radius = maxOf(size.width, size.height) * 0.34f
