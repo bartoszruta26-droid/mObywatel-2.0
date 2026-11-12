@@ -483,7 +483,12 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                BrandMark(size = 64.dp)
+                Image(
+                    painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
+                    contentDescription = "Godło Polski w zaokrąglonym kwadratowym znaku aplikacji",
+                    modifier = Modifier.size(64.dp),
+                    contentScale = ContentScale.Fit
+                )
                 Text(
                     "mObywatel",
                     color = foreground,
