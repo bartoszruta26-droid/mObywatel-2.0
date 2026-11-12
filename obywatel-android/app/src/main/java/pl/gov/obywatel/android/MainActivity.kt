@@ -1193,7 +1193,7 @@ private fun HomeScreen() {
                                             Text(
                                                 "Dodaj dokument",
                                                 style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.SemiBold,
+                                                fontWeight = FontWeight.Bold,
                                                 maxLines = 1
                                             )
                                         }
@@ -3907,27 +3907,37 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
                 else -> R.drawable.nav_more_selected
             }
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(20.dp))
                     .clickable { onSelect(index) }.padding(vertical = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Box(
-                    modifier = Modifier.clip(RoundedCornerShape(18.dp))
-                        .background(if (selected) Color(0xFF1687E8) else Color.Transparent)
-                        .padding(horizontal = 14.dp, vertical = 5.dp),
+                    modifier = Modifier.fillMaxWidth(0.88f)
+                        .height(43.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            if (selected) Color(0x33218FEA) else Color.Transparent
+                        )
+                        .then(
+                            if (selected) Modifier.border(
+                                width = 2.dp,
+                                color = Color(0xFF168FEA),
+                                shape = RoundedCornerShape(24.dp)
+                            ) else Modifier
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(if (selected) selectedIcon else iconRes),
                         contentDescription = label,
                         tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(23.dp)
+                        modifier = Modifier.size(27.dp)
                     )
                 }
                 Text(
                     label,
-                    color = if (selected) Color(0xFF4AAEFF) else MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                     maxLines = 1
