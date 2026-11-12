@@ -26,10 +26,13 @@ import androidx.compose.material.icons.filled.Image as ImageIcon
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -276,6 +279,7 @@ internal fun ApplicationAppearanceSettingsScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val launcherIconQuery = remember { mutableStateOf("") }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -341,7 +345,16 @@ internal fun ApplicationAppearanceSettingsScreen(
                 appearance.launcherIcon == "default",
                 R.drawable.file_00000000532082108d561dcd2385f8f9
             ) { onChange(appearance.copy(launcherIcon = "default")) }
-            launcherIconResources.forEach { resourceName ->
+            OutlinedTextField(
+                value = launcherIconQuery.value,
+                onValueChange = { launcherIconQuery.value = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text("Szukaj ikony po nazwie zasobu") }
+            )
+            launcherIconResources.filter {
+                launcherIconQuery.value.isBlank() || it.contains(launcherIconQuery.value.trim(), ignoreCase = true)
+            }.forEach { resourceName ->
                 AppearanceImageChoice(
                     context,
                     resourceName.replace('_', ' ').replaceFirstChar { it.uppercase() },
