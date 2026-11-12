@@ -23,10 +23,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Image as ImageIcon
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ColorLens
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -142,7 +138,7 @@ internal fun ApplicationAppearanceSettingsScreen(
                 }
             }
         }
-        AppearanceSection("Tło ekranu powitalnego przed logowaniem", Icons.Filled.Image) {
+        AppearanceSection("Tło ekranu powitalnego przed logowaniem", Icons.Filled.ImageIcon) {
             backgroundChoices.forEach { (name, label) ->
                 AppearanceImageChoice(context, label, name, appearance.welcomeBackground == name,
                     R.drawable.file_00000000e0e4820a839fa3184993f41b) {
@@ -150,7 +146,7 @@ internal fun ApplicationAppearanceSettingsScreen(
                 }
             }
         }
-        AppearanceSection("Tło ekranu logowania", Icons.Filled.Image) {
+        AppearanceSection("Tło ekranu logowania", Icons.Filled.ImageIcon) {
             backgroundChoices.forEach { (name, label) ->
                 AppearanceImageChoice(context, label, name, appearance.loginBackground == name,
                     R.drawable.file_00000000e0e4820a839fa3184993f41b) {
