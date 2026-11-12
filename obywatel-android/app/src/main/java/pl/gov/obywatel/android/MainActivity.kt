@@ -2921,8 +2921,11 @@ private fun DocumentsWalletScreen(
 private fun DocumentCardEmblem(documentKey: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val settings = remember(documentKey) { LegitimacyPreviewSettingsStore.load(context, documentKey) }
-    val selected = remember(settings.crestAssetId) {
+    val documentTitle = documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: documentKey
+    val selected = remember(documentKey, settings.crestAssetId) {
         settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, documentTitle, "Godło")
+            ?: DocumentBrandStore.imageForDocument(context, documentKey, documentTitle, "Herb")
             ?: BitmapFactory.decodeResource(context.resources, R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg)
     }
     if (selected != null) {
