@@ -2644,7 +2644,7 @@ private fun DocumentVisibilitySettingsScreen(
                         Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                     }
                     Box {
-                        OutlinedButton(onClick = { expandedDocumentIcon = id }, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = { expandedDocumentIcon = id }, modifier = Modifier.fillMaxWidth().testTag("document-icon-selector-$id")) {
                             val selected = documentIconOverrides[id]
                             Text(if (selected == null) "Ikona domyślna: " +
                                 (if (defaultDocumentIcon == "automatic") "automatyczna" else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second.orEmpty())
