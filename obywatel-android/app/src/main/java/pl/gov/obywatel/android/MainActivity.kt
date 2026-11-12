@@ -2922,19 +2922,27 @@ private fun DocumentCardEmblem(documentKey: String, modifier: Modifier = Modifie
     val context = LocalContext.current
     val settings = remember(documentKey) { LegitimacyPreviewSettingsStore.load(context, documentKey) }
     val documentTitle = documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: documentKey
-    val selected = remember(documentKey, settings.crestAssetId) {
+    val assigned = remember(documentKey, settings.crestAssetId) {
         settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, documentTitle, "Godło")
             ?: DocumentBrandStore.imageForDocument(context, documentKey, documentTitle, "Herb")
-            ?: BitmapFactory.decodeResource(context.resources, R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg)
+    }
+    val selected = assigned ?: remember {
+        BitmapFactory.decodeResource(context.resources, R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg)
     }
     if (selected != null) {
-        Image(
-            selected.asImageBitmap(),
-            contentDescription = "Indywidualne godło dokumentu",
-            modifier = modifier,
-            contentScale = ContentScale.Fit
-        )
+        Box(
+            modifier.clip(RoundedCornerShape(5.dp))
+                .background(if (assigned == null) Color(0xFFC90018) else Color.Transparent),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                selected.asImageBitmap(),
+                contentDescription = "Indywidualne godło dokumentu",
+                modifier = Modifier.fillMaxSize().padding(2.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
     }
 }
 
