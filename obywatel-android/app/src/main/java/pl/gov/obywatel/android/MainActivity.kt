@@ -778,7 +778,39 @@ private val documentDisplayOptions = listOf(
     Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
     Triple("children", "Dokumentacja dzieci", R.drawable.family),
     Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.lib_ic_image),
-    Triple("loyalty", "Karty lojalnościowe sklepów", R.drawable.lib_ic_credit_card)
+    Triple("loyalty", "Karty lojalnościowe sklepów", R.drawable.lib_ic_credit_card),
+    Triple("birth_extract", "Akt urodzenia", R.drawable.civic_service_illustration),
+    Triple("marriage_extract", "Akt małżeństwa", R.drawable.civic_service_illustration),
+    Triple("death_extract", "Odpis aktu zgonu", R.drawable.civic_service_illustration),
+    Triple("large_family", "Karta Dużej Rodziny", R.drawable.family),
+    Triple("blood_donor", "Legitymacja Honorowego Dawcy Krwi", R.drawable.lib_ic_medical_record),
+    Triple("disability_card", "Legitymacja osoby z niepełnosprawnością", R.drawable.documents_medical_certificates),
+    Triple("vehicle_registration", "Dowód rejestracyjny pojazdu", R.drawable.mob_transport),
+    Triple("insurance_vehicle", "Ubezpieczenie OC pojazdu", R.drawable.lib_ic_document),
+    Triple("insurance_professional", "Ubezpieczenie OC zawodowe", R.drawable.lib_ic_document),
+    Triple("insurance_private", "Ubezpieczenie OC w życiu prywatnym", R.drawable.lib_ic_document),
+    Triple("insurance_business", "Ubezpieczenie OC działalności", R.drawable.lib_ic_document),
+    Triple("criminal_record", "Zaświadczenie o niekaralności", R.drawable.lib_ic_lock),
+    Triple("mission_travel", "Dokument podróży służbowej / misyjnej", R.drawable.church_communities),
+    Triple("ehic", "Europejska Karta Ubezpieczenia Zdrowotnego", R.drawable.lib_ic_medical_record),
+    Triple("eu_education", "Zaświadczenie o zgodności kwalifikacji z UE", R.drawable.education),
+    Triple("church_bishop", "Dokument godności biskupiej", R.drawable.church_communities),
+    Triple("church_archbishop", "Dokument godności arcybiskupiej", R.drawable.church_communities),
+    Triple("church_cardinal", "Dokument godności kardynalskiej", R.drawable.church_communities),
+    Triple("church_abbot", "Dokument godności opackiej", R.drawable.church_communities),
+    Triple("church_minister", "Dokument posługi kościelnej", R.drawable.church_communities),
+    Triple("church_missionary", "Dokument posługi misyjnej", R.drawable.church_communities),
+    Triple("professional", "Dokumenty kwalifikacji zawodowych", R.drawable.work),
+    Triple("professional_medical", "Kwalifikacje medyczne", R.drawable.work),
+    Triple("professional_education", "Kwalifikacje edukacyjne", R.drawable.education),
+    Triple("professional_therapeutic", "Kwalifikacje terapeutyczne", R.drawable.work),
+    Triple("professional_other", "Pozostałe kwalifikacje zawodowe", R.drawable.work),
+    Triple("organization_foundation", "Dokumenty fundacji", R.drawable.lib_ic_building),
+    Triple("organization_church", "Dokumenty Kościoła / wspólnoty", R.drawable.church_communities),
+    Triple("organization_company", "Dokumenty przedsiębiorstwa", R.drawable.lib_ic_building),
+    Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
+    Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
+    Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document)
 )
 private val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
     id to if (id == "identity") "dashboard" else "hidden"
@@ -1036,6 +1068,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun openDocumentCard(documentId: String) {
         when (documentId) {
+            "profile" -> selectedDocumentId = "0"
             "identity" -> selectedDocumentId = "1"
             "passport" -> selectedDocumentId = "2"
             "family" -> selectedDocumentId = "3"
@@ -1043,15 +1076,30 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             "training" -> selectedDocumentId = "5"
             "student" -> selectedDocumentId = "6"
             "disability" -> selectedDocumentId = "7"
-            "loyalty_cards" -> selectedDocumentId = "8"
+            "loyalty", "loyalty_cards" -> selectedDocumentId = "8"
             "registry" -> activeService = "Odpis z rejestru podmiotów"
             "church" -> activeService = "Dokumenty Kościelne"
             "civil" -> activeService = "Formularze dokumentów"
             "business" -> activeService = "Dokumenty rejestru podmiotów"
             "bank_accounts" -> showBankAccounts = true
+            "children" -> activeService = "Dane dzieci"
+            "imported" -> showImportedDocuments = true
             "vaccines" -> activeService = "eKarta Szczepień"
             "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
             "branding" -> activeService = "Zasoby identyfikacji dokumentów"
+            "professional" -> activeService = "Dokumenty kwalifikacji zawodowych"
+            "official" -> activeService = "Formularze dokumentów"
+            "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
+            "church_minister", "church_missionary" -> activeService = "Dokumenty Kościelne"
+            "professional_medical", "professional_education", "professional_therapeutic",
+            "professional_other" -> activeService = "Dokumenty kwalifikacji zawodowych"
+            "organization_church" -> activeService = "Dokumenty Kościelne"
+            "organization_foundation", "organization_company", "organization_association",
+            "entity" -> activeService = "Dokumenty rejestru podmiotów"
+            "birth_extract", "marriage_extract", "death_extract" -> activeService = "Formularze dokumentów"
+            "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business",
+            "vehicle_registration", "criminal_record", "mission_travel", "ehic", "eu_education",
+            "large_family", "blood_donor", "disability_card" -> activeService = "Pozostałe dokumenty"
             else -> activeService = "Dokumenty"
         }
     }
@@ -1182,6 +1230,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { activeService = null }
                     )
                     activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null }, readOnly = true)
+                    activeService == "Dokumenty kwalifikacji zawodowych" -> ProfessionalQualificationsScreen(onBack = { activeService = null })
+                    activeService == "Pozostałe dokumenty" -> ServiceDetailScreen(title = activeService!!, onBack = { activeService = null }, onOpenDocuments = { activeService = null; showDemoDocuments = true })
                     activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, readOnly = true, onBack = { activeService = null })
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null }, readOnly = true)
                     activeService == "Zasoby identyfikacji dokumentów" -> DocumentBrandAssetsScreen(onBack = { activeService = null }, readOnly = true)
@@ -1313,8 +1363,28 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             ) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
-                                    IdentityDashboardCard(onOpen = { openDocumentCard("identity") })
+                                    IdentityDashboardCard(
+                                        onOpen = { openDocumentCard("identity") },
+                                        tileStyle = documentCardStyle
+                                    )
                                     Spacer(Modifier.height(12.dp))
+                                    val dashboardDocuments = documentDisplayOptions.filter {
+                                        it.first != "identity" && documentPlacements[it.first] == "dashboard"
+                                    }
+                                    if (dashboardDocuments.isNotEmpty()) {
+                                        Text("Dokumenty", color = MaterialTheme.colorScheme.onSurface,
+                                            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                        DashboardDocumentGrid(dashboardDocuments, documentCardStyle, ::openDocumentCard)
+                                    }
+                                    val otherDashboardDocuments = documentDisplayOptions.filter {
+                                        documentPlacements[it.first] == "other"
+                                    }
+                                    if (otherDashboardDocuments.isNotEmpty()) {
+                                        Text("Inne dokumenty", color = MaterialTheme.colorScheme.onSurface,
+                                            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                        DashboardDocumentGrid(otherDashboardDocuments, documentCardStyle, ::openDocumentCard)
+                                    }
+                                    Spacer(Modifier.height(8.dp))
                                     Text(
                                         "Zarządzaj",
                                         color = Color(0xFF83DFFF),
@@ -1323,38 +1393,26 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         modifier = Modifier.clickable { showDemoDocuments = true }
                                             .padding(vertical = 4.dp)
                                     )
-                                    Box(Modifier.fillMaxWidth().height(390.dp)) {
-                                        Button(
-                                            onClick = {
-                                                showSettingsMenu = false
-                                                showDocumentVisibilitySettings = true
-                                            },
-                                            modifier = Modifier.align(Alignment.BottomEnd)
-                                                .fillMaxWidth(0.54f)
-                                                .height(64.dp),
-                                            shape = RoundedCornerShape(22.dp),
-                                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
-                                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFF91D9F8),
-                                                contentColor = Color(0xFF102D5D)
-                                            )
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(R.drawable.lib_ic_plus),
-                                                contentDescription = null,
-                                                tint = Color(0xFF102D5D),
-                                                modifier = Modifier.size(28.dp)
-                                            )
-                                            Spacer(Modifier.width(12.dp))
-                                            Text(
-                                                "Dodaj dokument",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                maxLines = 1
-                                            )
-                                        }
+                                    Button(
+                                        onClick = {
+                                            showSettingsMenu = false
+                                            showDocumentVisibilitySettings = true
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(18.dp),
+                                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
+                                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFF91D9F8),
+                                            contentColor = Color(0xFF102D5D)
+                                        )
+                                    ) {
+                                        Icon(painter = painterResource(R.drawable.lib_ic_plus),
+                                            contentDescription = null, tint = Color(0xFF102D5D),
+                                            modifier = Modifier.size(24.dp))
+                                        Spacer(Modifier.width(10.dp))
+                                        Text("Dodaj dokument", style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold)
                                     }
-                                    Spacer(Modifier.height(8.dp))
                                 } else {
                                     CivicIllustrationBanner(
                                         imageRes = R.drawable.header_poland_banner,
@@ -1443,7 +1501,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                                 },
                                                 onClick = { openService(service.title) }
                                             )
-                                            Spacer(Modifier.height(10.dp))
+                                            Spacer(Modifier.height(4.dp))
                                         }
                                     }
                                 }
@@ -2456,9 +2514,16 @@ private fun BrandMark() {
 }
 
 @Composable
-private fun IdentityDashboardCard(onOpen: () -> Unit) {
+private fun IdentityDashboardCard(onOpen: () -> Unit, tileStyle: String = "large") {
+    val cardHeight = when (tileStyle) {
+        "small" -> 148.dp
+        "list" -> 96.dp
+        else -> 218.dp
+    }
     Card(
-        modifier = Modifier.fillMaxWidth().height(218.dp).clickable(onClick = onOpen),
+        modifier = Modifier.fillMaxWidth().height(cardHeight)
+            .clickable(onClick = onOpen)
+            .testTag("identity-dashboard-card-$tileStyle"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF078FE9)),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB9E8FF)),
@@ -2482,11 +2547,11 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
             Box(
                 modifier = Modifier.align(Alignment.TopEnd)
                     .padding(top = 12.dp, end = 12.dp)
-                    .size(78.dp)
+                    .size(if (tileStyle == "list") 28.dp else 32.dp)
             ) {
                 Box(
                     modifier = Modifier.align(Alignment.TopCenter)
-                        .size(62.dp)
+                        .size(if (tileStyle == "list") 24.dp else 28.dp)
                         .clip(RoundedCornerShape(13.dp))
                         .background(Color(0x557AA8C6)),
                     contentAlignment = Alignment.Center
@@ -2494,7 +2559,7 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
                     Image(
                         painter = painterResource(R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg),
                         contentDescription = "Godło Polski — czysty znak wektorowy na przezroczystym tle",
-                        modifier = Modifier.size(61.dp),
+                        modifier = Modifier.size(if (tileStyle == "small") 16.dp else 20.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
@@ -2526,12 +2591,13 @@ private fun ServiceCard(
     val compact = tileStyle == "small"
     val list = tileStyle == "list"
     val cardModifier = when {
-        list -> Modifier.fillMaxWidth().height(82.dp)
-        compact -> Modifier.fillMaxWidth().height(112.dp)
-        else -> Modifier.fillMaxWidth().aspectRatio(1.14f)
+        list -> Modifier.fillMaxWidth().height(64.dp)
+        compact -> Modifier.fillMaxWidth().height(76.dp)
+        else -> Modifier.fillMaxWidth().height(92.dp)
     }
     Card(
-        modifier = cardModifier.clickable(onClick = onClick),
+        modifier = cardModifier.clickable(onClick = onClick)
+            .testTag("service-card-${item.title}"),
         shape = RoundedCornerShape(17.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
@@ -2970,8 +3036,41 @@ private fun DocumentsWalletScreen(
         CatalogDocument("children", "Dokumentacja dzieci", "Rodzinna ewidencja danych i dokumentacji dzieci", listOf("Cywilne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Rejestry"), service = "Dane dzieci", icon = Icons.Filled.AccountCircle),
         CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
     )
-    val visibleDocuments = documents.filter { documentPlacements[it.id] != "hidden" }
-    val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry", "Inne dokumenty")
+    val knownDocumentIds = documents.map { it.id }.toSet()
+    val additionalDocuments = documentDisplayOptions.filter { it.first !in knownDocumentIds }.map { (id, title, _) ->
+        val categoriesForDocument = when {
+            id.startsWith("church_") -> listOf("Kościelne", "Osobiste", "Zawodowe", "Misyjne", "Rejestry")
+            id == "organization_church" -> listOf("Kościelne", "Organizacyjne", "Rejestry")
+            id.startsWith("professional_") || id == "professional" -> listOf("Zawodowe", "Edukacja", "Osobiste", "Rejestry")
+            id.startsWith("organization_") || id == "entity" -> listOf("Organizacyjne", "Cywilne", "Kościelne", "Rejestry")
+            id.startsWith("insurance_") -> listOf("OC", "Finansowe", "Osobiste")
+            id in setOf("birth_extract", "marriage_extract", "death_extract") -> listOf("Cywilne", "Rodzinne", "Rodowe", "Rejestry")
+            id in setOf("vehicle_registration") -> listOf("Państwowe", "Transport", "OC")
+            id in setOf("ehic", "blood_donor", "disability_card") -> listOf("Zdrowotne", "Państwowe", "Osobiste")
+            id in setOf("large_family") -> listOf("Rodzinne", "Państwowe", "Osobiste")
+            id in setOf("mission_travel") -> listOf("Misyjne", "Kościelne", "Zawodowe", "Osobiste")
+            id in setOf("eu_education") -> listOf("Edukacja", "Zawodowe", "Państwowe")
+            id == "criminal_record" -> listOf("Państwowe", "Cywilne", "Rejestry", "Osobiste")
+            id == "official" -> listOf("Państwowe", "Cywilne", "Rejestry")
+            else -> listOf("Pozostałe")
+        }
+        val service = when {
+            id.startsWith("church_") || id == "organization_church" -> "Dokumenty Kościelne"
+            id.startsWith("professional_") || id == "professional" -> "Dokumenty kwalifikacji zawodowych"
+            id.startsWith("organization_") || id == "entity" -> "Dokumenty rejestru podmiotów"
+            id in setOf("birth_extract", "marriage_extract", "death_extract", "official") -> "Formularze dokumentów"
+            else -> "Pozostałe dokumenty"
+        }
+        CatalogDocument(id, title, "Dokument i dane: $title", categoriesForDocument, service = service,
+            icon = Icons.Filled.Description)
+    }
+    val allDocuments = documents + additionalDocuments
+    val visibleDocuments = allDocuments.filter { documentPlacements[it.id] != "hidden" }
+    val categories = listOf(
+        "Państwowe", "Cywilne", "Kościelne", "Rodowe", "Rodzinne", "OC", "Zdrowotne",
+        "Osobiste", "Zawodowe", "Edukacja", "Organizacyjne", "Misyjne", "Transport",
+        "Finansowe", "Rejestry", "Pozostałe", "Inne dokumenty"
+    )
 
     fun openDocument(document: CatalogDocument) {
         when {
@@ -3077,6 +3176,58 @@ private fun DocumentsWalletScreen(
     }
 }
 
+
+@Composable
+private fun DashboardDocumentGrid(
+    documents: List<Triple<String, String, Int>>,
+    tileStyle: String,
+    onOpen: (String) -> Unit
+) {
+    val columns = when (tileStyle) {
+        "small" -> 3
+        "list" -> 1
+        else -> 2
+    }
+    val rows = documents.chunked(columns)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        rows.forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { (id, title, iconRes) ->
+                    Card(
+                        modifier = Modifier.weight(1f)
+                            .height(when (tileStyle) { "list" -> 68.dp; "small" -> 92.dp; else -> 116.dp })
+                            .clickable { onOpen(id) }
+                            .testTag("dashboard-document-$id"),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    ) {
+                        if (tileStyle == "list") {
+                            Row(Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(28.dp))
+                                Text(title, color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        } else {
+                            Column(Modifier.fillMaxSize().padding(10.dp),
+                                verticalArrangement = Arrangement.SpaceBetween) {
+                                Image(painterResource(iconRes), contentDescription = null,
+                                    modifier = Modifier.size(if (tileStyle == "small") 22.dp else 28.dp))
+                                Text(title, color = MaterialTheme.colorScheme.onSurface,
+                                    style = if (tileStyle == "small") MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+                repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
 
 @Composable
 private fun DocumentCardEmblem(documentKey: String, modifier: Modifier = Modifier) {
