@@ -464,22 +464,13 @@ private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
 
 @Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
+    val cream = Color(0xFFFFF1D1)
     Box(Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.drawable.header_poland_banner),
-            contentDescription = "Polska flaga na maszcie — tło ekranu powitalnego",
+            painter = painterResource(R.drawable.file_00000000e0e4820a839fa3184993f41b),
+            contentDescription = "Polska flaga na maszcie na tle nieba",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
-        )
-        // Przyciemnienie dolnej części zapewnia czytelność stopki bez zasłaniania fotografii.
-        Box(
-            Modifier.fillMaxSize().background(
-                androidx.compose.ui.graphics.Brush.verticalGradient(
-                    0f to Color(0x1A102030),
-                    0.58f to Color(0x22102030),
-                    1f to Color(0xD9101820)
-                )
-            )
         )
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
@@ -491,48 +482,62 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
             ) {
                 BrandMark(size = 64.dp)
                 Text(
-                    "Aplikacja Obywatelska",
-                    color = Color.White,
-                    style = MaterialTheme.typography.headlineSmall,
+                    "mObywatel",
+                    color = cream,
+                    style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
             Spacer(Modifier.height(34.dp))
             Text(
                 "Dzień dobry!",
-                color = Color.White,
-                style = MaterialTheme.typography.headlineMedium,
+                color = cream,
+                style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(10.dp))
             Text(
                 "Zaloguj się do aplikacji",
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium
+                color = cream,
+                style = MaterialTheme.typography.titleLarge
             )
             Spacer(Modifier.weight(1f))
             Button(
                 onClick = onStart,
-                modifier = Modifier.fillMaxWidth().height(64.dp),
-                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(76.dp),
+                shape = RoundedCornerShape(22.dp),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFB7DFFF),
-                    contentColor = Color(0xFF123B65)
+                    containerColor = Color(0xFF9FD5FF),
+                    contentColor = Color(0xFF062A59)
                 )
             ) {
-                Text("Zaloguj się", style = MaterialTheme.typography.titleMedium)
+                Text("Zaloguj się", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Medium)
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(24.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
                 Text(
-                    "Niezależny projekt obywatelski",
+                    "Więcej o Krajowym Planie\nOdbudowy",
                     modifier = Modifier.weight(1f),
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyMediu@Composable
+                    color = cream,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "wersja\n4.93.1\n(6704)",
+                    color = cream,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -541,19 +546,11 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
 
     Box(Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(R.drawable.header_poland_banner),
+            painter = painterResource(R.drawable.file_00000000e0e4820a839fa3184993f41b),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        Box(
-            Modifier.fillMaxSize().background(
-                androidx.compose.ui.graphics.Brush.verticalGradient(
-                    0f to Color(0x160D1B2A),
-                    0.55f to Color(0x180D1B2A),
-                    1f to Color(0xB9101820)
-                )
-            )
         )
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
@@ -638,8 +635,8 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().height(64.dp),
                 shape = RoundedCornerShape(17.dp),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFB7DFFF),
-                    contentColor = Color(0xFF123B65)
+                    containerColor = Color(0xFF9FD5FF),
+                    contentColor = Color(0xFF062A59)
                 )
             ) {
                 Text("Zaloguj się", style = MaterialTheme.typography.titleMedium)
