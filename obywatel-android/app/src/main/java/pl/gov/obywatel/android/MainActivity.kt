@@ -137,7 +137,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import pl.gov.obywatel.android.ui.theme.Blue
 import pl.gov.obywatel.android.ui.theme.ObywatelTheme
 import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
@@ -719,7 +718,6 @@ private data class ServiceItem(
     val subtitle: String,
     val icon: Int? = null,
     val fallbackIcon: ImageVector? = null,
-    val tint: Color = Blue,
     val category: String = "Pozostałe"
 )
 
@@ -4077,7 +4075,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                         .onSuccess { status = "Zapisano i zabezpieczono dane." }
                         .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
                 }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
-                if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E), style = MaterialTheme.typography.bodySmall)
+                if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             } else {
                 RegistryReadOnlyField("Źródło danych / adres rejestru", fields["registry_${entityKey}_source"])
                 RegistryReadOnlyField("Data sprawdzenia", fields["registry_${entityKey}_checked"])
