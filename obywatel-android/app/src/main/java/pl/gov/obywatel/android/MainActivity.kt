@@ -2277,8 +2277,8 @@ private fun Header(
 @Composable
 private fun BrandMark() {
     Image(
-        painter = painterResource(R.drawable.header_logo_panel),
-        contentDescription = "Znak graficzny aplikacji",
+        painter = painterResource(R.drawable.header_brand_vector),
+        contentDescription = "Białe godło orła na czerwonym tle — znak aplikacji",
         modifier = Modifier.size(48.dp),
         contentScale = ContentScale.Fit
     )
