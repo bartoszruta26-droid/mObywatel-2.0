@@ -767,7 +767,6 @@ internal fun UnifiedCredentialCard(
     var showInfo by remember(documentKey) { mutableStateOf(false) }
     val horizontal = settings.orientation == "POZIOMA"
     val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp)
-    val innerShape = androidx.compose.foundation.shape.RoundedCornerShape(11.dp)
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Tło dokumentu")
@@ -856,7 +855,7 @@ internal fun UnifiedCredentialCard(
                     ) {
                         Column(
                             Modifier.width(leftColumnWidth).fillMaxHeight(),
-                            verticalArrangement = Arrangement.spacedBy((cardWidth * 0.025f).coerceIn(6.dp, 11.dp)),
+                            verticalArrangement = Arrangement.spacedBy((cardWidth * 0.05f).coerceIn(14.dp, 20.dp)),
                             horizontalAlignment = Alignment.Start
                         ) {
                             if (settings.showPhoto) {
