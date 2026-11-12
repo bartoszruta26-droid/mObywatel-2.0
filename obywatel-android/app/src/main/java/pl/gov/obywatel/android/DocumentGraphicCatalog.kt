@@ -39,7 +39,7 @@ internal data class GraphicDocumentDefinition(
 )
 
 internal object GraphicDocumentCatalog {
-    val definitions = listOf(
+    private val baseDefinitions = listOf(
         GraphicDocumentDefinition("registry", "Odpis z rejestru podmiotów", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
         GraphicDocumentDefinition("birth_extract", "Akt urodzenia", DocumentPreviewKind.RECORD, "Skan / fotografia aktu"),
         GraphicDocumentDefinition("marriage_extract", "Akt małżeństwa", DocumentPreviewKind.RECORD, "Skan / fotografia aktu"),
@@ -73,6 +73,35 @@ internal object GraphicDocumentCatalog {
         GraphicDocumentDefinition("official", "Pozostałe dokumenty urzędowe", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
         GraphicDocumentDefinition("loyalty_cards", "Karty lojalnościowe sklepów", DocumentPreviewKind.CREDENTIAL)
     )
+
+    // Katalog jest rozszerzany automatycznie o wszystkie typy z rejestru dokumentów.
+    // Dzięki temu dodanie nowego dokumentu do ustawień nie wymaga drugiej, ręcznej
+    // rejestracji w katalogu edytora graficznego.
+    private val credentialKeys = setOf(
+        "identity", "passport", "parliament", "training", "student", "family",
+        "church", "church_bishop", "church_archbishop", "church_cardinal",
+        "church_abbot", "church_minister", "church_missionary", "professional",
+        "professional_medical", "professional_education", "professional_therapeutic",
+        "professional_other", "large_family", "blood_donor", "disability_card",
+        "ehic", "loyalty", "loyalty_cards", "profile"
+    )
+
+    val definitions: List<GraphicDocumentDefinition> by lazy {
+        val missing = documentBrandTargets
+            .filterNot { target -> baseDefinitions.any { it.id == target.first } }
+            .map { (id, title) ->
+                val credential = id in credentialKeys ||
+                    id.startsWith("church_") || id.startsWith("professional_")
+                GraphicDocumentDefinition(
+                    id = id,
+                    title = title,
+                    kind = if (credential) DocumentPreviewKind.CREDENTIAL else DocumentPreviewKind.RECORD,
+                    photoLabel = if (credential) "Fotografia posiadacza" else "Skan / fotografia dokumentu",
+                    supportsPhoto = true
+                )
+            }
+        (baseDefinitions + missing).distinctBy { it.id }
+    }
 
     fun find(id: String): GraphicDocumentDefinition? = definitions.firstOrNull { it.id == id }
 }
