@@ -3224,23 +3224,33 @@ private fun DocumentsWalletScreen(
                                 ) {
                                     Box(Modifier.fillMaxSize()) {
                                         DocumentTileArtwork(document.id, Modifier.fillMaxSize())
-                                        Box(Modifier.fillMaxSize().padding(10.dp)) {
-                                        Image(painter = painterResource(documentTileIconResource(document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
-                                            contentDescription = document.title,
-                                            modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 27.dp else 32.dp))
-                                        DocumentCardEmblem(
-                                            documentKey = document.id,
-                                            modifier = Modifier.align(Alignment.TopEnd)
-                                                .size(if (documentCardStyle == "small") 24.dp else 32.dp)
+                                        Text(
+                                            document.title,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = if (documentCardStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.align(Alignment.TopStart)
+                                                .fillMaxWidth(0.78f).padding(10.dp)
                                         )
-                                        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                            Text(document.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
-                                                style = if (documentCardStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
-                                                maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                            if (documentCardStyle == "large") Text(document.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        if (documentCardStyle == "large") {
+                                            Text(
+                                                document.subtitle,
+                                                color = Color.White.copy(alpha = 0.84f),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.align(Alignment.BottomStart).padding(10.dp)
+                                            )
                                         }
-                                        }
+                                        Image(
+                                            painter = painterResource(documentTileIconResource(document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
+                                            contentDescription = "Ikona wektorowa: " + document.title,
+                                            modifier = Modifier.align(Alignment.TopEnd)
+                                                .padding(8.dp)
+                                                .size(if (documentCardStyle == "small") 22.dp else 26.dp)
+                                        )
                                     }
                                 }
                             }
@@ -3290,24 +3300,27 @@ private fun DashboardDocumentGrid(
                                 DocumentTileArtwork(id, Modifier.fillMaxSize())
                                 Row(Modifier.fillMaxSize().padding(horizontal = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Image(painterResource(documentTileIconResource(id, iconRes)), contentDescription = null, modifier = Modifier.size(30.dp))
+                                    horizontalArrangement = Arrangement.SpaceBetween) {
                                     Text(title, color = Color.White,
                                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
-                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f).padding(end = 8.dp))
+                                    Image(painterResource(documentTileIconResource(id, iconRes)),
+                                        contentDescription = "Ikona wektorowa: " + title,
+                                        modifier = Modifier.size(22.dp))
                                 }
                             }
                         } else {
                             Box(Modifier.fillMaxSize()) {
                                 DocumentTileArtwork(id, Modifier.fillMaxSize())
-                                Column(Modifier.fillMaxSize().padding(10.dp),
-                                    verticalArrangement = Arrangement.SpaceBetween) {
-                                Image(painterResource(documentTileIconResource(id, iconRes)), contentDescription = null,
-                                    modifier = Modifier.size(if (tileStyle == "small") 27.dp else 32.dp))
-                                Text(title, color = MaterialTheme.colorScheme.onSurface,
+                                Text(title, color = Color.White,
                                     style = if (tileStyle == "small") MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                }
+                                    fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(0.78f).padding(10.dp))
+                                Image(painterResource(documentTileIconResource(id, iconRes)),
+                                    contentDescription = "Ikona wektorowa: " + title,
+                                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                                        .size(if (tileStyle == "small") 20.dp else 24.dp))
                             }
                         }
                     }
@@ -3326,7 +3339,9 @@ private fun documentTileIconResource(documentKey: String, fallback: Int): Int = 
     "civil", "birth_extract", "marriage_extract", "death_extract" -> R.drawable.tile_ic_civil_outline
     "business", "entity", "official", "organization_foundation", "organization_company",
     "organization_association" -> R.drawable.tile_ic_business_outline
-    else -> fallback
+    // Każdy typ dokumentu otrzymuje wektorową ikonę, także gdy nie ma
+    // dedykowanego piktogramu dla konkretnej kategorii.
+    else -> R.drawable.tile_ic_civil_outline
 }
 
 @Composable
