@@ -3135,19 +3135,22 @@ private fun DocumentsWalletScreen(
                                 1.dp, if (documentPlacements[document.id] == "dashboard") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                             )
                         ) {
-                            Row(
-                                Modifier.fillMaxWidth().padding(13.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(11.dp)
-                            ) {
-                                Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
-                                    contentDescription = document.title, modifier = Modifier.size(27.dp))
-                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                    Text(document.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
-                                        style = MaterialTheme.typography.bodyMedium)
-                                    Text(document.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                            Box(Modifier.fillMaxWidth()) {
+                                DocumentTileArtwork(document.id, Modifier.matchParentSize())
+                                Row(
+                                    Modifier.fillMaxWidth().padding(13.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(11.dp)
+                                ) {
+                                    Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
+                                        contentDescription = document.title, modifier = Modifier.size(27.dp))
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                        Text(document.title, color = Color.White, fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodyMedium)
+                                        Text(document.subtitle, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text("Podgląd  ›", color = Color.White, style = MaterialTheme.typography.labelSmall)
                                 }
-                                Text("Podgląd  ›", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -3230,13 +3233,16 @@ private fun DashboardDocumentGrid(
                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         if (tileStyle == "list") {
-                            Row(Modifier.fillMaxSize().padding(horizontal = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(28.dp))
-                                Text(title, color = MaterialTheme.colorScheme.onSurface,
-                                    style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
-                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Box(Modifier.fillMaxSize()) {
+                                DocumentTileArtwork(id, Modifier.fillMaxSize())
+                                Row(Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(28.dp))
+                                    Text(title, color = Color.White,
+                                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
+                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                }
                             }
                         } else {
                             Box(Modifier.fillMaxSize()) {
