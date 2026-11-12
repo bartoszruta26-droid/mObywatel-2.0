@@ -418,3 +418,51 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
         dismissButton = { TextButton(onClick = { showDelete = false; deleteTarget = null }) { Text("Anuluj") } }
     )
 }
+\n@Composable
+private fun SignatureKindLabel(kind: String) {
+    val (label, color) = when (kind) {
+        "epuap" -> "Podpisano podpisem elektronicznym ePUAP" to MaterialTheme.colorScheme.tertiary
+        "qualified" -> "Podpisano kwalifikowanym podpisem elektronicznym" to MaterialTheme.colorScheme.tertiary
+        else -> "Rodzaj podpisu nieustalony" to MaterialTheme.colorScheme.tertiary
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        val signatureIcon = when (kind) {
+            "epuap" -> Icons.Filled.Shield
+            "qualified" -> Icons.Filled.Verified
+            else -> Icons.Filled.Warning
+        }
+        Icon(signatureIcon, contentDescription = label, tint = color, modifier = Modifier.size(20.dp))
+        Text(label, color = color, fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 6.dp))
+    }
+}
+
+@Composable
+private fun PdfPagePreview(context: Context, id: String, pageIndex: Int, onPageCount: (Int) -> Unit) {
+    val result = remember(id, pageIndex) {
+        runCatching {
+            val file = SignedPdfStore.decryptPdfToCache(context, id)
+            val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+            val renderer = PdfRenderer(descriptor)
+            val count = renderer.pageCount
+            require(count > 0) { "Dokument PDF nie zawiera stron." }
+            val index = pageIndex.coerceIn(0, count - 1)
+            val page = renderer.openPage(index)
+            val width = (page.width * 1.6f).toInt().coerceIn(500, 1600)
+            val height = (page.height.toFloat() / page.width * width).toInt().coerceAtMost(2400)
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            bitmap.eraseColor(AndroidColor.WHITE)
+            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            page.close(); renderer.close(); descriptor.close(); file.delete()
+            count to bitmap
+        }
+    }
+    SideEffect { result.getOrNull()?.let { onPageCount(it.first) } }
+    if (result.isSuccess) {
+        Image(result.getOrThrow().second.asImageBitmap(), contentDescription = "Podgląd strony dokumentu PDF",
+            modifier = Modifier.fillMaxWidth(), contentScale = androidx.compose.ui.layout.ContentScale.FillWidth)
+    } else {
+        Text("Nie można wyświetlić PDF: ${result.exceptionOrNull()?.message ?: "nieznany błąd"}",
+            color = MaterialTheme.colorScheme.error)
+    }
+}

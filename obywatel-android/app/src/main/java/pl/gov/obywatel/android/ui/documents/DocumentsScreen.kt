@@ -256,3 +256,272 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
         }
     }
 }
+\nprivate data class OdtPreview(val text: String = "", val error: String? = null)
+
+@Composable
+private fun OdtPreviewPane(document: ImportedDocument, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val preview by produceState<OdtPreview?>(initialValue = null, document.uri) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                val input = checkNotNull(context.contentResolver.openInputStream(document.uri)) {
+                    "Nie można otworzyć dokumentu ODT."
+                }
+                OdtPreview(text = input.use { OdtTextExtractor.extract(it) })
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                OdtPreview(error = failure.message ?: "Nie udało się odczytać dokumentu ODT.")
+            }
+        }
+    }
+    when {
+        preview == null -> Box(modifier, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        preview?.error != null -> Box(modifier.padding(20.dp), contentAlignment = Alignment.Center) {
+            Text(preview?.error.orEmpty(), color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        }
+        else -> Column(modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Text("Podgląd tekstu ODT", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text("Układ, tabele, obrazy i formatowanie mogą różnić się od oryginału.",
+                style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+            Text(preview?.text.orEmpty(), style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+private data class DocxPreview(val text: String = "", val error: String? = null)
+
+@Composable
+private fun DocxPreviewPane(document: ImportedDocument, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val preview by produceState<DocxPreview?>(initialValue = null, document.uri) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                val input = checkNotNull(context.contentResolver.openInputStream(document.uri)) {
+                    "Nie można otworzyć dokumentu DOCX."
+                }
+                DocxPreview(text = input.use { DocxTextExtractor.extract(it) })
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                DocxPreview(error = failure.message ?: "Nie udało się odczytać dokumentu DOCX.")
+            }
+        }
+    }
+
+    when {
+        preview == null -> Box(modifier, contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        preview?.error != null -> Box(modifier.padding(20.dp), contentAlignment = Alignment.Center) {
+            Text(
+                preview?.error.orEmpty(),
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+            )
+        }
+        else -> Column(
+            modifier = modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Text("Podgląd tekstu DOCX", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Układ, tabele, obrazy i formatowanie mogą różnić się od oryginału.",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+            )
+            Text(preview?.text.orEmpty(), style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable
+private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    var page by remember(document.uri) { mutableIntStateOf(0) }
+    val preview by produceState<DocumentPreview?>(initialValue = null, document.uri, page) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                if (document.mimeType == "application/pdf") {
+                    val descriptor = checkNotNull(context.contentResolver.openFileDescriptor(document.uri, "r")) {
+                        "Nie można otworzyć pliku PDF."
+                    }
+                    descriptor.use { pfd ->
+                        PdfRenderer(pfd).use { renderer ->
+                            require(renderer.pageCount > 0) { "Plik PDF nie zawiera stron." }
+                            val safePage = page.coerceIn(0, renderer.pageCount - 1)
+                            renderer.openPage(safePage).use { pdfPage ->
+                                val dimensions = calculatePreviewDimensions(
+                                    pdfPage.width,
+                                    pdfPage.height,
+                                    MAX_PDF_PREVIEW_DIMENSION
+                                )
+                                val bitmap = Bitmap.createBitmap(
+                                    dimensions.width,
+                                    dimensions.height,
+                                    Bitmap.Config.ARGB_8888
+                                )
+                                try {
+                                    bitmap.eraseColor(Color.WHITE)
+                                    pdfPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                    DocumentPreview(bitmap, renderer.pageCount)
+                                } catch (failure: Exception) {
+                                    bitmap.recycle()
+                                    throw failure
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    DocumentPreview(decodeSampledImage(context, document), 1)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                DocumentPreview(
+                    Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888),
+                    1,
+                    failure.message ?: "Błąd podglądu."
+                )
+            }
+        }
+    }
+
+    // Bitmapa należy do bieżącego podglądu; zwolnij ją po zmianie strony
+    // lub dokumentu oraz po opuszczeniu ekranu.
+    DisposableEffect(preview?.bitmap) {
+        val bitmap = preview?.bitmap
+        onDispose {
+            if (bitmap != null && !bitmap.isRecycled) {
+                bitmap.recycle()
+            }
+        }
+    }
+
+    // Każda strona zaczyna się z neutralnym powiększeniem i położeniem.
+    var scale by remember(document.uri, page) { mutableFloatStateOf(1f) }
+    var offsetX by remember(document.uri, page) { mutableFloatStateOf(0f) }
+    var offsetY by remember(document.uri, page) { mutableFloatStateOf(0f) }
+    val transformState = rememberTransformableState { zoom, pan, _ ->
+        scale = (scale * zoom).coerceIn(1f, 5f)
+        offsetX += pan.x
+        offsetY += pan.y
+    }
+
+    Column(modifier) {
+        when {
+            preview == null -> Box(
+                Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) { CircularProgressIndicator() }
+
+            preview?.error != null -> Box(
+                Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    preview?.error.orEmpty(),
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                )
+            }
+
+            else -> {
+                Image(
+                    bitmap = preview!!.bitmap.asImageBitmap(),
+                    contentDescription = "Podgląd dokumentu ${document.title}, strona ${page + 1}",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offsetX,
+                            translationY = offsetY
+                        )
+                        .transformable(transformState)
+                )
+                if (preview!!.pageCount > 1) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(onClick = { page = (page - 1).coerceAtLeast(0) }, enabled = page > 0) {
+                            Text("Poprzednia strona")
+                        }
+                        Text(
+                            "Strona ${page + 1} z ${preview!!.pageCount}",
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                        )
+                        OutlinedButton(
+                            onClick = { page = (page + 1).coerceAtMost(preview!!.pageCount - 1) },
+                            enabled = page < preview!!.pageCount - 1
+                        ) { Text("Następna strona") }
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { scale = (scale - 0.25f).coerceAtLeast(1f) },
+                        enabled = scale > 1f
+                    ) {
+                        Icon(Icons.Filled.ZoomOut, contentDescription = "Pomniejsz podgląd")
+                    }
+                    IconButton(
+                        onClick = { scale = (scale + 0.25f).coerceAtMost(5f) },
+                        enabled = scale < 5f
+                    ) {
+                        Icon(Icons.Filled.ZoomIn, contentDescription = "Powiększ podgląd")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            scale = 1f
+                            offsetX = 0f
+                            offsetY = 0f
+                        },
+                        enabled = scale != 1f || offsetX != 0f || offsetY != 0f
+                    ) {
+                        Text("Przywróć widok")
+                    }
+                }
+                Text(
+                    "Uszczypnij, aby powiększyć; przeciągnij, aby przesunąć.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+private fun decodeSampledImage(
+    context: android.content.Context,
+    document: ImportedDocument
+): Bitmap {
+    val resolver = context.contentResolver
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    val boundsStream = resolver.openInputStream(document.uri)
+        ?: error("Nie można odczytać obrazu.")
+    boundsStream.use { input -> BitmapFactory.decodeStream(input, null, bounds) }
+    require(bounds.outWidth > 0 && bounds.outHeight > 0) { "Nieprawidłowy plik obrazu." }
+
+    val sampleSize = calculateInSampleSize(
+        bounds.outWidth,
+        bounds.outHeight,
+        MAX_IMAGE_PREVIEW_DIMENSION
+    )
+
+    val options = BitmapFactory.Options().apply {
+        inSampleSize = sampleSize
+        inPreferredConfig = Bitmap.Config.ARGB_8888
+    }
+    return resolver.openInputStream(document.uri)?.use { input ->
+        checkNotNull(BitmapFactory.decodeStream(input, null, options)) {
+            "Nie można zdekodować obrazu."
+        }
+    } ?: error("Nie można ponownie otworzyć obrazu.")
+}
