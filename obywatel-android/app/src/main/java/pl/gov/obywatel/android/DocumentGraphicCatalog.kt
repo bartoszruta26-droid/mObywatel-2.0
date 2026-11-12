@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -245,6 +247,7 @@ private fun DocumentRecordGraphicPreview(
     val crest = remember(settings.crestAssetId) { settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
     val flag = remember(settings.flagAssetId) { settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
     val background = remember(settings.backgroundAssetId) { settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
+    val logo = remember(settings.logoAssetId) { settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -256,6 +259,7 @@ private fun DocumentRecordGraphicPreview(
                 if (settings.showCrest && crest != null) Image(crest.asImageBitmap(), contentDescription = "Herb dokumentu", modifier = Modifier.size(52.dp))
                 if (settings.showFlag && flag != null) Image(flag.asImageBitmap(), contentDescription = "Flaga dokumentu", modifier = Modifier.size(52.dp))
                 if (settings.showBackground && background != null) Image(background.asImageBitmap(), contentDescription = "Tło dokumentu", modifier = Modifier.size(52.dp))
+                if (settings.showLogo && logo != null) Image(logo.asImageBitmap(), contentDescription = "Logo wystawcy", modifier = Modifier.size(52.dp))
             }
             HorizontalDivider()
             options.filter { !settings.visibleFieldsConfigured || settings.visibleFields.isEmpty() || it.first in settings.visibleFields }
