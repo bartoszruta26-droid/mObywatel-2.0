@@ -257,6 +257,9 @@ internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
     val tileBackgroundAssetId: String = "",
+    val tileIconAssetId: String = "",
+    val tileVectorMotifId: String = "auto",
+    val tileGradientPaletteId: String = "auto",
 
     val crestAssetId: String = "",
     val flagAssetId: String = "",
@@ -296,6 +299,43 @@ internal data class LegitimacyPreviewSettings(
     val fontColor: String = "#FF000000",
     val imageFilter: String = "none",
     val individualAppearanceConfigured: Boolean = false
+)
+
+
+internal val tileVectorMotifOptions = listOf(
+    "auto" to "Automatyczny", "0" to "Heraldyczny znak", "1" to "Dokument",
+    "2" to "Gmach / rejestr", "3" to "Krzyż", "4" to "Ród / rodzina",
+    "5" to "Podróż / świat", "6" to "Edukacja", "7" to "Zdrowie"
+)
+internal data class TileGradientPalette(val id: String, val label: String, val colors: List<String>)
+internal val tileGradientPaletteOptions = listOf(
+    TileGradientPalette("auto", "Automatyczny", listOf("#FF0756A5", "#FF078FD0", "#FF42B9D8")),
+    TileGradientPalette("azure", "Lazur", listOf("#FF003F87", "#FF1769AA", "#FF5AA6D1")),
+    TileGradientPalette("gules", "Czerwień", listOf("#FF790018", "#FFB5122B", "#FFE36A72")),
+    TileGradientPalette("sable", "Czerń", listOf("#FF171717", "#FF424242", "#FF777777")),
+    TileGradientPalette("vert", "Zieleń", listOf("#FF064B35", "#FF167A50", "#FF71A878")),
+    TileGradientPalette("purpure", "Purpura", listOf("#FF4A145F", "#FF762B83", "#FFB27BB5")),
+    TileGradientPalette("or", "Złoto", listOf("#FF775000", "#FFB8860B", "#FFE8C66A")),
+    TileGradientPalette("argent", "Srebro", listOf("#FF46515B", "#FF89949E", "#FFD5DCE2")),
+    TileGradientPalette("murrey", "Morwa", listOf("#FF54133B", "#FF852653", "#FFC47791")),
+    TileGradientPalette("tenne", "Tenne", listOf("#FF71330C", "#FFB65B1B", "#FFE1A15A")),
+    TileGradientPalette("carnation", "Goździk", listOf("#FF9B315D", "#FFD45B83", "#FFF0A0B4")),
+    TileGradientPalette("celeste", "Błękit", listOf("#FF176B83", "#FF3C9FB0", "#FF9AD5D4")),
+    TileGradientPalette("copper", "Miedź", listOf("#FF663B2B", "#FF9D6248", "#FFD29A70")),
+    TileGradientPalette("olive", "Oliwka", listOf("#FF4D4A16", "#FF85802A", "#FFC4B96B")),
+    TileGradientPalette("indigo", "Indygo", listOf("#FF25205F", "#FF4D4696", "#FF9994D0")),
+    TileGradientPalette("coral", "Koral", listOf("#FF8F342A", "#FFCE6250", "#FFF0A18A"))
+)
+private val tileIconChoices = listOf(
+    "lib_ic_document" to "Dokument", "lib_ic_account" to "Osoba",
+    "lib_ic_credit_card" to "Karta", "lib_ic_folder" to "Folder",
+    "lib_ic_medical_record" to "Medyczny", "lib_ic_school" to "Edukacja",
+    "lib_ic_building" to "Budynek", "lib_ic_wallet" to "Portfel",
+    "lib_ic_fingerprint" to "Odcisk palca", "lib_ic_flag" to "Flaga",
+    "tile_ic_student_outline" to "Uczeń / student",
+    "tile_ic_disability_outline" to "Niepełnosprawność",
+    "tile_ic_church_outline" to "Kościół", "tile_ic_civil_outline" to "Cywilny",
+    "tile_ic_business_outline" to "Podmiot / firma"
 )
 
 private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
@@ -403,6 +443,9 @@ internal object LegitimacyPreviewSettingsStore {
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
             tileBackgroundAssetId = p.getString("${key}_tile_background", "").orEmpty(),
+            tileIconAssetId = p.getString("${key}_tile_icon", "").orEmpty(),
+            tileVectorMotifId = p.getString("${key}_tile_vector_motif", "auto").orEmpty(),
+            tileGradientPaletteId = p.getString("${key}_tile_gradient_palette", "auto").orEmpty(),
             crestAssetId = p.getString("${key}_crest", "").orEmpty(),
             flagAssetId = p.getString("${key}_flag", "").orEmpty(),
             backgroundAssetId = p.getString("${key}_background", "").orEmpty(),
@@ -489,6 +532,9 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_flag", value.flagAssetId)
                 .putString("${key}_background", value.backgroundAssetId)
                 .putString("${key}_tile_background", value.tileBackgroundAssetId)
+                .putString("${key}_tile_icon", value.tileIconAssetId)
+                .putString("${key}_tile_vector_motif", value.tileVectorMotifId)
+                .putString("${key}_tile_gradient_palette", value.tileGradientPaletteId)
                 .putString("${key}_logo", value.logoAssetId)
                 .putString("${key}_caption", value.crestCaption)
                 .putString("${key}_caption_position", value.captionPosition)
@@ -908,6 +954,59 @@ internal fun LegitimacyPreviewSettingsPanel(
             )
             OutlinedButton(onClick = { tileBackgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
                 modifier = Modifier.fillMaxWidth()) { Text("Wczytaj własne tło kafelka") }
+
+            Text("Wektorowy motyw tła kafelka", fontWeight = FontWeight.SemiBold)
+            Text("Motyw jest rysowany wektorowo i może być dobrany niezależnie dla każdego dokumentu.",
+                style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                tileVectorMotifOptions.forEach { (id, label) ->
+                    FilterChip(selected = settings.tileVectorMotifId == id, onClick = { update(settings.copy(tileVectorMotifId = id)) }, label = { Text(label) })
+                }
+            }
+            Text("Miniikona kafelka", fontWeight = FontWeight.SemiBold)
+            val iconChoices = remember(context) {
+                listOf("" to "Automatyczna") + tileIconChoices.filter {
+                    context.resources.getIdentifier(it.first, "drawable", context.packageName) != 0
+                }
+            }
+            iconChoices.chunked(3).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    row.forEach { (id, label) ->
+                        val resourceId = if (id.isBlank()) 0 else context.resources.getIdentifier(id, "drawable", context.packageName)
+                        Card(Modifier.weight(1f).clickable { update(settings.copy(tileIconAssetId = id)) },
+                            border = androidx.compose.foundation.BorderStroke(if (settings.tileIconAssetId == id) 2.dp else 1.dp,
+                                if (settings.tileIconAssetId == id) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
+                            Column(Modifier.fillMaxWidth().padding(7.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                if (resourceId != 0) Image(painterResource(resourceId), contentDescription = label,
+                                    modifier = Modifier.size(30.dp), contentScale = ContentScale.Fit)
+                                else Icon(Icons.Filled.MoreVert, contentDescription = label, modifier = Modifier.size(30.dp))
+                                Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                            }
+                        }
+                    }
+                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+            Text("Kolor gradientowego tła kafelka — paleta heraldyczna", fontWeight = FontWeight.SemiBold)
+            tileGradientPaletteOptions.chunked(4).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    row.forEach { palette ->
+                        FilterChip(selected = settings.tileGradientPaletteId == palette.id,
+                            onClick = { update(settings.copy(tileGradientPaletteId = palette.id)) },
+                            label = {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    palette.colors.forEach { hex ->
+                                        Box(Modifier.size(10.dp).clip(RoundedCornerShape(50))
+                                            .background(Color(android.graphics.Color.parseColor(hex))))
+                                    }
+                                    Text(palette.label, style = MaterialTheme.typography.labelSmall)
+                                }
+                            })
+                    }
+                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
             if (!assetSelectionOnly) {

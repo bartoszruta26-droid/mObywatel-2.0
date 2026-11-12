@@ -1348,7 +1348,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
                                         Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            Image(painter = painterResource(documentTileIconResource(id, iconRes)), contentDescription = null,
+                                            Image(painter = painterResource(documentTileIconResource(context, id, iconRes)), contentDescription = null,
                                                 modifier = Modifier.size(38.dp), contentScale = ContentScale.Fit)
                                             Text(title, modifier = Modifier.weight(1f).padding(start = 12.dp),
                                                 color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
@@ -3228,7 +3228,7 @@ private fun DocumentsWalletScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(11.dp)
                                 ) {
-                                    Image(painter = painterResource(documentTileIconResource(document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
+                                    Image(painter = painterResource(documentTileIconResource(context, document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
                                         contentDescription = document.title, modifier = Modifier.size(30.dp))
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                         Text(document.title, color = Color.White, fontWeight = FontWeight.SemiBold,
@@ -3364,7 +3364,12 @@ private fun DashboardDocumentGrid(
     }
 }
 
-private fun documentTileIconResource(documentKey: String, fallback: Int): Int = when (documentKey) {
+private fun documentTileIconResource(context: Context, documentKey: String, fallback: Int): Int {
+    val selected = context.getSharedPreferences("legitimacy_preview_preferences", Context.MODE_PRIVATE)
+        .getString("${documentKey}_tile_icon", "").orEmpty()
+    if (selected.isNotBlank()) context.resources.getIdentifier(selected, "drawable", context.packageName)
+        .takeIf { it != 0 }?.let { return it }
+    return when (documentKey) {
     "training", "student" -> R.drawable.tile_ic_student_outline
     "disability", "disability_card" -> R.drawable.tile_ic_disability_outline
     "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
@@ -3375,6 +3380,7 @@ private fun documentTileIconResource(documentKey: String, fallback: Int): Int = 
     // Każdy typ dokumentu otrzymuje wektorową ikonę, także gdy nie ma
     // dedykowanego piktogramu dla konkretnej kategorii.
     else -> R.drawable.tile_ic_civil_outline
+    }
 }
 
 private fun documentTileWatermarkResource(documentKey: String): Int = when {
@@ -3440,9 +3446,8 @@ private fun documentTileWatermarkResource(documentKey: String): Int = when {
 @Composable
 private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val tileBackgroundAssetId = context.getSharedPreferences(
-        "legitimacy_preview_preferences", android.content.Context.MODE_PRIVATE
-    ).getString("${documentKey}_tile_background", "").orEmpty()
+    val tilePreferences = context.getSharedPreferences("legitimacy_preview_preferences", Context.MODE_PRIVATE)
+    val tileBackgroundAssetId = tilePreferences.getString("${documentKey}_tile_background", "").orEmpty()
     val tileBackgroundBitmap = remember(documentKey, tileBackgroundAssetId) {
         when {
             tileBackgroundAssetId.isBlank() -> null
@@ -3454,7 +3459,7 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
             else -> DocumentBrandStore.preview(context, tileBackgroundAssetId)
         }
     }
-    val palette = when (documentKey) {
+    val defaultPalette = when (documentKey) {
         "identity" -> listOf(Color(0xFF0756A5), Color(0xFF078FD0), Color(0xFF42B9D8))
         "profile" -> listOf(Color(0xFF3155A6), Color(0xFF527BCB), Color(0xFF70B7D8))
         "passport", "mission_travel" -> listOf(Color(0xFF123C78), Color(0xFF315F9D), Color(0xFF4C91B8))
@@ -3481,6 +3486,9 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
             }
         }
     }
+    val selectedPaletteId = tilePreferences.getString("${documentKey}_tile_gradient_palette", "auto").orEmpty()
+    val palette = tileGradientPaletteOptions.firstOrNull { it.id == selectedPaletteId && it.id != "auto" }
+        ?.colors?.map { Color(android.graphics.Color.parseColor(it)) } ?: defaultPalette
     val motif = when {
         documentKey in setOf("identity", "passport", "official", "disability_card") -> 0
         documentKey in setOf("profile", "student", "training") -> 1
@@ -3492,6 +3500,8 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
         documentKey in setOf("disability", "vaccines", "blood_donor") -> 7
         else -> documentKey.hashCode().ushr(1) % 8
     }
+    val selectedMotif = tilePreferences.getString("${documentKey}_tile_vector_motif", "auto").orEmpty()
+    val activeMotif = selectedMotif.toIntOrNull()?.takeIf { it in 0..7 } ?: motif
     Box(modifier.clip(RoundedCornerShape(13.dp))) {
     if (tileBackgroundBitmap != null) {
         Image(tileBackgroundBitmap.asImageBitmap(), contentDescription = "Indywidualne tło kafelka dokumentu",
@@ -3516,7 +3526,7 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
             style = Stroke(width = 3.dp.toPx())
         )
         val stroke = Stroke(width = maxOf(1.5.dp.toPx(), size.minDimension * 0.012f))
-        when (motif) {
+        when (activeMotif) {
             0 -> {
                 drawLine(watermark, Offset(cx, cy - radius * 0.48f), Offset(cx, cy + radius * 0.48f), strokeWidth = stroke.width)
                 drawLine(watermark, Offset(cx - radius * 0.42f, cy), Offset(cx + radius * 0.42f, cy), strokeWidth = stroke.width)
