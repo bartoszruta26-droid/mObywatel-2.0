@@ -2413,8 +2413,8 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.file_5320_eagle_vector),
-                        contentDescription = "Biały orzeł w koronie ze złotą koroną",
+                        painter = painterResource(R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg),
+                        contentDescription = "Godło Polski — czysty znak wektorowy na przezroczystym tle",
                         modifier = Modifier.size(61.dp),
                         contentScale = ContentScale.Fit
                     )
