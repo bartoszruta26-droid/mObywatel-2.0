@@ -740,7 +740,7 @@ private val services = listOf(
 
 private const val DOCUMENT_DISPLAY_PREFS = "document_display_preferences"
 private const val DOCUMENT_DISPLAY_KEY_PREFIX = "placement_"
-private val documentDisplayOptions = listOf(
+internal val documentDisplayOptions = (listOf(
     Triple("profile", "Dane osobowe profilu", R.drawable.lib_ic_account),
     Triple("identity", "Dowód tożsamości", R.drawable.documents_identity_card),
     Triple("passport", "Dane paszportowe", R.drawable.documents_passport),
@@ -754,6 +754,8 @@ private val documentDisplayOptions = listOf(
     Triple("civil", "Dokumenty cywilne", R.drawable.tile_ic_civil_outline),
     Triple("business", "Dokumenty firmowe i podmiotowe", R.drawable.tile_ic_business_outline),
     Triple("bank_accounts", "Konta bankowe", R.drawable.lib_ic_wallet),
+    Triple("rod_bank_accounts", "Rachunki bankowe Rodu", R.drawable.lib_ic_wallet),
+    Triple("entity_bank_accounts", "Rachunki bankowe podmiotów", R.drawable.lib_ic_wallet),
     Triple("vaccines", "Książeczka szczepień WHO", R.drawable.lib_ic_medical_record),
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
     Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
@@ -792,7 +794,56 @@ private val documentDisplayOptions = listOf(
     Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
     Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
     Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document)
-)
+) + documentBrandTargets
+    .filterNot { (id, _) -> listOf(
+        "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
+        "disability", "church", "civil", "business", "bank_accounts", "vaccines", "signed_pdf",
+        "imported", "children", "branding", "loyalty", "birth_extract", "marriage_extract",
+        "death_extract", "large_family", "blood_donor", "disability_card", "vehicle_registration",
+        "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business",
+        "criminal_record", "mission_travel", "ehic", "eu_education", "church_bishop",
+        "church_archbishop", "church_cardinal", "church_abbot", "church_minister",
+        "church_missionary", "professional", "professional_medical", "professional_education",
+        "professional_therapeutic", "professional_other", "organization_foundation",
+        "organization_church", "organization_company", "organization_association", "entity", "official"
+    ).contains(id) }
+    .map { (id, title) ->
+        val icon = when {
+            id.startsWith("church_") || id == "church" -> R.drawable.tile_ic_church_outline
+            id.startsWith("rod_") || id == "family" -> R.drawable.documents_family_record
+            id.startsWith("entity_") || id.startsWith("organization_") || id == "entity" || id == "business" -> R.drawable.lib_ic_building
+            id.startsWith("professional_") || id == "professional" -> R.drawable.work
+            id.startsWith("insurance_") || id == "official" -> R.drawable.lib_ic_document
+            else -> R.drawable.lib_ic_document
+        }
+        Triple(id, title, icon)
+    }
+).distinctBy { it.first }
+
+internal fun documentVisibilityGroup(id: String): String = when {
+    id == "church" || id.startsWith("church_") || id == "organization_church" ||
+        id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } ->
+        "Dokumenty kościelne"
+    id == "family" || id.startsWith("rod_") || id == "large_family" ->
+        "Dokumenty rodowe i rodzinne"
+    id == "business" || id == "entity" || id == "registry" || id == "bank_accounts" ||
+        id == "entity_bank_accounts" || id.startsWith("entity_") ||
+        id.startsWith("organization_") ->
+        "Dokumenty firmowe i podmiotowe"
+    id == "civil" || id in setOf(
+        "birth_extract", "marriage_extract", "death_extract", "criminal_record",
+        "vehicle_registration", "insurance_vehicle", "insurance_professional",
+        "insurance_private", "insurance_business", "official"
+    ) || officialGraphicDocumentTargets().any { it.first == id } ->
+        "Dokumenty cywilne i urzędowe"
+    id == "professional" || id.startsWith("professional_") || id in setOf("training", "student", "eu_education") ->
+        "Dokumenty zawodowe i edukacyjne"
+    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") ->
+        "Dokumenty zdrowotne i rodzinne"
+    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ->
+        "Pliki i pozostałe dokumenty"
+    else -> "Dokumenty osobiste i tożsamościowe"
+}
 private val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
     id to if (id == "identity") "dashboard" else "hidden"
 }
@@ -1008,6 +1059,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var serviceCategory by remember { mutableStateOf("Wszystkie") }
     val favoriteServices = remember { mutableStateMapOf("Zastrzeż PESEL" to true, "Zdrowie" to true, "Transport" to true) }
 
+    // Wszystkie wejścia do dodawania i zarządzania dokumentami kierują do jednego katalogu.
+    fun openDocumentVisibilityCatalog() {
+        showDemoDocuments = false
+        showSettingsMenu = false
+        showDocumentVisibilitySettings = true
+    }
+
     fun handleSystemBack() {
         when {
             credentialAppearanceTarget != null -> credentialAppearanceTarget = null
@@ -1201,7 +1259,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showSettingsMenu = false },
                         onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
                         onManageCredentialAppearance = { showSettingsMenu = false; showCredentialAppearanceEditor = true },
-                        onManageDocumentVisibility = { showSettingsMenu = false; showDocumentVisibilitySettings = true },
+                        onManageDocumentVisibility = { openDocumentVisibilityCatalog() },
                         onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
                         onEditDocumentBranding = { target -> showSettingsMenu = false; documentBrandTarget = target },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
@@ -1243,7 +1301,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
-                        onAddDocuments = { showDemoDocuments = false; showDocumentVisibilitySettings = true },
+                        onAddDocuments = { openDocumentVisibilityCatalog() },
                         documentPlacements = documentPlacements,
                         documentCardStyle = documentCardStyle,
                         defaultDocumentIcon = defaultDocumentIcon,
@@ -1449,10 +1507,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                             .padding(vertical = 4.dp)
                                     )
                                     Button(
-                                        onClick = {
-                                            showSettingsMenu = false
-                                            showDocumentVisibilitySettings = true
-                                        },
+                                        onClick = { openDocumentVisibilityCatalog() },
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(18.dp),
                                         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
@@ -2753,6 +2808,7 @@ private fun DocumentVisibilitySettingsScreen(
 ) {
     var defaultIconMenu by remember { mutableStateOf(false) }
     var expandedDocumentIcon by remember { mutableStateOf<String?>(null) }
+    var expandedVisibilityGroups by remember { mutableStateOf(emptySet<String>()) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2797,48 +2853,96 @@ private fun DocumentVisibilitySettingsScreen(
                 Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
             }
         }
-        documentDisplayOptions.forEach { (id, title, iconRes) ->
-            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Image(painter = painterResource(resolveDocumentIconResource(
-                            LocalContext.current, id, defaultDocumentIcon, documentIconOverrides
-                        )), contentDescription = null, modifier = Modifier.size(42.dp))
-                        Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    }
-                    Box {
-                        OutlinedButton(onClick = { expandedDocumentIcon = id }, modifier = Modifier.fillMaxWidth().testTag("document-icon-selector-$id")) {
-                            val selected = documentIconOverrides[id]
-                            Text(if (selected == null) "Ikona domyślna: " +
-                                (if (defaultDocumentIcon == "automatic") "automatyczna" else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second.orEmpty())
-                                else documentIconChoices.firstOrNull { it.first == selected }?.second ?: "Ikona indywidualna")
-                        }
-                        DropdownMenu(expanded = expandedDocumentIcon == id, onDismissRequest = { expandedDocumentIcon = null }) {
-                            DropdownMenuItem(text = { Text("Użyj ikony domyślnej") }, onClick = {
-                                onDocumentIconOverridesChange(documentIconOverrides - id); expandedDocumentIcon = null
-                            })
-                            documentIconChoices.forEach { (resource, label) ->
-                                DropdownMenuItem(text = { Text(label) }, onClick = {
-                                    onDocumentIconOverridesChange(documentIconOverrides + (id to resource))
-                                    expandedDocumentIcon = null
-                                })
+        val groupedVisibilityDocuments = documentDisplayOptions.groupBy { (id, _, _) ->
+            documentVisibilityGroup(id)
+        }
+        val visibilityGroupOrder = listOf(
+            "Dokumenty osobiste i tożsamościowe",
+            "Dokumenty cywilne i urzędowe",
+            "Dokumenty kościelne",
+            "Dokumenty rodowe i rodzinne",
+            "Dokumenty firmowe i podmiotowe",
+            "Dokumenty zawodowe i edukacyjne",
+            "Dokumenty zdrowotne i rodzinne",
+            "Pliki i pozostałe dokumenty"
+        )
+        visibilityGroupOrder.forEach { groupTitle ->
+            val groupDocuments = groupedVisibilityDocuments[groupTitle].orEmpty()
+            if (groupDocuments.isEmpty()) return@forEach
+            val expanded = groupTitle in expandedVisibilityGroups
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                            .clickable {
+                                expandedVisibilityGroups = if (expanded) expandedVisibilityGroups - groupTitle
+                                else expandedVisibilityGroups + groupTitle
                             }
-                        }
+                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(groupTitle, color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text("${groupDocuments.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium)
+                        Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleLarge)
                     }
-                    listOf("dashboard" to "Dokumenty", "other" to "Inne dokumenty", "hidden" to "Ukryj").forEach { (value, label) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                                .background(if (documentPlacements[id] == value) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-                                .clickable { onDocumentPlacementsChange(documentPlacements + (id to value)) }
-                                .testTag("document-placement-$id-$value")
-                                .padding(horizontal = 8.dp, vertical = 3.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = documentPlacements[id] == value,
-                                onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) }
-                            )
-                            Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
+                    if (expanded) {
+                        groupDocuments.forEach { (id, title, iconRes) ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Image(painter = painterResource(resolveDocumentIconResource(
+                                            LocalContext.current, id, defaultDocumentIcon, documentIconOverrides
+                                        )), contentDescription = null, modifier = Modifier.size(42.dp))
+                                        Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.weight(1f))
+                                    }
+                                    Box {
+                                        OutlinedButton(onClick = { expandedDocumentIcon = id }, modifier = Modifier.fillMaxWidth().testTag("document-icon-selector-$id")) {
+                                            val selected = documentIconOverrides[id]
+                                            Text(if (selected == null) "Ikona domyślna: " +
+                                                (if (defaultDocumentIcon == "automatic") "automatyczna" else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second.orEmpty())
+                                                else documentIconChoices.firstOrNull { it.first == selected }?.second ?: "Ikona indywidualna")
+                                        }
+                                        DropdownMenu(expanded = expandedDocumentIcon == id, onDismissRequest = { expandedDocumentIcon = null }) {
+                                            DropdownMenuItem(text = { Text("Użyj ikony domyślnej") }, onClick = {
+                                                onDocumentIconOverridesChange(documentIconOverrides - id); expandedDocumentIcon = null
+                                            })
+                                            documentIconChoices.forEach { (resource, label) ->
+                                                DropdownMenuItem(text = { Text(label) }, onClick = {
+                                                    onDocumentIconOverridesChange(documentIconOverrides + (id to resource))
+                                                    expandedDocumentIcon = null
+                                                })
+                                            }
+                                        }
+                                    }
+                                    listOf("dashboard" to "Dokumenty", "other" to "Inne dokumenty", "hidden" to "Ukryj").forEach { (value, label) ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
+                                                .background(if (documentPlacements[id] == value) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+                                                .clickable { onDocumentPlacementsChange(documentPlacements + (id to value)) }
+                                                .testTag("document-placement-$id-$value")
+                                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            RadioButton(
+                                                selected = documentPlacements[id] == value,
+                                                onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) }
+                                            )
+                                            Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

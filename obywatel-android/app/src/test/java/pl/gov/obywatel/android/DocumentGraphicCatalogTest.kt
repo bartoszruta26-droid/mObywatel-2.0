@@ -59,6 +59,25 @@ class DocumentGraphicCatalogTest {
     }
 
     @Test
+    fun visibilityCatalogContainsEverySettingsAndNestedDocumentTarget() {
+        val visibilityIds = documentDisplayOptions.map { it.first }.toSet()
+        assertEquals("Visibility catalog must not contain duplicate document identifiers",
+            documentDisplayOptions.size, visibilityIds.size)
+        assertTrue("Every graphic-branding target must have a visibility setting",
+            documentBrandTargets.all { it.first in visibilityIds })
+        val nestedTargets = churchGraphicDocumentTargets() +
+            familyEntityGraphicDocumentTargets() + officialGraphicDocumentTargets()
+        assertTrue("Every nested document must be manageable in visibility settings",
+            nestedTargets.all { it.first in visibilityIds })
+        assertTrue("Both family and entity bank registers must have independent visibility",
+            setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts").all { it in visibilityIds })
+        assertEquals("Dokumenty kościelne", documentVisibilityGroup("church_minutes"))
+        assertEquals("Dokumenty rodowe i rodzinne", documentVisibilityGroup("rod_birth_record"))
+        assertEquals("Dokumenty firmowe i podmiotowe", documentVisibilityGroup("entity_foundation_statute"))
+        assertEquals("Dokumenty cywilne i urzędowe", documentVisibilityGroup("birth_extract"))
+    }
+
+    @Test
     fun nestedDocumentKindsDistinguishCredentialsFromRecords() {
         assertEquals(DocumentPreviewKind.RECORD, GraphicDocumentCatalog.find("church_bishop_appointment")?.kind)
         assertEquals(DocumentPreviewKind.CREDENTIAL, GraphicDocumentCatalog.find("church_minister_card")?.kind)
