@@ -225,6 +225,51 @@ internal data class LegitimacyPreviewSettings(
 
 private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
 
+private const val BUILTIN_BACKGROUND_PREFIX = "builtin:"
+private val builtInCredentialBackgrounds = listOf(
+    "file_000000000480820ab196baceb9149967" to "Wzór firmowy 01",
+    "file_0000000009b8820abb055566e7a0d510" to "Wzór firmowy 02",
+    "file_000000000fcc820a9f7e3c368750a9f5" to "Wzór firmowy 03",
+    "file_00000000311c8246ad9be95179179050" to "Wzór firmowy 04",
+    "file_0000000035e081f4a0a7990b576e5398" to "Wzór firmowy 05",
+    "file_0000000041a881f4a930bd827168a8fa" to "Wzór firmowy 06",
+    "file_00000000532082108d561dcd2385f8f9" to "Wzór firmowy 07",
+    "file_000000005f44820abb5e05d54fcff000" to "Wzór firmowy 08",
+    "file_0000000064c88210af96e02cb0511406" to "Wzór firmowy 09",
+    "file_0000000068bc82108afd8c3f9a7876bf" to "Wzór firmowy 10",
+    "file_0000000073d88210a0cf298c8b74878b" to "Wzór firmowy 11",
+    "file_000000007db0820a9085e7c796d4701a" to "Wzór firmowy 12",
+    "file_000000007f3c820a942cfb69396276d6" to "Wzór firmowy 13",
+    "file_00000000818c8210b6fe5da7d5c5f9f1" to "Wzór firmowy 14",
+    "file_000000008608820c90a96b72e9bb83ac" to "Wzór firmowy 15",
+    "file_0000000088f0821083e4160489338d4d" to "Wzór firmowy 16",
+    "file_0000000089ac81f690fed3eb6a132e54" to "Wzór firmowy 17",
+    "file_0000000091148210832c52e04697ec21" to "Wzór firmowy 18",
+    "file_00000000924c820abedccdc4a7f1d5be" to "Wzór firmowy 19",
+    "file_0000000092f082109e9799ec12a74c01" to "Wzór firmowy 20",
+    "file_000000009c9881f4815513656695564d" to "Wzór firmowy 21",
+    "file_000000009d10820a995d6315d156b72e" to "Wzór firmowy 22",
+    "file_00000000a704820a841a6bda2c3223cb" to "Wzór firmowy 23",
+    "file_00000000b02082109be48ee61b0e7c96" to "Wzór firmowy 24",
+    "file_00000000b0cc81f69235793665bc9eff" to "Wzór firmowy 25",
+    "file_00000000c0f081f5990d08be15bbf139" to "Wzór firmowy 26",
+    "file_00000000d43881f6b46d4ea66bdeb1fd" to "Wzór firmowy 27",
+    "file_00000000d588820a9b141a8f2f8df7c5" to "Wzór firmowy 28",
+    "file_00000000e0e4820a839fa3184993f41b" to "Wzór firmowy 29",
+    "file_00000000e6d88210b265ef420ff089cd" to "Wzór firmowy 30",
+    "file_00000000e8948210a70bd85e83a2e205" to "Wzór firmowy 31",
+    "file_00000000e92482108cb3b56796451794" to "Wzór firmowy 32",
+    "file_00000000f5b0820a9499b70ab02da04b" to "Wzór firmowy 33"
+)
+
+internal fun credentialBackgroundResourceId(context: Context, assetId: String): Int? {
+    val resourceName = assetId.takeIf { it.startsWith(BUILTIN_BACKGROUND_PREFIX) }
+        ?.removePrefix(BUILTIN_BACKGROUND_PREFIX) ?: return null
+    return context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+        .takeIf { it != 0 }
+}
+
+
 internal fun mergeSharedLegitimacyAppearance(
     document: LegitimacyPreviewSettings,
     shared: LegitimacyPreviewSettings
@@ -627,10 +672,23 @@ internal fun LegitimacyPreviewSettingsPanel(
             Text("Tło legitymacji", fontWeight = FontWeight.SemiBold)
             Box {
                 OutlinedButton(onClick = { backgroundMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(assets.firstOrNull { it.id == settings.backgroundAssetId }?.label ?: "Wybierz tło z katalogu")
+                    val builtInLabel = builtInCredentialBackgrounds.firstOrNull {
+                        settings.backgroundAssetId == BUILTIN_BACKGROUND_PREFIX + it.first
+                    }?.second
+                    Text(
+                        assets.firstOrNull { it.id == settings.backgroundAssetId }?.label
+                            ?: builtInLabel
+                            ?: "Wybierz tło z katalogu"
+                    )
                 }
                 DropdownMenu(expanded = backgroundMenu, onDismissRequest = { backgroundMenu = false }) {
                     DropdownMenuItem(text = { Text("Domyślne tło") }, onClick = { update(settings.copy(backgroundAssetId = "")); backgroundMenu = false })
+                    builtInCredentialBackgrounds.forEach { (resourceName, label) ->
+                        DropdownMenuItem(text = { Text(label) }, onClick = {
+                            update(settings.copy(backgroundAssetId = BUILTIN_BACKGROUND_PREFIX + resourceName))
+                            backgroundMenu = false
+                        })
+                    }
                     assets.filter { it.kind == "Tło dokumentu" }.forEach { asset ->
                         DropdownMenuItem(text = { Text("${asset.label} · ${asset.owner}") }, onClick = {
                             update(settings.copy(backgroundAssetId = asset.id)); backgroundMenu = false
@@ -864,7 +922,10 @@ internal fun UnifiedCredentialCard(
     val horizontal = settings.orientation == "POZIOMA"
     val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp)
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
-        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+        settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { selected ->
+            credentialBackgroundResourceId(context, selected)?.let { BitmapFactory.decodeResource(context.resources, it) }
+                ?: DocumentBrandStore.preview(context, selected)
+        }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Tło dokumentu")
             ?: if (fallbackBackgroundRes != R.drawable.tlo_legitymacji_szare) {
                 BitmapFactory.decodeResource(context.resources, fallbackBackgroundRes)
