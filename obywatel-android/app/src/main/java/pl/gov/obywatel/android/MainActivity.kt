@@ -3377,6 +3377,21 @@ private fun documentTileIconResource(documentKey: String, fallback: Int): Int = 
     else -> R.drawable.tile_ic_civil_outline
 }
 
+private fun documentTileWatermarkResource(documentKey: String): Int = when {
+    documentKey.startsWith("church_") || documentKey in setOf("church", "organization_church", "mission_travel") ->
+        R.drawable.tile_watermark_sacred
+    documentKey in setOf("family", "children", "birth_extract", "marriage_extract", "death_extract", "large_family") ->
+        R.drawable.tile_watermark_family
+    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card", "insurance_professional") ->
+        R.drawable.tile_watermark_medical
+    documentKey in setOf("student", "training", "eu_education", "professional_education", "professional_medical", "professional_therapeutic", "professional_other") ->
+        R.drawable.tile_watermark_education
+    documentKey in setOf("civil", "official", "registry", "business", "entity", "organization_foundation",
+        "organization_company", "organization_association", "parliament", "vehicle_registration", "criminal_record") ->
+        R.drawable.tile_watermark_civic
+    else -> R.drawable.tile_watermark_security
+}
+
 @Composable
 private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifier) {
     val palette = when (documentKey) {
@@ -3417,7 +3432,8 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
         documentKey in setOf("disability", "vaccines", "blood_donor") -> 7
         else -> documentKey.hashCode().ushr(1) % 8
     }
-    ComposeCanvas(modifier) {
+    Box(modifier.clip(RoundedCornerShape(13.dp))) {
+    ComposeCanvas(Modifier.matchParentSize()) {
         drawRect(brush = Brush.linearGradient(
             colors = palette,
             start = Offset(0f, size.height),
@@ -3609,6 +3625,15 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
         }
         drawCircle(Color.White.copy(alpha = 0.08f), radius * 0.10f,
             Offset(size.width * 0.16f, size.height * 0.82f))
+    }
+        Image(
+            painter = painterResource(documentTileWatermarkResource(documentKey)),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.FillBounds,
+            alpha = 0.30f,
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+        )
     }
 }
 
