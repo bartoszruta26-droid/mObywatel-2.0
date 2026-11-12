@@ -503,6 +503,7 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+        Box(Modifier.fillMaxSize().background(Color(0x55000000)))
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.Top
@@ -585,6 +586,7 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
+        Box(Modifier.fillMaxSize().background(Color(0x55000000)))
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.Top
