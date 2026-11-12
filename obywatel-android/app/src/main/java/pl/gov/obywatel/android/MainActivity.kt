@@ -3402,7 +3402,7 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
                     cubicTo(cx + radius * 0.28f, cy + radius * 0.28f, cx + radius * 0.20f, cy + radius * 0.22f, cx, cy + radius * 0.38f)
                     close()
                 }
-                drawPath(watermark, book, style = stroke)
+                drawPath(book, watermark, style = stroke)
                 drawLine(watermark, Offset(cx, cy - radius * 0.18f),
                     Offset(cx, cy + radius * 0.36f), strokeWidth = stroke.width)
             }
