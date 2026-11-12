@@ -1095,6 +1095,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             "imported" -> showImportedDocuments = true
             "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
             "branding" -> activeService = "Zasoby identyfikacji dokumentów"
+            "professional", "professional_medical", "professional_education",
+            "professional_therapeutic", "professional_other" -> activeService = "Dokumenty kwalifikacji zawodowych"
             "identity_card" -> selectedDocumentId = "identity"
             "loyalty_cards" -> selectedDocumentId = "loyalty"
             else -> selectedDocumentId = documentId
@@ -2867,7 +2869,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych uczelni i statusu",
             Icons.Filled.Badge, { onEditDocuments("student") })
         ProfileActionCard("Dokumenty kwalifikacji zawodowych", "Ewidencja zawodów, numerów dokumentów, rejestrów i potwierdzeń kwalifikacji",
-            Icons.Filled.Work, { onEditOtherDocuments("professional") })
+            Icons.Filled.Badge, { onEditOtherDocuments("professional") })
         ProfileActionCard("Orzeczenia i zaświadczenia", "Ewidencja danych o rozstrzygnięciach",
             Icons.Filled.HealthAndSafety, onEditDisability)
         ProfileActionCard("Karty lojalnościowe sklepów", "Ewidencja do 10 kart, numerów i kodów kreskowych oraz QR",
