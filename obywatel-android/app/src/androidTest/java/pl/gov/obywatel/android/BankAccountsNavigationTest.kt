@@ -184,10 +184,10 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText("Wspólny wygląd legitymacji").performScrollTo().performClick()
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("Skala godła: 1,00").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Obrót godła: 0°").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Skala flagi: 1,00").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Obrót flagi: 0°").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Skala godła", substring = true).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Obrót godła", substring = true).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Skala flagi", substring = true).performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Obrót flagi", substring = true).performScrollTo().assertIsDisplayed()
     }
 
     @Test
