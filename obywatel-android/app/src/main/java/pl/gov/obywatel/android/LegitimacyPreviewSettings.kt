@@ -932,8 +932,6 @@ internal fun LegitimacyPreviewSettingsPanel(
                 } + assets.filter { it.kind == "Tło dokumentu" }
                     .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
             }
-            Text("Tło legitymacji", fontWeight = FontWeight.SemiBold)
-            Text("Wybierz tło z katalogu", style = MaterialTheme.typography.bodySmall)
             GraphicAssetPreviewGrid(
                 title = "Tło legitymacji — wybierz podgląd",
                 selectedId = settings.backgroundAssetId,

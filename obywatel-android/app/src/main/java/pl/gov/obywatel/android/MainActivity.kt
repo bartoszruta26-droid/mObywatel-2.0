@@ -3278,7 +3278,7 @@ private fun DocumentsWalletScreen(
                                             )
                                         }
                                         Image(
-                                            painter = painterResource(documentTileIconResource(document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
+                                            painter = painterResource(documentTileIconResource(context, document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
                                             contentDescription = "Ikona wektorowa: " + document.title,
                                             modifier = Modifier.align(Alignment.TopEnd)
                                                 .padding(8.dp)
@@ -3338,7 +3338,7 @@ private fun DashboardDocumentGrid(
                                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
                                         maxLines = 2, overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.weight(1f).padding(end = 8.dp))
-                                    Image(painterResource(documentTileIconResource(id, iconRes)),
+                                    Image(painterResource(documentTileIconResource(context, id, iconRes)),
                                         contentDescription = "Ikona wektorowa: " + title,
                                         modifier = Modifier.size(22.dp))
                                 }
@@ -3350,7 +3350,7 @@ private fun DashboardDocumentGrid(
                                     style = if (tileStyle == "small") MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(0.78f).padding(10.dp))
-                                Image(painterResource(documentTileIconResource(id, iconRes)),
+                                Image(painterResource(documentTileIconResource(context, id, iconRes)),
                                     contentDescription = "Ikona wektorowa: " + title,
                                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                                         .size(if (tileStyle == "small") 20.dp else 24.dp))
