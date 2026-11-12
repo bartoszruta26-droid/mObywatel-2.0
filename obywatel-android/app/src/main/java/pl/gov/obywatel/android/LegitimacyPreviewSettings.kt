@@ -1520,16 +1520,21 @@ internal fun CredentialTemplatePreview(documentKey: String, settings: Legitimacy
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
     val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
-    UnifiedCredentialCard(
-        documentKey = documentKey,
-        title = title,
-        subtitle = "",
-        holderName = "IMIĘ I NAZWISKO",
-        fields = selected.map { (key, label) -> Triple(key, label, "—") },
-        settings = settings,
-        assetRevision = assetRevision,
-        validity = true
-    )
+    if (settings.showCard) {
+        UnifiedCredentialCard(
+            documentKey = documentKey,
+            title = title,
+            subtitle = "",
+            holderName = "IMIĘ I NAZWISKO",
+            fields = selected.map { (key, label) -> Triple(key, label, "—") },
+            settings = settings,
+            assetRevision = assetRevision,
+            validity = true
+        )
+    } else {
+        Text("Podgląd legitymacji jest wyłączony.", color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+    }
 }
 
 @Composable
