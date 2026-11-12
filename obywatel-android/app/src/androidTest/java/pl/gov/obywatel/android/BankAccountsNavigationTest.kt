@@ -208,5 +208,9 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText("Tło legitymacji").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Wybierz tło z katalogu").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Wczytaj własne tło").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Wektorowy motyw tła kafelka").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Miniikona kafelka").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Kolor gradientowego tła kafelka — paleta heraldyczna").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Lazur").performScrollTo().assertIsDisplayed()
     }
 }
