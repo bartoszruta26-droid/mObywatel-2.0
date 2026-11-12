@@ -1926,31 +1926,7 @@ private fun DocumentDetailsScreen(
             }
         }.getOrNull()
     }
-    val statusKey = when (normalizedId) {
-        "identity" -> "idStatus"
-        "passport" -> "passportStatus"
-        "parliament" -> "mpStatus"
-        "training" -> "trainingStatus"
-        "student" -> "studentStatus"
-        "disability" -> "disabilityStatus"
-        else -> "status"
-    }
-    val expiryKey = when (normalizedId) {
-        "identity" -> "idExpiryDate"
-        "passport" -> "passportExpiryDate"
-        "parliament" -> "mpEnd"
-        "training" -> "trainingValidUntil"
-        "student" -> "studentValidity"
-        "disability" -> "disabilityValidity"
-        else -> "expiryDate"
-    }
-    val documentStatus = previewValues[statusKey].orEmpty().trim().lowercase()
-    val explicitlyInvalid = documentStatus.contains("nieważ") || documentStatus.contains("unieważ") ||
-        documentStatus.contains("utrac") || documentStatus.contains("zwróc") ||
-        documentStatus.contains("expired") || documentStatus.contains("invalid")
-    val expiry = previewValues[expiryKey].orEmpty()
-    val validity = if (documentStatus.isNotBlank() || expiry.isNotBlank())
-        !explicitlyInvalid && isCredentialValidByExpiry(expiry) else null
+    val validity = credentialValidityForDocument(normalizedId, previewValues)
     val hasData = options.any { (key, _) -> !previewValues[key].isNullOrBlank() } ||
         (normalizedId == "disability" && !previewValues["disabilityPersonName"].isNullOrBlank())
     Column(
@@ -3579,12 +3555,15 @@ private fun OwdDocumentArtworkCard(
         else -> "official"
     }
     val settings = rememberLegitimacyPreviewSettings(documentKey).value
+    val resolvedValidity = validity ?: credentialValidityForDocument(
+        documentKey, credentialFields.associate { it.first to it.third }
+    )
     if (settings.showCard) {
         UnifiedCredentialCard(
             documentKey = documentKey, title = title, subtitle = subtitle, holderName = holder,
             fields = credentialFields.ifEmpty { listOf(Triple("details", "DANE DOKUMENTU", details)) }, settings = settings,
             fallbackBackgroundRes = imageRes,
-            validity = validity
+            validity = resolvedValidity
         )
     }
 }
@@ -4400,22 +4379,16 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
 
 @Composable
 private fun CivicDocumentStatusTile(fields: Map<String, String>, documentId: String) {
-    val statusKey = when (documentId) {
-        "1" -> "idStatus"; "2" -> "passportStatus"; "4" -> "mpStatus"
-        "5" -> "trainingStatus"; "6" -> "studentStatus"; "7" -> "disabilityStatus"
-        else -> "familyStatus"
+    val documentKey = when (documentId) {
+        "1" -> "identity"
+        "2" -> "passport"
+        "4" -> "parliament"
+        "5" -> "training"
+        "6" -> "student"
+        "7" -> "disability"
+        else -> "family"
     }
-    val expiryKey = when (documentId) {
-        "1" -> "idExpiryDate"; "2" -> "passportExpiryDate"; "4" -> "mpEnd"
-        "5" -> "trainingValidUntil"; "6" -> "studentValidity"; "7" -> "disabilityValidity"
-        else -> "familyExpiryDate"
-    }
-    val rawStatus = fields[statusKey].orEmpty().trim().lowercase()
-    val explicitlyInvalid = rawStatus in setOf(
-        "nieważny", "nieważna", "nieważne", "unieważniony", "unieważniona",
-        "zwrócona", "zwrócony", "utracony", "utracona", "expired", "invalid"
-    )
-    CredentialValidityTile(!explicitlyInvalid && isCredentialValidByExpiry(fields[expiryKey].orEmpty()))
+    CredentialValidityTile(credentialValidityForDocument(documentKey, fields))
 }
 
 @Composable
