@@ -134,6 +134,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -3296,10 +3297,14 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
     }
     val motif = when {
         documentKey in setOf("identity", "passport", "official", "disability_card") -> 0
-        documentKey in setOf("profile", "family", "children", "student", "training") -> 1
+        documentKey in setOf("profile", "student", "training") -> 1
         documentKey in setOf("registry", "business", "entity", "parliament", "bank_accounts") -> 2
-        documentKey in setOf("church", "organization_church", "mission_travel") -> 3
-        else -> documentKey.hashCode().ushr(1) % 4
+        documentKey in setOf("church", "organization_church") -> 3
+        documentKey in setOf("family", "children", "birth_extract", "marriage_extract") -> 4
+        documentKey in setOf("mission_travel", "ehic", "vehicle_registration") -> 5
+        documentKey in setOf("student", "training", "eu_education") -> 6
+        documentKey in setOf("disability", "vaccines", "blood_donor") -> 7
+        else -> documentKey.hashCode().ushr(1) % 8
     }
     Canvas(modifier) {
         drawRect(brush = Brush.linearGradient(
@@ -3350,13 +3355,65 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
                 drawLine(watermark, Offset(cx, cy - radius * 0.48f),
                     Offset(cx + radius * 0.50f, cy - radius * 0.20f), strokeWidth = stroke.width)
             }
-            else -> {
-                drawCircle(watermark, radius * 0.18f, Offset(cx, cy - radius * 0.20f), style = stroke)
+            3 -> {
+                drawLine(watermark, Offset(cx, cy - radius * 0.52f),
+                    Offset(cx, cy + radius * 0.48f), strokeWidth = stroke.width * 1.25f)
+                drawLine(watermark, Offset(cx - radius * 0.32f, cy - radius * 0.20f),
+                    Offset(cx + radius * 0.32f, cy - radius * 0.20f), strokeWidth = stroke.width * 1.25f)
                 drawArc(watermark, 205f, 130f, false,
-                    topLeft = Offset(cx - radius * 0.44f, cy - radius * 0.05f),
-                    size = Size(radius * 0.88f, radius * 0.78f), style = stroke)
-                drawLine(watermark, Offset(cx, cy + radius * 0.32f),
-                    Offset(cx, cy + radius * 0.55f), strokeWidth = stroke.width)
+                    topLeft = Offset(cx - radius * 0.44f, cy + radius * 0.05f),
+                    size = Size(radius * 0.88f, radius * 0.70f), style = stroke)
+            }
+            4 -> {
+                drawLine(watermark, Offset(cx, cy - radius * 0.36f),
+                    Offset(cx, cy + radius * 0.43f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx, cy - radius * 0.08f),
+                    Offset(cx - radius * 0.34f, cy - radius * 0.34f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx, cy - radius * 0.08f),
+                    Offset(cx + radius * 0.34f, cy - radius * 0.34f), strokeWidth = stroke.width)
+                drawCircle(watermark, radius * 0.13f, Offset(cx, cy - radius * 0.42f), style = stroke)
+                drawCircle(watermark, radius * 0.12f, Offset(cx - radius * 0.38f, cy - radius * 0.38f), style = stroke)
+                drawCircle(watermark, radius * 0.12f, Offset(cx + radius * 0.38f, cy - radius * 0.38f), style = stroke)
+                drawArc(watermark, 190f, 160f, false,
+                    Offset(cx - radius * 0.42f, cy + radius * 0.10f),
+                    Size(radius * 0.84f, radius * 0.62f), style = stroke)
+            }
+            5 -> {
+                drawCircle(watermark, radius * 0.46f, Offset(cx, cy), style = stroke)
+                drawOval(watermark, Offset(cx - radius * 0.23f, cy - radius * 0.46f),
+                    Size(radius * 0.46f, radius * 0.92f), style = stroke)
+                drawLine(watermark, Offset(cx - radius * 0.43f, cy),
+                    Offset(cx + radius * 0.43f, cy), strokeWidth = stroke.width)
+                drawArc(watermark, 0f, 180f, false,
+                    Offset(cx - radius * 0.43f, cy - radius * 0.22f),
+                    Size(radius * 0.86f, radius * 0.44f), style = stroke)
+                drawArc(watermark, 180f, 180f, false,
+                    Offset(cx - radius * 0.43f, cy - radius * 0.22f),
+                    Size(radius * 0.86f, radius * 0.44f), style = stroke)
+            }
+            6 -> {
+                val book = Path().apply {
+                    moveTo(cx, cy + radius * 0.38f)
+                    cubicTo(cx - radius * 0.20f, cy + radius * 0.22f, cx - radius * 0.38f, cy + radius * 0.28f, cx - radius * 0.48f, cy + radius * 0.20f)
+                    lineTo(cx - radius * 0.48f, cy - radius * 0.36f)
+                    cubicTo(cx - radius * 0.28f, cy - radius * 0.46f, cx - radius * 0.12f, cy - radius * 0.30f, cx, cy - radius * 0.18f)
+                    cubicTo(cx + radius * 0.12f, cy - radius * 0.30f, cx + radius * 0.28f, cy - radius * 0.46f, cx + radius * 0.48f, cy - radius * 0.36f)
+                    lineTo(cx + radius * 0.48f, cy + radius * 0.20f)
+                    cubicTo(cx + radius * 0.28f, cy + radius * 0.28f, cx + radius * 0.20f, cy + radius * 0.22f, cx, cy + radius * 0.38f)
+                    close()
+                }
+                drawPath(watermark, book, style = stroke)
+                drawLine(watermark, Offset(cx, cy - radius * 0.18f),
+                    Offset(cx, cy + radius * 0.36f), strokeWidth = stroke.width)
+            }
+            7 -> {
+                drawRoundRect(watermark, Offset(cx - radius * 0.15f, cy - radius * 0.48f),
+                    Size(radius * 0.30f, radius * 0.96f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius * 0.08f), style = stroke)
+                drawRoundRect(watermark, Offset(cx - radius * 0.48f, cy - radius * 0.15f),
+                    Size(radius * 0.96f, radius * 0.30f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius * 0.08f), style = stroke)
+                drawCircle(fine, radius * 0.58f, Offset(cx, cy), style = stroke)
             }
         }
         drawCircle(Color.White.copy(alpha = 0.06f), radius * 0.10f,
