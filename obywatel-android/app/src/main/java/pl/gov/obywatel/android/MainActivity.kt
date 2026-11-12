@@ -2515,7 +2515,9 @@ private fun IdentityDashboardCard(onOpen: () -> Unit, tileStyle: String = "large
         else -> 218.dp
     }
     Card(
-        modifier = Modifier.fillMaxWidth().height(cardHeight).clickable(onClick = onOpen),
+        modifier = Modifier.fillMaxWidth().height(cardHeight)
+            .clickable(onClick = onOpen)
+            .testTag("identity-dashboard-card-$tileStyle"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF078FE9)),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB9E8FF)),
@@ -2588,7 +2590,8 @@ private fun ServiceCard(
         else -> Modifier.fillMaxWidth().height(108.dp)
     }
     Card(
-        modifier = cardModifier.clickable(onClick = onClick),
+        modifier = cardModifier.clickable(onClick = onClick)
+            .testTag("service-card-${item.title}"),
         shape = RoundedCornerShape(17.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
