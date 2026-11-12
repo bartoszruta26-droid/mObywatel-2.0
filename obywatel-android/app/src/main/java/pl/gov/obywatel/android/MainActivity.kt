@@ -1003,6 +1003,11 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
                         onChange = onAppearanceChange,
+                        documentCardStyle = documentCardStyle,
+                        onDocumentCardStyleChange = { style ->
+                            saveDocumentCardStyle(context, style)
+                            documentCardStyle = style
+                        },
                         onBack = { showApplicationAppearanceSettings = false; showSettingsMenu = true }
                     )
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
