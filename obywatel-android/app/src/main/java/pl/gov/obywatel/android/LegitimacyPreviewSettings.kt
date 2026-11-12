@@ -838,12 +838,12 @@ internal fun UnifiedCredentialCard(
     val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter {
         it.first in settings.visibleFields
     }
-    val sharePayload = remember(documentKey, holderName, fields) {
+    val sharePayload = remember(documentKey, holderName, visible) {
         buildString {
             append("OWD-CREDENTIAL|1\n")
             append("DOCUMENT=").append(documentKey).append('\n')
             append("HOLDER=").append(holderName).append('\n')
-            fields.filter { it.third.isNotBlank() }.forEach { (key, label, value) ->
+            visible.filter { it.third.isNotBlank() }.forEach { (key, label, value) ->
                 append(key).append('=').append(label).append(':').append(value).append('\n')
             }
         }
