@@ -10,6 +10,8 @@ class LegitimacyPreviewSettingsTest {
     @Test
     fun sharedAppearanceOverridesLayoutButPreservesDocumentAssetsAndFields() {
         val document = LegitimacyPreviewSettings(
+            showCard = true,
+            tileBackgroundAssetId = "tile-student",
             crestAssetId = "crest-student",
             flagAssetId = "flag-student",
             backgroundAssetId = "background-student",
@@ -50,7 +52,8 @@ class LegitimacyPreviewSettingsTest {
         val result = mergeSharedLegitimacyAppearance(document, shared)
 
         assertEquals("POZIOMA", result.orientation)
-        assertEquals(false, result.showCard)
+        assertEquals(true, result.showCard)
+        assertEquals("tile-student", result.tileBackgroundAssetId)
         assertEquals(true, result.showReverse)
         assertEquals(1.4f, result.graphicScale)
         assertEquals(12f, result.graphicRotation)
@@ -74,6 +77,8 @@ class LegitimacyPreviewSettingsTest {
     @Test
     fun sharedLayoutOverridesPerDocumentGeometryButPreservesDocumentAssets() {
         val document = LegitimacyPreviewSettings(
+            showCard = false,
+            tileBackgroundAssetId = "tile-specific",
             crestAssetId = "crest-specific",
             flagAssetId = "flag-specific",
             backgroundAssetId = "background-specific",
@@ -114,6 +119,8 @@ class LegitimacyPreviewSettingsTest {
         val result = mergeSharedLegitimacyAppearance(document, shared)
 
         assertEquals("POZIOMA", result.orientation)
+        assertEquals(false, result.showCard)
+        assertEquals("tile-specific", result.tileBackgroundAssetId)
         assertEquals(true, result.showPhoto)
         assertEquals(false, result.showFlag)
         assertEquals("sepia", result.imageFilter)
