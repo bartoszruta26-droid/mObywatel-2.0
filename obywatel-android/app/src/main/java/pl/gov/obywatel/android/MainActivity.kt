@@ -2951,7 +2951,11 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
     }
+    val appearance = rememberLegitimacyPreviewSettings("disability")
     var saveMessage by remember { mutableStateOf("") }
+    CompositionLocalProvider(
+        LocalCredentialFieldVisibility provides CredentialFieldVisibilityBinding("disability", appearance, fields)
+    ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -3030,6 +3034,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                 if (saveMessage.isNotBlank()) Text(saveMessage, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
         }
+    }
     }
 }
 
