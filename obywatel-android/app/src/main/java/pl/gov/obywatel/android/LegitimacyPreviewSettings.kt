@@ -1092,7 +1092,7 @@ internal fun UnifiedCredentialCard(
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Logo")
     }
-    val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter {
+    val visible = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) fields else fields.filter {
         it.first in settings.visibleFields
     }
     val sharePayload = remember(documentKey, holderName, visible) {
@@ -1595,7 +1595,7 @@ internal fun CredentialTemplatePreview(documentKey: String, settings: Legitimacy
     val title = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "Wspólny wzór legitymacji"
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
-    val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
+    val selected = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) options else options.filter { it.first in settings.visibleFields }
     if (settings.showCard) {
         UnifiedCredentialCard(
             documentKey = documentKey,
