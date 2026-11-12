@@ -62,7 +62,11 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("‹  Powrót do ustawień").performScrollTo().performClick()
         composeRule.waitForIdle()
-        Espresso.pressBack()
+        // Wróć do pulpitu przez widoczny element nawigacji zamiast polegać
+        // na globalnym BackHandler, który zależy od aktywnej podstrony.
+        composeRule.onNodeWithText("‹  Powrót do ekranu głównego")
+            .performScrollTo()
+            .performClick()
         composeRule.waitForIdle()
 
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
