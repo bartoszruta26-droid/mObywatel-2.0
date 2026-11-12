@@ -4221,6 +4221,7 @@ private fun CredentialAppearanceSettingsScreen(
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
     }
     val documentPhotoKey = "credentialPhoto_$documentKey"
+    var photoMessage by remember(documentKey) { mutableStateOf("") }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             runCatching {
@@ -4233,6 +4234,9 @@ private fun CredentialAppearanceSettingsScreen(
             }.onSuccess { encoded ->
                 savedValues[documentPhotoKey] = encoded
                 DemoIdentityStore.save(context, savedValues.toMap())
+                photoMessage = "Zapisano osobne zdjęcie dla dokumentu."
+            }.onFailure { error ->
+                photoMessage = error.localizedMessage ?: "Nie udało się wczytać zdjęcia."
             }
         }
     }
@@ -4286,6 +4290,10 @@ private fun CredentialAppearanceSettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (photoMessage.isNotBlank()) {
+                    Text(photoMessage, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary)
+                }
                 OutlinedButton(
                     onClick = { photoPicker.launch("image/*") },
                     modifier = Modifier.fillMaxWidth()
