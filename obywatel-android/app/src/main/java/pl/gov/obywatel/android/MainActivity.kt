@@ -1078,6 +1078,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     fun openDocumentCard(documentId: String) {
+        // Every document tile is a read-only entry point. Editing is reached
+        // only from More → Settings → the selected document.
         when (documentId) {
             "registry" -> activeService = "Odpis z rejestru podmiotów"
             "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
