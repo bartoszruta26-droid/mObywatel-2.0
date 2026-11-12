@@ -37,6 +37,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Brush
@@ -574,6 +575,56 @@ internal fun rememberLegitimacyPreviewSettings(documentKey: String): MutableStat
     return state
 }
 
+
+@Composable
+private fun GraphicAssetPreviewGrid(
+    title: String,
+    selectedId: String,
+    choices: List<Triple<String, String, Bitmap?>>,
+    onSelect: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, fontWeight = FontWeight.SemiBold)
+        choices.chunked(2).forEach { pair ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                pair.forEach { (id, label, bitmap) ->
+                    Card(
+                        modifier = Modifier.weight(1f).clickable { onSelect(id) },
+                        border = androidx.compose.foundation.BorderStroke(
+                            if (id == selectedId) 2.dp else 1.dp,
+                            if (id == selectedId) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(Modifier.fillMaxWidth().padding(7.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            if (bitmap != null) {
+                                Image(bitmap.asImageBitmap(), contentDescription = label,
+                                    modifier = Modifier.fillMaxWidth().height(92.dp), contentScale = ContentScale.Crop)
+                            } else {
+                                Box(Modifier.fillMaxWidth().height(92.dp).background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center) {
+                                    Text("Domyślne", style = MaterialTheme.typography.labelMedium)
+                                }
+                            }
+                            Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                            if (id == selectedId) Text("Wybrano", color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+private fun builtinGraphicPreview(context: Context, assetId: String): Bitmap? {
+    val resourceName = assetId.removePrefix(BUILTIN_BACKGROUND_PREFIX)
+    if (!assetId.startsWith(BUILTIN_BACKGROUND_PREFIX)) return null
+    val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+    return resourceId.takeIf { it != 0 }?.let { BitmapFactory.decodeResource(context.resources, it) }
+}
+
 @Composable
 internal fun LegitimacyPreviewSettingsPanel(
     documentKey: String,
@@ -666,6 +717,12 @@ internal fun LegitimacyPreviewSettingsPanel(
                 },
                 fontWeight = FontWeight.Bold
             )
+            if (assetSelectionOnly) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = settings.showCard, onCheckedChange = { update(settings.copy(showCard = it)) })
+                    Text("Wyświetlaj tę legitymację")
+                }
+            }
             if (!assetSelectionOnly) {
             Text("Orientacja", fontWeight = FontWeight.SemiBold)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -735,20 +792,13 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             if (assetSelectionOnly || documentKey != GLOBAL_LEGITIMACY_APPEARANCE_KEY) {
             Text("Wybierz herb, flagę, tło i logo niezależnie dla tego dokumentu.", style = MaterialTheme.typography.bodySmall)
-            Text("Herb / godło / logo", fontWeight = FontWeight.SemiBold)
-            Box {
-                OutlinedButton(onClick = { crestMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(assets.firstOrNull { it.id == settings.crestAssetId }?.label ?: "Wybierz herb z katalogu")
-                }
-                DropdownMenu(expanded = crestMenu, onDismissRequest = { crestMenu = false }) {
-                    DropdownMenuItem(text = { Text("Brak herbu") }, onClick = { update(settings.copy(crestAssetId = "")); crestMenu = false })
-                    assets.filter { it.kind == "Herb" || it.kind == "Godło" }.forEach { asset ->
-                        DropdownMenuItem(text = { Text("${asset.label} · ${asset.owner}") }, onClick = {
-                            update(settings.copy(crestAssetId = asset.id)); crestMenu = false
-                        })
-                    }
-                }
-            }
+            GraphicAssetPreviewGrid(
+                title = "Herb / godło — wybierz podgląd",
+                selectedId = settings.crestAssetId,
+                choices = listOf(Triple("", "Brak herbu", null)) + assets.filter { it.kind == "Herb" || it.kind == "Godło" }
+                    .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) },
+                onSelect = { update(settings.copy(crestAssetId = it)) }
+            )
             OutlinedButton(onClick = { crestPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własny herb")
             }
@@ -774,70 +824,54 @@ internal fun LegitimacyPreviewSettingsPanel(
                     }
                 }
             }
-            Text("Flaga", fontWeight = FontWeight.SemiBold)
-            Box {
-                OutlinedButton(onClick = { flagMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(assets.firstOrNull { it.id == settings.flagAssetId }?.label ?: "Wybierz flagę z katalogu")
-                }
-                DropdownMenu(expanded = flagMenu, onDismissRequest = { flagMenu = false }) {
-                    DropdownMenuItem(text = { Text("Brak własnej flagi") }, onClick = { update(settings.copy(flagAssetId = "")); flagMenu = false })
-                    assets.filter { it.kind == "Flaga" }.forEach { asset ->
-                        DropdownMenuItem(text = { Text("${asset.label} · ${asset.owner}") }, onClick = {
-                            update(settings.copy(flagAssetId = asset.id)); flagMenu = false
-                        })
-                    }
-                }
-            }
+            GraphicAssetPreviewGrid(
+                title = "Flaga — wybierz podgląd",
+                selectedId = settings.flagAssetId,
+                choices = listOf(Triple("", "Brak własnej flagi", null)) + assets.filter { it.kind == "Flaga" }
+                    .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) },
+                onSelect = { update(settings.copy(flagAssetId = it)) }
+            )
             OutlinedButton(onClick = { flagPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własną flagę")
             }
-            Text("Logo wystawcy", fontWeight = FontWeight.SemiBold)
-            Box {
-                OutlinedButton(onClick = { logoMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(assets.firstOrNull { it.id == settings.logoAssetId }?.label ?: "Wybierz logo z katalogu")
-                }
-                DropdownMenu(expanded = logoMenu, onDismissRequest = { logoMenu = false }) {
-                    DropdownMenuItem(text = { Text("Brak własnego logo") }, onClick = { update(settings.copy(logoAssetId = "")); logoMenu = false })
-                    assets.filter { it.kind == "Logo" }.forEach { asset ->
-                        DropdownMenuItem(text = { Text(asset.label + " · " + asset.owner) }, onClick = {
-                            update(settings.copy(logoAssetId = asset.id)); logoMenu = false
-                        })
-                    }
-                }
-            }
+            GraphicAssetPreviewGrid(
+                title = "Logo wystawcy — wybierz podgląd",
+                selectedId = settings.logoAssetId,
+                choices = listOf(Triple("", "Brak własnego logo", null)) + assets.filter { it.kind == "Logo" }
+                    .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) },
+                onSelect = { update(settings.copy(logoAssetId = it)) }
+            )
             OutlinedButton(onClick = { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własne logo")
             }
-            Text("Tło legitymacji", fontWeight = FontWeight.SemiBold)
-            Box {
-                OutlinedButton(onClick = { backgroundMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    val builtInLabel = builtInCredentialBackgrounds.firstOrNull {
-                        settings.backgroundAssetId == BUILTIN_BACKGROUND_PREFIX + it.first
-                    }?.second
-                    Text(
-                        assets.firstOrNull { it.id == settings.backgroundAssetId }?.label
-                            ?: builtInLabel
-                            ?: "Wybierz tło z katalogu"
-                    )
-                }
-                DropdownMenu(expanded = backgroundMenu, onDismissRequest = { backgroundMenu = false }) {
-                    DropdownMenuItem(text = { Text("Domyślne tło") }, onClick = { update(settings.copy(backgroundAssetId = "")); backgroundMenu = false })
-                    builtInCredentialBackgrounds.forEach { (resourceName, label) ->
-                        DropdownMenuItem(text = { Text(label) }, onClick = {
-                            update(settings.copy(backgroundAssetId = BUILTIN_BACKGROUND_PREFIX + resourceName))
-                            backgroundMenu = false
-                        })
-                    }
-                    assets.filter { it.kind == "Tło dokumentu" }.forEach { asset ->
-                        DropdownMenuItem(text = { Text("${asset.label} · ${asset.owner}") }, onClick = {
-                            update(settings.copy(backgroundAssetId = asset.id)); backgroundMenu = false
-                        })
-                    }
-                }
-            }
+            val backgroundChoices = listOf(Triple("", "Domyślne tło", null)) +
+                builtInCredentialBackgrounds.map { (resourceName, label) ->
+                    val id = BUILTIN_BACKGROUND_PREFIX + resourceName
+                    Triple(id, label, builtinGraphicPreview(context, id))
+                } + assets.filter { it.kind == "Tło dokumentu" }
+                    .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) }
+            GraphicAssetPreviewGrid(
+                title = "Tło legitymacji — wybierz podgląd",
+                selectedId = settings.backgroundAssetId,
+                choices = backgroundChoices,
+                onSelect = { update(settings.copy(backgroundAssetId = it)) }
+            )
             OutlinedButton(onClick = { backgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własne tło")
             }
+            GraphicAssetPreviewGrid(
+                title = "Tło kafelka dokumentu — wybierz podgląd",
+                selectedId = settings.tileBackgroundAssetId,
+                choices = listOf(Triple("", "Domyślne tło kafelka", null)) +
+                    builtInCredentialBackgrounds.map { (resourceName, label) ->
+                        val id = BUILTIN_BACKGROUND_PREFIX + resourceName
+                        Triple(id, label, builtinGraphicPreview(context, id))
+                    } + assets.filter { it.kind == "Tło kafelka" || it.kind == "Tło dokumentu" }
+                        .map { Triple(it.id, it.label, DocumentBrandStore.preview(context, it.id)) },
+                onSelect = { update(settings.copy(tileBackgroundAssetId = it)) }
+            )
+            if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
             if (!assetSelectionOnly) {
