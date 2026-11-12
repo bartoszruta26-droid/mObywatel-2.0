@@ -180,23 +180,46 @@ Piktogramy pochodzą z repozytorium źródłowego mObywatela, z katalogu `iOS/So
 - https://github.com/bartoszruta26-droid/mObywatel-2.0/tree/main/iOS/Sources/Assets.xcassets/Icons/Brand/Services
 - https://github.com/bartoszruta26-droid/mObywatel-2.0/tree/main/iOS/Sources/Assets.xcassets/Icons/Filled
 
-## Zakres funkcjonalny
+## Zakres funkcjonalny i stan implementacji
 
-- Ekran główny z nawigacją do wszystkich widocznych sekcji.
-- Lokalny portfel plików: import PDF/DOCX/obrazów przez Storage Access Framework (SAF), trwałe URI, lista, usuwanie i podgląd.
-- Lokalny rejestr metadanych dokumentów: tytuł, identyfikator, data utworzenia, URI źródła i SHA-256 pliku.
-- Generowanie kodu QR zawierającego lokalny identyfikator wpisu w formacie `urn:rp:local-document-registry:<UUID>`.
-- Odczyt kodu QR z wybranego obrazu i porównanie aktualnego skrótu pliku ze skrótem zapisanym w lokalnym rejestrze.
-- Ekrany informacyjne profilu, bezpieczeństwa, płatności i zdrowia.
-- Dostępność: semantyczne tytuły paneli, nagłówki, opisy kontrolek i obsługa systemowego przycisku Wstecz.
+Aplikacja jest prototypem Androida, którego główne funkcje działają lokalnie na urządzeniu. Poniższa tabela rozróżnia obecne mechanizmy od integracji, które są jedynie przygotowane architektonicznie.
+
+| Obszar | Stan w kodzie | Zakres i ograniczenia |
+|---|---|---|
+| Ekran główny i nawigacja | Zaimplementowane | Pięć sekcji dolnej nawigacji: Dokumenty, Usługi, Szukaj, Skanuj i Więcej; dodatkowe widoki otwierane z pulpitu i ustawień. |
+| Katalog i trasy dokumentów | Zaimplementowane | Rejestr typów tras DOCUMENT, GROUP i SPECIALIZED, w tym obsługa aliasów zgodności. |
+| Portfel dokumentów | Zaimplementowane lokalnie | Import plików przez Storage Access Framework, trwałe URI, lista, usuwanie i podgląd obsługiwanych formatów. Pliki źródłowe pozostają u dostawcy URI. |
+| Dokumenty i formularze | Zaimplementowane jako lokalne formularze/prototypy | Dokumenty obywatelskie, rodzinne, kościelne, podmiotowe, kwalifikacyjne i formularze cywilne. Samodzielnie tworzone dokumenty nie stają się dokumentami urzędowymi. |
+| Wygląd dokumentów | Zaimplementowane częściowo | Katalog grafik, przypisania herbów, flag, teł, ikon i znaków; ustawienia wzorów dokumentów. Zakres indywidualnej konfiguracji kafelków jest rozwijany w PR #36 i wymaga włączenia do main. |
+| OCR | Zaimplementowane jako pomocnicza sugestia | ML Kit rozpoznaje tekst, a parser proponuje wartości pól. Użytkownik musi je sprawdzić; OCR nie potwierdza autentyczności ani prawdziwości danych. |
+| QR i kody kreskowe | Zaimplementowane lokalnie w wybranych przepływach | Generowanie kodów oraz odczyt QR z wybranego obrazu. Nie oznacza to aktywnego skanera aparatem ani walidacji w rejestrze państwowym. |
+| vCard | Zaimplementowane | Kodowanie/dekodowanie kontaktów i archiwów vCard, także jako format danych dla OWD. |
+| Obywatelska Wymiana Danych (OWD) | Protokół aplikacyjny w kodzie | Oferta sesji, kryptografia, schematy, kontrola powtórzeń, vCard i transport bezpośredni. Nie jest to protokół rządowego mObywatela ani certyfikowana integracja państwowa. |
+| Podpisane poświadczenia | Komponent weryfikacyjny | Weryfikacja podpisu wymaga zaufanego klucza wystawcy z zewnętrznego katalogu. Sam klucz dostarczony w poświadczeniu nie jest kotwicą zaufania. |
+| PDF i podpisy | Funkcje lokalne + osobny moduł JVM | Aplikacja obsługuje lokalne pliki i podgląd; silnik DSS/PAdES znajduje się w odrębnym module JVM i nie jest zależnością APK. |
+| Usługi publiczne i profil | Widoki informacyjne | Brak logowania do usług państwowych i brak aktywnego adaptera do API rządowego. |
+| Historia i archiwa | Częściowo zintegrowane lokalnie | Wybrane magazyny udostępniają eksport/import archiwów; zakres i semantyka kopii zapasowej różnią się między domenami. |
+
+## Architektura i główne zależności
+
+Szczegółowe diagramy przepływu sterowania, modułów, danych, OWD, QR/OCR/PDF, zasobów i testów znajdują się w dokumencie [STRUKTURA_BLOKOWA.md](STRUKTURA_BLOKOWA.md). Audyt architektury i lista priorytetów napraw są opisane w [AUDYT_ARCHITEKTURY.md](AUDYT_ARCHITEKTURY.md).
+
+Główne warstwy:
+- **Interfejs:** Kotlin, Jetpack Compose, Material 3, ekrany w katalogu `ui` oraz rozbudowany koordynator w `MainActivity.kt`.
+- **Domena:** rejestr tras, katalog dokumentów, magazyny rodzinne, kościelne, zdrowotne, kwalifikacyjne, podmiotowe, PDF, QR i OWD.
+- **Dane lokalne:** SharedPreferences, prywatne katalogi aplikacji, URI SAF, Android Keystore, archiwa i skróty SHA-256.
+- **Integracje biblioteczne:** ZXing, ML Kit, AndroidSVG, Android PdfRenderer i AndroidX.
+- **Walidacja PAdES:** osobny moduł Java 17 wykorzystujący DSS, przeznaczony do hostowania poza APK.
 
 ## Ograniczenia i status prawny
 
-To niezależna aplikacja demonstracyjna. Nie jest oficjalną aplikacją mObywatel, systemem Sejmu, urzędu ani administracji państwowej. Zastosowanie piktogramów z opublikowanego systemu projektowego nie oznacza afiliacji z COI ani administracją publiczną. Znak prototypu nie jest godłem państwowym ani urzędową pieczęcią.
+To niezależna aplikacja obywatelska w formie prototypu. Nie jest oficjalną aplikacją mObywatel, systemem Sejmu, urzędu ani administracji państwowej. Nazwa projektu, użycie wybranych wzorców wizualnych lub piktogramów nie oznaczają afiliacji z COI ani administracją publiczną. Znak prototypu nie jest godłem państwowym ani urzędową pieczęcią.
 
-Lokalny rejestr nie publikuje wpisów w sieci i nie zapewnia zewnętrznej weryfikacji. Kod QR identyfikuje wpis lokalny; nie jest podpisem elektronicznym, pieczęcią elektroniczną ani urzędowym poświadczeniem. Odczyt kodu z obrazu nie jest skanowaniem aparatem na żywo. Porównanie SHA-256 wykrywa zmianę zawartości pliku względem lokalnie zapisanego skrótu, ale nie uwierzytelnia wystawcy ani pochodzenia dokumentu.
+Lokalne wpisy i dokumenty użytkownika nie są publikowane automatycznie w rejestrach publicznych. Kod QR może identyfikować wpis lokalny lub przenosić ofertę sesji OWD; sam w sobie nie jest podpisem elektronicznym, pieczęcią ani urzędowym poświadczeniem. Skrót SHA-256 wykrywa zmianę pliku względem zapisanego skrótu, ale nie potwierdza tożsamości wystawcy ani pochodzenia dokumentu.
 
-Ekrany profilu, bezpieczeństwa, płatności i zdrowia są informacyjne. Nie ma logowania do usług państwowych ani integracji z ich API. Nie należy używać prototypu do przedstawiania dokumentów jako wydanych lub zatwierdzonych przez organ państwowy.
+OWD jest niezależnym mechanizmem wymiany danych między urządzeniami. Nie należy utożsamiać go z rządowym mObywatelem, jego API, schematami lub usługami zaufania. W kodzie znajduje się granica przyszłego adaptera rządowego, lecz nie oznacza ona uzyskania dostępu, zgody, certyfikacji ani wdrożenia takiej integracji.
+
+Ekrany profilu, bezpieczeństwa, płatności, zdrowia i usług publicznych mają charakter informacyjny, o ile opis konkretnej funkcji nie stanowi inaczej. Dane z rejestrów publicznych wymagają sprawdzenia w źródle właściwego organu. Przed publicznym wdrożeniem należy opublikować odrębną, kompletną informację o przetwarzaniu danych, wskazując administratora, cele i podstawy przetwarzania, odbiorców, okresy przechowywania, prawa osób oraz kanał kontaktowy. Sam ten plik README nie jest polityką prywatności.
 
 ## Uruchomienie
 
@@ -204,8 +227,11 @@ Otwórz katalog `obywatel-android` w Android Studio z Android SDK i JDK 17. Proj
 
 ## Następne kroki techniczne
 
-1. Dokończyć wizualne odwzorowanie kart dokumentów i szczegółów dokumentu na podstawie dostępnych wzorców design systemu.
-2. Zweryfikować i ewentualnie dołączyć oficjalny wzór godła RP z odrębnego, autorytatywnego źródła oraz opisać zasady użycia.
-3. Dodać skaner QR aparatem i walidację identyfikatorów w obrębie lokalnego rejestru.
-4. Zaprojektować kontrolowany eksport i kopię zapasową rejestru.
-5. Dodać ochronę lokalnego profilu oraz kontrolę dostępu do danych.
+1. Wydzielić nawigację, stan ekranów i koordynatory domen z `MainActivity.kt`; zachować kompatybilność istniejących tras.
+2. Ujednolicić magazyny danych, wersjonowanie schematów, migracje, usuwanie i obsługę błędów.
+3. Dokończyć model bezpieczeństwa profilu, ochronę danych wrażliwych, cykl życia kluczy i politykę kopii zapasowych.
+4. Rozszerzyć testy kontraktowe, migracyjne, graniczne i UI dla wszystkich tras dokumentów oraz przepływów importu/eksportu.
+5. Przeprowadzić niezależny przegląd bezpieczeństwa OWD, transportu TCP, zarządzania sesją i katalogu zaufanych wystawców.
+6. Przygotować osobny projekt backendu i formalną specyfikację integracji z usługami publicznymi; nie deklarować integracji przed uzyskaniem uprawnień i testów interoperacyjności.
+7. Utrzymywać aktualny audyt architektury i diagramy po każdej istotnej zmianie modułów.
+
