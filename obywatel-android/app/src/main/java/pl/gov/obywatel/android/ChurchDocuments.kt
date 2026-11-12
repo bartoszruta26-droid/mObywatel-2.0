@@ -93,6 +93,13 @@ private val churchDocs = listOf(
     churchDoc("interfaith_dialogue","5. Ekumenizm i współpraca międzykościelna","Dokument dialogu międzyreligijnego", listOf("Uczestniczące wspólnoty","Temat dialogu","Cel i zakres","Zasady wzajemnego poszanowania","Uzgodnienia","Osoby reprezentujące"))
 )
 
+internal fun churchGraphicDocumentTargets(): List<Pair<String, String>> =
+    churchDocs.map { it.id to it.title }
+
+internal fun churchGraphicDocumentFields(documentId: String): List<Pair<String, String>> =
+    churchDocs.firstOrNull { it.id == documentId }?.fields.orEmpty()
+        .mapIndexed { index, label -> "churchField_$index" to label }
+
 internal object ChurchDocumentStore {
     private const val ALIAS = "church_documents_aes"
     private const val FILE = "church-documents.enc"
