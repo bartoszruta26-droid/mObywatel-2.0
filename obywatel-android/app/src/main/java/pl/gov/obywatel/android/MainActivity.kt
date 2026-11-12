@@ -897,7 +897,7 @@ private fun HomeScreen() {
         when (title) {
             "Portfel" -> showDemoDocuments = true
             "Ustawienia" -> {
-                selectedTab = 2
+                selectedTab = 4
                 showSettingsMenu = false
                 showDemoDocuments = false
                 selectedDocumentId = null
@@ -1082,11 +1082,8 @@ private fun HomeScreen() {
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
                             if (selectedTab == 0) Header(
-                                onOpenSettings = {
-                                    showSettingsMenu = true
-                                    showDemoDocuments = false
-                                    selectedDocumentId = null
-                                },
+                                onOpenAssistant = { activeService = "Asystent" },
+                                onOpenMessages = { activeService = "Wiadomości" },
                                 onOpenNotifications = { activeService = "Powiadomienia" }
                             )
                             Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
@@ -1104,26 +1101,25 @@ private fun HomeScreen() {
                                         modifier = Modifier.clickable { showDemoDocuments = true }
                                             .padding(vertical = 4.dp)
                                     )
-                                    Spacer(Modifier.weight(1f, fill = true))
-                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                    Box(Modifier.fillMaxWidth().height(390.dp)) {
                                         Button(
                                             onClick = {
                                                 selectedEditorCategory = "all"
                                                 showDocumentsEditor = true
                                             },
+                                            modifier = Modifier.align(Alignment.BottomEnd),
                                             shape = RoundedCornerShape(20.dp),
-                                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 14.dp),
                                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                                 containerColor = Color(0xFFB7E5FF),
                                                 contentColor = Color(0xFF123B65)
                                             )
                                         ) {
-                                            Icon(Icons.Filled.Add, contentDescription = null)
+                                            Icon(painterResource(R.drawable.lib_ic_plus), contentDescription = null)
                                             Spacer(Modifier.width(12.dp))
                                             Text("Dodaj dokument", style = MaterialTheme.typography.titleMedium)
                                         }
                                     }
-                                    Spacer(Modifier.height(14.dp))
+                                    Spacer(Modifier.height(8.dp))
                                 } else {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
@@ -2219,26 +2215,30 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
 }
 
 @Composable
-private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) {
+private fun Header(
+    onOpenAssistant: () -> Unit,
+    onOpenMessages: () -> Unit,
+    onOpenNotifications: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(start = 18.dp, end = 14.dp, top = 12.dp, bottom = 12.dp),
+            .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         BrandMark()
         Text(
             "Dokumenty",
-            modifier = Modifier.weight(1f).padding(start = 12.dp),
+            modifier = Modifier.weight(1f).padding(start = 10.dp),
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
-        IconButton(onClick = onOpenSettings) {
+        IconButton(onClick = onOpenAssistant) {
             Icon(painterResource(R.drawable.ic_header_robot), contentDescription = "Asystent",
                 tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
         }
-        IconButton(onClick = { onOpenSettings() }) {
+        IconButton(onClick = onOpenMessages) {
             Icon(painterResource(R.drawable.lib_ic_mail), contentDescription = "Wiadomości",
                 tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
         }
@@ -3851,6 +3851,13 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
     ) {
         items.forEach { (label, index, iconRes) ->
             val selected = selectedTab == index
+            val selectedIcon = when (index) {
+                0 -> R.drawable.nav_documents_selected
+                2 -> R.drawable.nav_services_selected
+                3 -> R.drawable.nav_scan_selected
+                1 -> R.drawable.nav_search_selected
+                else -> R.drawable.nav_more_selected
+            }
             Column(
                 modifier = Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
                     .clickable { onSelect(index) }.padding(vertical = 2.dp),
@@ -3864,15 +3871,7 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(
-                            when (index) {
-                                0 -> if (selected) R.drawable.nav_documents_selected else iconRes
-                                2 -> if (selected) R.drawable.nav_services_selected else iconRes
-                                3 -> if (selected) R.drawable.nav_scan_selected else iconRes
-                                1 -> if (selected) R.drawable.nav_search_selected else iconRes
-                                else -> if (selected) R.drawable.nav_more_selected else iconRes
-                            }
-                        ),
+                        painter = painterResource(if (selected) selectedIcon else iconRes),
                         contentDescription = label,
                         tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(23.dp)
