@@ -30,16 +30,18 @@ class DocumentsScreenTest {
     fun showsLocalPrototypeNoticeAndEmptyState() {
         composeRule.setContent {
             ObywatelTheme {
-                DocumentsScreen(onBack = {})
+                DocumentsScreen(onBack = {}, readOnly = true)
             }
         }
 
         composeRule.waitUntil(timeoutMillis = 5_000) {
-            composeRule.onAllNodes(androidx.compose.ui.test.hasText("Brak dokumentów. Dodaj plik, aby rozpocząć.")).fetchSemanticsNodes().isNotEmpty()
+            composeRule.onAllNodes(androidx.compose.ui.test.hasText("Brak dokumentów do wyświetlenia.")).fetchSemanticsNodes().isNotEmpty()
         }
-        composeRule.onNodeWithText("Moje dokumenty").assertIsDisplayed()
-        composeRule.onNodeWithText("Brak dokumentów. Dodaj plik, aby rozpocząć.").assertIsDisplayed()
-        composeRule.onNodeWithText("Dodaj PDF, DOCX, ODT lub obraz").assertIsEnabled()
+        composeRule.onNodeWithText("Dokumenty").assertIsDisplayed()
+        composeRule.onNodeWithText("Brak dokumentów do wyświetlenia.").assertIsDisplayed()
+        composeRule.onNodeWithText("Dodaj PDF, DOCX, ODT lub obraz").assertDoesNotExist()
+        composeRule.onNodeWithText("Dodawanie i usuwanie plików jest dostępne w Więcej → Ustawienia → Dokumenty własne — pliki.", substring = true)
+            .assertIsDisplayed()
     }
 
     @Test
@@ -51,7 +53,7 @@ class DocumentsScreenTest {
             }
         }
 
-        composeRule.onNodeWithContentDescription("Wróć do ekranu głównego").performClick()
+        composeRule.onNodeWithContentDescription("Powrót").performClick()
         org.junit.Assert.assertEquals(1, backCount)
     }
 }
