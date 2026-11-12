@@ -53,17 +53,21 @@ class BankAccountsNavigationTest {
 
     @Test
     fun documentWalletOpensBankAccountsInReadOnlyMode() {
-        // Ustaw jawnie rachunki w Portfelu — domyślnie dokumenty poza dowodem są ukryte.
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        context.getSharedPreferences("document_display_preferences", Context.MODE_PRIVATE)
-            .edit().putString("placement_bank_accounts", "dashboard").commit()
-        composeRule.activityRule.scenario.recreate()
+        // Włącz widoczność rachunków przez rzeczywisty ekran ustawień.
+        openSettingsMenu()
+        composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
         composeRule.waitForIdle()
-        enterDemoMode()
+        composeRule.onNodeWithTag("document-placement-bank_accounts-dashboard")
+            .performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("‹  Powrót do ustawień").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        Espresso.pressBack()
+        composeRule.waitForIdle()
+
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
-        // Grupy są nagłówkami jednego katalogu; rachunki otwierają się bezpośrednio z listy.
-        composeRule.onAllNodesWithText("Konta bankowe", substring = false)[0]
+        composeRule.onNodeWithText("Konta bankowe", substring = false)
             .performScrollTo()
             .assertHasClickAction()
             .performClick()
@@ -73,8 +77,6 @@ class BankAccountsNavigationTest {
             .performScrollTo()
             .performClick()
         composeRule.waitForIdle()
-        // Ekran szczegółów jest przewijany; przewiń do komunikatu zamiast
-        // zakładać, że znajduje się on od razu w widocznym obszarze.
         composeRule.onNodeWithText(
             "Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia."
         ).performScrollTo().assertIsDisplayed()
