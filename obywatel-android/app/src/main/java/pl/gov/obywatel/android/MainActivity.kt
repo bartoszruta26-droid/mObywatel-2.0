@@ -1867,19 +1867,62 @@ private fun DocumentDetailsScreen(
             else -> normalizedId.replace('_', ' ').replaceFirstChar { it.uppercase() }
         }
     val settings = rememberLegitimacyPreviewSettings(normalizedId).value
+    val previewValues = remember(allValues, normalizedId) {
+        allValues.toMutableMap().apply {
+            if (normalizedId == "disability" && this["firstNames"].isNullOrBlank()) {
+                this["firstNames"] = this["disabilityPersonName"].orEmpty()
+            }
+        }
+    }
     val options = credentialFieldOptions(normalizedId)
     val selectedOptions = if (!settings.visibleFieldsConfigured) options
         else options.filter { it.first in settings.visibleFields }
     val previewFields = selectedOptions.map { (key, label) ->
-        Triple(key, label.uppercase(), allValues[key].orEmpty().ifBlank { "—" })
+        Triple(key, label.uppercase(), previewValues[key].orEmpty().ifBlank { "—" })
     }
     val holder = when {
-        allValues["studentNames"].orEmpty().isNotBlank() -> allValues["studentNames"].orEmpty()
-        allValues["passportHolderNames"].orEmpty().isNotBlank() -> allValues["passportHolderNames"].orEmpty()
-        else -> listOf(allValues["firstNames"].orEmpty(), allValues["lastName"].orEmpty())
+        previewValues["studentNames"].orEmpty().isNotBlank() -> previewValues["studentNames"].orEmpty()
+        previewValues["passportHolderNames"].orEmpty().isNotBlank() -> previewValues["passportHolderNames"].orEmpty()
+        previewValues["disabilityPersonName"].orEmpty().isNotBlank() -> previewValues["disabilityPersonName"].orEmpty()
+        else -> listOf(previewValues["firstNames"].orEmpty(), previewValues["lastName"].orEmpty())
             .filter { it.isNotBlank() }.joinToString(" ").ifBlank { "DANE POSIADACZA" }
     }
-    val hasData = options.any { (key, _) -> !allValues[key].isNullOrBlank() }
+    val photoBitmap = remember(previewValues["photo"]) {
+        runCatching {
+            val encoded = previewValues["photo"].orEmpty()
+            if (encoded.isBlank()) null else {
+                val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
+        }.getOrNull()
+    }
+    val statusKey = when (normalizedId) {
+        "identity" -> "idStatus"
+        "passport" -> "passportStatus"
+        "parliament" -> "mpStatus"
+        "training" -> "trainingStatus"
+        "student" -> "studentStatus"
+        "disability" -> "disabilityStatus"
+        else -> "status"
+    }
+    val expiryKey = when (normalizedId) {
+        "identity" -> "idExpiryDate"
+        "passport" -> "passportExpiryDate"
+        "parliament" -> "mpEnd"
+        "training" -> "trainingValidUntil"
+        "student" -> "studentValidity"
+        "disability" -> "disabilityValidity"
+        else -> "expiryDate"
+    }
+    val documentStatus = previewValues[statusKey].orEmpty().trim().lowercase()
+    val explicitlyInvalid = documentStatus.contains("nieważ") || documentStatus.contains("unieważ") ||
+        documentStatus.contains("utrac") || documentStatus.contains("zwróc") ||
+        documentStatus.contains("expired") || documentStatus.contains("invalid")
+    val expiry = previewValues[expiryKey].orEmpty()
+    val validity = if (documentStatus.isNotBlank() || expiry.isNotBlank())
+        !explicitlyInvalid && isCredentialValidByExpiry(expiry) else null
+    val hasData = options.any { (key, _) -> !previewValues[key].isNullOrBlank() } ||
+        (normalizedId == "disability" && !previewValues["disabilityPersonName"].isNullOrBlank())
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -1900,7 +1943,8 @@ private fun DocumentDetailsScreen(
                 holderName = holder,
                 fields = previewFields,
                 settings = settings,
-                validity = null
+                photo = photoBitmap,
+                validity = validity
             )
         } else {
             Text("Podgląd karty jest wyłączony w ustawieniach wyglądu tego dokumentu.",
