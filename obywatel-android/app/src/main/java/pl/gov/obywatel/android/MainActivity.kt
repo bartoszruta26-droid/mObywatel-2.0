@@ -1080,29 +1080,26 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     fun openDocumentCard(documentId: String) {
-        // Every document tile is a read-only entry point. Editing is reached
-        // only from More → Settings → the selected document.
-        when (documentId) {
-            "registry" -> activeService = "Odpis z rejestru podmiotów"
-            "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
-            "church_minister", "church_missionary", "organization_church" -> activeService = "Dokumenty Kościelne"
-            "civil", "birth_extract", "marriage_extract", "death_extract", "official",
-            "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business",
-            "vehicle_registration", "criminal_record", "mission_travel", "ehic", "eu_education",
-            "large_family", "blood_donor", "disability_card" -> activeService = "Formularze dokumentów"
-            "business", "entity", "organization_foundation", "organization_company",
-            "organization_association" -> activeService = "Dokumenty rejestru podmiotów"
-            "bank_accounts" -> showBankAccounts = true
-            "children" -> activeService = "Dane dzieci"
-            "vaccines" -> activeService = "eKarta Szczepień"
-            "imported" -> showImportedDocuments = true
-            "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
-            "branding" -> activeService = "Zasoby identyfikacji dokumentów"
-            "professional", "professional_medical", "professional_education",
-            "professional_therapeutic", "professional_other" -> activeService = "Dokumenty kwalifikacji zawodowych"
-            "identity_card" -> selectedDocumentId = "identity"
-            "loyalty_cards" -> selectedDocumentId = "loyalty"
-            else -> selectedDocumentId = documentId
+        // The same route is used from both home sections and the wallet.
+        // Keep the source ID intact unless the registry declares a legacy alias.
+        val route = DocumentRouteRegistry.find(documentId)
+        if (route == null) {
+            selectedDocumentId = documentId
+            return
+        }
+        when (route.type) {
+            DocumentRouteType.GROUP -> activeService = requireNotNull(route.destination)
+            DocumentRouteType.DOCUMENT -> selectedDocumentId = route.documentId
+            DocumentRouteType.SPECIALIZED -> when (route.destination) {
+                "registry_extract" -> activeService = "Odpis z rejestru podmiotów"
+                "children" -> activeService = "Dane dzieci"
+                "bank_accounts" -> showBankAccounts = true
+                "vaccines" -> activeService = "eKarta Szczepień"
+                "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
+                "imported" -> showImportedDocuments = true
+                "branding" -> activeService = "Zasoby identyfikacji dokumentów"
+                else -> selectedDocumentId = route.documentId
+            }
         }
     }
 
@@ -3380,6 +3377,66 @@ private fun documentTileIconResource(documentKey: String, fallback: Int): Int = 
     else -> R.drawable.tile_ic_civil_outline
 }
 
+private fun documentTileWatermarkResource(documentKey: String): Int = when {
+    // Dokumenty kościelne i misyjne: motyw sakralny.
+    documentKey.startsWith("church_") ||
+        documentKey in setOf("church", "organization_church") ->
+        R.drawable.tile_watermark_sacred
+
+    // Tożsamość, dane osoby i dokumenty podróży.
+    documentKey in setOf("identity", "identity_card", "profile") ->
+        R.drawable.tile_watermark_identity
+    documentKey in setOf("passport", "mission_travel") ->
+        R.drawable.tile_watermark_travel
+
+    // Finanse, ubezpieczenia i rozliczenia.
+    documentKey in setOf("bank_accounts", "insurance_business") ->
+        R.drawable.tile_watermark_finance
+
+    // Karty i dokumenty obsługiwane przede wszystkim cyfrowo.
+    documentKey in setOf("signed_pdf", "imported", "branding", "loyalty", "loyalty_cards") ->
+        R.drawable.tile_watermark_digital
+
+    // Pojazdy i dokumentacja komunikacyjna.
+    documentKey in setOf("vehicle_registration", "insurance_vehicle") ->
+        R.drawable.tile_watermark_transport
+
+    // Uprawnienia, kwalifikacje i ubezpieczenie zawodowe.
+    documentKey in setOf(
+        "professional", "professional_medical", "professional_education",
+        "professional_therapeutic", "professional_other", "insurance_professional"
+    ) ->
+        R.drawable.tile_watermark_professional
+
+    // Rodzina, stan cywilny i dokumenty członków rodziny.
+    documentKey in setOf(
+        "family", "children", "birth_extract", "marriage_extract",
+        "death_extract", "large_family", "insurance_private"
+    ) ->
+        R.drawable.tile_watermark_family
+
+    // Zdrowie, niepełnosprawność i uprawnienia medyczne.
+    documentKey in setOf(
+        "disability", "vaccines", "ehic", "blood_donor", "disability_card"
+    ) ->
+        R.drawable.tile_watermark_medical
+
+    // Edukacja i potwierdzenia nauki lub szkolenia.
+    documentKey in setOf("student", "training", "eu_education") ->
+        R.drawable.tile_watermark_education
+
+    // Rejestry, dokumenty urzędowe i obywatelskie.
+    documentKey in setOf(
+        "civil", "official", "registry", "business", "entity",
+        "organization_foundation", "organization_company",
+        "organization_association", "parliament", "criminal_record"
+    ) ->
+        R.drawable.tile_watermark_civic
+
+    // Ogólne dokumenty ochronne i poświadczenia bez odrębnej kategorii.
+    else -> R.drawable.tile_watermark_security
+}
+
 @Composable
 private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifier) {
     val palette = when (documentKey) {
@@ -3420,7 +3477,8 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
         documentKey in setOf("disability", "vaccines", "blood_donor") -> 7
         else -> documentKey.hashCode().ushr(1) % 8
     }
-    ComposeCanvas(modifier) {
+    Box(modifier.clip(RoundedCornerShape(13.dp))) {
+    ComposeCanvas(Modifier.matchParentSize()) {
         drawRect(brush = Brush.linearGradient(
             colors = palette,
             start = Offset(0f, size.height),
@@ -3530,8 +3588,97 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
                 drawCircle(fine, radius * 0.58f, Offset(cx, cy), style = stroke)
             }
         }
-        drawCircle(Color.White.copy(alpha = 0.06f), radius * 0.10f,
+        // Layered security-print treatment shared by every document tile:
+        // guilloche rosette, micro-grid, diagonal engraving and precision frame.
+        val minSide = size.minDimension
+        val inset = minSide * 0.055f
+        val frameColor = Color.White.copy(alpha = 0.16f)
+        drawRoundRect(
+            color = frameColor,
+            topLeft = Offset(inset, inset),
+            size = Size(size.width - inset * 2f, size.height - inset * 2f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(minSide * 0.055f),
+            style = Stroke(width = maxOf(0.7.dp.toPx(), minSide * 0.0025f))
+        )
+        // Fine engraved diagonal lines are deliberately clipped to the lower-left field.
+        val engraving = Color.White.copy(alpha = 0.055f)
+        val spacing = maxOf(5.dp.toPx(), minSide * 0.035f)
+        var line = -size.height
+        while (line < size.width * 0.72f) {
+            drawLine(
+                color = engraving,
+                start = Offset(line, size.height),
+                end = Offset(line + size.height * 0.72f, size.height * 0.28f),
+                strokeWidth = maxOf(0.55.dp.toPx(), minSide * 0.0018f)
+            )
+            line += spacing
+        }
+        // Halftone security field.
+        val dotStep = maxOf(5.dp.toPx(), minSide * 0.045f)
+        var dotY = size.height * 0.58f
+        while (dotY < size.height * 0.91f) {
+            var dotX = size.width * 0.07f
+            while (dotX < size.width * 0.48f) {
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.10f),
+                    radius = maxOf(0.45.dp.toPx(), minSide * 0.0022f),
+                    center = Offset(dotX, dotY)
+                )
+                dotX += dotStep
+            }
+            dotY += dotStep
+        }
+        // Guilloche rosette: concentric rings and radial spokes.
+        val rosetteCenter = Offset(size.width * 0.84f, size.height * 0.76f)
+        val rosetteRadius = minSide * 0.20f
+        val rosetteColor = Color.White.copy(alpha = 0.13f)
+        for (ring in 0..3) {
+            drawCircle(
+                color = rosetteColor.copy(alpha = 0.12f + ring * 0.025f),
+                radius = rosetteRadius * (0.42f + ring * 0.19f),
+                center = rosetteCenter,
+                style = Stroke(width = maxOf(0.65.dp.toPx(), minSide * 0.002f))
+            )
+        }
+        for (spoke in 0 until 16) {
+            val angle = spoke * (2f * Math.PI.toFloat() / 16f)
+            val inner = rosetteRadius * 0.34f
+            val outer = rosetteRadius * (if (spoke % 2 == 0) 1.12f else 0.88f)
+            drawLine(
+                color = rosetteColor,
+                start = Offset(
+                    rosetteCenter.x + kotlin.math.cos(angle.toDouble()).toFloat() * inner,
+                    rosetteCenter.y + kotlin.math.sin(angle.toDouble()).toFloat() * inner
+                ),
+                end = Offset(
+                    rosetteCenter.x + kotlin.math.cos(angle.toDouble()).toFloat() * outer,
+                    rosetteCenter.y + kotlin.math.sin(angle.toDouble()).toFloat() * outer
+                ),
+                strokeWidth = maxOf(0.6.dp.toPx(), minSide * 0.002f)
+            )
+        }
+        // Four registration marks and a discreet security seal at the lower edge.
+        val mark = minSide * 0.035f
+        val corners = listOf(
+            Offset(inset + mark, inset + mark),
+            Offset(size.width - inset - mark, inset + mark),
+            Offset(inset + mark, size.height - inset - mark),
+            Offset(size.width - inset - mark, size.height - inset - mark)
+        )
+        corners.forEach { p ->
+            drawCircle(frameColor, radius = maxOf(1.dp.toPx(), minSide * 0.006f), center = p)
+        }
+        drawCircle(Color.White.copy(alpha = 0.08f), radius * 0.10f,
             Offset(size.width * 0.16f, size.height * 0.82f))
+    }
+        Image(
+            painter = painterResource(documentTileWatermarkResource(documentKey)),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.FillBounds,
+            alpha = 0.30f,
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+        )
     }
 }
 
