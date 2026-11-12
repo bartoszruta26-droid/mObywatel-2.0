@@ -1059,6 +1059,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var serviceCategory by remember { mutableStateOf("Wszystkie") }
     val favoriteServices = remember { mutableStateMapOf("Zastrzeż PESEL" to true, "Zdrowie" to true, "Transport" to true) }
 
+    // Wszystkie wejścia do dodawania i zarządzania dokumentami kierują do jednego katalogu.
+    fun openDocumentVisibilityCatalog() {
+        showDemoDocuments = false
+        showSettingsMenu = false
+        showDocumentVisibilitySettings = true
+    }
+
     fun handleSystemBack() {
         when {
             credentialAppearanceTarget != null -> credentialAppearanceTarget = null
@@ -1252,7 +1259,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showSettingsMenu = false },
                         onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
                         onManageCredentialAppearance = { showSettingsMenu = false; showCredentialAppearanceEditor = true },
-                        onManageDocumentVisibility = { showSettingsMenu = false; showDocumentVisibilitySettings = true },
+                        onManageDocumentVisibility = { openDocumentVisibilityCatalog() },
                         onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
                         onEditDocumentBranding = { target -> showSettingsMenu = false; documentBrandTarget = target },
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
@@ -1294,7 +1301,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
-                        onAddDocuments = { showDemoDocuments = false; showDocumentVisibilitySettings = true },
+                        onAddDocuments = { openDocumentVisibilityCatalog() },
                         documentPlacements = documentPlacements,
                         documentCardStyle = documentCardStyle,
                         defaultDocumentIcon = defaultDocumentIcon,
@@ -1500,10 +1507,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                             .padding(vertical = 4.dp)
                                     )
                                     Button(
-                                        onClick = {
-                                            showSettingsMenu = false
-                                            showDocumentVisibilitySettings = true
-                                        },
+                                        onClick = { openDocumentVisibilityCatalog() },
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(18.dp),
                                         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
