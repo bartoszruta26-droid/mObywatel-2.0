@@ -185,12 +185,18 @@ private fun saveSubdocumentGraphicValues(
         }.toMap()
     }
     when {
-        churchGraphicDocumentTargets().any { it.first == documentKey } ->
-            ChurchDocumentStore.save(context, ChurchDocumentStore.load(context) + (documentKey to sourceValues))
-        familyEntityGraphicDocumentTargets().any { it.first == documentKey } ->
-            FamilyEntityDocumentStore.save(context, FamilyEntityDocumentStore.load(context) + (documentKey to sourceValues))
-        officialGraphicDocumentTargets().any { it.first == documentKey } ->
-            OfficialDocumentStore.save(context, OfficialDocumentStore.load(context) + (documentKey to sourceValues))
+        churchGraphicDocumentTargets().any { it.first == documentKey } -> {
+            val current = ChurchDocumentStore.load(context)
+            ChurchDocumentStore.save(context, current + (documentKey to (current[documentKey].orEmpty() + sourceValues)))
+        }
+        familyEntityGraphicDocumentTargets().any { it.first == documentKey } -> {
+            val current = FamilyEntityDocumentStore.load(context)
+            FamilyEntityDocumentStore.save(context, current + (documentKey to (current[documentKey].orEmpty() + sourceValues)))
+        }
+        officialGraphicDocumentTargets().any { it.first == documentKey } -> {
+            val current = OfficialDocumentStore.load(context)
+            OfficialDocumentStore.save(context, current + (documentKey to (current[documentKey].orEmpty() + sourceValues)))
+        }
     }
 }
 
