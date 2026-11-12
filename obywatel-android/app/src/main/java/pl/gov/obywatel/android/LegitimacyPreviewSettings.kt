@@ -1479,6 +1479,7 @@ private fun CredentialRoundAction(
 internal fun CredentialValidityTile(valid: Boolean) {
     Card(
         Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
