@@ -55,5 +55,31 @@ class LegitimacyPreviewSettingsTest {
         assertEquals(setOf("firstNames", "lastName"), result.visibleFields)
         assertTrue(result.visibleFieldsConfigured)
     }
+    @Test
+    fun individualAppearanceOverridesSharedOrientationFilterAndLayout() {
+        val document = LegitimacyPreviewSettings(
+            orientation = "PIONOWA",
+            showPhoto = false,
+            showFlag = true,
+            imageFilter = "grayscale",
+            graphicScale = 1.7f,
+            individualAppearanceConfigured = true
+        )
+        val shared = LegitimacyPreviewSettings(
+            orientation = "POZIOMA",
+            showPhoto = true,
+            showFlag = false,
+            imageFilter = "sepia",
+            graphicScale = 0.8f
+        )
+
+        val result = mergeSharedLegitimacyAppearance(document, shared)
+
+        assertEquals("PIONOWA", result.orientation)
+        assertEquals(false, result.showPhoto)
+        assertEquals(true, result.showFlag)
+        assertEquals("grayscale", result.imageFilter)
+        assertEquals(1.7f, result.graphicScale)
+    }
 }
 
