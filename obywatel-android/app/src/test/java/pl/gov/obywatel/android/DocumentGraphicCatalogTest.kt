@@ -18,7 +18,7 @@ class DocumentGraphicCatalogTest {
             "church_cardinal", "church_abbot", "church_minister", "church_missionary",
             "professional_medical", "professional_education", "professional_therapeutic",
             "professional_other", "organization_foundation", "organization_church",
-            "organization_company", "organization_association", "official"
+            "organization_company", "organization_association", "official", "loyalty_cards"
         )
         val definitions = GraphicDocumentCatalog.definitions
         assertEquals(expected, definitions.map { it.id }.toSet())
@@ -49,7 +49,7 @@ class DocumentGraphicCatalogTest {
             "large_family", "blood_donor", "disability_card", "ehic", "church_bishop",
             "church_archbishop", "church_cardinal", "church_abbot", "church_minister",
             "church_missionary", "professional_medical", "professional_education",
-            "professional_therapeutic", "professional_other"
+            "professional_therapeutic", "professional_other", "loyalty_cards"
         )
         credentialIds.forEach { id ->
             assertEquals(DocumentPreviewKind.CREDENTIAL, GraphicDocumentCatalog.find(id)?.kind)
