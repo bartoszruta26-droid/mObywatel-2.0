@@ -1535,7 +1535,17 @@ private fun CredentialRoundAction(
 }
 
 @Composable
-internal fun CredentialValidityTile(valid: Boolean) {
+internal fun CredentialValidityTile(valid: Boolean?) {
+    val label = when (valid) {
+        true -> "Dokument ważny"
+        false -> "Dokument nieważny"
+        null -> "Ważność dokumentu nieustalona"
+    }
+    val tint = when (valid) {
+        true -> Color(0xFF238548)
+        false -> Color(0xFFB3261E)
+        null -> Color(0xFF9A6700)
+    }
     Card(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -1548,17 +1558,16 @@ internal fun CredentialValidityTile(valid: Boolean) {
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Icon(
-                imageVector = if (valid) Icons.Filled.CheckCircle else Icons.Filled.Error,
-                contentDescription = if (valid) "Dokument ważny" else "Dokument nieważny",
-                tint = if (valid) Color(0xFF238548) else Color(0xFFB3261E),
+                imageVector = when (valid) {
+                    true -> Icons.Filled.CheckCircle
+                    false -> Icons.Filled.Error
+                    null -> Icons.Filled.Info
+                },
+                contentDescription = label,
+                tint = tint,
                 modifier = Modifier.size(30.dp)
             )
-            Text(
-                if (valid) "Dokument ważny" else "Dokument nieważny",
-                fontSize = 15.sp,
-                color = if (valid) Color(0xFF237A35) else Color(0xFFB3261E),
-                fontWeight = FontWeight.SemiBold
-            )
+            Text(label, fontSize = 15.sp, color = tint, fontWeight = FontWeight.SemiBold)
         }
     }
 }
