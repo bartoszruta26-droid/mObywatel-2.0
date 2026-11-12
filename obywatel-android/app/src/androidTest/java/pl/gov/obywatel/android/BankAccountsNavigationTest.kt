@@ -39,6 +39,11 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
     }
 
+    private fun expandVisibilityGroup(title: String) {
+        composeRule.onNodeWithText(title).performScrollTo().performClick()
+        composeRule.waitForIdle()
+    }
+
     private fun enterDemoMode() {
         // Plansza z godłem jest wyświetlana przez 1,5 s przed ekranem powitalnym.
         composeRule.waitUntil(timeoutMillis = 5_000) {
@@ -58,6 +63,7 @@ class BankAccountsNavigationTest {
         openSettingsMenu()
         composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
         composeRule.waitForIdle()
+        expandVisibilityGroup("Dokumenty firmowe i podmiotowe")
         composeRule.onNodeWithTag("document-placement-bank_accounts-dashboard")
             .performScrollTo().performClick()
         composeRule.waitForIdle()
@@ -136,6 +142,7 @@ class BankAccountsNavigationTest {
         openSettingsMenu()
         composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
         composeRule.waitForIdle()
+        expandVisibilityGroup("Dokumenty osobiste i tożsamościowe")
 
         composeRule.onNodeWithText("Domyślna ikona dokumentów").assertIsDisplayed()
         composeRule.onNodeWithText("Automatycznie — ikona przypisana do dokumentu").performClick()
@@ -155,7 +162,9 @@ class BankAccountsNavigationTest {
         openSettingsMenu()
         composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
         composeRule.waitForIdle()
+        expandVisibilityGroup("Dokumenty osobiste i tożsamościowe")
         composeRule.onNodeWithTag("document-placement-passport-dashboard").performScrollTo().performClick()
+        expandVisibilityGroup("Dokumenty zawodowe i edukacyjne")
         composeRule.onNodeWithTag("document-placement-training-other").performScrollTo().performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("‹  Powrót do ustawień").performScrollTo().performClick()
