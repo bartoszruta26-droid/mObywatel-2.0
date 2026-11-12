@@ -3440,10 +3440,9 @@ private fun documentTileWatermarkResource(documentKey: String): Int = when {
 @Composable
 private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val tileBackgroundAssetId = remember(documentKey) {
-        context.getSharedPreferences("legitimacy_preview_preferences", android.content.Context.MODE_PRIVATE)
-            .getString("${documentKey}_tile_background", "").orEmpty()
-    }
+    val tileBackgroundAssetId = context.getSharedPreferences(
+        "legitimacy_preview_preferences", android.content.Context.MODE_PRIVATE
+    ).getString("${documentKey}_tile_background", "").orEmpty()
     val tileBackgroundBitmap = remember(documentKey, tileBackgroundAssetId) {
         when {
             tileBackgroundAssetId.isBlank() -> null
