@@ -2943,6 +2943,7 @@ private fun DocumentsWalletScreen(
     onOpenDetails: (String) -> Unit,
     onOpenService: (String) -> Unit
 ) {
+    val context = LocalContext.current
     data class CatalogDocument(
         val id: String,
         val title: String,
