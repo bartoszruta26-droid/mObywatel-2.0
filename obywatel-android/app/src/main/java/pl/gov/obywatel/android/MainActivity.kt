@@ -45,7 +45,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -3306,7 +3306,7 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
         documentKey in setOf("disability", "vaccines", "blood_donor") -> 7
         else -> documentKey.hashCode().ushr(1) % 8
     }
-    Canvas(modifier) {
+    ComposeCanvas(modifier) {
         drawRect(brush = Brush.linearGradient(
             colors = palette,
             start = Offset(0f, size.height),
