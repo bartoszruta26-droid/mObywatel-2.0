@@ -247,10 +247,27 @@ internal fun DocumentGraphicEditorScreen(
         Text(if (definition.kind == DocumentPreviewKind.CREDENTIAL) "Podgląd legitymacji / karty"
             else "Podgląd ewidencyjny — bez imitowania dokumentu urzędowego",
             fontWeight = FontWeight.Bold)
-        if (definition.kind == DocumentPreviewKind.CREDENTIAL) {
-            CredentialTemplatePreview(documentKey, appearance.value, values = values.toMap())
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = appearance.value.showCard,
+                onCheckedChange = { checked ->
+                    val updated = appearance.value.copy(showCard = checked)
+                    LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                    appearance.value = updated
+                }
+            )
+            Text("Wyświetlaj legitymację / podgląd dokumentu")
+        }
+        if (appearance.value.showCard) {
+            if (definition.kind == DocumentPreviewKind.CREDENTIAL) {
+                CredentialTemplatePreview(documentKey, appearance.value, values = values.toMap())
+            } else {
+                DocumentRecordGraphicPreview(definition, options, values.toMap(), appearance.value)
+            }
         } else {
-            DocumentRecordGraphicPreview(definition, options, values.toMap(), appearance.value)
+            Text("Podgląd legitymacji / dokumentu jest wyłączony.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall)
         }
 
         Button(onClick = {

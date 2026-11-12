@@ -418,7 +418,7 @@ private fun LoyaltyGeneratedCodes(barcodeValue: String, qrValue: String) {
     if (barcode != null || qr != null) {
         Text("Podgląd kodów", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
         if (barcode != null) Image(barcode.asImageBitmap(), contentDescription = "Kod kreskowy karty lojalnościowej",
-            modifier = Modifier.fillMaxWidth().height(76.dp), contentScale = ContentScale.Fit)
+            modifier = Modifier.fillMaxWidth().height(64.dp), contentScale = ContentScale.Fit)
         if (qr != null) Image(qr.asImageBitmap(), contentDescription = "Kod QR karty lojalnościowej",
             modifier = Modifier.size(170.dp), contentScale = ContentScale.Fit)
     }
@@ -538,13 +538,13 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
             Button(
                 onClick = onStart,
                 modifier = Modifier.fillMaxWidth().height(76.dp),
-                shape = RoundedCornerShape(22.dp),
+                shape = RoundedCornerShape(17.dp),
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF9FD5FF),
                     contentColor = Color(0xFF062A59)
                 )
             ) {
-                Text("Zaloguj się", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Medium)
+                Text("Zaloguj się", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
             }
             Spacer(Modifier.height(24.dp))
             Row(
@@ -675,7 +675,7 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                     contentColor = Color(0xFF062A59)
                 )
             ) {
-                Text("Zaloguj się", style = MaterialTheme.typography.titleMedium)
+                Text("Zaloguj się", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
             }
             Spacer(Modifier.height(18.dp))
             Row(
@@ -2954,7 +2954,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Konta bankowe", "Osobna ewidencja rachunków prywatnych i podmiotowych", Icons.Filled.AccountBalance, { onEditOtherDocuments("bank_accounts") })
         ProfileActionCard("Dokumenty własne — pliki", "Dodawanie, porządkowanie i usuwanie importowanych plików", Icons.Filled.Description, { onEditOtherDocuments("imported") })
         ProfileActionCard("Pliki PDF i podpisy", "Import dokumentów, dołączanie plików podpisów i zarządzanie ewidencją", Icons.Filled.PictureAsPdf, { onEditOtherDocuments("signed_pdf") })
-        ProfileActionCard("Indywidualna edycja wszystkich dokumentów", "Osobny podgląd, fotografia lub skan, flaga, godło, herb, logo, tło i pola każdego dokumentu",
+        ProfileActionCard("Indywidualna edycja pozostałych dokumentów", "Osobny podgląd, fotografia lub skan, flaga, godło, herb, logo, tło i pola każdego dokumentu",
             Icons.Filled.Description, { onEditOtherDocuments("graphic_catalog") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })

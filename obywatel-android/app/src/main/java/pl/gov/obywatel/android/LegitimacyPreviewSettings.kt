@@ -958,8 +958,8 @@ internal fun LegitimacyPreviewSettingsPanel(
             OutlinedButton(onClick = { tileBackgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
                 modifier = Modifier.fillMaxWidth()) { Text("Wczytaj własne tło kafelka") }
 
-            Text("Wektorowy motyw tła kafelka", fontWeight = FontWeight.SemiBold)
-            Text("Motyw jest rysowany wektorowo i może być dobrany niezależnie dla każdego dokumentu.",
+            Text("Grafika wektorowa podglądu kafelka", fontWeight = FontWeight.SemiBold)
+            Text("Wybierz wektorowy motyw ilustracji kafelka. Wybór jest zapisywany oddzielnie dla każdego dokumentu.",
                 style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 tileVectorMotifOptions.forEach { (id, label) ->
