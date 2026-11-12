@@ -1818,7 +1818,7 @@ private fun DocumentDetailsScreen(
         )
         Text(title, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         if (values.isEmpty()) {
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = BlueLight)) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Brak zapisanych danych tego dokumentu.", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Text("Uzupełnij dane w ustawieniach, aby wyświetlić podgląd.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -2350,7 +2350,7 @@ private fun ProfileActionCard(title: String, subtitle: String, icon: ImageVector
                 Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
-            Icon(Icons.Filled.MoreHoriz, contentDescription = "Otwórz", tint = Muted)
+            Icon(Icons.Filled.MoreHoriz, contentDescription = "Otwórz", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -2828,7 +2828,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(if (selected) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
-                            contentDescription = null, tint = if (selected) Blue else Muted)
+                            contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(label, modifier = Modifier.padding(start = 9.dp), color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
@@ -3283,7 +3283,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                         else Text("Nie można wyświetlić zdjęcia", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Muted, modifier = Modifier.size(42.dp))
+                            Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(42.dp))
                             Text("MIEJSCE NA ZDJĘCIE", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                             Text("Nie wybrano fotografii", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                         }
@@ -3555,7 +3555,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                         ) {
                             Icon(
                                 if (selected) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
-                                contentDescription = null, tint = if (selected) Blue else Muted
+                                contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(label, modifier = Modifier.padding(start = 9.dp), color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
@@ -4093,7 +4093,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
 private fun RegistryReadOnlyField(label: String, value: String?) {
     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
-        Text(value?.takeIf { it.isNotBlank() } ?: "Brak zapisanego wpisu", color = if (value.isNullOrBlank()) Muted else Navy,
+        Text(value?.takeIf { it.isNotBlank() } ?: "Brak zapisanego wpisu", color = if (value.isNullOrBlank()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
             fontWeight = if (value.isNullOrBlank()) FontWeight.Normal else FontWeight.SemiBold)
     }
 }
