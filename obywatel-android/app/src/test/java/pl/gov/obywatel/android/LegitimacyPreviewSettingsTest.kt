@@ -18,7 +18,8 @@ class LegitimacyPreviewSettingsTest {
             visibleFieldsConfigured = true,
             orientation = "PIONOWA",
             graphicScale = 1.0f,
-            fontFamily = "sans"
+            fontFamily = "sans",
+            fontColor = "#FF7A1F2B"
         )
         val shared = LegitimacyPreviewSettings(
             orientation = "POZIOMA",
@@ -34,7 +35,8 @@ class LegitimacyPreviewSettingsTest {
             graphicOffsetX = 8f,
             labelScale = 1.2f,
             valueScale = 0.9f,
-            fontFamily = "serif"
+            fontFamily = "serif",
+            fontColor = "#FF17365D"
         )
 
         val result = mergeSharedLegitimacyAppearance(document, shared)
@@ -45,6 +47,7 @@ class LegitimacyPreviewSettingsTest {
         assertEquals(1.4f, result.graphicScale)
         assertEquals(12f, result.graphicRotation)
         assertEquals("serif", result.fontFamily)
+        assertEquals("#FF7A1F2B", result.fontColor)
         assertEquals("crest-student", result.crestAssetId)
         assertEquals("flag-student", result.flagAssetId)
         assertEquals("background-student", result.backgroundAssetId)
@@ -53,3 +56,4 @@ class LegitimacyPreviewSettingsTest {
         assertTrue(result.visibleFieldsConfigured)
     }
 }
+
