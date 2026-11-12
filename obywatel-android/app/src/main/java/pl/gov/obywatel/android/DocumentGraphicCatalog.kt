@@ -151,6 +151,19 @@ private val bankGraphicFieldKeys = listOf(
 )
 
 private fun loadSubdocumentGraphicValues(context: android.content.Context, documentKey: String): Map<String, String> {
+    if (documentKey == "disability") {
+        val stored = DemoIdentityStore.load(context)
+        return mapOf(
+            "firstNames" to stored["disabilityPersonName"].orEmpty(),
+            "disabilityDecisionType" to stored["disabilityCategory"].orEmpty(),
+            "disabilityDecisionNumber" to stored["disabilityDecisionNumber"].orEmpty(),
+            "disabilityCaseNumber" to stored["disabilityCaseNumber"].orEmpty(),
+            "disabilityDegree" to stored["disabilityDegree"].orEmpty(),
+            "disabilityValidity" to stored["disabilityValidity"].orEmpty(),
+            "disabilityIssuerName" to stored["disabilityIssuerName"].orEmpty(),
+            "disabilityLegalBasis" to stored["disabilityLegalBasis"].orEmpty()
+        ).filterValues { it.isNotBlank() }
+    }
     val source = when {
         churchGraphicDocumentTargets().any { it.first == documentKey } ->
             ChurchDocumentStore.load(context)[documentKey].orEmpty()
@@ -175,6 +188,21 @@ private fun saveSubdocumentGraphicValues(
     documentKey: String,
     values: Map<String, String>
 ) {
+    if (documentKey == "disability") {
+        val current = DemoIdentityStore.load(context)
+        val mapped = mapOf(
+            "disabilityPersonName" to values["firstNames"].orEmpty(),
+            "disabilityCategory" to values["disabilityDecisionType"].orEmpty(),
+            "disabilityDecisionNumber" to values["disabilityDecisionNumber"].orEmpty(),
+            "disabilityCaseNumber" to values["disabilityCaseNumber"].orEmpty(),
+            "disabilityDegree" to values["disabilityDegree"].orEmpty(),
+            "disabilityValidity" to values["disabilityValidity"].orEmpty(),
+            "disabilityIssuerName" to values["disabilityIssuerName"].orEmpty(),
+            "disabilityLegalBasis" to values["disabilityLegalBasis"].orEmpty()
+        )
+        DemoIdentityStore.save(context, current + mapped)
+        return
+    }
     val sourceValues = if (documentKey == "rod_bank_accounts" || documentKey == "entity_bank_accounts") {
         bankGraphicFieldKeys.mapIndexedNotNull { index, key ->
             values[key]?.let { "account_0_$index" to it }
@@ -213,7 +241,7 @@ internal fun DocumentGraphicEditorScreen(
     val sourceValues = remember(documentKey) { loadSubdocumentGraphicValues(context, documentKey) }
     val values = remember(documentKey) {
         mutableStateMapOf<String, String>().apply {
-            options.forEach { (key, _) -> put(key, stored[prefix + key] ?: sourceValues[key].orEmpty()) }
+            options.forEach { (key, _) -> put(key, sourceValues[key] ?: stored[prefix + key].orEmpty()) }
             put("photo", stored[prefix + "photo"].orEmpty())
         }
     }
