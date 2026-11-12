@@ -792,7 +792,7 @@ internal fun LegitimacyHeraldry(
     val imageFilter = remember(settings.imageFilter) { credentialImageColorFilter(settings.imageFilter) }
     Column(
         Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
         if (settings.showFlag && selectedFlag != null) {
@@ -812,7 +812,7 @@ internal fun LegitimacyHeraldry(
         }
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (settings.showCrest && selectedCrest != null) {
@@ -834,8 +834,8 @@ internal fun LegitimacyHeraldry(
             if (settings.showCrest || caption.isNotBlank()) {
                 Text(
                     caption,
-                    fontSize = 10.sp,
-                    lineHeight = 12.sp,
+                    fontSize = 12.sp,
+                    lineHeight = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = credentialFontColor(settings.fontColor),
                     maxLines = 2
@@ -859,19 +859,23 @@ private fun CredentialFieldValue(
         else -> FontFamily.SansSerif
     }
     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(item.second, fontSize = labelFontSize * settings.labelScale,
-            fontFamily = family, color = credentialFontColor(settings.fontColor), fontWeight = FontWeight.Medium, maxLines = 1,
-            modifier = Modifier.graphicsLayer {
-                rotationZ = settings.labelRotation
-                translationX = settings.labelOffsetX * density
-                translationY = settings.labelOffsetY * density
-            })
         Text(item.third.ifBlank { "—" }, fontSize = valueFontSize * settings.valueScale,
-            fontFamily = family, color = credentialFontColor(settings.fontColor), fontWeight = FontWeight.SemiBold, maxLines = 2,
+            fontFamily = family,
+            color = if (settings.fontColor.isBlank()) MaterialTheme.colorScheme.onSurface else credentialFontColor(settings.fontColor),
+            fontWeight = FontWeight.SemiBold, maxLines = 2,
             modifier = Modifier.graphicsLayer {
                 rotationZ = settings.valueRotation
                 translationX = settings.valueOffsetX * density
                 translationY = settings.valueOffsetY * density
+            })
+        Text(item.second, fontSize = labelFontSize * settings.labelScale,
+            fontFamily = family,
+            color = if (settings.fontColor.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else credentialFontColor(settings.fontColor),
+            fontWeight = FontWeight.Medium, maxLines = 1,
+            modifier = Modifier.graphicsLayer {
+                rotationZ = settings.labelRotation
+                translationX = settings.labelOffsetX * density
+                translationY = settings.labelOffsetY * density
             })
     }
 }
@@ -1019,7 +1023,7 @@ internal fun UnifiedCredentialCard(
             cameraDistance = 24f * density
         },
         shape = cardShape,
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F3EF)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         BoxWithConstraints(
@@ -1041,7 +1045,7 @@ internal fun UnifiedCredentialCard(
                 Box(
                     Modifier.fillMaxWidth().height(bodyHeight)
                 ) {
-                    Box(Modifier.fillMaxSize().background(Color(0xFFF4F3EF)))
+                    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant))
                     if (settings.showBackground && background != null) {
                         Image(
                             background.asImageBitmap(),
@@ -1074,11 +1078,11 @@ internal fun UnifiedCredentialCard(
                                         .background(
                                             androidx.compose.ui.graphics.Brush.linearGradient(
                                                 listOf(
-                                                    Color(0xFFFFF9E9),
-                                                    Color(0xFFC6A76D),
                                                     Color(0xFFFFFFFF),
-                                                    Color(0xFF9DB6C8),
-                                                    Color(0xFFE9D9B8)
+                                                    Color(0xFFE5E5E5),
+                                                    Color(0xFFB8B8B8),
+                                                    Color(0xFFF5F5F5),
+                                                    Color(0xFF9E9E9E)
                                                 )
                                             )
                                         )
