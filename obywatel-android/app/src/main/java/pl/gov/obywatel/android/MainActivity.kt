@@ -3527,7 +3527,87 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
                 drawCircle(fine, radius * 0.58f, Offset(cx, cy), style = stroke)
             }
         }
-        drawCircle(Color.White.copy(alpha = 0.06f), radius * 0.10f,
+        // Layered security-print treatment shared by every document tile:
+        // guilloche rosette, micro-grid, diagonal engraving and precision frame.
+        val minSide = size.minDimension
+        val inset = minSide * 0.055f
+        val frameColor = Color.White.copy(alpha = 0.16f)
+        drawRoundRect(
+            color = frameColor,
+            topLeft = Offset(inset, inset),
+            size = Size(size.width - inset * 2f, size.height - inset * 2f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(minSide * 0.055f),
+            style = Stroke(width = maxOf(0.7.dp.toPx(), minSide * 0.0025f))
+        )
+        // Fine engraved diagonal lines are deliberately clipped to the lower-left field.
+        val engraving = Color.White.copy(alpha = 0.055f)
+        val spacing = maxOf(5.dp.toPx(), minSide * 0.035f)
+        var line = -size.height
+        while (line < size.width * 0.72f) {
+            drawLine(
+                color = engraving,
+                start = Offset(line, size.height),
+                end = Offset(line + size.height * 0.72f, size.height * 0.28f),
+                strokeWidth = maxOf(0.55.dp.toPx(), minSide * 0.0018f)
+            )
+            line += spacing
+        }
+        // Halftone security field.
+        val dotStep = maxOf(5.dp.toPx(), minSide * 0.045f)
+        var dotY = size.height * 0.58f
+        while (dotY < size.height * 0.91f) {
+            var dotX = size.width * 0.07f
+            while (dotX < size.width * 0.48f) {
+                drawCircle(
+                    color = Color.White.copy(alpha = 0.10f),
+                    radius = maxOf(0.45.dp.toPx(), minSide * 0.0022f),
+                    center = Offset(dotX, dotY)
+                )
+                dotX += dotStep
+            }
+            dotY += dotStep
+        }
+        // Guilloche rosette: concentric rings and radial spokes.
+        val rosetteCenter = Offset(size.width * 0.84f, size.height * 0.76f)
+        val rosetteRadius = minSide * 0.20f
+        val rosetteColor = Color.White.copy(alpha = 0.13f)
+        for (ring in 0..3) {
+            drawCircle(
+                color = rosetteColor.copy(alpha = 0.12f + ring * 0.025f),
+                radius = rosetteRadius * (0.42f + ring * 0.19f),
+                center = rosetteCenter,
+                style = Stroke(width = maxOf(0.65.dp.toPx(), minSide * 0.002f))
+            )
+        }
+        for (spoke in 0 until 16) {
+            val angle = spoke * (2f * Math.PI.toFloat() / 16f)
+            val inner = rosetteRadius * 0.34f
+            val outer = rosetteRadius * (if (spoke % 2 == 0) 1.12f else 0.88f)
+            drawLine(
+                color = rosetteColor,
+                start = Offset(
+                    rosetteCenter.x + kotlin.math.cos(angle) * inner,
+                    rosetteCenter.y + kotlin.math.sin(angle) * inner
+                ),
+                end = Offset(
+                    rosetteCenter.x + kotlin.math.cos(angle) * outer,
+                    rosetteCenter.y + kotlin.math.sin(angle) * outer
+                ),
+                strokeWidth = maxOf(0.6.dp.toPx(), minSide * 0.002f)
+            )
+        }
+        // Four registration marks and a discreet security seal at the lower edge.
+        val mark = minSide * 0.035f
+        val corners = listOf(
+            Offset(inset + mark, inset + mark),
+            Offset(size.width - inset - mark, inset + mark),
+            Offset(inset + mark, size.height - inset - mark),
+            Offset(size.width - inset - mark, size.height - inset - mark)
+        )
+        corners.forEach { p ->
+            drawCircle(frameColor, radius = maxOf(1.dp.toPx(), minSide * 0.006f), center = p)
+        }
+        drawCircle(Color.White.copy(alpha = 0.08f), radius * 0.10f,
             Offset(size.width * 0.16f, size.height * 0.82f))
     }
 }
