@@ -4197,6 +4197,7 @@ private fun CredentialAppearanceSettingsScreen(
     val context = LocalContext.current
     val state = rememberLegitimacyPreviewSettings(documentKey)
     val options = remember(documentKey) { credentialFieldOptions(documentKey) }
+    val savedValues = remember(documentKey) { DemoIdentityStore.load(context) }
     val title = documentDisplayOptions.firstOrNull { it.first == documentKey }?.second
         ?: documentKey.replace('_', ' ').replaceFirstChar { it.uppercase() }
 
@@ -4243,7 +4244,7 @@ private fun CredentialAppearanceSettingsScreen(
             onChange = { state.value = it },
             assetSelectionOnly = true
         )
-        CredentialTemplatePreview(documentKey, state.value)
+        CredentialTemplatePreview(documentKey, state.value, values = savedValues)
     }
 }
 
