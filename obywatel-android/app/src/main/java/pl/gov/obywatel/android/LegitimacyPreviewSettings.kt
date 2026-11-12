@@ -6,6 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
@@ -887,17 +890,63 @@ internal fun UnifiedCredentialCard(
             }
         }
     }
-    val qrBitmap = remember(sharePayload) {
+    val applicationAppearance = LocalApplicationAppearance.current
+    val qrBitmap = remember(sharePayload, applicationAppearance.headerEmblem) {
         runCatching {
+            // Używamy dokładnie tego samego zasobu co godło w lewym górnym rogu nagłówka.
+            val emblem = BitmapFactory.decodeResource(
+                context.resources,
+                applicationDrawable(
+                    context,
+                    applicationAppearance.headerEmblem,
+                    R.drawable.file_00000000532082108d561dcd2385f8f9
+                )
+            )
             val hints = mapOf<EncodeHintType, Any>(
                 EncodeHintType.CHARACTER_SET to "UTF-8",
-                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
+                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H,
                 EncodeHintType.MARGIN to 2
             )
             val matrix = QRCodeWriter().encode(sharePayload, BarcodeFormat.QR_CODE, 480, 480, hints)
             Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).also { bitmap ->
                 for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
                     bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+                if (emblem != null) {
+                    val canvas = Canvas(bitmap)
+                    // Niewielkie godło (7% szerokości) z białym marginesem ochronnym.
+                    // Korekcja H zapewnia większą odporność na uszkodzenia kodu.
+                    val emblemSide = matrix.width * 0.07f
+                    val padding = matrix.width * 0.018f
+                    val boxSide = emblemSide + padding * 2f
+                    val left = (matrix.width - boxSide) / 2f
+                    val top = (matrix.height - boxSide) / 2f
+                    val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = android.graphics.Color.WHITE
+                        style = Paint.Style.FILL
+                    }
+                    canvas.drawRoundRect(
+                        RectF(left, top, left + boxSide, top + boxSide),
+                        boxSide * 0.14f,
+                        boxSide * 0.14f,
+                        backgroundPaint
+                    )
+                    val scale = emblemSide / maxOf(emblem.width, emblem.height).toFloat()
+                    val drawWidth = emblem.width * scale
+                    val drawHeight = emblem.height * scale
+                    val destination = RectF(
+                        (matrix.width - drawWidth) / 2f,
+                        (matrix.height - drawHeight) / 2f,
+                        (matrix.width + drawWidth) / 2f,
+                        (matrix.height + drawHeight) / 2f
+                    )
+                    canvas.drawBitmap(
+                        emblem,
+                        null,
+                        destination,
+                        Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+                    )
+                    emblem.recycle()
                 }
             }
         }.getOrNull()
