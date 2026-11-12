@@ -220,7 +220,8 @@ internal data class LegitimacyPreviewSettings(
     val valueOffsetY: Float = 0f,
     val fontFamily: String = "sans",
     val fontColor: String = "#FF000000",
-    val imageFilter: String = "none"
+    val imageFilter: String = "none",
+    val individualAppearanceConfigured: Boolean = false
 )
 
 private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
@@ -273,31 +274,36 @@ internal fun credentialBackgroundResourceId(context: Context, assetId: String): 
 internal fun mergeSharedLegitimacyAppearance(
     document: LegitimacyPreviewSettings,
     shared: LegitimacyPreviewSettings
-): LegitimacyPreviewSettings = document.copy(
-    showCard = shared.showCard,
-    showReverse = shared.showReverse,
-    orientation = shared.orientation,
-    showPhoto = shared.showPhoto,
-    showFlag = shared.showFlag,
-    showCrest = shared.showCrest,
-    showLogo = shared.showLogo,
-    showBackground = shared.showBackground,
-    graphicScale = shared.graphicScale,
-    graphicRotation = shared.graphicRotation,
-    graphicOffsetX = shared.graphicOffsetX,
-    graphicOffsetY = shared.graphicOffsetY,
-    labelScale = shared.labelScale,
-    labelRotation = shared.labelRotation,
-    labelOffsetX = shared.labelOffsetX,
-    labelOffsetY = shared.labelOffsetY,
-    valueScale = shared.valueScale,
-    valueRotation = shared.valueRotation,
-    valueOffsetX = shared.valueOffsetX,
-    valueOffsetY = shared.valueOffsetY,
-    fontFamily = shared.fontFamily,
-    fontColor = document.fontColor.ifBlank { shared.fontColor },
-    imageFilter = shared.imageFilter
-)
+): LegitimacyPreviewSettings {
+    if (document.individualAppearanceConfigured) return document.copy(
+        fontColor = document.fontColor.ifBlank { shared.fontColor }
+    )
+    return document.copy(
+        showCard = shared.showCard,
+        showReverse = shared.showReverse,
+        orientation = shared.orientation,
+        showPhoto = shared.showPhoto,
+        showFlag = shared.showFlag,
+        showCrest = shared.showCrest,
+        showLogo = shared.showLogo,
+        showBackground = shared.showBackground,
+        graphicScale = shared.graphicScale,
+        graphicRotation = shared.graphicRotation,
+        graphicOffsetX = shared.graphicOffsetX,
+        graphicOffsetY = shared.graphicOffsetY,
+        labelScale = shared.labelScale,
+        labelRotation = shared.labelRotation,
+        labelOffsetX = shared.labelOffsetX,
+        labelOffsetY = shared.labelOffsetY,
+        valueScale = shared.valueScale,
+        valueRotation = shared.valueRotation,
+        valueOffsetX = shared.valueOffsetX,
+        valueOffsetY = shared.valueOffsetY,
+        fontFamily = shared.fontFamily,
+        fontColor = document.fontColor.ifBlank { shared.fontColor },
+        imageFilter = shared.imageFilter
+    )
+}
 
 internal object LegitimacyPreviewSettingsStore {
     private const val PREFS = "legitimacy_preview_preferences"
@@ -336,7 +342,8 @@ internal object LegitimacyPreviewSettingsStore {
             valueOffsetY = p.getFloat("${key}_value_y", 0f),
             fontFamily = p.getString("${key}_font_family", "sans").orEmpty(),
             fontColor = p.getString("${key}_font_color", if (key == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "#FF000000" else "").orEmpty(),
-            imageFilter = p.getString("${key}_image_filter", "none").orEmpty()
+            imageFilter = p.getString("${key}_image_filter", "none").orEmpty(),
+            individualAppearanceConfigured = p.getBoolean("${key}_individual_appearance_configured", false)
         )
     }
 
@@ -381,6 +388,29 @@ internal object LegitimacyPreviewSettingsStore {
                 .putStringSet("${key}_visible_fields", value.visibleFields)
                 .putBoolean("${key}_visible_fields_configured", value.visibleFieldsConfigured)
                 .putString("${key}_font_color", value.fontColor)
+                .putBoolean("${key}_individual_appearance_configured", value.individualAppearanceConfigured)
+                .putBoolean("${key}_show_card", value.showCard)
+                .putBoolean("${key}_show_reverse", value.showReverse)
+                .putString("${key}_orientation", value.orientation)
+                .putBoolean("${key}_show_photo", value.showPhoto)
+                .putBoolean("${key}_show_flag", value.showFlag)
+                .putBoolean("${key}_show_crest", value.showCrest)
+                .putBoolean("${key}_show_logo", value.showLogo)
+                .putBoolean("${key}_show_background", value.showBackground)
+                .putFloat("${key}_graphic_scale", value.graphicScale)
+                .putFloat("${key}_graphic_rotation", value.graphicRotation)
+                .putFloat("${key}_graphic_x", value.graphicOffsetX)
+                .putFloat("${key}_graphic_y", value.graphicOffsetY)
+                .putFloat("${key}_label_scale", value.labelScale)
+                .putFloat("${key}_label_rotation", value.labelRotation)
+                .putFloat("${key}_label_x", value.labelOffsetX)
+                .putFloat("${key}_label_y", value.labelOffsetY)
+                .putFloat("${key}_value_scale", value.valueScale)
+                .putFloat("${key}_value_rotation", value.valueRotation)
+                .putFloat("${key}_value_x", value.valueOffsetX)
+                .putFloat("${key}_value_y", value.valueOffsetY)
+                .putString("${key}_font_family", value.fontFamily)
+                .putString("${key}_image_filter", value.imageFilter)
             listOf("show_card", "show_reverse", "orientation", "show_photo", "show_flag", "show_crest",
                 "show_logo", "show_background", "graphic_scale", "graphic_rotation", "graphic_x", "graphic_y",
                 "label_scale", "label_rotation", "label_x", "label_y", "value_scale", "value_rotation",
@@ -461,7 +491,9 @@ internal fun LegitimacyPreviewSettingsPanel(
     var message by remember { mutableStateOf("") }
 
     fun update(value: LegitimacyPreviewSettings) {
-        val persisted = if (assetSelectionOnly) value.copy(fontColor = individualFontColor) else value
+        val persisted = if (assetSelectionOnly) value.copy(fontColor = individualFontColor)
+            else if (documentKey != GLOBAL_LEGITIMACY_APPEARANCE_KEY) value.copy(individualAppearanceConfigured = true)
+            else value
         LegitimacyPreviewSettingsStore.save(context, documentKey, persisted)
         val effective = if (assetSelectionOnly && individualFontColor.isBlank()) {
             value.copy(fontColor = LegitimacyPreviewSettingsStore.load(context, GLOBAL_LEGITIMACY_APPEARANCE_KEY).fontColor)
