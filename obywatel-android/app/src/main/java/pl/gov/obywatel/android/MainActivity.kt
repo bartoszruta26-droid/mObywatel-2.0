@@ -105,6 +105,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -526,37 +532,141 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
                     "Niezależny projekt obywatelski",
                     modifier = Modifier.weight(1f),
                     color = Color.White,
+                    style = MaterialTheme.typography.bodyMediu@Composable
+private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    val cream = Color(0xFFFFF1D1)
+    val skyBlue = Color(0xFF9EDCFF)
+
+    Box(Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.header_poland_banner),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    0f to Color(0x160D1B2A),
+                    0.55f to Color(0x180D1B2A),
+                    1f to Color(0xB9101820)
+                )
+            )
+        )
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
+            verticalArrangement = Arrangement.Top
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                BrandMark(size = 72.dp)
+                Text(
+                    "mObywatel",
+                    color = cream,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(Modifier.height(38.dp))
+            Text(
+                "Wpisz hasło",
+                color = cream,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Zaloguj się do aplikacji",
+                color = cream,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.height(42.dp))
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color(0x665B555C))
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    "Hasło",
+                    color = cream,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = if (passwordVisible) VisualTransformation.None
+                        else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = null,
+                                tint = cream
+                            )
+                        }
+                    },
+                    shape = RoundedCornerShape(18.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = cream,
+                        focusedBorderColor = cream,
+                        unfocusedBorderColor = cream,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    )
+                )
+                Text(
+                    "Nie pamiętasz hasła?",
+                    modifier = Modifier.clickable { },
+                    color = skyBlue,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = onDemo,
+                modifier = Modifier.fillMaxWidth().height(64.dp),
+                shape = RoundedCornerShape(17.dp),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFB7DFFF),
+                    contentColor = Color(0xFF123B65)
+                )
+            ) {
+                Text("Zaloguj się", style = MaterialTheme.typography.titleMedium)
+            }
+            Spacer(Modifier.height(18.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Text(
+                    "Więcej o Krajowym Planie",
+                    color = cream,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    "Aplikacja Obywatelska",
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium
+                    "wersja",
+                    color = cream,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
         }
     }
 }
-
-@Composable
-private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        BrandMark(size = 88.dp)
-        Spacer(Modifier.height(18.dp))
-        Text("Logowanie", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Moduł uwierzytelniania zewnętrznego nie jest jeszcze podłączony. Nie wpisuj tutaj haseł ani danych logowania do usług publicznych.",
-            color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(18.dp))
-        Card(colors = CardDefaults.cardColors(containerColor = White)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Tryb demonstracyjny", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Pozwala otworzyć lokalne funkcje aplikacji. Nie potwierdza tożsamości i nie tworzy konta użytkownika.",
+ Nie potwierdza tożsamości i nie tworzy konta użytkownika.",
                     color = Muted, style = MaterialTheme.typography.bodySmall)
                 Button(onClick = onDemo, modifier = Modifier.fillMaxWidth()) { Text("Wejdź w trybie demonstracyjnym") }
             }
