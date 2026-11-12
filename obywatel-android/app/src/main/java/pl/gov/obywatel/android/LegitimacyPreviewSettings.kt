@@ -401,6 +401,7 @@ internal fun LegitimacyPreviewSettingsPanel(
     assetSelectionOnly: Boolean = false
 ) {
     val context = LocalContext.current
+    var individualFontColor by remember(documentKey) { mutableStateOf(LegitimacyPreviewSettingsStore.load(context, documentKey).fontColor) }
     var assets by remember(documentKey) { mutableStateOf(DocumentBrandStore.list(context)) }
     var crestMenu by remember { mutableStateOf(false) }
     var flagMenu by remember { mutableStateOf(false) }
@@ -411,8 +412,17 @@ internal fun LegitimacyPreviewSettingsPanel(
     var message by remember { mutableStateOf("") }
 
     fun update(value: LegitimacyPreviewSettings) {
-        LegitimacyPreviewSettingsStore.save(context, documentKey, value)
-        onChange(value)
+        val persisted = if (assetSelectionOnly) value.copy(fontColor = individualFontColor) else value
+        LegitimacyPreviewSettingsStore.save(context, documentKey, persisted)
+        val effective = if (assetSelectionOnly && individualFontColor.isBlank()) {
+            value.copy(fontColor = LegitimacyPreviewSettingsStore.load(context, GLOBAL_LEGITIMACY_APPEARANCE_KEY).fontColor)
+        } else if (assetSelectionOnly) value.copy(fontColor = individualFontColor) else value
+        onChange(effective)
+    }
+
+    fun updateFontColor(color: String) {
+        if (assetSelectionOnly) individualFontColor = color
+        update(settings.copy(fontColor = color))
     }
 
     fun selectOrientation(target: String) {
@@ -487,7 +497,7 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             Text(if (assetSelectionOnly) "Indywidualny kolor czcionki" else "Domyślny kolor czcionki wszystkich legitymacji", fontWeight = FontWeight.SemiBold)
             if (assetSelectionOnly) {
-                FilterChip(selected = settings.fontColor.isBlank(), onClick = { update(settings.copy(fontColor = "")) }, label = { Text("Kolor wspólny") })
+                FilterChip(selected = individualFontColor.isBlank(), onClick = { updateFontColor("") }, label = { Text("Kolor wspólny") })
             }
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(
@@ -495,7 +505,8 @@ internal fun LegitimacyPreviewSettingsPanel(
                     "#FF174A35" to "Zieleń", "#FF7A1F2B" to "Bordo", "#FF6B4423" to "Brąz",
                     "#FF1565C0" to "Niebieski", "#FF5E35B1" to "Fiolet"
                 ).forEach { (hex, label) ->
-                    FilterChip(selected = settings.fontColor.equals(hex, true), onClick = { update(settings.copy(fontColor = hex)) }, label = { Text(label) })
+                    val selectedColor = if (assetSelectionOnly) individualFontColor else settings.fontColor
+                    FilterChip(selected = selectedColor.equals(hex, true), onClick = { updateFontColor(hex) }, label = { Text(label) })
                 }
             }
             Text("Kolor wspólny jest domyślnie czarny. W ustawieniach dokumentu możesz wybrać kolor indywidualny albo wrócić do koloru wspólnego.", style = MaterialTheme.typography.bodySmall)
