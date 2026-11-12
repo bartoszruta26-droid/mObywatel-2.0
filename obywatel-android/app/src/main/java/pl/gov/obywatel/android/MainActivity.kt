@@ -4203,7 +4203,7 @@ private fun CredentialAppearanceEditorEntry(
             onClick = { onOpenAppearance(documentKey) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            Text("Wygląd legitymacji i widoczność pól podglądu")
+            Text("Podgląd legitymacji, zdjęcie, flaga, godło i tło")
         }
     }
 }
@@ -4217,7 +4217,25 @@ private fun CredentialAppearanceSettingsScreen(
     val context = LocalContext.current
     val state = rememberLegitimacyPreviewSettings(documentKey)
     val options = remember(documentKey) { credentialFieldOptions(documentKey) }
-    val savedValues = remember(documentKey) { DemoIdentityStore.load(context) }
+    val savedValues = remember(documentKey) {
+        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
+    }
+    val documentPhotoKey = "credentialPhoto_$documentKey"
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            runCatching {
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    ?: error("Nie można odczytać wybranego zdjęcia.")
+                require(bytes.isNotEmpty() && bytes.size <= 5 * 1024 * 1024) {
+                    "Zdjęcie przekracza limit 5 MB albo jest puste."
+                }
+                Base64.encodeToString(bytes, Base64.NO_WRAP)
+            }.onSuccess { encoded ->
+                savedValues[documentPhotoKey] = encoded
+                DemoIdentityStore.save(context, savedValues.toMap())
+            }
+        }
+    }
     val title = documentDisplayOptions.firstOrNull { it.first == documentKey }?.second
         ?: documentKey.replace('_', ' ').replaceFirstChar { it.uppercase() }
 
@@ -4258,13 +4276,41 @@ private fun CredentialAppearanceSettingsScreen(
                 }
             }
         }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Fotografia dokumentu", fontWeight = FontWeight.Bold)
+                Text(
+                    if (savedValues[documentPhotoKey].isNullOrBlank())
+                        "Dla tego dokumentu używana jest fotografia profilu, dopóki nie wybierzesz osobnego zdjęcia."
+                    else "Wybrano osobną fotografię dla tego dokumentu.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedButton(
+                    onClick = { photoPicker.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Wybierz zdjęcie dokumentu") }
+                if (!savedValues[documentPhotoKey].isNullOrBlank()) {
+                    TextButton(
+                        onClick = {
+                            savedValues.remove(documentPhotoKey)
+                            DemoIdentityStore.save(context, savedValues.toMap())
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Użyj ponownie zdjęcia profilu") }
+                }
+            }
+        }
         LegitimacyPreviewSettingsPanel(
             documentKey = documentKey,
             settings = state.value,
             onChange = { state.value = it },
             assetSelectionOnly = true
         )
-        CredentialTemplatePreview(documentKey, state.value, values = savedValues)
+        val previewValues = savedValues.toMap() + (
+            "photo" to (savedValues[documentPhotoKey] ?: savedValues["photo"].orEmpty())
+        )
+        CredentialTemplatePreview(documentKey, state.value, values = previewValues)
     }
 }
 
