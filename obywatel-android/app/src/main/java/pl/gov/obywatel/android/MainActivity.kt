@@ -1570,7 +1570,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
                                     )
                             }
-                            DemoIdentityStore.save(context, current.toMutableMap().apply { putAll(profileValues) })
+                            val mergedProfile = current.toMutableMap().apply { putAll(profileValues) }
+                            PersonalDataPropagation.apply(mergedProfile)
+                            DemoIdentityStore.save(context, mergedProfile)
                             incoming["churchDocumentArchive"]?.let { ChurchDocumentStore.importArchive(context, it) }
                             incoming["familyEntityDocumentArchive"]?.let { FamilyEntityDocumentStore.importArchive(context, it) }
                             incoming["officialDocumentArchive"]?.let { OfficialDocumentStore.importArchive(context, it) }
