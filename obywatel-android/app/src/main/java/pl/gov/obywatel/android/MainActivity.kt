@@ -993,7 +993,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {
-                    showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = { showCredentialAppearanceEditor = false })
+                    showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = { showCredentialAppearanceEditor = false; showSettingsMenu = true })
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
                         onChange = onAppearanceChange,
@@ -1037,6 +1037,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         },
                         onBack = { showSettingsMenu = false },
                         onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
+                        onManageCredentialAppearance = { showSettingsMenu = false; showCredentialAppearanceEditor = true },
                         onManageDocumentVisibility = { showSettingsMenu = false; showDocumentVisibilitySettings = true },
                         onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
                         onEditDocumentBranding = { target -> showSettingsMenu = false; documentBrandTarget = target },
@@ -1210,7 +1211,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onOpenHelp = { activeService = "Pomoc i informacje" },
                         onOpenHistory = { activeService = "Historia działań" },
                         onOpenIdentityDesigner = { showIdentityDesigner = true },
-                        onOpenCredentialAppearance = { showCredentialAppearanceEditor = true },
                         onOpenImportedDocuments = { showImportedDocuments = true },
                         onOpenLegalInformation = { activeService = "Informacje prawne" }
                     )
@@ -2189,7 +2189,6 @@ private fun MoreMenuScreen(
     onOpenHelp: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenIdentityDesigner: () -> Unit,
-    onOpenCredentialAppearance: () -> Unit,
     onOpenImportedDocuments: () -> Unit,
     onOpenLegalInformation: () -> Unit
 ) {
@@ -2204,7 +2203,6 @@ private fun MoreMenuScreen(
         ProfileActionCard("Wydane certyfikaty", "Informacje o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Projektant dokumentów", "Tworzenie dokumentów, układ, podgląd i eksport PDF", Icons.Filled.Description, onOpenIdentityDesigner)
-        ProfileActionCard("Wspólny wygląd legitymacji", "Jeden układ, rozmieszczenie, skala i typografia dla wszystkich legitymacji", Icons.Filled.Badge, onOpenCredentialAppearance)
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
@@ -2532,6 +2530,7 @@ private fun DocumentVisibilitySettingsScreen(
 private fun SettingsMenuScreen(
     documentPlacements: Map<String, String>,
     onManageApplicationAppearance: () -> Unit,
+    onManageCredentialAppearance: () -> Unit,
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit,
     onManageDocumentVisibility: () -> Unit,
@@ -2572,6 +2571,12 @@ private fun SettingsMenuScreen(
             "Motyw kolorystyczny, godło oraz tła ekranów uruchamiania i logowania",
             Icons.Filled.Settings,
             onManageApplicationAppearance
+        )
+        ProfileActionCard(
+            "Wspólny wygląd legitymacji",
+            "Jeden układ, rozmieszczenie, skala i typografia dla wszystkich legitymacji",
+            Icons.Filled.Badge,
+            onManageCredentialAppearance
         )
         ProfileActionCard(
             "Widoczność dokumentów",
@@ -2869,11 +2874,10 @@ private fun DocumentsWalletScreen(
                                     Box(Modifier.fillMaxSize().padding(10.dp)) {
                                         Icon(document.icon, contentDescription = null, tint = Blue,
                                             modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 23.dp else 30.dp))
-                                        Image(
-                                            painter = painterResource(R.drawable.file_5320_eagle_vector),
-                                            contentDescription = "Orzeł — znak dokumentu",
-                                            modifier = Modifier.align(Alignment.TopEnd).size(if (documentCardStyle == "small") 24.dp else 32.dp),
-                                            contentScale = ContentScale.Fit
+                                        DocumentCardEmblem(
+                                            documentKey = document.id,
+                                            modifier = Modifier.align(Alignment.TopEnd)
+                                                .size(if (documentCardStyle == "small") 24.dp else 32.dp)
                                         )
                                         Column(Modifier.align(Alignment.BottomStart).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                             Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
@@ -2897,6 +2901,25 @@ private fun DocumentsWalletScreen(
             Spacer(Modifier.width(8.dp))
             Text("Dodaj dokument")
         }
+    }
+}
+
+
+@Composable
+private fun DocumentCardEmblem(documentKey: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val settings = remember(documentKey) { LegitimacyPreviewSettingsStore.load(context, documentKey) }
+    val selected = remember(settings.crestAssetId) {
+        settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: BitmapFactory.decodeResource(context.resources, R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg)
+    }
+    if (selected != null) {
+        Image(
+            selected.asImageBitmap(),
+            contentDescription = "Indywidualne godło dokumentu",
+            modifier = modifier,
+            contentScale = ContentScale.Fit
+        )
     }
 }
 
