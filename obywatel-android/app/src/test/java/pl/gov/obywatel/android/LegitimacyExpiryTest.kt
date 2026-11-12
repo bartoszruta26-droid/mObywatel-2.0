@@ -4,7 +4,8 @@ package pl.gov.obywatel.android
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import org.junit.Assert.assertEquals\nimport org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
