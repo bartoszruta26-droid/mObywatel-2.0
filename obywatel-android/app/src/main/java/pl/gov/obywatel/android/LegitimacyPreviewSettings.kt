@@ -1024,7 +1024,7 @@ internal fun UnifiedCredentialCard(
     )
     val imageFilter = remember(settings.imageFilter) { credentialImageColorFilter(settings.imageFilter) }
     val horizontal = settings.orientation == "POZIOMA"
-    val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp)
+    val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { selected ->
             credentialBackgroundResourceId(context, selected)?.let { BitmapFactory.decodeResource(context.resources, it) }
@@ -1126,8 +1126,12 @@ internal fun UnifiedCredentialCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
+        // Granica wzoru graficznego obejmuje kartę wraz z paskiem statusu ważności.
+        // Przycisk animacji i trzy okrągłe skróty pozostają poza tą powierzchnią.
         BoxWithConstraints(
-            Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.68f)
+            Modifier.fillMaxWidth()
+                .aspectRatio(if (horizontal) 1.586f else 0.68f)
+                .clip(cardShape)
         ) {
             val cardWidth = maxWidth
             val cardHeight = maxHeight
