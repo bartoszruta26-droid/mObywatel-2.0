@@ -703,6 +703,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Ten sam znak i tło są wyświetlane przez okno startowe oraz ekran powitalny.
         window.setBackgroundDrawableResource(R.drawable.splash_screen)
+        ApplicationAppearanceStore.applyLauncherIcon(this, ApplicationAppearanceStore.load(this).launcherIcon)
         setContent {
             var appearance by remember { mutableStateOf(ApplicationAppearanceStore.load(this@MainActivity)) }
             ObywatelTheme(themeMode = appearance.theme) {
