@@ -158,6 +158,9 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("‹  Powrót do ekranu głównego").performScrollTo().performClick()
         composeRule.waitForIdle()
+        // Menu „Więcej” pozostaje wybraną zakładką po zamknięciu ustawień.
+        composeRule.onNodeWithContentDescription("Dokumenty").performClick()
+        composeRule.waitForIdle()
 
         composeRule.onNodeWithTag("dashboard-document-passport").assertIsDisplayed()
         composeRule.onNodeWithTag("dashboard-document-training").assertIsDisplayed()
@@ -173,6 +176,8 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText("Powrót do ustawień").performScrollTo().performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("‹  Powrót do ekranu głównego").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
 
         composeRule.onNodeWithTag("identity-dashboard-card-small").assertIsDisplayed()
