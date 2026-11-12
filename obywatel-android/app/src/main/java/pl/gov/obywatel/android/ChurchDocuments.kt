@@ -177,7 +177,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                                 Text(doc.title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                                 Text(if (filled) "Dane zapisane" else "Brak zapisanych danych", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 if (!readOnly) TextButton(onClick = { onEditGraphic(doc.id) }) { Text("Wygląd") }
                                 Text("Otwórz", color = MaterialTheme.colorScheme.primary)
                             }
