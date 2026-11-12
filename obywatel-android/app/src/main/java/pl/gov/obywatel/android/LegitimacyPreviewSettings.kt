@@ -553,7 +553,11 @@ internal fun LegitimacyPreviewSettingsPanel(
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                if (assetSelectionOnly) "Grafiki przypisane do tego dokumentu" else "Wspólny wygląd wszystkich legitymacji",
+                when {
+                    assetSelectionOnly -> "Grafiki przypisane do tego dokumentu"
+                    documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY -> "Wspólny wygląd wszystkich legitymacji"
+                    else -> "Indywidualny wygląd legitymacji"
+                },
                 fontWeight = FontWeight.Bold
             )
             if (!assetSelectionOnly) {
