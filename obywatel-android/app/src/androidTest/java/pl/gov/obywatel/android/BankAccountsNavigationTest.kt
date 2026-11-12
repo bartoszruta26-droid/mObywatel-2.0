@@ -53,6 +53,10 @@ class BankAccountsNavigationTest {
 
     @Test
     fun documentWalletOpensBankAccountsInReadOnlyMode() {
+        // Ustaw jawnie rachunki w Portfelu — domyślnie dokumenty poza dowodem są ukryte.
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.getSharedPreferences("document_display_preferences", Context.MODE_PRIVATE)
+            .edit().putString("placement_bank_accounts", "dashboard").commit()
         enterDemoMode()
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
@@ -119,7 +123,8 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText("Dowód tożsamości").performScrollTo()
-        composeRule.onNodeWithText("Ikona domyślna: Karta").performScrollTo().performClick()
+        // Każdy wiersz dokumentu ma własny selektor; drugi odpowiada „Dowód tożsamości”.
+        composeRule.onAllNodesWithText("Ikona domyślna: Karta")[1].performScrollTo().performClick()
         composeRule.onNodeWithText("Paszport").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Paszport").assertIsDisplayed()
