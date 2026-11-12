@@ -667,13 +667,20 @@ internal fun LegitimacyHeraldry(
     Column(
         Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(3.dp)
+        verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
         if (settings.showFlag && selectedFlag != null) {
             Image(
                 selectedFlag.asImageBitmap(),
                 contentDescription = "Flaga dokumentu",
-                modifier = Modifier.fillMaxWidth(0.78f).height(19.dp).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
+                modifier = Modifier.fillMaxWidth(0.66f).height(29.dp)
+                    .graphicsLayer {
+                        scaleX = settings.graphicScale
+                        scaleY = settings.graphicScale
+                        rotationZ = settings.graphicRotation
+                        translationX = settings.graphicOffsetX * density
+                        translationY = settings.graphicOffsetY * density
+                    },
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
         }
@@ -686,16 +693,22 @@ internal fun LegitimacyHeraldry(
                 Image(
                     selectedCrest.asImageBitmap(),
                     contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(31.dp).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
+                    modifier = Modifier.size(43.dp).graphicsLayer {
+                        scaleX = settings.graphicScale
+                        scaleY = settings.graphicScale
+                        rotationZ = settings.graphicRotation
+                        translationX = settings.graphicOffsetX * density
+                        translationY = settings.graphicOffsetY * density
+                    },
                     contentScale = androidx.compose.ui.layout.ContentScale.Fit
                 )
             }
-            if (settings.showCrest) Spacer(Modifier.width(4.dp))
+            if (settings.showCrest) Spacer(Modifier.width(6.dp))
             if (settings.showCrest || caption.isNotBlank()) {
                 Text(
                     caption,
-                    fontSize = 8.sp,
-                    lineHeight = 9.sp,
+                    fontSize = 10.sp,
+                    lineHeight = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2
                 )
@@ -752,6 +765,8 @@ internal fun UnifiedCredentialCard(
     var showQr by remember(documentKey) { mutableStateOf(false) }
     var showInfo by remember(documentKey) { mutableStateOf(false) }
     val horizontal = settings.orientation == "POZIOMA"
+    val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp)
+    val innerShape = androidx.compose.foundation.shape.RoundedCornerShape(11.dp)
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Tło dokumentu")
@@ -794,192 +809,205 @@ internal fun UnifiedCredentialCard(
             }
         }.getOrNull()
     }
+
     Card(
-        Modifier.fillMaxWidth(),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = Modifier.fillMaxWidth(),
+        shape = cardShape,
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F3EF)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-        Column(Modifier.fillMaxWidth()) {
-            BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.70f)) {
-                val cardWidth = maxWidth
-                val horizontalPadding = (cardWidth * 0.05f).coerceIn(8.dp, 20.dp)
-                val verticalPadding = (cardWidth * 0.05f).coerceIn(8.dp, 20.dp)
-                val photoWidth = (cardWidth * if (horizontal) 0.31f else 0.33f).coerceAtLeast(46.dp)
-                val photoHeight = photoWidth * (45f / 35f)
-                val fieldLabelSize = (cardWidth.value * 0.023f).coerceIn(7f, 14f).sp
-                val fieldValueSize = (cardWidth.value * 0.030f).coerceIn(8f, 18f).sp
-                val holderSize = (cardWidth.value * 0.041f).coerceIn(11f, 24f).sp
-                Box(Modifier.fillMaxSize()) {
+        BoxWithConstraints(
+            Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.68f)
+        ) {
+            val cardWidth = maxWidth
+            val cardHeight = maxHeight
+            val footerHeight = if (horizontal) cardHeight * 0.18f else cardHeight * 0.155f
+            val bodyHeight = cardHeight - footerHeight
+            val horizontalPadding = (cardWidth * 0.055f).coerceIn(9.dp, 22.dp)
+            val verticalPadding = (bodyHeight * 0.045f).coerceIn(8.dp, 18.dp)
+            val photoWidth = (cardWidth * if (horizontal) 0.27f else 0.37f).coerceAtLeast(54.dp)
+            val photoHeight = photoWidth * 1.36f
+            val fieldLabelSize = (cardWidth.value * 0.032f).coerceIn(9f, 13f).sp
+            val fieldValueSize = (cardWidth.value * 0.044f).coerceIn(12f, 17f).sp
+            val leftColumnWidth = photoWidth + (cardWidth * 0.045f)
+            Box(Modifier.fillMaxSize()) {
+                // Awers: jasne, zabezpieczone tło i dwie wyraźne kolumny.
+                Box(
+                    Modifier.fillMaxWidth().height(bodyHeight)
+                ) {
+                    Box(Modifier.fillMaxSize().background(Color(0xFFF4F3EF)))
                     if (settings.showBackground && background != null) {
                         Image(
                             background.asImageBitmap(),
                             contentDescription = "Tło dokumentu",
-                            modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
-                            contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
-                            alpha = 0.48f
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            alpha = 0.88f
                         )
                     }
-                    Column(
-                        Modifier.fillMaxSize().padding(horizontalPadding, verticalPadding),
-                        verticalArrangement = Arrangement.spacedBy((cardWidth * 0.018f).coerceIn(3.dp, 7.dp))
+                    Row(
+                        Modifier.fillMaxSize().padding(
+                            horizontal = horizontalPadding,
+                            vertical = verticalPadding
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.035f).coerceIn(7.dp, 13.dp)),
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        Column(
+                            Modifier.width(leftColumnWidth).fillMaxHeight(),
+                            verticalArrangement = Arrangement.spacedBy((cardWidth * 0.025f).coerceIn(6.dp, 11.dp)),
+                            horizontalAlignment = Alignment.Start
                         ) {
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                                Text(
-                                    title.uppercase(),
-                                    fontWeight = FontWeight.ExtraBold,
-                                    fontSize = (cardWidth.value * 0.038f).coerceIn(10f, 22f).sp,
-                                    maxLines = 2
-                                )
-                                if (subtitle.isNotBlank()) {
-                                    Text(
-                                        subtitle,
-                                        fontSize = (cardWidth.value * 0.027f).coerceIn(8f, 14f).sp,
-                                        maxLines = 2
+                            if (settings.showPhoto) {
+                                val photoFrameShape = androidx.compose.foundation.shape.RoundedCornerShape(9.dp)
+                                Box(
+                                    Modifier.width(photoWidth)
+                                        .height(photoHeight.coerceAtMost(bodyHeight * 0.57f))
+                                        .shadow(4.dp, photoFrameShape)
+                                        .clip(photoFrameShape)
+                                        .background(
+                                            androidx.compose.ui.graphics.Brush.linearGradient(
+                                                listOf(
+                                                    Color(0xFFFFF9E9),
+                                                    Color(0xFFC6A76D),
+                                                    Color(0xFFFFFFFF),
+                                                    Color(0xFF9DB6C8),
+                                                    Color(0xFFE9D9B8)
+                                                )
+                                            )
+                                        )
+                                        .padding(3.dp)
+                                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                                        .background(Color(0xFFE9E6E1)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (photo != null) {
+                                        Image(
+                                            photo.asImageBitmap(),
+                                            contentDescription = "Fotografia posiadacza",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                        )
+                                    } else {
+                                        Text("FOTOGRAFIA", fontSize = fieldLabelSize, color = Color(0xFF59616A))
+                                    }
+                                }
+                            }
+                            LegitimacyHeraldry(
+                                settings = settings,
+                                documentKey = documentKey,
+                                vertical = !horizontal,
+                                assetRevision = assetRevision,
+                                title = title
+                            )
+                        }
+
+                        Column(
+                            Modifier.weight(1f).fillMaxHeight(),
+                            verticalArrangement = Arrangement.spacedBy((cardWidth * 0.018f).coerceIn(4.dp, 8.dp))
+                        ) {
+                            if (settings.showLogo && logo != null) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                    Image(
+                                        logo.asImageBitmap(),
+                                        contentDescription = "Logo wystawcy",
+                                        modifier = Modifier.size((cardWidth * 0.10f).coerceIn(26.dp, 38.dp)),
+                                        contentScale = androidx.compose.ui.layout.ContentScale.Fit
                                     )
                                 }
                             }
-                            if (settings.showLogo && logo != null) {
-                                Image(
-                                    logo.asImageBitmap(),
-                                    contentDescription = "Logo wystawcy",
-                                    modifier = Modifier.size((cardWidth * 0.13f).coerceIn(30.dp, 46.dp)).graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
-                                    contentScale = androidx.compose.ui.layout.ContentScale.Fit
-                                )
-                            }
-                        }
-                        Row(
-                            Modifier.fillMaxWidth().weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.025f).coerceIn(5.dp, 10.dp))
-                        ) {
-                            Column(
-                                Modifier.width(photoWidth),
-                                verticalArrangement = Arrangement.spacedBy((cardWidth * 0.012f).coerceIn(3.dp, 6.dp)),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                if (settings.showPhoto) {
-                                    Box(
-                                        Modifier.fillMaxWidth()
-                                            .height(photoHeight)
-                                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        if (photo != null) {
-                                            Image(
-                                                photo.asImageBitmap(),
-                                                contentDescription = "Fotografia posiadacza",
-                                                modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = settings.graphicScale; scaleY = settings.graphicScale; rotationZ = settings.graphicRotation; translationX = settings.graphicOffsetX * density; translationY = settings.graphicOffsetY * density },
-                                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                                            )
-                                        } else {
-                                            Text("FOTO", fontSize = fieldLabelSize)
-                                        }
-                                    }
-                                }
-                                LegitimacyHeraldry(
-                                    settings = settings,
-                                    documentKey = documentKey,
-                                    vertical = !horizontal,
-                                    assetRevision = assetRevision,
-                                    title = title
-                                )
-                            }
-                            Column(
-                                Modifier.weight(1f).fillMaxHeight(),
-                                verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
-                            ) {
-                                Text(
-                                    holderName.ifBlank { "IMIĘ I NAZWISKO" },
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = holderSize * settings.valueScale,
-                                    fontFamily = when (settings.fontFamily) { "serif" -> FontFamily.Serif; "mono" -> FontFamily.Monospace; "cursive" -> FontFamily.Cursive; else -> FontFamily.SansSerif },
-                                    modifier = Modifier.graphicsLayer { rotationZ = settings.valueRotation; translationX = settings.valueOffsetX * density; translationY = settings.valueOffsetY * density },
-                                    maxLines = 2
-                                )
-                                if (horizontal) {
-                                    Row(
-                                        Modifier.fillMaxWidth().weight(1f),
-                                        horizontalArrangement = Arrangement.spacedBy((cardWidth * 0.02f).coerceIn(4.dp, 10.dp))
-                                    ) {
-                                        Column(
-                                            Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                                        ) {
-                                            visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach {
-                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
-                                            }
-                                        }
-                                        Column(
-                                            Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                                        ) {
-                                            visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach {
-                                                CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
-                                            }
-                                        }
-                                    }
-                                } else {
+                            if (horizontal) {
+                                Row(
+                                    Modifier.fillMaxWidth().weight(1f),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
                                     Column(
                                         Modifier.weight(1f).verticalScroll(rememberScrollState()),
-                                        verticalArrangement = Arrangement.spacedBy((cardWidth * 0.01f).coerceIn(2.dp, 5.dp))
+                                        verticalArrangement = Arrangement.spacedBy(7.dp)
                                     ) {
-                                        visible.forEach { CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings) }
+                                        visible.filterIndexed { index, _ -> index % 2 == 0 }.forEach {
+                                            CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
+                                        }
+                                    }
+                                    Column(
+                                        Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                                        verticalArrangement = Arrangement.spacedBy(7.dp)
+                                    ) {
+                                        visible.filterIndexed { index, _ -> index % 2 == 1 }.forEach {
+                                            CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
+                                        }
+                                    }
+                                }
+                            } else {
+                                Column(
+                                    Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()),
+                                    verticalArrangement = Arrangement.spacedBy((cardWidth * 0.018f).coerceIn(4.dp, 8.dp))
+                                ) {
+                                    visible.forEach {
+                                        CredentialFieldValue(it, fieldLabelSize, fieldValueSize, settings)
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                // Pasek statusu stanowi integralną część karty.
+                if (validity != null) {
+                    val statusColor = if (validity) Color(0xFF43D65F) else Color(0xFFFF6B6B)
+                    Row(
+                        Modifier.align(Alignment.BottomStart)
+                            .fillMaxWidth()
+                            .height(footerHeight)
+                            .background(Color(0xFF414047))
+                            .padding(horizontal = horizontalPadding, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (validity) Icons.Filled.CheckCircle else Icons.Filled.Error,
+                            contentDescription = if (validity) "Dokument ważny" else "Dokument nieważny",
+                            tint = statusColor,
+                            modifier = Modifier.size((cardWidth * 0.052f).coerceIn(22.dp, 30.dp))
+                        )
+                        Text(
+                            if (validity) "Dokument ważny" else "Dokument nieważny",
+                            fontSize = (cardWidth.value * 0.030f).coerceIn(12f, 16f).sp,
+                            color = statusColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.weight(1f))
+                        IconButton(
+                            onClick = { showInfo = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Filled.Info, contentDescription = "Informacje o ważności dokumentu",
+                                tint = Color.White.copy(alpha = 0.82f), modifier = Modifier.size(18.dp))
                         }
                     }
                 }
             }
-            if (validity != null) {
-                val statusColor = if (validity) Color(0xFF237A35) else Color(0xFFB3261E)
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(9.dp)
-                ) {
-                    Icon(
-                        imageVector = if (validity) Icons.Filled.CheckCircle else Icons.Filled.Error,
-                        contentDescription = if (validity) "Dokument ważny" else "Dokument nieważny",
-                        tint = statusColor,
-                        modifier = Modifier.size(25.dp)
-                    )
-                    Text(
-                        if (validity) "Dokument ważny" else "Dokument nieważny",
-                        fontSize = 14.sp,
-                        color = statusColor,
-                        fontWeight = FontWeight.SemiBold
-                    )
+        }
+        if (validity != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { showQr = true }) {
+                    Icon(Icons.Filled.QrCode2, contentDescription = "Udostępnij dane legitymacji — pokaż kod QR")
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 3.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { showQr = true }) {
-                        Icon(Icons.Filled.QrCode2, contentDescription = "Udostępnij dane legitymacji — pokaż kod QR")
-                    }
-                    IconButton(onClick = {
-                        runCatching {
-                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, title)
-                                putExtra(Intent.EXTRA_TEXT, sharePayload)
-                            }
-                            context.startActivity(Intent.createChooser(sendIntent, "Udostępnij dane legitymacji"))
+                IconButton(onClick = {
+                    runCatching {
+                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, title)
+                            putExtra(Intent.EXTRA_TEXT, sharePayload)
                         }
-                    }) {
-                        Icon(Icons.Filled.Share, contentDescription = "Udostępnij dane legitymacji")
+                        context.startActivity(Intent.createChooser(sendIntent, "Udostępnij dane legitymacji"))
                     }
-                    IconButton(onClick = { showInfo = true }) {
-                        Icon(Icons.Filled.Info, contentDescription = "Informacje o danych legitymacji")
-                    }
+                }) {
+                    Icon(Icons.Filled.Share, contentDescription = "Udostępnij dane legitymacji")
                 }
             }
         }
