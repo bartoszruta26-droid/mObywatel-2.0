@@ -79,7 +79,6 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Description
@@ -1079,7 +1078,7 @@ private fun HomeScreen() {
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             } else {
-                                Text("Dokumenty (\${matchingDocuments.size})",
+                                Text("Dokumenty (" + matchingDocuments.size + ")",
                                     color = MaterialTheme.colorScheme.onSurface,
                                     style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                 if (matchingDocuments.isEmpty()) {
@@ -1095,11 +1094,11 @@ private fun HomeScreen() {
                                                 modifier = Modifier.size(38.dp), contentScale = ContentScale.Fit)
                                             Text(title, modifier = Modifier.weight(1f).padding(start = 12.dp),
                                                 color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-                                            Icon(Icons.Filled.ChevronRight, contentDescription = "Otwórz")
+                                            Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
                                 }
-                                Text("Usługi i funkcje (\${matchingServices.size})",
+                                Text("Usługi i funkcje (" + matchingServices.size + ")",
                                     color = MaterialTheme.colorScheme.onSurface,
                                     style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                                 if (matchingServices.isEmpty()) {
@@ -1144,17 +1143,20 @@ private fun HomeScreen() {
                     )
                     else -> {
                         Column(modifier = Modifier.fillMaxSize()) {
-                            if (selectedTab == 0) Header(
-                                onOpenAssistant = { activeService = "Asystent" },
-                                onOpenMessages = { activeService = "Wiadomości" },
-                                onOpenNotifications = { activeService = "Powiadomienia" }
-                            )
-                            Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
+                            if (selectedTab == 0) {
+                                Header(
+                                    onOpenAssistant = { activeService = "Asystent" },
+                                    onOpenMessages = { activeService = "Wiadomości" },
+                                    onOpenNotifications = { activeService = "Powiadomienia" }
+                                )
+                            }
+                            Column(
+                                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                                    .padding(horizontal = 18.dp)
+                            ) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
-                                    IdentityDashboardCard(
-                                        onOpen = { openDocumentCard("identity") }
-                                    )
+                                    IdentityDashboardCard(onOpen = { openDocumentCard("identity") })
                                     Spacer(Modifier.height(12.dp))
                                     Text(
                                         "Zarządzaj",
@@ -1184,73 +1186,29 @@ private fun HomeScreen() {
                                     }
                                     Spacer(Modifier.height(8.dp))
                                 } else {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
-                                                    .testTag(if (items.firstOrNull()?.first == "family") "document-cards-family" else "document-cards-dashboard"),
-                                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                            ) {
-                                                items.forEach { (id, label, _) ->
-                                                    Card(
-                                                        modifier = Modifier.width(150.dp).height(118.dp)
-                                                            .clickable { openDocumentCard(id) },
-                                                        shape = RoundedCornerShape(14.dp),
-                                                        colors = CardDefaults.cardColors(containerColor = White),
-                                                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                                                    ) {
-                                                        Column(
-                                                            Modifier.fillMaxSize().padding(12.dp),
-                                                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                                                        ) {
-                                                            Icon(
-                                                                imageVector = documentIconFor(id),
-                                                                contentDescription = "Ikona dokumentu: $label",
-                                                                tint = Blue,
-                                                                modifier = Modifier.size(30.dp)
-                                                            )
-                                                            Text(
-                                                                label,
-                                                                color = Navy,
-                                                                fontWeight = FontWeight.SemiBold,
-                                                                maxLines = 2,
-                                                                overflow = TextOverflow.Ellipsis,
-                                                                style = MaterialTheme.typography.labelLarge
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    DocumentCards(dashboardDocuments)
-                                    Spacer(Modifier.height(14.dp))
-                                    SectionHeading("Inne dokumenty", "Dokumenty przeniesione do osobnego kafelka")
-                                    DocumentCards(otherDocuments)
-                                    Spacer(Modifier.height(18.dp))
-                                    SectionHeading("Usługi", "Szybki dostęp do wybranych funkcji")
-                                    Text("Wszystkie usługi", color = Blue, fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.clickable { selectedTab = 2 }.padding(vertical = 8.dp))
-                                } else {
                                     CivicIllustrationBanner(
                                         imageRes = R.drawable.header_poland_banner,
                                         description = "Baner informacyjny Polski"
                                     )
                                     Spacer(Modifier.height(12.dp))
                                     SectionHeading("Usługi", "Katalog usług według kategorii")
-                                    Spacer(Modifier.height(12.dp))
-                                }
-                                if (selectedTab == 2) {
                                     Card(
-                                        modifier = Modifier.fillMaxWidth().clickable { showPublicServicesBrowser = true },
-                                        colors = CardDefaults.cardColors(containerColor = BlueLight)
+                                        modifier = Modifier.fillMaxWidth()
+                                            .clickable { showPublicServicesBrowser = true },
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
                                         Row(
                                             Modifier.fillMaxWidth().padding(14.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Icon(Icons.Filled.Public, contentDescription = null, tint = Blue, modifier = Modifier.size(26.dp))
+                                            Icon(Icons.Filled.Public, contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(26.dp))
                                             Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                                                Text("Przeglądarka usług publicznych", color = Navy, fontWeight = FontWeight.Bold)
-                                                Text("Otwieraj portale gov.pl i inne serwisy wewnątrz aplikacji", color = Muted, style = MaterialTheme.typography.bodySmall)
+                                                Text("Przeglądarka usług publicznych",
+                                                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                                                Text("Otwieraj portale gov.pl i inne serwisy wewnątrz aplikacji",
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    style = MaterialTheme.typography.bodySmall)
                                             }
                                             Text("Otwórz", color = Blue, fontWeight = FontWeight.Bold)
                                         }
@@ -1262,66 +1220,62 @@ private fun HomeScreen() {
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = true,
                                         label = { Text("Szukaj usługi") },
-                                        leadingIcon = { Icon(Icons.Filled.Info, contentDescription = null) }
+                                        leadingIcon = { Icon(painterResource(R.drawable.nav_search), contentDescription = null) }
                                     )
                                     Spacer(Modifier.height(8.dp))
                                     Row(
                                         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        listOf("Wszystkie", "Zdrowie", "Kierowca i pojazdy", "Sprawy urzędowe", "Rodzina", "Edukacja", "Praca", "Finanse i podatki", "Transport", "Nieruchomości", "Środowisko", "Bezpieczeństwo", "Prawo i obywatel", "Kultura i dziedzictwo", "Sport", "Organizacje społeczne", "Kościół i wspólnoty", "Rejestry", "Dokumenty", "Podróże", "Pozostałe")
-                                            .forEach { category ->
-                                                val active = serviceCategory == category
-                                                Box(
-                                                    modifier = Modifier.clip(RoundedCornerShape(18.dp))
-                                                        .background(if (active) Blue else White)
-                                                        .border(1.dp, if (active) Blue else Border, RoundedCornerShape(18.dp))
-                                                        .clickable { serviceCategory = category }
-                                                        .padding(horizontal = 11.dp, vertical = 8.dp)
-                                                ) {
-                                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                        categoryIconFor(category)?.let { iconRes ->
-                                                            Icon(painter = painterResource(iconRes), contentDescription = null, tint = if (active) White else Blue, modifier = Modifier.size(19.dp))
-                                                        }
-                                                        Text(category, color = if (active) White else Navy,
-                                                            style = MaterialTheme.typography.labelMedium,
-                                                            fontWeight = if (active) FontWeight.Bold else FontWeight.Medium)
-                                                    }
-                                                }
+                                        listOf(
+                                            "Wszystkie", "Zdrowie", "Kierowca i pojazdy", "Sprawy urzędowe",
+                                            "Rodzina", "Edukacja", "Praca", "Finanse i podatki", "Transport",
+                                            "Nieruchomości", "Środowisko", "Bezpieczeństwo", "Prawo i obywatel",
+                                            "Kultura i dziedzictwo", "Sport", "Organizacje społeczne",
+                                            "Kościół i wspólnoty", "Rejestry", "Dokumenty", "Podróże", "Pozostałe"
+                                        ).forEach { category ->
+                                            val active = serviceCategory == category
+                                            Box(
+                                                modifier = Modifier.clip(RoundedCornerShape(18.dp))
+                                                    .background(if (active) Blue else MaterialTheme.colorScheme.surface)
+                                                    .border(1.dp, if (active) Blue else MaterialTheme.colorScheme.outline,
+                                                        RoundedCornerShape(18.dp))
+                                                    .clickable { serviceCategory = category }
+                                                    .padding(horizontal = 11.dp, vertical = 8.dp)
+                                            ) {
+                                                Text(category,
+                                                    color = if (active) White else MaterialTheme.colorScheme.onSurface,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = if (active) FontWeight.Bold else FontWeight.Medium)
                                             }
+                                        }
                                     }
                                     Spacer(Modifier.height(10.dp))
-                                }
-                                val visibleServices = if (selectedTab == 2) services.filter { service ->
-                                    (serviceCategory == "Wszystkie" || service.category == serviceCategory) &&
-                                        (serviceSearch.isBlank() || service.title.contains(serviceSearch, ignoreCase = true) ||
-                                            service.subtitle.contains(serviceSearch, ignoreCase = true))
-                                } else services.filter { favoriteServices[it.title] == true }.take(4)
-                                if (visibleServices.isEmpty()) {
-                                    Text(
-                                        "Nie znaleziono usług. Zmień wyszukiwaną frazę lub kategorię.",
-                                        color = Muted,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)
-                                    )
-                                } else {
-                                    LazyVerticalGrid(
-                                        columns = GridCells.Fixed(2),
-                                        modifier = Modifier.weight(1f),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        items(visibleServices) { service ->
+                                    val visibleServices = services.filter { service ->
+                                        (serviceCategory == "Wszystkie" || service.category == serviceCategory) &&
+                                            (serviceSearch.isBlank() ||
+                                                service.title.contains(serviceSearch, ignoreCase = true) ||
+                                                service.subtitle.contains(serviceSearch, ignoreCase = true))
+                                    }
+                                    if (visibleServices.isEmpty()) {
+                                        Text("Nie znaleziono usług. Zmień wyszukiwaną frazę lub kategorię.",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp))
+                                    } else {
+                                        visibleServices.forEach { service ->
                                             ServiceCard(
                                                 service,
                                                 isFavorite = favoriteServices[service.title] == true,
-                                                onFavorite = { favoriteServices[service.title] = favoriteServices[service.title] != true },
+                                                onFavorite = {
+                                                    favoriteServices[service.title] = favoriteServices[service.title] != true
+                                                },
                                                 onClick = { openService(service.title) }
                                             )
+                                            Spacer(Modifier.height(10.dp))
                                         }
                                     }
                                 }
-                                Spacer(Modifier.height(10.dp))
                             }
                         }
                     }
