@@ -57,6 +57,8 @@ class BankAccountsNavigationTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         context.getSharedPreferences("document_display_preferences", Context.MODE_PRIVATE)
             .edit().putString("placement_bank_accounts", "dashboard").commit()
+        composeRule.activityRule.scenario.recreate()
+        composeRule.waitForIdle()
         enterDemoMode()
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
@@ -124,7 +126,7 @@ class BankAccountsNavigationTest {
 
         composeRule.onNodeWithText("Dowód tożsamości").performScrollTo()
         // Każdy wiersz dokumentu ma własny selektor; drugi odpowiada „Dowód tożsamości”.
-        composeRule.onAllNodesWithText("Ikona domyślna: Karta")[1].performScrollTo().performClick()
+        composeRule.onNodeWithTag("document-icon-selector-identity").performScrollTo().performClick()
         composeRule.onNodeWithText("Paszport").performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Paszport").assertIsDisplayed()
