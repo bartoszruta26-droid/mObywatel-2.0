@@ -411,10 +411,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putFloat("${key}_value_y", value.valueOffsetY)
                 .putString("${key}_font_family", value.fontFamily)
                 .putString("${key}_image_filter", value.imageFilter)
-            listOf("show_card", "show_reverse", "orientation", "show_photo", "show_flag", "show_crest",
-                "show_logo", "show_background", "graphic_scale", "graphic_rotation", "graphic_x", "graphic_y",
-                "label_scale", "label_rotation", "label_x", "label_y", "value_scale", "value_rotation",
-                "value_x", "value_y", "font_family", "image_filter").forEach { editor.remove("${key}_$it") }
+            // Parametry wzoru indywidualnego są zapisywane powyżej i nie mogą być usuwane.
         }
         check(editor.commit()) { "Nie udało się zapisać ustawień wyglądu legitymacji." }
     }
