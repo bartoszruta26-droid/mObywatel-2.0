@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Antena -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.8" android:strokeLineCap="round" android:pathData="M24,7 L24,12"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M24,3 A3,3 0,1 0,24 9 A3,3 0,1 0,24 3 Z"/>
+    <!-- Głowa robota -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M10,17 C10,14.8 11.8,13 14,13 H34 C36.2,13 38,14.8 38,17 V31 C38,33.2 36.2,35 34,35 H14 C11.8,35 10,33.2 10,31 Z"/>
+    <!-- Boczne uszy -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.8" android:strokeLineCap="round" android:pathData="M5,21 L10,21 M38,21 L43,21"/>
+    <!-- Oczy -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M18,21 A2.7,2.7 0,1 0,18 26.4 A2.7,2.7 0,1 0,18 21 M30,21 A2.7,2.7 0,1 0,30 26.4 A2.7,2.7 0,1 0,30 21"/>
+    <!-- Uśmiech -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineCap="round" android:pathData="M19,30 L29,30"/>
+</vector>

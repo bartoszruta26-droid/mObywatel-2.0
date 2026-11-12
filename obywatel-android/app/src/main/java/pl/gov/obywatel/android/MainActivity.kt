@@ -1173,16 +1173,29 @@ private fun HomeScreen() {
                                                 selectedEditorCategory = "all"
                                                 showDocumentsEditor = true
                                             },
-                                            modifier = Modifier.align(Alignment.BottomEnd),
-                                            shape = RoundedCornerShape(20.dp),
+                                            modifier = Modifier.align(Alignment.BottomEnd)
+                                                .fillMaxWidth(0.54f)
+                                                .height(64.dp),
+                                            shape = RoundedCornerShape(22.dp),
+                                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
                                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFB7E5FF),
-                                                contentColor = Color(0xFF123B65)
+                                                containerColor = Color(0xFF91D9F8),
+                                                contentColor = Color(0xFF102D5D)
                                             )
                                         ) {
-                                            Icon(painterResource(R.drawable.lib_ic_plus), contentDescription = null)
+                                            Icon(
+                                                painter = painterResource(R.drawable.lib_ic_plus),
+                                                contentDescription = null,
+                                                tint = Color(0xFF102D5D),
+                                                modifier = Modifier.size(28.dp)
+                                            )
                                             Spacer(Modifier.width(12.dp))
-                                            Text("Dodaj dokument", style = MaterialTheme.typography.titleMedium)
+                                            Text(
+                                                "Dodaj dokument",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1
+                                            )
                                         }
                                     }
                                     Spacer(Modifier.height(8.dp))
@@ -2253,7 +2266,7 @@ private fun Header(
             fontWeight = FontWeight.Bold
         )
         IconButton(onClick = onOpenAssistant) {
-            Icon(painterResource(R.drawable.ic_header_robot), contentDescription = "Asystent",
+            Icon(painterResource(R.drawable.ic_header_robot_head), contentDescription = "Asystent",
                 tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
         }
         IconButton(onClick = onOpenMessages) {
@@ -2307,25 +2320,32 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
+            // Orzeł pozostaje czytelny; znacznik nachodzi na jego dolną prawą część przy nodze.
             Box(
-                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp).size(72.dp)
+                modifier = Modifier.align(Alignment.TopEnd)
+                    .padding(top = 12.dp, end = 12.dp)
+                    .size(78.dp)
             ) {
                 Box(
-                    modifier = Modifier.align(Alignment.TopCenter).size(58.dp)
-                        .clip(RoundedCornerShape(12.dp)).background(Color(0x557AA8C6)),
+                    modifier = Modifier.align(Alignment.TopCenter)
+                        .size(62.dp)
+                        .clip(RoundedCornerShape(13.dp))
+                        .background(Color(0x557AA8C6)),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(R.drawable.dashboard_eagle_vector),
-                        contentDescription = "Biały orzeł w koronie",
-                        modifier = Modifier.size(54.dp),
+                        contentDescription = "Biały orzeł w koronie ze złotą koroną",
+                        modifier = Modifier.size(61.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
                 Image(
                     painter = painterResource(R.drawable.ic_verified_green),
                     contentDescription = "Dokument zweryfikowany",
-                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = 3.dp, y = 3.dp).size(24.dp)
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                        .offset(x = 1.dp, y = 1.dp)
+                        .size(27.dp)
                 )
             }
         }
