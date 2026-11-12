@@ -740,7 +740,7 @@ private val services = listOf(
 
 private const val DOCUMENT_DISPLAY_PREFS = "document_display_preferences"
 private const val DOCUMENT_DISPLAY_KEY_PREFIX = "placement_"
-internal val documentDisplayOptions = listOf(
+internal val documentDisplayOptions = (listOf(
     Triple("profile", "Dane osobowe profilu", R.drawable.lib_ic_account),
     Triple("identity", "Dowód tożsamości", R.drawable.documents_identity_card),
     Triple("passport", "Dane paszportowe", R.drawable.documents_passport),
