@@ -3267,41 +3267,13 @@ private fun DashboardDocumentGrid(
 }
 
 private fun documentTileIconResource(documentKey: String, fallback: Int): Int = when (documentKey) {
-    "profile" -> R.drawable.tile_ic_profile
-    "identity" -> R.drawable.tile_ic_identity
-    "passport" -> R.drawable.tile_ic_passport
-    "registry" -> R.drawable.tile_ic_registry
-    "family" -> R.drawable.tile_ic_family
-    "children" -> R.drawable.tile_ic_children
-    "parliament" -> R.drawable.tile_ic_parliament
-    "training", "student" -> R.drawable.tile_ic_education
-    "disability" -> R.drawable.tile_ic_disability
-    "disability_card" -> R.drawable.tile_ic_disability_card
-    "church" -> R.drawable.tile_ic_church
-    "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary",
-    "organization_church" -> R.drawable.tile_ic_church_office
-    "civil" -> R.drawable.tile_ic_civil
-    "birth_extract" -> R.drawable.tile_ic_birth
-    "marriage_extract" -> R.drawable.tile_ic_marriage
-    "death_extract" -> R.drawable.tile_ic_death
-    "large_family" -> R.drawable.tile_ic_large_family
-    "blood_donor" -> R.drawable.tile_ic_blood_donor
-    "vehicle_registration" -> R.drawable.tile_ic_vehicle
-    "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business" -> R.drawable.tile_ic_insurance
-    "criminal_record" -> R.drawable.tile_ic_criminal_record
-    "mission_travel" -> R.drawable.tile_ic_travel
-    "ehic" -> R.drawable.tile_ic_ehic
-    "eu_education" -> R.drawable.tile_ic_qualification
-    "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> R.drawable.tile_ic_professional
-    "business", "entity", "official" -> R.drawable.tile_ic_business
-    "organization_foundation", "organization_company", "organization_association" -> R.drawable.tile_ic_organization
-    "bank_accounts" -> R.drawable.tile_ic_bank
-    "vaccines" -> R.drawable.tile_ic_vaccines
-    "signed_pdf" -> R.drawable.tile_ic_pdf
-    "branding" -> R.drawable.tile_ic_branding
-    "imported" -> R.drawable.tile_ic_imported
-    "children" -> R.drawable.tile_ic_children
-    "loyalty" -> R.drawable.tile_ic_loyalty
+    "training", "student" -> R.drawable.tile_ic_student_outline
+    "disability", "disability_card" -> R.drawable.tile_ic_disability_outline
+    "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
+    "church_minister", "church_missionary", "organization_church" -> R.drawable.tile_ic_church_outline
+    "civil", "birth_extract", "marriage_extract", "death_extract" -> R.drawable.tile_ic_civil_outline
+    "business", "entity", "official", "organization_foundation", "organization_company",
+    "organization_association" -> R.drawable.tile_ic_business_outline
     else -> fallback
 }
 
