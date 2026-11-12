@@ -458,31 +458,92 @@ private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
 
 @Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        BrandMark(size = 112.dp)
-        Spacer(Modifier.height(24.dp))
-        Text("Aplikacja Obywatelska", color = Navy, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Miejsce do porządkowania dokumentów, danych i spraw obywatelskich.",
-            color = Muted, style = MaterialTheme.typography.bodyLarge)
-        Spacer(Modifier.height(18.dp))
-        Card(colors = CardDefaults.cardColors(containerColor = White)) {
-            Text("Niezależny projekt obywatelski. Aplikacja nie jest oficjalnym mObywatelem ani systemem administracji publicznej.",
-                Modifier.padding(16.dp), color = Navy, style = MaterialTheme.typography.bodyMedium)
+    Box(Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(R.drawable.header_poland_banner),
+            contentDescription = "Polska flaga na maszcie — tło ekranu powitalnego",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        // Przyciemnienie dolnej części zapewnia czytelność stopki bez zasłaniania fotografii.
+        Box(
+            Modifier.fillMaxSize().background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    0f to Color(0x1A102030),
+                    0.58f to Color(0x22102030),
+                    1f to Color(0xD9101820)
+                )
+            )
+        )
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
+            verticalArrangement = Arrangement.Top
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                BrandMark(size = 64.dp)
+                Text(
+                    "Aplikacja Obywatelska",
+                    color = Color.White,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(Modifier.height(34.dp))
+            Text(
+                "Dzień dobry!",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "Zaloguj się do aplikacji",
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = onStart,
+                modifier = Modifier.fillMaxWidth().height(64.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFB7DFFF),
+                    contentColor = Color(0xFF123B65)
+                )
+            ) {
+                Text("Zaloguj się", style = MaterialTheme.typography.titleMedium)
+            }
+            Spacer(Modifier.height(20.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Text(
+                    "Niezależny projekt obywatelski",
+                    modifier = Modifier.weight(1f),
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    "Aplikacja Obywatelska",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) { Text("Rozpocznij") }
-        TextButton(onClick = onSkip) { Text("Pomiń wprowadzenie") }
     }
 }
 
 @Composable
 private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().background(AppSurface).padding(24.dp),
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
