@@ -627,7 +627,7 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             Text("Widoczność pól ustawiasz bezpośrednio przy odpowiednim polu danych.", style = MaterialTheme.typography.bodySmall)
             }
-            if (assetSelectionOnly) {
+            if (assetSelectionOnly || documentKey != GLOBAL_LEGITIMACY_APPEARANCE_KEY) {
             Text("Wybierz herb, flagę, tło i logo niezależnie dla tego dokumentu.", style = MaterialTheme.typography.bodySmall)
             Text("Herb / godło / logo", fontWeight = FontWeight.SemiBold)
             Box {
