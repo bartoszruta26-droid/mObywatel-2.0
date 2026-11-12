@@ -1118,7 +1118,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             showCredentialAppearanceEditor = true
                         }
                     )
-                    showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = { showCredentialAppearanceEditor = false; showSettingsMenu = true })
+                    showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = {
+                        showCredentialAppearanceEditor = false
+                        if (!showDocumentsEditor && settingsDocumentEditor == null) showSettingsMenu = true
+                    })
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
                         onChange = onAppearanceChange,
@@ -1133,7 +1136,11 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
-                    showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
+                    showDocumentsEditor -> DemoDocumentsScreen(
+                        categoryId = selectedEditorCategory,
+                        onBack = { showDocumentsEditor = false; showSettingsMenu = true },
+                        onOpenSharedAppearance = { showCredentialAppearanceEditor = true }
+                    )
                     showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
                     }
@@ -3619,7 +3626,11 @@ private data class CredentialFieldVisibilityBinding(
 private val LocalCredentialFieldVisibility = androidx.compose.runtime.compositionLocalOf<CredentialFieldVisibilityBinding?> { null }
 
 @Composable
-private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) {
+private fun DemoDocumentsScreen(
+    categoryId: String = "all",
+    onBack: () -> Unit,
+    onOpenSharedAppearance: () -> Unit = {}
+) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
@@ -4155,11 +4166,16 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             Text("Indywidualny wzór graficzny legitymacji", fontWeight = FontWeight.Bold)
             Text("Ustawienia poniżej dotyczą wyłącznie tego dokumentu i zastępują w nim odpowiednie parametry wzoru wspólnego.",
                 style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = onOpenSharedAppearance, modifier = Modifier.fillMaxWidth()) {
+                Text("Edytuj wspólny wzór wszystkich legitymacji")
+            }
             LegitimacyPreviewSettingsPanel(
                 documentKey = credentialKey,
                 settings = appearance.value,
-                onChange = { appearance.value = it }
+                onChange = { appearance.value = it },
+                assetSelectionOnly = true
             )
+            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
         }
         Text(
             "Dane są zabezpieczane z użyciem mechanizmów systemu Android. Zachowaj ostrożność: mogą zawierać informacje wrażliwe.",
