@@ -255,6 +255,8 @@ internal fun credentialValidityForDocument(documentKey: String, values: Map<Stri
 internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
+    val tileBackgroundAssetId: String = "",
+
     val crestAssetId: String = "",
     val flagAssetId: String = "",
     val backgroundAssetId: String = "",
@@ -349,7 +351,6 @@ internal fun mergeSharedLegitimacyAppearance(
     // Wspólny układ i geometria są nadrzędne dla każdej legitymacji.
     // Indywidualne ustawienia zachowują przypisane zasoby i ewentualny kolor tekstu.
     return document.copy(
-        showCard = shared.showCard,
         showReverse = shared.showReverse,
         orientation = shared.orientation,
         showPhoto = shared.showPhoto,
@@ -392,6 +393,7 @@ internal object LegitimacyPreviewSettingsStore {
         return LegitimacyPreviewSettings(
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
+            tileBackgroundAssetId = p.getString("${key}_tile_background", "").orEmpty(),
             crestAssetId = p.getString("${key}_crest", "").orEmpty(),
             flagAssetId = p.getString("${key}_flag", "").orEmpty(),
             backgroundAssetId = p.getString("${key}_background", "").orEmpty(),
@@ -439,6 +441,7 @@ internal object LegitimacyPreviewSettingsStore {
             // Jeden globalny zestaw parametrów geometrii i typografii wzoru.
             editor.putBoolean("${key}_show_card", value.showCard)
                 .putBoolean("${key}_show_reverse", value.showReverse)
+                .putString("${key}_tile_background", value.tileBackgroundAssetId)
                 .putString("${key}_orientation", value.orientation)
                 .putBoolean("${key}_show_photo", value.showPhoto)
                 .putBoolean("${key}_show_flag", value.showFlag)
@@ -476,6 +479,7 @@ internal object LegitimacyPreviewSettingsStore {
             editor.putString("${key}_crest", value.crestAssetId)
                 .putString("${key}_flag", value.flagAssetId)
                 .putString("${key}_background", value.backgroundAssetId)
+                .putString("${key}_tile_background", value.tileBackgroundAssetId)
                 .putString("${key}_logo", value.logoAssetId)
                 .putString("${key}_caption", value.crestCaption)
                 .putString("${key}_caption_position", value.captionPosition)
