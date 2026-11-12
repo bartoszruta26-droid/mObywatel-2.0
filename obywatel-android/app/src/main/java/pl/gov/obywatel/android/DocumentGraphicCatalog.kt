@@ -81,7 +81,8 @@ internal object GraphicDocumentCatalog {
     private val credentialKeys = setOf(
         "identity", "passport", "parliament", "training", "student", "family",
         "church", "church_bishop", "church_archbishop", "church_cardinal",
-        "church_abbot", "church_minister", "church_missionary", "professional",
+        "church_abbot", "church_minister", "church_missionary", "church_bishop_title",
+        "church_minister_card", "missionary_identity", "professional",
         "professional_medical", "professional_education", "professional_therapeutic",
         "professional_other", "large_family", "blood_donor", "disability_card",
         "ehic", "loyalty", "loyalty_cards", "profile"
@@ -92,7 +93,11 @@ internal object GraphicDocumentCatalog {
             .filterNot { target -> baseDefinitions.any { it.id == target.first } }
             .map { (id, title) ->
                 val credential = id in credentialKeys ||
-                    id.startsWith("church_") || id.startsWith("professional_")
+                    id.startsWith("professional_") ||
+                    title.contains("legitymacja", ignoreCase = true) ||
+                    title.contains("karta", ignoreCase = true) ||
+                    title.contains("świadectwo", ignoreCase = true) ||
+                    title.contains("dyplom", ignoreCase = true)
                 GraphicDocumentDefinition(
                     id = id,
                     title = title,
