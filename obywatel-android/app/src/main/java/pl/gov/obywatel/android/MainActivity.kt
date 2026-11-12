@@ -1357,7 +1357,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                     } else {
                                         visibleServices.forEach { service ->
                                             ServiceCard(
-                                                service,
+                                                item = service,
+                                                tileStyle = documentCardStyle,
                                                 isFavorite = favoriteServices[service.title] == true,
                                                 onFavorite = {
                                                     favoriteServices[service.title] = favoriteServices[service.title] != true
@@ -2437,34 +2438,60 @@ private fun SectionHeading(title: String, subtitle: String) {
 }
 
 @Composable
-private fun ServiceCard(item: ServiceItem, isFavorite: Boolean, onFavorite: () -> Unit, onClick: () -> Unit) {
+private fun ServiceCard(
+    item: ServiceItem,
+    tileStyle: String,
+    isFavorite: Boolean,
+    onFavorite: () -> Unit,
+    onClick: () -> Unit
+) {
+    val compact = tileStyle == "small"
+    val list = tileStyle == "list"
+    val cardModifier = when {
+        list -> Modifier.fillMaxWidth().height(82.dp)
+        compact -> Modifier.fillMaxWidth().height(112.dp)
+        else -> Modifier.fillMaxWidth().aspectRatio(1.14f)
+    }
     Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.14f).clickable(onClick = onClick),
+        modifier = cardModifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(17.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(BlueLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (item.icon != null) {
-                        Icon(painter = painterResource(item.icon), contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp))
-                    } else {
-                        item.fallbackIcon?.let { Icon(it, contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp)) }
+        Row(
+            Modifier.fillMaxSize().padding(if (list) 10.dp else 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier.size(if (list || compact) 36.dp else 44.dp)
+                    .clip(RoundedCornerShape(13.dp)).background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                if (item.icon != null) {
+                    Icon(painter = painterResource(item.icon), contentDescription = item.title,
+                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                } else {
+                    item.fallbackIcon?.let {
+                        Icon(it, contentDescription = item.title, tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp))
                     }
                 }
-                Text(if (isFavorite) "★" else "☆", color = if (isFavorite) Color(0xFFB7791F) else Muted,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.clickable(onClick = onFavorite).padding(3.dp))
             }
-            Column {
-                Text(item.title, color = Navy, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(3.dp))
-                Text(item.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                Text(item.title, color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (!list) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(item.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
             }
+            Text(if (isFavorite) "★" else "☆",
+                color = if (isFavorite) Color(0xFFB7791F) else MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.clickable(onClick = onFavorite).padding(3.dp))
         }
     }
 }
