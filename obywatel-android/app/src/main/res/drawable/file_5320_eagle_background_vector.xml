@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <path android:fillColor="#FFB5122B" android:pathData="M0,0 H100 V100 H0 Z"/>
+    <!-- Korona -->
+    <path android:fillColor="#FFFFD84A" android:pathData="M34,12 L24,3 L27,20 L37,17 L50,23 L63,17 L73,20 L76,3 L66,12 L59,7 L54,17 L50,5 L46,17 L41,7 Z"/>
+    <path android:fillColor="#FFFFB900" android:pathData="M28,20 L72,20 L68,27 L32,27 Z"/>
+    <path android:fillColor="#FFFFE77A" android:pathData="M34,22 L66,22 L63,25 L37,25 Z"/>
+    <!-- Głowa i szyja -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M43,27 C39,30 38,35 41,39 C36,42 34,47 38,51 C40,54 44,55 47,53 L47,65 L53,65 L53,53 C57,55 61,53 63,50 C66,46 63,41 59,39 C62,34 60,29 56,27 C52,25 47,25 43,27 Z"/>
+    <!-- Dziób -->
+    <path android:fillColor="#FFFFD43B" android:pathData="M41,34 C36,32 31,34 29,39 C34,39 37,42 41,41 C44,40 45,37 41,34 Z"/>
+    <path android:fillColor="#FFFFB900" android:pathData="M29,39 L23,42 L32,43 L38,41 Z"/>
+    <!-- Oczy -->
+    <path android:fillColor="#FF202020" android:pathData="M43,33 A1.8,1.8 0,1 0,43 36.6 A1.8,1.8 0,1 0,43 33 M57,33 A1.8,1.8 0,1 0,57 36.6 A1.8,1.8 0,1 0,57 33"/>
+    <!-- Skrzydła - sylwetka symetryczna -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M40,42 C31,34 21,29 7,30 C13,35 17,40 18,45 C12,42 8,43 3,47 C12,49 17,53 20,59 C14,57 10,59 6,63 C17,63 23,67 27,73 C30,68 35,62 43,59 Z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M60,42 C69,34 79,29 93,30 C87,35 83,40 82,45 C88,42 92,43 97,47 C88,49 83,53 80,59 C86,57 90,59 94,63 C83,63 77,67 73,73 C70,68 65,62 57,59 Z"/>
+    <!-- Pióra skrzydeł -->
+    <path android:fillColor="#FFE8EDF2" android:pathData="M9,33 C21,34 29,40 38,49 L35,51 C25,43 17,39 9,33 Z M6,48 C19,47 29,52 38,57 L35,60 C24,54 15,51 6,48 Z M10,62 C22,59 31,63 38,68 L34,71 C25,66 18,64 10,62 Z"/>
+    <path android:fillColor="#FFE8EDF2" android:pathData="M91,33 C79,34 71,40 62,49 L65,51 C75,43 83,39 91,33 Z M94,48 C81,47 71,52 62,57 L65,60 C76,54 85,51 94,48 Z M90,62 C78,59 69,63 62,68 L66,71 C75,66 82,64 90,62 Z"/>
+    <!-- Tułów i pierś -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M43,49 C38,56 39,66 43,74 L50,91 L57,74 C61,66 62,56 57,49 C54,53 46,53 43,49 Z"/>
+    <path android:fillColor="#FFE8EDF2" android:pathData="M45,57 L50,62 L55,57 L54,66 L50,71 L46,66 Z M46,70 L50,75 L54,70 L52,80 L50,84 L48,80 Z"/>
+    <!-- Ogon -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M43,72 C37,76 32,83 30,91 L39,86 L43,97 L50,88 L57,97 L61,86 L70,91 C68,83 63,76 57,72 L53,83 L50,76 L47,83 Z"/>
+    <!-- Nogi i szpony -->
+    <path android:fillColor="#FFFFD43B" android:pathData="M42,68 L38,77 L42,80 L46,75 Z M58,68 L62,77 L58,80 L54,75 Z"/>
+    <path android:fillColor="#FFFFC629" android:pathData="M38,78 L31,80 L34,84 L42,82 L46,78 Z M62,78 L69,80 L66,84 L58,82 L54,78 Z"/>
+</vector>
