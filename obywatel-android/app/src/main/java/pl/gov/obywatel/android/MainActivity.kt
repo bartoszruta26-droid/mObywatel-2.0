@@ -1124,7 +1124,7 @@ private fun HomeScreen() {
                                                     style = MaterialTheme.typography.bodySmall, maxLines = 2,
                                                     overflow = TextOverflow.Ellipsis)
                                             }
-                                            Icon(Icons.Filled.ChevronRight, contentDescription = "Otwórz")
+                                            Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
                                 }
@@ -2260,17 +2260,16 @@ private fun Header(
             Icon(painterResource(R.drawable.ic_header_mail), contentDescription = "Wiadomości",
                 tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
         }
-        IconButton(onClick = onOpenNotifications) {
-            Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
-            IconButton(onClick = onOpenNotifications) {
-                Icon(painterResource(R.drawable.ic_header_bell), contentDescription = "Powiadomienia",
-                    tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(29.dp))
-            }
+        Box(
+            modifier = Modifier.size(36.dp).clickable(onClick = onOpenNotifications),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(painterResource(R.drawable.ic_header_bell), contentDescription = "Powiadomienia",
+                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(29.dp))
             Box(
                 modifier = Modifier.align(Alignment.TopEnd).size(10.dp)
                     .clip(CircleShape).background(Color(0xFFFF3028))
             )
-        }
         }
     }
 }
