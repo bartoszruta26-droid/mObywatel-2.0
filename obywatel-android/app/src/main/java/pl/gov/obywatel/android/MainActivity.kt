@@ -1176,6 +1176,14 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "vaccines" -> CredentialAppearanceEditorEntry("vaccines", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     }
+                    settingsDocumentEditor == "graphic_catalog" -> DocumentGraphicCatalogScreen(
+                        onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                        onSelect = { key -> settingsDocumentEditor = "graphic:$key" }
+                    )
+                    settingsDocumentEditor?.startsWith("graphic:") == true -> DocumentGraphicEditorScreen(
+                        documentKey = settingsDocumentEditor!!.substringAfter("graphic:"),
+                        onBack = { settingsDocumentEditor = "graphic_catalog" }
+                    )
                     documentBrandTarget != null -> DocumentBrandAssetsScreen(onBack = { documentBrandTarget = null; showSettingsMenu = true }, fixedTarget = documentBrandTarget!!)
                     showDocumentBrandAssets -> DocumentBrandAssetsScreen(onBack = { showDocumentBrandAssets = false; showSettingsMenu = true })
                     showDocumentVisibilitySettings -> DocumentVisibilitySettingsScreen(
@@ -2949,6 +2957,8 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Konta bankowe", "Osobna ewidencja rachunków prywatnych i podmiotowych", Icons.Filled.AccountBalance, { onEditOtherDocuments("bank_accounts") })
         ProfileActionCard("Dokumenty własne — pliki", "Dodawanie, porządkowanie i usuwanie importowanych plików", Icons.Filled.Description, { onEditOtherDocuments("imported") })
         ProfileActionCard("Pliki PDF i podpisy", "Import dokumentów, dołączanie plików podpisów i zarządzanie ewidencją", Icons.Filled.PictureAsPdf, { onEditOtherDocuments("signed_pdf") })
+        ProfileActionCard("Indywidualna edycja pozostałych dokumentów", "Osobny podgląd, fotografia lub skan, flaga, godło, herb, logo, tło i pola każdego dokumentu",
+            Icons.Filled.Description, { onEditOtherDocuments("graphic_catalog") })
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
