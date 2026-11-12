@@ -52,6 +52,13 @@ private val officialDocTypes = listOf(
     OfficialDocType("eu_education","Zaświadczenie o zgodności wykształcenia z wymogami UE", listOf("Imię i nazwisko","Kwalifikacja / zawód","Nazwa i kraj instytucji kształcącej","Poziom i czas kształcenia","Numer dyplomu / świadectwa","Organ wydający zaświadczenie","Podstawa prawna / dyrektywa","Państwo docelowe","Data wydania","Numer sprawy / zaświadczenia","Zakres potwierdzenia","Status"))
 )
 
+internal fun officialGraphicDocumentTargets(): List<Pair<String, String>> =
+    officialDocTypes.map { it.id to it.title }
+
+internal fun officialGraphicDocumentFields(documentId: String): List<Pair<String, String>> =
+    officialDocTypes.firstOrNull { it.id == documentId }?.fields.orEmpty()
+        .mapIndexed { index, label -> "field_$index" to label }
+
 internal object OfficialDocumentStore {
     private const val ALIAS = "obywatel_official_docs_aes"
     private const val INDEX = "official-documents.enc"

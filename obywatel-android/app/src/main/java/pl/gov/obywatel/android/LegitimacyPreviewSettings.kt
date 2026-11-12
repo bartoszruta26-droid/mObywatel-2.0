@@ -55,7 +55,12 @@ import androidx.compose.ui.unit.sp
 // Visual parity: checkmark scan frame and horizontal gradient identity-card shortcut.
 internal data class CredentialFieldOption(val key: String, val label: String)
 
-internal fun credentialFieldOptions(documentKey: String): List<Pair<String, String>> = (when (documentKey) {
+internal fun credentialFieldOptions(documentKey: String): List<Pair<String, String>> {
+    val subdocumentFields = churchGraphicDocumentFields(documentKey)
+        .ifEmpty { familyEntityGraphicDocumentFields(documentKey) }
+        .ifEmpty { officialGraphicDocumentFields(documentKey) }
+    if (subdocumentFields.isNotEmpty()) return subdocumentFields + listOf("details" to "Informacje dodatkowe")
+    return (when (documentKey) {
     "parliament" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji",
         "mpTerm" to "Kadencja", "mpDistrict" to "Okręg wyborczy", "mpStart" to "Początek mandatu",
@@ -164,6 +169,7 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca"
     )
 }) + listOf("details" to "Informacje dodatkowe")
+}
 
 internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
     val value = rawExpiry.trim()

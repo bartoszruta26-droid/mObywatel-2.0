@@ -77,6 +77,15 @@ private val entityDocs = listOf(
     RegistryDoc(if (title.contains("rachunków bankowych")) "entity_bank_accounts" else "entity_${section.hashCode().toUInt().toString(16)}_${index}", title, section, if (title.contains("rachunków bankowych")) emptyList() else fields.distinct(), "Ewidencja dokumentu podmiotu. Wpisane dane nie potwierdzają samodzielnie aktualnego stanu rejestru; dokument urzędowy należy dołączyć jako źródło.")
 } }
 
+internal fun familyEntityGraphicDocumentTargets(): List<Pair<String, String>> =
+    (rodDocs + entityDocs)
+        .filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
+        .map { it.id to it.title }
+
+internal fun familyEntityGraphicDocumentFields(documentId: String): List<Pair<String, String>> =
+    (rodDocs + entityDocs).firstOrNull { it.id == documentId }?.fields.orEmpty()
+        .mapIndexed { index, label -> "field_$index" to label }
+
 internal object FamilyEntityDocumentStore {
     private const val ALIAS = "family_entity_docs_aes"
     private const val FILE = "family-entity-documents.enc"
@@ -168,7 +177,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             var local by remember(doc.id) { mutableStateOf(saved) }
             var accountCount by remember(doc.id) { mutableIntStateOf((saved["accountCount"]?.toIntOrNull() ?: 1).coerceIn(1, 30)) }
             val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
-            val previewKey = if (isBankRegister) "bank_accounts" else if (entityMode) "entity" else "family"
+            val previewKey = if (isBankRegister) "bank_accounts" else doc.id
             val previewFields = if (isBankRegister) {
                 buildList {
                     repeat(accountCount) { accountIndex ->

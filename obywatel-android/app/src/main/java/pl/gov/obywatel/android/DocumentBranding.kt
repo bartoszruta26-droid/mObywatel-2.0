@@ -55,7 +55,7 @@ internal data class BrandAsset(
 )
 internal data class BrandAssignment(val documentType: String, val kind: String, val assetId: String)
 
-internal val documentBrandTargets = listOf(
+internal val documentBrandTargets = (listOf(
     "identity" to "Dowód tożsamości",
     "passport" to "Paszport",
     "parliament" to "Legitymacja poselska",
@@ -107,7 +107,8 @@ internal val documentBrandTargets = listOf(
     "children" to "Dokumentacja dzieci",
     "vaccines" to "Karta szczepień",
     "civil" to "Dokumenty cywilne"
-)
+) + churchGraphicDocumentTargets() + familyEntityGraphicDocumentTargets() +
+    officialGraphicDocumentTargets()).distinctBy { it.first }
 
 internal object DocumentBrandStore {
     private const val ALIAS = "document_brand_assets_aes"
