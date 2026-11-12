@@ -627,7 +627,6 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                 )
                 Text(
                     "Nie pamiętasz hasła?",
-                    modifier = Modifier.clickable { },
                     color = skyBlue,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
@@ -664,14 +663,6 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                 )
             }
         }
-    }
-}
- Nie potwierdza tożsamości i nie tworzy konta użytkownika.",
-                    color = Muted, style = MaterialTheme.typography.bodySmall)
-                Button(onClick = onDemo, modifier = Modifier.fillMaxWidth()) { Text("Wejdź w trybie demonstracyjnym") }
-            }
-        }
-        TextButton(onClick = onBack) { Text("Wstecz") }
     }
 }
 
