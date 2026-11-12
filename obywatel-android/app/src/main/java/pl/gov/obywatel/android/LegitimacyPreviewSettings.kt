@@ -725,6 +725,17 @@ internal fun LegitimacyPreviewSettingsPanel(
         }.onFailure { message = "Nie udało się wczytać tła: ${it.message ?: "błąd"}" }
     }
 
+    val tileBackgroundPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) runCatching {
+            DocumentBrandStore.import(context, uri, "legitimacy:$documentKey", "Tło kafelka", "Tło kafelka dokumentu")
+        }.onSuccess {
+            assets = DocumentBrandStore.list(context)
+            val imported = assets.lastOrNull { it.owner == "legitimacy:$documentKey" && it.kind == "Tło kafelka" }
+            if (imported != null) update(settings.copy(tileBackgroundAssetId = imported.id))
+            message = "Wczytano tło kafelka. Ustawienie zapisano."
+        }.onFailure { message = "Nie udało się wczytać tła kafelka: ${it.message ?: "błąd"}" }
+    }
+
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -888,8 +899,8 @@ internal fun LegitimacyPreviewSettingsPanel(
                         .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) },
                 onSelect = { update(settings.copy(tileBackgroundAssetId = it)) }
             )
-            if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-
+            OutlinedButton(onClick = { tileBackgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
+                modifier = Modifier.fillMaxWidth()) { Text("Wczytaj własne tło kafelka") }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
             if (!assetSelectionOnly) {
