@@ -2842,8 +2842,8 @@ private fun DocumentsWalletScreen(
         CatalogDocument("children", "Dokumentacja dzieci", "Rodzinna ewidencja danych i dokumentacji dzieci", listOf("Cywilne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Rejestry"), service = "Dane dzieci", icon = Icons.Filled.AccountCircle),
         CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
     )
-    val visibleDocuments = documents.filter { documentPlacements[it.id] == "dashboard" || documentPlacements[it.id] == "other" }
-    val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry")
+    val visibleDocuments = documents.filter { documentPlacements[it.id] != "hidden" }
+    val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry", "Inne dokumenty")
 
     fun openDocument(document: CatalogDocument) {
         when {
@@ -2865,7 +2865,11 @@ private fun DocumentsWalletScreen(
             color = Muted, style = MaterialTheme.typography.bodySmall
         )
         categories.forEach { category ->
-            val entries = visibleDocuments.filter { category in it.categories }
+            val entries = if (category == "Inne dokumenty") {
+                visibleDocuments.filter { documentPlacements[it.id] == "other" }
+            } else {
+                visibleDocuments.filter { documentPlacements[it.id] == "dashboard" && category in it.categories }
+            }
             if (entries.isNotEmpty()) {
                 Text(category, color = Navy, fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
