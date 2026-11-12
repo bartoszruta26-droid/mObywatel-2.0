@@ -775,6 +775,7 @@ internal fun LegitimacyHeraldry(
                     fontSize = 10.sp,
                     lineHeight = 12.sp,
                     fontWeight = FontWeight.SemiBold,
+                    color = credentialFontColor(settings.fontColor),
                     maxLines = 2
                 )
             }
