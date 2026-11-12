@@ -185,6 +185,9 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, on
             val values=records[type.id].orEmpty()
             var local by remember(type.id, records) { mutableStateOf(values) }
             Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
+            if (!readOnly) OutlinedButton(onClick = { onEditGraphic(type.id) }, modifier = Modifier.fillMaxWidth()) {
+                Text("Edytuj wygląd graficzny i podgląd tego dokumentu")
+            }
             if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.secondaryContainer)) {
                 Text(type.note,Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.bodySmall)
             }
