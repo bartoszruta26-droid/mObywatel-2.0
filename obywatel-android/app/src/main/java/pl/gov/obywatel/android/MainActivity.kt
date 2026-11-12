@@ -4467,11 +4467,13 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                     "Data sporządzenia dokumentu" to fields["registry_${entityKey}_documentDate"].orEmpty()
                 )
             Text(entityTitle, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            if (!editable) DocumentIdentityTemplate(
-                entityTitle,
-                entityValues,
-                owner = entityFields.firstOrNull()?.let { fields[it.first].orEmpty() }.orEmpty()
-            )
+            if (!editable) {
+                DocumentIdentityTemplate(
+                    entityTitle,
+                    entityValues,
+                    owner = entityFields.firstOrNull()?.let { fields[it.first].orEmpty() }.orEmpty()
+                )
+            }
             entityFields.forEach { (key, label, placeholder) ->
                 if (editable) DemoDataField(key, label, fields, placeholder)
                 else RegistryReadOnlyField(label, fields[key])
