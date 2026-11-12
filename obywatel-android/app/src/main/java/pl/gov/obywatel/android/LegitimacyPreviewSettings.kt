@@ -1591,21 +1591,44 @@ internal fun CredentialValidityTile(valid: Boolean?) {
 }
 
 @Composable
-internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings, assetRevision: Int = 0) {
+internal fun CredentialTemplatePreview(
+    documentKey: String,
+    settings: LegitimacyPreviewSettings,
+    assetRevision: Int = 0,
+    values: Map<String, String>? = null
+) {
     val title = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "Wspólny wzór legitymacji"
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
     val selected = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) options else options.filter { it.first in settings.visibleFields }
+    val holderName = values?.get("studentNames").orEmpty().ifBlank {
+        values?.get("passportHolderNames").orEmpty().ifBlank {
+            values?.get("disabilityPersonName").orEmpty().ifBlank {
+                listOf(values?.get("firstNames").orEmpty(), values?.get("lastName").orEmpty())
+                    .filter { it.isNotBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
+            }
+        }
+    }
+    val photo = remember(values?.get("photo")) {
+        runCatching {
+            val encoded = values?.get("photo").orEmpty()
+            if (encoded.isBlank()) null else {
+                val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
+        }.getOrNull()
+    }
     if (settings.showCard) {
         UnifiedCredentialCard(
             documentKey = documentKey,
             title = title,
             subtitle = "",
-            holderName = "IMIĘ I NAZWISKO",
-            fields = selected.map { (key, label) -> Triple(key, label, "—") },
+            holderName = holderName,
+            fields = selected.map { (key, label) -> Triple(key, label, values?.get(key).orEmpty().ifBlank { "—" }) },
             settings = settings,
+            photo = photo,
             assetRevision = assetRevision,
-            validity = true
+            validity = values?.let { credentialValidityForDocument(documentKey, it) } ?: true
         )
     } else {
         Text("Podgląd legitymacji jest wyłączony.", color = MaterialTheme.colorScheme.onSurfaceVariant,
