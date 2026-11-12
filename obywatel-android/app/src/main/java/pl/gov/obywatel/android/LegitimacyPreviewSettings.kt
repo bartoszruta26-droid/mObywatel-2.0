@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// Visual parity: checkmark scan frame and horizontal gradient identity-card shortcut.
 internal data class CredentialFieldOption(val key: String, val label: String)
 
 internal fun credentialFieldOptions(documentKey: String): List<Pair<String, String>> = (when (documentKey) {
