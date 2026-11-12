@@ -3267,6 +3267,7 @@ private fun DashboardDocumentGrid(
 }
 
 private fun documentTileIconResource(documentKey: String, fallback: Int): Int = when (documentKey) {
+    "profile" -> R.drawable.tile_ic_profile
     "identity" -> R.drawable.tile_ic_identity
     "passport" -> R.drawable.tile_ic_passport
     "registry" -> R.drawable.tile_ic_registry
@@ -3282,6 +3283,8 @@ private fun documentTileIconResource(documentKey: String, fallback: Int): Int = 
     "signed_pdf" -> R.drawable.tile_ic_pdf
     "branding" -> R.drawable.tile_ic_branding
     "imported" -> R.drawable.tile_ic_imported
+    "children" -> R.drawable.tile_ic_children
+    "loyalty" -> R.drawable.tile_ic_loyalty
     else -> fallback
 }
 
