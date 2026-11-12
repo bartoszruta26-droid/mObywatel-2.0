@@ -50,6 +50,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -2771,7 +2772,8 @@ private fun OwdDocumentArtworkCard(
     holder: String,
     details: String,
     privateRecord: Boolean,
-    credentialFields: List<Triple<String, String, String>> = emptyList()
+    credentialFields: List<Triple<String, String, String>> = emptyList(),
+    validity: Boolean? = null
 ) {
     val documentKey = when {
         title.contains("rodow", true) -> "family"
@@ -2788,7 +2790,8 @@ private fun OwdDocumentArtworkCard(
         UnifiedCredentialCard(
             documentKey = documentKey, title = title, subtitle = subtitle, holderName = holder,
             fields = credentialFields.ifEmpty { listOf(Triple("details", "DANE DOKUMENTU", details)) }, settings = settings,
-            fallbackBackgroundRes = imageRes
+            fallbackBackgroundRes = imageRes,
+            validity = validity
         )
     }
 }
