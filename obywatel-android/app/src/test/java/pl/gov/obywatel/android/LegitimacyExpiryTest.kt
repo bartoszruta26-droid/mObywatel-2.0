@@ -4,7 +4,7 @@ package pl.gov.obywatel.android
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals\nimport org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -38,5 +38,31 @@ class LegitimacyExpiryTest {
     @Test
     fun isoPastDateIsInvalid() {
         assertFalse(isCredentialValidByExpiry(LocalDate.now().minusDays(1).toString()))
+    }
+
+    @Test
+    fun documentSpecificExpiryIsUsedForIdentityAndProfessionalCredentials() {
+        val past = LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("d.M.uuuu"))
+        assertFalse(credentialValidityForDocument("identity", mapOf("idExpiryDate" to past))!!)
+        assertFalse(credentialValidityForDocument("professional_medical", mapOf("professionalValidity" to past))!!)
+    }
+
+    @Test
+    fun explicitRevocationOverridesFutureExpiry() {
+        val future = LocalDate.now().plusDays(30).toString()
+        assertFalse(credentialValidityForDocument("parliament", mapOf(
+            "mpStatus" to "unieważniona",
+            "mpEnd" to future
+        ))!!)
+    }
+
+    @Test
+    fun missingValidityDataIsUnknownRatherThanAssumedValid() {
+        assertEquals(null, credentialValidityForDocument("identity", emptyMap()))
+    }
+
+    @Test
+    fun activeStatusWithoutExpiryRemainsValid() {
+        assertTrue(credentialValidityForDocument("passport", mapOf("passportStatus" to "aktywny"))!!)
     }
 }
