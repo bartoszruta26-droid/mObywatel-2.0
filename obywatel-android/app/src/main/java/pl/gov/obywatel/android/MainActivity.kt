@@ -1080,29 +1080,25 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     fun openDocumentCard(documentId: String) {
-        // Every document tile is a read-only entry point. Editing is reached
-        // only from More → Settings → the selected document.
-        when (documentId) {
-            "registry" -> activeService = "Odpis z rejestru podmiotów"
-            "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
-            "church_minister", "church_missionary", "organization_church" -> activeService = "Dokumenty Kościelne"
-            "civil", "birth_extract", "marriage_extract", "death_extract", "official",
-            "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business",
-            "vehicle_registration", "criminal_record", "mission_travel", "ehic", "eu_education",
-            "large_family", "blood_donor", "disability_card" -> activeService = "Formularze dokumentów"
-            "business", "entity", "organization_foundation", "organization_company",
-            "organization_association" -> activeService = "Dokumenty rejestru podmiotów"
-            "bank_accounts" -> showBankAccounts = true
-            "children" -> activeService = "Dane dzieci"
-            "vaccines" -> activeService = "eKarta Szczepień"
-            "imported" -> showImportedDocuments = true
-            "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
-            "branding" -> activeService = "Zasoby identyfikacji dokumentów"
-            "professional", "professional_medical", "professional_education",
-            "professional_therapeutic", "professional_other" -> activeService = "Dokumenty kwalifikacji zawodowych"
-            "identity_card" -> selectedDocumentId = "identity"
-            "loyalty_cards" -> selectedDocumentId = "loyalty"
-            else -> selectedDocumentId = documentId
+        // The same route is used from both home sections and the wallet.
+        // Keep the source ID intact unless the registry declares a legacy alias.
+        val route = DocumentRouteRegistry.find(documentId)
+        if (route == null) {
+            selectedDocumentId = documentId
+            return
+        }
+        when (route.type) {
+            DocumentRouteType.GROUP -> activeService = requireNotNull(route.destination)
+            DocumentRouteType.DOCUMENT -> selectedDocumentId = route.documentId
+            DocumentRouteType.SPECIALIZED -> when (route.destination) {
+                "registry_extract" -> activeService = "Odpis z rejestru podmiotów"
+                "bank_accounts" -> showBankAccounts = true
+                "vaccines" -> activeService = "eKarta Szczepień"
+                "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
+                "imported" -> showImportedDocuments = true
+                "branding" -> activeService = "Zasoby identyfikacji dokumentów"
+                else -> selectedDocumentId = route.documentId
+            }
         }
     }
 
