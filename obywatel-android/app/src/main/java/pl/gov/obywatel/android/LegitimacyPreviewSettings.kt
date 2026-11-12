@@ -89,6 +89,21 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "studentProfile" to "Profil / forma", "studentYear" to "Rok i semestr",
         "studentAcademicYear" to "Rok akademicki", "studentStatus" to "Status"
     )
+    "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> listOf(
+        "account_name" to "Nazwa własna rachunku",
+        "account_bank" to "Bank / instytucja prowadząca",
+        "account_currency" to "Waluta",
+        "account_iban" to "Numer rachunku / IBAN",
+        "account_bic" to "Kod BIC / SWIFT",
+        "account_holder" to "Posiadacz / współposiadacze",
+        "account_type" to "Rodzaj rachunku",
+        "account_country" to "Kraj prowadzenia rachunku",
+        "account_status" to "Status rachunku",
+        "account_open_date" to "Data otwarcia",
+        "account_close_date" to "Data zamknięcia",
+        "account_purpose" to "Cel / przeznaczenie",
+        "account_notes" to "Uwagi"
+    )
     "identity" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
         "birthPlace" to "Miejsce urodzenia", "citizenship" to "Obywatelstwo", "sex" to "Płeć",
