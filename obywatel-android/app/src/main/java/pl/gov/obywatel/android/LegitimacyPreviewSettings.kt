@@ -206,6 +206,10 @@ internal fun credentialValidityForDocument(documentKey: String, values: Map<Stri
         "ehic" -> listOf("ehicStatus", "status")
         "vaccines" -> listOf("vaccineStatus", "status")
         "loyalty", "loyalty_cards" -> listOf("loyaltyStatus", "status")
+        "bank_accounts" -> listOf("accountStatus", "status")
+        "children" -> listOf("childStatus", "status")
+        "civil", "birth_extract", "marriage_extract", "death_extract" -> listOf("civilStatus", "status")
+        "entity", "business", "registry", "organization_foundation", "organization_company", "organization_association" -> listOf("registryStatus", "entityStatus", "status")
         else -> listOf("status")
     }
     val expiryKeys = when (documentKey) {
@@ -226,14 +230,24 @@ internal fun credentialValidityForDocument(documentKey: String, values: Map<Stri
         "ehic" -> listOf("ehicExpiry", "expiryDate")
         "vaccines" -> listOf("vaccineExpiry", "expiryDate")
         "loyalty", "loyalty_cards" -> listOf("loyaltyExpiry", "expiryDate")
+        "bank_accounts" -> listOf("accountExpiryDate", "expiryDate")
+        "children" -> listOf("childDocumentExpiry", "expiryDate")
+        "civil", "birth_extract", "marriage_extract", "death_extract" -> listOf("civilExpiryDate", "expiryDate")
+        "entity", "business", "registry", "organization_foundation", "organization_company", "organization_association" -> listOf("registryExpiryDate", "entityExpiryDate", "expiryDate")
         else -> listOf("expiryDate", "validUntil", "documentExpiryDate")
     }
-    val status = statusKeys.firstNotNullOfOrNull { key -> values[key]?.trim()?.takeIf { it.isNotEmpty() } }.orEmpty()
-    val expiry = expiryKeys.firstNotNullOfOrNull { key -> values[key]?.trim()?.takeIf { it.isNotEmpty() } }.orEmpty()
+    val status = statusKeys.firstNotNullOfOrNull { key -> values[key]?.trim()?.takeIf { it.isNotEmpty() } }
+        ?: values.entries.firstOrNull { (key, value) -> key.endsWith("Status", true) && value.isNotBlank() }?.value.orEmpty()
+    val expiry = expiryKeys.firstNotNullOfOrNull { key -> values[key]?.trim()?.takeIf { it.isNotEmpty() } }
+        ?: values.entries.firstOrNull { (key, value) ->
+            value.isNotBlank() && (key.contains("Expiry", true) || key.endsWith("ValidUntil", true) ||
+                key.endsWith("Validity", true) || key.endsWith("ExpiryDate", true))
+        }?.value.orEmpty()
     if (status.isBlank() && expiry.isBlank()) return null
     val normalized = status.lowercase(java.util.Locale.forLanguageTag("pl-PL"))
     val explicitlyInvalid = listOf(
-        "nieważ", "unieważ", "utrac", "zwróc", "wygas", "zawies", "expired", "invalid", "revoked", "cancelled"
+        "nieważ", "unieważ", "utrac", "zwróc", "wygas", "zawies", "nieaktywn", "zablok", "zamknięt",
+        "expired", "invalid", "revoked", "cancelled"
     ).any(normalized::contains)
     return !explicitlyInvalid && isCredentialValidByExpiry(expiry)
 }
