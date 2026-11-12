@@ -1078,10 +1078,26 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     fun openDocumentCard(documentId: String) {
-        selectedDocumentId = when (documentId) {
-            "identity_card" -> "identity"
-            "loyalty_cards" -> "loyalty"
-            else -> documentId
+        when (documentId) {
+            "registry" -> activeService = "Odpis z rejestru podmiotów"
+            "family" -> activeService = "Dokumenty Rodowe"
+            "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
+            "church_minister", "church_missionary", "organization_church" -> activeService = "Dokumenty Kościelne"
+            "civil", "birth_extract", "marriage_extract", "death_extract", "official",
+            "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business",
+            "vehicle_registration", "criminal_record", "mission_travel", "ehic", "eu_education",
+            "large_family", "blood_donor", "disability_card" -> activeService = "Formularze dokumentów"
+            "business", "entity", "organization_foundation", "organization_company",
+            "organization_association" -> activeService = "Dokumenty rejestru podmiotów"
+            "bank_accounts" -> showBankAccounts = true
+            "children" -> activeService = "Dane dzieci"
+            "vaccines" -> activeService = "eKarta Szczepień"
+            "imported" -> showImportedDocuments = true
+            "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
+            "branding" -> activeService = "Zasoby identyfikacji dokumentów"
+            "identity_card" -> selectedDocumentId = "identity"
+            "loyalty_cards" -> selectedDocumentId = "loyalty"
+            else -> selectedDocumentId = documentId
         }
     }
 
@@ -1196,7 +1212,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         documentCardStyle = documentCardStyle,
                         defaultDocumentIcon = defaultDocumentIcon,
                         documentIconOverrides = documentIconOverrides,
-                        onOpenDetails = { selectedDocumentId = it },
+                        onOpenDetails = { openDocumentCard(it) },
                         onOpenService = { title ->
                             when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
                         }
@@ -3797,7 +3813,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
                 DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
-                Text("Podgląd cyfrowej legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) Text("Podgląd cyfrowej legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 ParliamentaryCredentialPreview(fields)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja poselska", fields, "mpExtra", "Art. 104 Konstytucji RP określa wolny mandat poselski oraz obowiązek złożenia ślubowania przed Sejmem przed rozpoczęciem sprawowania mandatu. Odmowa ślubowania oznacza zrzeczenie się mandatu. Sam wpis ewidencyjny nie potwierdza uzyskania mandatu ani prawa do reprezentowania Sejmu.")
             }
@@ -3830,7 +3846,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("trainingAssessment", "Zaliczenie / egzamin / wynik", fields)
                 DemoDataField("trainingCertificateNumber", "Numer zaświadczenia o ukończeniu", fields)
                 DemoDataField("trainingForm", "Forma kształcenia", fields, "stacjonarna / zdalna / hybrydowa")
-                Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 SchoolLegitimacyPreview(fields, photoBase64, student = false)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "trainingExtra", "Legitymacja instytucji szkoleniowej potwierdza status w ewidencji wystawcy w granicach regulaminu i właściwej podstawy działania. Nie jest legitymacją studencką i sama nie nadaje statusu studenta uczelni.")
             }
@@ -3971,7 +3987,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("disabilityAppealOutcome", "Wynik odwołania / sprzeciwu", fields)
                 DemoDataField("disabilityDuplicateInfo", "Duplikat / zmiana dokumentu", fields)
                 DemoDataField("disabilitySourceAttachment", "Nazwa / opis dokumentu źródłowego", fields)
-                Text("Podgląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) Text("Podgląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DisabilityDecisionPreview(fields)
                 AdditionalInformationSection("Informacje dodatkowe — orzeczenie / zaświadczenie", fields, "disabilityExtra", when (fields["disabilityAuthorityType"] ?: "powiat") {
                     "foundation" -> "Dokument fundacji opisuje się zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego."
