@@ -994,6 +994,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var documentBrandTarget by remember { mutableStateOf<String?>(null) }
     var showRegistryEditor by remember { mutableStateOf(false) }
     var settingsDocumentEditor by remember { mutableStateOf<String?>(null) }
+    var graphicEditorReturnTarget by remember { mutableStateOf("graphic_catalog") }
     var credentialAppearanceTarget by remember { mutableStateOf<String?>(null) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
