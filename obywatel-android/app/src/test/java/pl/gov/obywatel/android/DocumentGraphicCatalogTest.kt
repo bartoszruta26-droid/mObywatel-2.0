@@ -46,6 +46,29 @@ class DocumentGraphicCatalogTest {
     }
 
     @Test
+    fun everyNestedChurchFamilyEntityAndOfficialDocumentHasItsOwnGraphicEditor() {
+        val nestedTargets = churchGraphicDocumentTargets() +
+            familyEntityGraphicDocumentTargets() + officialGraphicDocumentTargets()
+        assertTrue("Nested documents must be included in the graphic catalog",
+            nestedTargets.isNotEmpty() && nestedTargets.all { GraphicDocumentCatalog.find(it.first) != null })
+        assertEquals("Nested document identifiers must be unique",
+            nestedTargets.size, nestedTargets.map { it.first }.toSet().size)
+        nestedTargets.forEach { (id, _) ->
+            assertTrue("No document-specific fields for $id", credentialFieldOptions(id).isNotEmpty())
+        }
+    }
+
+    @Test
+    fun nestedDocumentKindsDistinguishCredentialsFromRecords() {
+        assertEquals(DocumentPreviewKind.RECORD, GraphicDocumentCatalog.find("church_bishop_appointment")?.kind)
+        assertEquals(DocumentPreviewKind.CREDENTIAL, GraphicDocumentCatalog.find("church_minister_card")?.kind)
+        val familyCredential = familyEntityGraphicDocumentTargets().first { it.second.contains("Legitymacja") }
+        assertEquals(DocumentPreviewKind.CREDENTIAL, GraphicDocumentCatalog.find(familyCredential.first)?.kind)
+        assertTrue(familyEntityGraphicDocumentTargets().filterNot { it.second.contains("Legitymacja") }
+            .all { GraphicDocumentCatalog.find(it.first) != null })
+    }
+
+    @Test
     fun sourceDocumentsKeepRecordPreviewInsteadOfCredentialMockup() {
         val recordIds = setOf(
             "registry", "birth_extract", "marriage_extract", "death_extract",
