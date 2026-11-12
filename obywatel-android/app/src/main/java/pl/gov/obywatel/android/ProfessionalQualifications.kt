@@ -314,35 +314,35 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("‹  Więcej", color = Color(0xFF1769AA), fontWeight = FontWeight.SemiBold,
+        Text("‹  Więcej", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Zawody i numery prawa wykonywania zawodu", color = Color(0xFF102D46),
+        Text("Zawody i numery prawa wykonywania zawodu", color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Samodzielnie dodawaj nazwy wykonywanych zawodów oraz numery praw wykonywania zawodu i innych dokumentów.",
-            color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
             Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Ważne rozróżnienie prawne", fontWeight = FontWeight.Bold, color = Color(0xFF102D46))
+                Text("Ważne rozróżnienie prawne", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 Text("Numer PWZ wpisuj wyłącznie wtedy, gdy właściwe przepisy przewidują prawo wykonywania danego zawodu i dokument został rzeczywiście nadany. Dla pozostałych ról zapisuj numer dyplomu, certyfikatu, zaświadczenia, legitymacji lub innego dokumentu — bez nazywania go PWZ. Przykładowo fizjoterapeuta posiada ustawowe prawo wykonywania zawodu; masażysta, naturopata, zielarz i misjonarz nie otrzymują automatycznie numeru PWZ z samego tytułu tej roli.",
-                    color = Color(0xFF29445B), style = MaterialTheme.typography.bodySmall)
+                    color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
             }
         }
-        if (professions.isEmpty()) Text("Nie dodano jeszcze żadnego zawodu. Wybierz „Dodaj kolejny zawód”, aby wpisać własną nazwę i dane dokumentu.", color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
+        if (professions.isEmpty()) Text("Nie dodano jeszcze żadnego zawodu. Wybierz „Dodaj kolejny zawód”, aby wpisać własną nazwę i dane dokumentu.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         professions.forEach { p ->
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         androidx.compose.material3.Icon(Icons.Filled.Badge, contentDescription = null,
-                            tint = Color(0xFF1769AA), modifier = Modifier.size(27.dp))
+                            tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(27.dp))
                         Text(p.profession, Modifier.weight(1f).padding(start = 9.dp),
-                            color = Color(0xFF102D46), fontWeight = FontWeight.Bold)
+                            color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                         TextButton(onClick = { editing = p }) { Text("Edytuj") }
                     }
                     val numberLabel = if (p.numberType == "pwzf") "Numer prawa wykonywania zawodu" else "Numer dokumentu / kwalifikacji"
-                    Text(numberLabel + ": " + p.number.ifBlank { "Nie uzupełniono" }, color = Color(0xFF263746))
-                    if (p.issuer.isNotBlank()) Text("Organ / wystawca: " + p.issuer, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
-                    if (p.registerName.isNotBlank()) Text("Rejestr: " + p.registerName, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
-                    Text("Status: " + p.status, color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                    Text(numberLabel + ": " + p.number.ifBlank { "Nie uzupełniono" }, color = MaterialTheme.colorScheme.onSurface)
+                    if (p.issuer.isNotBlank()) Text("Organ / wystawca: " + p.issuer, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    if (p.registerName.isNotBlank()) Text("Rejestr: " + p.registerName, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    Text("Status: " + p.status, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                     AssignedDocumentBrandPreview(
                         documentType = "professional",
                         owner = p.profession,
@@ -368,25 +368,25 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
         OutlinedButton(onClick = { adding = true }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj kolejny zawód") }
 
         Spacer(Modifier.height(8.dp))
-        Text("Uzyskane kwalifikacje", color = Color(0xFF102D46),
+        Text("Uzyskane kwalifikacje", color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text("Dodawaj zdjęcia, skany i pliki PDF dyplomów, certyfikatów, zaświadczeń, legitymacji oraz innych dokumentów potwierdzających kwalifikacje.",
-            color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         OutlinedButton(onClick = { picker.launch(arrayOf("image/*", "application/pdf")) },
             modifier = Modifier.fillMaxWidth()) { Text("＋  Dodaj zdjęcia lub pliki PDF") }
-        Text("Powiązanie dokumentów: " + selectedProfession, color = Color(0xFF667788), style = MaterialTheme.typography.bodySmall)
+        Text("Powiązanie dokumentów: " + selectedProfession, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         files.filter { selectedProfession == "Wszystkie zawody" || it.profession == selectedProfession || it.profession.isBlank() }
             .forEach { f ->
-                Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                     Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         androidx.compose.material3.Icon(if (f.mimeType == "application/pdf") Icons.Filled.Description else Icons.Filled.Image,
-                            contentDescription = null, tint = Color(0xFF1769AA), modifier = Modifier.size(34.dp))
+                            contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp))
                         Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                            Text(f.name, color = Color(0xFF102D46), fontWeight = FontWeight.SemiBold)
+                            Text(f.name, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                             Text((if (f.mimeType == "application/pdf") "PDF" else "Zdjęcie") + " • " +
                                 String.format(Locale("pl", "PL"), "%.1f kB", f.size / 1024.0),
-                                color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
-                            if (f.profession.isNotBlank()) Text("Zawód: " + f.profession, color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                            if (f.profession.isNotBlank()) Text("Zawód: " + f.profession, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                         }
                         TextButton(onClick = {
                             runCatching { ProfessionalCredentialStore.deleteFile(context, f) }
@@ -396,10 +396,10 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                     }
                 }
             }
-        if (files.isEmpty()) Text("Nie dodano jeszcze dokumentów kwalifikacyjnych.", color = Color(0xFF667788))
-        if (status.isNotBlank()) Text(status, color = Color(0xFF1769AA), style = MaterialTheme.typography.bodySmall)
+        if (files.isEmpty()) Text("Nie dodano jeszcze dokumentów kwalifikacyjnych.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (status.isNotBlank()) Text(status, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
         Text("Pliki i dane są przechowywane lokalnie w zaszyfrowanej postaci. Kopia zapasowa Androida nie obejmuje tego archiwum. Sam zapis w aplikacji nie potwierdza autentyczności ani uznania kwalifikacji przez właściwy organ.",
-            color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
     }
 
     val target = editing ?: if (adding) ProfessionCredential(UUID.randomUUID().toString(), "", "", "other",

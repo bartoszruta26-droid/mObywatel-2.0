@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso
+import org.junit.Before
+
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -18,6 +23,21 @@ class BankAccountsNavigationTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    @Before
+    fun resetDocumentDisplayPreferences() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.getSharedPreferences("document_display_preferences", Context.MODE_PRIVATE)
+            .edit().clear().commit()
+    }
+
+    private fun openSettingsMenu() {
+        enterDemoMode()
+        composeRule.onNodeWithContentDescription("Więcej").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
+        composeRule.waitForIdle()
+    }
+
     private fun enterDemoMode() {
         // Plansza z godłem jest wyświetlana przez 1,5 s przed ekranem powitalnym.
         composeRule.waitUntil(timeoutMillis = 5_000) {
@@ -33,11 +53,33 @@ class BankAccountsNavigationTest {
 
     @Test
     fun documentWalletOpensBankAccountsInReadOnlyMode() {
-        enterDemoMode()
+        // Włącz widoczność rachunków przez rzeczywisty ekran ustawień.
+        openSettingsMenu()
+        composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("document-placement-bank_accounts-dashboard")
+            .performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("‹  Powrót do ustawień").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        // Wróć do pulpitu przez widoczny element nawigacji zamiast polegać
+        // na globalnym BackHandler, który zależy od aktywnej podstrony.
+        composeRule.onNodeWithText("‹  Powrót do ekranu głównego")
+            .performScrollTo()
+            .performClick()
+        composeRule.waitForIdle()
+
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
-        // Grupy są nagłówkami jednego katalogu; rachunki otwierają się bezpośrednio z listy.
-        composeRule.onAllNodesWithText("Konta bankowe", substring = false)[0]
+        // Karta nawigacyjna „Dokumenty” otwiera pulpit; portfel dokumentów
+        // znajduje się pod nagłówkiem „Zarządzaj” na tym pulpicie.
+        composeRule.onNodeWithText("Zarządzaj").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        // Na pulpicie występuje kilka kart „Konta bankowe” (różne miejsca
+        // prezentacji tego samego dokumentu). Wybierz pierwszą kartę w sekcji
+        // „Zarządzaj”, zamiast wymagać globalnej unikalności tekstu.
+        composeRule.onAllNodesWithText("Konta bankowe", substring = false)
+            .get(0)
             .performScrollTo()
             .assertHasClickAction()
             .performClick()
@@ -47,8 +89,6 @@ class BankAccountsNavigationTest {
             .performScrollTo()
             .performClick()
         composeRule.waitForIdle()
-        // Ekran szczegółów jest przewijany; przewiń do komunikatu zamiast
-        // zakładać, że znajduje się on od razu w widocznym obszarze.
         composeRule.onNodeWithText(
             "Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia."
         ).performScrollTo().assertIsDisplayed()
@@ -70,5 +110,50 @@ class BankAccountsNavigationTest {
         // Kontrolki formularza leżą niżej w przewijanym ekranie.
         composeRule.onNodeWithText("Dodaj rachunek").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Zapisz").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun androidBackReturnsFromApplicationAppearanceToSettingsMenu() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Ustawienia aplikacji").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Motyw i kolory").assertIsDisplayed()
+
+        Espresso.pressBack()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Wspólny wygląd legitymacji")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun documentIconsCanBeSelectedGloballyAndPerDocument() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Domyślna ikona dokumentów").assertIsDisplayed()
+        composeRule.onNodeWithText("Automatycznie — ikona przypisana do dokumentu").performClick()
+        composeRule.onNodeWithText("Karta").performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Dowód tożsamości").performScrollTo()
+        // Każdy wiersz dokumentu ma własny selektor; drugi odpowiada „Dowód tożsamości”.
+        composeRule.onNodeWithTag("document-icon-selector-identity").performScrollTo().performClick()
+        composeRule.onNodeWithText("Paszport").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Paszport").assertIsDisplayed()
+    }
+
+    @Test
+    fun individualCredentialEditorExposesBackgroundSelectors() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Tło legitymacji").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Wybierz tło z katalogu").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Wczytaj własne tło").performScrollTo().assertIsDisplayed()
     }
 }

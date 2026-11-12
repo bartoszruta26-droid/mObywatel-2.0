@@ -627,7 +627,7 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             Text("Widoczność pól ustawiasz bezpośrednio przy odpowiednim polu danych.", style = MaterialTheme.typography.bodySmall)
             }
-            if (assetSelectionOnly) {
+            if (assetSelectionOnly || documentKey != GLOBAL_LEGITIMACY_APPEARANCE_KEY) {
             Text("Wybierz herb, flagę, tło i logo niezależnie dla tego dokumentu.", style = MaterialTheme.typography.bodySmall)
             Text("Herb / godło / logo", fontWeight = FontWeight.SemiBold)
             Box {
@@ -831,14 +831,20 @@ internal fun LegitimacyHeraldry(
         if (settings.showFlag && selectedFlag != null) {
             Image(
                 selectedFlag.asImageBitmap(),
-                contentDescription = "Flaga dokumentu",
-                modifier = Modifier.fillMaxWidth(0.76f).height(48.dp)
+                contentDescription = "Flaga dokumentu — pod fotografią, przy lewym marginesie",
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .fillMaxWidth(0.76f)
+                    .height(48.dp)
                     .graphicsLayer {
+                        // Flaga jest elementem kolumny zdjęcia: pozostaje przy jej lewym
+                        // marginesie i nie dziedziczy przesunięć używanych dla godła.
+                        transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
                         scaleX = settings.graphicScale
                         scaleY = settings.graphicScale
                         rotationZ = settings.graphicRotation
-                        translationX = settings.graphicOffsetX * density
-                        translationY = settings.graphicOffsetY * density
+                        translationX = 0f
+                        translationY = 0f
                     },
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )

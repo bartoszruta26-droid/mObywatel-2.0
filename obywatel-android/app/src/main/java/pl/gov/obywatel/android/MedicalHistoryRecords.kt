@@ -133,33 +133,33 @@ internal fun MedicalHistoryRecordsScreen(onBack: () -> Unit) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("‹  Powrót", color = Color(0xFF1769AA), fontWeight = FontWeight.SemiBold,
+        Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Historia chorób", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Prywatne archiwum dokumentacji zdrowotnej — zdjęcia wyników badań, wypisów, rozpoznań, konsultacji, kart informacyjnych i innych dokumentów medycznych.",
-            style = MaterialTheme.typography.bodySmall, color = Color(0xFF596675))
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Prywatność i status danych", color = Color(0xFF172B45), fontWeight = FontWeight.Bold)
+                Text("Prywatność i status danych", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 Text("Zdjęcia i opisy są przechowywane lokalnie w prywatnym obszarze aplikacji i szyfrowane kluczem Android Keystore. Moduł nie łączy się z IKP, placówkami ani rejestrami i nie potwierdza autentyczności dokumentów. To osobiste archiwum, a nie oficjalna dokumentacja medyczna.",
-                    style = MaterialTheme.typography.bodySmall, color = Color(0xFF26384A))
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
             }
         }
         if (selected == null) {
             if (entries.isEmpty()) {
-                Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Text("Archiwum jest puste. Dodaj pierwszy wpis i dołącz do niego dowolną liczbę zdjęć (maksymalnie 40 na wpis).",
-                        Modifier.padding(16.dp), color = Color(0xFF26384A))
+                        Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurface)
                 }
             }
             entries.forEach { entry ->
                 Card(Modifier.fillMaxWidth().clickable { selectedId = entry.id },
-                    colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                        Text(entry.title.ifBlank { "Historia choroby — bez tytułu" }, color = Color(0xFF172B45), fontWeight = FontWeight.Bold)
-                        Text("Data: ${entry.date.ifBlank { "nie podano" }}", color = Color(0xFF596675))
-                        if (entry.diagnosis.isNotBlank()) Text("Rozpoznanie: ${entry.diagnosis}", color = Color(0xFF26384A))
-                        Text("Zdjęcia: ${entry.images.size}  •  Otwórz ›", color = Color(0xFF1769AA), fontWeight = FontWeight.SemiBold)
+                        Text(entry.title.ifBlank { "Historia choroby — bez tytułu" }, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                        Text("Data: ${entry.date.ifBlank { "nie podano" }}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (entry.diagnosis.isNotBlank()) Text("Rozpoznanie: ${entry.diagnosis}", color = MaterialTheme.colorScheme.onSurface)
+                        Text("Zdjęcia: ${entry.images.size}  •  Otwórz ›", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -176,12 +176,12 @@ internal fun MedicalHistoryRecordsScreen(onBack: () -> Unit) {
                 "Placówka / laboratorium" to selected.facility,
                 "Lekarz / osoba wystawiająca" to selected.physician).forEach { (label, value) ->
                 if (value.isNotBlank()) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(label, color = Color(0xFF596675), style = MaterialTheme.typography.labelSmall)
-                    Text(value, color = Color(0xFF172B45))
+                    Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                    Text(value, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
-            if (selected.notes.isNotBlank()) Text("Opis i uwagi: ${selected.notes}", color = Color(0xFF26384A))
-            Text("Załączone zdjęcia: ${selected.images.size}", fontWeight = FontWeight.Bold, color = Color(0xFF172B45))
+            if (selected.notes.isNotBlank()) Text("Opis i uwagi: ${selected.notes}", color = MaterialTheme.colorScheme.onSurface)
+            Text("Załączone zdjęcia: ${selected.images.size}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             selected.images.forEachIndexed { index, encoded ->
                 val bitmap = remember(encoded) {
                     runCatching {
@@ -190,17 +190,17 @@ internal fun MedicalHistoryRecordsScreen(onBack: () -> Unit) {
                     }.getOrNull()
                 }
                 if (bitmap != null) {
-                    Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                         Column(Modifier.fillMaxWidth().padding(8.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             Image(bitmap, contentDescription = "Zdjęcie dokumentu medycznego ${index + 1}",
                                 modifier = Modifier.fillMaxWidth().height(210.dp))
-                            Text("Zdjęcie ${index + 1}", color = Color(0xFF596675))
+                            Text("Zdjęcie ${index + 1}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             TextButton(onClick = {
                                 persist(entries.map { if (it.id == selected.id) it.copy(images = it.images.filterIndexed { i, _ -> i != index }) else it })
                             }) { Text("Usuń zdjęcie") }
                         }
                     }
-                } else Text("Nie można wyświetlić zdjęcia ${index + 1}.", color = Color(0xFFB3261E))
+                } else Text("Nie można wyświetlić zdjęcia ${index + 1}.", color = MaterialTheme.colorScheme.error)
             }
             OutlinedButton(onClick = { imagePicker.launch(arrayOf("image/*")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Dodaj kolejne zdjęcia")
@@ -210,7 +210,7 @@ internal fun MedicalHistoryRecordsScreen(onBack: () -> Unit) {
                 selectedId = null
             }, modifier = Modifier.fillMaxWidth()) { Text("Usuń całą historię") }
         }
-        if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Color(0xFF1769AA) else Color(0xFFB3261E))
+        if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
         Spacer(Modifier.height(8.dp))
     }
 
@@ -230,7 +230,7 @@ internal fun MedicalHistoryRecordsScreen(onBack: () -> Unit) {
                         Text("Wybierz wiele zdjęć")
                     }
                     Text("Dołączono zdjęć: ${pendingImages.size} / 40. Zdjęcia są zmniejszane do maksymalnie 1800 px i zapisywane jako JPEG.",
-                        color = Color(0xFF596675), style = MaterialTheme.typography.bodySmall)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     pendingImages.take(4).forEachIndexed { index, encoded ->
                         val preview = remember(encoded) {
                             runCatching {

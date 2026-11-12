@@ -104,6 +104,8 @@ import androidx.compose.material.icons.filled.Train
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -135,14 +137,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import pl.gov.obywatel.android.ui.theme.Blue
-import pl.gov.obywatel.android.ui.theme.BlueLight
-import pl.gov.obywatel.android.ui.theme.Border
-import pl.gov.obywatel.android.ui.theme.Ink
-import pl.gov.obywatel.android.ui.theme.Muted
-import pl.gov.obywatel.android.ui.theme.Navy
 import pl.gov.obywatel.android.ui.theme.ObywatelTheme
-import pl.gov.obywatel.android.ui.theme.White
 import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
 import pl.gov.obywatel.android.ui.services.PublicServicesScreen
@@ -251,11 +246,11 @@ private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Stri
         }
     }
 
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Odczyt dokumentu z filmu przez OCR", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Odczyt dokumentu z filmu przez OCR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             Text("Nagraj krótki film, powoli pokazując dokument z bliska. Aplikacja pobierze do 24 klatek nagrania, rozpozna tekst na każdej z nich i połączy wyniki, aby uzupełnić pasujące pola. Możesz też wybrać wcześniej nagrany film albo zdjęcie/skan. OCR nie potwierdza autentyczności dokumentu.",
-                color = Muted, style = MaterialTheme.typography.bodySmall)
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = {
                 runCatching {
                     val file = File.createTempFile("document-ocr-video-", ".mp4", context.cacheDir)
@@ -265,11 +260,11 @@ private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Stri
             }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Nagraj film dokumentu") }
             OutlinedButton(onClick = { videoPicker.launch("video/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz nagrany film") }
             OutlinedButton(onClick = { photoPicker.launch("image/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz zdjęcie lub skan") }
-            if (processing) Text("Analiza klatek filmu i uzupełnianie pól…", color = Blue)
-            if (mappedCount > 0) Text("Wstępnie uzupełniono $mappedCount pustych pól", color = Blue, fontWeight = FontWeight.SemiBold)
+            if (processing) Text("Analiza klatek filmu i uzupełnianie pól…", color = MaterialTheme.colorScheme.primary)
+            if (mappedCount > 0) Text("Wstępnie uzupełniono $mappedCount pustych pól", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             if (recognizedText.isNotBlank()) {
-                Text("Tekst rozpoznany z nagrania — sprawdź", color = Navy, fontWeight = FontWeight.SemiBold)
-                Text(recognizedText, color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Tekst rozpoznany z nagrania — sprawdź", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                Text(recognizedText, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -333,9 +328,9 @@ private fun LoyaltyCardsEditor(
         }
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Karty lojalnościowe sklepów", color = Navy, fontWeight = FontWeight.Bold)
+        Text("Karty lojalnościowe sklepów", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
         Text("Można prowadzić maksymalnie 25 kart. Dane można ręcznie poprawiać. Zdjęcie jest przetwarzane bez zapisywania pliku w pamięci aplikacji; zapisujesz wyłącznie sprawdzone dane tekstowe.",
-            color = Muted, style = MaterialTheme.typography.bodySmall)
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = {
                 if (cardCount < 25) {
@@ -364,7 +359,7 @@ private fun LoyaltyCardsEditor(
                 androidx.compose.material3.FilterChip(selected = selectedCard == n, onClick = { selectedCard = n }, label = { Text(n.toString()) })
             }
         }
-        Text("Karta $selectedCard z $cardCount", color = Navy, fontWeight = FontWeight.SemiBold)
+        Text("Karta $selectedCard z $cardCount", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
         DemoDataField("${prefix}Store", "Sklep / marka", fields)
         DemoDataField("${prefix}Program", "Nazwa programu lojalnościowego", fields)
         DemoDataField("${prefix}Number", "Numer karty nadany przez sklep", fields)
@@ -385,7 +380,7 @@ private fun LoyaltyCardsEditor(
                 liveScanner.launch(options)
             }, modifier = Modifier.weight(1f)) { Text("Skanuj kod") }
         }
-        if (processing) Text("Odczytywanie obrazu…", color = Blue)
+        if (processing) Text("Odczytywanie obrazu…", color = MaterialTheme.colorScheme.primary)
         val barcodePayload = fields["${prefix}Barcode"].orEmpty().ifBlank { fields["${prefix}Number"].orEmpty() }
         val qrPayload = fields["${prefix}Qr"].orEmpty().ifBlank { fields["${prefix}Number"].orEmpty() }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -402,8 +397,8 @@ private fun LoyaltyCardsEditor(
         }
         LoyaltyGeneratedCodes(barcodePayload, qrPayload)
         if (fields["${prefix}OcrText"].orEmpty().isNotBlank()) {
-            Text("Pełny tekst rozpoznany przez OCR", color = Navy, fontWeight = FontWeight.SemiBold)
-            Text(fields["${prefix}OcrText"].orEmpty(), color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text("Pełny tekst rozpoznany przez OCR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+            Text(fields["${prefix}OcrText"].orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         AdditionalInformationSection("Źródło i weryfikacja danych karty", fields, "loyaltyExtra",
             "OCR i skaner dostarczają propozycję danych, a nie potwierdzenie ich poprawności. Numer lokalny jest identyfikatorem tej ewidencji i nie jest numerem wydanym przez sklep.")
@@ -415,7 +410,7 @@ private fun LoyaltyGeneratedCodes(barcodeValue: String, qrValue: String) {
     val barcode = remember(barcodeValue) { generateLoyaltyCodeBitmap(barcodeValue, BarcodeFormat.CODE_128) }
     val qr = remember(qrValue) { generateLoyaltyCodeBitmap(qrValue, BarcodeFormat.QR_CODE) }
     if (barcode != null || qr != null) {
-        Text("Podgląd kodów", color = Navy, fontWeight = FontWeight.SemiBold)
+        Text("Podgląd kodów", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
         if (barcode != null) Image(barcode.asImageBitmap(), contentDescription = "Kod kreskowy karty lojalnościowej",
             modifier = Modifier.fillMaxWidth().height(76.dp), contentScale = ContentScale.Fit)
         if (qr != null) Image(qr.asImageBitmap(), contentDescription = "Kod QR karty lojalnościowej",
@@ -723,7 +718,6 @@ private data class ServiceItem(
     val subtitle: String,
     val icon: Int? = null,
     val fallbackIcon: ImageVector? = null,
-    val tint: Color = Blue,
     val category: String = "Pozostałe"
 )
 
@@ -800,6 +794,71 @@ private fun saveDocumentCardStyle(context: Context, style: String) {
         .edit().putString(DOCUMENT_CARD_STYLE_KEY, style).commit()) {
         "Nie udało się zapisać układu kafelków dokumentów."
     }
+}
+
+private const val DOCUMENT_DEFAULT_ICON_KEY = "default_document_icon"
+private const val DOCUMENT_ICON_OVERRIDE_PREFIX = "document_icon_"
+private val documentIconChoices = listOf(
+    "lib_ic_document" to "Dokument",
+    "lib_ic_account" to "Osoba",
+    "lib_ic_credit_card" to "Karta",
+    "lib_ic_folder" to "Folder",
+    "lib_ic_medical_record" to "Dokument medyczny",
+    "lib_ic_school" to "Edukacja",
+    "lib_ic_building" to "Budynek",
+    "lib_ic_wallet" to "Portfel",
+    "lib_ic_fingerprint" to "Odcisk palca",
+    "lib_ic_flag" to "Flaga",
+    "documents_identity_card" to "Dowód tożsamości",
+    "documents_passport" to "Paszport",
+    "documents_family_record" to "Dokument rodowy",
+    "documents_student_legitimacy" to "Legitymacja uczniowska"
+)
+private fun loadDefaultDocumentIcon(context: Context): String =
+    context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+        .getString(DOCUMENT_DEFAULT_ICON_KEY, "automatic")
+        ?.takeIf { it == "automatic" || documentIconChoices.any { choice -> choice.first == it } }
+        ?: "automatic"
+private fun saveDefaultDocumentIcon(context: Context, value: String) {
+    require(value == "automatic" || documentIconChoices.any { it.first == value })
+    check(context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+        .edit().putString(DOCUMENT_DEFAULT_ICON_KEY, value).commit()) {
+        "Nie udało się zapisać domyślnej ikony dokumentów."
+    }
+}
+private fun loadDocumentIconOverrides(context: Context): Map<String, String> {
+    val prefs = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+    return documentDisplayOptions.mapNotNull { (id, _, _) ->
+        prefs.getString(DOCUMENT_ICON_OVERRIDE_PREFIX + id, null)
+            ?.takeIf { selected -> documentIconChoices.any { it.first == selected } }
+            ?.let { id to it }
+    }.toMap()
+}
+private fun saveDocumentIconOverrides(context: Context, values: Map<String, String>) {
+    val editor = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE).edit()
+    documentDisplayOptions.forEach { (id, _, _) ->
+        val value = values[id]
+        if (value.isNullOrBlank()) editor.remove(DOCUMENT_ICON_OVERRIDE_PREFIX + id)
+        else {
+            require(documentIconChoices.any { it.first == value }) { "Nieprawidłowa ikona dokumentu: $id" }
+            editor.putString(DOCUMENT_ICON_OVERRIDE_PREFIX + id, value)
+        }
+    }
+    check(editor.commit()) { "Nie udało się zapisać indywidualnych ikon dokumentów." }
+}
+private fun resolveDocumentIconResource(
+    context: Context,
+    documentId: String,
+    defaultIcon: String,
+    overrides: Map<String, String>
+): Int {
+    val selected = overrides[documentId] ?: defaultIcon
+    if (selected != "automatic") {
+        context.resources.getIdentifier(selected, "drawable", context.packageName)
+            .takeIf { it != 0 }?.let { return it }
+    }
+    return documentDisplayOptions.firstOrNull { it.first == documentId }?.third
+        ?: R.drawable.lib_ic_document
 }
 private fun loadDocumentPlacements(context: Context): Map<String, String> {
     val prefs = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
@@ -903,6 +962,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
     var documentPlacements by remember(context) { mutableStateOf(loadDocumentPlacements(context)) }
     var documentCardStyle by remember(context) { mutableStateOf(loadDocumentCardStyle(context)) }
+    var defaultDocumentIcon by remember(context) { mutableStateOf(loadDefaultDocumentIcon(context)) }
+    var documentIconOverrides by remember(context) { mutableStateOf(loadDocumentIconOverrides(context)) }
     var selectedTab by remember { mutableIntStateOf(0) }
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
@@ -929,11 +990,11 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun handleSystemBack() {
         when {
-            showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false }
+            showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
-            showImportedDocuments -> { showImportedDocuments = false; selectedTab = 1 }
+            showImportedDocuments -> showImportedDocuments = false
             showBankAccounts -> showBankAccounts = false
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
@@ -1003,11 +1064,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
                         onChange = onAppearanceChange,
+                        documentCardStyle = documentCardStyle,
+                        onDocumentCardStyleChange = { style ->
+                            saveDocumentCardStyle(context, style)
+                            documentCardStyle = style
+                        },
                         onBack = { showApplicationAppearanceSettings = false; showSettingsMenu = true }
                     )
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
-                    showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false; selectedTab = 1 }, readOnly = true)
+                    showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
                     showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
                     showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
@@ -1032,6 +1098,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onDocumentCardStyleChange = { style ->
                             saveDocumentCardStyle(context, style)
                             documentCardStyle = style
+                        },
+                        defaultDocumentIcon = defaultDocumentIcon,
+                        onDefaultDocumentIconChange = { selected ->
+                            saveDefaultDocumentIcon(context, selected)
+                            defaultDocumentIcon = selected
+                        },
+                        documentIconOverrides = documentIconOverrides,
+                        onDocumentIconOverridesChange = { updated ->
+                            saveDocumentIconOverrides(context, updated)
+                            documentIconOverrides = updated
                         },
                         onBack = { showDocumentVisibilitySettings = false; showSettingsMenu = true }
                     )
@@ -1090,6 +1166,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onAddDocuments = { showDemoDocuments = false; showDocumentVisibilitySettings = true },
                         documentPlacements = documentPlacements,
                         documentCardStyle = documentCardStyle,
+                        defaultDocumentIcon = defaultDocumentIcon,
+                        documentIconOverrides = documentIconOverrides,
                         onOpenDetails = { selectedDocumentId = it },
                         onOpenService = { title ->
                             when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
@@ -1302,7 +1380,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     style = MaterialTheme.typography.bodySmall)
                                             }
-                                            Text("Otwórz", color = Blue, fontWeight = FontWeight.Bold)
+                                            Text("Otwórz", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                                         }
                                     }
                                     Spacer(Modifier.height(10.dp))
@@ -1329,14 +1407,14 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                             val active = serviceCategory == category
                                             Box(
                                                 modifier = Modifier.clip(RoundedCornerShape(18.dp))
-                                                    .background(if (active) Blue else MaterialTheme.colorScheme.surface)
-                                                    .border(1.dp, if (active) Blue else MaterialTheme.colorScheme.outline,
+                                                    .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
+                                                    .border(1.dp, if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                                                         RoundedCornerShape(18.dp))
                                                     .clickable { serviceCategory = category }
                                                     .padding(horizontal = 11.dp, vertical = 8.dp)
                                             ) {
                                                 Text(category,
-                                                    color = if (active) White else MaterialTheme.colorScheme.onSurface,
+                                                    color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                                     style = MaterialTheme.typography.labelMedium,
                                                     fontWeight = if (active) FontWeight.Bold else FontWeight.Medium)
                                             }
@@ -1357,7 +1435,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                     } else {
                                         visibleServices.forEach { service ->
                                             ServiceCard(
-                                                service,
+                                                item = service,
+                                                tileStyle = documentCardStyle,
                                                 isFavorite = favoriteServices[service.title] == true,
                                                 onFavorite = {
                                                     favoriteServices[service.title] = favoriteServices[service.title] != true
@@ -1513,7 +1592,7 @@ private fun QrToolsScreen() {
 
 @Composable
 private fun QrSubscreenHeader(label: String, onBack: () -> Unit) {
-    Text("‹  $label", color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(horizontal = 20.dp, vertical = 8.dp))
+    Text("‹  $label", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(horizontal = 20.dp, vertical = 8.dp))
 }
 
 private const val QR_BRAND_NONE = "none"
@@ -1522,17 +1601,17 @@ private const val QR_BRAND_FILE = "file"
 
 @Composable
 private fun QrBrandingControls(branding: String, onBrandingChange: (String) -> Unit, logoLoaded: Boolean, onChooseLogo: () -> Unit, onClearLogo: () -> Unit) {
-    Text("Znak graficzny obok kodu QR", color = Navy, fontWeight = FontWeight.Bold)
+    Text("Znak graficzny obok kodu QR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
     listOf(QR_BRAND_STATE to "Godło państwowe", QR_BRAND_FILE to "Logo z pliku", QR_BRAND_NONE to "Bez znaku").forEach { (value, label) ->
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { onBrandingChange(value) }) {
             RadioButton(selected = branding == value, onClick = { onBrandingChange(value) })
-            Text(label, color = Ink, style = MaterialTheme.typography.bodyMedium)
+            Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
         }
     }
     if (branding == QR_BRAND_FILE) {
         OutlinedButton(onClick = onChooseLogo, modifier = Modifier.fillMaxWidth()) { Text(if (logoLoaded) "Zmień załączone logo" else "Wybierz logo z pliku") }
         if (logoLoaded) OutlinedButton(onClick = onClearLogo, modifier = Modifier.fillMaxWidth()) { Text("Usuń załączone logo") }
-        Text("Logo jest wyświetlane poza kodem QR. Żaden jego fragment nie zasłania modułów kodu.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Logo jest wyświetlane poza kodem QR. Żaden jego fragment nie zasłania modułów kodu.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -1731,16 +1810,16 @@ private fun DocumentDetailsScreen(
     ) {
         Text(
             "‹  Wróć do dokumentów",
-            color = Blue,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp)
         )
-        Text(title, color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(title, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         if (values.isEmpty()) {
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = BlueLight)) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Brak zapisanych danych tego dokumentu.", fontWeight = FontWeight.SemiBold, color = Navy)
-                    Text("Uzupełnij dane w ustawieniach, aby wyświetlić podgląd.", color = Muted)
+                    Text("Brak zapisanych danych tego dokumentu.", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Uzupełnij dane w ustawieniach, aby wyświetlić podgląd.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         } else {
@@ -1816,19 +1895,19 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Obywatelska Wymiana Danych", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("OWD • niezależna wymiana danych między zgodnymi aplikacjami", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Text("Wybór danych do udostępnienia", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        Text("Obywatelska Wymiana Danych", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("OWD • niezależna wymiana danych między zgodnymi aplikacjami", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text("Wybór danych do udostępnienia", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
         if (populated.isEmpty()) {
-            Text("Brak zapisanych danych do udostępnienia. Uzupełnij je w Ustawieniach.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text("Brak zapisanych danych do udostępnienia. Uzupełnij je w Ustawieniach.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         } else {
-            Text("Zakres udostępnienia", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Zakres udostępnienia", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             listOf(
                 "all" to "Wszystkie dane i dokumenty",
                 "documents" to "Wybrane dokumenty",
                 "document_fields" to "Dane z wybranego dokumentu"
             ).forEach { (mode, label) ->
-                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 5.dp),
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(MaterialTheme.colorScheme.surface).padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = selectionMode == mode, onClick = {
                         selectionMode = mode
@@ -1836,15 +1915,15 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                         consent = false
                         if (mode == "document_fields") selectedDocumentFields = populatedByDocument[selectedDocumentId].orEmpty()
                     })
-                    Text(label, color = Navy, fontWeight = if (selectionMode == mode) FontWeight.Bold else FontWeight.Medium)
+                    Text(label, color = MaterialTheme.colorScheme.onSurface, fontWeight = if (selectionMode == mode) FontWeight.Bold else FontWeight.Medium)
                 }
             }
             when (selectionMode) {
                 "documents" -> {
-                    Text("Zaznacz dokumenty, których dane mają wejść do zakresu.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text("Zaznacz dokumenty, których dane mają wejść do zakresu.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }.forEach { group ->
                         val keys = populatedByDocument[group.id].orEmpty()
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 5.dp),
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(MaterialTheme.colorScheme.surface).padding(horizontal = 10.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             androidx.compose.material3.Checkbox(checked = group.id in selectedDocuments, onCheckedChange = { checked ->
                                 selectedDocuments = if (checked) selectedDocuments + group.id else selectedDocuments - group.id
@@ -1852,17 +1931,17 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                                 consent = false
                             })
                             Column(Modifier.weight(1f)) {
-                                Text(group.title, color = Navy, fontWeight = FontWeight.SemiBold)
-                                Text("${keys.size} dostępnych pól", color = Muted, style = MaterialTheme.typography.bodySmall)
+                                Text(group.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                                Text("${keys.size} dostępnych pól", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
                 }
                 "document_fields" -> {
-                    Text("Wybierz jeden dokument, a następnie zaznacz konkretne pola.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text("Wybierz jeden dokument, a następnie zaznacz konkretne pola.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     val availableGroups = documentGroups.filter { populatedByDocument[it.id].orEmpty().isNotEmpty() }
                     availableGroups.forEach { group ->
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 3.dp),
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(MaterialTheme.colorScheme.surface).padding(horizontal = 10.dp, vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(selected = selectedDocumentId == group.id, onClick = {
                                 selectedDocumentId = group.id
@@ -1870,12 +1949,12 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                                 offerQr = null
                                 consent = false
                             })
-                            Text(group.title, color = Navy, fontWeight = if (selectedDocumentId == group.id) FontWeight.Bold else FontWeight.Medium)
+                            Text(group.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = if (selectedDocumentId == group.id) FontWeight.Bold else FontWeight.Medium)
                         }
                     }
                     val currentGroup = documentGroups.firstOrNull { it.id == selectedDocumentId }
                     currentGroup?.fields?.filter { it.second in populatedByDocument[selectedDocumentId].orEmpty() }?.forEach { (label, key) ->
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(White).padding(horizontal = 10.dp, vertical = 4.dp),
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp)).background(MaterialTheme.colorScheme.surface).padding(horizontal = 10.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             androidx.compose.material3.Checkbox(checked = key in selectedDocumentFields, onCheckedChange = { checked ->
                                 selectedDocumentFields = if (checked) selectedDocumentFields + key else selectedDocumentFields - key
@@ -1883,20 +1962,20 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
                                 consent = false
                             })
                             Column(Modifier.weight(1f)) {
-                                Text(label, color = Navy, fontWeight = FontWeight.Medium)
-                                Text(fields[key].orEmpty(), color = Muted, style = MaterialTheme.typography.bodySmall)
+                                Text(label, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
+                                Text(fields[key].orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
                 }
             }
-            Text("Wybrano ${selected.size} pól z ${allPopulatedKeys.size}. Zmiana zakresu unieważnia poprzednią zgodę i kod QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text("Wybrano ${selected.size} pól z ${allPopulatedKeys.size}. Zmiana zakresu unieważnia poprzednią zgodę i kod QR.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         OutlinedTextField(value = purpose, onValueChange = { purpose = it; consent = false; offerQr = null },
             modifier = Modifier.fillMaxWidth(), label = { Text("Cel udostępnienia") }, minLines = 2)
         Row(verticalAlignment = Alignment.CenterVertically) {
             androidx.compose.material3.Checkbox(checked = consent, onCheckedChange = { consent = it; offerQr = null })
-            Text("Potwierdzam świadomy wybór zakresu i celu udostępnienia danych.", color = Ink, style = MaterialTheme.typography.bodySmall)
+            Text("Potwierdzam świadomy wybór zakresu i celu udostępnienia danych.", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
         }
         QrBrandingControls(
             branding = qrBranding,
@@ -1932,23 +2011,23 @@ private fun OwdHubScreen(onOpenVCard: () -> Unit, onOpenWebsite: () -> Unit) {
             },
             modifier = Modifier.fillMaxWidth()
         ) { Text("Skanuj kod QR OWD") }
-        Text(sessionMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(sessionMessage, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         offerQr?.let { bitmap ->
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         "Oferta sesji OWD • pozostało ${offerQrRemainingSeconds / 60}:${(offerQrRemainingSeconds % 60).toString().padStart(2, '0')}",
-                        color = Navy, fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
                     )
                     Image(bitmap.asImageBitmap(), contentDescription = "Kod QR oferty sesji OWD", modifier = Modifier.size(250.dp))
-                     Text("To inicjuje sesję kryptograficzną. Skaner OWD potrafi rozpoznać i zweryfikować ofertę; wymiana kluczy, przesłanie rekordów i potwierdzenie odbioru wymagają jeszcze pełnego połączenia obu urządzeń.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                     Text("To inicjuje sesję kryptograficzną. Skaner OWD potrafi rozpoznać i zweryfikować ofertę; wymiana kluczy, przesłanie rekordów i potwierdzenie odbioru wymagają jeszcze pełnego połączenia obu urządzeń.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
         OutlinedButton(onClick = onOpenVCard, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator wizytówki vCard") }
         OutlinedButton(onClick = onOpenWebsite, modifier = Modifier.fillMaxWidth()) { Text("Otwórz generator kodu strony internetowej") }
-        Text("Prywatność: dane nie są umieszczane w kodzie inicjującym. Odbiorca i cel muszą zostać zweryfikowani przed właściwym transferem. Dane rodzinne/rodowe są całkowicie wyłączone z obecnego zakresu OWD.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Prywatność: dane nie są umieszczane w kodzie inicjującym. Odbiorca i cel muszą zostać zweryfikowani przed właściwym transferem. Dane rodzinne/rodowe są całkowicie wyłączone z obecnego zakresu OWD.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -1990,7 +2069,7 @@ private fun SaveQrImageButton(bitmap: Bitmap, fileName: String) {
         modifier = Modifier.fillMaxWidth()
     ) { Text("Zapisz grafikę QR (PNG)") }
     if (saveMessage.isNotBlank()) {
-        Text(saveMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(saveMessage, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -2013,22 +2092,22 @@ private fun WebsiteQrScreen() {
         else runCatching { generateBrandedQr(context, normalized, branding, uploadedLogo) }.getOrNull()
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Kod QR strony internetowej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Kod zawiera adres strony. Zeskanowanie otworzy go w przeglądarce po zatwierdzeniu przez użytkownika.", color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Text("Kod QR strony internetowej", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Kod zawiera adres strony. Zeskanowanie otworzy go w przeglądarce po zatwierdzeniu przez użytkownika.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         OutlinedTextField(value = address, onValueChange = { address = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Adres strony (URL)") }, placeholder = { Text("https://example.org") }, singleLine = true)
         QrBrandingControls(branding, { branding = it }, uploadedLogo != null, { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/*")) }, { uploadedLogo = null; message = "Usunięto logo." })
-        Text(message, color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         if (qrBitmap != null) {
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Kod QR strony", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Kod QR strony", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR strony internetowej", modifier = Modifier.size(260.dp), contentScale = ContentScale.Fit)
-                     Text(normalized, color = Muted, style = MaterialTheme.typography.bodySmall)
+                     Text(normalized, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     SaveQrImageButton(qrBitmap, "adres-url-qr.png")
                 }
             }
-        } else Text(if (!validUrl) "Podaj poprawny adres rozpoczynający się od http:// lub https://." else "Wybierz logo z pliku albo ustaw opcję „Bez znaku”.", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Text("Godło lub logo jest wyświetlane obok kodu. Sam kod pozostaje czysty, bez nakładek. Przed publikacją sprawdź skanowanie na kilku urządzeniach.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        } else Text(if (!validUrl) "Podaj poprawny adres rozpoczynający się od http:// lub https://." else "Wybierz logo z pliku albo ustaw opcję „Bez znaku”.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text("Godło lub logo jest wyświetlane obok kodu. Sam kod pozostaje czysty, bez nakładek. Przed publikacją sprawdź skanowanie na kilku urządzeniach.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 @Composable
@@ -2090,19 +2169,19 @@ private fun VCardQrScreen() {
         else runCatching { generateBrandedQr(context, payload, branding, uploadedLogo) }.getOrNull()
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text("Kod QR", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Generator kodu kontaktowego", color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text("Utwórz kod QR zawierający wizytówkę vCard. Zgodna aplikacja odbiorcy może odczytać dane i zaproponować zapis kontaktu.", color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Text("Kod QR", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Generator kodu kontaktowego", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text("Utwórz kod QR zawierający wizytówkę vCard. Zgodna aplikacja odbiorcy może odczytać dane i zaproponować zapis kontaktu.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Wizytówka kontaktowa", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Kod zawiera dane kontaktowe wybrane przez użytkownika.", color = Ink, style = MaterialTheme.typography.bodySmall)
+                Text("Wizytówka kontaktowa", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                Text("Kod zawiera dane kontaktowe wybrane przez użytkownika.", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
             }
         }
         OutlinedButton(onClick = { vCardPicker.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth()) {
             Text("Wczytaj plik vCard (.vcf)")
         }
-        Text(importMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(importMessage, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         QrBrandingControls(
             branding = branding,
             onBrandingChange = { branding = it },
@@ -2110,9 +2189,9 @@ private fun VCardQrScreen() {
             onChooseLogo = { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/*")) },
             onClearLogo = { uploadedLogo = null; logoMessage = "Usunięto logo." }
         )
-        Text(logoMessage, color = Muted, style = MaterialTheme.typography.bodySmall)
-        Text("Dane kontaktowe", color = Navy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-        Text("Pola są domyślnie uzupełniane z profilu. Możesz je edytować przed wygenerowaniem wizytówki. Dane identyfikacyjne, takie jak PESEL i numery dokumentów, nie są kopiowane do kodu QR.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(logoMessage, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text("Dane kontaktowe", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        Text("Pola są domyślnie uzupełniane z profilu. Możesz je edytować przed wygenerowaniem wizytówki. Dane identyfikacyjne, takie jak PESEL i numery dokumentów, nie są kopiowane do kodu QR.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         val fields = listOf(
             "FN" to "Nazwa wyświetlana",
             "N" to "Nazwisko;Imię;Drugie imię;Prefiks;Sufiks",
@@ -2137,9 +2216,9 @@ private fun VCardQrScreen() {
             importMessage = "Wyczyszczono formularz."
         }, modifier = Modifier.fillMaxWidth()) { Text("Wyczyść dane") }
         if (qrBitmap != null) {
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Twój kod QR", color = Navy, fontWeight = FontWeight.Bold)
+                    Text("Twój kod QR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     Image(qrBitmap.asImageBitmap(), contentDescription = "Kod QR z wizytówką vCard", modifier = Modifier.size(250.dp), contentScale = ContentScale.Fit)
                     SaveQrImageButton(qrBitmap, "wizytowka-vcard-qr.png")
                   }
@@ -2150,9 +2229,9 @@ private fun VCardQrScreen() {
                 branding == QR_BRAND_FILE && uploadedLogo == null -> "Wybierz logo z pliku albo ustaw opcję „Bez znaku”."
                 else -> "Nie udało się przygotować kodu QR. Sprawdź dane kontaktowe i spróbuj ponownie."
             }
-            Text(hint, color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text(hint, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
-        Text("Prywatność: kod ujawnia każdej osobie skanującej wszystkie zapisane w nim dane. Nie dodawaj numeru PESEL, danych dokumentu ani informacji poufnych.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Prywatność: kod ujawnia każdej osobie skanującej wszystkie zapisane w nim dane. Nie dodawaj numeru PESEL, danych dokumentu ani informacji poufnych.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -2203,8 +2282,8 @@ private fun MoreMenuScreen(
             .padding(horizontal = 18.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Informacje, bezpieczeństwo i ustawienia", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Więcej", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Informacje, bezpieczeństwo i ustawienia", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Historia działań", "Lista czynności w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
         ProfileActionCard("Wydane certyfikaty", "Informacje o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
@@ -2229,20 +2308,20 @@ private fun ProfileLandingScreen(
             .padding(horizontal = 18.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("Więcej", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Więcej", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         CivicIllustrationBanner(
             imageRes = R.drawable.header_logo_panel,
             description = "Panel znaku i identyfikacji aplikacji"
         )
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Blue, modifier = Modifier.size(48.dp))
+                Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(
                         listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ").ifBlank { "Użytkownik" },
-                        color = Navy, fontWeight = FontWeight.Bold
+                        color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold
                     )
-                    Text("Profil użytkownika", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Text("Profil użytkownika", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -2251,7 +2330,7 @@ private fun ProfileLandingScreen(
         ProfileActionCard("Ustawienia", "Otwórz menu zarządzania danymi", Icons.Filled.Settings, onOpenSettings)
         Text(
             "Dane profilu możesz uzupełniać i aktualizować w ustawieniach.",
-            color = Muted, style = MaterialTheme.typography.bodySmall
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
         )
     }
 }
@@ -2260,16 +2339,16 @@ private fun ProfileLandingScreen(
 private fun ProfileActionCard(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = Blue, modifier = Modifier.size(28.dp))
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
             Column(Modifier.weight(1f).padding(start = 13.dp)) {
-                Text(title, color = Navy, fontWeight = FontWeight.SemiBold)
-                Text(subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
-            Icon(Icons.Filled.MoreHoriz, contentDescription = "Otwórz", tint = Muted)
+            Icon(Icons.Filled.MoreHoriz, contentDescription = "Otwórz", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -2294,9 +2373,9 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("‹  Powrót do usług", color = Blue, fontWeight = FontWeight.SemiBold,
+        Text("‹  Powrót do usług", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
-        Text(title, color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(title, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         CivicIllustrationBanner(
             imageRes = when (title) {
                 "Zdrowie" -> R.drawable.navigation_help
@@ -2306,9 +2385,9 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
             },
             description = "Ilustracja tematyczna modułu $title"
         )
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                Text(descriptions[title] ?: "Moduł informacyjny.", color = Ink)
+                Text(descriptions[title] ?: "Moduł informacyjny.", color = MaterialTheme.colorScheme.onSurface)
             }
         }
         if (title == "Bezpieczeństwo") {
@@ -2317,7 +2396,7 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
         if (title == "Zdrowie") {
             ProfileActionCard("Dane o niepełnosprawności", "Otwórz ewidencję dokumentów i wskazań", Icons.Filled.HealthAndSafety, onOpenDocuments)
         }
-        Text("Dostępne funkcje i zakres danych są opisane bezpośrednio w poszczególnych modułach.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Dostępne funkcje i zakres danych są opisane bezpośrednio w poszczególnych modułach.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -2413,8 +2492,8 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.file_5320_eagle_vector),
-                        contentDescription = "Biały orzeł w koronie ze złotą koroną",
+                        painter = painterResource(R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg),
+                        contentDescription = "Godło Polski — czysty znak wektorowy na przezroczystym tle",
                         modifier = Modifier.size(61.dp),
                         contentScale = ContentScale.Fit
                     )
@@ -2429,42 +2508,68 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
 private fun SectionHeading(title: String, subtitle: String) {
     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
         Column {
-            Text(title, color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text(title, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
-        Text("ZOBACZ", color = Blue, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+        Text("ZOBACZ", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-private fun ServiceCard(item: ServiceItem, isFavorite: Boolean, onFavorite: () -> Unit, onClick: () -> Unit) {
+private fun ServiceCard(
+    item: ServiceItem,
+    tileStyle: String,
+    isFavorite: Boolean,
+    onFavorite: () -> Unit,
+    onClick: () -> Unit
+) {
+    val compact = tileStyle == "small"
+    val list = tileStyle == "list"
+    val cardModifier = when {
+        list -> Modifier.fillMaxWidth().height(82.dp)
+        compact -> Modifier.fillMaxWidth().height(112.dp)
+        else -> Modifier.fillMaxWidth().aspectRatio(1.14f)
+    }
     Card(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1.14f).clickable(onClick = onClick),
+        modifier = cardModifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(17.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(13.dp)).background(BlueLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (item.icon != null) {
-                        Icon(painter = painterResource(item.icon), contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp))
-                    } else {
-                        item.fallbackIcon?.let { Icon(it, contentDescription = item.title, tint = item.tint, modifier = Modifier.size(24.dp)) }
+        Row(
+            Modifier.fillMaxSize().padding(if (list) 10.dp else 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier.size(if (list || compact) 36.dp else 44.dp)
+                    .clip(RoundedCornerShape(13.dp)).background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                if (item.icon != null) {
+                    Icon(painter = painterResource(item.icon), contentDescription = item.title,
+                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                } else {
+                    item.fallbackIcon?.let {
+                        Icon(it, contentDescription = item.title, tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp))
                     }
                 }
-                Text(if (isFavorite) "★" else "☆", color = if (isFavorite) Color(0xFFB7791F) else Muted,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.clickable(onClick = onFavorite).padding(3.dp))
             }
-            Column {
-                Text(item.title, color = Navy, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(3.dp))
-                Text(item.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                Text(item.title, color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (!list) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(item.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
             }
+            Text(if (isFavorite) "★" else "☆",
+                color = if (isFavorite) Color(0xFFB7791F) else MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.clickable(onClick = onFavorite).padding(3.dp))
         }
     }
 }
@@ -2477,45 +2582,92 @@ private fun DocumentVisibilitySettingsScreen(
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     documentCardStyle: String,
     onDocumentCardStyleChange: (String) -> Unit,
+    defaultDocumentIcon: String,
+    onDefaultDocumentIconChange: (String) -> Unit,
+    documentIconOverrides: Map<String, String>,
+    onDocumentIconOverridesChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit
 ) {
+    var defaultIconMenu by remember { mutableStateOf(false) }
+    var expandedDocumentIcon by remember { mutableStateOf<String?>(null) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("‹  Powrót do ustawień", color = Blue, fontWeight = FontWeight.SemiBold,
+        Text("‹  Powrót do ustawień", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Widoczność dokumentów", color = Navy, style = MaterialTheme.typography.headlineSmall,
+        Text("Widoczność dokumentów", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text("Dla każdego dokumentu wybierz miejsce wyświetlania. Ukrycie dokumentu nie usuwa jego danych ani załączników.",
-            color = Muted, style = MaterialTheme.typography.bodyMedium)
-        Text("Wygląd kafelków w oknie Dokumenty", color = Navy, fontWeight = FontWeight.Bold)
-        Text("Wybierz sposób prezentacji dokumentów.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        Text("Wygląd kafelków w oknie Dokumenty", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Text("Wybierz sposób prezentacji dokumentów.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text("Domyślna ikona dokumentów", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Text("Ustawienie obejmuje wszystkie dokumenty. Ikona indywidualna wybrana niżej ma pierwszeństwo.", color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+        Box {
+            OutlinedButton(onClick = { defaultIconMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(if (defaultDocumentIcon == "automatic") "Automatycznie — ikona przypisana do dokumentu"
+                    else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second ?: "Wybierz ikonę")
+            }
+            DropdownMenu(expanded = defaultIconMenu, onDismissRequest = { defaultIconMenu = false }) {
+                DropdownMenuItem(text = { Text("Automatycznie — ikona przypisana do dokumentu") }, onClick = {
+                    onDefaultDocumentIconChange("automatic"); defaultIconMenu = false
+                })
+                documentIconChoices.forEach { (resource, label) ->
+                    DropdownMenuItem(text = { Text(label) }, onClick = {
+                        onDefaultDocumentIconChange(resource); defaultIconMenu = false
+                    })
+                }
+            }
+        }
         listOf("large" to "Duże kafelki", "small" to "Małe kafelki", "list" to "Kafelki listy").forEach { (value, label) ->
             Row(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                    .background(if (documentCardStyle == value) BlueLight else Color.Transparent)
+                    .background(if (documentCardStyle == value) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
                     .clickable { onDocumentCardStyleChange(value) }
                     .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(selected = documentCardStyle == value, onClick = { onDocumentCardStyleChange(value) })
-                Text(label, color = Ink, style = MaterialTheme.typography.bodyMedium)
+                Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
             }
         }
         documentDisplayOptions.forEach { (id, title, iconRes) ->
-            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Image(painter = painterResource(iconRes), contentDescription = null, modifier = Modifier.size(42.dp))
-                        Text(title, color = Navy, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Image(painter = painterResource(resolveDocumentIconResource(
+                            LocalContext.current, id, defaultDocumentIcon, documentIconOverrides
+                        )), contentDescription = null, modifier = Modifier.size(42.dp))
+                        Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    }
+                    Box {
+                        OutlinedButton(onClick = { expandedDocumentIcon = id }, modifier = Modifier.fillMaxWidth().testTag("document-icon-selector-$id")) {
+                            val selected = documentIconOverrides[id]
+                            Text(if (selected == null) "Ikona domyślna: " +
+                                (if (defaultDocumentIcon == "automatic") "automatyczna" else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second.orEmpty())
+                                else documentIconChoices.firstOrNull { it.first == selected }?.second ?: "Ikona indywidualna")
+                        }
+                        DropdownMenu(expanded = expandedDocumentIcon == id, onDismissRequest = { expandedDocumentIcon = null }) {
+                            DropdownMenuItem(text = { Text("Użyj ikony domyślnej") }, onClick = {
+                                onDocumentIconOverridesChange(documentIconOverrides - id); expandedDocumentIcon = null
+                            })
+                            documentIconChoices.forEach { (resource, label) ->
+                                DropdownMenuItem(text = { Text(label) }, onClick = {
+                                    onDocumentIconOverridesChange(documentIconOverrides + (id to resource))
+                                    expandedDocumentIcon = null
+                                })
+                            }
+                        }
                     }
                     listOf("dashboard" to "Dokumenty", "other" to "Inne dokumenty", "hidden" to "Ukryj").forEach { (value, label) ->
                         Row(
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                                .background(if (documentPlacements[id] == value) BlueLight else Color.Transparent)
+                                .background(if (documentPlacements[id] == value) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
                                 .clickable { onDocumentPlacementsChange(documentPlacements + (id to value)) }
+                                .testTag("document-placement-$id-$value")
                                 .padding(horizontal = 8.dp, vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -2523,7 +2675,7 @@ private fun DocumentVisibilitySettingsScreen(
                                 selected = documentPlacements[id] == value,
                                 onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) }
                             )
-                            Text(label, color = Ink, style = MaterialTheme.typography.bodyMedium)
+                            Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
@@ -2555,11 +2707,11 @@ private fun SettingsMenuScreen(
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("‹  Powrót do ekranu głównego", color = Blue, fontWeight = FontWeight.SemiBold,
+        Text("‹  Powrót do ekranu głównego", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Ustawienia", color = Navy, style = MaterialTheme.typography.headlineSmall,
+        Text("Ustawienia", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Zarządzanie danymi", color = Muted,
+        Text("Zarządzanie danymi", color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium)
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -2567,9 +2719,9 @@ private fun SettingsMenuScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Edycja tylko w Ustawieniach", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Edycja tylko w Ustawieniach", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 Text("Portfel dokumentów i jego szczegóły są widokami do odczytu. Formularze edycji można otworzyć wyłącznie z tego menu.",
-                    color = Muted, style = MaterialTheme.typography.bodySmall)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }
         ProfileActionCard(
@@ -2596,12 +2748,12 @@ private fun SettingsMenuScreen(
             Icons.Filled.Description,
             onManageDocumentBrandAssets
         )
-        Text("Kopia danych vCard", color = Navy, fontWeight = FontWeight.Bold)
-        Text("Eksport obejmuje pola profilu i ewidencji, w tym załączone dane tekstowe. Plik może zawierać dane wrażliwe — przechowuj go bezpiecznie.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Kopia danych vCard", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Text("Eksport obejmuje pola profilu i ewidencji, w tym załączone dane tekstowe. Plik może zawierać dane wrażliwe — przechowuj go bezpiecznie.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Eksportuj wszystkie dane", "Zapisz jedno archiwum .vcf", Icons.Filled.Description, onExportAll)
         ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
-        if (importStatus.isNotBlank()) Text(importStatus, color = Blue, style = MaterialTheme.typography.bodySmall)
-        Text("Dane profilu i dokumenty", color = Navy, fontWeight = FontWeight.Bold)
+        if (importStatus.isNotBlank()) Text(importStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+        Text("Dane profilu i dokumenty", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
         ProfileActionCard("Odpis z rejestru podmiotów", "Wprowadzanie i aktualizacja danych podmiotów", Icons.Filled.AccountBalance, onEditRegistry)
         ProfileActionCard("Dane osobowe", "Zdjęcie profilowe, dane osoby i rodziców",
             Icons.Filled.AccountCircle, { onEditDocuments("profile") })
@@ -2633,7 +2785,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
-            color = Muted, style = MaterialTheme.typography.bodySmall)
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -2649,14 +2801,14 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("‹  Powrót", color = Blue, fontWeight = FontWeight.SemiBold,
+        Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
-        Text("Ustawienia danych o niepełnosprawności", color = Navy,
+        Text("Ustawienia danych o niepełnosprawności", color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Uzupełnij dane zgodnie z posiadanym dokumentem lub informacją źródłową.", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+        Text("Uzupełnij dane zgodnie z posiadanym dokumentem lub informacją źródłową.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                Text("Źródło dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Źródło dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 val options = listOf(
                     "powiat" to "Zespół powiatowy / miejski",
                     "other_law" to "Inny organ — odrębna podstawa prawna",
@@ -2668,15 +2820,15 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                     val selected = (fields["disabilityAuthorityType"] ?: "powiat") == value
                     Row(
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                            .background(if (selected) BlueLight else Color(0xFFF3F4EF))
-                            .border(1.dp, if (selected) Blue else Border, RoundedCornerShape(9.dp))
+                            .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(9.dp))
                             .clickable { fields["disabilityAuthorityType"] = value }
                             .padding(11.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(if (selected) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
-                            contentDescription = null, tint = if (selected) Blue else Muted)
-                        Text(label, modifier = Modifier.padding(start = 9.dp), color = Ink,
+                            contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(label, modifier = Modifier.padding(start = 9.dp), color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
                     }
@@ -2685,20 +2837,20 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                 DemoDataField("disabilityIssuerName", "Osoba podpisująca / wystawca", fields)
                 DemoDataField("disabilityLegalBasis", "Podstawa prawna lub regulacyjna", fields)
                 DemoDataField("disabilityFoundationStatute", "Statut / uchwała fundacji (jeśli dotyczy)", fields)
-                Text("Dane osoby i dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Dane osoby i dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityPersonName", "Imię i nazwisko", fields)
                 DemoDataField("disabilityBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
                 DemoDataField("disabilityPeselOrId", "PESEL / identyfikator", fields)
                 DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / zaświadczenia", fields)
                 DemoDataField("disabilityDecisionDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("disabilityDecisionPlace", "Miejsce wydania", fields)
-                Text("Ustalony stopień i okres", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Ustalony stopień i okres", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityCategory", "Kategoria", fields)
                 DemoDataField("disabilityDegree", "Stopień niepełnosprawności", fields, "znaczny / umiarkowany / lekki")
                 DemoDataField("disabilityCauseCodes", "Symbole / przyczyny", fields)
                 DemoDataField("disabilityValidity", "Okres obowiązywania", fields, "na stałe / do DD-MM-RRRR")
                 DemoDataField("disabilityFromDate", "Data ustalenia niepełnosprawności", fields, "DD-MM-RRRR")
-                Text("Wskazania i potrzeby wsparcia", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Wskazania i potrzeby wsparcia", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityEmployment", "Zatrudnienie", fields)
                 DemoDataField("disabilityTraining", "Szkolenie", fields)
                 DemoDataField("disabilityTherapy", "Terapia / rehabilitacja", fields)
@@ -2706,7 +2858,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                 DemoDataField("disabilityCare", "Opieka / pomoc innej osoby", fields)
                 DemoDataField("disabilityMobility", "Wsparcie środowiskowe", fields)
                 DemoDataField("disabilityParking", "Karta parkingowa — wskazania", fields)
-                Text("Metodologia i ocena funkcjonalna (opcjonalnie)", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Metodologia i ocena funkcjonalna (opcjonalnie)", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityAssessmentMethod", "Metoda oceny (np. ICF)", fields)
                 DemoDataField("disabilityWhodasScore", "WHODAS 2.0 — wynik / data oceny", fields)
                 DemoDataField("disabilityMedicalQualification", "Kwalifikacje osoby oceniającej", fields)
@@ -2719,7 +2871,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Zapisz dane") }
-                if (saveMessage.isNotBlank()) Text(saveMessage, color = Blue, style = MaterialTheme.typography.bodySmall)
+                if (saveMessage.isNotBlank()) Text(saveMessage, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -2738,13 +2890,13 @@ private fun CertificatesScreen(onBack: () -> Unit) {
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("‹  Powrót", color = Blue, fontWeight = FontWeight.SemiBold,
+        Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
-        Text("Zaświadczenia", color = Navy, style = MaterialTheme.typography.headlineSmall,
+        Text("Zaświadczenia", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
-        Text("Zapisane dane dokumentów i zaświadczeń", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text("Zapisane dane dokumentów i zaświadczeń", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         if (hasDisabilityData) {
-            Text("Orzeczenie / zaświadczenie o niepełnosprawności", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Orzeczenie / zaświadczenie o niepełnosprawności", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             DisabilityDecisionPreview(fields)
             listOf(
                 "Organ / wystawca" to "disabilityAuthorityName",
@@ -2757,18 +2909,18 @@ private fun CertificatesScreen(onBack: () -> Unit) {
                 val value = fields[key].orEmpty()
                 if (value.isNotBlank()) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(label, color = Muted, style = MaterialTheme.typography.bodySmall)
-                        Text(value, color = Ink, style = MaterialTheme.typography.bodySmall,
+                        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                        Text(value, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold, modifier = Modifier.width(190.dp))
                     }
                 }
             }
         } else {
-            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                    Icon(Icons.Filled.Description, contentDescription = null, tint = Blue, modifier = Modifier.size(30.dp))
-                    Text("Brak zapisanych danych", color = Navy, fontWeight = FontWeight.Bold)
-                    Text("Dodaj dane o niepełnosprawności w Ustawieniach. Po zapisaniu pojawią się tutaj.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Icon(Icons.Filled.Description, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(30.dp))
+                    Text("Brak zapisanych danych", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    Text("Dodaj dane o niepełnosprawności w Ustawieniach. Po zapisaniu pojawią się tutaj.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -2781,9 +2933,12 @@ private fun DocumentsWalletScreen(
     onAddDocuments: () -> Unit,
     documentPlacements: Map<String, String>,
     documentCardStyle: String,
+    defaultDocumentIcon: String,
+    documentIconOverrides: Map<String, String>,
     onOpenDetails: (String) -> Unit,
     onOpenService: (String) -> Unit
 ) {
+    val context = LocalContext.current
     data class CatalogDocument(
         val id: String,
         val title: String,
@@ -2815,8 +2970,8 @@ private fun DocumentsWalletScreen(
         CatalogDocument("children", "Dokumentacja dzieci", "Rodzinna ewidencja danych i dokumentacji dzieci", listOf("Cywilne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Rejestry"), service = "Dane dzieci", icon = Icons.Filled.AccountCircle),
         CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
     )
-    val visibleDocuments = documents.filter { documentPlacements[it.id] == "dashboard" || documentPlacements[it.id] == "other" }
-    val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry")
+    val visibleDocuments = documents.filter { documentPlacements[it.id] != "hidden" }
+    val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry", "Inne dokumenty")
 
     fun openDocument(document: CatalogDocument) {
         when {
@@ -2830,17 +2985,21 @@ private fun DocumentsWalletScreen(
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("‹  Pulpit", color = Blue, fontWeight = FontWeight.SemiBold,
+        Text("‹  Pulpit", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Dokumenty", color = Navy, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text("Dokumenty", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
             "Wybierz dokument. Grupy porządkują katalog, a każda pozycja otwiera bezpośrednio podgląd dokumentu.",
-            color = Muted, style = MaterialTheme.typography.bodySmall
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
         )
         categories.forEach { category ->
-            val entries = visibleDocuments.filter { category in it.categories }
+            val entries = if (category == "Inne dokumenty") {
+                visibleDocuments.filter { documentPlacements[it.id] == "other" }
+            } else {
+                visibleDocuments.filter { documentPlacements[it.id] == "dashboard" && category in it.categories }
+            }
             if (entries.isNotEmpty()) {
-                Text(category, color = Navy, fontWeight = FontWeight.Bold,
+                Text(category, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 5.dp))
                 if (documentCardStyle == "list") {
@@ -2850,7 +3009,7 @@ private fun DocumentsWalletScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             border = androidx.compose.foundation.BorderStroke(
-                                1.dp, if (documentPlacements[document.id] == "dashboard") Blue else Border
+                                1.dp, if (documentPlacements[document.id] == "dashboard") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                             )
                         ) {
                             Row(
@@ -2858,13 +3017,14 @@ private fun DocumentsWalletScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(11.dp)
                             ) {
-                                Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
+                                Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
+                                    contentDescription = document.title, modifier = Modifier.size(27.dp))
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                    Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
+                                    Text(document.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
                                         style = MaterialTheme.typography.bodyMedium)
-                                    Text(document.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                                    Text(document.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 }
-                                Text("Podgląd  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
+                                Text("Podgląd  ›", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -2880,11 +3040,12 @@ private fun DocumentsWalletScreen(
                                     shape = RoundedCornerShape(13.dp),
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                                     border = androidx.compose.foundation.BorderStroke(
-                                        1.dp, if (documentPlacements[document.id] == "dashboard") Blue else Border
+                                        1.dp, if (documentPlacements[document.id] == "dashboard") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                                     )
                                 ) {
                                     Box(Modifier.fillMaxSize().padding(10.dp)) {
-                                        Icon(document.icon, contentDescription = null, tint = Blue,
+                                        Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
+                                            contentDescription = document.title,
                                             modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 23.dp else 30.dp))
                                         DocumentCardEmblem(
                                             documentKey = document.id,
@@ -2892,10 +3053,10 @@ private fun DocumentsWalletScreen(
                                                 .size(if (documentCardStyle == "small") 24.dp else 32.dp)
                                         )
                                         Column(Modifier.align(Alignment.BottomStart).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                            Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
+                                            Text(document.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
                                                 style = if (documentCardStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
                                                 maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                            if (documentCardStyle == "large") Text(document.subtitle, color = Muted,
+                                            if (documentCardStyle == "large") Text(document.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                         }
                                     }
@@ -2991,18 +3152,18 @@ private fun ReadOnlyAdditionalInformationSection(fields: Map<String, String>, pr
     val populated = rows.filter { !fields[it.second].isNullOrBlank() }
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F5F8))) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Źródła i informacje dodatkowe", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Źródła i informacje dodatkowe", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             if (populated.isEmpty()) {
-                Text("Brak wpisów dotyczących źródła, podstawy, weryfikacji lub adnotacji.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Brak wpisów dotyczących źródła, podstawy, weryfikacji lub adnotacji.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             } else {
                 populated.forEach { (label, key) ->
                     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
-                        Text(fields[key].orEmpty(), color = Navy, fontWeight = FontWeight.Medium)
+                        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+                        Text(fields[key].orEmpty(), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
                     }
                 }
             }
-            Text("Oświadczenie użytkownika opisuje dane zgodnie z jego wiedzą oraz wskazaną podstawą i źródłem.", color = Muted, style = MaterialTheme.typography.labelSmall)
+            Text("Oświadczenie użytkownika opisuje dane zgodnie z jego wiedzą oraz wskazaną podstawą i źródłem.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -3076,14 +3237,14 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
     ) {
         Text(
             text = "‹  Powrót do ustawień",
-            color = Blue,
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp)
         )
         Text(
             editorTitle,
-            color = Navy,
+            color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -3094,16 +3255,16 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Zdjęcie profilowe", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Zdjęcie profilowe", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 Box(
                     modifier = Modifier.fillMaxWidth().height(150.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFF0F3F6))
-                        .border(1.dp, Border, RoundedCornerShape(12.dp)),
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     if (photoBase64.isNotBlank()) {
@@ -3118,20 +3279,20 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                             }
                         }
                         if (bitmap != null) Image(bitmap.asImageBitmap(), contentDescription = "Zdjęcie profilowe", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                        else Text("Nie można wyświetlić zdjęcia", color = Muted)
+                        else Text("Nie można wyświetlić zdjęcia", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Muted, modifier = Modifier.size(42.dp))
-                            Text("MIEJSCE NA ZDJĘCIE", color = Muted, fontWeight = FontWeight.Bold)
-                            Text("Nie wybrano fotografii", color = Muted, style = MaterialTheme.typography.bodySmall)
+                            Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(42.dp))
+                            Text("MIEJSCE NA ZDJĘCIE", color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
+                            Text("Nie wybrano fotografii", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Wybierz zdjęcie", color = Blue, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { selectedPhotoField = "photo"; photoPicker.launch("image/*") }.padding(vertical = 8.dp))
+                    Text("Wybierz zdjęcie", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { selectedPhotoField = "photo"; photoPicker.launch("image/*") }.padding(vertical = 8.dp))
                     if (photoBase64.isNotBlank()) Text("Usuń zdjęcie", color = Color(0xFF9B2C2C), fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { photoBase64 = ""; fields["photo"] = "" }.padding(vertical = 8.dp))
                 }
-                Text("Pozostałe fotografie", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Pozostałe fotografie", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 listOf(
                     "photoAlternative1" to "Zdjęcie alternatywne 1",
                     "photoAlternative2" to "Zdjęcie alternatywne 2",
@@ -3152,7 +3313,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                         }
                     }
                 }
-                Text("Dane osobowe", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Dane osobowe", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("firstNames", "Imię / imiona", fields)
                 DemoDataField("lastName", "Nazwisko", fields)
                 DemoDataField("contactPhone", "Telefon kontaktowy", fields)
@@ -3173,11 +3334,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Rodowy dokument tożsamości — dane dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Rodowy dokument tożsamości — dane dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("familyDocNumber", "Numer rodowego dokumentu", fields)
                 DemoDataField("familyName", "Nazwa rodu", fields)
                 DemoDataField("familyLine", "Linia / gałąź rodu", fields)
@@ -3215,11 +3376,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Podstawowe dane identyfikacyjne", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Podstawowe dane identyfikacyjne", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("firstNames", "Imię / imiona", fields)
                 DemoDataField("lastName", "Nazwisko", fields)
                 DemoDataField("birthDate", "Data urodzenia", fields, "DD-MM-RRRR")
@@ -3228,7 +3389,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("sex", "Płeć (dane deklarowane)", fields)
                 DemoDataField("birthSurname", "Nazwisko rodowe", fields)
                 DemoDataField("pesel", "Numer PESEL", fields)
-                Text("Dane samego dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Dane samego dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("idNumber", "Numer dokumentu tożsamości", fields)
                 DemoDataField("idIssueDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("idExpiryDate", "Data ważności", fields, "DD-MM-RRRR")
@@ -3238,8 +3399,8 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("idLossOrInvalidationDate", "Data utraty / unieważnienia", fields, "DD-MM-RRRR")
                 Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF2D9))) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Dane identyfikacyjne i dokumentowe", color = Navy, fontWeight = FontWeight.SemiBold)
-                        Text("Uzupełnij dane zgodnie z dokumentem źródłowym, w tym numer, organ wydający i terminy ważności.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                        Text("Dane identyfikacyjne i dokumentowe", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                        Text("Uzupełnij dane zgodnie z dokumentem źródłowym, w tym numer, organ wydający i terminy ważności.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 OwdDocumentArtworkCard(
@@ -3273,11 +3434,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Legitymacja poselska — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Legitymacja poselska — dane ewidencyjne", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("mpCardNumber", "Numer ewidencyjny legitymacji", fields)
                 DemoDataField("mpTerm", "Kadencja", fields)
                 DemoDataField("mpDistrict", "Okręg wyborczy", fields)
@@ -3287,11 +3448,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpIssuer", "Organ / osoba wystawiająca", fields)
                 DemoDataField("mpStatus", "Status legitymacji", fields, "aktywna / zwrócona / unieważniona")
                 DemoDataField("mpMandateSource", "Źródło potwierdzenia mandatu", fields)
-                Text("Dane dotyczące ślubowania — oświadczenie własne", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Dane dotyczące ślubowania — oświadczenie własne", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
                 DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
-                Text("Podgląd cyfrowej legitymacji", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Podgląd cyfrowej legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 ParliamentaryCredentialPreview(fields)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja poselska", fields, "mpExtra", "Art. 104 Konstytucji RP określa wolny mandat poselski oraz obowiązek złożenia ślubowania przed Sejmem przed rozpoczęciem sprawowania mandatu. Odmowa ślubowania oznacza zrzeczenie się mandatu. Sam wpis ewidencyjny nie potwierdza uzyskania mandatu ani prawa do reprezentowania Sejmu.")
             }
@@ -3301,11 +3462,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Legitymacja uczestnika kursu — instytucja szkoleniowa", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Legitymacja uczestnika kursu — instytucja szkoleniowa", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("trainingInstitution", "Nazwa instytucji szkoleniowej", fields)
                 DemoDataField("trainingInstitutionAddress", "Adres instytucji", fields)
                 DemoDataField("trainingInstitutionRegistry", "Numer wpisu / rejestru instytucji (jeśli dotyczy)", fields)
@@ -3324,7 +3485,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("trainingAssessment", "Zaliczenie / egzamin / wynik", fields)
                 DemoDataField("trainingCertificateNumber", "Numer zaświadczenia o ukończeniu", fields)
                 DemoDataField("trainingForm", "Forma kształcenia", fields, "stacjonarna / zdalna / hybrydowa")
-                Text("Podgląd legitymacji", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 SchoolLegitimacyPreview(fields, photoBase64, student = false)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "trainingExtra", "Legitymacja instytucji szkoleniowej potwierdza status w ewidencji wystawcy w granicach regulaminu i właściwej podstawy działania. Nie jest legitymacją studencką i sama nie nadaje statusu studenta uczelni.")
             }
@@ -3334,11 +3495,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Legitymacja ucznia/studenta — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Legitymacja ucznia/studenta — dane ewidencyjne", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("studentUniversity", "Nazwa uczelni", fields)
                 DemoDataField("studentUniversityAddress", "Adres uczelni", fields)
                 DemoDataField("studentUniversityId", "Identyfikator uczelni / jednostki", fields)
@@ -3354,7 +3515,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("studentValidity", "Termin ważności / aktualizacji", fields, "DD-MM-RRRR")
                 DemoDataField("studentStatus", "Status studenta", fields, "aktywny / urlop / skreślony / ukończony")
                 DemoDataField("studentIssuer", "Osoba / jednostka wydająca", fields)
-                Text("Podgląd legitymacji", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 SchoolLegitimacyPreview(fields, photoBase64, student = true)
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "studentExtra", "")
             }
@@ -3367,12 +3528,12 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Orzeczenie o niepełnosprawności — dane ewidencyjne", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Źródło ustalenia / dokumentu", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text("Orzeczenie o niepełnosprawności — dane ewidencyjne", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                Text("Źródło ustalenia / dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 val authorityOptions = listOf(
                     "powiat" to "Zespół powiatowy / miejski",
                     "other_law" to "Orzeczenie na podstawie innych przepisów",
@@ -3385,17 +3546,17 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                         val selected = (fields["disabilityAuthorityType"] ?: "powiat") == value
                         Row(
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                                .background(if (selected) BlueLight else Color(0xFFF3F4EF))
-                                .border(1.dp, if (selected) Blue else Border, RoundedCornerShape(9.dp))
+                                .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                                .border(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(9.dp))
                                 .clickable { fields["disabilityAuthorityType"] = value }
                                 .padding(horizontal = 12.dp, vertical = 11.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 if (selected) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
-                                contentDescription = null, tint = if (selected) Blue else Muted
+                                contentDescription = null, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Text(label, modifier = Modifier.padding(start = 9.dp), color = if (selected) Navy else Ink,
+                            Text(label, modifier = Modifier.padding(start = 9.dp), color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                 style = MaterialTheme.typography.bodyMedium)
                         }
@@ -3428,23 +3589,23 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     "self_declaration" -> {
                         DemoDataField("disabilitySelfDeclarationDate", "Data złożenia oświadczenia", fields, "DD-MM-RRRR")
                         DemoDataField("disabilitySelfDeclarationBasis", "Podstawa i cel oświadczenia", fields)
-                        Text("Oświadczenie własne zapisuje deklarację osoby. Samo w sobie nie jest orzeczeniem ustawowym; jego znaczenie zależy od przepisu lub procedury, w której jest składane.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                        Text("Oświadczenie własne zapisuje deklarację osoby. Samo w sobie nie jest orzeczeniem ustawowym; jego znaczenie zależy od przepisu lub procedury, w której jest składane.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     }
                 }
-                Text("Dane osoby i rozstrzygnięcia", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text("Dane osoby i rozstrzygnięcia", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / rozstrzygnięcia", fields)
                 DemoDataField("disabilityDecisionDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("disabilityDecisionPlace", "Miejsce wydania", fields)
                 DemoDataField("disabilityPersonName", "Osoba, której dotyczy orzeczenie", fields, "Imię i nazwisko")
                 DemoDataField("disabilityBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
                 DemoDataField("disabilityPeselOrId", "PESEL / identyfikator ewidencyjny", fields)
-                Text("Ustalony status / stopień", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text("Ustalony status / stopień", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 DemoDataField("disabilityCategory", "Kategoria", fields, "np. osoba do 16 lat / osoba powyżej 16 lat")
                 DemoDataField("disabilityDegree", "Stopień niepełnosprawności", fields, "znaczny / umiarkowany / lekki / nie dotyczy")
                 DemoDataField("disabilityCauseCodes", "Symbole przyczyn (maks. 3 w orzeczeniu powiatowym)", fields, "np. 05-R, 10-N")
                 DemoDataField("disabilityValidity", "Okres, na jaki ustalono status", fields, "na stałe / do DD-MM-RRRR")
                 DemoDataField("disabilityFromDate", "Data, od której ustalono niepełnosprawność", fields, "DD-MM-RRRR")
-                Text("Wskazania i potrzeby wsparcia", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text("Wskazania i potrzeby wsparcia", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 DemoDataField("disabilityEmployment", "Wskazania dotyczące zatrudnienia", fields)
                 DemoDataField("disabilityTraining", "Wskazania dotyczące szkolenia", fields)
                 DemoDataField("disabilityTherapy", "Terapia zajęciowa / rehabilitacja", fields)
@@ -3452,7 +3613,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("disabilityCare", "Opieka / pomoc innej osoby", fields)
                 DemoDataField("disabilityMobility", "Środowiskowy system wsparcia", fields)
                 DemoDataField("disabilityParking", "Wskazania dotyczące karty parkingowej", fields)
-                Text("Skład i podpisy", color = Navy, fontWeight = FontWeight.SemiBold)
+                Text("Skład i podpisy", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 DemoDataField("disabilityMedicalAssessment", "Lekarz / osoba dokonująca oceny", fields)
                 DemoDataField("disabilityPanelMembers", "Skład zespołu / osoby uczestniczące w ocenie", fields)
                 DemoDataField("disabilityChairperson", "Przewodniczący zespołu", fields)
@@ -3465,7 +3626,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("disabilityAppealOutcome", "Wynik odwołania / sprzeciwu", fields)
                 DemoDataField("disabilityDuplicateInfo", "Duplikat / zmiana dokumentu", fields)
                 DemoDataField("disabilitySourceAttachment", "Nazwa / opis dokumentu źródłowego", fields)
-                Text("Podgląd dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Podgląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DisabilityDecisionPreview(fields)
                 AdditionalInformationSection("Informacje dodatkowe — orzeczenie / zaświadczenie", fields, "disabilityExtra", when (fields["disabilityAuthorityType"] ?: "powiat") {
                     "foundation" -> "Dokument fundacji opisuje się zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego."
@@ -3481,11 +3642,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Dane paszportowe", color = Navy, fontWeight = FontWeight.Bold)
+                Text("Dane paszportowe", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("passportNumber", "Numer dokumentu paszportowego", fields)
                 DemoDataField("passportCountry", "Państwo wydania", fields)
                 DemoDataField("passportIssueDate", "Data wydania", fields, "DD-MM-RRRR")
@@ -3518,10 +3679,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             }
         }
         }
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Konfiguracja i zapis", color = Navy, fontWeight = FontWeight.Bold)
-                Text("Dane i zdjęcie są zabezpieczane przed nieuprawnionym dostępem.", color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text("Konfiguracja i zapis", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                Text("Dane i zdjęcie są zabezpieczane przed nieuprawnionym dostępem.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 androidx.compose.material3.Button(
                     onClick = {
                         runCatching {
@@ -3533,11 +3694,11 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Zapisz dane i zdjęcie") }
-                if (saveMessage.isNotBlank()) Text(saveMessage, color = Blue, style = MaterialTheme.typography.bodySmall)
+                if (saveMessage.isNotBlank()) Text(saveMessage, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
         }
         if (categoryId != "all") {
-            Text("Grafiki przypisane do tego dokumentu", color = Navy, fontWeight = FontWeight.Bold)
+            Text("Grafiki przypisane do tego dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             Text("Indywidualny wzór graficzny legitymacji", fontWeight = FontWeight.Bold)
             Text("Ustawienia poniżej dotyczą wyłącznie tego dokumentu i zastępują w nim odpowiednie parametry wzoru wspólnego.",
                 style = MaterialTheme.typography.bodySmall)
@@ -3549,7 +3710,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         }
         Text(
             "Dane są zabezpieczane z użyciem mechanizmów systemu Android. Zachowaj ostrożność: mogą zawierać informacje wrażliwe.",
-            color = Muted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(Modifier.height(12.dp))
@@ -3841,18 +4002,18 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("‹  Menu główne", color = Blue, fontWeight = FontWeight.SemiBold,
+        Text("‹  Menu główne", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Odpis z rejestru podmiotów", color = Navy, style = MaterialTheme.typography.headlineSmall,
+        Text("Odpis z rejestru podmiotów", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
         Text(if (editable) "Wprowadzanie i aktualizacja danych podmiotów. Wybierz rodzaj podmiotu i uzupełnij dane na podstawie właściwego dokumentu lub rejestru." else "Podgląd zapisanych danych identyfikacyjnych i rejestrowych podmiotów. Wybierz kafelek, aby wyświetlić szczegóły.",
-            color = Muted, style = MaterialTheme.typography.bodyMedium)
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF2EC))) {
             Text(if (editable) "Wpisy są przechowywane lokalnie jako dane wprowadzone przez użytkownika. Podaj źródło i datę sprawdzenia." else "Dane zapisane w ustawieniach. W razie potrzeby porównaj je z właściwym rejestrem; aplikacja nie pobiera urzędowego odpisu.",
-                Modifier.padding(14.dp), color = Navy, style = MaterialTheme.typography.bodySmall)
+                Modifier.padding(14.dp), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
         }
         if (selectedEntity == null) {
-            Text("Wybierz rodzaj podmiotu", color = Navy, fontWeight = FontWeight.Bold,
+            Text("Wybierz rodzaj podmiotu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleMedium)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -3864,16 +4025,16 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                     Card(
                         modifier = Modifier.fillMaxWidth().height(142.dp).clickable { selectedEntity = key },
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = White),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(Modifier.fillMaxSize().padding(14.dp),
                             verticalArrangement = Arrangement.SpaceBetween) {
                             Icon(Icons.Filled.AccountBalance, contentDescription = null,
-                                tint = Blue, modifier = Modifier.size(30.dp))
-                            Text(label, color = Navy, fontWeight = FontWeight.SemiBold,
+                                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(30.dp))
+                            Text(label, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
                                 style = MaterialTheme.typography.bodyMedium)
-                            Text("Otwórz dokument  ›", color = Blue,
+                            Text("Otwórz dokument  ›", color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                         }
                     }
@@ -3882,7 +4043,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
         } else {
             val entityKey = selectedEntity!!
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("‹  Wszystkie rodzaje podmiotów", color = Blue, fontWeight = FontWeight.SemiBold,
+                Text("‹  Wszystkie rodzaje podmiotów", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clickable { selectedEntity = null }.padding(vertical = 5.dp))
             }
             val entityTitle = sections.first { it.first == entityKey }.second
@@ -3893,7 +4054,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                     "Data sprawdzenia" to fields["registry_${entityKey}_checked"].orEmpty(),
                     "Data sporządzenia dokumentu" to fields["registry_${entityKey}_documentDate"].orEmpty()
                 )
-            Text(entityTitle, color = Navy, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(entityTitle, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             DocumentIdentityTemplate(
                 entityTitle,
                 entityValues,
@@ -3903,8 +4064,8 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                 if (editable) DemoDataField(key, label, fields, placeholder)
                 else RegistryReadOnlyField(label, fields[key])
             }
-            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Border))
-            Text("Źródło i kontrola aktualności", color = Navy, fontWeight = FontWeight.Bold)
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+            Text("Źródło i kontrola aktualności", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             if (editable) {
                 DemoDataField("registry_${entityKey}_source", "Źródło danych / adres rejestru", fields, "Adres strony lub nazwa dokumentu")
                 DemoDataField("registry_${entityKey}_checked", "Data sprawdzenia", fields, "DD-MM-RRRR")
@@ -3915,7 +4076,7 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                         .onSuccess { status = "Zapisano i zabezpieczono dane." }
                         .onFailure { status = "Nie udało się zapisać danych: ${it.message}" }
                 }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane podmiotu") }
-                if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Blue else Color(0xFFB3261E), style = MaterialTheme.typography.bodySmall)
+                if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             } else {
                 RegistryReadOnlyField("Źródło danych / adres rejestru", fields["registry_${entityKey}_source"])
                 RegistryReadOnlyField("Data sprawdzenia", fields["registry_${entityKey}_checked"])
@@ -3930,8 +4091,8 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
 @Composable
 private fun RegistryReadOnlyField(label: String, value: String?) {
     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(label, color = Muted, style = MaterialTheme.typography.labelMedium)
-        Text(value?.takeIf { it.isNotBlank() } ?: "Brak zapisanego wpisu", color = if (value.isNullOrBlank()) Muted else Navy,
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+        Text(value?.takeIf { it.isNotBlank() } ?: "Brak zapisanego wpisu", color = if (value.isNullOrBlank()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
             fontWeight = if (value.isNullOrBlank()) FontWeight.Normal else FontWeight.SemiBold)
     }
 }
@@ -3954,15 +4115,15 @@ private fun AdditionalInformationSection(
                 modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Filled.Info, contentDescription = null, tint = Blue)
+                Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(title, modifier = Modifier.weight(1f).padding(start = 9.dp),
-                    color = Navy, fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleSmall)
-                Text(if (expanded) "Zwiń" else "Rozwiń", color = Blue,
+                Text(if (expanded) "Zwiń" else "Rozwiń", color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
             }
             if (expanded) {
-                if (explanation.isNotBlank()) Text(explanation, color = Ink, style = MaterialTheme.typography.bodySmall)
+                if (explanation.isNotBlank()) Text(explanation, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
                 DemoDataField("${prefix}Source", "Źródło danych / dokument źródłowy", fields)
                 DemoDataField("${prefix}LegalBasis", "Podstawa prawna / regulaminowa", fields)
                 DemoDataField("${prefix}VerifiedAt", "Data ostatniej weryfikacji danych", fields, "DD-MM-RRRR")
@@ -3970,7 +4131,7 @@ private fun AdditionalInformationSection(
                 DemoDataField("${prefix}Notes", "Adnotacje i informacje uzupełniające", fields)
                 Text(
                     "Informacje dodatkowe uzupełniają zapis danych o źródło, podstawę i datę weryfikacji.",
-                    color = Muted, style = MaterialTheme.typography.labelSmall
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall
                 )
             }
         }

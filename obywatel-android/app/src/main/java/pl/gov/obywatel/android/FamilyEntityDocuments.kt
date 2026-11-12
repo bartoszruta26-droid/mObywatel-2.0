@@ -143,18 +143,18 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
     var preview by remember { mutableStateOf(readOnly) }
     var message by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp).then(if (bankAccountsOnly) Modifier.testTag("bank-accounts-screen-title") else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("‹  Powrót", color = Color(0xFF1769AA), modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text(if (bankAccountsOnly) "Konta bankowe" else if (entityMode) "Dokumenty rejestru podmiotów" else "Dokumenty Rodowe", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(if (bankAccountsOnly) "Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej." else "Katalog formularzy z edycją danych, zapisem lokalnym i podglądem dokumentu. Dane są przechowywane lokalnie w postaci zaszyfrowanej.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
+        Text(if (bankAccountsOnly) "Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej." else "Katalog formularzy z edycją danych, zapisem lokalnym i podglądem dokumentu. Dane są przechowywane lokalnie w postaci zaszyfrowanej.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (selected == null) {
             catalog.groupBy { it.section }.forEach { (section, docs) ->
-                Text(section, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF173B58))
+                Text(section, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 docs.forEach { doc ->
                     val filled = records[doc.id].orEmpty().values.any { it.isNotBlank() }
-                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id; preview = readOnly }, colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id; preview = readOnly }, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                         Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column(Modifier.weight(1f)) { Text(doc.title, fontWeight = FontWeight.SemiBold, color = Color(0xFF173B58)); Text(if (filled) "Dane zapisane" else "Formularz pusty", style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788)) }
-                            Text("Otwórz", color = Color(0xFF1769AA))
+                            Column(Modifier.weight(1f)) { Text(doc.title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface); Text(if (filled) "Dane zapisane" else "Formularz pusty", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                            Text("Otwórz", color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -175,19 +175,19 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                 values = if (preview) previewValues else emptyMap(),
                 owner = if (preview) previewValues.values.firstOrNull().orEmpty() else ""
             )
-            Text(doc.note, style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
+            Text(doc.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (isBankRegister) {
-                Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Każdy rachunek jest osobnym wpisem, a numer IBAN i dane właściciela są przechowywane w zaszyfrowanym archiwum lokalnym.", style = MaterialTheme.typography.bodySmall, color = Color(0xFF1769AA))
+                Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Każdy rachunek jest osobnym wpisem, a numer IBAN i dane właściciela są przechowywane w zaszyfrowanym archiwum lokalnym.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 repeat(accountCount) { accountIndex ->
-                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F8FB))) {
+                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Rachunek bankowy \${accountIndex + 1}", fontWeight = FontWeight.Bold, color = Color(0xFF173B58))
+                            Text("Rachunek bankowy \${accountIndex + 1}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             accountFields.forEachIndexed { fieldIndex, label ->
                                 val key = "account_\${accountIndex}_\${fieldIndex}"
                                 val value = local[key].orEmpty()
                                 if (preview) {
                                     if (value.isNotBlank()) Column {
-                                        Text(label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788))
+                                        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         Text(value, style = MaterialTheme.typography.bodyLarge)
                                     }
                                 } else OutlinedTextField(value = value, onValueChange = { local = local + (key to it) },
@@ -205,14 +205,14 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             } else doc.fields.forEachIndexed { index, label ->
                 val value = local["f$index"].orEmpty()
                 if (preview) {
-                    if (value.isNotBlank()) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) { Text(label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788)); Text(value, style = MaterialTheme.typography.bodyLarge) }
+                    if (value.isNotBlank()) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) { Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(value, style = MaterialTheme.typography.bodyLarge) }
                 } else OutlinedTextField(value = value, onValueChange = { local = local + ("f$index" to it) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1, maxLines = 5)
             }
             if (isBankRegister) {
-                if (!preview) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP). Nie przechowuj PIN-ów, haseł, kodów autoryzacyjnych ani danych logowania do bankowości.", color = Color(0xFF9A5B00), style = MaterialTheme.typography.labelSmall)
-                if (preview) Text("Liczba zarejestrowanych pozycji: \$accountCount", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+                if (!preview) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP). Nie przechowuj PIN-ów, haseł, kodów autoryzacyjnych ani danych logowania do bankowości.", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
+                if (preview) Text("Liczba zarejestrowanych pozycji: \$accountCount", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             }
-            if (preview) Text("PODGLĄD EWIDENCYJNY • DANE Z FORMULARZA", color = Color(0xFF667788), style = MaterialTheme.typography.labelSmall)
+            if (preview) Text("PODGLĄD EWIDENCYJNY • DANE Z FORMULARZA", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             if (!readOnly) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj dane" else "Podgląd") }
@@ -221,9 +221,9 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
 
             } else {
                 Text("Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia.",
-                    style = MaterialTheme.typography.labelSmall, color = Color(0xFF667788))
+                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (message.isNotBlank()) Text(message, color = Color(0xFF1769AA), style = MaterialTheme.typography.bodySmall)
+            if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = { selected = null; message = "" }) { Text("Wróć do katalogu") }
             DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key

@@ -152,21 +152,21 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
             .onFailure { status="Błąd załącznika: ${it.message}" }
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement=Arrangement.spacedBy(12.dp)) {
-        Text("‹  Powrót", color=Color(0xFF1769AA), fontWeight=FontWeight.SemiBold, modifier=Modifier.clickable(onClick=onBack).padding(vertical=5.dp))
+        Text("‹  Powrót", color=MaterialTheme.colorScheme.primary, fontWeight=FontWeight.SemiBold, modifier=Modifier.clickable(onClick=onBack).padding(vertical=5.dp))
         Text(if(readOnly) "Dokumenty urzędowe i ubezpieczeniowe" else "Formularze i ewidencja dokumentów", style=MaterialTheme.typography.headlineSmall, fontWeight=FontWeight.Bold)
-        Text("Wprowadzaj dane zgodnie z dokumentem źródłowym. Pliki i wpisy zachowują status nadany im przez właściwego wystawcę.", style=MaterialTheme.typography.bodySmall, color=Color(0xFF667788))
+        Text("Wprowadzaj dane zgodnie z dokumentem źródłowym. Pliki i wpisy zachowują status nadany im przez właściwego wystawcę.", style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant)
         if(selected==null) {
             officialDocTypes.forEach { type ->
                 val values=records[type.id].orEmpty()
                 val populated=values.values.any { it.isNotBlank() }
-                Card(Modifier.fillMaxWidth().clickable { selected=type.id }, colors=CardDefaults.cardColors(containerColor=Color.White)) {
+                Card(Modifier.fillMaxWidth().clickable { selected=type.id }, colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surface)) {
                     Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Filled.Description,contentDescription=null,tint=Color(0xFF1769AA),modifier=Modifier.size(30.dp))
+                        Icon(Icons.Filled.Description,contentDescription=null,tint=MaterialTheme.colorScheme.primary,modifier=Modifier.size(30.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(type.title,fontWeight=FontWeight.SemiBold,color=Color(0xFF102D46))
-                            Text(if(populated) "Dane zapisane" else "Brak danych",color=Color(0xFF667788),style=MaterialTheme.typography.bodySmall)
+                            Text(type.title,fontWeight=FontWeight.SemiBold,color=MaterialTheme.colorScheme.onSurface)
+                            Text(if(populated) "Dane zapisane" else "Brak danych",color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
                         }
-                        Text("Otwórz",color=Color(0xFF1769AA),style=MaterialTheme.typography.labelMedium)
+                        Text("Otwórz",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -174,7 +174,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
             val type=officialDocTypes.first { it.id==selected }
             val values=records[type.id].orEmpty()
             var local by remember(type.id, records) { mutableStateOf(values) }
-            Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=Color(0xFF102D46))
+            Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
             // Wszystkie dokumenty urzędowe korzystają ze wspólnego wzoru legitymacji.
             // Etykiety pól są zachowane, aby renderer mapował je na ustawienia widoczności.
             DocumentIdentityTemplate(
@@ -182,8 +182,8 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                 values = type.fields.mapIndexed { index, label -> label to local["f$index"].orEmpty() }.toMap(),
                 documentType = type.id
             )
-            if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=Color(0xFFEAF3FA))) {
-                Text(type.note,Modifier.padding(12.dp),color=Color(0xFF29445B),style=MaterialTheme.typography.bodySmall)
+            if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.secondaryContainer)) {
+                Text(type.note,Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.bodySmall)
             }
             type.fields.forEachIndexed { index,label ->
                 OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6,readOnly=readOnly)
@@ -192,8 +192,8 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                 if (!readOnly) OutlinedButton(onClick={attachmentPicker.launch(arrayOf("application/pdf","text/xml","application/xml"))},modifier=Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.FolderOpen,contentDescription=null); Spacer(Modifier.width(8.dp)); Text("Dodaj oryginalny plik PDF lub XML")
                 }
-                OfficialDocumentStore.attachments(context,type.id).forEach { Text("Załącznik: $it",color=Color(0xFF1769AA),style=MaterialTheme.typography.bodySmall) }
-                Text("Plik PDF/XML jest przechowywany jako załącznik. Aplikacja nie weryfikuje podpisu elektronicznego, pieczęci ani statusu KRK.",color=Color(0xFF667788),style=MaterialTheme.typography.bodySmall)
+                OfficialDocumentStore.attachments(context,type.id).forEach { Text("Załącznik: $it",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall) }
+                Text("Plik PDF/XML jest przechowywany jako załącznik. Aplikacja nie weryfikuje podpisu elektronicznego, pieczęci ani statusu KRK.",color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
             }
             DocumentPdfExportButton(type.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) type.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
@@ -202,9 +202,9 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                 runCatching { OfficialDocumentStore.save(context,records+(type.id to local)); records=OfficialDocumentStore.load(context); status="Zapisano dane lokalnie." }
                     .onFailure { status="Błąd zapisu: ${it.message}" }
             },modifier=Modifier.fillMaxWidth()) { Text("Zapisz dane") }
-            if(status.isNotBlank()) Text(status,color=Color(0xFF1769AA),style=MaterialTheme.typography.bodySmall)
+            if(status.isNotBlank()) Text(status,color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall)
             TextButton(onClick={selected=null;status=""}) { Text("Wróć do katalogu") }
         }
-        Text("Dane są szyfrowane lokalnie w pamięci aplikacji. Aplikacja nie pobiera danych z rejestrów państwowych i nie wystawia dokumentów w imieniu organów.",color=Color(0xFF667788),style=MaterialTheme.typography.labelSmall)
+        Text("Dane są szyfrowane lokalnie w pamięci aplikacji. Aplikacja nie pobiera danych z rejestrów państwowych i nie wystawia dokumentów w imieniu organów.",color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.labelSmall)
     }
 }

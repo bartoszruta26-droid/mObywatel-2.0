@@ -572,14 +572,14 @@ internal fun AssignedDocumentBrandPreview(documentType: String, owner: String, t
                 ?: DocumentBrandStore.imageForDocument(context, documentType, owner, "Godło")
         )
     }
-    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             if (brand.first != null) Image(brand.first!!.asImageBitmap(), contentDescription = "Logo przypisane do dokumentu", modifier = Modifier.size(42.dp), contentScale = ContentScale.Fit)
             if (brand.second != null) Image(brand.second!!.asImageBitmap(), contentDescription = "Herb lub godło przypisane do dokumentu", modifier = Modifier.size(42.dp), contentScale = ContentScale.Fit)
             Column(Modifier.weight(1f)) {
-                Text(title, fontWeight = FontWeight.SemiBold, color = Color(0xFF173B58))
-                if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
-                if (brand.first == null && brand.second == null) Text("Brak przypisanego logo, herbu lub godła", style = MaterialTheme.typography.bodySmall, color = Color(0xFF667788))
+                Text(title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (brand.first == null && brand.second == null) Text("Brak przypisanego logo, herbu lub godła", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -1079,7 +1079,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("‹  Powrót", color = Color(0xFF1769AA),
+        Text("‹  Powrót", color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text(
             if (fixedTarget == null) "Biblioteka zasobów graficznych"
@@ -1094,7 +1094,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         if (fixedTarget != null && !readOnly) {
             Text("Dokument", fontWeight = FontWeight.SemiBold)
             Text(documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget,
-                color = Color(0xFF173B58), fontWeight = FontWeight.Medium)
+                color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
         }
 
         if (!readOnly) {
@@ -1130,7 +1130,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             onClick = { picker.launch(arrayOf("image/*", "text/*", "application/pdf", "application/x-pkcs12", "application/pkix-cert", "application/octet-stream")) },
             modifier = Modifier.fillMaxWidth()
         ) { Text("Wybierz plik i zapisz zasób") }
-        if (status.isNotBlank()) Text(status, color = Color(0xFF1769AA))
+        if (status.isNotBlank()) Text(status, color = MaterialTheme.colorScheme.primary)
 
         }
         if (fixedTarget != null && !readOnly) {
@@ -1187,7 +1187,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             }
         }
         Text("Znalezione zasoby: ${filteredAssets.size}", style = MaterialTheme.typography.labelMedium,
-            color = Color(0xFF667788))
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (filteredAssets.isEmpty()) {
             Text("Brak zasobów spełniających kryteria. Zmień filtr lub dodaj nowy plik.",
                 style = MaterialTheme.typography.bodySmall)
@@ -1265,7 +1265,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
         Text(
             "Hologram i znak wodny są elementami graficznymi. Nie stanowią zabezpieczenia antyfałszerskiego ani urzędowego poświadczenia. Wgrywaj wyłącznie znaki, do których używania masz uprawnienie.",
             style = MaterialTheme.typography.labelSmall,
-            color = Color(0xFF9A5B00)
+            color = MaterialTheme.colorScheme.tertiary
         )
     }
 }
@@ -1282,7 +1282,7 @@ internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, 
     }
     OutlinedTextField(owner,{owner=it},label={Text("Zestaw identyfikacji podmiotu (nazwa)")},modifier=Modifier.fillMaxWidth())
     Button(onClick={create.launch(title.replace(Regex("[^A-Za-z0-9_-]"),"_").take(50).ifBlank { "dokument" }+".pdf")},modifier=modifier.fillMaxWidth()) { Text("Eksportuj dokument do PDF") }
-    if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=Color(0xFF1769AA))
+    if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)
 }
 
 private data class PdfBrandElement(val id:String,val x:Float,val y:Float,val width:Float,val height:Float)

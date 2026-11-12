@@ -146,27 +146,27 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("‹  Powrót", color = Color(0xFF1769AA), fontWeight = FontWeight.SemiBold,
+        Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text(if (section == "children") "Dane dzieci" else "eKarta Szczepień",
             style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Prywatna dokumentacja rodzinna. Dane wpisuje opiekun; aplikacja nie pobiera ich z rejestrów medycznych i nie potwierdza autentyczności wpisów.",
-            style = MaterialTheme.typography.bodySmall, color = Color(0xFF596675))
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { section = "children"; selectedId = null }) { Text("Dane dzieci") }
             OutlinedButton(onClick = { section = "vaccines"; selectedId = null }) { Text("Szczepienia") }
         }
         if (selected == null) {
             if (children.isEmpty()) {
-                Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F6F9))) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Text("Nie dodano jeszcze profilu dziecka. Wybierz „Dodaj dziecko”, aby utworzyć pierwszą kartę.",
-                        Modifier.padding(16.dp), color = Color(0xFF26384A))
+                        Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurface)
                 }
             }
             children.forEach { child ->
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { selectedId = child.id },
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (child.photoBase64.isNotBlank()) {
@@ -178,11 +178,11 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
                         }
                         Column(Modifier.weight(1f).padding(start = 10.dp)) {
                             Text(listOf(child.firstName, child.lastName).filter { it.isNotBlank() }.joinToString(" ").ifBlank { "Nowe dziecko — uzupełnij dane" },
-                                fontWeight = FontWeight.Bold, color = Color(0xFF172B45))
-                            Text("Data urodzenia: ${child.birthDate.ifBlank { "nie podano" }}", color = Color(0xFF596675))
-                            Text("Wpisy szczepień: ${child.vaccines.size}", color = Color(0xFF1769AA))
+                                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Data urodzenia: ${child.birthDate.ifBlank { "nie podano" }}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Wpisy szczepień: ${child.vaccines.size}", color = MaterialTheme.colorScheme.primary)
                         }
-                        Text("Otwórz ›", color = Color(0xFF1769AA), fontWeight = FontWeight.SemiBold)
+                        Text("Otwórz ›", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -222,16 +222,16 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
             } else {
                 Text(listOf(selected.firstName, selected.lastName).filter { it.isNotBlank() }.joinToString(" ").ifBlank { "Dziecko — bez nazwy" },
                     style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text("Historia szczepień — wpisy ręczne", color = Color(0xFF596675))
-                Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF3FA))) {
+                Text("Historia szczepień — wpisy ręczne", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                     Text("Układ karty obejmuje dane szczepionki, chorobę docelową, dawkę, datę, serię, producenta, punkt wykonania, osobę dokonującą wpisu i termin kolejnej dawki. Wpis nie zastępuje oficjalnej dokumentacji medycznej.",
-                        Modifier.padding(14.dp), color = Color(0xFF26384A), style = MaterialTheme.typography.bodySmall)
+                        Modifier.padding(14.dp), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
                 }
                 selected.vaccines.forEach { v ->
-                    Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(v.vaccine.ifBlank { "Szczepienie — nazwa nieuzupełniona" }, fontWeight = FontWeight.Bold)
-                            Text("Data: ${v.date}   •   Dawka: ${v.dose}", color = Color(0xFF26384A))
+                            Text("Data: ${v.date}   •   Dawka: ${v.dose}", color = MaterialTheme.colorScheme.onSurface)
                             if (v.disease.isNotBlank()) Text("Choroba / wskazanie: ${v.disease}")
                             if (v.batch.isNotBlank()) Text("Numer serii: ${v.batch}")
                             if (v.manufacturer.isNotBlank()) Text("Producent: ${v.manufacturer}")
@@ -248,10 +248,10 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
                 if (!readOnly) OutlinedButton(onClick = { showVaccineForm = true }, modifier = Modifier.fillMaxWidth()) {
                     Text("Dodaj wpis szczepienia")
                 }
-                Text("Liczba wpisów: ${selected.vaccines.size}", color = Color(0xFF596675))
+                Text("Liczba wpisów: ${selected.vaccines.size}", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) Color(0xFF1769AA) else Color(0xFFB3261E))
+        if (status.isNotBlank()) Text(status, color = if (status.startsWith("Zapisano")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
         Spacer(Modifier.height(8.dp))
     }
 

@@ -296,6 +296,8 @@ private val backgroundChoices = listOf(
 internal fun ApplicationAppearanceSettingsScreen(
     appearance: ApplicationAppearance,
     onChange: (ApplicationAppearance) -> Unit,
+    documentCardStyle: String,
+    onDocumentCardStyleChange: (String) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -326,6 +328,13 @@ internal fun ApplicationAppearanceSettingsScreen(
                 "graphite" to "Grafitowy"
             ).forEach { (key, label) ->
                 AppearanceChoiceRow(label, appearance.theme == key) { onChange(appearance.copy(theme = key)) }
+            }
+        }
+        AppearanceSection("Rozmiar kafelków dokumentów i usług", Icons.Filled.Palette) {
+            Text("Ustawienie jest wspólne dla Portfela dokumentów i kafelków usług na ekranie głównym.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            listOf("large" to "Duże kafelki", "small" to "Małe kafelki", "list" to "Lista").forEach { (key, label) ->
+                AppearanceChoiceRow(label, documentCardStyle == key) { onDocumentCardStyleChange(key) }
             }
         }
         AppearanceSection("Godło ekranu początkowego", Icons.Filled.ImageIcon) {
