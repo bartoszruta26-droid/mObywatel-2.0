@@ -1120,7 +1120,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     )
                     showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = {
                         showCredentialAppearanceEditor = false
-                        if (!showDocumentsEditor && settingsDocumentEditor == null) showSettingsMenu = true
+                        if (!showDocumentsEditor && settingsDocumentEditor == null && !showRegistryEditor && !showDisabilitySettings) {
+                            showSettingsMenu = true
+                        }
                     })
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
