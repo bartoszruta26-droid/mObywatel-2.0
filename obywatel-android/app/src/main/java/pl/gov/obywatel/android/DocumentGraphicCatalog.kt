@@ -70,7 +70,8 @@ internal object GraphicDocumentCatalog {
         GraphicDocumentDefinition("organization_church", "Dokumenty Kościoła / wspólnoty", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
         GraphicDocumentDefinition("organization_company", "Dokumenty przedsiębiorstwa", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
         GraphicDocumentDefinition("organization_association", "Dokumenty stowarzyszenia", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
-        GraphicDocumentDefinition("official", "Pozostałe dokumenty urzędowe", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu")
+        GraphicDocumentDefinition("official", "Pozostałe dokumenty urzędowe", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
+        GraphicDocumentDefinition("loyalty_cards", "Karty lojalnościowe sklepów", DocumentPreviewKind.CREDENTIAL)
     )
 
     fun find(id: String): GraphicDocumentDefinition? = definitions.firstOrNull { it.id == id }
