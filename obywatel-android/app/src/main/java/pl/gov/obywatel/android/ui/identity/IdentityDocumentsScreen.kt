@@ -355,15 +355,6 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     AssetChoice("Flaga",assets.filter{it.orgId==orgId&&it.category=="Flaga"},flagId){flagId=it}
                     AssetChoice("Herb / godło",assets.filter{it.orgId==orgId&&(it.category=="Herb"||it.category=="Godło")},emblemId){emblemId=it}
                     AssetChoice("Hologram / zabezpieczenie",assets.filter{it.orgId==orgId&&(it.category=="Hologram / zabezpieczenie"||it.category=="Znak wodny")},securityId){securityId=it}
-                    DocumentPdfPreview(
-                        context=c, title=title, number=number, recipient=recipient, body=body,
-                        signer=signer, role=role, watermark=watermark,
-                        org=orgs.firstOrNull{it.id==orgId},
-                        logo=assets.firstOrNull{it.id==logoId}, seal=assets.firstOrNull{it.id==sealId},
-                        signature=assets.firstOrNull{it.id==signatureId}, background=assets.firstOrNull{it.id==backgroundId},
-                        flag=assets.firstOrNull{it.id==flagId}, emblem=assets.firstOrNull{it.id==emblemId},
-                        security=assets.firstOrNull{it.id==securityId}, group=documentGroup, layout=layout
-                    )
                     OutlinedButton(onClick={
                         runCatching {
                             val prefs=c.getSharedPreferences("owd_document_templates",0)

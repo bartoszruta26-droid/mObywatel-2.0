@@ -773,11 +773,11 @@ private val documentDisplayOptions = listOf(
     Triple("family", "Dokument rodowy", R.drawable.documents_family_record),
     Triple("parliament", "Legitymacja poselska", R.drawable.documents_deputy_legitimacy),
     Triple("training", "Legitymacja kursanta", R.drawable.documents_course_legitimacy),
-    Triple("student", "Legitymacja ucznia/studenta", R.drawable.documents_student_legitimacy),
-    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.documents_medical_certificates),
-    Triple("church", "Dokumenty kościelne", R.drawable.church_communities),
-    Triple("civil", "Dokumenty cywilne", R.drawable.civic_service_illustration),
-    Triple("business", "Dokumenty firmowe i podmiotowe", R.drawable.lib_ic_building),
+    Triple("student", "Legitymacja ucznia/studenta", R.drawable.tile_ic_student_outline),
+    Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.tile_ic_disability_outline),
+    Triple("church", "Dokumenty kościelne", R.drawable.tile_ic_church_outline),
+    Triple("civil", "Dokumenty cywilne", R.drawable.tile_ic_civil_outline),
+    Triple("business", "Dokumenty firmowe i podmiotowe", R.drawable.tile_ic_business_outline),
     Triple("bank_accounts", "Konta bankowe", R.drawable.lib_ic_wallet),
     Triple("vaccines", "Książeczka szczepień WHO", R.drawable.lib_ic_medical_record),
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
@@ -850,7 +850,12 @@ private val documentIconChoices = listOf(
     "documents_identity_card" to "Dowód tożsamości",
     "documents_passport" to "Paszport",
     "documents_family_record" to "Dokument rodowy",
-    "documents_student_legitimacy" to "Legitymacja uczniowska"
+    "documents_student_legitimacy" to "Legitymacja uczniowska",
+    "tile_ic_student_outline" to "Legitymacja ucznia/studenta",
+    "tile_ic_disability_outline" to "Orzeczenia i zaświadczenia",
+    "tile_ic_church_outline" to "Dokumenty kościelne",
+    "tile_ic_civil_outline" to "Dokumenty cywilne",
+    "tile_ic_business_outline" to "Dokumenty firmowe i podmiotowe"
 )
 private fun loadDefaultDocumentIcon(context: Context): String =
     context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
@@ -1014,6 +1019,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var documentBrandTarget by remember { mutableStateOf<String?>(null) }
     var showRegistryEditor by remember { mutableStateOf(false) }
     var settingsDocumentEditor by remember { mutableStateOf<String?>(null) }
+    var credentialAppearanceTarget by remember { mutableStateOf<String?>(null) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
@@ -1028,6 +1034,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun handleSystemBack() {
         when {
+            credentialAppearanceTarget != null -> credentialAppearanceTarget = null
             showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
@@ -1052,7 +1059,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1073,40 +1080,29 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     fun openDocumentCard(documentId: String) {
+        // Every document tile is a read-only entry point. Editing is reached
+        // only from More → Settings → the selected document.
         when (documentId) {
-            "profile" -> selectedDocumentId = "0"
-            "identity" -> selectedDocumentId = "1"
-            "passport" -> selectedDocumentId = "2"
-            "family" -> selectedDocumentId = "3"
-            "parliament" -> selectedDocumentId = "4"
-            "training" -> selectedDocumentId = "5"
-            "student" -> selectedDocumentId = "6"
-            "disability" -> selectedDocumentId = "7"
-            "loyalty", "loyalty_cards" -> selectedDocumentId = "8"
             "registry" -> activeService = "Odpis z rejestru podmiotów"
-            "church" -> activeService = "Dokumenty Kościelne"
-            "civil" -> activeService = "Formularze dokumentów"
-            "business" -> activeService = "Dokumenty rejestru podmiotów"
-            "bank_accounts" -> showBankAccounts = true
-            "children" -> activeService = "Dane dzieci"
-            "imported" -> showImportedDocuments = true
-            "vaccines" -> activeService = "eKarta Szczepień"
-            "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
-            "branding" -> activeService = "Zasoby identyfikacji dokumentów"
-            "professional" -> activeService = "Dokumenty kwalifikacji zawodowych"
-            "official" -> activeService = "Formularze dokumentów"
-            "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
-            "church_minister", "church_missionary" -> activeService = "Dokumenty Kościelne"
-            "professional_medical", "professional_education", "professional_therapeutic",
-            "professional_other" -> activeService = "Dokumenty kwalifikacji zawodowych"
-            "organization_church" -> activeService = "Dokumenty Kościelne"
-            "organization_foundation", "organization_company", "organization_association",
-            "entity" -> activeService = "Dokumenty rejestru podmiotów"
-            "birth_extract", "marriage_extract", "death_extract" -> activeService = "Formularze dokumentów"
+            "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
+            "church_minister", "church_missionary", "organization_church" -> activeService = "Dokumenty Kościelne"
+            "civil", "birth_extract", "marriage_extract", "death_extract", "official",
             "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business",
             "vehicle_registration", "criminal_record", "mission_travel", "ehic", "eu_education",
-            "large_family", "blood_donor", "disability_card" -> activeService = "Pozostałe dokumenty"
-            else -> activeService = "Dokumenty"
+            "large_family", "blood_donor", "disability_card" -> activeService = "Formularze dokumentów"
+            "business", "entity", "organization_foundation", "organization_company",
+            "organization_association" -> activeService = "Dokumenty rejestru podmiotów"
+            "bank_accounts" -> showBankAccounts = true
+            "children" -> activeService = "Dane dzieci"
+            "vaccines" -> activeService = "eKarta Szczepień"
+            "imported" -> showImportedDocuments = true
+            "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
+            "branding" -> activeService = "Zasoby identyfikacji dokumentów"
+            "professional", "professional_medical", "professional_education",
+            "professional_therapeutic", "professional_other" -> activeService = "Dokumenty kwalifikacji zawodowych"
+            "identity_card" -> selectedDocumentId = "identity"
+            "loyalty_cards" -> selectedDocumentId = "loyalty"
+            else -> selectedDocumentId = documentId
         }
     }
 
@@ -1114,7 +1110,20 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {
-                    showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = { showCredentialAppearanceEditor = false; showSettingsMenu = true })
+                    credentialAppearanceTarget != null -> CredentialAppearanceSettingsScreen(
+                        documentKey = credentialAppearanceTarget!!,
+                        onBack = { credentialAppearanceTarget = null },
+                        onOpenSharedAppearance = {
+                            credentialAppearanceTarget = null
+                            showCredentialAppearanceEditor = true
+                        }
+                    )
+                    showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = {
+                        showCredentialAppearanceEditor = false
+                        if (!showDocumentsEditor && settingsDocumentEditor == null && !showRegistryEditor && !showDisabilitySettings) {
+                            showSettingsMenu = true
+                        }
+                    })
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
                         onChange = onAppearanceChange,
@@ -1129,17 +1138,44 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
-                    showDocumentsEditor -> DemoDocumentsScreen(categoryId = selectedEditorCategory, onBack = { showDocumentsEditor = false; showSettingsMenu = true })
-                    showRegistryEditor -> EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
-                    settingsDocumentEditor == "imported" -> DocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
-                    settingsDocumentEditor == "signed_pdf" -> SignedPdfDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, allowImport = true, readOnly = false)
-                    settingsDocumentEditor == "family" -> FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "business" -> FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "bank_accounts" -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "church" -> ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "civil" -> OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "children_health" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
-                    settingsDocumentEditor == "vaccines" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    showDocumentsEditor -> DemoDocumentsScreen(
+                        categoryId = selectedEditorCategory,
+                        onBack = { showDocumentsEditor = false; showSettingsMenu = true },
+                        onOpenSharedAppearance = { showCredentialAppearanceEditor = true }
+                    )
+                    showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
+                    }
+                    settingsDocumentEditor == "imported" -> CredentialAppearanceEditorEntry("imported", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        DocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
+                    }
+                    settingsDocumentEditor == "signed_pdf" -> CredentialAppearanceEditorEntry("signed_pdf", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        SignedPdfDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, allowImport = true, readOnly = false)
+                    }
+                    settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
+                    }
+                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "children_health" -> CredentialAppearanceEditorEntry("children", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
+                    settingsDocumentEditor == "vaccines" -> CredentialAppearanceEditorEntry("vaccines", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    }
                     documentBrandTarget != null -> DocumentBrandAssetsScreen(onBack = { documentBrandTarget = null; showSettingsMenu = true }, fixedTarget = documentBrandTarget!!)
                     showDocumentBrandAssets -> DocumentBrandAssetsScreen(onBack = { showDocumentBrandAssets = false; showSettingsMenu = true })
                     showDocumentVisibilitySettings -> DocumentVisibilitySettingsScreen(
@@ -1212,8 +1248,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     )
                     selectedDocumentId != null -> DocumentDetailsScreen(
                         documentId = selectedDocumentId!!,
-                        onBack = { selectedDocumentId = null },
-                        onOpenService = { title -> selectedDocumentId = null; activeService = title }
+                        onBack = { selectedDocumentId = null }
                     )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
@@ -1222,12 +1257,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         documentCardStyle = documentCardStyle,
                         defaultDocumentIcon = defaultDocumentIcon,
                         documentIconOverrides = documentIconOverrides,
-                        onOpenDetails = { selectedDocumentId = it },
+                        onOpenDetails = { openDocumentCard(it) },
                         onOpenService = { title ->
                             when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
                         }
                     )
-                    showDisabilitySettings -> DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
+                    showDisabilitySettings -> CredentialAppearanceEditorEntry("disability", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        CompositionLocalProvider(LocalDocumentScreenMode provides DocumentScreenMode.EDITOR) {
+                            DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
+                        }
+                    }
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
                     activeService == "Informacje prawne" -> LegalInformationScreen(
                         onBack = { activeService = null }
@@ -1236,7 +1275,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { activeService = null }
                     )
                     activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null }, readOnly = true)
-                    activeService == "Dokumenty kwalifikacji zawodowych" -> ProfessionalQualificationsScreen(onBack = { activeService = null })
+                    activeService == "Dokumenty kwalifikacji zawodowych" -> ProfessionalQualificationsScreen(onBack = { activeService = null }, readOnly = true)
                     activeService == "Pozostałe dokumenty" -> ServiceDetailScreen(title = activeService!!, onBack = { activeService = null }, onOpenDocuments = { activeService = null; showDemoDocuments = true })
                     activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, readOnly = true, onBack = { activeService = null })
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null }, readOnly = true)
@@ -1304,7 +1343,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                                     ) {
                                         Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                            Image(painter = painterResource(iconRes), contentDescription = null,
+                                            Image(painter = painterResource(documentTileIconResource(id, iconRes)), contentDescription = null,
                                                 modifier = Modifier.size(38.dp), contentScale = ContentScale.Fit)
                                             Text(title, modifier = Modifier.weight(1f).padding(start = 12.dp),
                                                 color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
@@ -1852,36 +1891,61 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
 @Composable
 private fun DocumentDetailsScreen(
     documentId: String,
-    onBack: () -> Unit,
-    onOpenService: (String) -> Unit
+    onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val normalizedId = when (documentId) {
+        "0" -> "profile"
+        "1" -> "identity"
+        "2" -> "passport"
+        "3" -> "family"
+        "4" -> "parliament"
+        "5" -> "training"
+        "6" -> "student"
+        "7" -> "disability"
+        "8", "loyalty_cards" -> "loyalty"
+        "identity_card" -> "identity"
+        else -> documentId
+    }
     val allValues = remember { DemoIdentityStore.load(context) }
-    val group = remember(documentId) {
-        val normalizedId = when (documentId) {
-            "0" -> "profile"
-            "1" -> "identity"
-            "2" -> "passport"
-            "3" -> "family"
-            "4" -> "parliament"
-            "5" -> "training"
-            "6" -> "student"
-            "7" -> "disability"
-            "8" -> "loyalty"
-            else -> documentId
+    val title = documentDisplayOptions.firstOrNull { it.first == normalizedId }?.second
+        ?: when (normalizedId) {
+            "loyalty" -> "Karty lojalnościowe"
+            else -> normalizedId.replace('_', ' ').replaceFirstChar { it.uppercase() }
         }
-        owdDocumentGroups().firstOrNull { it.id == normalizedId }
-            ?: if (normalizedId == "loyalty") OwdDocumentGroup("loyalty", "Karty lojalnościowe", listOf(
-                "Posiadacz" to "loyaltyHolder", "Nazwa programu" to "loyaltyName",
-                "Numer karty" to "loyaltyNumber", "Status" to "status"
-            )) else null
+    val settings = rememberLegitimacyPreviewSettings(normalizedId).value
+    val previewValues = remember(allValues, normalizedId) {
+        allValues.toMutableMap().apply {
+            if (normalizedId == "disability" && this["firstNames"].isNullOrBlank()) {
+                this["firstNames"] = this["disabilityPersonName"].orEmpty()
+            }
+        }
     }
-    val title = group?.title ?: "Dokument"
-    val values = remember(allValues, group) {
-        group?.fields.orEmpty().mapNotNull { (label, key) ->
-            allValues[key]?.takeIf { it.isNotBlank() }?.let { label to it }
-        }.toMap() + listOfNotNull(allValues["photo"]?.takeIf { it.isNotBlank() }?.let { "photo" to it })
+    val options = credentialFieldOptions(normalizedId)
+    val selectedOptions = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) options
+        else options.filter { it.first in settings.visibleFields }
+    val previewFields = selectedOptions.map { (key, label) ->
+        Triple(key, label.uppercase(), previewValues[key].orEmpty().ifBlank { "—" })
     }
+    val holder = when {
+        previewValues["studentNames"].orEmpty().isNotBlank() -> previewValues["studentNames"].orEmpty()
+        previewValues["passportHolderNames"].orEmpty().isNotBlank() -> previewValues["passportHolderNames"].orEmpty()
+        previewValues["disabilityPersonName"].orEmpty().isNotBlank() -> previewValues["disabilityPersonName"].orEmpty()
+        else -> listOf(previewValues["firstNames"].orEmpty(), previewValues["lastName"].orEmpty())
+            .filter { it.isNotBlank() }.joinToString(" ").ifBlank { "DANE POSIADACZA" }
+    }
+    val photoBitmap = remember(previewValues["photo"]) {
+        runCatching {
+            val encoded = previewValues["photo"].orEmpty()
+            if (encoded.isBlank()) null else {
+                val bytes = Base64.decode(encoded, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
+        }.getOrNull()
+    }
+    val validity = credentialValidityForDocument(normalizedId, previewValues)
+    val hasData = options.any { (key, _) -> !previewValues[key].isNullOrBlank() } ||
+        (normalizedId == "disability" && !previewValues["disabilityPersonName"].isNullOrBlank())
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -1893,19 +1957,27 @@ private fun DocumentDetailsScreen(
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp)
         )
         Text(title, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        if (values.isEmpty()) {
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Brak zapisanych danych tego dokumentu.", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                    Text("Uzupełnij dane w ustawieniach, aby wyświetlić podgląd.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        } else {
-            DocumentIdentityTemplate(
-                title = title,
-                values = values,
-                documentType = group?.id ?: "official"
+        Text("Podgląd dokumentu", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        if (settings.showCard) {
+            UnifiedCredentialCard(
+                documentKey = normalizedId,
+                title = title.uppercase(),
+                subtitle = "Podgląd danych zapisanych w aplikacji",
+                holderName = holder,
+                fields = previewFields,
+                settings = settings,
+                photo = photoBitmap,
+                validity = validity
             )
+        } else {
+            Text("Podgląd karty jest wyłączony w ustawieniach wyglądu tego dokumentu.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+        if (!hasData) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                Text("Brak zapisanych danych. Ten ekran prezentuje wyłącznie podgląd; edycja znajduje się w ustawieniach konkretnego dokumentu.",
+                    Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurface)
+            }
         }
     }
 }
@@ -2421,7 +2493,7 @@ private fun ProfileActionCard(title: String, subtitle: String, icon: ImageVector
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(30.dp))
             Column(Modifier.weight(1f).padding(start = 13.dp)) {
                 Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -2500,11 +2572,11 @@ private fun Header(
         )
         IconButton(onClick = onOpenAssistant) {
             Icon(painterResource(R.drawable.ic_header_robot_head), contentDescription = "Asystent",
-                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
+                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(30.dp))
         }
         IconButton(onClick = onOpenMessages) {
             Icon(painterResource(R.drawable.ic_header_mail), contentDescription = "Wiadomości",
-                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
+                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(30.dp))
         }
         Box(
             modifier = Modifier.size(36.dp).clickable(onClick = onOpenNotifications),
@@ -2862,6 +2934,8 @@ private fun SettingsMenuScreen(
             Icons.Filled.Description, { onEditDocuments("training") })
         ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych uczelni i statusu",
             Icons.Filled.Badge, { onEditDocuments("student") })
+        ProfileActionCard("Dokumenty kwalifikacji zawodowych", "Ewidencja zawodów, numerów dokumentów, rejestrów i potwierdzeń kwalifikacji",
+            Icons.Filled.Badge, { onEditOtherDocuments("professional") })
         ProfileActionCard("Orzeczenia i zaświadczenia", "Ewidencja danych o rozstrzygnięciach",
             Icons.Filled.HealthAndSafety, onEditDisability)
         ProfileActionCard("Karty lojalnościowe sklepów", "Ewidencja do 10 kart, numerów i kodów kreskowych oraz QR",
@@ -2888,7 +2962,11 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
     }
+    val appearance = rememberLegitimacyPreviewSettings("disability")
     var saveMessage by remember { mutableStateOf("") }
+    CompositionLocalProvider(
+        LocalCredentialFieldVisibility provides CredentialFieldVisibilityBinding("disability", appearance, fields)
+    ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2967,6 +3045,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit) {
                 if (saveMessage.isNotBlank()) Text(saveMessage, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
         }
+    }
     }
 }
 
@@ -3100,10 +3179,7 @@ private fun DocumentsWalletScreen(
     )
 
     fun openDocument(document: CatalogDocument) {
-        when {
-            document.detailsIndex != null -> onOpenDetails(document.detailsIndex)
-            document.service != null -> onOpenService(document.service)
-        }
+        onOpenDetails(document.id)
     }
 
     Column(
@@ -3145,8 +3221,8 @@ private fun DocumentsWalletScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(11.dp)
                                 ) {
-                                    Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
-                                        contentDescription = document.title, modifier = Modifier.size(27.dp))
+                                    Image(painter = painterResource(documentTileIconResource(document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
+                                        contentDescription = document.title, modifier = Modifier.size(30.dp))
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                         Text(document.title, color = Color.White, fontWeight = FontWeight.SemiBold,
                                             style = MaterialTheme.typography.bodyMedium)
@@ -3174,23 +3250,33 @@ private fun DocumentsWalletScreen(
                                 ) {
                                     Box(Modifier.fillMaxSize()) {
                                         DocumentTileArtwork(document.id, Modifier.fillMaxSize())
-                                        Box(Modifier.fillMaxSize().padding(10.dp)) {
-                                        Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
-                                            contentDescription = document.title,
-                                            modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 23.dp else 30.dp))
-                                        DocumentCardEmblem(
-                                            documentKey = document.id,
-                                            modifier = Modifier.align(Alignment.TopEnd)
-                                                .size(if (documentCardStyle == "small") 24.dp else 32.dp)
+                                        Text(
+                                            document.title,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = if (documentCardStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.align(Alignment.TopStart)
+                                                .fillMaxWidth(0.78f).padding(10.dp)
                                         )
-                                        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                            Text(document.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
-                                                style = if (documentCardStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
-                                                maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                            if (documentCardStyle == "large") Text(document.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        if (documentCardStyle == "large") {
+                                            Text(
+                                                document.subtitle,
+                                                color = Color.White.copy(alpha = 0.84f),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.align(Alignment.BottomStart).padding(10.dp)
+                                            )
                                         }
-                                        }
+                                        Image(
+                                            painter = painterResource(documentTileIconResource(document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
+                                            contentDescription = "Ikona wektorowa: " + document.title,
+                                            modifier = Modifier.align(Alignment.TopEnd)
+                                                .padding(8.dp)
+                                                .size(if (documentCardStyle == "small") 22.dp else 26.dp)
+                                        )
                                     }
                                 }
                             }
@@ -3240,24 +3326,27 @@ private fun DashboardDocumentGrid(
                                 DocumentTileArtwork(id, Modifier.fillMaxSize())
                                 Row(Modifier.fillMaxSize().padding(horizontal = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(28.dp))
+                                    horizontalArrangement = Arrangement.SpaceBetween) {
                                     Text(title, color = Color.White,
                                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
-                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f).padding(end = 8.dp))
+                                    Image(painterResource(documentTileIconResource(id, iconRes)),
+                                        contentDescription = "Ikona wektorowa: " + title,
+                                        modifier = Modifier.size(22.dp))
                                 }
                             }
                         } else {
                             Box(Modifier.fillMaxSize()) {
                                 DocumentTileArtwork(id, Modifier.fillMaxSize())
-                                Column(Modifier.fillMaxSize().padding(10.dp),
-                                    verticalArrangement = Arrangement.SpaceBetween) {
-                                Image(painterResource(iconRes), contentDescription = null,
-                                    modifier = Modifier.size(if (tileStyle == "small") 22.dp else 28.dp))
-                                Text(title, color = MaterialTheme.colorScheme.onSurface,
+                                Text(title, color = Color.White,
                                     style = if (tileStyle == "small") MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                }
+                                    fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(0.78f).padding(10.dp))
+                                Image(painterResource(documentTileIconResource(id, iconRes)),
+                                    contentDescription = "Ikona wektorowa: " + title,
+                                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                                        .size(if (tileStyle == "small") 20.dp else 24.dp))
                             }
                         }
                     }
@@ -3266,6 +3355,19 @@ private fun DashboardDocumentGrid(
             }
         }
     }
+}
+
+private fun documentTileIconResource(documentKey: String, fallback: Int): Int = when (documentKey) {
+    "training", "student" -> R.drawable.tile_ic_student_outline
+    "disability", "disability_card" -> R.drawable.tile_ic_disability_outline
+    "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot",
+    "church_minister", "church_missionary", "organization_church" -> R.drawable.tile_ic_church_outline
+    "civil", "birth_extract", "marriage_extract", "death_extract" -> R.drawable.tile_ic_civil_outline
+    "business", "entity", "official", "organization_foundation", "organization_company",
+    "organization_association" -> R.drawable.tile_ic_business_outline
+    // Każdy typ dokumentu otrzymuje wektorową ikonę, także gdy nie ma
+    // dedykowanego piktogramu dla konkretnej kategorii.
+    else -> R.drawable.tile_ic_civil_outline
 }
 
 @Composable
@@ -3463,6 +3565,7 @@ private fun OwdDocumentArtworkCard(
     credentialFields: List<Triple<String, String, String>> = emptyList(),
     validity: Boolean? = null
 ) {
+    if (LocalDocumentScreenMode.current == DocumentScreenMode.EDITOR) return
     val documentKey = when {
         title.contains("rodow", true) -> "family"
         title.contains("tożsamo", true) || title.contains("tozsamos", true) -> "identity"
@@ -3474,12 +3577,15 @@ private fun OwdDocumentArtworkCard(
         else -> "official"
     }
     val settings = rememberLegitimacyPreviewSettings(documentKey).value
+    val resolvedValidity = validity ?: credentialValidityForDocument(
+        documentKey, credentialFields.associate { it.first to it.third }
+    )
     if (settings.showCard) {
         UnifiedCredentialCard(
             documentKey = documentKey, title = title, subtitle = subtitle, holderName = holder,
             fields = credentialFields.ifEmpty { listOf(Triple("details", "DANE DOKUMENTU", details)) }, settings = settings,
             fallbackBackgroundRes = imageRes,
-            validity = validity
+            validity = resolvedValidity
         )
     }
 }
@@ -3513,6 +3619,9 @@ private fun ReadOnlyAdditionalInformationSection(fields: Map<String, String>, pr
     }
 }
 
+private enum class DocumentScreenMode { PREVIEW, EDITOR }
+private val LocalDocumentScreenMode = androidx.compose.runtime.compositionLocalOf { DocumentScreenMode.PREVIEW }
+
 private data class CredentialFieldVisibilityBinding(
     val documentKey: String,
     val settings: MutableState<LegitimacyPreviewSettings>,
@@ -3521,7 +3630,11 @@ private data class CredentialFieldVisibilityBinding(
 private val LocalCredentialFieldVisibility = androidx.compose.runtime.compositionLocalOf<CredentialFieldVisibilityBinding?> { null }
 
 @Composable
-private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) {
+private fun DemoDocumentsScreen(
+    categoryId: String = "all",
+    onBack: () -> Unit,
+    onOpenSharedAppearance: () -> Unit = {}
+) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
@@ -3572,6 +3685,7 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
         }
     }
     androidx.compose.runtime.CompositionLocalProvider(
+        LocalDocumentScreenMode provides DocumentScreenMode.EDITOR,
         LocalCredentialFieldVisibility provides if (categoryId == "all") null
             else CredentialFieldVisibilityBinding(credentialKey, appearance, fields)
     ) {
@@ -3797,8 +3911,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
                 DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
-                Text("Podgląd cyfrowej legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                ParliamentaryCredentialPreview(fields)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) {
+                    Text("Podgląd cyfrowej legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    ParliamentaryCredentialPreview(fields)
+                }
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja poselska", fields, "mpExtra", "Art. 104 Konstytucji RP określa wolny mandat poselski oraz obowiązek złożenia ślubowania przed Sejmem przed rozpoczęciem sprawowania mandatu. Odmowa ślubowania oznacza zrzeczenie się mandatu. Sam wpis ewidencyjny nie potwierdza uzyskania mandatu ani prawa do reprezentowania Sejmu.")
             }
         }
@@ -3830,8 +3946,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("trainingAssessment", "Zaliczenie / egzamin / wynik", fields)
                 DemoDataField("trainingCertificateNumber", "Numer zaświadczenia o ukończeniu", fields)
                 DemoDataField("trainingForm", "Forma kształcenia", fields, "stacjonarna / zdalna / hybrydowa")
-                Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                SchoolLegitimacyPreview(fields, photoBase64, student = false)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) {
+                    Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    SchoolLegitimacyPreview(fields, photoBase64, student = false)
+                }
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "trainingExtra", "Legitymacja instytucji szkoleniowej potwierdza status w ewidencji wystawcy w granicach regulaminu i właściwej podstawy działania. Nie jest legitymacją studencką i sama nie nadaje statusu studenta uczelni.")
             }
         }
@@ -3861,7 +3979,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("studentStatus", "Status studenta", fields, "aktywny / urlop / skreślony / ukończony")
                 DemoDataField("studentIssuer", "Osoba / jednostka wydająca", fields)
                 Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                SchoolLegitimacyPreview(fields, photoBase64, student = true)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) {
+                    Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    SchoolLegitimacyPreview(fields, photoBase64, student = true)
+                }
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "studentExtra", "")
             }
         }
@@ -3971,8 +4092,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("disabilityAppealOutcome", "Wynik odwołania / sprzeciwu", fields)
                 DemoDataField("disabilityDuplicateInfo", "Duplikat / zmiana dokumentu", fields)
                 DemoDataField("disabilitySourceAttachment", "Nazwa / opis dokumentu źródłowego", fields)
-                Text("Podgląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                DisabilityDecisionPreview(fields)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) {
+                    Text("Podgląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    DisabilityDecisionPreview(fields)
+                }
                 AdditionalInformationSection("Informacje dodatkowe — orzeczenie / zaświadczenie", fields, "disabilityExtra", when (fields["disabilityAuthorityType"] ?: "powiat") {
                     "foundation" -> "Dokument fundacji opisuje się zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego."
                     "other_law" -> "Skutki dokumentu z odrębnego systemu wynikają z konkretnego przepisu. Należy wskazać podstawę i zakres równoważności."
@@ -4047,11 +4170,16 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
             Text("Indywidualny wzór graficzny legitymacji", fontWeight = FontWeight.Bold)
             Text("Ustawienia poniżej dotyczą wyłącznie tego dokumentu i zastępują w nim odpowiednie parametry wzoru wspólnego.",
                 style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = onOpenSharedAppearance, modifier = Modifier.fillMaxWidth()) {
+                Text("Edytuj wspólny wzór wszystkich legitymacji")
+            }
             LegitimacyPreviewSettingsPanel(
                 documentKey = credentialKey,
                 settings = appearance.value,
-                onChange = { appearance.value = it }
+                onChange = { appearance.value = it },
+                assetSelectionOnly = true
             )
+            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
         }
         Text(
             "Dane są zabezpieczane z użyciem mechanizmów systemu Android. Zachowaj ostrożność: mogą zawierać informacje wrażliwe.",
@@ -4064,7 +4192,85 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
 }
 
 @Composable
+private fun CredentialAppearanceEditorEntry(
+    documentKey: String,
+    onOpenAppearance: (String) -> Unit,
+    content: @Composable () -> Unit
+) {
+    Column(Modifier.fillMaxSize()) {
+        Box(Modifier.weight(1f)) { content() }
+        OutlinedButton(
+            onClick = { onOpenAppearance(documentKey) },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Text("Wygląd legitymacji i widoczność pól podglądu")
+        }
+    }
+}
+
+@Composable
+private fun CredentialAppearanceSettingsScreen(
+    documentKey: String,
+    onBack: () -> Unit,
+    onOpenSharedAppearance: () -> Unit
+) {
+    val context = LocalContext.current
+    val state = rememberLegitimacyPreviewSettings(documentKey)
+    val options = remember(documentKey) { credentialFieldOptions(documentKey) }
+    val savedValues = remember(documentKey) { DemoIdentityStore.load(context) }
+    val title = documentDisplayOptions.firstOrNull { it.first == documentKey }?.second
+        ?: documentKey.replace('_', ' ').replaceFirstChar { it.uppercase() }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("‹  Powrót do edycji dokumentu", color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Wygląd podglądu — $title", style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold)
+        Text("Zaznacz pola, które mają być widoczne na karcie. Herby, flagi, logo, tło i kolor tekstu przypisujesz osobno do tego dokumentu. Orientacja, filtry zdjęcia, widoczność całej karty oraz rozmieszczenie i rozmiar elementów pozostają wspólne dla wszystkich legitymacji.",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        OutlinedButton(onClick = onOpenSharedAppearance, modifier = Modifier.fillMaxWidth()) {
+            Text("Edytuj wspólny wzór wszystkich legitymacji")
+        }
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Pola wyświetlane na legitymacji", fontWeight = FontWeight.Bold)
+                options.forEach { (key, label) ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = !state.value.visibleFieldsConfigured || state.value.visibleFields.isEmpty() || key in state.value.visibleFields,
+                            onCheckedChange = { checked ->
+                                val current = if (state.value.visibleFieldsConfigured && state.value.visibleFields.isNotEmpty()) state.value.visibleFields
+                                    else options.map { it.first }.toSet()
+                                val updated = state.value.copy(
+                                    visibleFields = if (checked) current + key else current - key,
+                                    visibleFieldsConfigured = true
+                                )
+                                LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                                state.value = updated
+                            }
+                        )
+                        Text(label, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
+        LegitimacyPreviewSettingsPanel(
+            documentKey = documentKey,
+            settings = state.value,
+            onChange = { state.value = it },
+            assetSelectionOnly = true
+        )
+        CredentialTemplatePreview(documentKey, state.value, values = savedValues)
+    }
+}
+
+@Composable
 private fun DisabilityDecisionPreview(fields: Map<String, String>) {
+    if (LocalDocumentScreenMode.current == DocumentScreenMode.EDITOR) return
     val authorityType = fields["disabilityAuthorityType"] ?: "powiat"
     val label = when (authorityType) {
         "foundation" -> "Dokument zespołu medycznego fundacji"
@@ -4092,6 +4298,7 @@ private fun DisabilityDecisionPreview(fields: Map<String, String>) {
 
 @Composable
 private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: String, student: Boolean) {
+    if (LocalDocumentScreenMode.current == DocumentScreenMode.EDITOR) return
     val documentKey = if (student) "student" else "training"
     val settingsState = rememberLegitimacyPreviewSettings(documentKey)
     val settings = settingsState.value
@@ -4113,9 +4320,7 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
     } else listOf(fields["firstNames"], fields["lastName"]).filterNot { it.isNullOrBlank() }.joinToString(" ")
     val institution = if (student) fields["studentUniversity"].orEmpty() else fields["trainingInstitution"].orEmpty()
     val validity = if (student) fields["studentValidity"].orEmpty() else fields["trainingValidUntil"].orEmpty()
-    val status = if (student) fields["studentStatus"].orEmpty().trim().lowercase() else fields["trainingStatus"].orEmpty().trim().lowercase()
-    val explicitlyInvalid = status in setOf("nieważny", "nieważna", "unieważniony", "unieważniona", "zwrócony", "zwrócona", "utracony", "utracona", "expired", "invalid")
-    val valid = !explicitlyInvalid && isCredentialValidByExpiry(validity)
+    val valid = credentialValidityForDocument(documentKey, fields)
     val cardFields = if (student) listOf(
         Triple("studentUniversity", "UCZELNIA", institution),
         Triple("studentProgramme", "KIERUNEK", fields["studentProgramme"].orEmpty()),
@@ -4155,6 +4360,7 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
 
 @Composable
 private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
+    if (LocalDocumentScreenMode.current == DocumentScreenMode.EDITOR) return
     val documentKey = "parliament"
     val settingsState = rememberLegitimacyPreviewSettings(documentKey)
     val settings = settingsState.value
@@ -4177,9 +4383,7 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
     val number = fields["mpCardNumber"].orEmpty()
     val term = fields["mpTerm"].orEmpty()
     val expiry = fields["mpEnd"].orEmpty()
-    val status = fields["mpStatus"].orEmpty().trim().lowercase()
-    val explicitlyInvalid = status in setOf("nieważny", "nieważna", "unieważniony", "unieważniona", "zwrócony", "zwrócona", "utracony", "utracona", "expired", "invalid")
-    val valid = !explicitlyInvalid && isCredentialValidByExpiry(expiry)
+    val valid = credentialValidityForDocument(documentKey, fields)
     val cardFields = listOf(
         Triple("mpCardNumber", "NUMER LEGITYMACJI", number),
         Triple("mpTerm", "KADENCJA", term),
@@ -4209,22 +4413,16 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
 
 @Composable
 private fun CivicDocumentStatusTile(fields: Map<String, String>, documentId: String) {
-    val statusKey = when (documentId) {
-        "1" -> "idStatus"; "2" -> "passportStatus"; "4" -> "mpStatus"
-        "5" -> "trainingStatus"; "6" -> "studentStatus"; "7" -> "disabilityStatus"
-        else -> "familyStatus"
+    val documentKey = when (documentId) {
+        "1" -> "identity"
+        "2" -> "passport"
+        "4" -> "parliament"
+        "5" -> "training"
+        "6" -> "student"
+        "7" -> "disability"
+        else -> "family"
     }
-    val expiryKey = when (documentId) {
-        "1" -> "idExpiryDate"; "2" -> "passportExpiryDate"; "4" -> "mpEnd"
-        "5" -> "trainingValidUntil"; "6" -> "studentValidity"; "7" -> "disabilityValidity"
-        else -> "familyExpiryDate"
-    }
-    val rawStatus = fields[statusKey].orEmpty().trim().lowercase()
-    val explicitlyInvalid = rawStatus in setOf(
-        "nieważny", "nieważna", "nieważne", "unieważniony", "unieważniona",
-        "zwrócona", "zwrócony", "utracony", "utracona", "expired", "invalid"
-    )
-    CredentialValidityTile(!explicitlyInvalid && isCredentialValidByExpiry(fields[expiryKey].orEmpty()))
+    CredentialValidityTile(credentialValidityForDocument(documentKey, fields))
 }
 
 @Composable
@@ -4400,11 +4598,20 @@ private fun EntityRegistryExtractScreen(onBack: () -> Unit, editable: Boolean = 
                     "Data sporządzenia dokumentu" to fields["registry_${entityKey}_documentDate"].orEmpty()
                 )
             Text(entityTitle, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            DocumentIdentityTemplate(
-                entityTitle,
-                entityValues,
-                owner = entityFields.firstOrNull()?.let { fields[it.first].orEmpty() }.orEmpty()
-            )
+            if (!editable) {
+                val previewSettings = rememberLegitimacyPreviewSettings("entity").value.copy(visibleFieldsConfigured = false)
+                val previewFields = entityValues.entries.take(12).mapIndexed { index, entry ->
+                    Triple("registryField_$index", entry.key.uppercase(), entry.value.ifBlank { "—" })
+                }
+                UnifiedCredentialCard(
+                    documentKey = "entity",
+                    title = entityTitle.uppercase(),
+                    subtitle = "PODGLĄD DANYCH REJESTROWYCH",
+                    holderName = entityFields.firstOrNull()?.let { fields[it.first].orEmpty() }.orEmpty().ifBlank { "DANE PODMIOTU" },
+                    fields = previewFields,
+                    settings = previewSettings
+                )
+            }
             entityFields.forEach { (key, label, placeholder) ->
                 if (editable) DemoDataField(key, label, fields, placeholder)
                 else RegistryReadOnlyField(label, fields[key])
@@ -4487,7 +4694,7 @@ private fun AdditionalInformationSection(
 private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane") {
     val binding = LocalCredentialFieldVisibility.current
     val settings = binding?.settings?.value
-    val checked = settings?.let { !it.visibleFieldsConfigured || key in it.visibleFields } ?: true
+    val checked = settings?.let { !it.visibleFieldsConfigured || it.visibleFields.isEmpty() || key in it.visibleFields } ?: true
     val context = LocalContext.current
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -4503,7 +4710,7 @@ private fun DemoDataField(key: String, label: String, fields: MutableMap<String,
             Checkbox(
                 checked = checked,
                 onCheckedChange = { selected ->
-                    val current = if (settings?.visibleFieldsConfigured == true) settings.visibleFields
+                    val current = if (settings?.visibleFieldsConfigured == true && settings.visibleFields.isNotEmpty()) settings.visibleFields
                         else (binding.fields.keys + credentialFieldOptions(binding.documentKey).map { it.first }).toSet()
                     val next = if (selected) current + key else current - key
                     val updated = (settings ?: LegitimacyPreviewSettings()).copy(

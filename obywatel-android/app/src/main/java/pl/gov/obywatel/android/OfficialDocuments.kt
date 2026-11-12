@@ -175,18 +175,28 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
             val values=records[type.id].orEmpty()
             var local by remember(type.id, records) { mutableStateOf(values) }
             Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
-            // Wszystkie dokumenty urzędowe korzystają ze wspólnego wzoru legitymacji.
-            // Etykiety pól są zachowane, aby renderer mapował je na ustawienia widoczności.
-            DocumentIdentityTemplate(
-                title = type.title,
-                values = type.fields.mapIndexed { index, label -> label to local["f$index"].orEmpty() }.toMap(),
-                documentType = type.id
-            )
             if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.secondaryContainer)) {
                 Text(type.note,Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.bodySmall)
             }
-            type.fields.forEachIndexed { index,label ->
-                OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6,readOnly=readOnly)
+            if (readOnly) {
+                val previewSettings = rememberLegitimacyPreviewSettings(type.id).value.copy(visibleFieldsConfigured = false)
+                val previewFields = type.fields.take(12).mapIndexed { index, label ->
+                    Triple("officialField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
+                }
+                UnifiedCredentialCard(
+                    documentKey = type.id,
+                    title = type.title.uppercase(),
+                    subtitle = "PODGLĄD EWIDENCYJNY",
+                    holderName = local.values.firstOrNull { it.isNotBlank() } ?: "DANE DOKUMENTU",
+                    fields = previewFields,
+                    settings = previewSettings
+                )
+                Text("Podgląd wyłącznie do odczytu. Edycja jest dostępna w Więcej → Ustawienia → dokumenty cywilne.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+            } else {
+                type.fields.forEachIndexed { index,label ->
+                    OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
+                }
             }
             if(type.id=="criminal_record") {
                 if (!readOnly) OutlinedButton(onClick={attachmentPicker.launch(arrayOf("application/pdf","text/xml","application/xml"))},modifier=Modifier.fillMaxWidth()) {

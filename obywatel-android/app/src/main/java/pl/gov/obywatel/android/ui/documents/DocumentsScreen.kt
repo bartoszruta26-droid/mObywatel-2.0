@@ -100,13 +100,10 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
     var documents by remember { mutableStateOf<List<ImportedDocument>>(emptyList()) }
     var selected by remember { mutableStateOf<ImportedDocument?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var statusMessage by remember { mutableStateOf<String?>(null) }
     var isLoadingDocuments by remember { mutableStateOf(true) }
-    var showSigningOptions by remember { mutableStateOf(false) }
-    var signingMethodInfo by remember { mutableStateOf<String?>(null) }
 
-    // Wstecz najpierw zamyka podgląd dokumentu; dopiero kolejny powrót
-    // opuszcza ekran dokumentów (obsługiwany przez MainActivity).
-    BackHandler(enabled = selected != null) { selected = null }
+    BackHandler(enabled = readOnly && selected != null) { selected = null }
 
     LaunchedEffect(Unit) {
         try {
@@ -120,15 +117,11 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
         }
     }
 
-    val importLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             scope.launch {
                 val result = withContext(Dispatchers.IO) {
                     try {
-                        // Magazyn najpierw waliduje MIME, a następnie atomowo
-                        // utrwala uprawnienie SAF razem z wpisem na liście.
                         val document = ImportedDocumentStore.add(context, uri)
                         Result.success(document to ImportedDocumentStore.list(context))
                     } catch (cancelled: CancellationException) {
@@ -139,8 +132,9 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
                 }
                 result.onSuccess { (document, updatedDocuments) ->
                     documents = updatedDocuments
-                    selected = document
+                    selected = null
                     errorMessage = null
+                    statusMessage = "Dodano plik: ${document.title}. Podgląd jest dostępny w portfelu dokumentów."
                 }.onFailure { error ->
                     errorMessage = error.message ?: "Nie udało się dodać pliku."
                 }
@@ -150,133 +144,89 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
 
     Surface(
         modifier = Modifier.fillMaxSize().semantics {
-            paneTitle = if (selected == null) "Moje dokumenty" else "Podgląd dokumentu"
+            paneTitle = if (readOnly && selected != null) "Podgląd dokumentu" else if (readOnly) "Dokumenty" else "Zarządzanie dokumentami"
         },
         color = MaterialTheme.colorScheme.background
     ) {
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { if (selected != null) selected = null else onBack() }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = if (selected != null) "Wróć do listy dokumentów" else "Wróć do ekranu głównego"
-                    )
+                IconButton(onClick = { if (readOnly && selected != null) selected = null else onBack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = if (readOnly && selected != null) "Wróć do listy dokumentów" else "Wróć do poprzedniego ekranu")
                 }
                 Text(
-                    selected?.title ?: "Moje dokumenty",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f).semantics { heading() }
+                    if (readOnly && selected != null) selected!!.title else if (readOnly) "Moje dokumenty" else "Zarządzanie plikami dokumentów",
+                    style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f).semantics { heading() }
                 )
             }
 
-            if (selected == null) {
+            if (readOnly && selected != null) {
+                val document = selected!!
+                when (document.mimeType) {
+                    DOCX_MIME_TYPE -> DocxPreviewPane(document = document, modifier = Modifier.weight(1f).fillMaxWidth())
+                    ODT_MIME_TYPE -> OdtPreviewPane(document = document, modifier = Modifier.weight(1f).fillMaxWidth())
+                    else -> DocumentPreviewPane(document = document, modifier = Modifier.weight(1f).fillMaxWidth())
+                }
+                Text("Podgląd wyłącznie do odczytu. Dodawanie i usuwanie plików jest dostępne w Więcej → Ustawienia → Dokumenty własne — pliki.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
                 Text(
-                    if (readOnly) "Twoje pliki — wybierz dokument, aby otworzyć jego podgląd." else "Dodaj dokumenty i uzupełnij ich opis, źródło oraz własne oświadczenie dotyczące zgodności danych.",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    if (readOnly) "Wybierz dokument, aby otworzyć jego podgląd. Ten widok nie umożliwia modyfikacji plików."
+                    else "Dodawaj i usuwaj pliki. Ich podgląd jest dostępny osobno w portfelu dokumentów.",
+                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (!readOnly) Button(
-                    onClick = {
-                        importLauncher.launch(
-                            arrayOf(
-                                "application/pdf",
-                                DOCX_MIME_TYPE,
-                                ODT_MIME_TYPE,
-                                "image/jpeg",
-                                "image/png",
-                                "image/webp",
-                                "image/gif",
-                                "image/bmp"
-                            )
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoadingDocuments
-                ) {
+                if (!readOnly) Button(onClick = {
+                    importLauncher.launch(arrayOf("application/pdf", DOCX_MIME_TYPE, ODT_MIME_TYPE,
+                        "image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"))
+                }, modifier = Modifier.fillMaxWidth(), enabled = !isLoadingDocuments) {
                     Icon(Icons.Filled.FileOpen, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
                     Text("Dodaj PDF, DOCX, ODT lub obraz")
                 }
-                errorMessage?.let {
-                    Text(
-                        it,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(8.dp).semantics {
-                            liveRegion = LiveRegionMode.Polite
-                        }
-                    )
-                }
+                errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp).semantics { liveRegion = LiveRegionMode.Polite }) }
+                statusMessage?.let { Text(it, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.bodySmall) }
                 Spacer(Modifier.height(12.dp))
                 when {
-                    isLoadingDocuments -> Box(
-                        Modifier.weight(1f).fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) { CircularProgressIndicator() }
-
-                    documents.isEmpty() -> Box(
-                        Modifier.weight(1f).fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth().padding(24.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(id = pl.gov.obywatel.android.R.drawable.empty_documents_illustration),
-                                contentDescription = null,
-                                modifier = Modifier.size(148.dp)
-                            )
+                    isLoadingDocuments -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    documents.isEmpty() -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+                            Image(painter = painterResource(id = pl.gov.obywatel.android.R.drawable.empty_documents_illustration),
+                                contentDescription = null, modifier = Modifier.size(148.dp))
                             Spacer(Modifier.height(12.dp))
-                            Text(
-                                "Brak dokumentów. Dodaj plik, aby rozpocząć.",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                            Text(if (readOnly) "Brak dokumentów do wyświetlenia." else "Brak dokumentów. Dodaj plik, aby rozpocząć.",
+                                style = MaterialTheme.typography.bodyLarge)
                         }
                     }
-
-                    else -> LazyColumn(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    else -> LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(documents, key = { it.uri.toString() }) { document ->
                             Card(
-                                modifier = Modifier.fillMaxWidth().clickable(
-                                    onClickLabel = "Otwórz dokument ${document.title}",
-                                    role = Role.Button
-                                ) { selected = document },
+                                modifier = Modifier.fillMaxWidth().then(
+                                    if (readOnly) Modifier.clickable(onClickLabel = "Otwórz dokument ${document.title}", role = Role.Button) { selected = document }
+                                    else Modifier
+                                ),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
-                                Row(
-                                    Modifier.fillMaxWidth().padding(14.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        when (document.mimeType) {
-                                            "application/pdf" -> Icons.Filled.PictureAsPdf
-                                            DOCX_MIME_TYPE, ODT_MIME_TYPE -> Icons.Filled.Description
-                                            else -> Icons.Filled.Image
-                                        },
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(28.dp)
-                                    )
+                                Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(when (document.mimeType) {
+                                        "application/pdf" -> Icons.Filled.PictureAsPdf
+                                        DOCX_MIME_TYPE, ODT_MIME_TYPE -> Icons.Filled.Description
+                                        else -> Icons.Filled.Image
+                                    }, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
                                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                                         Text(document.title, fontWeight = FontWeight.SemiBold)
-                                        Text(
-                                            when (document.mimeType) {
-                                                "application/pdf" -> "PDF"
-                                                DOCX_MIME_TYPE -> "Dokument Word (DOCX)"
-                                                ODT_MIME_TYPE -> "Dokument OpenDocument (ODT)"
-                                                else -> document.mimeType
-                                            },
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
+                                        Text(when (document.mimeType) {
+                                            "application/pdf" -> "PDF"
+                                            DOCX_MIME_TYPE -> "Dokument Word (DOCX)"
+                                            ODT_MIME_TYPE -> "Dokument OpenDocument (ODT)"
+                                            else -> document.mimeType
+                                        }, style = MaterialTheme.typography.bodySmall)
                                     }
-                                    if (!readOnly) IconButton(onClick = {
+                                    if (readOnly) Text("Podgląd", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
+                                    else IconButton(onClick = {
                                         scope.launch {
                                             val result = withContext(Dispatchers.IO) {
                                                 try {
@@ -291,107 +241,27 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
                                             result.onSuccess { updated ->
                                                 documents = updated
                                                 errorMessage = null
+                                                statusMessage = "Usunięto plik: ${document.title}."
                                             }.onFailure { failure ->
-                                                errorMessage = failure.message
-                                                    ?: "Nie udało się usunąć dokumentu."
+                                                errorMessage = failure.message ?: "Nie udało się usunąć dokumentu."
                                             }
                                         }
-                                    }) {
-                                        Icon(Icons.Filled.DeleteOutline, contentDescription = "Usuń dokument: ${document.title}")
-                                    }
+                                    }) { Icon(Icons.Filled.DeleteOutline, contentDescription = "Usuń dokument: ${document.title}") }
                                 }
                             }
                         }
                     }
                 }
-            } else {
-                if (selected!!.mimeType == DOCX_MIME_TYPE) {
-                    DocxPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
-                } else if (selected!!.mimeType == ODT_MIME_TYPE) {
-                    OdtPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
-                } else {
-                    DocumentPreviewPane(document = selected!!, modifier = Modifier.weight(1f).fillMaxWidth())
-                }
-                Spacer(Modifier.height(10.dp))
-                if (!readOnly) Button(
-                    onClick = { showSigningOptions = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Podpisz dokument")
-                }
-                if (!readOnly) OutlinedButton(
-                    onClick = {
-                        importLauncher.launch(arrayOf("application/pdf"))
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Dodaj podpisany plik PDF")
-                }
-                if (readOnly) Text("Podgląd tylko do odczytu. Dodawanie, usuwanie i obsługa podpisów są dostępne w Więcej → Ustawienia → Dokumenty do edycji.", style = MaterialTheme.typography.bodySmall)
-                signingMethodInfo?.let { message ->
-                    Text(message, style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 6.dp))
-                }
-                Text(
-                    "Podpis składasz w oficjalnej usłudze. Po zakończeniu pobierz podpisany plik i dodaj go tutaj; aplikacja zachowa go jako osobny dokument.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-
-    if (!readOnly && showSigningOptions) {
-        AlertDialog(
-            onDismissRequest = { showSigningOptions = false },
-            title = { Text("Wybierz sposób podpisania") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Profil Zaufany — podpis zaufany")
-                    Text("Certyfikat kwalifikowany — podpis kwalifikowany")
+                if (readOnly) {
                     Text(
-                        "Obie metody są dostępne w rządowej usłudze podpisywania. Wybór konkretnej metody następuje po dodaniu pliku w usłudze.",
-                        style = MaterialTheme.typography.bodySmall
+                        "Podgląd wyłącznie do odczytu. Dodawanie i usuwanie plików jest dostępne w Więcej → Ustawienia → Dokumenty własne — pliki.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 12.dp)
                     )
                 }
-            },
-            confirmButton = {
-                Column(horizontalAlignment = Alignment.End) {
-                    TextButton(onClick = {
-                        showSigningOptions = false
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            android.net.Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany")
-                        )
-                        runCatching { context.startActivity(intent) }
-                            .onSuccess {
-                                signingMethodInfo = "Wybrano ścieżkę podpisu zaufanego. W usłudze gov.pl dodaj dokument i potwierdź metodę Profil Zaufany. Po podpisaniu pobierz plik i wróć do aplikacji."
-                            }
-                            .onFailure {
-                                signingMethodInfo = "Nie udało się otworzyć usługi. Otwórz gov.pl i wyszukaj usługę „Podpisz dokument elektronicznie”."
-                            }
-                    }) { Text("Profil Zaufany") }
-                    TextButton(onClick = {
-                        showSigningOptions = false
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            android.net.Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany")
-                        )
-                        runCatching { context.startActivity(intent) }
-                            .onSuccess {
-                                signingMethodInfo = "Wybrano ścieżkę podpisu kwalifikowanego. W usłudze gov.pl wybierz certyfikat kwalifikowany i postępuj zgodnie z instrukcją Podpis GOV."
-                            }
-                            .onFailure {
-                                signingMethodInfo = "Nie udało się otworzyć usługi. Otwórz gov.pl i wyszukaj usługę „Podpisz dokument elektronicznie”."
-                            }
-                    }) { Text("Certyfikat kwalifikowany") }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSigningOptions = false }) { Text("Anuluj") }
             }
-        )
+        }
     }
 }
 

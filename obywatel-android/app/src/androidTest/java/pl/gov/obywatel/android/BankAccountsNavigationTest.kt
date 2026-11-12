@@ -5,6 +5,7 @@ package pl.gov.obywatel.android
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
+import org.junit.Assert.assertTrue
 import org.junit.Before
 
 import androidx.compose.ui.test.assertHasClickAction
@@ -90,8 +91,10 @@ class BankAccountsNavigationTest {
             .performClick()
         composeRule.waitForIdle()
         composeRule.onNodeWithText(
-            "Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia."
+            "Podgląd wyłącznie do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia → konkretny dokument."
         ).performScrollTo().assertIsDisplayed()
+        assertTrue(composeRule.onAllNodesWithText("Dodaj rachunek").fetchSemanticsNodes().isEmpty())
+        assertTrue(composeRule.onAllNodesWithText("Zapisz dane").fetchSemanticsNodes().isEmpty())
     }
 
     @Test
@@ -109,7 +112,8 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
         // Kontrolki formularza leżą niżej w przewijanym ekranie.
         composeRule.onNodeWithText("Dodaj rachunek").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Zapisz").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Zapisz dane").performScrollTo().assertIsDisplayed()
+        assertTrue(composeRule.onAllNodesWithText("Podgląd wyłącznie do odczytu.", substring = true).fetchSemanticsNodes().isEmpty())
     }
 
     @Test

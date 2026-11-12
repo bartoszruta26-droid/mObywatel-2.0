@@ -285,13 +285,14 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
     var showSignatureChoice by remember { mutableStateOf(false) }
     var pendingRecord by remember { mutableStateOf<SignedPdfRecord?>(null) }
     var showDelete by remember { mutableStateOf(false) }
+    var deleteTarget by remember { mutableStateOf<SignedPdfRecord?>(null) }
 
     val pdfPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching { SignedPdfStore.importPdf(context, uri) }
             .onSuccess {
+                records = SignedPdfStore.list(context)
                 pendingRecord = it
                 showSignatureChoice = true
-                records = SignedPdfStore.list(context)
                 ActivityHistoryStore.record(context, "Dokumenty", "Zaimportowano dokument PDF", it.name)
             }
             .onFailure { status = "Import PDF nie powiódł się: ${it.message ?: "błąd odczytu"}" }
@@ -308,78 +309,78 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
         pendingId = null
     }
 
-    val selected = records.firstOrNull { it.id == selectedId }
+    val selected = if (readOnly) records.firstOrNull { it.id == selectedId } else null
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("‹  Więcej", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Dokumenty PDF i podpisy elektroniczne", color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("Oznaczenie podpisu a jego weryfikacja", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                Text("Aplikacja przechowuje PDF i może dołączyć zewnętrzny plik podpisu (np. XML/XAdES). Samo pole podpisu w PDF, nazwa pliku ani deklaracja użytkownika nie potwierdzają ważności podpisu, tożsamości podpisującego ani kwalifikowanego statusu certyfikatu. Ikona będzie opisana jako oznaczenie rodzaju podpisu; pełna weryfikacja kryptograficzna i walidacja łańcucha zaufania wymagają osobnego mechanizmu.", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
+        Text(if (readOnly) "‹  Wróć do dokumentów" else "‹  Więcej",
+            color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable(onClick = { if (readOnly && selected != null) selectedId = null else onBack() }).padding(vertical = 5.dp))
+        Text(if (readOnly && selected != null) selected.name else if (readOnly) "Podgląd dokumentów PDF" else "Zarządzanie dokumentami PDF i podpisami",
+            color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        if (readOnly && selected != null) {
+            val document = selected
+            SignatureKindLabel(document.signatureKind)
+            Text("Data importu: " + SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date(document.importedAt)),
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            PdfPagePreview(context, document.id, pageIndex, onPageCount = { count ->
+                if (pageIndex >= count) pageIndex = (count - 1).coerceAtLeast(0)
+            })
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton(onClick = { pageIndex = (pageIndex - 1).coerceAtLeast(0) }, enabled = pageIndex > 0) { Text("Poprzednia") }
+                Text("Strona ${pageIndex + 1}", color = MaterialTheme.colorScheme.onSurface)
+                OutlinedButton(onClick = { pageIndex++ }) { Text("Następna") }
             }
-        }
-        if (selected == null) {
-            if (allowImport && !readOnly) {
-                Button(onClick = { pdfPicker.launch(arrayOf("application/pdf")) }, modifier = Modifier.fillMaxWidth()) {
+            Text("Podgląd wyłącznie do odczytu. Zarządzanie plikami i podpisami znajduje się w Więcej → Ustawienia → Pliki PDF i podpisy.",
+                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            if (!readOnly) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Text("Oznaczenie podpisu a jego weryfikacja", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                        Text("Aplikacja przechowuje PDF i może dołączyć zewnętrzny plik podpisu (np. XML/XAdES). Samo pole podpisu w PDF, nazwa pliku ani deklaracja użytkownika nie potwierdzają ważności podpisu, tożsamości podpisującego ani kwalifikowanego statusu certyfikatu.",
+                            color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                if (allowImport) Button(onClick = { pdfPicker.launch(arrayOf("application/pdf")) }, modifier = Modifier.fillMaxWidth()) {
                     Text("Importuj dokument PDF")
                 }
-            } else {
-                Text("Wybierz dokument z listy, aby wyświetlić jego treść i oznaczenie rodzaju podpisu.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            }
+            } else Text("Wybierz dokument, aby otworzyć jego podgląd. Ten widok nie umożliwia modyfikacji plików ani podpisów.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             if (records.isEmpty()) Text("Nie dodano jeszcze dokumentów PDF.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             records.sortedByDescending { it.importedAt }.forEach { record ->
-                Card(Modifier.fillMaxWidth().clickable { selectedId = record.id; pageIndex = 0 },
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Card(
+                    Modifier.fillMaxWidth().then(if (readOnly) Modifier.clickable { selectedId = record.id; pageIndex = 0 } else Modifier),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.Description, contentDescription = "Dokument PDF", tint = MaterialTheme.colorScheme.primary)
                             Text(record.name, modifier = Modifier.weight(1f).padding(start = 8.dp),
                                 color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                            if (readOnly) Text("Podgląd", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
                         }
                         SignatureKindLabel(record.signatureKind)
                         if (record.pdfHasSignatureField) Text("PDF zawiera strukturę pola podpisu cyfrowego — bez potwierdzenia jego ważności.",
                             color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.bodySmall)
                         Text(if (record.signatureFileName.isNotBlank()) "Plik podpisu: ${record.signatureFileName}" else "Brak dołączonego pliku podpisu",
                             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                        if (!readOnly) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                OutlinedButton(onClick = { pendingId = record.id; signaturePicker.launch(arrayOf("application/xml", "text/xml", "application/octet-stream", "*/*")) },
+                                    modifier = Modifier.weight(1f)) { Text(if (record.signatureFileName.isBlank()) "Dołącz podpis" else "Zmień podpis") }
+                                OutlinedButton(onClick = { pendingRecord = record; showSignatureChoice = true },
+                                    modifier = Modifier.weight(1f)) { Text("Oznacz rodzaj") }
+                            }
+                            TextButton(onClick = { deleteTarget = record; showDelete = true }) { Text("Usuń dokument") }
+                        }
                     }
                 }
-            }
-        } else {
-            TextButton(onClick = { selectedId = null }) { Text("‹ Lista dokumentów") }
-            Text(selected.name, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            SignatureKindLabel(selected.signatureKind)
-            Text("Data importu: " + SimpleDateFormat("dd.MM.yyyy HH:mm", Locale("pl", "PL")).format(Date(selected.importedAt)),
-                color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            PdfPagePreview(context, selected.id, pageIndex, onPageCount = { count ->
-                if (pageIndex >= count) pageIndex = (count - 1).coerceAtLeast(0)
-            })
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically) {
-                OutlinedButton(onClick = { pageIndex = (pageIndex - 1).coerceAtLeast(0) }, enabled = pageIndex > 0) { Text("Poprzednia") }
-                Text("Strona ${pageIndex + 1}", color = MaterialTheme.colorScheme.onSurface)
-                OutlinedButton(onClick = { pageIndex++ }) { Text("Następna") }
-            }
-            if (!readOnly) {
-                OutlinedButton(onClick = { pendingId = selected.id; signaturePicker.launch(arrayOf("application/xml", "text/xml", "application/octet-stream", "*/*")) },
-                    modifier = Modifier.fillMaxWidth()) { Text(if (selected.signatureFileName.isBlank()) "Dołącz plik podpisu XML/XAdES" else "Zmień dołączony plik podpisu") }
-                if (selected.signatureFileName.isNotBlank()) Text("Dołączono: ${selected.signatureFileName}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                OutlinedButton(onClick = { showSignatureChoice = true; pendingRecord = selected }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Oznacz rodzaj podpisu")
-                }
-                OutlinedButton(onClick = { showDelete = true }, modifier = Modifier.fillMaxWidth()) { Text("Usuń dokument") }
-            } else {
-                Text("Widok tylko do odczytu. Zarządzanie plikami i podpisami pozostaje poza portfelem dokumentów.",
-                    style = MaterialTheme.typography.labelSmall)
             }
         }
         if (status.isNotBlank()) Text(status, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
     }
 
-    if (showSignatureChoice && pendingRecord != null) {
+    if (!readOnly && showSignatureChoice && pendingRecord != null) {
         AlertDialog(
             onDismissRequest = { showSignatureChoice = false; pendingRecord = null },
             title = { Text("Rodzaj podpisu") },
@@ -393,7 +394,6 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
                         SignedPdfStore.setSignatureKind(context, target.id, kind)
                         ActivityHistoryStore.record(context, "Certyfikaty", "Oznaczono rodzaj podpisu dokumentu", target.name + " — " + kind)
                         records = SignedPdfStore.list(context)
-                        selectedId = target.id
                         showSignatureChoice = false
                         pendingRecord = null
                         status = "Zapisano oznaczenie rodzaju podpisu. Nie jest to wynik walidacji kryptograficznej."
@@ -403,16 +403,19 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
             confirmButton = { TextButton(onClick = { showSignatureChoice = false; pendingRecord = null }) { Text("Zamknij") } }
         )
     }
-    if (showDelete && selected != null) AlertDialog(
-        onDismissRequest = { showDelete = false },
+    if (!readOnly && showDelete && deleteTarget != null) AlertDialog(
+        onDismissRequest = { showDelete = false; deleteTarget = null },
         title = { Text("Usunąć dokument?") },
         text = { Text("Usunięty zostanie PDF oraz dołączony plik podpisu z lokalnego archiwum.") },
         confirmButton = { Button(onClick = {
-            ActivityHistoryStore.record(context, "Dokumenty", "Usunięto dokument PDF", selected.name)
-            SignedPdfStore.delete(context, selected.id)
-            records = SignedPdfStore.list(context); selectedId = null; showDelete = false
+            val target = deleteTarget ?: return@Button
+            ActivityHistoryStore.record(context, "Dokumenty", "Usunięto dokument PDF", target.name)
+            SignedPdfStore.delete(context, target.id)
+            records = SignedPdfStore.list(context)
+            deleteTarget = null
+            showDelete = false
         }) { Text("Usuń") } },
-        dismissButton = { TextButton(onClick = { showDelete = false }) { Text("Anuluj") } }
+        dismissButton = { TextButton(onClick = { showDelete = false; deleteTarget = null }) { Text("Anuluj") } }
     )
 }
 

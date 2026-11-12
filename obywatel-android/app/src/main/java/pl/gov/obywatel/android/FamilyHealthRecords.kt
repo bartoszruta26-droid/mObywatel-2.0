@@ -204,16 +204,29 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
                 if (!readOnly) OutlinedButton(onClick = { photoLauncher.launch("image/*") }, modifier = Modifier.fillMaxWidth()) {
                     Text(if (selected.photoBase64.isBlank()) "Dodaj zdjęcie" else "Zmień zdjęcie")
                 }
-                ChildField("Imię / imiona", selected.firstName, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(firstName = v) } }
-                ChildField("Nazwisko", selected.lastName, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(lastName = v) } }
-                ChildField("Data urodzenia (DD-MM-RRRR)", selected.birthDate, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(birthDate = v) } }
-                ChildField("PESEL (opcjonalnie)", selected.pesel, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(pesel = v) } }
-                ChildField("Płeć — wpis opiekuna", selected.sex, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(sex = v) } }
-                ChildField("Miejsce urodzenia", selected.birthPlace, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(birthPlace = v) } }
-                ChildField("Grupa krwi (jeśli znana)", selected.bloodGroup, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(bloodGroup = v) } }
-                ChildField("Alergie / reakcje niepożądane", selected.allergies, singleLine = false, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(allergies = v) } }
-                ChildField("Rodzic / opiekun", selected.guardian, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(guardian = v) } }
-                ChildField("Uwagi", selected.notes, singleLine = false, readOnly = readOnly) { v -> updateChild(selected.id) { it.copy(notes = v) } }
+                if (readOnly) {
+                    ReadOnlyChildField("Imię / imiona", selected.firstName)
+                    ReadOnlyChildField("Nazwisko", selected.lastName)
+                    ReadOnlyChildField("Data urodzenia (DD-MM-RRRR)", selected.birthDate)
+                    ReadOnlyChildField("PESEL (opcjonalnie)", selected.pesel)
+                    ReadOnlyChildField("Płeć — wpis opiekuna", selected.sex)
+                    ReadOnlyChildField("Miejsce urodzenia", selected.birthPlace)
+                    ReadOnlyChildField("Grupa krwi (jeśli znana)", selected.bloodGroup)
+                    ReadOnlyChildField("Alergie / reakcje niepożądane", selected.allergies)
+                    ReadOnlyChildField("Rodzic / opiekun", selected.guardian)
+                    ReadOnlyChildField("Uwagi", selected.notes)
+                } else {
+                    ChildField("Imię / imiona", selected.firstName) { v -> updateChild(selected.id) { it.copy(firstName = v) } }
+                    ChildField("Nazwisko", selected.lastName) { v -> updateChild(selected.id) { it.copy(lastName = v) } }
+                    ChildField("Data urodzenia (DD-MM-RRRR)", selected.birthDate) { v -> updateChild(selected.id) { it.copy(birthDate = v) } }
+                    ChildField("PESEL (opcjonalnie)", selected.pesel) { v -> updateChild(selected.id) { it.copy(pesel = v) } }
+                    ChildField("Płeć — wpis opiekuna", selected.sex) { v -> updateChild(selected.id) { it.copy(sex = v) } }
+                    ChildField("Miejsce urodzenia", selected.birthPlace) { v -> updateChild(selected.id) { it.copy(birthPlace = v) } }
+                    ChildField("Grupa krwi (jeśli znana)", selected.bloodGroup) { v -> updateChild(selected.id) { it.copy(bloodGroup = v) } }
+                    ChildField("Alergie / reakcje niepożądane", selected.allergies, singleLine = false) { v -> updateChild(selected.id) { it.copy(allergies = v) } }
+                    ChildField("Rodzic / opiekun", selected.guardian) { v -> updateChild(selected.id) { it.copy(guardian = v) } }
+                    ChildField("Uwagi", selected.notes, singleLine = false) { v -> updateChild(selected.id) { it.copy(notes = v) } }
+                }
                 Button(onClick = { section = "vaccines" }, modifier = Modifier.fillMaxWidth()) { Text("Otwórz eKartę Szczepień") }
                 if (!readOnly) TextButton(onClick = {
                     persist(children.filterNot { it.id == selected.id })
@@ -296,9 +309,18 @@ internal fun FamilyHealthRecordsScreen(initialSection: String, onBack: () -> Uni
 }
 
 @Composable
-private fun ChildField(label: String, value: String, singleLine: Boolean = true, readOnly: Boolean = false, onChange: (String) -> Unit) {
+private fun ReadOnlyChildField(label: String, value: String) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+        Text(value.ifBlank { "Brak zapisanego wpisu" }, color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
+private fun ChildField(label: String, value: String, singleLine: Boolean = true, onChange: (String) -> Unit) {
     OutlinedTextField(value = value, onValueChange = onChange, modifier = Modifier.fillMaxWidth(),
-        label = { Text(label) }, singleLine = singleLine, minLines = if (singleLine) 1 else 3, readOnly = readOnly)
+        label = { Text(label) }, singleLine = singleLine, minLines = if (singleLine) 1 else 3)
 }
 
 private object FamilyHealthStore {

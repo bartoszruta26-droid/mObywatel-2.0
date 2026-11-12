@@ -189,6 +189,69 @@ internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
     return parsed == null || !parsed.isBefore(java.time.LocalDate.now())
 }
 
+/** Resolves a document-specific status/expiry pair without treating missing data as proof of validity. */
+internal fun credentialValidityForDocument(documentKey: String, values: Map<String, String>): Boolean? {
+    val statusKeys = when (documentKey) {
+        "identity" -> listOf("idStatus", "status")
+        "passport" -> listOf("passportStatus", "status")
+        "parliament" -> listOf("mpStatus", "status")
+        "training" -> listOf("trainingStatus", "status")
+        "student" -> listOf("studentStatus", "status")
+        "disability" -> listOf("disabilityStatus", "status")
+        "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf("professionalStatus", "status")
+        "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" -> listOf("churchStatus", "status")
+        "family", "organization_family" -> listOf("familyStatus", "status")
+        "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business" -> listOf("insuranceStatus", "status")
+        "mission_travel" -> listOf("missionStatus", "status")
+        "ehic" -> listOf("ehicStatus", "status")
+        "vaccines" -> listOf("vaccineStatus", "status")
+        "loyalty", "loyalty_cards" -> listOf("loyaltyStatus", "status")
+        "bank_accounts" -> listOf("accountStatus", "status")
+        "children" -> listOf("childStatus", "status")
+        "civil", "birth_extract", "marriage_extract", "death_extract" -> listOf("civilStatus", "status")
+        "entity", "business", "registry", "organization_foundation", "organization_company", "organization_association" -> listOf("registryStatus", "entityStatus", "status")
+        else -> listOf("status")
+    }
+    val expiryKeys = when (documentKey) {
+        "identity" -> listOf("idExpiryDate", "expiryDate")
+        "passport" -> listOf("passportExpiryDate", "expiryDate")
+        "parliament" -> listOf("mpEnd", "expiryDate")
+        "training" -> listOf("trainingValidUntil", "expiryDate")
+        "student" -> listOf("studentValidity", "expiryDate")
+        "disability" -> listOf("disabilityValidity", "expiryDate")
+        "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf("professionalValidity", "expiryDate")
+        "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" -> listOf("churchValidity", "expiryDate")
+        "family", "organization_family" -> listOf("familyExpiryDate", "expiryDate")
+        "large_family" -> listOf("largeFamilyExpiry", "expiryDate")
+        "disability_card" -> listOf("disabilityCardExpiry", "expiryDate")
+        "vehicle_registration" -> listOf("vehicleInspectionDue", "expiryDate")
+        "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business" -> listOf("insuranceEnd", "expiryDate")
+        "mission_travel" -> listOf("missionEnd", "expiryDate")
+        "ehic" -> listOf("ehicExpiry", "expiryDate")
+        "vaccines" -> listOf("vaccineExpiry", "expiryDate")
+        "loyalty", "loyalty_cards" -> listOf("loyaltyExpiry", "expiryDate")
+        "bank_accounts" -> listOf("accountExpiryDate", "expiryDate")
+        "children" -> listOf("childDocumentExpiry", "expiryDate")
+        "civil", "birth_extract", "marriage_extract", "death_extract" -> listOf("civilExpiryDate", "expiryDate")
+        "entity", "business", "registry", "organization_foundation", "organization_company", "organization_association" -> listOf("registryExpiryDate", "entityExpiryDate", "expiryDate")
+        else -> listOf("expiryDate", "validUntil", "documentExpiryDate")
+    }
+    val status = statusKeys.firstNotNullOfOrNull { key -> values[key]?.trim()?.takeIf { it.isNotEmpty() } }
+        ?: values.entries.firstOrNull { (key, value) -> key.endsWith("Status", true) && value.isNotBlank() }?.value.orEmpty()
+    val expiry = expiryKeys.firstNotNullOfOrNull { key -> values[key]?.trim()?.takeIf { it.isNotEmpty() } }
+        ?: values.entries.firstOrNull { (key, value) ->
+            value.isNotBlank() && (key.contains("Expiry", true) || key.endsWith("ValidUntil", true) ||
+                key.endsWith("Validity", true) || key.endsWith("ExpiryDate", true))
+        }?.value.orEmpty()
+    if (status.isBlank() && expiry.isBlank()) return null
+    val normalized = status.lowercase(java.util.Locale.forLanguageTag("pl-PL"))
+    val explicitlyInvalid = listOf(
+        "nieważ", "unieważ", "utrac", "zwróc", "wygas", "zawies", "nieaktywn", "zablok", "zamknięt",
+        "expired", "invalid", "revoked", "cancelled"
+    ).any { token -> normalized.contains(token) }
+    return !explicitlyInvalid && isCredentialValidByExpiry(expiry)
+}
+
 internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
@@ -882,10 +945,11 @@ internal fun LegitimacyHeraldry(
         if (settings.showFlag && selectedFlag != null) {
             Image(
                 selectedFlag.asImageBitmap(),
-                contentDescription = "Flaga dokumentu — pod fotografią, przy lewym marginesie",
+                contentDescription = "Flaga dokumentu — wyrównana do lewego marginesu zdjęcia i godła",
+                alignment = Alignment.CenterStart,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .fillMaxWidth(0.76f)
+                    .fillMaxWidth()
                     .height(48.dp)
                     .graphicsLayer {
                         // Flaga jest elementem kolumny zdjęcia: pozostaje przy jej lewym
@@ -1024,7 +1088,7 @@ internal fun UnifiedCredentialCard(
     )
     val imageFilter = remember(settings.imageFilter) { credentialImageColorFilter(settings.imageFilter) }
     val horizontal = settings.orientation == "POZIOMA"
-    val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp)
+    val cardShape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
     val background = remember(settings.backgroundAssetId, documentKey, assetRevision, title, fallbackBackgroundRes) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { selected ->
             credentialBackgroundResourceId(context, selected)?.let { BitmapFactory.decodeResource(context.resources, it) }
@@ -1042,7 +1106,7 @@ internal fun UnifiedCredentialCard(
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Logo")
     }
-    val visible = if (!settings.visibleFieldsConfigured) fields else fields.filter {
+    val visible = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) fields else fields.filter {
         it.first in settings.visibleFields
     }
     val sharePayload = remember(documentKey, holderName, visible) {
@@ -1126,8 +1190,12 @@ internal fun UnifiedCredentialCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
+        // Granica wzoru graficznego obejmuje kartę wraz z paskiem statusu ważności.
+        // Przycisk animacji i trzy okrągłe skróty pozostają poza tą powierzchnią.
         BoxWithConstraints(
-            Modifier.fillMaxWidth().aspectRatio(if (horizontal) 1.586f else 0.68f)
+            Modifier.fillMaxWidth()
+                .aspectRatio(if (horizontal) 1.586f else 0.68f)
+                .clip(cardShape)
         ) {
             val cardWidth = maxWidth
             val cardHeight = maxHeight
@@ -1264,52 +1332,62 @@ internal fun UnifiedCredentialCard(
                 }
 
                 // Pasek statusu stanowi integralną część karty.
-                if (validity != null) {
-                    val statusColor = if (validity) Color(0xFF43D65F) else Color(0xFFFF6B6B)
-                    Row(
-                        Modifier.align(Alignment.BottomStart)
-                            .fillMaxWidth()
-                            .height(footerHeight)
-                            .background(Color(0xFF414047))
-                            .padding(horizontal = horizontalPadding, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (validity) Icons.Filled.CheckCircle else Icons.Filled.Error,
-                            contentDescription = if (validity) "Dokument ważny" else "Dokument nieważny",
-                            tint = statusColor,
-                            modifier = Modifier.size((cardWidth * 0.052f).coerceIn(22.dp, 30.dp))
-                        )
-                        Text(
-                            if (validity) "Dokument ważny" else "Dokument nieważny",
-                            fontSize = (cardWidth.value * 0.030f).coerceIn(12f, 16f).sp,
-                            color = statusColor,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.weight(1f))
-                    }
+                val statusColor = when (validity) {
+                    true -> Color(0xFF43D65F)
+                    false -> Color(0xFFFF6B6B)
+                    null -> Color(0xFFFFC857)
+                }
+                val statusLabel = when (validity) {
+                    true -> "Dokument ważny"
+                    false -> "Dokument nieważny"
+                    null -> "Ważność dokumentu nieustalona"
+                }
+                Row(
+                    Modifier.align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .height(footerHeight)
+                        .background(Color(0xFF414047))
+                        .padding(horizontal = horizontalPadding, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        imageVector = when (validity) {
+                            true -> Icons.Filled.CheckCircle
+                            false -> Icons.Filled.Error
+                            null -> Icons.Filled.Info
+                        },
+                        contentDescription = statusLabel,
+                        tint = statusColor,
+                        modifier = Modifier.size((cardWidth * 0.052f).coerceIn(22.dp, 30.dp))
+                    )
+                    Text(
+                        statusLabel,
+                        fontSize = (cardWidth.value * 0.030f).coerceIn(12f, 16f).sp,
+                        color = statusColor,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }
-        if (validity != null) {
-            Button(
-                onClick = { animationEnabled = !animationEnabled },
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2879D8)),
-                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp)
-            ) {
-                Text(if (animationEnabled) "Wyłącz animację" else "Włącz animację",
-                    color = Color.White, fontWeight = FontWeight.SemiBold)
-            }
-            Row(
+        Button(
+            onClick = { animationEnabled = !animationEnabled },
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2879D8)),
+            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp)
+        ) {
+            Text(if (animationEnabled) "Wyłącz animację" else "Włącz animację",
+                color = Color.White, fontWeight = FontWeight.SemiBold)
+        }
+        Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.Top
             ) {
                 CredentialRoundAction(
-                    label = "Potwierdź\nswoje dane",
+                    label = "Udostępnij\nkod QR",
                     icon = {
                         androidx.compose.foundation.Canvas(Modifier.size(30.dp)) {
                             val c = Color(0xFFB9E9FF)
@@ -1340,7 +1418,7 @@ internal fun UnifiedCredentialCard(
                     onClick = { showQr = true }
                 )
                 CredentialRoundAction(
-                    label = "Dane dowodu\ntożsamości",
+                    label = "Dane\ndokumentu",
                     icon = {
                         androidx.compose.foundation.Canvas(Modifier.size(width = 36.dp, height = 25.dp)) {
                             val cardBrush = Brush.horizontalGradient(
@@ -1363,11 +1441,10 @@ internal fun UnifiedCredentialCard(
                     onClick = { showIdentityDetails = true }
                 )
                 CredentialRoundAction(
-                    label = "Pozostałe\nskróty",
+                    label = "Opcje\ndodatkowe",
                     icon = { Icon(Icons.Filled.MoreVert, contentDescription = null, tint = Color(0xFFB9E9FF), modifier = Modifier.size(29.dp)) },
                     onClick = { showShortcuts = true }
                 )
-            }
         }
     }
     if (showQr) {
@@ -1387,13 +1464,31 @@ internal fun UnifiedCredentialCard(
                         style = MaterialTheme.typography.bodySmall)
                 }
             },
-            confirmButton = { TextButton(onClick = { showQr = false }) { Text("Zamknij") } }
+            confirmButton = {
+                Row {
+                    TextButton(onClick = {
+                        runCatching {
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, title)
+                                putExtra(Intent.EXTRA_TEXT, sharePayload)
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, "Udostępnij dane kodu QR"))
+                        }
+                    }) {
+                        Icon(Icons.Filled.Share, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Udostępnij")
+                    }
+                    TextButton(onClick = { showQr = false }) { Text("Zamknij") }
+                }
+            }
         )
     }
     if (showIdentityDetails) {
         AlertDialog(
             onDismissRequest = { showIdentityDetails = false },
-            title = { Text("Dane dowodu tożsamości") },
+            title = { Text("Dane dokumentu") },
             text = {
                 Column(
                     modifier = Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()),
@@ -1472,9 +1567,20 @@ private fun CredentialRoundAction(
 }
 
 @Composable
-internal fun CredentialValidityTile(valid: Boolean) {
+internal fun CredentialValidityTile(valid: Boolean?) {
+    val label = when (valid) {
+        true -> "Dokument ważny"
+        false -> "Dokument nieważny"
+        null -> "Ważność dokumentu nieustalona"
+    }
+    val tint = when (valid) {
+        true -> Color(0xFF238548)
+        false -> Color(0xFFB3261E)
+        null -> Color(0xFF9A6700)
+    }
     Card(
         Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -1484,36 +1590,64 @@ internal fun CredentialValidityTile(valid: Boolean) {
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Icon(
-                imageVector = if (valid) Icons.Filled.CheckCircle else Icons.Filled.Error,
-                contentDescription = if (valid) "Dokument ważny" else "Dokument nieważny",
-                tint = if (valid) Color(0xFF238548) else Color(0xFFB3261E),
+                imageVector = when (valid) {
+                    true -> Icons.Filled.CheckCircle
+                    false -> Icons.Filled.Error
+                    null -> Icons.Filled.Info
+                },
+                contentDescription = label,
+                tint = tint,
                 modifier = Modifier.size(30.dp)
             )
-            Text(
-                if (valid) "Dokument ważny" else "Dokument nieważny",
-                fontSize = 15.sp,
-                color = if (valid) Color(0xFF237A35) else Color(0xFFB3261E),
-                fontWeight = FontWeight.SemiBold
-            )
+            Text(label, fontSize = 15.sp, color = tint, fontWeight = FontWeight.SemiBold)
         }
     }
 }
 
 @Composable
-internal fun CredentialTemplatePreview(documentKey: String, settings: LegitimacyPreviewSettings, assetRevision: Int = 0) {
+internal fun CredentialTemplatePreview(
+    documentKey: String,
+    settings: LegitimacyPreviewSettings,
+    assetRevision: Int = 0,
+    values: Map<String, String>? = null
+) {
     val title = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "Wspólny wzór legitymacji"
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
-    val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
-    UnifiedCredentialCard(
-        documentKey = documentKey,
-        title = title,
-        subtitle = "",
-        holderName = "IMIĘ I NAZWISKO",
-        fields = selected.map { (key, label) -> Triple(key, label, "—") },
-        settings = settings,
-        assetRevision = assetRevision
-    )
+    val selected = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) options else options.filter { it.first in settings.visibleFields }
+    val holderName = values?.get("studentNames").orEmpty().ifBlank {
+        values?.get("passportHolderNames").orEmpty().ifBlank {
+            values?.get("disabilityPersonName").orEmpty().ifBlank {
+                listOf(values?.get("firstNames").orEmpty(), values?.get("lastName").orEmpty())
+                    .filter { it.isNotBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
+            }
+        }
+    }
+    val photo = remember(values?.get("photo")) {
+        runCatching {
+            val encoded = values?.get("photo").orEmpty()
+            if (encoded.isBlank()) null else {
+                val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            }
+        }.getOrNull()
+    }
+    if (settings.showCard) {
+        UnifiedCredentialCard(
+            documentKey = documentKey,
+            title = title,
+            subtitle = "",
+            holderName = holderName,
+            fields = selected.map { (key, label) -> Triple(key, label, values?.get(key).orEmpty().ifBlank { "—" }) },
+            settings = settings,
+            photo = photo,
+            assetRevision = assetRevision,
+            validity = values?.let { credentialValidityForDocument(documentKey, it) } ?: true
+        )
+    } else {
+        Text("Podgląd legitymacji jest wyłączony.", color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+    }
 }
 
 @Composable
