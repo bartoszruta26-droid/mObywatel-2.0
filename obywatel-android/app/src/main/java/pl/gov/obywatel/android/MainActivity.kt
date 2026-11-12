@@ -3378,16 +3378,28 @@ private fun documentTileIconResource(documentKey: String, fallback: Int): Int = 
 }
 
 private fun documentTileWatermarkResource(documentKey: String): Int = when {
-    documentKey.startsWith("church_") || documentKey in setOf("church", "organization_church", "mission_travel") ->
+    documentKey.startsWith("church_") || documentKey in setOf("church", "organization_church") ->
         R.drawable.tile_watermark_sacred
+    documentKey in setOf("identity", "profile") ->
+        R.drawable.tile_watermark_identity
+    documentKey in setOf("passport", "mission_travel") ->
+        R.drawable.tile_watermark_travel
+    documentKey in setOf("bank_accounts") ->
+        R.drawable.tile_watermark_finance
+    documentKey in setOf("signed_pdf", "imported", "branding", "loyalty") ->
+        R.drawable.tile_watermark_digital
+    documentKey in setOf("vehicle_registration") ->
+        R.drawable.tile_watermark_transport
+    documentKey in setOf("professional_education", "professional_medical", "professional_therapeutic", "professional_other", "insurance_professional") ->
+        R.drawable.tile_watermark_professional
     documentKey in setOf("family", "children", "birth_extract", "marriage_extract", "death_extract", "large_family") ->
         R.drawable.tile_watermark_family
-    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card", "insurance_professional") ->
+    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card") ->
         R.drawable.tile_watermark_medical
-    documentKey in setOf("student", "training", "eu_education", "professional_education", "professional_medical", "professional_therapeutic", "professional_other") ->
+    documentKey in setOf("student", "training", "eu_education") ->
         R.drawable.tile_watermark_education
     documentKey in setOf("civil", "official", "registry", "business", "entity", "organization_foundation",
-        "organization_company", "organization_association", "parliament", "vehicle_registration", "criminal_record") ->
+        "organization_company", "organization_association", "parliament", "criminal_record") ->
         R.drawable.tile_watermark_civic
     else -> R.drawable.tile_watermark_security
 }
