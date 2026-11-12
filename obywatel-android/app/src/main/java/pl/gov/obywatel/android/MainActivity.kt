@@ -3271,7 +3271,8 @@ private fun documentTileIconResource(documentKey: String, fallback: Int): Int = 
     "identity" -> R.drawable.tile_ic_identity
     "passport" -> R.drawable.tile_ic_passport
     "registry" -> R.drawable.tile_ic_registry
-    "family", "children" -> R.drawable.tile_ic_family
+    "family" -> R.drawable.tile_ic_family
+    "children" -> R.drawable.tile_ic_children
     "parliament" -> R.drawable.tile_ic_parliament
     "training", "student" -> R.drawable.tile_ic_education
     "disability" -> R.drawable.tile_ic_disability
