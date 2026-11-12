@@ -177,7 +177,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             var local by remember(doc.id) { mutableStateOf(saved) }
             var accountCount by remember(doc.id) { mutableIntStateOf((saved["accountCount"]?.toIntOrNull() ?: 1).coerceIn(1, 30)) }
             val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
-            val previewKey = if (isBankRegister) "bank_accounts" else if (entityMode) "entity" else "family"
+            val previewKey = if (isBankRegister) "bank_accounts" else doc.id
             val previewFields = if (isBankRegister) {
                 buildList {
                     repeat(accountCount) { accountIndex ->
