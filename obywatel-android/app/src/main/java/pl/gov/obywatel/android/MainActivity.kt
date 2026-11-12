@@ -800,6 +800,7 @@ private val documentDisplayOptions = listOf(
     Triple("church_abbot", "Dokument godności opackiej", R.drawable.church_communities),
     Triple("church_minister", "Dokument posługi kościelnej", R.drawable.church_communities),
     Triple("church_missionary", "Dokument posługi misyjnej", R.drawable.church_communities),
+    Triple("professional", "Dokumenty kwalifikacji zawodowych", R.drawable.work),
     Triple("professional_medical", "Kwalifikacje medyczne", R.drawable.work),
     Triple("professional_education", "Kwalifikacje edukacyjne", R.drawable.education),
     Triple("professional_therapeutic", "Kwalifikacje terapeutyczne", R.drawable.work),
@@ -3038,7 +3039,7 @@ private fun DocumentsWalletScreen(
     val additionalDocuments = documentDisplayOptions.filter { it.first !in knownDocumentIds }.map { (id, title, _) ->
         val categoriesForDocument = when {
             id.startsWith("church_") -> listOf("Kościelne", "Osobiste", "Zawodowe", "Misyjne", "Rejestry")
-            id.startsWith("professional_") -> listOf("Zawodowe", "Edukacja", "Osobiste", "Rejestry")
+            id.startsWith("professional_") || id == "professional" -> listOf("Zawodowe", "Edukacja", "Osobiste", "Rejestry")
             id.startsWith("organization_") || id == "entity" -> listOf("Organizacyjne", "Cywilne", "Kościelne", "Rejestry")
             id.startsWith("insurance_") -> listOf("OC", "Finansowe", "Osobiste")
             id in setOf("birth_extract", "marriage_extract", "death_extract") -> listOf("Cywilne", "Rodzinne", "Rodowe", "Rejestry")
@@ -3052,7 +3053,7 @@ private fun DocumentsWalletScreen(
         }
         val service = when {
             id.startsWith("church_") -> "Dokumenty Kościelne"
-            id.startsWith("professional_") -> "Dokumenty kwalifikacji zawodowych"
+            id.startsWith("professional_") || id == "professional" -> "Dokumenty kwalifikacji zawodowych"
             id.startsWith("organization_") || id == "entity" -> "Dokumenty rejestru podmiotów"
             id in setOf("birth_extract", "marriage_extract", "death_extract", "official") -> "Formularze dokumentów"
             else -> "Pozostałe dokumenty"
