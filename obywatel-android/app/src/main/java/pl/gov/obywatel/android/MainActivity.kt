@@ -551,7 +551,6 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        )
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.Top
