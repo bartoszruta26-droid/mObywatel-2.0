@@ -494,7 +494,7 @@ internal fun LegitimacyPreviewSettingsPanel(
         LegitimacyPreviewSettingsStore.save(context, documentKey, persisted)
         val effective = if (assetSelectionOnly && individualFontColor.isBlank()) {
             value.copy(fontColor = LegitimacyPreviewSettingsStore.load(context, GLOBAL_LEGITIMACY_APPEARANCE_KEY).fontColor)
-        } else if (assetSelectionOnly) value.copy(fontColor = individualFontColor) else value
+        } else if (assetSelectionOnly) value.copy(fontColor = individualFontColor) else persisted
         onChange(effective)
     }
 
