@@ -6,8 +6,8 @@ SPDX-License-Identifier: EUPL-1.2
 # Szczegółowa struktura blokowa aplikacji obywatelskiej
 
 > **Zakres dokumentu:** stan kodu gałęzi **main** na dzień 12 listopada 2026 r.  
-> **Analizowany punkt odniesienia:** commit \`76225967572a923cb12090cd46f5ce785621ccd7\`.  
-> **Projekt Android:** katalog główny \`obywatel-android\`, Kotlin, Jetpack Compose, Gradle Kotlin DSL.  
+> **Analizowany punkt odniesienia:** commit `76225967572a923cb12090cd46f5ce785621ccd7`.  
+> **Projekt Android:** katalog główny `obywatel-android`, Kotlin, Jetpack Compose, Gradle Kotlin DSL.  
 > **Charakter dokumentu:** opis architektury wynikający z istniejącego kodu, a nie docelowa specyfikacja ani deklaracja ukończonych integracji.
 
 ## 1. Legenda i zasady odczytu
