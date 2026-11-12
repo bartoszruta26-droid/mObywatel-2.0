@@ -19,9 +19,11 @@ class BankAccountsNavigationTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private fun enterDemoMode() {
-        composeRule.onNodeWithText("Pomiń wprowadzenie").performClick()
+        // Aktualny ekran wejściowy nie ma już przycisku „Pomiń wprowadzenie”.
+        // Przejście do lokalnego trybu demonstracyjnego prowadzi przez dwa ekrany logowania.
+        composeRule.onNodeWithText("Zaloguj się", useUnmergedTree = true).performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Wejdź w trybie demonstracyjnym").performClick()
+        composeRule.onNodeWithText("Zaloguj się", useUnmergedTree = true).performClick()
         composeRule.waitForIdle()
     }
 
