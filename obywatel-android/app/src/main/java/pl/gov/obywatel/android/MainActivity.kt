@@ -1036,14 +1036,38 @@ private fun HomeScreen() {
                         onBack = { activeService = null },
                         onOpenDocuments = { activeService = null; showDemoDocuments = true }
                     )
-                    selectedTab == 1 -> DocumentsWalletScreen(
-                        onBack = { selectedTab = 0 },
-                        onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
-                        onOpenDetails = { selectedDocumentId = it },
-                        onOpenService = { title ->
-                            when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
+                    selectedTab == 1 -> {
+                        Column(
+                            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                                .padding(horizontal = 18.dp, vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text("Szukaj", color = MaterialTheme.colorScheme.onBackground,
+                                style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                            OutlinedTextField(
+                                value = serviceSearch,
+                                onValueChange = { serviceSearch = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                label = { Text("Szukaj") },
+                                leadingIcon = { Icon(painterResource(R.drawable.nav_search), contentDescription = null) }
+                            )
+                            services.filter { serviceSearch.isBlank() ||
+                                it.title.contains(serviceSearch, ignoreCase = true) ||
+                                it.subtitle.contains(serviceSearch, ignoreCase = true)
+                            }.forEach { item ->
+                                ListItem(
+                                    headlineContent = { Text(item.title) },
+                                    supportingContent = { Text(item.subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                    leadingContent = {
+                                        Icon(item.fallbackIcon ?: Icons.Filled.Search, contentDescription = null)
+                                    },
+                                    modifier = Modifier.fillMaxWidth().clickable { openService(item.title) }
+                                )
+                                HorizontalDivider()
+                            }
                         }
-                    )
+                    }
                     selectedTab == 3 -> QrToolsScreen()
                     selectedTab == 4 -> MoreMenuScreen(
                         onOpenSettings = { showSettingsMenu = true },
@@ -1068,16 +1092,39 @@ private fun HomeScreen() {
                             Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
-                                    SectionHeading("Dokumenty", "Portfel dokumentów")
-                                    val dashboardDocuments = documentDisplayOptions.filter { documentPlacements[it.first] == "dashboard" }
-                                    val otherDocuments = documentDisplayOptions.filter { documentPlacements[it.first] == "other" }
-                                    @Composable
-                                    fun DocumentCards(items: List<Triple<String, String, Int>>) {
-                                        if (items.isEmpty()) {
-                                            Text("Brak dokumentów przypisanych do tego obszaru. Zmień ustawienia widoczności dokumentów.",
-                                                color = Muted, style = MaterialTheme.typography.bodySmall,
-                                                modifier = Modifier.padding(vertical = 8.dp))
-                                        } else {
+                                    IdentityDashboardCard(
+                                        onOpen = { openDocumentCard("identity") }
+                                    )
+                                    Spacer(Modifier.height(12.dp))
+                                    Text(
+                                        "Zarządzaj",
+                                        color = Color(0xFF83DFFF),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.clickable { showDemoDocuments = true }
+                                            .padding(vertical = 4.dp)
+                                    )
+                                    Spacer(Modifier.weight(1f, fill = true))
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                        Button(
+                                            onClick = {
+                                                selectedEditorCategory = "all"
+                                                showDocumentsEditor = true
+                                            },
+                                            shape = RoundedCornerShape(20.dp),
+                                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 14.dp),
+                                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFB7E5FF),
+                                                contentColor = Color(0xFF123B65)
+                                            )
+                                        ) {
+                                            Icon(Icons.Filled.Add, contentDescription = null)
+                                            Spacer(Modifier.width(12.dp))
+                                            Text("Dodaj dokument", style = MaterialTheme.typography.titleMedium)
+                                        }
+                                    }
+                                    Spacer(Modifier.height(14.dp))
+                                } else {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                                                     .testTag(if (items.firstOrNull()?.first == "family") "document-cards-family" else "document-cards-dashboard"),
@@ -2173,52 +2220,86 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
 
 @Composable
 private fun Header(onOpenSettings: () -> Unit, onOpenNotifications: () -> Unit) {
-    Column(
+    Row(
         modifier = Modifier.fillMaxWidth()
-            .background(White)
-            .border(width = 0.5.dp, color = Border)
-            .padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 14.dp)
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(start = 18.dp, end = 14.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            BrandMark()
-            Column(Modifier.weight(1f).padding(start = 11.dp)) {
-                Text("Obywatel", color = Navy, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text("Portfel obywatelski", color = Muted, style = MaterialTheme.typography.labelMedium)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(CircleShape)
-                        .background(BlueLight).clickable(onClick = onOpenSettings),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Ustawienia", tint = Blue)
-                }
-                Box(
-                    modifier = Modifier.size(40.dp).clip(CircleShape).background(BlueLight)
-                        .clickable(onClick = onOpenNotifications),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.NotificationsNone, contentDescription = "Powiadomienia", tint = Blue)
-                }
-            }
+        BrandMark()
+        Text(
+            "Dokumenty",
+            modifier = Modifier.weight(1f).padding(start = 12.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        IconButton(onClick = onOpenSettings) {
+            Icon(painterResource(R.drawable.ic_header_robot), contentDescription = "Asystent",
+                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
+        }
+        IconButton(onClick = { onOpenSettings() }) {
+            Icon(painterResource(R.drawable.lib_ic_mail), contentDescription = "Wiadomości",
+                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
+        }
+        IconButton(onClick = onOpenNotifications) {
+            Icon(painterResource(R.drawable.lib_ic_bell_badge), contentDescription = "Powiadomienia",
+                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
         }
     }
 }
 
 @Composable
 private fun BrandMark() {
-    Box(
-        modifier = Modifier.size(54.dp).clip(RoundedCornerShape(16.dp))
-            .background(White).padding(7.dp),
-        contentAlignment = Alignment.Center
+    Image(
+        painter = painterResource(R.drawable.header_logo_panel),
+        contentDescription = "Znak graficzny aplikacji",
+        modifier = Modifier.size(48.dp),
+        contentScale = ContentScale.Fit
+    )
+}
+
+@Composable
+private fun IdentityDashboardCard(onOpen: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().height(218.dp).clickable(onClick = onOpen),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF078FE9)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB9E8FF)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        // Autorski znak prototypu — nie jest oficjalnym logo mObywatela ani godłem RP.
-        Box(
-            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(11.dp))
-                .background(Blue),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Filled.Public, contentDescription = "Autorski znak aplikacji", tint = White, modifier = Modifier.size(30.dp))
+        Box(Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(R.drawable.tlo_poziome_oryginal),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Text(
+                "mDowód",
+                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 18.dp),
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Box(
+                modifier = Modifier.align(Alignment.TopEnd).padding(14.dp)
+                    .size(48.dp).clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x557AA8C6)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.dashboard_eagle_vector),
+                    contentDescription = "Orzeł",
+                    modifier = Modifier.size(34.dp),
+                    contentScale = ContentScale.Fit
+                )
+                Image(
+                    painter = painterResource(R.drawable.ic_verified_green),
+                    contentDescription = "Dokument zweryfikowany",
+                    modifier = Modifier.align(Alignment.BottomEnd).size(21.dp)
+                )
+            }
         }
     }
 }
@@ -3754,20 +3835,21 @@ private object DemoIdentityStore {
 @Composable
 private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
     val items = listOf(
-        Triple("Pulpit", Icons.Filled.Home, 0),
-        Triple("Dokumenty", null, 1),
-        Triple("Usługi", null, 2),
-        Triple("Kod QR", Icons.Filled.QrCode2, 3),
-        Triple("Więcej", null, 4)
+        Triple("Dokumenty", 0, R.drawable.nav_documents),
+        Triple("Usługi", 2, R.drawable.nav_services),
+        Triple("Kod QR", 3, R.drawable.nav_scan),
+        Triple("Szukaj", 1, R.drawable.nav_search),
+        Triple("Więcej", 4, R.drawable.nav_more)
     )
     Row(
-        modifier = Modifier.fillMaxWidth().background(White)
-            .border(width = 0.6.dp, color = Border)
+        modifier = Modifier.fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = 0.6.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
             .padding(horizontal = 4.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        items.forEach { (label, icon, index) ->
+        items.forEach { (label, index, iconRes) ->
             val selected = selectedTab == index
             Column(
                 modifier = Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
@@ -3776,21 +3858,33 @@ private fun BottomNavigation(selectedTab: Int, onSelect: (Int) -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Box(
-                    modifier = Modifier.clip(RoundedCornerShape(12.dp))
-                        .background(if (selected) BlueLight else Color.Transparent)
-                        .padding(horizontal = 13.dp, vertical = 4.dp),
+                    modifier = Modifier.clip(RoundedCornerShape(18.dp))
+                        .background(if (selected) Color(0xFF1687E8) else Color.Transparent)
+                        .padding(horizontal = 14.dp, vertical = 5.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    when (index) {
-                        1 -> Icon(Icons.Filled.Description, contentDescription = label, tint = if (selected) Blue else Muted, modifier = Modifier.size(22.dp))
-                        2 -> Image(painterResource(R.drawable.public_services), contentDescription = label, modifier = Modifier.size(22.dp), contentScale = ContentScale.Fit)
-                        4 -> Image(painterResource(R.drawable.profile), contentDescription = label, modifier = Modifier.size(22.dp), contentScale = ContentScale.Fit)
-                        else -> Icon(icon!!, contentDescription = label, tint = if (selected) Blue else Muted, modifier = Modifier.size(22.dp))
-                    }
+                    Icon(
+                        painter = painterResource(
+                            when (index) {
+                                0 -> if (selected) R.drawable.nav_documents_selected else iconRes
+                                2 -> if (selected) R.drawable.nav_services_selected else iconRes
+                                3 -> if (selected) R.drawable.nav_scan_selected else iconRes
+                                1 -> if (selected) R.drawable.nav_search_selected else iconRes
+                                else -> if (selected) R.drawable.nav_more_selected else iconRes
+                            }
+                        ),
+                        contentDescription = label,
+                        tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(23.dp)
+                    )
                 }
-                Text(label, color = if (selected) Blue else Muted,
+                Text(
+                    label,
+                    color = if (selected) Color(0xFF4AAEFF) else MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.labelSmall,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, maxLines = 1)
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                    maxLines = 1
+                )
             }
         }
     }
