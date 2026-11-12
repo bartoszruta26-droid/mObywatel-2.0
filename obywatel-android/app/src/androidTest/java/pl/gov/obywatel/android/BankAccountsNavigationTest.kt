@@ -124,4 +124,15 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Paszport").assertIsDisplayed()
     }
+
+    @Test
+    fun individualCredentialEditorExposesBackgroundSelectors() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Tło legitymacji").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Wybierz tło z katalogu").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Wczytaj własne tło").performScrollTo().assertIsDisplayed()
+    }
 }
