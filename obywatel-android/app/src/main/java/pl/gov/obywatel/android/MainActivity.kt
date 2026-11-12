@@ -804,9 +804,15 @@ private fun saveDocumentCardStyle(context: Context, style: String) {
 private fun loadDocumentPlacements(context: Context): Map<String, String> {
     val prefs = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
     if (!prefs.getBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, false)) {
+        // Migracja uzupełnia wyłącznie brakujące wpisy. Nie nadpisuje wyborów
+        // użytkownika zapisanych we wcześniejszej wersji aplikacji.
         val editor = prefs.edit()
         documentDisplayOptions.forEach { (id, _, _) ->
-            editor.putString(DOCUMENT_DISPLAY_KEY_PREFIX + id, if (id == "identity") "dashboard" else "hidden")
+            val key = DOCUMENT_DISPLAY_KEY_PREFIX + id
+            if (!prefs.contains(key)) {
+                val legacy = if (id == "loyalty") prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + "loyalty_cards", null) else null
+                editor.putString(key, legacy ?: defaultDocumentPlacements[id] ?: "hidden")
+            }
         }
         editor.putBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, true)
         check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności dokumentów." }
