@@ -2419,7 +2419,7 @@ private fun ProfileActionCard(title: String, subtitle: String, icon: ImageVector
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(30.dp))
             Column(Modifier.weight(1f).padding(start = 13.dp)) {
                 Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                 Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -2498,11 +2498,11 @@ private fun Header(
         )
         IconButton(onClick = onOpenAssistant) {
             Icon(painterResource(R.drawable.ic_header_robot_head), contentDescription = "Asystent",
-                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
+                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(30.dp))
         }
         IconButton(onClick = onOpenMessages) {
             Icon(painterResource(R.drawable.ic_header_mail), contentDescription = "Wiadomości",
-                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(27.dp))
+                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(30.dp))
         }
         Box(
             modifier = Modifier.size(36.dp).clickable(onClick = onOpenNotifications),
@@ -3144,7 +3144,7 @@ private fun DocumentsWalletScreen(
                                     horizontalArrangement = Arrangement.spacedBy(11.dp)
                                 ) {
                                     Image(painter = painterResource(documentTileIconResource(document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
-                                        contentDescription = document.title, modifier = Modifier.size(27.dp))
+                                        contentDescription = document.title, modifier = Modifier.size(30.dp))
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                         Text(document.title, color = Color.White, fontWeight = FontWeight.SemiBold,
                                             style = MaterialTheme.typography.bodyMedium)
@@ -3175,7 +3175,7 @@ private fun DocumentsWalletScreen(
                                         Box(Modifier.fillMaxSize().padding(10.dp)) {
                                         Image(painter = painterResource(documentTileIconResource(document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
                                             contentDescription = document.title,
-                                            modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 23.dp else 30.dp))
+                                            modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 27.dp else 32.dp))
                                         DocumentCardEmblem(
                                             documentKey = document.id,
                                             modifier = Modifier.align(Alignment.TopEnd)
@@ -3239,7 +3239,7 @@ private fun DashboardDocumentGrid(
                                 Row(Modifier.fillMaxSize().padding(horizontal = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Image(painterResource(documentTileIconResource(id, iconRes)), contentDescription = null, modifier = Modifier.size(28.dp))
+                                    Image(painterResource(documentTileIconResource(id, iconRes)), contentDescription = null, modifier = Modifier.size(30.dp))
                                     Text(title, color = Color.White,
                                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
                                         maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -3251,7 +3251,7 @@ private fun DashboardDocumentGrid(
                                 Column(Modifier.fillMaxSize().padding(10.dp),
                                     verticalArrangement = Arrangement.SpaceBetween) {
                                 Image(painterResource(documentTileIconResource(id, iconRes)), contentDescription = null,
-                                    modifier = Modifier.size(if (tileStyle == "small") 22.dp else 28.dp))
+                                    modifier = Modifier.size(if (tileStyle == "small") 27.dp else 32.dp))
                                 Text(title, color = MaterialTheme.colorScheme.onSurface,
                                     style = if (tileStyle == "small") MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
