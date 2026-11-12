@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -1064,17 +1065,54 @@ internal fun UnifiedCredentialCard(
             ) {
                 CredentialRoundAction(
                     label = "Potwierdź\nswoje dane",
-                    icon = { Icon(Icons.Filled.QrCode2, contentDescription = null, tint = Color(0xFFB9E9FF), modifier = Modifier.size(29.dp)) },
+                    icon = {
+                        androidx.compose.foundation.Canvas(Modifier.size(30.dp)) {
+                            val c = Color(0xFFB9E9FF)
+                            val w = 2.2.dp.toPx()
+                            val a = size.minDimension * 0.28f
+                            val p = 2.dp.toPx()
+                            // Narożniki ramki skanowania i ptaszek w jej środku.
+                            drawLine(c, androidx.compose.ui.geometry.Offset(p,p), androidx.compose.ui.geometry.Offset(p+a,p), w)
+                            drawLine(c, androidx.compose.ui.geometry.Offset(p,p), androidx.compose.ui.geometry.Offset(p,p+a), w)
+                            drawLine(c, androidx.compose.ui.geometry.Offset(size.width-p-a,p), androidx.compose.ui.geometry.Offset(size.width-p,p), w)
+                            drawLine(c, androidx.compose.ui.geometry.Offset(size.width-p,p), androidx.compose.ui.geometry.Offset(size.width-p,p+a), w)
+                            drawLine(c, androidx.compose.ui.geometry.Offset(p,size.height-p-a), androidx.compose.ui.geometry.Offset(p,size.height-p), w)
+                            drawLine(c, androidx.compose.ui.geometry.Offset(p,size.height-p), androidx.compose.ui.geometry.Offset(p+a,size.height-p), w)
+                            drawLine(c, androidx.compose.ui.geometry.Offset(size.width-p-a,size.height-p), androidx.compose.ui.geometry.Offset(size.width-p,size.height-p), w)
+                            drawLine(c, androidx.compose.ui.geometry.Offset(size.width-p,size.height-p-a), androidx.compose.ui.geometry.Offset(size.width-p,size.height-p), w)
+                            val check = androidx.compose.ui.graphics.Path().apply {
+                                moveTo(size.width*0.29f, size.height*0.52f)
+                                lineTo(size.width*0.44f, size.height*0.67f)
+                                lineTo(size.width*0.73f, size.height*0.35f)
+                            }
+                            drawPath(check, c, style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = 2.8.dp.toPx(),
+                                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                                join = androidx.compose.ui.graphics.StrokeJoin.Round
+                            ))
+                        }
+                    },
                     onClick = { showQr = true }
                 )
                 CredentialRoundAction(
                     label = "Dane dowodu\ntożsamości",
                     icon = {
-                        androidx.compose.foundation.Canvas(Modifier.size(30.dp)) {
-                            val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.4.dp.toPx())
-                            drawRoundRect(Color(0xFFFFB6E8), style = stroke, cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
-                            drawCircle(Color(0xFFFFB6E8), radius = 2.2.dp.toPx(), center = androidx.compose.ui.geometry.Offset(size.width * 0.72f, size.height * 0.28f))
-                            drawLine(Color(0xFFFFB6E8), androidx.compose.ui.geometry.Offset(size.width * 0.22f, size.height * 0.72f), androidx.compose.ui.geometry.Offset(size.width * 0.78f, size.height * 0.72f), strokeWidth = 2.dp.toPx())
+                        androidx.compose.foundation.Canvas(Modifier.size(width = 36.dp, height = 25.dp)) {
+                            val cardBrush = Brush.horizontalGradient(
+                                listOf(Color(0xFFE8A8E8), Color(0xFFD8A5F2), Color(0xFFB6B8F5))
+                            )
+                            drawRoundRect(
+                                brush = cardBrush,
+                                topLeft = androidx.compose.ui.geometry.Offset(1.dp.toPx(), 2.dp.toPx()),
+                                size = androidx.compose.ui.geometry.Size(size.width - 2.dp.toPx(), size.height - 4.dp.toPx()),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx())
+                            )
+                            // Złota kropka wewnątrz karty, przy lewym górnym rogu.
+                            drawCircle(
+                                color = Color(0xFFFFD45A),
+                                radius = 2.3.dp.toPx(),
+                                center = androidx.compose.ui.geometry.Offset(6.dp.toPx(), 7.dp.toPx())
+                            )
                         }
                     },
                     onClick = { showIdentityDetails = true }
