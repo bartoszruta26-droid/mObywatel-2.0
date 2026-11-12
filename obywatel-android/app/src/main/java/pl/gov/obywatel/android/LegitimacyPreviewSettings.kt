@@ -37,6 +37,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Brush
@@ -255,6 +256,11 @@ internal fun credentialValidityForDocument(documentKey: String, values: Map<Stri
 internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
+    val tileBackgroundAssetId: String = "",
+    val tileIconAssetId: String = "",
+    val tileVectorMotifId: String = "auto",
+    val tileGradientPaletteId: String = "auto",
+
     val crestAssetId: String = "",
     val flagAssetId: String = "",
     val backgroundAssetId: String = "",
@@ -295,10 +301,55 @@ internal data class LegitimacyPreviewSettings(
     val individualAppearanceConfigured: Boolean = false
 )
 
+
+internal val tileVectorMotifOptions = listOf(
+    "auto" to "Automatyczny", "0" to "Heraldyczny znak", "1" to "Dokument",
+    "2" to "Gmach / rejestr", "3" to "Krzyż", "4" to "Ród / rodzina",
+    "5" to "Podróż / świat", "6" to "Edukacja", "7" to "Zdrowie"
+)
+internal data class TileGradientPalette(val id: String, val label: String, val colors: List<String>)
+internal val tileGradientPaletteOptions = listOf(
+    TileGradientPalette("auto", "Automatyczny", listOf("#FF0756A5", "#FF078FD0", "#FF42B9D8")),
+    TileGradientPalette("azure", "Lazur", listOf("#FF003F87", "#FF1769AA", "#FF5AA6D1")),
+    TileGradientPalette("gules", "Czerwień", listOf("#FF790018", "#FFB5122B", "#FFE36A72")),
+    TileGradientPalette("sable", "Czerń", listOf("#FF171717", "#FF424242", "#FF777777")),
+    TileGradientPalette("vert", "Zieleń", listOf("#FF064B35", "#FF167A50", "#FF71A878")),
+    TileGradientPalette("purpure", "Purpura", listOf("#FF4A145F", "#FF762B83", "#FFB27BB5")),
+    TileGradientPalette("or", "Złoto", listOf("#FF775000", "#FFB8860B", "#FFE8C66A")),
+    TileGradientPalette("argent", "Srebro", listOf("#FF46515B", "#FF89949E", "#FFD5DCE2")),
+    TileGradientPalette("murrey", "Morwa", listOf("#FF54133B", "#FF852653", "#FFC47791")),
+    TileGradientPalette("tenne", "Tenne", listOf("#FF71330C", "#FFB65B1B", "#FFE1A15A")),
+    TileGradientPalette("carnation", "Goździk", listOf("#FF9B315D", "#FFD45B83", "#FFF0A0B4")),
+    TileGradientPalette("celeste", "Błękit", listOf("#FF176B83", "#FF3C9FB0", "#FF9AD5D4")),
+    TileGradientPalette("copper", "Miedź", listOf("#FF663B2B", "#FF9D6248", "#FFD29A70")),
+    TileGradientPalette("olive", "Oliwka", listOf("#FF4D4A16", "#FF85802A", "#FFC4B96B")),
+    TileGradientPalette("indigo", "Indygo", listOf("#FF25205F", "#FF4D4696", "#FF9994D0")),
+    TileGradientPalette("coral", "Koral", listOf("#FF8F342A", "#FFCE6250", "#FFF0A18A"))
+)
+private val tileIconChoices = listOf(
+    "lib_ic_document" to "Dokument", "lib_ic_account" to "Osoba",
+    "lib_ic_credit_card" to "Karta", "lib_ic_folder" to "Folder",
+    "lib_ic_medical_record" to "Medyczny", "lib_ic_school" to "Edukacja",
+    "lib_ic_building" to "Budynek", "lib_ic_wallet" to "Portfel",
+    "lib_ic_fingerprint" to "Odcisk palca", "lib_ic_flag" to "Flaga",
+    "tile_ic_student_outline" to "Uczeń / student",
+    "tile_ic_disability_outline" to "Niepełnosprawność",
+    "tile_ic_church_outline" to "Kościół", "tile_ic_civil_outline" to "Cywilny",
+    "tile_ic_business_outline" to "Podmiot / firma"
+)
+
 private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
 
 private const val BUILTIN_BACKGROUND_PREFIX = "builtin:"
 private val builtInCredentialBackgrounds = listOf(
+    "tlo_legitymacji_brazowe" to "Tło legitymacji — brązowe",
+    "tlo_legitymacji_niebieskie" to "Tło legitymacji — niebieskie",
+    "tlo_legitymacji_szare" to "Tło legitymacji — szare",
+    "tlo_legitymacji_zielone" to "Tło legitymacji — zielone",
+    "tlo_pionowe_oryginal" to "Tło pionowe — oryginalne",
+    "tlo_poziome_oryginal" to "Tło poziome — oryginalne",
+    "tlo_znak_wodny_pionowe" to "Znak wodny — pionowy",
+    "tlo_znak_wodny_poziome" to "Znak wodny — poziomy",
     "file_000000000480820ab196baceb9149967" to "Wzór firmowy 01",
     "file_0000000009b8820abb055566e7a0d510" to "Wzór firmowy 02",
     "file_000000000fcc820a9f7e3c368750a9f5" to "Wzór firmowy 03",
@@ -349,7 +400,6 @@ internal fun mergeSharedLegitimacyAppearance(
     // Wspólny układ i geometria są nadrzędne dla każdej legitymacji.
     // Indywidualne ustawienia zachowują przypisane zasoby i ewentualny kolor tekstu.
     return document.copy(
-        showCard = shared.showCard,
         showReverse = shared.showReverse,
         orientation = shared.orientation,
         showPhoto = shared.showPhoto,
@@ -392,6 +442,10 @@ internal object LegitimacyPreviewSettingsStore {
         return LegitimacyPreviewSettings(
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
+            tileBackgroundAssetId = p.getString("${key}_tile_background", "").orEmpty(),
+            tileIconAssetId = p.getString("${key}_tile_icon", "").orEmpty(),
+            tileVectorMotifId = p.getString("${key}_tile_vector_motif", "auto").orEmpty(),
+            tileGradientPaletteId = p.getString("${key}_tile_gradient_palette", "auto").orEmpty(),
             crestAssetId = p.getString("${key}_crest", "").orEmpty(),
             flagAssetId = p.getString("${key}_flag", "").orEmpty(),
             backgroundAssetId = p.getString("${key}_background", "").orEmpty(),
@@ -439,6 +493,7 @@ internal object LegitimacyPreviewSettingsStore {
             // Jeden globalny zestaw parametrów geometrii i typografii wzoru.
             editor.putBoolean("${key}_show_card", value.showCard)
                 .putBoolean("${key}_show_reverse", value.showReverse)
+                .putString("${key}_tile_background", value.tileBackgroundAssetId)
                 .putString("${key}_orientation", value.orientation)
                 .putBoolean("${key}_show_photo", value.showPhoto)
                 .putBoolean("${key}_show_flag", value.showFlag)
@@ -476,6 +531,10 @@ internal object LegitimacyPreviewSettingsStore {
             editor.putString("${key}_crest", value.crestAssetId)
                 .putString("${key}_flag", value.flagAssetId)
                 .putString("${key}_background", value.backgroundAssetId)
+                .putString("${key}_tile_background", value.tileBackgroundAssetId)
+                .putString("${key}_tile_icon", value.tileIconAssetId)
+                .putString("${key}_tile_vector_motif", value.tileVectorMotifId)
+                .putString("${key}_tile_gradient_palette", value.tileGradientPaletteId)
                 .putString("${key}_logo", value.logoAssetId)
                 .putString("${key}_caption", value.crestCaption)
                 .putString("${key}_caption_position", value.captionPosition)
@@ -570,6 +629,66 @@ internal fun rememberLegitimacyPreviewSettings(documentKey: String): MutableStat
     return state
 }
 
+
+@Composable
+private fun GraphicAssetPreviewGrid(
+    title: String,
+    selectedId: String,
+    choices: List<Triple<String, String, Bitmap?>>,
+    onSelect: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, fontWeight = FontWeight.SemiBold)
+        choices.chunked(2).forEach { pair ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                pair.forEach { (id, label, bitmap) ->
+                    Card(
+                        modifier = Modifier.weight(1f).clickable { onSelect(id) },
+                        border = androidx.compose.foundation.BorderStroke(
+                            if (id == selectedId) 2.dp else 1.dp,
+                            if (id == selectedId) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(Modifier.fillMaxWidth().padding(7.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            if (bitmap != null) {
+                                Image(bitmap.asImageBitmap(), contentDescription = label,
+                                    modifier = Modifier.fillMaxWidth().height(120.dp).background(MaterialTheme.colorScheme.surfaceVariant), contentScale = ContentScale.Fit)
+                            } else {
+                                Box(Modifier.fillMaxWidth().height(120.dp).background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center) {
+                                    Text("Domyślne", style = MaterialTheme.typography.labelMedium)
+                                }
+                            }
+                            Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                            if (id == selectedId) Text("Wybrano", color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+private fun previewThumbnail(context: Context, assetId: String): Bitmap? {
+    val bitmap = if (assetId.startsWith(BUILTIN_BACKGROUND_PREFIX)) {
+        val resourceName = assetId.removePrefix(BUILTIN_BACKGROUND_PREFIX)
+        val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+        resourceId.takeIf { it != 0 }?.let {
+            BitmapFactory.decodeResource(context.resources, it, BitmapFactory.Options().apply { inSampleSize = 8 })
+        }
+    } else DocumentBrandStore.preview(context, assetId)
+    bitmap ?: return null
+    val maxEdge = 360
+    if (bitmap.width <= maxEdge && bitmap.height <= maxEdge) return bitmap
+    val scale = maxEdge.toFloat() / maxOf(bitmap.width, bitmap.height)
+    val thumbnail = Bitmap.createScaledBitmap(bitmap, (bitmap.width * scale).toInt().coerceAtLeast(1),
+        (bitmap.height * scale).toInt().coerceAtLeast(1), true)
+    if (thumbnail !== bitmap) bitmap.recycle()
+    return thumbnail
+}
 @Composable
 internal fun LegitimacyPreviewSettingsPanel(
     documentKey: String,
@@ -652,6 +771,17 @@ internal fun LegitimacyPreviewSettingsPanel(
         }.onFailure { message = "Nie udało się wczytać tła: ${it.message ?: "błąd"}" }
     }
 
+    val tileBackgroundPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) runCatching {
+            DocumentBrandStore.import(context, uri, "legitimacy:$documentKey", "Tło kafelka", "Tło kafelka dokumentu")
+        }.onSuccess {
+            assets = DocumentBrandStore.list(context)
+            val imported = assets.lastOrNull { it.owner == "legitimacy:$documentKey" && it.kind == "Tło kafelka" }
+            if (imported != null) update(settings.copy(tileBackgroundAssetId = imported.id))
+            message = "Wczytano tło kafelka. Ustawienie zapisano."
+        }.onFailure { message = "Nie udało się wczytać tła kafelka: ${it.message ?: "błąd"}" }
+    }
+
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -662,6 +792,12 @@ internal fun LegitimacyPreviewSettingsPanel(
                 },
                 fontWeight = FontWeight.Bold
             )
+            if (assetSelectionOnly) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = settings.showCard, onCheckedChange = { update(settings.copy(showCard = it)) })
+                    Text("Wyświetlaj tę legitymację")
+                }
+            }
             if (!assetSelectionOnly) {
             Text("Orientacja", fontWeight = FontWeight.SemiBold)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -731,20 +867,15 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             if (assetSelectionOnly || documentKey != GLOBAL_LEGITIMACY_APPEARANCE_KEY) {
             Text("Wybierz herb, flagę, tło i logo niezależnie dla tego dokumentu.", style = MaterialTheme.typography.bodySmall)
-            Text("Herb / godło / logo", fontWeight = FontWeight.SemiBold)
-            Box {
-                OutlinedButton(onClick = { crestMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(assets.firstOrNull { it.id == settings.crestAssetId }?.label ?: "Wybierz herb z katalogu")
-                }
-                DropdownMenu(expanded = crestMenu, onDismissRequest = { crestMenu = false }) {
-                    DropdownMenuItem(text = { Text("Brak herbu") }, onClick = { update(settings.copy(crestAssetId = "")); crestMenu = false })
-                    assets.filter { it.kind == "Herb" || it.kind == "Godło" }.forEach { asset ->
-                        DropdownMenuItem(text = { Text("${asset.label} · ${asset.owner}") }, onClick = {
-                            update(settings.copy(crestAssetId = asset.id)); crestMenu = false
-                        })
-                    }
-                }
-            }
+            GraphicAssetPreviewGrid(
+                title = "Herb / godło — wybierz podgląd",
+                selectedId = settings.crestAssetId,
+                choices = remember(documentKey, assets) {
+                    listOf(Triple("", "Brak herbu", null)) + assets.filter { it.kind == "Herb" || it.kind == "Godło" }
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                },
+                onSelect = { update(settings.copy(crestAssetId = it)) }
+            )
             OutlinedButton(onClick = { crestPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własny herb")
             }
@@ -770,69 +901,113 @@ internal fun LegitimacyPreviewSettingsPanel(
                     }
                 }
             }
-            Text("Flaga", fontWeight = FontWeight.SemiBold)
-            Box {
-                OutlinedButton(onClick = { flagMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(assets.firstOrNull { it.id == settings.flagAssetId }?.label ?: "Wybierz flagę z katalogu")
-                }
-                DropdownMenu(expanded = flagMenu, onDismissRequest = { flagMenu = false }) {
-                    DropdownMenuItem(text = { Text("Brak własnej flagi") }, onClick = { update(settings.copy(flagAssetId = "")); flagMenu = false })
-                    assets.filter { it.kind == "Flaga" }.forEach { asset ->
-                        DropdownMenuItem(text = { Text("${asset.label} · ${asset.owner}") }, onClick = {
-                            update(settings.copy(flagAssetId = asset.id)); flagMenu = false
-                        })
-                    }
-                }
-            }
+            GraphicAssetPreviewGrid(
+                title = "Flaga — wybierz podgląd",
+                selectedId = settings.flagAssetId,
+                choices = remember(documentKey, assets) {
+                    listOf(Triple("", "Brak własnej flagi", null)) + assets.filter { it.kind == "Flaga" }
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                },
+                onSelect = { update(settings.copy(flagAssetId = it)) }
+            )
             OutlinedButton(onClick = { flagPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własną flagę")
             }
-            Text("Logo wystawcy", fontWeight = FontWeight.SemiBold)
-            Box {
-                OutlinedButton(onClick = { logoMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(assets.firstOrNull { it.id == settings.logoAssetId }?.label ?: "Wybierz logo z katalogu")
-                }
-                DropdownMenu(expanded = logoMenu, onDismissRequest = { logoMenu = false }) {
-                    DropdownMenuItem(text = { Text("Brak własnego logo") }, onClick = { update(settings.copy(logoAssetId = "")); logoMenu = false })
-                    assets.filter { it.kind == "Logo" }.forEach { asset ->
-                        DropdownMenuItem(text = { Text(asset.label + " · " + asset.owner) }, onClick = {
-                            update(settings.copy(logoAssetId = asset.id)); logoMenu = false
-                        })
-                    }
-                }
-            }
+            GraphicAssetPreviewGrid(
+                title = "Logo wystawcy — wybierz podgląd",
+                selectedId = settings.logoAssetId,
+                choices = remember(documentKey, assets) {
+                    listOf(Triple("", "Brak własnego logo", null)) + assets.filter { it.kind == "Logo" }
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                },
+                onSelect = { update(settings.copy(logoAssetId = it)) }
+            )
             OutlinedButton(onClick = { logoPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własne logo")
             }
-            Text("Tło legitymacji", fontWeight = FontWeight.SemiBold)
-            Box {
-                OutlinedButton(onClick = { backgroundMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    val builtInLabel = builtInCredentialBackgrounds.firstOrNull {
-                        settings.backgroundAssetId == BUILTIN_BACKGROUND_PREFIX + it.first
-                    }?.second
-                    Text(
-                        assets.firstOrNull { it.id == settings.backgroundAssetId }?.label
-                            ?: builtInLabel
-                            ?: "Wybierz tło z katalogu"
-                    )
-                }
-                DropdownMenu(expanded = backgroundMenu, onDismissRequest = { backgroundMenu = false }) {
-                    DropdownMenuItem(text = { Text("Domyślne tło") }, onClick = { update(settings.copy(backgroundAssetId = "")); backgroundMenu = false })
-                    builtInCredentialBackgrounds.forEach { (resourceName, label) ->
-                        DropdownMenuItem(text = { Text(label) }, onClick = {
-                            update(settings.copy(backgroundAssetId = BUILTIN_BACKGROUND_PREFIX + resourceName))
-                            backgroundMenu = false
-                        })
-                    }
-                    assets.filter { it.kind == "Tło dokumentu" }.forEach { asset ->
-                        DropdownMenuItem(text = { Text("${asset.label} · ${asset.owner}") }, onClick = {
-                            update(settings.copy(backgroundAssetId = asset.id)); backgroundMenu = false
-                        })
-                    }
-                }
+            val backgroundChoices = remember(documentKey, assets) { listOf(Triple("", "Domyślne tło", null)) +
+                builtInCredentialBackgrounds.map { (resourceName, label) ->
+                    val id = BUILTIN_BACKGROUND_PREFIX + resourceName
+                    Triple(id, label, previewThumbnail(context, id))
+                } + assets.filter { it.kind == "Tło dokumentu" }
+                    .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
             }
+            Text("Tło legitymacji", fontWeight = FontWeight.SemiBold)
+            Text("Wybierz tło z katalogu", style = MaterialTheme.typography.bodySmall)
+            GraphicAssetPreviewGrid(
+                title = "Tło legitymacji — wybierz podgląd",
+                selectedId = settings.backgroundAssetId,
+                choices = backgroundChoices,
+                onSelect = { update(settings.copy(backgroundAssetId = it)) }
+            )
             OutlinedButton(onClick = { backgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Wczytaj własne tło")
+            }
+            GraphicAssetPreviewGrid(
+                title = "Tło kafelka dokumentu — wybierz podgląd",
+                selectedId = settings.tileBackgroundAssetId,
+                choices = remember(documentKey, assets) { listOf(Triple("", "Domyślne tło kafelka", null)) +
+                    builtInCredentialBackgrounds.map { (resourceName, label) ->
+                        val id = BUILTIN_BACKGROUND_PREFIX + resourceName
+                        Triple(id, label, previewThumbnail(context, id))
+                    } + assets.filter { it.kind == "Tło kafelka" || it.kind == "Tło dokumentu" }
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) } },
+                onSelect = { update(settings.copy(tileBackgroundAssetId = it)) }
+            )
+            OutlinedButton(onClick = { tileBackgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
+                modifier = Modifier.fillMaxWidth()) { Text("Wczytaj własne tło kafelka") }
+
+            Text("Wektorowy motyw tła kafelka", fontWeight = FontWeight.SemiBold)
+            Text("Motyw jest rysowany wektorowo i może być dobrany niezależnie dla każdego dokumentu.",
+                style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                tileVectorMotifOptions.forEach { (id, label) ->
+                    FilterChip(selected = settings.tileVectorMotifId == id, onClick = { update(settings.copy(tileVectorMotifId = id)) }, label = { Text(label) })
+                }
+            }
+            Text("Miniikona kafelka", fontWeight = FontWeight.SemiBold)
+            val iconChoices = remember(context) {
+                listOf("" to "Automatyczna") + tileIconChoices.filter {
+                    context.resources.getIdentifier(it.first, "drawable", context.packageName) != 0
+                }
+            }
+            iconChoices.chunked(3).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    row.forEach { (id, label) ->
+                        val resourceId = if (id.isBlank()) 0 else context.resources.getIdentifier(id, "drawable", context.packageName)
+                        Card(Modifier.weight(1f).clickable { update(settings.copy(tileIconAssetId = id)) },
+                            border = androidx.compose.foundation.BorderStroke(if (settings.tileIconAssetId == id) 2.dp else 1.dp,
+                                if (settings.tileIconAssetId == id) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
+                            Column(Modifier.fillMaxWidth().padding(7.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                if (resourceId != 0) Image(painterResource(resourceId), contentDescription = label,
+                                    modifier = Modifier.size(30.dp), contentScale = ContentScale.Fit)
+                                else Icon(Icons.Filled.MoreVert, contentDescription = label, modifier = Modifier.size(30.dp))
+                                Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                            }
+                        }
+                    }
+                    repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+            Text("Kolor gradientowego tła kafelka — paleta heraldyczna", fontWeight = FontWeight.SemiBold)
+            tileGradientPaletteOptions.chunked(4).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    row.forEach { palette ->
+                        FilterChip(selected = settings.tileGradientPaletteId == palette.id,
+                            onClick = { update(settings.copy(tileGradientPaletteId = palette.id)) },
+                            label = {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    palette.colors.forEach { hex ->
+                                        Box(Modifier.size(10.dp).clip(RoundedCornerShape(50))
+                                            .background(Color(android.graphics.Color.parseColor(hex))))
+                                    }
+                                    Text(palette.label, style = MaterialTheme.typography.labelSmall)
+                                }
+                            })
+                    }
+                    repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
+                }
             }
             if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }

@@ -115,13 +115,13 @@ internal object DocumentBrandStore {
     private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
     private val kinds = listOf(
-        "Ikona wektorowa", "Ikona", "Tło dokumentu", "Herb", "Godło", "Logo",
+        "Ikona wektorowa", "Ikona", "Tło dokumentu", "Tło kafelka", "Herb", "Godło", "Logo",
         "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
         "Załącznik tekstowy", "Załącznik", "Fotografia", "Znak wodny",
         "Grafika hologramu / zabezpieczenia"
     )
     private val imageKinds = setOf(
-        "Ikona wektorowa", "Ikona", "Tło dokumentu", "Herb", "Godło", "Logo",
+        "Ikona wektorowa", "Ikona", "Tło dokumentu", "Tło kafelka", "Herb", "Godło", "Logo",
         "Pieczęć", "Wzór podpisu odręcznego", "Flaga", "Fotografia", "Znak wodny",
         "Grafika hologramu / zabezpieczenia"
     )
