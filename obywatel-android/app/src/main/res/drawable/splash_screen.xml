@@ -2,10 +2,9 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/splash_background"/>
+            <solid android:color="#FFF4F6F8"/>
         </shape>
     </item>
-    <!-- Istniejący znak Orła na czerwonym polu, wspólny dla okna startowego i ekranu powitalnego. -->
     <item android:width="184dp" android:height="184dp" android:gravity="center"
-        android:drawable="@drawable/header_logo_panel"/>
+        android:drawable="@drawable/file_00000000532082108d561dcd2385f8f9"/>
 </layer-list>
