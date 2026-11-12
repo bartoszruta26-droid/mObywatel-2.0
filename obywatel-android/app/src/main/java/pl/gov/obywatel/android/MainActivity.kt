@@ -929,7 +929,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun handleSystemBack() {
         when {
-            showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false }
+            showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
