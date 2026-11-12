@@ -207,6 +207,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
     val orgs= remember { mutableStateListOf<Org>().apply { addAll(IdentityStore.orgs(c)) } }
     val assets= remember { mutableStateListOf<BrandAsset>().apply { addAll(IdentityStore.assets(c)) } }
     var page by remember { mutableStateOf("Dokumenty") }
+    var previewOnly by remember { mutableStateOf(false) }
     var orgId by remember { mutableStateOf(orgs.firstOrNull()?.id.orEmpty()) }
     var orgName by remember { mutableStateOf("") }
     var orgType by remember { mutableStateOf(kinds.first()) }
@@ -290,7 +291,24 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
         }
     }
 
-    Surface(Modifier.fillMaxSize().semantics{paneTitle="Zarządzanie dokumentami i identyfikacją"},color=MaterialTheme.colorScheme.background) {
+    Surface(Modifier.fillMaxSize().semantics{paneTitle=if (previewOnly) "Podgląd dokumentu" else "Zarządzanie dokumentami i identyfikacją"},color=MaterialTheme.colorScheme.background) {
+        if (previewOnly) {
+            Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { previewOnly = false }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć do edycji") }
+                    Text("Podgląd dokumentu", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                }
+                DocumentPdfPreview(
+                    context=c, title=title, number=number, recipient=recipient, body=body,
+                    signer=signer, role=role, watermark=watermark,
+                    org=orgs.firstOrNull{it.id==orgId},
+                    logo=assets.firstOrNull{it.id==logoId}, seal=assets.firstOrNull{it.id==sealId},
+                    signature=assets.firstOrNull{it.id==signatureId}, background=assets.firstOrNull{it.id==backgroundId},
+                    flag=assets.firstOrNull{it.id==flagId}, emblem=assets.firstOrNull{it.id==emblemId},
+                    security=assets.firstOrNull{it.id==securityId}, group=documentGroup, layout=layout
+                )
+            }
+        } else {
         Column(Modifier.fillMaxSize().padding(16.dp).then(if (page == "Dokumenty") Modifier.verticalScroll(rememberScrollState()) else Modifier)) {
             Row(verticalAlignment=Alignment.CenterVertically) {
                 IconButton(onClick=onBack){Icon(Icons.AutoMirrored.Filled.ArrowBack,contentDescription="Wróć")}
@@ -355,15 +373,9 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                     AssetChoice("Flaga",assets.filter{it.orgId==orgId&&it.category=="Flaga"},flagId){flagId=it}
                     AssetChoice("Herb / godło",assets.filter{it.orgId==orgId&&(it.category=="Herb"||it.category=="Godło")},emblemId){emblemId=it}
                     AssetChoice("Hologram / zabezpieczenie",assets.filter{it.orgId==orgId&&(it.category=="Hologram / zabezpieczenie"||it.category=="Znak wodny")},securityId){securityId=it}
-                    DocumentPdfPreview(
-                        context=c, title=title, number=number, recipient=recipient, body=body,
-                        signer=signer, role=role, watermark=watermark,
-                        org=orgs.firstOrNull{it.id==orgId},
-                        logo=assets.firstOrNull{it.id==logoId}, seal=assets.firstOrNull{it.id==sealId},
-                        signature=assets.firstOrNull{it.id==signatureId}, background=assets.firstOrNull{it.id==backgroundId},
-                        flag=assets.firstOrNull{it.id==flagId}, emblem=assets.firstOrNull{it.id==emblemId},
-                        security=assets.firstOrNull{it.id==securityId}, group=documentGroup, layout=layout
-                    )
+                    OutlinedButton(onClick = { previewOnly = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Otwórz osobny podgląd dokumentu")
+                    }
                     OutlinedButton(onClick={
                         runCatching {
                             val prefs=c.getSharedPreferences("owd_document_templates",0)
@@ -421,6 +433,7 @@ fun IdentityDocumentsScreen(onBack:()->Unit) {
                 }
             }
             if(message.isNotBlank()) Text(message,color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall,modifier=Modifier.padding(top=8.dp))
+        }
         }
     }
 }
