@@ -133,7 +133,6 @@ import pl.gov.obywatel.android.ui.theme.Ink
 import pl.gov.obywatel.android.ui.theme.Muted
 import pl.gov.obywatel.android.ui.theme.Navy
 import pl.gov.obywatel.android.ui.theme.ObywatelTheme
-import pl.gov.obywatel.android.ui.theme.Surface as AppSurface
 import pl.gov.obywatel.android.ui.theme.White
 import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
@@ -460,7 +459,7 @@ private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
 @Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().background(AppSurface).padding(24.dp),
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -772,7 +771,7 @@ private fun HomeScreen() {
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = AppSurface) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {

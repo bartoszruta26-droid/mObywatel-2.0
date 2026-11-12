@@ -15,3 +15,11 @@ val Ink = Color(0xFF172B3D)
 val Muted = Color(0xFF64748B)
 val White = Color(0xFFFFFFFF)
 val Border = Color(0xFFE1E8F0)
+
+
+// Neutralne powierzchnie ekranu startowego w trybie ciemnym.
+val DarkSurface = Color(0xFF101820)
+val DarkSurfaceVariant = Color(0xFF1B2935)
+val DarkInk = Color(0xFFE7EEF5)
+val DarkMuted = Color(0xFFB0BEC9)
+val DarkBorder = Color(0xFF344553)

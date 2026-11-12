@@ -277,39 +277,51 @@ internal object LegitimacyPreviewSettingsStore {
     }
 
     fun save(context: Context, key: String, value: LegitimacyPreviewSettings) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean("${key}_show_card", value.showCard)
-            .putBoolean("${key}_show_reverse", value.showReverse)
-            .putString("${key}_crest", value.crestAssetId)
-            .putString("${key}_flag", value.flagAssetId)
-            .putString("${key}_background", value.backgroundAssetId)
-            .putString("${key}_logo", value.logoAssetId)
-            .putString("${key}_caption", value.crestCaption)
-            .putString("${key}_caption_position", value.captionPosition)
-            .putString("${key}_orientation", value.orientation)
-            .putStringSet("${key}_visible_fields", value.visibleFields)
-            .putBoolean("${key}_visible_fields_configured", value.visibleFieldsConfigured)
-            .putBoolean("${key}_show_photo", value.showPhoto)
-            .putBoolean("${key}_show_flag", value.showFlag)
-            .putBoolean("${key}_show_crest", value.showCrest)
-            .putBoolean("${key}_show_logo", value.showLogo)
-            .putBoolean("${key}_show_background", value.showBackground)
-            .putFloat("${key}_graphic_scale", value.graphicScale)
-            .putFloat("${key}_graphic_rotation", value.graphicRotation)
-            .putFloat("${key}_graphic_x", value.graphicOffsetX)
-            .putFloat("${key}_graphic_y", value.graphicOffsetY)
-            .putFloat("${key}_label_scale", value.labelScale)
-            .putFloat("${key}_label_rotation", value.labelRotation)
-            .putFloat("${key}_label_x", value.labelOffsetX)
-            .putFloat("${key}_label_y", value.labelOffsetY)
-            .putFloat("${key}_value_scale", value.valueScale)
-            .putFloat("${key}_value_rotation", value.valueRotation)
-            .putFloat("${key}_value_x", value.valueOffsetX)
-            .putFloat("${key}_value_y", value.valueOffsetY)
-            .putString("${key}_font_family", value.fontFamily)
-            .apply()
+        val editor = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        if (key == GLOBAL_LEGITIMACY_APPEARANCE_KEY) {
+            // Jeden globalny zestaw parametrów geometrii i typografii wzoru.
+            editor.putBoolean("${key}_show_card", value.showCard)
+                .putBoolean("${key}_show_reverse", value.showReverse)
+                .putString("${key}_orientation", value.orientation)
+                .putBoolean("${key}_show_photo", value.showPhoto)
+                .putBoolean("${key}_show_flag", value.showFlag)
+                .putBoolean("${key}_show_crest", value.showCrest)
+                .putBoolean("${key}_show_logo", value.showLogo)
+                .putBoolean("${key}_show_background", value.showBackground)
+                .putFloat("${key}_graphic_scale", value.graphicScale)
+                .putFloat("${key}_graphic_rotation", value.graphicRotation)
+                .putFloat("${key}_graphic_x", value.graphicOffsetX)
+                .putFloat("${key}_graphic_y", value.graphicOffsetY)
+                .putFloat("${key}_label_scale", value.labelScale)
+                .putFloat("${key}_label_rotation", value.labelRotation)
+                .putFloat("${key}_label_x", value.labelOffsetX)
+                .putFloat("${key}_label_y", value.labelOffsetY)
+                .putFloat("${key}_value_scale", value.valueScale)
+                .putFloat("${key}_value_rotation", value.valueRotation)
+                .putFloat("${key}_value_x", value.valueOffsetX)
+                .putFloat("${key}_value_y", value.valueOffsetY)
+                .putString("${key}_font_family", value.fontFamily)
+            listOf("crest", "flag", "background", "logo", "caption", "caption_position").forEach {
+                editor.remove("${key}_$it")
+            }
+        } else {
+            // W ustawieniach dokumentu zapisujemy wyłącznie przypisane mu zasoby.
+            editor.putString("${key}_crest", value.crestAssetId)
+                .putString("${key}_flag", value.flagAssetId)
+                .putString("${key}_background", value.backgroundAssetId)
+                .putString("${key}_logo", value.logoAssetId)
+                .putString("${key}_caption", value.crestCaption)
+                .putString("${key}_caption_position", value.captionPosition)
+                .putStringSet("${key}_visible_fields", value.visibleFields)
+                .putBoolean("${key}_visible_fields_configured", value.visibleFieldsConfigured)
+            listOf("show_card", "show_reverse", "orientation", "show_photo", "show_flag", "show_crest",
+                "show_logo", "show_background", "graphic_scale", "graphic_rotation", "graphic_x", "graphic_y",
+                "label_scale", "label_rotation", "label_x", "label_y", "value_scale", "value_rotation",
+                "value_x", "value_y", "font_family").forEach { editor.remove("${key}_$it") }
+        }
+        check(editor.commit()) { "Nie udało się zapisać ustawień wyglądu legitymacji." }
     }
-    
+
     /** Serializes every per-document layout preference into the vCard archive. */
     fun exportAll(context: Context): Map<String, String> {
         val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
