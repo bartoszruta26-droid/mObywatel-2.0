@@ -215,6 +215,7 @@ internal data class LegitimacyPreviewSettings(
     val valueOffsetX: Float = 0f,
     val valueOffsetY: Float = 0f,
     val fontFamily: String = "sans",
+    val fontColor: String = "#FF000000",
     val imageFilter: String = "none"
 )
 
@@ -245,6 +246,7 @@ internal fun mergeSharedLegitimacyAppearance(
     valueOffsetX = shared.valueOffsetX,
     valueOffsetY = shared.valueOffsetY,
     fontFamily = shared.fontFamily,
+    fontColor = document.fontColor.ifBlank { shared.fontColor },
     imageFilter = shared.imageFilter
 )
 
@@ -284,6 +286,7 @@ internal object LegitimacyPreviewSettingsStore {
             valueOffsetX = p.getFloat("${key}_value_x", 0f),
             valueOffsetY = p.getFloat("${key}_value_y", 0f),
             fontFamily = p.getString("${key}_font_family", "sans").orEmpty(),
+            fontColor = p.getString("${key}_font_color", if (key == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "#FF000000" else "").orEmpty(),
             imageFilter = p.getString("${key}_image_filter", "none").orEmpty()
         )
     }
@@ -313,6 +316,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putFloat("${key}_value_x", value.valueOffsetX)
                 .putFloat("${key}_value_y", value.valueOffsetY)
                 .putString("${key}_font_family", value.fontFamily)
+                .putString("${key}_font_color", value.fontColor)
                 .putString("${key}_image_filter", value.imageFilter)
             listOf("crest", "flag", "background", "logo", "caption", "caption_position").forEach {
                 editor.remove("${key}_$it")
@@ -327,6 +331,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_caption_position", value.captionPosition)
                 .putStringSet("${key}_visible_fields", value.visibleFields)
                 .putBoolean("${key}_visible_fields_configured", value.visibleFieldsConfigured)
+                .putString("${key}_font_color", value.fontColor)
             listOf("show_card", "show_reverse", "orientation", "show_photo", "show_flag", "show_crest",
                 "show_logo", "show_background", "graphic_scale", "graphic_rotation", "graphic_x", "graphic_y",
                 "label_scale", "label_rotation", "label_x", "label_y", "value_scale", "value_rotation",
@@ -480,6 +485,20 @@ internal fun LegitimacyPreviewSettingsPanel(
                 Checkbox(checked = settings.showReverse, onCheckedChange = { update(settings.copy(showReverse = it)) })
                 Text("Wyświetlaj rewers (domyślnie ukryty)")
             }
+            Text(if (assetSelectionOnly) "Indywidualny kolor czcionki" else "Domyślny kolor czcionki wszystkich legitymacji", fontWeight = FontWeight.SemiBold)
+            if (assetSelectionOnly) {
+                FilterChip(selected = settings.fontColor.isBlank(), onClick = { update(settings.copy(fontColor = "")) }, label = { Text("Kolor wspólny") })
+            }
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(
+                    "#FF000000" to "Czarny", "#FF263238" to "Grafit", "#FF17365D" to "Granat",
+                    "#FF174A35" to "Zieleń", "#FF7A1F2B" to "Bordo", "#FF6B4423" to "Brąz",
+                    "#FF1565C0" to "Niebieski", "#FF5E35B1" to "Fiolet"
+                ).forEach { (hex, label) ->
+                    FilterChip(selected = settings.fontColor.equals(hex, true), onClick = { update(settings.copy(fontColor = hex)) }, label = { Text(label) })
+                }
+            }
+            Text("Kolor wspólny jest domyślnie czarny. W ustawieniach dokumentu możesz wybrać kolor indywidualny albo wrócić do koloru wspólnego.", style = MaterialTheme.typography.bodySmall)
             Text("Filtr fotografii i godła", fontWeight = FontWeight.SemiBold)
             listOf(
                 "none" to "Oryginał / brak filtra",
@@ -700,14 +719,14 @@ internal fun LegitimacyHeraldry(
     val imageFilter = remember(settings.imageFilter) { credentialImageColorFilter(settings.imageFilter) }
     Column(
         Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start,
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
         if (settings.showFlag && selectedFlag != null) {
             Image(
                 selectedFlag.asImageBitmap(),
                 contentDescription = "Flaga dokumentu",
-                modifier = Modifier.fillMaxWidth(0.58f).height(24.dp)
+                modifier = Modifier.fillMaxWidth(0.76f).height(48.dp)
                     .graphicsLayer {
                         scaleX = settings.graphicScale
                         scaleY = settings.graphicScale
@@ -720,14 +739,14 @@ internal fun LegitimacyHeraldry(
         }
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (settings.showCrest && selectedCrest != null) {
                 Image(
                     selectedCrest.asImageBitmap(),
                     contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(34.dp).graphicsLayer {
+                    modifier = Modifier.size(68.dp).graphicsLayer {
                         scaleX = settings.graphicScale
                         scaleY = settings.graphicScale
                         rotationZ = settings.graphicRotation
@@ -767,14 +786,14 @@ private fun CredentialFieldValue(
     }
     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
         Text(item.second, fontSize = labelFontSize * settings.labelScale,
-            fontFamily = family, fontWeight = FontWeight.Medium, maxLines = 1,
+            fontFamily = family, color = credentialFontColor(settings.fontColor), fontWeight = FontWeight.Medium, maxLines = 1,
             modifier = Modifier.graphicsLayer {
                 rotationZ = settings.labelRotation
                 translationX = settings.labelOffsetX * density
                 translationY = settings.labelOffsetY * density
             })
         Text(item.third.ifBlank { "—" }, fontSize = valueFontSize * settings.valueScale,
-            fontFamily = family, fontWeight = FontWeight.SemiBold, maxLines = 2,
+            fontFamily = family, color = credentialFontColor(settings.fontColor), fontWeight = FontWeight.SemiBold, maxLines = 2,
             modifier = Modifier.graphicsLayer {
                 rotationZ = settings.valueRotation
                 translationX = settings.valueOffsetX * density
@@ -782,6 +801,10 @@ private fun CredentialFieldValue(
             })
     }
 }
+
+private fun credentialFontColor(value: String): Color = runCatching {
+    Color(android.graphics.Color.parseColor(value.ifBlank { "#FF000000" }))
+}.getOrDefault(Color.Black)
 
 private fun credentialImageColorFilter(mode: String): ColorFilter? {
     val matrix = when (mode) {
