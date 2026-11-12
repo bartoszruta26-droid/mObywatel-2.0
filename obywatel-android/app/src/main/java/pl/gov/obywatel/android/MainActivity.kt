@@ -4735,7 +4735,7 @@ private fun DemoDataField(key: String, label: String, fields: MutableMap<String,
     }
 }
 
-private object DemoIdentityStore {
+internal object DemoIdentityStore {
     private const val KEY_ALIAS = "obywatel_demo_identity_aes"
     private const val FILE_NAME = "identity_profile.enc"
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
