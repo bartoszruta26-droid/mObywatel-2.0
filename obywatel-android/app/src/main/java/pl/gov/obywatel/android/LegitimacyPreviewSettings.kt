@@ -248,7 +248,7 @@ internal fun credentialValidityForDocument(documentKey: String, values: Map<Stri
     val explicitlyInvalid = listOf(
         "nieważ", "unieważ", "utrac", "zwróc", "wygas", "zawies", "nieaktywn", "zablok", "zamknięt",
         "expired", "invalid", "revoked", "cancelled"
-    ).any(normalized::contains)
+    ).any { token -> normalized.contains(token) }
     return !explicitlyInvalid && isCredentialValidByExpiry(expiry)
 }
 
