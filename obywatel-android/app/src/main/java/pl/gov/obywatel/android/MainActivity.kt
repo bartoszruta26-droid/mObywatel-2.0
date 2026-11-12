@@ -822,15 +822,20 @@ internal val documentDisplayOptions = (listOf(
 
 internal fun documentVisibilityGroup(id: String): String = when {
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
-        id == "mission_travel" -> "Dokumenty kościelne"
-    id == "family" || id.startsWith("rod_") || id == "large_family" -> "Dokumenty rodowe i rodzinne"
+        id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } ->
+        "Dokumenty kościelne"
+    id == "family" || id.startsWith("rod_") || id == "large_family" ->
+        "Dokumenty rodowe i rodzinne"
     id == "business" || id == "entity" || id == "registry" || id == "bank_accounts" ||
-        id.startsWith("entity_") || id.startsWith("organization_") -> "Dokumenty firmowe i podmiotowe"
+        id == "entity_bank_accounts" || id.startsWith("entity_") ||
+        id.startsWith("organization_") ->
+        "Dokumenty firmowe i podmiotowe"
     id == "civil" || id in setOf(
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
         "vehicle_registration", "insurance_vehicle", "insurance_professional",
         "insurance_private", "insurance_business", "official"
-    ) -> "Dokumenty cywilne i urzędowe"
+    ) || officialGraphicDocumentTargets().any { it.first == id } ->
+        "Dokumenty cywilne i urzędowe"
     id == "professional" || id.startsWith("professional_") || id in setOf("training", "student", "eu_education") ->
         "Dokumenty zawodowe i edukacyjne"
     id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") ->
