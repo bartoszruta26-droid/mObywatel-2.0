@@ -3863,8 +3863,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("mpOathDate", "Data złożenia ślubowania", fields, "DD-MM-RRRR")
                 DemoDataField("mpOathPlace", "Miejsce / okoliczności wypowiedzenia ślubowania", fields)
                 DemoDataField("mpOathEvidence", "Źródło potwierdzenia (np. protokół, nagranie, publikacja)", fields)
-                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) Text("Podgląd cyfrowej legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                ParliamentaryCredentialPreview(fields)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) {
+                    Text("Podgląd cyfrowej legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    ParliamentaryCredentialPreview(fields)
+                }
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja poselska", fields, "mpExtra", "Art. 104 Konstytucji RP określa wolny mandat poselski oraz obowiązek złożenia ślubowania przed Sejmem przed rozpoczęciem sprawowania mandatu. Odmowa ślubowania oznacza zrzeczenie się mandatu. Sam wpis ewidencyjny nie potwierdza uzyskania mandatu ani prawa do reprezentowania Sejmu.")
             }
         }
@@ -3896,8 +3898,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("trainingAssessment", "Zaliczenie / egzamin / wynik", fields)
                 DemoDataField("trainingCertificateNumber", "Numer zaświadczenia o ukończeniu", fields)
                 DemoDataField("trainingForm", "Forma kształcenia", fields, "stacjonarna / zdalna / hybrydowa")
-                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                SchoolLegitimacyPreview(fields, photoBase64, student = false)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) {
+                    Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    SchoolLegitimacyPreview(fields, photoBase64, student = false)
+                }
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "trainingExtra", "Legitymacja instytucji szkoleniowej potwierdza status w ewidencji wystawcy w granicach regulaminu i właściwej podstawy działania. Nie jest legitymacją studencką i sama nie nadaje statusu studenta uczelni.")
             }
         }
@@ -3927,7 +3931,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("studentStatus", "Status studenta", fields, "aktywny / urlop / skreślony / ukończony")
                 DemoDataField("studentIssuer", "Osoba / jednostka wydająca", fields)
                 Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                SchoolLegitimacyPreview(fields, photoBase64, student = true)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) {
+                    Text("Podgląd legitymacji", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    SchoolLegitimacyPreview(fields, photoBase64, student = true)
+                }
                 AdditionalInformationSection("Informacje dodatkowe — legitymacja ucznia/studenta", fields, "studentExtra", "")
             }
         }
@@ -4037,8 +4044,10 @@ private fun DemoDocumentsScreen(categoryId: String = "all", onBack: () -> Unit) 
                 DemoDataField("disabilityAppealOutcome", "Wynik odwołania / sprzeciwu", fields)
                 DemoDataField("disabilityDuplicateInfo", "Duplikat / zmiana dokumentu", fields)
                 DemoDataField("disabilitySourceAttachment", "Nazwa / opis dokumentu źródłowego", fields)
-                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) Text("Podgląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                DisabilityDecisionPreview(fields)
+                if (LocalDocumentScreenMode.current == DocumentScreenMode.PREVIEW) {
+                    Text("Podgląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    DisabilityDecisionPreview(fields)
+                }
                 AdditionalInformationSection("Informacje dodatkowe — orzeczenie / zaświadczenie", fields, "disabilityExtra", when (fields["disabilityAuthorityType"] ?: "powiat") {
                     "foundation" -> "Dokument fundacji opisuje się zgodnie z rzeczywistą podstawą działania, kwalifikacjami wystawców i zakresem przeznaczenia. Nie przypisujemy mu automatycznie skutków orzeczenia ustawowego."
                     "other_law" -> "Skutki dokumentu z odrębnego systemu wynikają z konkretnego przepisu. Należy wskazać podstawę i zakres równoważności."
