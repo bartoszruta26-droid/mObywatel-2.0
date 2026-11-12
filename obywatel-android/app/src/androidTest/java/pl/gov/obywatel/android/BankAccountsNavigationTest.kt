@@ -71,6 +71,10 @@ class BankAccountsNavigationTest {
 
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
+        // Karta nawigacyjna „Dokumenty” otwiera pulpit; portfel dokumentów
+        // znajduje się pod nagłówkiem „Zarządzaj” na tym pulpicie.
+        composeRule.onNodeWithText("Zarządzaj").performScrollTo().performClick()
+        composeRule.waitForIdle()
         composeRule.onNodeWithText("Konta bankowe", substring = false)
             .performScrollTo()
             .assertHasClickAction()
