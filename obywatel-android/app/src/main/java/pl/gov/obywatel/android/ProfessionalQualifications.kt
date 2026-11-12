@@ -288,7 +288,7 @@ internal fun exportProfessionalQualificationArchive(context: Context): String = 
 internal fun importProfessionalQualificationArchive(context: Context, raw: String) = ProfessionalCredentialStore.importArchive(context, raw)
 
 @Composable
-internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
+internal fun ProfessionalQualificationsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
     val context = LocalContext.current
     var professions by remember { mutableStateOf(ProfessionalCredentialStore.professions(context)) }
     var files by remember { mutableStateOf(ProfessionalCredentialStore.files(context)) }
@@ -316,9 +316,10 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Więcej", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Zawody i numery prawa wykonywania zawodu", color = MaterialTheme.colorScheme.onSurface,
+        Text(if (readOnly) "Podgląd kwalifikacji zawodowych" else "Zawody i numery prawa wykonywania zawodu", color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Samodzielnie dodawaj nazwy wykonywanych zawodów oraz numery praw wykonywania zawodu i innych dokumentów.",
+        Text(if (readOnly) "Zapisane dane kwalifikacji i dokumentów. Edycja jest dostępna wyłącznie w Więcej → Ustawienia → Dokumenty kwalifikacji zawodowych."
+            else "Samodzielnie dodawaj nazwy wykonywanych zawodów oraz numery praw wykonywania zawodu i innych dokumentów.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
             Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -327,7 +328,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall)
             }
         }
-        if (professions.isEmpty()) Text("Nie dodano jeszcze żadnego zawodu. Wybierz „Dodaj kolejny zawód”, aby wpisać własną nazwę i dane dokumentu.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        if (professions.isEmpty()) Text(if (readOnly) "Brak zapisanych kwalifikacji zawodowych." else "Nie dodano jeszcze żadnego zawodu. Wybierz „Dodaj kolejny zawód”, aby wpisać własną nazwę i dane dokumentu.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         professions.forEach { p ->
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -336,19 +337,31 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                             tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(27.dp))
                         Text(p.profession, Modifier.weight(1f).padding(start = 9.dp),
                             color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                        TextButton(onClick = { editing = p }) { Text("Edytuj") }
+                        if (!readOnly) TextButton(onClick = { editing = p }) { Text("Edytuj") }
                     }
                     val numberLabel = if (p.numberType == "pwzf") "Numer prawa wykonywania zawodu" else "Numer dokumentu / kwalifikacji"
                     Text(numberLabel + ": " + p.number.ifBlank { "Nie uzupełniono" }, color = MaterialTheme.colorScheme.onSurface)
                     if (p.issuer.isNotBlank()) Text("Organ / wystawca: " + p.issuer, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     if (p.registerName.isNotBlank()) Text("Rejestr: " + p.registerName, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     Text("Status: " + p.status, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
-                    AssignedDocumentBrandPreview(
-                        documentType = "professional",
-                        owner = p.profession,
-                        title = "Znak przypisany do kwalifikacji",
-                        subtitle = "Herb, godło lub logo właściwe dla tej dziedziny"
-                    )
+                    if (readOnly) {
+                        val previewSettings = rememberLegitimacyPreviewSettings("professional").value.copy(visibleFieldsConfigured = false)
+                        UnifiedCredentialCard(
+                            documentKey = "professional",
+                            title = p.profession.uppercase(),
+                            subtitle = p.issuer.ifBlank { "KWALIFIKACJA ZAWODOWA" },
+                            holderName = p.profession,
+                            fields = listOf(
+                                Triple("professionalTitle", "ZAWÓD / ROLA", p.profession),
+                                Triple("professionalNumber", "NUMER DOKUMENTU / KWALIFIKACJI", p.number.ifBlank { "—" }),
+                                Triple("professionalIssuer", "ORGAN / WYSTAWCA", p.issuer.ifBlank { "—" }),
+                                Triple("professionalValidity", "WAŻNY DO", p.validUntil.ifBlank { "—" }),
+                                Triple("professionalSpeciality", "REJESTR", p.registerName.ifBlank { "—" }),
+                                Triple("professionalQualification", "ZAKRES UPRAWNIEŃ", p.scope.ifBlank { "—" })
+                            ),
+                            settings = previewSettings
+                        )
+                    }
                     DocumentPdfExportButton("Karta kwalifikacji — " + p.profession, mapOf(
                         "Zawód / rola" to p.profession,
                         (if (p.numberType == "pwzf") "Numer prawa wykonywania zawodu" else "Numer dokumentu / kwalifikacji") to p.number,
@@ -365,14 +378,14 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                 }
             }
         }
-        OutlinedButton(onClick = { adding = true }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj kolejny zawód") }
+        if (!readOnly) OutlinedButton(onClick = { adding = true }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj kolejny zawód") }
 
         Spacer(Modifier.height(8.dp))
         Text("Uzyskane kwalifikacje", color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text("Dodawaj zdjęcia, skany i pliki PDF dyplomów, certyfikatów, zaświadczeń, legitymacji oraz innych dokumentów potwierdzających kwalifikacje.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        OutlinedButton(onClick = { picker.launch(arrayOf("image/*", "application/pdf")) },
+        if (!readOnly) OutlinedButton(onClick = { picker.launch(arrayOf("image/*", "application/pdf")) },
             modifier = Modifier.fillMaxWidth()) { Text("＋  Dodaj zdjęcia lub pliki PDF") }
         Text("Powiązanie dokumentów: " + selectedProfession, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         files.filter { selectedProfession == "Wszystkie zawody" || it.profession == selectedProfession || it.profession.isBlank() }
@@ -388,7 +401,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                             if (f.profession.isNotBlank()) Text("Zawód: " + f.profession, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                         }
-                        TextButton(onClick = {
+                        if (!readOnly) TextButton(onClick = {
                             runCatching { ProfessionalCredentialStore.deleteFile(context, f) }
                                 .onSuccess { files = ProfessionalCredentialStore.files(context); status = "Usunięto dokument." }
                                 .onFailure { status = "Błąd usuwania: " + (it.message ?: "nieznany błąd") }
@@ -404,7 +417,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit) {
 
     val target = editing ?: if (adding) ProfessionCredential(UUID.randomUUID().toString(), "", "", "other",
         "", "", "", "", "", "", "", "Do uzupełnienia") else null
-    if (target != null) {
+    if (!readOnly && target != null) {
         var name by remember(target.id) { mutableStateOf(target.profession) }
         var number by remember(target.id) { mutableStateOf(target.number) }
         var numberType by remember(target.id) { mutableStateOf(target.numberType) }
