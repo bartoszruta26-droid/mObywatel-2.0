@@ -2755,7 +2755,7 @@ private fun DocumentsWalletScreen(
         CatalogDocument("children", "Dokumentacja dzieci", "Rodzinna ewidencja danych i dokumentacji dzieci", listOf("Cywilne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Rejestry"), service = "Dane dzieci", icon = Icons.Filled.AccountCircle),
         CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
     )
-    val visibleDocuments = documents.filter { documentPlacements[it.id] in setOf("dashboard", "other") }
+    val visibleDocuments = documents.filter { documentPlacements[it.id] == "dashboard" || documentPlacements[it.id] == "other" }
     val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry")
 
     fun openDocument(document: CatalogDocument) {
