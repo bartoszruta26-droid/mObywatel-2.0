@@ -1093,9 +1093,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             "church_minister", "church_missionary" -> activeService = "Dokumenty Kościelne"
             "professional_medical", "professional_education", "professional_therapeutic",
             "professional_other" -> activeService = "Dokumenty kwalifikacji zawodowych"
-            "organization_foundation", "organization_church", "organization_company",
-            "organization_association", "entity" -> activeService = "Dokumenty rejestru podmiotów"
-            "birth_extract", "marriage_extract", "death_extract", "official" -> activeService = "Formularze dokumentów"
+            "organization_church" -> activeService = "Dokumenty Kościelne"
+            "organization_foundation", "organization_company", "organization_association",
+            "entity" -> activeService = "Dokumenty rejestru podmiotów"
+            "birth_extract", "marriage_extract", "death_extract" -> activeService = "Formularze dokumentów"
             "insurance_vehicle", "insurance_professional", "insurance_private", "insurance_business",
             "vehicle_registration", "criminal_record", "mission_travel", "ehic", "eu_education",
             "large_family", "blood_donor", "disability_card" -> activeService = "Pozostałe dokumenty"
@@ -3039,6 +3040,7 @@ private fun DocumentsWalletScreen(
     val additionalDocuments = documentDisplayOptions.filter { it.first !in knownDocumentIds }.map { (id, title, _) ->
         val categoriesForDocument = when {
             id.startsWith("church_") -> listOf("Kościelne", "Osobiste", "Zawodowe", "Misyjne", "Rejestry")
+            id == "organization_church" -> listOf("Kościelne", "Organizacyjne", "Rejestry")
             id.startsWith("professional_") || id == "professional" -> listOf("Zawodowe", "Edukacja", "Osobiste", "Rejestry")
             id.startsWith("organization_") || id == "entity" -> listOf("Organizacyjne", "Cywilne", "Kościelne", "Rejestry")
             id.startsWith("insurance_") -> listOf("OC", "Finansowe", "Osobiste")
@@ -3049,10 +3051,10 @@ private fun DocumentsWalletScreen(
             id in setOf("mission_travel") -> listOf("Misyjne", "Kościelne", "Zawodowe", "Osobiste")
             id in setOf("eu_education") -> listOf("Edukacja", "Zawodowe", "Państwowe")
             id == "criminal_record" -> listOf("Państwowe", "Cywilne", "Rejestry", "Osobiste")
-            else -> listOf("Inne")
+            else -> listOf("Pozostałe")
         }
         val service = when {
-            id.startsWith("church_") -> "Dokumenty Kościelne"
+            id.startsWith("church_") || id == "organization_church" -> "Dokumenty Kościelne"
             id.startsWith("professional_") || id == "professional" -> "Dokumenty kwalifikacji zawodowych"
             id.startsWith("organization_") || id == "entity" -> "Dokumenty rejestru podmiotów"
             id in setOf("birth_extract", "marriage_extract", "death_extract", "official") -> "Formularze dokumentów"
@@ -3066,7 +3068,7 @@ private fun DocumentsWalletScreen(
     val categories = listOf(
         "Państwowe", "Cywilne", "Kościelne", "Rodowe", "Rodzinne", "OC", "Zdrowotne",
         "Osobiste", "Zawodowe", "Edukacja", "Organizacyjne", "Misyjne", "Transport",
-        "Finansowe", "Rejestry", "Inne dokumenty"
+        "Finansowe", "Rejestry", "Pozostałe", "Inne dokumenty"
     )
 
     fun openDocument(document: CatalogDocument) {
