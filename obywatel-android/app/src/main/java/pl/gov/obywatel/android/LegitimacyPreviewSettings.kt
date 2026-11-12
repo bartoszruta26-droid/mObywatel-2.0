@@ -673,7 +673,7 @@ internal fun LegitimacyHeraldry(
             Image(
                 selectedFlag.asImageBitmap(),
                 contentDescription = "Flaga dokumentu",
-                modifier = Modifier.fillMaxWidth(0.66f).height(29.dp)
+                modifier = Modifier.fillMaxWidth(0.58f).height(24.dp)
                     .graphicsLayer {
                         scaleX = settings.graphicScale
                         scaleY = settings.graphicScale
@@ -693,7 +693,7 @@ internal fun LegitimacyHeraldry(
                 Image(
                     selectedCrest.asImageBitmap(),
                     contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(43.dp).graphicsLayer {
+                    modifier = Modifier.size(34.dp).graphicsLayer {
                         scaleX = settings.graphicScale
                         scaleY = settings.graphicScale
                         rotationZ = settings.graphicRotation
@@ -731,7 +731,7 @@ private fun CredentialFieldValue(
         else -> FontFamily.SansSerif
     }
     Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-        Text(item.second.uppercase(), fontSize = labelFontSize * settings.labelScale,
+        Text(item.second, fontSize = labelFontSize * settings.labelScale,
             fontFamily = family, fontWeight = FontWeight.Medium, maxLines = 1,
             modifier = Modifier.graphicsLayer {
                 rotationZ = settings.labelRotation
