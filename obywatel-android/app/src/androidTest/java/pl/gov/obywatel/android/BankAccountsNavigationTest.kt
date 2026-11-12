@@ -19,7 +19,11 @@ class BankAccountsNavigationTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     private fun enterDemoMode() {
-        // Aktualny ekran wejściowy nie ma już przycisku „Pomiń wprowadzenie”.
+        // Plansza z godłem jest wyświetlana przez 1,5 s przed ekranem powitalnym.
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithText("Zaloguj się", useUnmergedTree = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
         // Przejście do lokalnego trybu demonstracyjnego prowadzi przez dwa ekrany logowania.
         composeRule.onNodeWithText("Zaloguj się", useUnmergedTree = true).performClick()
         composeRule.waitForIdle()
