@@ -145,7 +145,7 @@ internal object OfficialDocumentStore {
 }
 
 @Composable
-internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
+internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, onEditGraphic:(String)->Unit = {}) {
     val context= LocalContext.current
     var records by remember { mutableStateOf(OfficialDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
@@ -173,7 +173,10 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false) {
                             Text(type.title,fontWeight=FontWeight.SemiBold,color=MaterialTheme.colorScheme.onSurface)
                             Text(if(populated) "Dane zapisane" else "Brak danych",color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
                         }
-                        Text("Otwórz",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelMedium)
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            if (!readOnly) TextButton(onClick = { onEditGraphic(type.id) }) { Text("Wygląd") }
+                            Text("Otwórz",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.labelMedium)
+                        }
                     }
                 }
             }
