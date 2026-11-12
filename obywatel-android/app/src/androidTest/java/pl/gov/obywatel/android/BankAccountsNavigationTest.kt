@@ -5,9 +5,9 @@ package pl.gov.obywatel.android
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso
+import org.junit.Assert.assertTrue
 import org.junit.Before
 
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -93,8 +93,8 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText(
             "Podgląd wyłącznie do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia → konkretny dokument."
         ).performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Dodaj rachunek").assertDoesNotExist()
-        composeRule.onNodeWithText("Zapisz dane").assertDoesNotExist()
+        assertTrue(composeRule.onAllNodesWithText("Dodaj rachunek").fetchSemanticsNodes().isEmpty())
+        assertTrue(composeRule.onAllNodesWithText("Zapisz dane").fetchSemanticsNodes().isEmpty())
     }
 
     @Test
@@ -113,7 +113,7 @@ class BankAccountsNavigationTest {
         // Kontrolki formularza leżą niżej w przewijanym ekranie.
         composeRule.onNodeWithText("Dodaj rachunek").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Zapisz dane").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Podgląd wyłącznie do odczytu.", substring = true).assertDoesNotExist()
+        assertTrue(composeRule.onAllNodesWithText("Podgląd wyłącznie do odczytu.", substring = true).fetchSemanticsNodes().isEmpty())
     }
 
     @Test
