@@ -441,24 +441,43 @@ private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bit
 @Composable
 private fun ApplicationEntryFlow() {
     var stage by remember { mutableIntStateOf(0) }
-    when (stage) {
-        0 -> EntryWelcomeScreen(
-            onStart = { stage = 1 },
-            onSkip = { stage = 1 }
-        )
-        1 -> EntryLoginScreen(
-            onDemo = { stage = 2 },
-            onBack = { stage = 0 }
-        )
-        else -> HomeScreen()
+    var showIntro by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(1_500)
+        showIntro = false
+    }
+    if (showIntro) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color(0xFFF4F6F8)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
+                contentDescription = "Godło aplikacji — plansza wprowadzająca",
+                modifier = Modifier.size(184.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+    } else {
+        when (stage) {
+            0 -> EntryWelcomeScreen(
+                onStart = { stage = 1 },
+                onSkip = { stage = 1 }
+            )
+            1 -> EntryLoginScreen(
+                onDemo = { stage = 2 },
+                onBack = { stage = 0 }
+            )
+            else -> HomeScreen()
+        }
     }
 }
 
 @Composable
 private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
     Image(
-        painter = painterResource(R.drawable.header_logo_panel),
-        contentDescription = "Orzeł Polski na czerwonym polu — znak aplikacji",
+        painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
+        contentDescription = "Godło aplikacji",
         modifier = Modifier.size(size),
         contentScale = ContentScale.Fit
     )
@@ -738,26 +757,31 @@ private val documentDisplayOptions = listOf(
     Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.documents_family_record),
     Triple("loyalty_cards", "Karty lojalnościowe sklepów", R.drawable.documents_course_legitimacy)
 )
-private val defaultDocumentPlacements = mapOf(
-    "identity" to "dashboard",
-    "passport" to "dashboard",
-    "registry" to "dashboard",
-    "student" to "dashboard",
-    "family" to "other",
-    "parliament" to "other",
-    "training" to "other",
-    "disability" to "other",
-    "church" to "other",
-    "civil" to "other",
-    "business" to "other",
-    "bank_accounts" to "other",
-    "vaccines" to "other",
-    "signed_pdf" to "other",
-    "branding" to "hidden",
-    "loyalty_cards" to "other"
-)
+private val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
+    id to if (id == "identity") "dashboard" else "hidden"
+}
+private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
+private const val DOCUMENT_CARD_STYLE_KEY = "document_card_style"
+private fun loadDocumentCardStyle(context: Context): String =
+    context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+        .getString(DOCUMENT_CARD_STYLE_KEY, "large")?.takeIf { it in setOf("large", "small", "list") } ?: "large"
+private fun saveDocumentCardStyle(context: Context, style: String) {
+    require(style in setOf("large", "small", "list")) { "Nieprawidłowy układ kafelków dokumentów." }
+    check(context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+        .edit().putString(DOCUMENT_CARD_STYLE_KEY, style).commit()) {
+        "Nie udało się zapisać układu kafelków dokumentów."
+    }
+}
 private fun loadDocumentPlacements(context: Context): Map<String, String> {
     val prefs = context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
+    if (!prefs.getBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, false)) {
+        val editor = prefs.edit()
+        documentDisplayOptions.forEach { (id, _, _) ->
+            editor.putString(DOCUMENT_DISPLAY_KEY_PREFIX + id, if (id == "identity") "dashboard" else "hidden")
+        }
+        editor.putBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, true)
+        check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności dokumentów." }
+    }
     return documentDisplayOptions.associate { (id, _, _) ->
         id to (prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + id, null) ?: defaultDocumentPlacements[id] ?: "hidden")
     }
@@ -841,6 +865,7 @@ private fun HomeScreen() {
         }
     }
     var documentPlacements by remember(context) { mutableStateOf(loadDocumentPlacements(context)) }
+    var documentCardStyle by remember(context) { mutableStateOf(loadDocumentCardStyle(context)) }
     var selectedTab by remember { mutableIntStateOf(0) }
     var activeService by remember { mutableStateOf<String?>(null) }
     var showDemoDocuments by remember { mutableStateOf(false) }
@@ -959,6 +984,11 @@ private fun HomeScreen() {
                             saveDocumentPlacements(context, updated)
                             documentPlacements = updated
                         },
+                        documentCardStyle = documentCardStyle,
+                        onDocumentCardStyleChange = { style ->
+                            saveDocumentCardStyle(context, style)
+                            documentCardStyle = style
+                        },
                         onBack = { showDocumentVisibilitySettings = false; showSettingsMenu = true }
                     )
                     showSettingsMenu -> SettingsMenuScreen(
@@ -1011,7 +1041,9 @@ private fun HomeScreen() {
                     )
                     showDemoDocuments -> DocumentsWalletScreen(
                         onBack = { showDemoDocuments = false },
-                        onAddDocuments = { selectedTab = 4; showSettingsMenu = true },
+                        onAddDocuments = { showDemoDocuments = false; showDocumentVisibilitySettings = true },
+                        documentPlacements = documentPlacements,
+                        documentCardStyle = documentCardStyle,
                         onOpenDetails = { selectedDocumentId = it },
                         onOpenService = { title ->
                             when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
@@ -1171,8 +1203,8 @@ private fun HomeScreen() {
                                     Box(Modifier.fillMaxWidth().height(390.dp)) {
                                         Button(
                                             onClick = {
-                                                selectedEditorCategory = "all"
-                                                showDocumentsEditor = true
+                                                showSettingsMenu = false
+                                                showDocumentVisibilitySettings = true
                                             },
                                             modifier = Modifier.align(Alignment.BottomEnd)
                                                 .fillMaxWidth(0.54f)
@@ -2291,8 +2323,8 @@ private fun Header(
 @Composable
 private fun BrandMark() {
     Image(
-        painter = painterResource(R.drawable.header_brand_vector),
-        contentDescription = "Białe godło orła na czerwonym tle — znak aplikacji",
+        painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
+        contentDescription = "Godło aplikacji",
         modifier = Modifier.size(48.dp),
         contentScale = ContentScale.Fit
     )
@@ -2341,13 +2373,7 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
                         contentScale = ContentScale.Fit
                     )
                 }
-                Image(
-                    painter = painterResource(R.drawable.ic_verified_green),
-                    contentDescription = "Dokument zweryfikowany",
-                    modifier = Modifier.align(Alignment.BottomEnd)
-                        .offset(x = 1.dp, y = 1.dp)
-                        .size(27.dp)
-                )
+
             }
         }
     }
@@ -2403,6 +2429,8 @@ private fun ServiceCard(item: ServiceItem, isFavorite: Boolean, onFavorite: () -
 private fun DocumentVisibilitySettingsScreen(
     documentPlacements: Map<String, String>,
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
+    documentCardStyle: String,
+    onDocumentCardStyleChange: (String) -> Unit,
     onBack: () -> Unit
 ) {
     Column(
@@ -2416,6 +2444,20 @@ private fun DocumentVisibilitySettingsScreen(
             fontWeight = FontWeight.Bold)
         Text("Dla każdego dokumentu wybierz miejsce wyświetlania. Ukrycie dokumentu nie usuwa jego danych ani załączników.",
             color = Muted, style = MaterialTheme.typography.bodyMedium)
+        Text("Wygląd kafelków w oknie Dokumenty", color = Navy, fontWeight = FontWeight.Bold)
+        Text("Wybierz sposób prezentacji dokumentów.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        listOf("large" to "Duże kafelki", "small" to "Małe kafelki", "list" to "Kafelki listy").forEach { (value, label) ->
+            Row(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                    .background(if (documentCardStyle == value) BlueLight else Color.Transparent)
+                    .clickable { onDocumentCardStyleChange(value) }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(selected = documentCardStyle == value, onClick = { onDocumentCardStyleChange(value) })
+                Text(label, color = Ink, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
         documentDisplayOptions.forEach { (id, title, iconRes) ->
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = White)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -2677,6 +2719,8 @@ private fun CertificatesScreen(onBack: () -> Unit) {
 private fun DocumentsWalletScreen(
     onBack: () -> Unit,
     onAddDocuments: () -> Unit,
+    documentPlacements: Map<String, String>,
+    documentCardStyle: String,
     onOpenDetails: (String) -> Unit,
     onOpenService: (String) -> Unit
 ) {
@@ -2711,6 +2755,7 @@ private fun DocumentsWalletScreen(
         CatalogDocument("children", "Dokumentacja dzieci", "Rodzinna ewidencja danych i dokumentacji dzieci", listOf("Cywilne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Rejestry"), service = "Dane dzieci", icon = Icons.Filled.AccountCircle),
         CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
     )
+    val visibleDocuments = documents.filter { documentPlacements[it.id] in setOf("dashboard", "other") }
     val categories = listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry")
 
     fun openDocument(document: CatalogDocument) {
@@ -2733,33 +2778,75 @@ private fun DocumentsWalletScreen(
             color = Muted, style = MaterialTheme.typography.bodySmall
         )
         categories.forEach { category ->
-            val entries = documents.filter { category in it.categories }
+            val entries = visibleDocuments.filter { category in it.categories }
             if (entries.isNotEmpty()) {
                 Text(category, color = Navy, fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(top = 5.dp))
-                entries.forEach { document ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().clickable { openDocument(document) },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = White)
-                    ) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(13.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(11.dp)
+                if (documentCardStyle == "list") {
+                    entries.forEach { document ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clickable { openDocument(document) },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = White)
                         ) {
-                            Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
-                                    style = MaterialTheme.typography.bodyMedium)
-                                Text(document.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                            Row(
+                                Modifier.fillMaxWidth().padding(13.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(11.dp)
+                            ) {
+                                Icon(document.icon, contentDescription = null, tint = Blue, modifier = Modifier.size(27.dp))
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                    Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
+                                        style = MaterialTheme.typography.bodyMedium)
+                                    Text(document.subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+                                }
+                                Text("Podgląd  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
                             }
-                            Text("Podgląd  ›", color = Blue, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                } else {
+                    val columns = if (documentCardStyle == "small") 3 else 2
+                    entries.chunked(columns).forEach { rowDocuments ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            rowDocuments.forEach { document ->
+                                Card(
+                                    modifier = Modifier.weight(1f)
+                                        .height(if (documentCardStyle == "small") 112.dp else 148.dp)
+                                        .clickable { openDocument(document) },
+                                    shape = RoundedCornerShape(13.dp),
+                                    colors = CardDefaults.cardColors(containerColor = White)
+                                ) {
+                                    Box(Modifier.fillMaxSize().padding(10.dp)) {
+                                        Icon(document.icon, contentDescription = null, tint = Blue,
+                                            modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 23.dp else 30.dp))
+                                        Image(
+                                            painter = painterResource(R.drawable.file_5320_eagle_vector),
+                                            contentDescription = "Orzeł — znak dokumentu",
+                                            modifier = Modifier.align(Alignment.TopEnd).size(if (documentCardStyle == "small") 24.dp else 32.dp),
+                                            contentScale = ContentScale.Fit
+                                        )
+                                        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                            Text(document.title, color = Navy, fontWeight = FontWeight.SemiBold,
+                                                style = if (documentCardStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
+                                                maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                            if (documentCardStyle == "large") Text(document.subtitle, color = Muted,
+                                                style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        }
+                                    }
+                                }
+                            }
+                            repeat(columns - rowDocuments.size) { Spacer(Modifier.weight(1f)) }
                         }
                     }
                 }
             }
+        }
+        Spacer(Modifier.height(8.dp))
+        Button(onClick = onAddDocuments, modifier = Modifier.fillMaxWidth()) {
+            Icon(painter = painterResource(R.drawable.lib_ic_plus), contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("Dodaj dokument")
         }
     }
 }
