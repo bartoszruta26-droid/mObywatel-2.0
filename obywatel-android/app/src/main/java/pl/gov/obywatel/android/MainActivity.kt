@@ -3378,29 +3378,62 @@ private fun documentTileIconResource(documentKey: String, fallback: Int): Int = 
 }
 
 private fun documentTileWatermarkResource(documentKey: String): Int = when {
-    documentKey.startsWith("church_") || documentKey in setOf("church", "organization_church") ->
+    // Dokumenty kościelne i misyjne: motyw sakralny.
+    documentKey.startsWith("church_") ||
+        documentKey in setOf("church", "organization_church") ->
         R.drawable.tile_watermark_sacred
-    documentKey in setOf("identity", "profile") ->
+
+    // Tożsamość, dane osoby i dokumenty podróży.
+    documentKey in setOf("identity", "identity_card", "profile") ->
         R.drawable.tile_watermark_identity
     documentKey in setOf("passport", "mission_travel") ->
         R.drawable.tile_watermark_travel
-    documentKey in setOf("bank_accounts") ->
+
+    // Finanse, ubezpieczenia i rozliczenia.
+    documentKey in setOf("bank_accounts", "insurance_business") ->
         R.drawable.tile_watermark_finance
-    documentKey in setOf("signed_pdf", "imported", "branding", "loyalty") ->
+
+    // Karty i dokumenty obsługiwane przede wszystkim cyfrowo.
+    documentKey in setOf("signed_pdf", "imported", "branding", "loyalty", "loyalty_cards") ->
         R.drawable.tile_watermark_digital
-    documentKey in setOf("vehicle_registration") ->
+
+    // Pojazdy i dokumentacja komunikacyjna.
+    documentKey in setOf("vehicle_registration", "insurance_vehicle") ->
         R.drawable.tile_watermark_transport
-    documentKey in setOf("professional_education", "professional_medical", "professional_therapeutic", "professional_other", "insurance_professional") ->
+
+    // Uprawnienia, kwalifikacje i ubezpieczenie zawodowe.
+    documentKey in setOf(
+        "professional", "professional_medical", "professional_education",
+        "professional_therapeutic", "professional_other", "insurance_professional"
+    ) ->
         R.drawable.tile_watermark_professional
-    documentKey in setOf("family", "children", "birth_extract", "marriage_extract", "death_extract", "large_family") ->
+
+    // Rodzina, stan cywilny i dokumenty członków rodziny.
+    documentKey in setOf(
+        "family", "children", "birth_extract", "marriage_extract",
+        "death_extract", "large_family", "insurance_private"
+    ) ->
         R.drawable.tile_watermark_family
-    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card") ->
+
+    // Zdrowie, niepełnosprawność i uprawnienia medyczne.
+    documentKey in setOf(
+        "disability", "vaccines", "ehic", "blood_donor", "disability_card"
+    ) ->
         R.drawable.tile_watermark_medical
+
+    // Edukacja i potwierdzenia nauki lub szkolenia.
     documentKey in setOf("student", "training", "eu_education") ->
         R.drawable.tile_watermark_education
-    documentKey in setOf("civil", "official", "registry", "business", "entity", "organization_foundation",
-        "organization_company", "organization_association", "parliament", "criminal_record") ->
+
+    // Rejestry, dokumenty urzędowe i obywatelskie.
+    documentKey in setOf(
+        "civil", "official", "registry", "business", "entity",
+        "organization_foundation", "organization_company",
+        "organization_association", "parliament", "criminal_record"
+    ) ->
         R.drawable.tile_watermark_civic
+
+    // Ogólne dokumenty ochronne i poświadczenia bez odrębnej kategorii.
     else -> R.drawable.tile_watermark_security
 }
 
