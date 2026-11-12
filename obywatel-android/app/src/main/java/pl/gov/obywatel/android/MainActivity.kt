@@ -740,7 +740,7 @@ private val services = listOf(
 
 private const val DOCUMENT_DISPLAY_PREFS = "document_display_preferences"
 private const val DOCUMENT_DISPLAY_KEY_PREFIX = "placement_"
-private val documentDisplayOptions = listOf(
+internal val documentDisplayOptions = listOf(
     Triple("profile", "Dane osobowe profilu", R.drawable.lib_ic_account),
     Triple("identity", "Dowód tożsamości", R.drawable.documents_identity_card),
     Triple("passport", "Dane paszportowe", R.drawable.documents_passport),
@@ -754,6 +754,8 @@ private val documentDisplayOptions = listOf(
     Triple("civil", "Dokumenty cywilne", R.drawable.tile_ic_civil_outline),
     Triple("business", "Dokumenty firmowe i podmiotowe", R.drawable.tile_ic_business_outline),
     Triple("bank_accounts", "Konta bankowe", R.drawable.lib_ic_wallet),
+    Triple("rod_bank_accounts", "Rachunki bankowe Rodu", R.drawable.lib_ic_wallet),
+    Triple("entity_bank_accounts", "Rachunki bankowe podmiotów", R.drawable.lib_ic_wallet),
     Triple("vaccines", "Książeczka szczepień WHO", R.drawable.lib_ic_medical_record),
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
     Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
@@ -818,7 +820,7 @@ private val documentDisplayOptions = listOf(
     }
 ).distinctBy { it.first }
 
-private fun documentVisibilityGroup(id: String): String = when {
+internal fun documentVisibilityGroup(id: String): String = when {
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" -> "Dokumenty kościelne"
     id == "family" || id.startsWith("rod_") || id == "large_family" -> "Dokumenty rodowe i rodzinne"
@@ -2842,10 +2844,22 @@ private fun DocumentVisibilitySettingsScreen(
                 Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
             }
         }
-        val groupedVisibilityDocuments = documentDisplayOptions.groupBy { (id, title, _) ->
+        val groupedVisibilityDocuments = documentDisplayOptions.groupBy { (id, _, _) ->
             documentVisibilityGroup(id)
         }
-        groupedVisibilityDocuments.forEach { (groupTitle, groupDocuments) ->
+        val visibilityGroupOrder = listOf(
+            "Dokumenty osobiste i tożsamościowe",
+            "Dokumenty cywilne i urzędowe",
+            "Dokumenty kościelne",
+            "Dokumenty rodowe i rodzinne",
+            "Dokumenty firmowe i podmiotowe",
+            "Dokumenty zawodowe i edukacyjne",
+            "Dokumenty zdrowotne i rodzinne",
+            "Pliki i pozostałe dokumenty"
+        )
+        visibilityGroupOrder.forEach { groupTitle ->
+            val groupDocuments = groupedVisibilityDocuments[groupTitle].orEmpty()
+            if (groupDocuments.isEmpty()) return@forEach
             val expanded = groupTitle in expandedVisibilityGroups
             Card(
                 modifier = Modifier.fillMaxWidth(),
