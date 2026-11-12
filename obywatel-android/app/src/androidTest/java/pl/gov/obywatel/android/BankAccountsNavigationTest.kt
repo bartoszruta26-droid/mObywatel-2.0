@@ -147,6 +147,50 @@ class BankAccountsNavigationTest {
     }
 
     @Test
+    fun dashboardShowsDocumentsMarkedAsVisibleInBothPlacements() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("document-placement-passport-dashboard").performScrollTo().performClick()
+        composeRule.onNodeWithTag("document-placement-training-other").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("‹  Powrót do ustawień").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("‹  Powrót do ekranu głównego").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag("dashboard-document-passport").assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-document-training").assertIsDisplayed()
+    }
+
+    @Test
+    fun applicationTileSizeSettingAlsoResizesIdentityDashboardCard() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Ustawienia aplikacji").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Małe kafelki").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Powrót do ustawień").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("‹  Powrót do ekranu głównego").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag("identity-dashboard-card-small").assertIsDisplayed()
+    }
+
+    @Test
+    fun sharedCredentialAppearanceExposesSeparateCrestAndFlagTransforms() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Wspólny wygląd legitymacji").performScrollTo().performClick()
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("Skala godła: 1,00").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Obrót godła: 0°").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Skala flagi: 1,00").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Obrót flagi: 0°").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
     fun individualCredentialEditorExposesBackgroundSelectors() {
         openSettingsMenu()
         composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().performClick()
