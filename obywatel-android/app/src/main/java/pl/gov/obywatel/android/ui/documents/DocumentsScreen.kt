@@ -256,7 +256,8 @@ fun DocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false) {
         }
     }
 }
-\nprivate data class OdtPreview(val text: String = "", val error: String? = null)
+
+private data class OdtPreview(val text: String = "", val error: String? = null)
 
 @Composable
 private fun OdtPreviewPane(document: ImportedDocument, modifier: Modifier = Modifier) {
