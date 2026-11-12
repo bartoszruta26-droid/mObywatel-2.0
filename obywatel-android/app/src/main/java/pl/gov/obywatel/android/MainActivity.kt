@@ -1092,6 +1092,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             DocumentRouteType.DOCUMENT -> selectedDocumentId = route.documentId
             DocumentRouteType.SPECIALIZED -> when (route.destination) {
                 "registry_extract" -> activeService = "Odpis z rejestru podmiotów"
+                "children" -> activeService = "Dane dzieci"
                 "bank_accounts" -> showBankAccounts = true
                 "vaccines" -> activeService = "eKarta Szczepień"
                 "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
