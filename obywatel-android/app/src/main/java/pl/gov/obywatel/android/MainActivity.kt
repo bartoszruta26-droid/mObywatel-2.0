@@ -45,6 +45,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -132,6 +133,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -1363,10 +1369,22 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             ) {
                                 Spacer(Modifier.height(18.dp))
                                 if (selectedTab == 0) {
-                                    IdentityDashboardCard(
-                                        onOpen = { openDocumentCard("identity") },
-                                        tileStyle = documentCardStyle
-                                    )
+                                    if (documentCardStyle == "small") {
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            IdentityDashboardCard(
+                                                onOpen = { openDocumentCard("identity") },
+                                                tileStyle = documentCardStyle,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Spacer(Modifier.weight(1f))
+                                            Spacer(Modifier.weight(1f))
+                                        }
+                                    } else {
+                                        IdentityDashboardCard(
+                                            onOpen = { openDocumentCard("identity") },
+                                            tileStyle = documentCardStyle
+                                        )
+                                    }
                                     Spacer(Modifier.height(12.dp))
                                     val dashboardDocuments = documentDisplayOptions.filter {
                                         it.first != "identity" && documentPlacements[it.first] == "dashboard"
@@ -2514,14 +2532,18 @@ private fun BrandMark() {
 }
 
 @Composable
-private fun IdentityDashboardCard(onOpen: () -> Unit, tileStyle: String = "large") {
+private fun IdentityDashboardCard(
+    onOpen: () -> Unit,
+    tileStyle: String = "large",
+    modifier: Modifier = Modifier.fillMaxWidth()
+) {
     val cardHeight = when (tileStyle) {
-        "small" -> 148.dp
-        "list" -> 96.dp
+        "small" -> 92.dp
+        "list" -> 68.dp
         else -> 218.dp
     }
     Card(
-        modifier = Modifier.fillMaxWidth().height(cardHeight)
+        modifier = modifier.height(cardHeight)
             .clickable(onClick = onOpen)
             .testTag("identity-dashboard-card-$tileStyle"),
         shape = RoundedCornerShape(20.dp),
@@ -2530,28 +2552,31 @@ private fun IdentityDashboardCard(onOpen: () -> Unit, tileStyle: String = "large
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(R.drawable.tlo_poziome_oryginal),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
+            DocumentTileArtwork("identity", Modifier.fillMaxSize())
             Text(
                 "mDowód",
-                modifier = Modifier.align(Alignment.TopStart).padding(start = 20.dp, top = 18.dp),
+                modifier = Modifier.align(Alignment.TopStart).padding(
+                    start = if (tileStyle == "small") 10.dp else 20.dp,
+                    top = if (tileStyle == "small") 10.dp else 18.dp
+                ),
                 color = Color.White,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = if (tileStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
             // Orzeł pozostaje czytelny; znacznik nachodzi na jego dolną prawą część przy nodze.
             Box(
                 modifier = Modifier.align(Alignment.TopEnd)
-                    .padding(top = 12.dp, end = 12.dp)
-                    .size(if (tileStyle == "list") 28.dp else 32.dp)
+                    .padding(
+                        top = if (tileStyle == "small") 8.dp else 12.dp,
+                        end = if (tileStyle == "small") 8.dp else 12.dp
+                    )
+                    .size(if (tileStyle == "small") 22.dp else if (tileStyle == "list") 28.dp else 32.dp)
             ) {
                 Box(
                     modifier = Modifier.align(Alignment.TopCenter)
-                        .size(if (tileStyle == "list") 24.dp else 28.dp)
+                        .size(if (tileStyle == "small") 18.dp else if (tileStyle == "list") 24.dp else 28.dp)
                         .clip(RoundedCornerShape(13.dp))
                         .background(Color(0x557AA8C6)),
                     contentAlignment = Alignment.Center
@@ -2559,7 +2584,7 @@ private fun IdentityDashboardCard(onOpen: () -> Unit, tileStyle: String = "large
                     Image(
                         painter = painterResource(R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg),
                         contentDescription = "Godło Polski — czysty znak wektorowy na przezroczystym tle",
-                        modifier = Modifier.size(if (tileStyle == "small") 16.dp else 20.dp),
+                        modifier = Modifier.size(if (tileStyle == "small") 13.dp else 20.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
@@ -3111,19 +3136,22 @@ private fun DocumentsWalletScreen(
                                 1.dp, if (documentPlacements[document.id] == "dashboard") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                             )
                         ) {
-                            Row(
-                                Modifier.fillMaxWidth().padding(13.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(11.dp)
-                            ) {
-                                Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
-                                    contentDescription = document.title, modifier = Modifier.size(27.dp))
-                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                    Text(document.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
-                                        style = MaterialTheme.typography.bodyMedium)
-                                    Text(document.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                            Box(Modifier.fillMaxWidth()) {
+                                DocumentTileArtwork(document.id, Modifier.matchParentSize())
+                                Row(
+                                    Modifier.fillMaxWidth().padding(13.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(11.dp)
+                                ) {
+                                    Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
+                                        contentDescription = document.title, modifier = Modifier.size(27.dp))
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                        Text(document.title, color = Color.White, fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodyMedium)
+                                        Text(document.subtitle, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text("Podgląd  ›", color = Color.White, style = MaterialTheme.typography.labelSmall)
                                 }
-                                Text("Podgląd  ›", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -3142,7 +3170,9 @@ private fun DocumentsWalletScreen(
                                         1.dp, if (documentPlacements[document.id] == "dashboard") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
                                     )
                                 ) {
-                                    Box(Modifier.fillMaxSize().padding(10.dp)) {
+                                    Box(Modifier.fillMaxSize()) {
+                                        DocumentTileArtwork(document.id, Modifier.fillMaxSize())
+                                        Box(Modifier.fillMaxSize().padding(10.dp)) {
                                         Image(painter = painterResource(resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides)),
                                             contentDescription = document.title,
                                             modifier = Modifier.align(Alignment.TopStart).size(if (documentCardStyle == "small") 23.dp else 30.dp))
@@ -3157,6 +3187,7 @@ private fun DocumentsWalletScreen(
                                                 maxLines = 2, overflow = TextOverflow.Ellipsis)
                                             if (documentCardStyle == "large") Text(document.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        }
                                         }
                                     }
                                 }
@@ -3203,22 +3234,28 @@ private fun DashboardDocumentGrid(
                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         if (tileStyle == "list") {
-                            Row(Modifier.fillMaxSize().padding(horizontal = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(28.dp))
-                                Text(title, color = MaterialTheme.colorScheme.onSurface,
-                                    style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
-                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Box(Modifier.fillMaxSize()) {
+                                DocumentTileArtwork(id, Modifier.fillMaxSize())
+                                Row(Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(28.dp))
+                                    Text(title, color = Color.White,
+                                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
+                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                }
                             }
                         } else {
-                            Column(Modifier.fillMaxSize().padding(10.dp),
-                                verticalArrangement = Arrangement.SpaceBetween) {
+                            Box(Modifier.fillMaxSize()) {
+                                DocumentTileArtwork(id, Modifier.fillMaxSize())
+                                Column(Modifier.fillMaxSize().padding(10.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween) {
                                 Image(painterResource(iconRes), contentDescription = null,
                                     modifier = Modifier.size(if (tileStyle == "small") 22.dp else 28.dp))
                                 Text(title, color = MaterialTheme.colorScheme.onSurface,
                                     style = if (tileStyle == "small") MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                }
                             }
                         }
                     }
@@ -3226,6 +3263,161 @@ private fun DashboardDocumentGrid(
                 repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
             }
         }
+    }
+}
+
+@Composable
+private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifier) {
+    val palette = when (documentKey) {
+        "identity" -> listOf(Color(0xFF0756A5), Color(0xFF078FD0), Color(0xFF42B9D8))
+        "profile" -> listOf(Color(0xFF3155A6), Color(0xFF527BCB), Color(0xFF70B7D8))
+        "passport", "mission_travel" -> listOf(Color(0xFF123C78), Color(0xFF315F9D), Color(0xFF4C91B8))
+        "registry", "business", "entity" -> listOf(Color(0xFF174C58), Color(0xFF287F79), Color(0xFF67B89C))
+        "family", "children" -> listOf(Color(0xFF704477), Color(0xFF9A6392), Color(0xFFD08D9B))
+        "parliament", "official" -> listOf(Color(0xFF6B3A35), Color(0xFF9A5546), Color(0xFFD18B61))
+        "training", "student", "eu_education" -> listOf(Color(0xFF394A83), Color(0xFF526FB0), Color(0xFF8A9FD0))
+        "disability", "vaccines", "ehic", "blood_donor", "disability_card" ->
+            listOf(Color(0xFF17645C), Color(0xFF278F83), Color(0xFF75C3A6))
+        "church", "organization_church" -> listOf(Color(0xFF57437E), Color(0xFF7660A5), Color(0xFFB19ACD))
+        "civil", "birth_extract", "marriage_extract", "death_extract" ->
+            listOf(Color(0xFF76522D), Color(0xFFAD8046), Color(0xFFD6B77B))
+        "bank_accounts" -> listOf(Color(0xFF20516A), Color(0xFF337E9C), Color(0xFF80B7C8))
+        "signed_pdf", "imported" -> listOf(Color(0xFF424C65), Color(0xFF66738F), Color(0xFFA3AEC2))
+        "branding" -> listOf(Color(0xFF5A456B), Color(0xFF87628F), Color(0xFFC19AC0))
+        "loyalty" -> listOf(Color(0xFF8A4D2F), Color(0xFFBD7544), Color(0xFFE0B06D))
+        else -> {
+            val paletteIndex = documentKey.hashCode().ushr(1) % 4
+            when (paletteIndex) {
+                0 -> listOf(Color(0xFF24527A), Color(0xFF397FA0), Color(0xFF78B9C7))
+                1 -> listOf(Color(0xFF4B477D), Color(0xFF716CA8), Color(0xFFA8A4D0))
+                2 -> listOf(Color(0xFF356451), Color(0xFF548D70), Color(0xFFA0C59A))
+                else -> listOf(Color(0xFF76513D), Color(0xFFAA7957), Color(0xFFD5B18A))
+            }
+        }
+    }
+    val motif = when {
+        documentKey in setOf("identity", "passport", "official", "disability_card") -> 0
+        documentKey in setOf("profile", "student", "training") -> 1
+        documentKey in setOf("registry", "business", "entity", "parliament", "bank_accounts") -> 2
+        documentKey in setOf("church", "organization_church") -> 3
+        documentKey in setOf("family", "children", "birth_extract", "marriage_extract") -> 4
+        documentKey in setOf("mission_travel", "ehic", "vehicle_registration") -> 5
+        documentKey in setOf("student", "training", "eu_education") -> 6
+        documentKey in setOf("disability", "vaccines", "blood_donor") -> 7
+        else -> documentKey.hashCode().ushr(1) % 8
+    }
+    ComposeCanvas(modifier) {
+        drawRect(brush = Brush.linearGradient(
+            colors = palette,
+            start = Offset(0f, size.height),
+            end = Offset(size.width, 0f)
+        ))
+        val cx = size.width * 0.82f
+        val cy = size.height * 0.28f
+        val radius = maxOf(size.width, size.height) * 0.34f
+        val watermark = Color.White.copy(alpha = 0.13f)
+        val fine = Color.White.copy(alpha = 0.09f)
+        drawCircle(watermark, radius, Offset(cx, cy), style = Stroke(width = 2.dp.toPx()))
+        drawCircle(fine, radius * 0.76f, Offset(cx, cy), style = Stroke(width = 1.dp.toPx()))
+        drawArc(watermark, -28f, 238f, false,
+            topLeft = Offset(cx - radius * 0.88f, cy - radius * 0.88f),
+            size = Size(radius * 1.76f, radius * 1.76f),
+            style = Stroke(width = 3.dp.toPx())
+        )
+        val stroke = Stroke(width = maxOf(1.5.dp.toPx(), size.minDimension * 0.012f))
+        when (motif) {
+            0 -> {
+                drawLine(watermark, Offset(cx, cy - radius * 0.48f), Offset(cx, cy + radius * 0.48f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx - radius * 0.42f, cy), Offset(cx + radius * 0.42f, cy), strokeWidth = stroke.width)
+                drawCircle(watermark, radius * 0.24f, Offset(cx, cy), style = stroke)
+            }
+            1 -> {
+                val left = cx - radius * 0.32f
+                val top = cy - radius * 0.42f
+                drawRoundRect(watermark, Offset(left, top), Size(radius * 0.64f, radius * 0.84f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius * 0.12f), style = stroke)
+                drawLine(watermark, Offset(left + radius * 0.13f, cy - radius * 0.12f),
+                    Offset(left + radius * 0.51f, cy - radius * 0.12f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(left + radius * 0.13f, cy + radius * 0.10f),
+                    Offset(left + radius * 0.45f, cy + radius * 0.10f), strokeWidth = stroke.width)
+            }
+            2 -> {
+                drawLine(watermark, Offset(cx - radius * 0.46f, cy + radius * 0.34f),
+                    Offset(cx + radius * 0.46f, cy + radius * 0.34f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx - radius * 0.36f, cy + radius * 0.34f),
+                    Offset(cx - radius * 0.36f, cy - radius * 0.20f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx + radius * 0.36f, cy + radius * 0.34f),
+                    Offset(cx + radius * 0.36f, cy - radius * 0.20f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx - radius * 0.46f, cy - radius * 0.20f),
+                    Offset(cx + radius * 0.46f, cy - radius * 0.20f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx - radius * 0.50f, cy - radius * 0.20f),
+                    Offset(cx, cy - radius * 0.48f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx, cy - radius * 0.48f),
+                    Offset(cx + radius * 0.50f, cy - radius * 0.20f), strokeWidth = stroke.width)
+            }
+            3 -> {
+                drawLine(watermark, Offset(cx, cy - radius * 0.52f),
+                    Offset(cx, cy + radius * 0.48f), strokeWidth = stroke.width * 1.25f)
+                drawLine(watermark, Offset(cx - radius * 0.32f, cy - radius * 0.20f),
+                    Offset(cx + radius * 0.32f, cy - radius * 0.20f), strokeWidth = stroke.width * 1.25f)
+                drawArc(watermark, 205f, 130f, false,
+                    topLeft = Offset(cx - radius * 0.44f, cy + radius * 0.05f),
+                    size = Size(radius * 0.88f, radius * 0.70f), style = stroke)
+            }
+            4 -> {
+                drawLine(watermark, Offset(cx, cy - radius * 0.36f),
+                    Offset(cx, cy + radius * 0.43f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx, cy - radius * 0.08f),
+                    Offset(cx - radius * 0.34f, cy - radius * 0.34f), strokeWidth = stroke.width)
+                drawLine(watermark, Offset(cx, cy - radius * 0.08f),
+                    Offset(cx + radius * 0.34f, cy - radius * 0.34f), strokeWidth = stroke.width)
+                drawCircle(watermark, radius * 0.13f, Offset(cx, cy - radius * 0.42f), style = stroke)
+                drawCircle(watermark, radius * 0.12f, Offset(cx - radius * 0.38f, cy - radius * 0.38f), style = stroke)
+                drawCircle(watermark, radius * 0.12f, Offset(cx + radius * 0.38f, cy - radius * 0.38f), style = stroke)
+                drawArc(watermark, 190f, 160f, false,
+                    Offset(cx - radius * 0.42f, cy + radius * 0.10f),
+                    Size(radius * 0.84f, radius * 0.62f), style = stroke)
+            }
+            5 -> {
+                drawCircle(watermark, radius * 0.46f, Offset(cx, cy), style = stroke)
+                drawOval(watermark, Offset(cx - radius * 0.23f, cy - radius * 0.46f),
+                    Size(radius * 0.46f, radius * 0.92f), style = stroke)
+                drawLine(watermark, Offset(cx - radius * 0.43f, cy),
+                    Offset(cx + radius * 0.43f, cy), strokeWidth = stroke.width)
+                drawArc(watermark, 0f, 180f, false,
+                    Offset(cx - radius * 0.43f, cy - radius * 0.22f),
+                    Size(radius * 0.86f, radius * 0.44f), style = stroke)
+                drawArc(watermark, 180f, 180f, false,
+                    Offset(cx - radius * 0.43f, cy - radius * 0.22f),
+                    Size(radius * 0.86f, radius * 0.44f), style = stroke)
+            }
+            6 -> {
+                val book = Path().apply {
+                    moveTo(cx, cy + radius * 0.38f)
+                    cubicTo(cx - radius * 0.20f, cy + radius * 0.22f, cx - radius * 0.38f, cy + radius * 0.28f, cx - radius * 0.48f, cy + radius * 0.20f)
+                    lineTo(cx - radius * 0.48f, cy - radius * 0.36f)
+                    cubicTo(cx - radius * 0.28f, cy - radius * 0.46f, cx - radius * 0.12f, cy - radius * 0.30f, cx, cy - radius * 0.18f)
+                    cubicTo(cx + radius * 0.12f, cy - radius * 0.30f, cx + radius * 0.28f, cy - radius * 0.46f, cx + radius * 0.48f, cy - radius * 0.36f)
+                    lineTo(cx + radius * 0.48f, cy + radius * 0.20f)
+                    cubicTo(cx + radius * 0.28f, cy + radius * 0.28f, cx + radius * 0.20f, cy + radius * 0.22f, cx, cy + radius * 0.38f)
+                    close()
+                }
+                drawPath(book, watermark, style = stroke)
+                drawLine(watermark, Offset(cx, cy - radius * 0.18f),
+                    Offset(cx, cy + radius * 0.36f), strokeWidth = stroke.width)
+            }
+            7 -> {
+                drawRoundRect(watermark, Offset(cx - radius * 0.15f, cy - radius * 0.48f),
+                    Size(radius * 0.30f, radius * 0.96f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius * 0.08f), style = stroke)
+                drawRoundRect(watermark, Offset(cx - radius * 0.48f, cy - radius * 0.15f),
+                    Size(radius * 0.96f, radius * 0.30f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius * 0.08f), style = stroke)
+                drawCircle(fine, radius * 0.58f, Offset(cx, cy), style = stroke)
+            }
+        }
+        drawCircle(Color.White.copy(alpha = 0.06f), radius * 0.10f,
+            Offset(size.width * 0.16f, size.height * 0.82f))
     }
 }
 
@@ -3245,7 +3437,7 @@ private fun DocumentCardEmblem(documentKey: String, modifier: Modifier = Modifie
     if (selected != null) {
         Box(
             modifier.clip(RoundedCornerShape(5.dp))
-                .background(if (assigned == null) Color(0xFFC90018) else Color.Transparent),
+                .background(if (assigned == null) Color.White.copy(alpha = 0.16f) else Color.Transparent),
             contentAlignment = Alignment.Center
         ) {
             Image(
