@@ -1253,8 +1253,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
                         }
                     )
-                    showDisabilitySettings -> CompositionLocalProvider(LocalDocumentScreenMode provides DocumentScreenMode.EDITOR) {
-                        DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
+                    showDisabilitySettings -> CredentialAppearanceEditorEntry("disability", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                        CompositionLocalProvider(LocalDocumentScreenMode provides DocumentScreenMode.EDITOR) {
+                            DisabilitySettingsScreen(onBack = { showDisabilitySettings = false; showSettingsMenu = true })
+                        }
                     }
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
                     activeService == "Informacje prawne" -> LegalInformationScreen(
