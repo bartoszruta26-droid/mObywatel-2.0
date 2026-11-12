@@ -154,22 +154,21 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
     val context = androidx.compose.ui.platform.LocalContext.current
     var records by remember { mutableStateOf(ChurchDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
-    var preview by remember { mutableStateOf(readOnly) }
     var message by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Dokumenty Kościelne", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Formularze, ewidencja, podgląd i lokalne archiwum. Wybierz kategorię dokumentu.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Katalog dokumentów. Podgląd jest oddzielony od formularzy edycyjnych.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (selected == null) {
             churchDocs.groupBy { it.section }.forEach { (section, docs) ->
                 Text(section, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 docs.forEach { doc ->
                     val filled = records[doc.id].orEmpty().values.any { it.isNotBlank() }
-                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id; preview = readOnly }, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id }, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                         Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column(Modifier.weight(1f)) {
                                 Text(doc.title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                                Text(if (filled) "Dane zapisane" else "Formularz pusty", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(if (filled) "Dane zapisane" else "Brak zapisanych danych", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Text("Otwórz", color = MaterialTheme.colorScheme.primary)
                         }
@@ -180,7 +179,6 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
             val doc = churchDocs.first { it.id == selected }
             val saved = records[doc.id].orEmpty()
             var local by remember(doc.id) { mutableStateOf(saved) }
-            Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             val churchNameIndex = doc.fields.indexOfFirst { it.contains("Pełna nazwa Kościoła", ignoreCase = true) || it.contains("nazwa wspólnoty", ignoreCase = true) }
             val churchOwner = if (churchNameIndex >= 0) local["f$churchNameIndex"].orEmpty() else ""
             val dignityFieldIndex = doc.fields.indexOfFirst {
@@ -197,53 +195,55 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                 dignityValue.contains("biskup") -> "church_bishop"
                 else -> doc.id
             }
-            if (preview) {
-                val previewValues = local.mapKeys { (key, _) ->
-                    if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
-                }
-                DocumentIdentityTemplate(
-                    title = doc.title,
-                    values = previewValues,
-                    owner = churchOwner,
-                    documentType = brandDocumentType
+            val previewFields = doc.fields.mapIndexed { index, label ->
+                Triple("churchField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
+            }
+            Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            if (readOnly) {
+                val settings = rememberLegitimacyPreviewSettings(brandDocumentType).value.copy(visibleFieldsConfigured = false)
+                UnifiedCredentialCard(
+                    documentKey = brandDocumentType,
+                    title = doc.title.uppercase(),
+                    subtitle = churchOwner.ifBlank { "DOKUMENT KOŚCIELNY" },
+                    holderName = churchOwner.ifBlank { "DANE WYSTAWCY" },
+                    fields = previewFields.take(12),
+                    settings = settings
                 )
+                Text(doc.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Podgląd wyłącznie do odczytu. Edycja jest dostępna w Więcej → Ustawienia → Dokumenty kościelne.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
-            AssignedDocumentBrandPreview(
-                documentType = brandDocumentType,
-                owner = churchOwner,
-                title = "Znak przypisany do dokumentu",
-                subtitle = "Herb, godło lub logo wystawcy"
-            )
-            }
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                Text(doc.note, Modifier.padding(12.dp), color = Color(0xFF284B64), style = MaterialTheme.typography.bodySmall)
-            }
-            doc.fields.forEachIndexed { index, label ->
-                val value = local["f$index"].orEmpty()
-                if (preview) {
-                    if (value.isNotBlank()) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(value, style = MaterialTheme.typography.bodyLarge)
-                    }
-                } else OutlinedTextField(value = value, onValueChange = { local = local + ("f$index" to it) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = if (label.contains("Treść") || label.contains("Zakres") || label.contains("Uwagi")) 3 else 1, maxLines = 6)
+                AssignedDocumentBrandPreview(
+                    documentType = brandDocumentType,
+                    owner = churchOwner,
+                    title = "Znak przypisany do dokumentu",
+                    subtitle = "Herb, godło lub logo wystawcy"
+                )
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                    Text(doc.note, Modifier.padding(12.dp), color = Color(0xFF284B64), style = MaterialTheme.typography.bodySmall)
+                }
+                doc.fields.forEachIndexed { index, label ->
+                    OutlinedTextField(
+                        value = local["f$index"].orEmpty(),
+                        onValueChange = { local = local + ("f$index" to it) },
+                        label = { Text(label) },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = if (label.contains("Treść") || label.contains("Zakres") || label.contains("Uwagi")) 3 else 1,
+                        maxLines = 6
+                    )
+                }
+                Button(onClick = {
+                    runCatching {
+                        ChurchDocumentStore.save(context, records + (doc.id to local))
+                        records = ChurchDocumentStore.load(context)
+                        message = "Zapisano dane lokalnie."
+                    }.onFailure { message = "Błąd zapisu: ${it.message}" }
+                }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane") }
+                if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
             DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
             }, documentType = brandDocumentType, ownerDefault = churchOwner)
-            if (preview) Text("PODGLĄD EWIDENCYJNY — status dokumentu zależy od właściwego wystawcy, podpisu, pieczęci i kompetencji.", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
-            if (!readOnly) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj" else "Podgląd") }
-                    if (!preview) Button(onClick = {
-                        runCatching { ChurchDocumentStore.save(context, records + (doc.id to local)); records = ChurchDocumentStore.load(context); message = "Zapisano dane lokalnie." }
-                            .onFailure { message = "Błąd zapisu: ${it.message}" }
-                    }, modifier = Modifier.weight(1f)) { Text("Zapisz") }
-                }
-            } else {
-                Text("Widok tylko do odczytu. Edycja dokumentów jest dostępna w Więcej → Ustawienia.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
-            }
-            if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = { selected = null; message = "" }) { Text("Wróć do katalogu") }
         }
         Text("Dane są szyfrowane lokalnie. Wpis formularza nie zastępuje dekretu, aktu święceń, autentycznego dokumentu kościelnego ani wpisu w rejestrze państwowym.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)

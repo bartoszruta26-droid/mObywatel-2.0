@@ -140,20 +140,23 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
     val catalog = if (bankAccountsOnly) bankDocuments else (if (entityMode) entityDocs else rodDocs).filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
     var records by remember { mutableStateOf(FamilyEntityDocumentStore.load(context)) }
     var selected by remember { mutableStateOf<String?>(null) }
-    var preview by remember { mutableStateOf(readOnly) }
     var message by remember { mutableStateOf("") }
+    val accountFields = listOf("Nazwa własna rachunku", "Bank / instytucja prowadząca", "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT", "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku", "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi")
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp).then(if (bankAccountsOnly) Modifier.testTag("bank-accounts-screen-title") else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text(if (bankAccountsOnly) "Konta bankowe" else if (entityMode) "Dokumenty rejestru podmiotów" else "Dokumenty Rodowe", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(if (bankAccountsOnly) "Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej." else "Katalog formularzy z edycją danych, zapisem lokalnym i podglądem dokumentu. Dane są przechowywane lokalnie w postaci zaszyfrowanej.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(if (bankAccountsOnly) "Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej." else "Katalog formularzy. Podgląd jest oddzielony od edycji, a dane są przechowywane lokalnie w postaci zaszyfrowanej.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (selected == null) {
             catalog.groupBy { it.section }.forEach { (section, docs) ->
                 Text(section, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 docs.forEach { doc ->
                     val filled = records[doc.id].orEmpty().values.any { it.isNotBlank() }
-                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id; preview = readOnly }, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Card(Modifier.fillMaxWidth().clickable { selected = doc.id }, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                         Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column(Modifier.weight(1f)) { Text(doc.title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface); Text(if (filled) "Dane zapisane" else "Formularz pusty", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                            Column(Modifier.weight(1f)) {
+                                Text(doc.title, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(if (filled) "Dane zapisane" else "Brak zapisanych danych", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             Text("Otwórz", color = MaterialTheme.colorScheme.primary)
                         }
                     }
@@ -165,69 +168,92 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             var local by remember(doc.id) { mutableStateOf(saved) }
             var accountCount by remember(doc.id) { mutableIntStateOf((saved["accountCount"]?.toIntOrNull() ?: 1).coerceIn(1, 30)) }
             val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
-            val accountFields = listOf("Nazwa własna rachunku", "Bank / instytucja prowadząca", "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT", "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku", "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi")
-            Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            val previewValues = local.mapKeys { (key, _) ->
-                if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
-            }
-            DocumentIdentityTemplate(
-                title = doc.title,
-                values = if (preview) previewValues else emptyMap(),
-                owner = if (preview) previewValues.values.firstOrNull().orEmpty() else ""
-            )
-            Text(doc.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (isBankRegister) {
-                Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Każdy rachunek jest osobnym wpisem, a numer IBAN i dane właściciela są przechowywane w zaszyfrowanym archiwum lokalnym.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                repeat(accountCount) { accountIndex ->
-                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Rachunek bankowy \${accountIndex + 1}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                            accountFields.forEachIndexed { fieldIndex, label ->
-                                val key = "account_\${accountIndex}_\${fieldIndex}"
-                                val value = local[key].orEmpty()
-                                if (preview) {
-                                    if (value.isNotBlank()) Column {
-                                        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text(value, style = MaterialTheme.typography.bodyLarge)
-                                    }
-                                } else OutlinedTextField(value = value, onValueChange = { local = local + (key to it) },
-                                    label = { Text(label) }, modifier = Modifier.fillMaxWidth(),
-                                    singleLine = fieldIndex in listOf(2, 3, 4, 8, 9, 10),
-                                    minLines = if (fieldIndex == 12) 2 else 1, maxLines = 4)
-                            }
+            val previewKey = if (isBankRegister) "bank_accounts" else if (entityMode) "entity" else "family"
+            val previewFields = if (isBankRegister) {
+                buildList {
+                    repeat(accountCount) { accountIndex ->
+                        accountFields.forEachIndexed { fieldIndex, label ->
+                            val value = local["account_${accountIndex}_${fieldIndex}"].orEmpty().ifBlank { "—" }
+                            add(Triple("account_${accountIndex}_${fieldIndex}", "${label.uppercase()} · RACHUNEK ${accountIndex + 1}", value))
                         }
                     }
                 }
-                if (!preview) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { if (accountCount < 30) accountCount++ }, modifier = Modifier.weight(1f), enabled = accountCount < 30) { Text("Dodaj rachunek") }
-                    OutlinedButton(onClick = { if (accountCount > 1) { accountCount--; local = local.filterKeys { key -> !key.startsWith("account_\${accountCount}_") } } }, modifier = Modifier.weight(1f), enabled = accountCount > 1) { Text("Usuń ostatni") }
-                }
-            } else doc.fields.forEachIndexed { index, label ->
-                val value = local["f$index"].orEmpty()
-                if (preview) {
-                    if (value.isNotBlank()) Column(verticalArrangement = Arrangement.spacedBy(2.dp)) { Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(value, style = MaterialTheme.typography.bodyLarge) }
-                } else OutlinedTextField(value = value, onValueChange = { local = local + ("f$index" to it) }, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1, maxLines = 5)
+            } else doc.fields.mapIndexed { index, label ->
+                Triple("field_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
             }
-            if (isBankRegister) {
-                if (!preview) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP). Nie przechowuj PIN-ów, haseł, kodów autoryzacyjnych ani danych logowania do bankowości.", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
-                if (preview) Text("Liczba zarejestrowanych pozycji: \$accountCount", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
-            }
-            if (preview) Text("PODGLĄD EWIDENCYJNY • DANE Z FORMULARZA", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
-            if (!readOnly) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    OutlinedButton(onClick = { preview = !preview }, modifier = Modifier.weight(1f)) { Text(if (preview) "Edytuj dane" else "Podgląd") }
-                    if (!preview) Button(onClick = { runCatching { FamilyEntityDocumentStore.save(context, records + (doc.id to (if (isBankRegister) local + ("accountCount" to accountCount.toString()) else local))); records = FamilyEntityDocumentStore.load(context); message = "Zapisano formularz." }.onFailure { message = "Błąd zapisu: ${it.message}" } }, modifier = Modifier.weight(1f)) { Text("Zapisz") }
-                }
-
-            } else {
-                Text("Widok tylko do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia.",
+            Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            if (readOnly) {
+                val settings = rememberLegitimacyPreviewSettings(previewKey).value.copy(visibleFieldsConfigured = false)
+                UnifiedCredentialCard(
+                    documentKey = previewKey,
+                    title = doc.title.uppercase(),
+                    subtitle = doc.section,
+                    holderName = previewFields.firstOrNull()?.third?.takeIf { it != "—" } ?: "DANE EWIDENCYJNE",
+                    fields = previewFields.take(12),
+                    settings = settings
+                )
+                Text("Podgląd wyłącznie do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia → konkretny dokument.",
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                Text(doc.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (isBankRegister) {
+                    Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Nie przechowuj PIN-ów, haseł ani kodów autoryzacyjnych.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    repeat(accountCount) { accountIndex ->
+                        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("Rachunek bankowy ${accountIndex + 1}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                accountFields.forEachIndexed { fieldIndex, label ->
+                                    val key = "account_${accountIndex}_${fieldIndex}"
+                                    OutlinedTextField(
+                                        value = local[key].orEmpty(),
+                                        onValueChange = { local = local + (key to it) },
+                                        label = { Text(label) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = fieldIndex in listOf(2, 3, 4, 8, 9, 10),
+                                        minLines = if (fieldIndex == 12) 2 else 1,
+                                        maxLines = 4
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { if (accountCount < 30) accountCount++ }, modifier = Modifier.weight(1f), enabled = accountCount < 30) { Text("Dodaj rachunek") }
+                        OutlinedButton(onClick = {
+                            if (accountCount > 1) {
+                                accountCount--
+                                local = local.filterKeys { key -> !key.startsWith("account_${accountCount}_") }
+                            }
+                        }, modifier = Modifier.weight(1f), enabled = accountCount > 1) { Text("Usuń ostatni") }
+                    }
+                } else doc.fields.forEachIndexed { index, label ->
+                    OutlinedTextField(
+                        value = local["f$index"].orEmpty(),
+                        onValueChange = { local = local + ("f$index" to it) },
+                        label = { Text(label) },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1,
+                        maxLines = 5
+                    )
+                }
+                if (isBankRegister) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP).", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
+                Button(
+                    onClick = {
+                        runCatching {
+                            val savedValues = if (isBankRegister) local + ("accountCount" to accountCount.toString()) else local
+                            FamilyEntityDocumentStore.save(context, records + (doc.id to savedValues))
+                            records = FamilyEntityDocumentStore.load(context)
+                            message = "Zapisano formularz."
+                        }.onFailure { message = "Błąd zapisu: ${it.message}" }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Zapisz dane") }
+                if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
-            if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-            TextButton(onClick = { selected = null; message = "" }) { Text("Wróć do katalogu") }
             DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
             })
+            TextButton(onClick = { selected = null; message = "" }) { Text("Wróć do katalogu") }
         }
     }
 }
