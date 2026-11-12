@@ -3309,6 +3309,7 @@ private fun DashboardDocumentGrid(
     tileStyle: String,
     onOpen: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val columns = when (tileStyle) {
         "small" -> 3
         "list" -> 1
