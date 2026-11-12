@@ -2367,7 +2367,7 @@ private fun IdentityDashboardCard(onOpen: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.dashboard_eagle_vector),
+                        painter = painterResource(R.drawable.file_5320_eagle_vector),
                         contentDescription = "Biały orzeł w koronie ze złotą koroną",
                         modifier = Modifier.size(61.dp),
                         contentScale = ContentScale.Fit
