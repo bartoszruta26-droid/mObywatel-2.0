@@ -2667,6 +2667,7 @@ private fun DocumentVisibilitySettingsScreen(
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
                                 .background(if (documentPlacements[id] == value) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
                                 .clickable { onDocumentPlacementsChange(documentPlacements + (id to value)) }
+                                .testTag("document-placement-$id-$value")
                                 .padding(horizontal = 8.dp, vertical = 3.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
