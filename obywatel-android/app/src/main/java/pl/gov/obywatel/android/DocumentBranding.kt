@@ -1003,11 +1003,12 @@ internal fun DocumentIdentityTemplate(
             holderName = holder,
             fields = cardFields,
             settings = settings,
-            photo = photo
+            photo = photo,
+            validity = valid
         )
+    } else {
+        CredentialValidityTile(valid)
     }
-    // Status ważności jest zawsze nad kodem QR, zgodnie z układem legitymacji.
-    CredentialValidityTile(valid)
     if (settings.showCard) {
         if (showReverse || settings.showReverse) {
             LegitimacyReverseSide(
