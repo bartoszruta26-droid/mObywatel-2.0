@@ -21,6 +21,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Image as ImageIcon
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.Card
@@ -128,7 +132,7 @@ internal fun ApplicationAppearanceSettingsScreen(
                 AppearanceChoiceRow(label, appearance.theme == key) { onChange(appearance.copy(theme = key)) }
             }
         }
-        AppearanceSection("Godło ekranu początkowego", Icons.Filled.Image) {
+        AppearanceSection("Godło ekranu początkowego", Icons.Filled.ImageIcon) {
             Text("Znak widoczny podczas uruchamiania aplikacji.", color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall)
             emblemChoices.forEach { (name, label) ->
