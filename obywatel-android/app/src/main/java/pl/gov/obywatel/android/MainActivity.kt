@@ -3586,12 +3586,12 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
             drawLine(
                 color = rosetteColor,
                 start = Offset(
-                    rosetteCenter.x + kotlin.math.cos(angle) * inner,
-                    rosetteCenter.y + kotlin.math.sin(angle) * inner
+                    rosetteCenter.x + kotlin.math.cos(angle.toDouble()).toFloat() * inner,
+                    rosetteCenter.y + kotlin.math.sin(angle.toDouble()).toFloat() * inner
                 ),
                 end = Offset(
-                    rosetteCenter.x + kotlin.math.cos(angle) * outer,
-                    rosetteCenter.y + kotlin.math.sin(angle) * outer
+                    rosetteCenter.x + kotlin.math.cos(angle.toDouble()).toFloat() * outer,
+                    rosetteCenter.y + kotlin.math.sin(angle.toDouble()).toFloat() * outer
                 ),
                 strokeWidth = maxOf(0.6.dp.toPx(), minSide * 0.002f)
             )
