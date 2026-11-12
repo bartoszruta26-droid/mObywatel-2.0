@@ -418,7 +418,8 @@ internal fun SignedPdfDocumentsScreen(onBack: () -> Unit, allowImport: Boolean =
         dismissButton = { TextButton(onClick = { showDelete = false; deleteTarget = null }) { Text("Anuluj") } }
     )
 }
-\n@Composable
+
+@Composable
 private fun SignatureKindLabel(kind: String) {
     val (label, color) = when (kind) {
         "epuap" -> "Podpisano podpisem elektronicznym ePUAP" to MaterialTheme.colorScheme.tertiary
