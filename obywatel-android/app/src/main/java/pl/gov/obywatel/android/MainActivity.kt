@@ -2848,7 +2848,10 @@ private fun DocumentsWalletScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth().clickable { openDocument(document) },
                             shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = White)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp, if (documentPlacements[document.id] == "dashboard") Blue else Border
+                            )
                         ) {
                             Row(
                                 Modifier.fillMaxWidth().padding(13.dp),
@@ -2875,7 +2878,10 @@ private fun DocumentsWalletScreen(
                                         .height(if (documentCardStyle == "small") 112.dp else 148.dp)
                                         .clickable { openDocument(document) },
                                     shape = RoundedCornerShape(13.dp),
-                                    colors = CardDefaults.cardColors(containerColor = White)
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp, if (documentPlacements[document.id] == "dashboard") Blue else Border
+                                    )
                                 ) {
                                     Box(Modifier.fillMaxSize().padding(10.dp)) {
                                         Icon(document.icon, contentDescription = null, tint = Blue,
