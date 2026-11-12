@@ -607,9 +607,9 @@ private fun GraphicAssetPreviewGrid(
                         Column(Modifier.fillMaxWidth().padding(7.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             if (bitmap != null) {
                                 Image(bitmap.asImageBitmap(), contentDescription = label,
-                                    modifier = Modifier.fillMaxWidth().height(92.dp), contentScale = ContentScale.Crop)
+                                    modifier = Modifier.fillMaxWidth().height(120.dp).background(MaterialTheme.colorScheme.surfaceVariant), contentScale = ContentScale.Fit)
                             } else {
-                                Box(Modifier.fillMaxWidth().height(92.dp).background(MaterialTheme.colorScheme.surfaceVariant),
+                                Box(Modifier.fillMaxWidth().height(120.dp).background(MaterialTheme.colorScheme.surfaceVariant),
                                     contentAlignment = Alignment.Center) {
                                     Text("Domyślne", style = MaterialTheme.typography.labelMedium)
                                 }
