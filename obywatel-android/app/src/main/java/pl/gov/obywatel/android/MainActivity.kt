@@ -1056,15 +1056,25 @@ private fun HomeScreen() {
                                 it.title.contains(serviceSearch, ignoreCase = true) ||
                                 it.subtitle.contains(serviceSearch, ignoreCase = true)
                             }.forEach { item ->
-                                ListItem(
-                                    headlineContent = { Text(item.title) },
-                                    supportingContent = { Text(item.subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                                    leadingContent = {
-                                        Icon(item.fallbackIcon ?: Icons.Filled.Search, contentDescription = null)
-                                    },
-                                    modifier = Modifier.fillMaxWidth().clickable { openService(item.title) }
-                                )
-                                HorizontalDivider()
+                                Card(
+                                    modifier = Modifier.fillMaxWidth().clickable { openService(item.title) },
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                                ) {
+                                    Row(
+                                        Modifier.fillMaxWidth().padding(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(item.fallbackIcon ?: Icons.Filled.Description, contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurface)
+                                        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                                            Text(item.title, color = MaterialTheme.colorScheme.onSurface,
+                                                fontWeight = FontWeight.SemiBold)
+                                            Text(item.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                style = MaterialTheme.typography.bodySmall, maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
