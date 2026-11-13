@@ -2137,14 +2137,18 @@ internal fun DocumentFieldEditor(
             minLines = minLines,
             maxLines = maxLines
         )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             listOf(
-                CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                CREDENTIAL_FIELD_HIDDEN to "Brak",
                 CREDENTIAL_FIELD_FRONT to "Awers",
                 CREDENTIAL_FIELD_BACK to "Rewers"
             ).forEach { (target, caption) ->
                 Row(
-                    Modifier.weight(1f).clickable {
+                    Modifier.weight(1f).clip(RoundedCornerShape(6.dp)).clickable {
                         val current = settingsState.value
                         val updated = current.copy(
                             fieldSides = current.fieldSides + (fieldKey to target),
@@ -2155,7 +2159,8 @@ internal fun DocumentFieldEditor(
                         LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
                         settingsState.value = updated
                     },
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     androidx.compose.material3.RadioButton(
                         selected = selectedSide == target,
@@ -2169,9 +2174,10 @@ internal fun DocumentFieldEditor(
                             )
                             LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
                             settingsState.value = updated
-                        }
+                        },
+                        modifier = Modifier.size(30.dp)
                     )
-                    Text(caption, style = MaterialTheme.typography.labelSmall)
+                    Text(caption, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                 }
             }
         }
