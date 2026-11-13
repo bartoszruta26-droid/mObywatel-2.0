@@ -222,7 +222,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, in
                 OutlinedButton(onClick = { onEditGraphic(type.id) }, modifier = Modifier.fillMaxWidth()) {
                     Text("Edytuj wygląd graficzny")
                 }
-                val previewFields = type.fields.take(12).mapIndexed { index, label ->
+                val previewFields = type.fields.mapIndexed { index, label ->
                     Triple("officialField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
                 }
                 Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
