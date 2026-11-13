@@ -185,9 +185,6 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, on
             val values=records[type.id].orEmpty()
             val local = remember(type.id, records) { mutableStateMapOf<String, String>().apply { putAll(values) } }
             Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
-            if (!readOnly) OutlinedButton(onClick = { onEditGraphic(type.id) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Edytuj wygląd graficzny i podgląd tego dokumentu")
-            }
             if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.secondaryContainer)) {
                 Text(type.note,Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.bodySmall)
             }
@@ -212,6 +209,23 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, on
                     OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local["f$index"]=it},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
                 }
             }
+            if (!readOnly) {
+                OutlinedButton(onClick = { onEditGraphic(type.id) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Edytuj wygląd graficzny")
+                }
+                val previewFields = type.fields.take(12).mapIndexed { index, label ->
+                    Triple("officialField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
+                }
+                Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                UnifiedCredentialCard(
+                    documentKey = type.id,
+                    title = type.title.uppercase(),
+                    subtitle = "PODGLĄD EWIDENCYJNY",
+                    holderName = local.values.firstOrNull { it.isNotBlank() } ?: "DANE DOKUMENTU",
+                    fields = previewFields,
+                    settings = rememberLegitimacyPreviewSettings(type.id).value
+                )
+            }
             if(type.id=="criminal_record") {
                 if (!readOnly) OutlinedButton(onClick={attachmentPicker.launch(arrayOf("application/pdf","text/xml","application/xml"))},modifier=Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.FolderOpen,contentDescription=null); Spacer(Modifier.width(8.dp)); Text("Dodaj oryginalny plik PDF lub XML")
@@ -219,13 +233,13 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, on
                 OfficialDocumentStore.attachments(context,type.id).forEach { Text("Załącznik: $it",color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall) }
                 Text("Plik PDF/XML jest przechowywany jako załącznik. Aplikacja nie weryfikuje podpisu elektronicznego, pieczęci ani statusu KRK.",color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
             }
-            DocumentPdfExportButton(type.title, local.mapKeys { (key, _) ->
-                if (key.startsWith("f")) type.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
-            })
             if(!readOnly) Button(onClick={
                 runCatching { OfficialDocumentStore.save(context,records+(type.id to local)); records=OfficialDocumentStore.load(context); status="Zapisano dane lokalnie." }
                     .onFailure { status="Błąd zapisu: ${it.message}" }
             },modifier=Modifier.fillMaxWidth()) { Text("Zapisz dane") }
+            DocumentPdfExportButton(type.title, local.mapKeys { (key, _) ->
+                if (key.startsWith("f")) type.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
+            })
             if(status.isNotBlank()) Text(status,color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall)
             TextButton(onClick={selected=null;status=""}) { Text("Wróć do katalogu") }
         }
