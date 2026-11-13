@@ -707,9 +707,9 @@ internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
         ?: BitmapFactory.decodeResource(context.resources, R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg)
 }
 
-internal fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
+internal fun defaultDocumentBackgroundResourceId(title: String): Int {
     val normalized = title.lowercase(Locale.ROOT)
-    val resourceId = when {
+    return when {
         // Dokumenty rodowe i rodzinne.
         isFamilyDocument(title) && (normalized.contains("paszport") || normalized.contains("podróż") || normalized.contains("podroz")) ->
             R.drawable.doc_02_paszport_rodowy_jasny
@@ -730,7 +730,7 @@ internal fun defaultDocumentBackground(context: Context, title: String): Bitmap?
             normalized.contains("strzeleck") || normalized.contains("łucznicz") ||
             normalized.contains("lucznicz") || normalized.contains("ochroniarsk") ->
             R.drawable.doc_02_legitymacja_zawodowa
-        normalized.contains("rekonstrukc") ->
+        normalized.contains("rekonstrukc") || normalized.contains("historyczn") ->
             R.drawable.doc_06_przynaleznosc_rodowa_organizacyjna
         normalized.contains("taktycz") || normalized.contains("surwiwal") ||
             normalized.contains("szkolenia obronnego") || normalized.contains("certyfikat") ->
@@ -783,8 +783,10 @@ internal fun defaultDocumentBackground(context: Context, title: String): Bitmap?
             R.drawable.documents_document_wallet_banner
         else -> R.drawable.documents_document_wallet_banner
     }
-    return BitmapFactory.decodeResource(context.resources, resourceId)
 }
+
+internal fun defaultDocumentBackground(context: Context, title: String): Bitmap? =
+    BitmapFactory.decodeResource(context.resources, defaultDocumentBackgroundResourceId(title))
 
 private fun decodeCredentialPhoto(encoded: String?): Bitmap? = runCatching {
     val source = encoded?.trim().orEmpty()
