@@ -44,6 +44,17 @@ class DocumentGraphicCatalogTest {
     }
 
     @Test
+    fun everyGraphicTargetHasAResolvedDefaultBackgroundAndEveryTileHasAnIconResource() {
+        documentBrandTargets.forEach { (id, title) ->
+            assertTrue("Missing default background for $id / $title",
+                defaultDocumentBackgroundResourceId(title) != 0)
+        }
+        documentDisplayOptions.forEach { (id, _, iconResource) ->
+            assertTrue("Missing tile icon resource for $id", iconResource != 0)
+        }
+    }
+
+    @Test
     fun armedServiceDocumentsHaveIndependentGraphicAssignmentTargets() {
         val armedIds = setOf(
             "military_book", "martial_arts", "shooting_sport", "archery",
