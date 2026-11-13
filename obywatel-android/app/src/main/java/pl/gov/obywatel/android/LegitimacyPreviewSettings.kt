@@ -206,13 +206,32 @@ internal fun credentialVisibleFields(
 ): List<Triple<String, String, String>> =
     if (!visibleFieldsConfigured) fields else fields.filter { it.first in visibleFieldKeys }
 
+internal const val CREDENTIAL_FIELD_HIDDEN = "NONE"
+internal const val CREDENTIAL_FIELD_FRONT = "FRONT"
+internal const val CREDENTIAL_FIELD_BACK = "BACK"
+
+internal fun credentialFieldSide(
+    key: String,
+    visibleFieldsConfigured: Boolean,
+    visibleFieldKeys: Set<String>,
+    fieldSides: Map<String, String>
+): String = fieldSides[key]?.takeIf { it in setOf(CREDENTIAL_FIELD_HIDDEN, CREDENTIAL_FIELD_FRONT, CREDENTIAL_FIELD_BACK) }
+    ?: if (!visibleFieldsConfigured || key in visibleFieldKeys) CREDENTIAL_FIELD_FRONT else CREDENTIAL_FIELD_HIDDEN
+
 internal fun splitCredentialFieldsForSides(
     fields: List<Triple<String, String, String>>,
-    orientation: String
+    orientation: String,
+    visibleFieldsConfigured: Boolean = false,
+    visibleFieldKeys: Set<String> = emptySet(),
+    fieldSides: Map<String, String> = emptyMap()
 ): Pair<List<Triple<String, String, String>>, List<Triple<String, String, String>>> {
-    val frontCapacity = if (orientation == "POZIOMA") 8 else 5
-    return if (fields.size > frontCapacity) fields.take(frontCapacity) to fields.drop(frontCapacity)
-    else fields to emptyList()
+    val front = fields.filter { (key, _, _) ->
+        credentialFieldSide(key, visibleFieldsConfigured, visibleFieldKeys, fieldSides) == CREDENTIAL_FIELD_FRONT
+    }
+    val back = fields.filter { (key, _, _) ->
+        credentialFieldSide(key, visibleFieldsConfigured, visibleFieldKeys, fieldSides) == CREDENTIAL_FIELD_BACK
+    }
+    return front to back
 }
 
 internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
@@ -327,6 +346,7 @@ internal data class LegitimacyPreviewSettings(
     val orientation: String = "PIONOWA",
     val visibleFields: Set<String> = emptySet(),
     val visibleFieldsConfigured: Boolean = false,
+    val fieldSides: Map<String, String> = emptyMap(),
     val showPhoto: Boolean = true,
     val showFlag: Boolean = true,
     val showCrest: Boolean = true,
@@ -505,6 +525,10 @@ internal object LegitimacyPreviewSettingsStore {
     fun load(context: Context, key: String): LegitimacyPreviewSettings {
         val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val storedVisibleFields = p.getStringSet("${key}_visible_fields", emptySet())?.toSet().orEmpty()
+        val storedFieldSides = p.getStringSet("${key}_field_sides", emptySet()).orEmpty().mapNotNull { entry ->
+            val separator = entry.lastIndexOf("::")
+            if (separator <= 0) null else entry.substring(0, separator) to entry.substring(separator + 2)
+        }.toMap()
         return LegitimacyPreviewSettings(
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
@@ -528,6 +552,7 @@ internal object LegitimacyPreviewSettingsStore {
             orientation = p.getString("${key}_orientation", "PIONOWA").orEmpty(),
             visibleFields = storedVisibleFields,
             visibleFieldsConfigured = p.getBoolean("${key}_visible_fields_configured", storedVisibleFields.isNotEmpty()),
+            fieldSides = storedFieldSides,
             showPhoto = p.getBoolean("${key}_show_photo", true),
             showFlag = p.getBoolean("${key}_show_flag", true),
             showCrest = p.getBoolean("${key}_show_crest", true),
@@ -628,6 +653,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_caption_position", value.captionPosition)
                 .putStringSet("${key}_visible_fields", value.visibleFields)
                 .putBoolean("${key}_visible_fields_configured", value.visibleFieldsConfigured)
+                .putStringSet("${key}_field_sides", value.fieldSides.map { (field, side) -> "${field}::${side}" }.toSet())
                 .putString("${key}_font_color", value.fontColor)
                 .putBoolean("${key}_individual_appearance_configured", value.individualAppearanceConfigured)
                 .putBoolean("${key}_show_card", value.showCard)
@@ -1970,10 +1996,12 @@ internal fun CredentialTemplatePreview(
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
     val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
-    val selectedCardFields = selected.map { (key, label) ->
+    val selectedCardFields = options.map { (key, label) ->
         Triple(key, label, values?.get(key).orEmpty().ifBlank { "—" })
     }
-    val (frontFields, reverseFields) = splitCredentialFieldsForSides(selectedCardFields, settings.orientation)
+    val (frontFields, reverseFields) = splitCredentialFieldsForSides(
+        selectedCardFields, settings.orientation, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
+    )
     val holderName = values?.get("studentNames").orEmpty().ifBlank {
         values?.get("passportHolderNames").orEmpty().ifBlank {
             values?.get("disabilityPersonName").orEmpty().ifBlank {
@@ -2003,7 +2031,7 @@ internal fun CredentialTemplatePreview(
             assetRevision = assetRevision,
             validity = values?.let { credentialValidityForDocument(documentKey, it) } ?: true
         )
-        if (reverseFields.isNotEmpty()) {
+        if (settings.showReverse && reverseFields.isNotEmpty()) {
             UnifiedCredentialCard(
                 documentKey = "${documentKey}_reverse",
                 title = "${title} — REWERS",
