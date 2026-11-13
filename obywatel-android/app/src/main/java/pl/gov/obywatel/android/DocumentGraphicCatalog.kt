@@ -395,15 +395,28 @@ private fun DocumentRecordGraphicPreview(
     settings: LegitimacyPreviewSettings
 ) {
     val context = LocalContext.current
-    val crest = remember(settings.crestAssetId) { settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
-    val flag = remember(settings.flagAssetId) { settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
-    val background = remember(settings.backgroundAssetId) {
+    val crest = remember(settings.crestAssetId, definition.id, definition.title) {
+        settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Herb")
+            ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Godło")
+            ?: defaultDocumentEmblem(context, definition.title)
+    }
+    val flag = remember(settings.flagAssetId, definition.id, definition.title) {
+        settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Flaga")
+            ?: defaultDocumentFlag(context, definition.title)
+    }
+    val background = remember(settings.backgroundAssetId, definition.id, definition.title) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { selected ->
             credentialBackgroundResourceId(context, selected)?.let { android.graphics.BitmapFactory.decodeResource(context.resources, it) }
                 ?: DocumentBrandStore.preview(context, selected)
-        }
+        } ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Tło dokumentu")
+            ?: defaultDocumentBackground(context, definition.title)
     }
-    val logo = remember(settings.logoAssetId) { settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
+    val logo = remember(settings.logoAssetId, definition.id, definition.title) {
+        settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Logo")
+    }
     val sourceImage = remember(values["photo"]) {
         runCatching {
             val bytes = Base64.decode(values["photo"].orEmpty(), Base64.DEFAULT)
