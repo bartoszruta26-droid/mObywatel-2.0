@@ -114,6 +114,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Image as ImageIcon
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
@@ -148,6 +152,39 @@ import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
 import pl.gov.obywatel.android.ui.services.PublicServicesScreen
 import kotlinx.coroutines.delay
+
+@Composable
+private fun OcrRoundAction(
+    label: String,
+    icon: ImageVector,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.width(68.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        Surface(
+            modifier = Modifier.size(56.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick),
+            shape = CircleShape,
+            color = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(26.dp))
+            }
+        }
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 2,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
 
 @Composable
 internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<String, String>, context: Context, saveMessage: (String) -> Unit) {
@@ -366,17 +403,31 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
             Text("Odczyt dokumentu przez OCR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             Text("Możesz rozpoznać tekst ze zdjęcia, fotografii wykonanej aparatem, pliku PDF, pliku tekstowego albo filmu. OCR proponuje uzupełnienie pasujących pól; sprawdź każdą wartość. Odczyt PDF obejmuje maksymalnie 10 pierwszych stron. OCR nie potwierdza autentyczności dokumentu.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(onClick = {
-                runCatching {
-                    val file = File.createTempFile("document-ocr-video-", ".mp4", context.cacheDir)
-                    androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.ocrfiles", file)
-                }.onSuccess { pendingVideoUri = it; videoCamera.launch(it) }
-                    .onFailure { saveMessage("Nie można uruchomić kamery wideo: ${it.localizedMessage ?: "błąd przygotowania nagrania"}") }
-            }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Nagraj film dokumentu") }
-            OutlinedButton(onClick = { videoPicker.launch("video/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz nagrany film") }
-            OutlinedButton(onClick = { documentOcrPicker.launch(arrayOf("application/pdf", "image/*", "text/plain", "text/*")) }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wczytaj PDF, JPG lub plik tekstowy") }
-            OutlinedButton(onClick = { cameraPhoto.launch(null) }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Zrób zdjęcie dokumentu do OCR") }
-            OutlinedButton(onClick = { photoPicker.launch("image/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz zdjęcie lub skan") }
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                OcrRoundAction("Nagraj film", Icons.Filled.Videocam, enabled = !processing) {
+                    runCatching {
+                        val file = File.createTempFile("document-ocr-video-", ".mp4", context.cacheDir)
+                        androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.ocrfiles", file)
+                    }.onSuccess { pendingVideoUri = it; videoCamera.launch(it) }
+                        .onFailure { saveMessage("Nie można uruchomić kamery wideo: ${it.localizedMessage ?: "błąd przygotowania nagrania"}") }
+                }
+                OcrRoundAction("Film", Icons.Filled.VideoLibrary, enabled = !processing) {
+                    videoPicker.launch("video/*")
+                }
+                OcrRoundAction("Plik / PDF", Icons.Filled.PictureAsPdf, enabled = !processing) {
+                    documentOcrPicker.launch(arrayOf("application/pdf", "image/*", "text/plain", "text/*"))
+                }
+                OcrRoundAction("Aparat", Icons.Filled.PhotoCamera, enabled = !processing) {
+                    cameraPhoto.launch(null)
+                }
+                OcrRoundAction("Zdjęcie", Icons.Filled.ImageIcon, enabled = !processing) {
+                    photoPicker.launch("image/*")
+                }
+            }
             if (processing) Text("Analiza klatek filmu i uzupełnianie pól…", color = MaterialTheme.colorScheme.primary)
             if (mappedCount > 0) Text("Wstępnie uzupełniono $mappedCount pustych pól", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
             if (recognizedText.isNotBlank()) {
@@ -1315,7 +1366,20 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
         when (route.type) {
             DocumentRouteType.GROUP -> activeService = requireNotNull(route.destination)
-            DocumentRouteType.DOCUMENT -> openSettingsDocumentEditor(route.documentId)
+            DocumentRouteType.DOCUMENT -> {
+                // Kafelek dokumentu służy do podglądu; edycja pozostaje dostępna
+                // wyłącznie z ustawień dokumentu.
+                showDocumentEditorCatalog = false
+                showSettingsMenu = false
+                showDemoDocuments = false
+                showDocumentsEditor = false
+                showRegistryEditor = false
+                showDisabilitySettings = false
+                showBankAccounts = false
+                settingsDocumentEditor = null
+                activeService = null
+                selectedDocumentId = route.documentId
+            }
             DocumentRouteType.SPECIALIZED -> when (route.destination) {
                 "registry_extract" -> openSettingsDocumentEditor("registry")
                 "children" -> openSettingsDocumentEditor("children")
