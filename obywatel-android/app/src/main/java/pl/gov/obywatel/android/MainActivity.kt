@@ -841,18 +841,22 @@ internal fun documentVisibilityGroup(id: String): String = when {
         "Dokumenty kościelne"
     id == "family" || id.startsWith("rod_") || id == "large_family" ->
         "Dokumenty rodowe i rodzinne"
-    id == "business" || id == "entity" || id == "registry" || id == "bank_accounts" ||
-        id == "entity_bank_accounts" || id.startsWith("entity_") ||
-        id.startsWith("organization_") ->
+    id == "bank_accounts" ->
+        "Dokumenty finansowe"
+    id == "parliament" ->
+        "Dokumenty publiczne i obywatelskie"
+    id == "business" || id == "entity" || id == "registry" ||
+        id == "entity_bank_accounts" || id == "insurance_business" ||
+        id.startsWith("entity_") || id.startsWith("organization_") ->
         "Dokumenty firmowe i podmiotowe"
+    id == "insurance_professional" || id == "professional" || id.startsWith("professional_") ||
+        id in setOf("training", "student", "eu_education") ->
+        "Dokumenty zawodowe i edukacyjne"
     id == "civil" || id in setOf(
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
-        "vehicle_registration", "insurance_vehicle", "insurance_professional",
-        "insurance_private", "insurance_business", "official"
+        "vehicle_registration", "insurance_vehicle", "official"
     ) || officialGraphicDocumentTargets().any { it.first == id } ->
         "Dokumenty cywilne i urzędowe"
-    id == "professional" || id.startsWith("professional_") || id in setOf("training", "student", "eu_education") ->
-        "Dokumenty zawodowe i edukacyjne"
     id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") ->
         "Dokumenty zdrowotne i rodzinne"
     id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ->
@@ -861,10 +865,12 @@ internal fun documentVisibilityGroup(id: String): String = when {
 }
 internal val documentVisibilityGroupOrder = listOf(
     "Dokumenty osobiste i tożsamościowe",
+    "Dokumenty publiczne i obywatelskie",
     "Dokumenty cywilne i urzędowe",
     "Dokumenty kościelne",
     "Dokumenty rodowe i rodzinne",
     "Dokumenty firmowe i podmiotowe",
+    "Dokumenty finansowe",
     "Dokumenty zawodowe i edukacyjne",
     "Dokumenty zdrowotne i rodzinne",
     "Pliki i pozostałe dokumenty"
