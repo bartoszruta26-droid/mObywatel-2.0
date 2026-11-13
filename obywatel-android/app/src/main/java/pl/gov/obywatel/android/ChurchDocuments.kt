@@ -226,6 +226,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                         maxLines = 6
                     )
                 }
+                DocumentOriginalAttachments(doc.id)
                 AssignedDocumentBrandPreview(
                     documentType = brandDocumentType,
                     owner = churchOwner,
