@@ -255,7 +255,25 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP",
         "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant"
     )
-    "loyalty", "loyalty_cards" -> listOf(
+    "loyalty_cards" -> buildList {
+        repeat(25) { index ->
+            val number = index + 1
+            val prefix = "loyalty$number"
+            add("${prefix}Store" to "Karta $number — sklep / marka")
+            add("${prefix}Program" to "Karta $number — nazwa programu")
+            add("${prefix}Number" to "Karta $number — numer karty nadany przez sklep")
+            add("${prefix}LocalId" to "Karta $number — lokalny numer ewidencyjny")
+            add("${prefix}Barcode" to "Karta $number — treść kodu kreskowego")
+            add("${prefix}Qr" to "Karta $number — treść kodu QR")
+            add("${prefix}Status" to "Karta $number — status")
+        }
+        add("loyaltyExtraSource" to "Źródło danych / dokument źródłowy")
+        add("loyaltyExtraLegalBasis" to "Podstawa prawna / regulaminowa")
+        add("loyaltyExtraVerifiedAt" to "Data ostatniej weryfikacji danych")
+        add("loyaltyExtraVerifiedBy" to "Podmiot / osoba potwierdzająca dane")
+        add("loyaltyExtraNotes" to "Adnotacje i informacje uzupełniające")
+    }
+    "loyalty" -> listOf(
         "loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz"
     )
     "bank_accounts" -> listOf(
