@@ -859,6 +859,16 @@ internal fun documentVisibilityGroup(id: String): String = when {
         "Pliki i pozostałe dokumenty"
     else -> "Dokumenty osobiste i tożsamościowe"
 }
+internal val documentVisibilityGroupOrder = listOf(
+    "Dokumenty osobiste i tożsamościowe",
+    "Dokumenty cywilne i urzędowe",
+    "Dokumenty kościelne",
+    "Dokumenty rodowe i rodzinne",
+    "Dokumenty firmowe i podmiotowe",
+    "Dokumenty zawodowe i edukacyjne",
+    "Dokumenty zdrowotne i rodzinne",
+    "Pliki i pozostałe dokumenty"
+)
 private val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
     id to if (id == "identity") "dashboard" else "hidden"
 }
@@ -2873,16 +2883,7 @@ private fun DocumentVisibilitySettingsScreen(
         val groupedVisibilityDocuments = documentDisplayOptions
             .distinctBy { it.first }
             .groupBy { (id, _, _) -> documentVisibilityGroup(id) }
-        val visibilityGroupOrder = listOf(
-            "Dokumenty osobiste i tożsamościowe",
-            "Dokumenty cywilne i urzędowe",
-            "Dokumenty kościelne",
-            "Dokumenty rodowe i rodzinne",
-            "Dokumenty firmowe i podmiotowe",
-            "Dokumenty zawodowe i edukacyjne",
-            "Dokumenty zdrowotne i rodzinne",
-            "Pliki i pozostałe dokumenty"
-        )
+        val visibilityGroupOrder = documentVisibilityGroupOrder
         visibilityGroupOrder.forEach { groupTitle ->
             val groupDocuments = groupedVisibilityDocuments[groupTitle].orEmpty()
             if (groupDocuments.isEmpty()) return@forEach
@@ -3056,16 +3057,7 @@ private fun SettingsMenuScreen(
         Text("Dokumenty — katalog wspólny", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
         Text("Lista jest budowana z tego samego rejestru dokumentów co katalog i ustawienia widoczności. Zmiana grupy lub dodanie dokumentu aktualizuje wszystkie widoki.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        val settingsGroups = listOf(
-            "Dokumenty osobiste i tożsamościowe",
-            "Dokumenty cywilne i urzędowe",
-            "Dokumenty kościelne",
-            "Dokumenty rodowe i rodzinne",
-            "Dokumenty firmowe i podmiotowe",
-            "Dokumenty zawodowe i edukacyjne",
-            "Dokumenty zdrowotne i rodzinne",
-            "Pliki i pozostałe dokumenty"
-        )
+        val settingsGroups = documentVisibilityGroupOrder
         settingsGroups.forEach { group ->
             val entries = documentDisplayOptions.distinctBy { it.first }
                 .filter { documentVisibilityGroup(it.first) == group }
@@ -3286,16 +3278,7 @@ private fun DocumentsWalletScreen(
         val icon: ImageVector = Icons.Filled.Description
     )
 
-    val catalogGroupOrder = listOf(
-        "Dokumenty osobiste i tożsamościowe",
-        "Dokumenty cywilne i urzędowe",
-        "Dokumenty kościelne",
-        "Dokumenty rodowe i rodzinne",
-        "Dokumenty firmowe i podmiotowe",
-        "Dokumenty zawodowe i edukacyjne",
-        "Dokumenty zdrowotne i rodzinne",
-        "Pliki i pozostałe dokumenty"
-    )
+    val catalogGroupOrder = documentVisibilityGroupOrder + "Inne dokumenty"
     val documents = documentDisplayOptions.distinctBy { it.first }.map { (id, title, _) ->
         val group = documentVisibilityGroup(id)
         val service = when {
