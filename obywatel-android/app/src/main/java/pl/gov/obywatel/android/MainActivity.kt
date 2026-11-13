@@ -964,7 +964,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("organization_company", "Dokumenty przedsiębiorstwa", R.drawable.lib_ic_building),
     Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
     Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
-    Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document)
+    Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document),
     Triple("military_book", "Książeczka wojskowa", R.drawable.lib_ic_document),
     Triple("martial_arts", "Legitymacja sztuk walki", R.drawable.work),
     Triple("shooting_sport", "Legitymacja strzelecka i sportowa", R.drawable.lib_ic_document),
