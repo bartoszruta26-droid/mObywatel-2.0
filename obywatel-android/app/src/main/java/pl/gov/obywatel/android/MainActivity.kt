@@ -472,19 +472,29 @@ private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
 }
 
 @Composable
-private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
+private fun EntryBackground() {
     val context = LocalContext.current
     val appearance = LocalApplicationAppearance.current
+    Image(
+        painter = painterResource(
+            applicationDrawable(
+                context,
+                appearance.loginBackground,
+                R.drawable.file_00000000e0e4820a839fa3184993f41b
+            )
+        ),
+        contentDescription = null,
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop
+    )
+    Box(Modifier.fillMaxSize().background(Color(0x55000000)))
+}
+
+@Composable
+private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
     val foreground = Color(0xFFFFF1D1)
     Box(Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(applicationDrawable(context, appearance.loginBackground,
-                R.drawable.file_00000000e0e4820a839fa3184993f41b)),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-        Box(Modifier.fillMaxSize().background(Color(0x55000000)))
+        EntryBackground()
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.Top
@@ -561,18 +571,8 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
     var passwordVisible by remember { mutableStateOf(false) }
     val cream = Color(0xFFFFF1D1)
     val skyBlue = Color(0xFF9EDCFF)
-    val context = LocalContext.current
-    val appearance = LocalApplicationAppearance.current
-
     Box(Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(applicationDrawable(context, appearance.loginBackground,
-                R.drawable.file_00000000e0e4820a839fa3184993f41b)),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-        Box(Modifier.fillMaxSize().background(Color(0x55000000)))
+        EntryBackground()
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.Top
