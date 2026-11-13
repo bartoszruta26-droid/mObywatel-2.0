@@ -64,6 +64,45 @@ class LegitimacyPreviewSettingsTest {
 
 
     @Test
+    fun loyaltyCardPreviewUsesNumberedEditorKeysForAllTwentyFiveCards() {
+        val options = credentialFieldOptions("loyalty_cards")
+        val keys = options.map { it.first }
+        assertEquals(180, options.size)
+        assertEquals("loyalty1Store", keys.first())
+        assertTrue("Każda karta musi mieć własny numer sklepu.",
+            (1..25).all { "loyalty${it}Store" in keys })
+        assertTrue("Każda karta musi mieć własny numer karty.",
+            (1..25).all { "loyalty${it}Number" in keys })
+        assertTrue("Podgląd nie może używać ogólnych, nieistniejących kluczy.",
+            listOf("loyaltyName", "loyaltyNumber", "loyaltyHolder").none { it in keys })
+        assertTrue("Dane źródłowe i weryfikacyjne muszą mieć te same klucze co edytor.",
+            listOf("loyaltyExtraSource", "loyaltyExtraLegalBasis", "loyaltyExtraVerifiedAt",
+                "loyaltyExtraVerifiedBy", "loyaltyExtraNotes").all { it in keys })
+    }
+
+    @Test
+    fun dynamicChurchFamilyAndOfficialPreviewsReuseTheirEditorFieldDefinitions() {
+        val churchId = "church_orders"
+        assertEquals(churchGraphicDocumentFields(churchId), credentialFieldOptions(churchId))
+
+        val familyId = familyEntityGraphicDocumentTargets().first().first
+        assertEquals(familyEntityGraphicDocumentFields(familyId), credentialFieldOptions(familyId))
+
+        val officialId = "birth_extract"
+        assertEquals(officialGraphicDocumentFields(officialId), credentialFieldOptions(officialId))
+    }
+
+    @Test
+    fun bankAccountPreviewKeysMatchTheDynamicThirtyAccountEditor() {
+        val options = credentialFieldOptions("bank_accounts").map { it.first }
+        assertEquals(390, options.size)
+        assertTrue("Pierwsze konto musi odpowiadać kluczom formularza.",
+            (0..12).all { "account_0_${it}" in options })
+        assertTrue("Trzydzieste konto musi odpowiadać kluczom formularza.",
+            (0..12).all { "account_29_${it}" in options })
+    }
+
+    @Test
     fun schemaBackedDocumentPreviewUsesOnlyEditorDefinitions() {
         val documentId = "professional_medical"
         val expected = documentEditorFieldDefinitions(documentId).map {
