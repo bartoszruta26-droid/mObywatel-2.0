@@ -2098,6 +2098,56 @@ private fun AnimatedHologram(assetId: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+internal fun CredentialCardSides(
+    documentKey: String,
+    title: String,
+    subtitle: String,
+    holderName: String,
+    fields: List<Triple<String, String, String>>,
+    settings: LegitimacyPreviewSettings,
+    photo: Bitmap? = null,
+    fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare,
+    assetRevision: Int = 0,
+    validity: Boolean? = null
+) {
+    val (frontFields, reverseFields) = splitCredentialFieldsForSides(
+        fields, settings.orientation, settings.visibleFieldsConfigured,
+        settings.visibleFields, settings.fieldSides
+    )
+    if (!settings.showCard) {
+        Text("Podgląd legitymacji jest wyłączony.", color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+        return
+    }
+    UnifiedCredentialCard(
+        documentKey = documentKey,
+        title = title,
+        subtitle = subtitle,
+        holderName = holderName,
+        fields = frontFields,
+        settings = settings,
+        photo = photo,
+        fallbackBackgroundRes = fallbackBackgroundRes,
+        assetRevision = assetRevision,
+        validity = validity
+    )
+    if (settings.showReverse && reverseFields.isNotEmpty()) {
+        UnifiedCredentialCard(
+            documentKey = "${documentKey}_reverse",
+            title = "${title} — REWERS",
+            subtitle = "Dalsze dane dokumentu",
+            holderName = holderName,
+            fields = reverseFields,
+            settings = settings.copy(showPhoto = false, showFlag = false, showCrest = false,
+                showLogo = false, showHologram = false),
+            fallbackBackgroundRes = fallbackBackgroundRes,
+            assetRevision = assetRevision,
+            validity = validity
+        )
+    }
+}
+
+@Composable
 internal fun CredentialTemplatePreview(
     documentKey: String,
     settings: LegitimacyPreviewSettings,
