@@ -43,7 +43,17 @@ internal object DocumentOcrParser {
                 Rule("disabilityBirthDate",listOf("data urodzenia")),Rule("disabilityPeselOrId",listOf("pesel","identyfikator")),
                 Rule("disabilityDegree",listOf("stopien niepelnosprawnosci","stopien")),Rule("disabilityCauseCodes",listOf("symbol przyczyny")),
                 Rule("disabilityValidity",listOf("okres","wazne do","data waznosci")),Rule("disabilityAuthorityName",listOf("nazwa organu","zespol do spraw")))
-            else->common
+            else -> when {
+                churchGraphicDocumentTargets().any { it.first == categoryId } ->
+                    churchGraphicDocumentFields(categoryId).map { (key, label) -> Rule(key, listOf(label)) }
+                familyEntityGraphicDocumentTargets().any { it.first == categoryId } ->
+                    familyEntityGraphicDocumentFields(categoryId).map { (key, label) -> Rule(key, listOf(label)) }
+                officialGraphicDocumentTargets().any { it.first == categoryId } ->
+                    officialGraphicDocumentFields(categoryId).map { (key, label) -> Rule(key, listOf(label)) }
+                else -> documentEditorFieldDefinitions(categoryId).map { definition ->
+                    Rule("doc_${categoryId}_${definition.key}", listOf(definition.label))
+                }
+            }
         }
         val out=linkedMapOf<String,String>()
         fun put(k:String,v:String){val x=v.trim().trim(':','-',' ','|');if(x.length in 1..160&&!x.equals("POLSKA",true))out.putIfAbsent(k,x)}
@@ -55,7 +65,7 @@ internal object DocumentOcrParser {
         val all=lines.joinToString(" ")
         Regex("\\b\\d{11}\\b").find(all)?.value?.let{put(if(categoryId=="disability")"disabilityPeselOrId" else "pesel",it)}
         val dates=Regex("\\b(?:[0-3]?\\d[.\\-/][01]?\\d[.\\-/](?:19|20)?\\d{2}|(?:19|20)\\d{2}-[01]\\d-[0-3]\\d)\\b").findAll(all).map{it.value}.toList()
-        if(dates.isNotEmpty()){
+        if(dates.isNotEmpty() && categoryId in setOf("identity_card", "passport", "parliament", "training", "student", "disability")){
             val issue=when(categoryId){"passport"->"passportIssueDate";"training"->"trainingIssueDate";"student"->"studentIssueDate";"parliament"->"mpCardIssueDate";"disability"->"disabilityDecisionDate";else->"idIssueDate"}
             val expiry=when(categoryId){"passport"->"passportExpiryDate";"training"->"trainingValidUntil";"student"->"studentValidity";"disability"->"disabilityValidity";else->"idExpiryDate"}
             put(issue,dates.first());if(dates.size>1)put(expiry,dates.last())

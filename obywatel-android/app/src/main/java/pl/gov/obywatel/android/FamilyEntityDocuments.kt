@@ -143,12 +143,12 @@ internal object FamilyEntityDocumentStore {
 }
 
 @Composable
-internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false, readOnly: Boolean = false, onEditGraphic: (String) -> Unit = {}) {
+internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false, readOnly: Boolean = false, initialDocumentId: String? = null, onEditGraphic: (String) -> Unit = {}) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val bankDocuments = (rodDocs + entityDocs).filter { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
     val catalog = if (bankAccountsOnly) bankDocuments else (if (entityMode) entityDocs else rodDocs).filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
     var records by remember { mutableStateOf(FamilyEntityDocumentStore.load(context)) }
-    var selected by remember { mutableStateOf<String?>(null) }
+    var selected by remember(initialDocumentId) { mutableStateOf(initialDocumentId) }
     var message by remember { mutableStateOf("") }
     val accountFields = listOf("Nazwa własna rachunku", "Bank / instytucja prowadząca", "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT", "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku", "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi")
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp).then(if (bankAccountsOnly) Modifier.testTag("bank-accounts-screen-title") else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {

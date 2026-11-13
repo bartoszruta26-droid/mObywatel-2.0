@@ -241,7 +241,116 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
         }.start()
     }
 
+    fun recognizeTextFile(uri: Uri) {
+        runCatching {
+            val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                var total = 0
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    total += count
+                    require(total <= 5 * 1024 * 1024) { "Plik tekstowy przekracza limit 5 MB." }
+                    output.write(buffer, 0, count)
+                }
+                output.toByteArray()
+            } ?: error("Nie można otworzyć pliku tekstowego.")
+            require(bytes.isNotEmpty()) { "Plik tekstowy jest pusty." }
+            runCatching {
+                Charsets.UTF_8.newDecoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+            }.getOrElse { String(bytes, java.nio.charset.Charset.forName("windows-1250")) }
+        }.onSuccess { applyRecognizedText(it) }
+            .onFailure { saveMessage("Nie można odczytać pliku tekstowego: ${it.localizedMessage ?: "błąd pliku"}") }
+    }
+
+    fun recognizePdf(uri: Uri) {
+        processing = true
+        Thread {
+            val pages = mutableListOf<Bitmap>()
+            var totalPages = 0
+            val error = runCatching {
+                context.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                    val renderer = android.graphics.pdf.PdfRenderer(descriptor)
+                    try {
+                        totalPages = renderer.pageCount
+                        require(totalPages > 0) { "Dokument PDF nie zawiera stron." }
+                        val pageLimit = minOf(totalPages, 10)
+                        for (pageIndex in 0 until pageLimit) {
+                            val page = renderer.openPage(pageIndex)
+                            try {
+                                val scale = minOf(1f, 1400f / maxOf(page.width, page.height))
+                                val width = (page.width * scale).toInt().coerceAtLeast(1)
+                                val height = (page.height * scale).toInt().coerceAtLeast(1)
+                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                page.render(bitmap, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                pages.add(bitmap)
+                            } finally { page.close() }
+                        }
+                    } finally { renderer.close() }
+                } ?: error("Nie można otworzyć pliku PDF.")
+            }.exceptionOrNull()
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                if (error != null) {
+                    pages.forEach { if (!it.isRecycled) it.recycle() }
+                    processing = false
+                    saveMessage("Nie można przetworzyć PDF: ${error.localizedMessage ?: "błąd dokumentu"}")
+                    return@post
+                }
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                val recognizedPages = mutableListOf<String>()
+                lateinit var processPage: (Int) -> Unit
+                processPage = { index ->
+                    if (index >= pages.size) {
+                        recognizer.close()
+                        pages.forEach { if (!it.isRecycled) it.recycle() }
+                        applyRecognizedText(recognizedPages.joinToString("\n"))
+                        if (totalPages > pages.size) saveMessage("OCR przetworzył pierwsze ${pages.size} z ${totalPages} stron PDF. Sprawdź tekst i w razie potrzeby podziel dokument.")
+                        processing = false
+                    } else {
+                        val bitmap = pages[index]
+                        recognizer.process(InputImage.fromBitmap(bitmap, 0))
+                            .addOnSuccessListener { if (it.text.isNotBlank()) recognizedPages.add(it.text) }
+                            .addOnFailureListener { /* Pojedyncza strona bez czytelnego tekstu nie przerywa analizy. */ }
+                            .addOnCompleteListener { if (!bitmap.isRecycled) bitmap.recycle(); processPage(index + 1) }
+                    }
+                }
+                processPage(0)
+            }
+        }.start()
+    }
+
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { if (it != null) recognizeImage(it) }
+    val documentOcrPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val mime = context.contentResolver.getType(uri).orEmpty().lowercase()
+            val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0).orEmpty() else "" }.orEmpty()
+            when {
+                mime == "application/pdf" || name.endsWith(".pdf", true) -> recognizePdf(uri)
+                mime.startsWith("text/") || name.substringAfterLast('.', "").lowercase() in setOf("txt", "csv", "md", "rtf", "xml") -> recognizeTextFile(uri)
+                mime.startsWith("image/") || name.substringAfterLast('.', "").lowercase() in setOf("jpg", "jpeg", "png", "webp") -> recognizeImage(uri)
+                else -> saveMessage("Wybierz PDF, JPG/PNG/WebP albo plik tekstowy.")
+            }
+        }
+    }
+    val cameraPhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        if (bitmap != null) {
+            processing = true
+            val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+            recognizer.process(InputImage.fromBitmap(bitmap, 0))
+                .addOnSuccessListener { applyRecognizedText(it.text) }
+                .addOnFailureListener { saveMessage("OCR zdjęcia nie powiódł się: ${it.localizedMessage ?: "błąd odczytu"}") }
+                .addOnCompleteListener {
+                    recognizer.close()
+                    if (!bitmap.isRecycled) bitmap.recycle()
+                    processing = false
+                }
+        } else saveMessage("Fotografowanie dokumentu anulowano.")
+    }
     val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { if (it != null) recognizeVideo(it, false) }
     val videoCamera = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { captured ->
         val uri = pendingVideoUri
@@ -254,8 +363,8 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
 
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Odczyt dokumentu z filmu przez OCR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            Text("Nagraj krótki film, powoli pokazując dokument z bliska. Aplikacja pobierze do 24 klatek nagrania, rozpozna tekst na każdej z nich i połączy wyniki, aby uzupełnić pasujące pola. Możesz też wybrać wcześniej nagrany film albo zdjęcie/skan. OCR nie potwierdza autentyczności dokumentu.",
+            Text("Odczyt dokumentu przez OCR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            Text("Możesz rozpoznać tekst ze zdjęcia, fotografii wykonanej aparatem, pliku PDF, pliku tekstowego albo filmu. OCR proponuje uzupełnienie pasujących pól; sprawdź każdą wartość. Odczyt PDF obejmuje maksymalnie 10 pierwszych stron. OCR nie potwierdza autentyczności dokumentu.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = {
                 runCatching {
@@ -265,6 +374,8 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
                     .onFailure { saveMessage("Nie można uruchomić kamery wideo: ${it.localizedMessage ?: "błąd przygotowania nagrania"}") }
             }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Nagraj film dokumentu") }
             OutlinedButton(onClick = { videoPicker.launch("video/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz nagrany film") }
+            OutlinedButton(onClick = { documentOcrPicker.launch(arrayOf("application/pdf", "image/*", "text/plain", "text/*")) }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wczytaj PDF, JPG lub plik tekstowy") }
+            OutlinedButton(onClick = { cameraPhoto.launch(null) }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Zrób zdjęcie dokumentu do OCR") }
             OutlinedButton(onClick = { photoPicker.launch("image/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz zdjęcie lub skan") }
             if (processing) Text("Analiza klatek filmu i uzupełnianie pól…", color = MaterialTheme.colorScheme.primary)
             if (mappedCount > 0) Text("Wstępnie uzupełniono $mappedCount pustych pól", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
@@ -836,35 +947,45 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    // Keep the core identity documents in an explicit, stable bucket. These IDs
+    // must remain visible in the visibility catalog even as new groups evolve.
+    id in setOf("profile", "identity", "passport") ->
+        "Dokumenty osobiste i tożsamościowe"
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } ->
         "Dokumenty kościelne"
-    id == "family" || id.startsWith("rod_") || id == "large_family" ->
+    id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" ->
         "Dokumenty rodowe i rodzinne"
-    id == "business" || id == "entity" || id == "registry" || id == "bank_accounts" ||
-        id == "entity_bank_accounts" || id.startsWith("entity_") ||
-        id.startsWith("organization_") ->
+    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") ->
+        "Dokumenty finansowe"
+    id == "parliament" ->
+        "Dokumenty publiczne i obywatelskie"
+    id == "business" || id == "entity" || id == "registry" ||
+        id.startsWith("entity_") || id.startsWith("organization_") ->
         "Dokumenty firmowe i podmiotowe"
+    id == "professional" || id.startsWith("professional_") ||
+        id in setOf("training", "student", "eu_education") ->
+        "Dokumenty zawodowe i edukacyjne"
     id == "civil" || id in setOf(
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
-        "vehicle_registration", "insurance_vehicle", "insurance_professional",
-        "insurance_private", "insurance_business", "official"
+        "vehicle_registration", "official"
     ) || officialGraphicDocumentTargets().any { it.first == id } ->
         "Dokumenty cywilne i urzędowe"
-    id == "professional" || id.startsWith("professional_") || id in setOf("training", "student", "eu_education") ->
-        "Dokumenty zawodowe i edukacyjne"
     id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") ->
         "Dokumenty zdrowotne i rodzinne"
-    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ->
+    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ||
+        documentBrandTargets.any { it.first == id } ->
         "Pliki i pozostałe dokumenty"
     else -> "Dokumenty osobiste i tożsamościowe"
 }
 internal val documentVisibilityGroupOrder = listOf(
     "Dokumenty osobiste i tożsamościowe",
+    "Dokumenty publiczne i obywatelskie",
     "Dokumenty cywilne i urzędowe",
     "Dokumenty kościelne",
     "Dokumenty rodowe i rodzinne",
     "Dokumenty firmowe i podmiotowe",
+    "Dokumenty finansowe",
     "Dokumenty zawodowe i edukacyjne",
     "Dokumenty zdrowotne i rodzinne",
     "Pliki i pozostałe dokumenty"
@@ -1049,6 +1170,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showDocumentsEditor by remember { mutableStateOf(false) }
     var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
+    var showDocumentEditorCatalog by remember { mutableStateOf(false) }
     var showApplicationAppearanceSettings by remember { mutableStateOf(false) }
     var showDocumentVisibilitySettings by remember { mutableStateOf(false) }
     var showDocumentBrandAssets by remember { mutableStateOf(false) }
@@ -1076,6 +1198,42 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         showDocumentVisibilitySettings = true
     }
 
+    fun openSettingsDocumentEditor(documentId: String) {
+        showDocumentEditorCatalog = false
+        when {
+            documentId == "profile" -> { selectedEditorCategory = "profile"; showDocumentsEditor = true }
+            documentId == "identity" -> { selectedEditorCategory = "identity_card"; showDocumentsEditor = true }
+            documentId == "passport" -> { selectedEditorCategory = "passport"; showDocumentsEditor = true }
+            documentId == "parliament" -> { selectedEditorCategory = "parliament"; showDocumentsEditor = true }
+            documentId == "training" -> { selectedEditorCategory = "training"; showDocumentsEditor = true }
+            documentId == "student" -> { selectedEditorCategory = "student"; showDocumentsEditor = true }
+            documentId == "loyalty" || documentId == "loyalty_cards" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
+            documentId == "disability" -> showDisabilitySettings = true
+            documentId == "registry" -> showRegistryEditor = true
+            documentId == "bank_accounts" -> { selectedEditorCategory = "catalog:bank_accounts"; showDocumentsEditor = true }
+            documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts:rod_bank_accounts"
+            documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts:entity_bank_accounts"
+            documentId == "family" -> settingsDocumentEditor = "family"
+            documentId.startsWith("rod_") -> settingsDocumentEditor = "family:$documentId"
+            documentId == "church" -> settingsDocumentEditor = "church"
+            documentId == "mission_travel" -> { selectedEditorCategory = "catalog:mission_travel"; showDocumentsEditor = true }
+            documentId.startsWith("church_") -> settingsDocumentEditor = if (churchGraphicDocumentTargets().any { it.first == documentId }) "church:$documentId" else "church"
+            documentId == "civil" -> settingsDocumentEditor = "civil"
+            documentId in setOf("birth_extract", "marriage_extract", "death_extract", "vehicle_registration", "official") ||
+                officialGraphicDocumentTargets().any { it.first == documentId } -> settingsDocumentEditor = "civil:$documentId"
+            documentId == "business" || documentId == "entity" -> settingsDocumentEditor = "business"
+            documentId.startsWith("organization_") -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
+            documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
+            documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
+            documentId == "children" -> settingsDocumentEditor = "children_health"
+            documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
+            documentId == "imported" -> settingsDocumentEditor = "imported"
+            documentId == "professional" -> settingsDocumentEditor = "professional"
+            documentId == "branding" -> settingsDocumentEditor = "graphic_catalog"
+            else -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
+        }
+    }
+
     fun handleSystemBack() {
         when {
             credentialAppearanceTarget != null -> credentialAppearanceTarget = null
@@ -1091,6 +1249,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             showDocumentVisibilitySettings -> { showDocumentVisibilitySettings = false; showSettingsMenu = true }
             documentBrandTarget != null -> { documentBrandTarget = null; showSettingsMenu = true }
             showDocumentBrandAssets -> { showDocumentBrandAssets = false; showSettingsMenu = true }
+            showDocumentEditorCatalog -> { showDocumentEditorCatalog = false; showSettingsMenu = true }
             showSettingsMenu -> showSettingsMenu = false
             selectedDocumentId != null -> selectedDocumentId = null
             showDemoDocuments -> showDemoDocuments = false
@@ -1103,7 +1262,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1184,7 +1343,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showDocumentsEditor = false; showSettingsMenu = true },
                         onOpenDocumentAppearance = { key -> credentialAppearanceTarget = key }
                     )
-                    showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }, showOriginalAttachment = false) {
+                    showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }, showOriginalAttachment = true) {
                         EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
                     }
                     settingsDocumentEditor == "imported" -> CredentialAppearanceEditorEntry("imported", onOpenAppearance = { credentialAppearanceTarget = it }) {
@@ -1196,24 +1355,34 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
-                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
-                        FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                    (settingsDocumentEditor == "family" || settingsDocumentEditor?.startsWith("family:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("family:", "")?.ifBlank { "family" } ?: "family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("family:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("family:") == true) {
+                        FamilyEntityDocumentsScreen(entityMode = false, initialDocumentId = settingsDocumentEditor?.substringAfter("family:", "")?.ifBlank { null },
+                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
-                        FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                    (settingsDocumentEditor == "business" || settingsDocumentEditor?.startsWith("business:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("business:", "")?.ifBlank { "business" } ?: "business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("business:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("business:") == true) {
+                        FamilyEntityDocumentsScreen(entityMode = true, initialDocumentId = settingsDocumentEditor?.substringAfter("business:", "")?.ifBlank { null },
+                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
-                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                    (settingsDocumentEditor == "bank_accounts" || settingsDocumentEditor?.startsWith("bank_accounts:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("bank_accounts:", "")?.ifBlank { "bank_accounts" } ?: "bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("bank_accounts:", "")?.ifBlank { null },
+                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                    settingsDocumentEditor?.startsWith("entity_bank_accounts:") == true -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("entity_bank_accounts:", "")?.ifBlank { "entity_bank_accounts" } ?: "entity_bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                        FamilyEntityDocumentsScreen(entityMode = true, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("entity_bank_accounts:", "")?.ifBlank { null },
+                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
+                    }
+                    (settingsDocumentEditor == "church" || settingsDocumentEditor?.startsWith("church:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("church:", "")?.ifBlank { "church" } ?: "church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("church:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("church:") == true) {
                         ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            initialDocumentId = settingsDocumentEditor?.substringAfter("church:", "")?.ifBlank { null },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                    (settingsDocumentEditor == "civil" || settingsDocumentEditor?.startsWith("civil:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("civil:", "")?.ifBlank { "civil" } ?: "civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("civil:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("civil:") == true) {
                         OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            initialDocumentId = settingsDocumentEditor?.substringAfter("civil:", "")?.ifBlank { null },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
                     settingsDocumentEditor == "children_health" -> CredentialAppearanceEditorEntry("children", onOpenAppearance = { credentialAppearanceTarget = it }) {
@@ -1260,6 +1429,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         },
                         onBack = { showDocumentVisibilitySettings = false; showSettingsMenu = true }
                     )
+                    showDocumentEditorCatalog -> DocumentEditorCatalogScreen(
+                        onOpenDocument = ::openSettingsDocumentEditor,
+                        onBack = { showDocumentEditorCatalog = false; showSettingsMenu = true }
+                    )
                     showSettingsMenu -> SettingsMenuScreen(
                         documentPlacements = documentPlacements,
                         onDocumentPlacementsChange = { updated ->
@@ -1269,6 +1442,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showSettingsMenu = false },
                         onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
                         onManageCredentialAppearance = { showSettingsMenu = false; showCredentialAppearanceEditor = true },
+                        onManageDocumentEditing = { showSettingsMenu = false; showDocumentEditorCatalog = true },
                         onManageDocumentVisibility = { openDocumentVisibilityCatalog() },
                         onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
                         onEditDocumentBranding = { target -> showSettingsMenu = false; documentBrandTarget = target },
@@ -1295,6 +1469,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 mapOf(
                                     "documentCatalogManifest" to catalogManifest,
                                     "documentCatalogGroupOrder" to org.json.JSONArray(documentVisibilityGroupOrder).toString(),
+                                    "documentEditorSchemaVersion" to DOCUMENT_EDITOR_SCHEMA_VERSION,
                                     "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
                                     "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
                                     "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
@@ -1702,8 +1877,11 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 title = { Text("Import danych vCard") },
                 text = {
                     val current = remember { DemoIdentityStore.load(context) }
-                    val overwritten = incoming.keys.count { current.containsKey(it) }
-                    val added = incoming.size - overwritten
+                    val supportedProfileKeys = current.keys + documentEditorImportableFieldKeys()
+                    val supportedArchiveKeys = documentArchiveImportKeys()
+                    val recognizedIncoming = incoming.keys.count { it in supportedProfileKeys || it in supportedArchiveKeys || it.startsWith("cs_") || it.startsWith("dp_") || isSupportedDynamicDocumentField(it) }
+                    val overwritten = incoming.keys.count { it in supportedProfileKeys && current.containsKey(it) }
+                    val added = recognizedIncoming - overwritten
                     Text(
                         "Plik zawiera ${incoming.size} pól. Nowe: ${added}; zastąpią istniejące: ${overwritten}. " +
                             "Dane zostaną połączone z profilem. Po zapisie aplikacja sprawdzi zgodność zapisanych wartości."
@@ -1713,18 +1891,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     TextButton(onClick = {
                         runCatching {
                             val current = DemoIdentityStore.loadStrict(context)
+                            val importedSchemaVersion = incoming["documentEditorSchemaVersion"]?.toIntOrNull() ?: 1
+                            require(importedSchemaVersion in 1..DOCUMENT_EDITOR_SCHEMA_VERSION.toInt()) {
+                                "Archiwum używa nieobsługiwanej wersji schematu dokumentów: $importedSchemaVersion."
+                            }
                             val profileValues = incoming.filterKeys {
                                 // Importuj wyłącznie pola należące do aktualnego modelu profilu.
                                 // Nieznane lub wycofane nazwy pól ze starszych archiwów vCard
                                 // są pomijane — nie tworzymy przez nie osieroconych wpisów.
-                                it in current.keys &&
-                                    !it.startsWith("cs_") && !it.startsWith("dp_") &&
-                                    it !in setOf(
-                                        "documentCatalogManifest", "documentCatalogGroupOrder", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
-                                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
-                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
-                                        "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
-                                    )
+                                (it in current.keys || it in documentEditorImportableFieldKeys() || isSupportedDynamicDocumentField(it)) &&
+                                    !it.startsWith("cs_") && !it.startsWith("dp_")
                             }
                             val mergedProfile = current.toMutableMap().apply { putAll(profileValues) }
                             PersonalDataPropagation.apply(mergedProfile)
@@ -1780,7 +1956,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val auxiliaryCount = incoming.keys.count {
                                 it.startsWith("cs_") || it.startsWith("dp_") ||
                                     it in setOf(
-                                        "documentCatalogManifest", "documentCatalogGroupOrder", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
@@ -3051,10 +3227,65 @@ private fun DocumentVisibilitySettingsScreen(
 }
 
 @Composable
+private fun DocumentEditorCatalogScreen(
+    onOpenDocument: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    var expandedGroups by remember { mutableStateOf(emptySet<String>()) }
+    val documents = documentDisplayOptions.distinctBy { it.first }
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("‹  Powrót do ustawień", color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Edytuj dane dokumentów", style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Text("Dokumenty są uporządkowane według ich przeznaczenia. Każdy dokument ma przypisaną stałą grupę.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        documentVisibilityGroupOrder.forEach { group ->
+            val entries = documents.filter { documentVisibilityGroup(it.first) == group }
+                .sortedBy { it.second.lowercase(java.util.Locale("pl", "PL")) }
+            if (entries.isNotEmpty()) {
+                val expanded = group in expandedGroups
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                            .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
+                            .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                            Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+                            Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
+                        }
+                        if (expanded) entries.forEach { (id, title, iconRes) ->
+                            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { onOpenDocument(id) }
+                                .padding(horizontal = 8.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(32.dp))
+                                Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                                TextButton(onClick = { onOpenDocument(id) }) { Text("Edytuj") }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Text("Liczba dokumentów: ${documents.size}. Każdy dokument jest przypisany do jednej grupy.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(12.dp))
+    }
+}
+
+@Composable
 private fun SettingsMenuScreen(
     documentPlacements: Map<String, String>,
     onManageApplicationAppearance: () -> Unit,
     onManageCredentialAppearance: () -> Unit,
+    onManageDocumentEditing: () -> Unit,
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit,
     onManageDocumentVisibility: () -> Unit,
@@ -3119,55 +3350,12 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Eksportuj wszystkie dane", "Zapisz jedno archiwum .vcf", Icons.Filled.Description, onExportAll)
         ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
         if (importStatus.isNotBlank()) Text(importStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-        Text("Dokumenty — katalog wspólny", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-        Text("Lista jest budowana z tego samego rejestru dokumentów co katalog i ustawienia widoczności. Zmiana grupy lub dodanie dokumentu aktualizuje wszystkie widoki.",
-            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        val settingsGroups = documentVisibilityGroupOrder
-        settingsGroups.forEach { group ->
-            val entries = documentDisplayOptions.distinctBy { it.first }
-                .filter { documentVisibilityGroup(it.first) == group }
-            if (entries.isNotEmpty()) {
-                Text(group, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleSmall)
-                entries.forEach { (id, title, _) ->
-                    val action: () -> Unit = {
-                        when (id) {
-                            "profile" -> onEditDocuments("profile")
-                            "identity" -> onEditDocuments("identity_card")
-                            "passport" -> onEditDocuments("passport")
-                            "family" -> onEditOtherDocuments("family")
-                            "parliament" -> onEditDocuments("parliament")
-                            "training" -> onEditDocuments("training")
-                            "student" -> onEditDocuments("student")
-                            "disability" -> onEditDisability()
-                            "church" -> onEditOtherDocuments("church")
-                            "civil" -> onEditOtherDocuments("civil")
-                            "business", "entity" -> onEditOtherDocuments("business")
-                            "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> onEditOtherDocuments("bank_accounts")
-                            "vaccines" -> onEditOtherDocuments("vaccines")
-                            "children" -> onEditOtherDocuments("children_health")
-                            "signed_pdf" -> onEditOtherDocuments("signed_pdf")
-                            "imported" -> onEditOtherDocuments("imported")
-                            "professional" -> onEditOtherDocuments("professional")
-                            "registry" -> onEditRegistry()
-                            "loyalty" -> onEditDocuments("loyalty_cards")
-                            else -> onEditOtherDocuments("graphic_catalog")
-                        }
-                    }
-                    val icon = when (group) {
-                        "Dokumenty kościelne" -> Icons.Filled.AccountBalance
-                        "Dokumenty rodowe i rodzinne" -> Icons.Filled.Fingerprint
-                        "Dokumenty firmowe i podmiotowe" -> Icons.Filled.Business
-                        "Dokumenty zawodowe i edukacyjne" -> Icons.Filled.Badge
-                        "Dokumenty zdrowotne i rodzinne" -> Icons.Filled.HealthAndSafety
-                        "Pliki i pozostałe dokumenty" -> Icons.Filled.Description
-                        "Dokumenty cywilne i urzędowe" -> Icons.Filled.Description
-                        else -> Icons.Filled.CreditCard
-                    }
-                    ProfileActionCard(title, "Otwórz ustawienia danych i dokumentu", icon, action)
-                }
-            }
-        }
+        ProfileActionCard(
+            "Edytuj dane dokumentów",
+            "Otwórz katalog wszystkich dokumentów, uporządkowany w rozwijane grupy. Każdy dokument ma osobny formularz edycji.",
+            Icons.Filled.Description,
+            onManageDocumentEditing
+        )
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
@@ -4049,7 +4237,9 @@ private fun DemoDocumentsScreen(
         "disability" -> "Orzeczenia i zaświadczenia"
         "loyalty_cards" -> "Karty lojalnościowe"
         "passport" -> "Dane paszportowe"
-        else -> "Wszystkie dane i dokumenty"
+        else -> if (categoryId.startsWith("catalog:")) {
+            documentDisplayOptions.firstOrNull { it.first == categoryId.removePrefix("catalog:") }?.second ?: "Dane dokumentu"
+        } else "Wszystkie dane i dokumenty"
     }
     val credentialKey = when (categoryId) {
         "identity_card" -> "identity"
@@ -4061,7 +4251,7 @@ private fun DemoDocumentsScreen(
         "disability" -> "disability"
         "passport" -> "passport"
         "loyalty_cards" -> "loyalty_cards"
-        else -> categoryId
+        else -> if (categoryId.startsWith("catalog:")) categoryId.removePrefix("catalog:") else categoryId
     }
     val appearance = rememberLegitimacyPreviewSettings(credentialKey)
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -4104,12 +4294,24 @@ private fun DemoDocumentsScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        if (categoryId in setOf(
-                "identity_card", "parliament", "training", "student", "disability", "passport",
-                "family", "church", "civil", "business", "bank_accounts", "children_health",
-                "vaccines", "professional", "imported", "signed_pdf", "entity"
-            )) {
-            GeneralDocumentOcrEditor(categoryId, fields, context) { saveMessage = it }
+        if (categoryId != "all") {
+            GeneralDocumentOcrEditor(if (categoryId.startsWith("catalog:")) categoryId.removePrefix("catalog:") else categoryId, fields, context) { saveMessage = it }
+        }
+        if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
+        if (categoryId.startsWith("catalog:")) {
+            val documentId = categoryId.removePrefix("catalog:")
+            val definitions = documentEditorFieldDefinitions(documentId)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Text("Dane właściwe dla dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    definitions.forEach { definition ->
+                        DemoDataField("doc_${documentId}_${definition.key}", definition.label, fields, definition.placeholder)
+                    }
+                }
+            }
         }
          if (categoryId == "all" || categoryId == "profile") {
         Card(
@@ -4549,13 +4751,7 @@ private fun DemoDocumentsScreen(
         }
         }
         if (categoryId != "all") {
-            DocumentOriginalAttachments(credentialKey)
             Text("Wygląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            OutlinedButton(
-                onClick = { onOpenDocumentAppearance(credentialKey) },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Edytuj wygląd graficzny") }
-            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
         }
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -4571,11 +4767,16 @@ private fun DemoDocumentsScreen(
                             .onFailure { saveMessage = "Błąd zapisu: ${it.localizedMessage ?: "nieznany błąd"}" }
                     },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Zapisz dane i zdjęcie") }
+                ) { Text("Zapisz dane") }
                 if (saveMessage.isNotBlank()) Text(saveMessage, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
         }
         if (categoryId != "all") {
+            OutlinedButton(
+                onClick = { onOpenDocumentAppearance(credentialKey) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Przejdź do edycji graficznej") }
+            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
             DocumentPdfExportButton(editorTitle, fields.toMap(), documentType = credentialKey)
         }
         Text(
@@ -4598,18 +4799,23 @@ private fun CredentialAppearanceEditorEntry(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-    val ocrPrefix = "groupedOcr:$documentKey:"
+    val ocrStorageKey = "groupedOcr_${documentKey.hashCode().toUInt().toString(16)}"
     val ocrFields = remember(documentKey) {
         mutableStateMapOf<String, String>().apply {
-            DemoIdentityStore.load(context).filterKeys { it.startsWith(ocrPrefix) }
-                .forEach { (key, value) -> put(key.removePrefix(ocrPrefix), value) }
+            val encoded = DemoIdentityStore.load(context)[ocrStorageKey]
+            runCatching {
+                val saved = JSONObject(encoded ?: "{}")
+                saved.keys().forEach { key -> put(key, saved.optString(key)) }
+            }
         }
     }
     Column(Modifier.fillMaxSize()) {
         if (showOcrStage) {
             GeneralDocumentOcrEditor(documentKey, ocrFields, context) {
                 val snapshot = DemoIdentityStore.load(context).toMutableMap()
-                ocrFields.forEach { (key, value) -> snapshot[ocrPrefix + key] = value }
+                val savedOcr = JSONObject()
+                ocrFields.forEach { (key, value) -> savedOcr.put(key, value) }
+                snapshot[ocrStorageKey] = savedOcr.toString()
                 DemoIdentityStore.save(context, snapshot)
             }
             val suggestions = ocrFields.filterKeys { it != "${documentKey}OcrText" && it.isNotBlank() }

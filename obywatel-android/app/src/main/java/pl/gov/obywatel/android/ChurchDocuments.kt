@@ -157,10 +157,10 @@ internal object ChurchDocumentStore {
 }
 
 @Composable
-internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false, onEditGraphic: (String) -> Unit = {}) {
+internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false, initialDocumentId: String? = null, onEditGraphic: (String) -> Unit = {}) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var records by remember { mutableStateOf(ChurchDocumentStore.load(context)) }
-    var selected by remember { mutableStateOf<String?>(null) }
+    var selected by remember(initialDocumentId) { mutableStateOf(initialDocumentId) }
     var message by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
