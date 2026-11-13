@@ -37,6 +37,15 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun archiveImportAllowlistIncludesDedicatedAndCatalogEditorFields() {
+        val keys = documentEditorImportableFieldKeys()
+        assertTrue("passportNumber" in keys)
+        assertTrue("disabilityDecisionNumber" in keys)
+        assertTrue("doc_insurance_vehicle_policyNumber" in keys)
+        assertTrue("passportOcrText" in keys)
+    }
+
+    @Test
     fun documentEditorFieldKeysAreStableAndUniqueAcrossCatalog() {
         val keys = documentEditorFieldKeys()
         assertTrue(keys.isNotEmpty())
