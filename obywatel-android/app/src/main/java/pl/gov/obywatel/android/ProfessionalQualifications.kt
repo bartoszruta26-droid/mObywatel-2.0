@@ -345,7 +345,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit, readOnly: Bool
                     if (p.registerName.isNotBlank()) Text("Rejestr: " + p.registerName, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     Text("Status: " + p.status, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                     if (readOnly) {
-                        val previewSettings = rememberLegitimacyPreviewSettings("professional").value.copy(visibleFieldsConfigured = false)
+                        val previewSettings = rememberLegitimacyPreviewSettings("professional").value
                         UnifiedCredentialCard(
                             documentKey = "professional",
                             title = p.profession.uppercase(),
