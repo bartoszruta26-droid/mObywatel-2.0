@@ -194,12 +194,13 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
             // Każdy dokument podrzędny ma własny klucz wyglądu; DocumentBrandStore
             // samodzielnie stosuje przypisania odziedziczone z typu nadrzędnego.
             val brandDocumentType = doc.id
+            val settingsState = rememberLegitimacyPreviewSettings(brandDocumentType)
             val previewFields = doc.fields.mapIndexed { index, label ->
                 Triple("churchField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (readOnly) {
-                val settings = rememberLegitimacyPreviewSettings(brandDocumentType).value
+                val settings = settingsState.value
                 CredentialCardSides(
                     documentKey = brandDocumentType,
                     title = doc.title.uppercase(),
@@ -221,6 +222,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                         documentKey = brandDocumentType,
                         fieldKey = "churchField_$index",
                         label = label,
+                        settingsState = settingsState,
                         value = local["f$index"].orEmpty(),
                         onValueChange = { local["f$index"] = it },
                         minLines = if (label.contains("Treść") || label.contains("Zakres") || label.contains("Uwagi")) 3 else 1,
@@ -247,7 +249,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                     subtitle = churchOwner.ifBlank { "DOKUMENT KOŚCIELNY" },
                     holderName = churchOwner.ifBlank { "DANE WYSTAWCY" },
                     fields = previewFields,
-                    settings = rememberLegitimacyPreviewSettings(brandDocumentType).value
+                    settings = settingsState.value
                 )
                 Button(onClick = {
                     runCatching {
