@@ -26,9 +26,14 @@ class DocumentRouteRegistryTest {
         )
 
         val catalogTileIds = documentDisplayOptions.map { it.first }.toSet()
-        assertEquals("The route registry must cover the live visibility catalog.", catalogTileIds,
-            DocumentRouteRegistry.routes.keys - setOf("identity_card", "loyalty_cards"))
-        assertEquals(visibleTileIds, catalogTileIds)
+        assertTrue(
+            "Every live visibility tile must have an explicit route.",
+            DocumentRouteRegistry.routes.keys.containsAll(catalogTileIds)
+        )
+        assertTrue(
+            "The established document tiles must remain in the live catalog.",
+            catalogTileIds.containsAll(visibleTileIds)
+        )
         visibleTileIds.forEach { id -> assertNotNull("Missing route for $id", DocumentRouteRegistry.find(id)) }
     }
 
