@@ -98,18 +98,6 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("premium", "Składka i częstotliwość płatności", ""),
             Triple("claimsContact", "Kontakt do zgłoszenia szkody", "")
         )
-        "mission_travel" -> fields(
-            Triple("travellerName", "Osoba odbywająca podróż", ""),
-            Triple("missionTitle", "Nazwa misji / delegacji", ""),
-            Triple("destination", "Miejsce docelowe i trasa", ""),
-            Triple("organizingInstitution", "Organizator / jednostka delegująca", ""),
-            Triple("purpose", "Cel podróży służbowej / misyjnej", ""),
-            Triple("authorizationNumber", "Numer polecenia / upoważnienia", ""),
-            Triple("departureDate", "Data rozpoczęcia", "DD-MM-RRRR"),
-            Triple("returnDate", "Data zakończenia", "DD-MM-RRRR"),
-            Triple("responsiblePerson", "Osoba odpowiedzialna / kontakt", ""),
-            Triple("fundingSource", "Źródło finansowania", "")
-        )
         "criminal_record" -> fields(
             Triple("applicantName", "Imię i nazwisko osoby, której dotyczy zaświadczenie", ""),
             Triple("applicantIdentifier", "PESEL / identyfikator wnioskodawcy", ""),
