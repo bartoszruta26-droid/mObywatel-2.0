@@ -1231,7 +1231,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId.startsWith("rod_") -> settingsDocumentEditor = "family:$documentId"
             documentId == "church" -> settingsDocumentEditor = "church"
             documentId == "mission_travel" -> { selectedEditorCategory = "catalog:mission_travel"; showDocumentsEditor = true }
-            documentId.startsWith("church_") -> {
+            documentId.startsWith("church_") || churchGraphicDocumentTargets().any { it.first == documentId } -> {
                 if (churchGraphicDocumentTargets().any { it.first == documentId }) {
                     settingsDocumentEditor = "church:$documentId"
                 } else {
