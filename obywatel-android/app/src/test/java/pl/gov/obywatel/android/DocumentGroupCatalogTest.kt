@@ -45,6 +45,17 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun iconAssetKindsAreTintedWhiteAcrossLegacyAndExtendedCategories() {
+        assertTrue(isWhiteTintedIconAssetKind("Ikona wektorowa"))
+        assertTrue(isWhiteTintedIconAssetKind("Ikona wektorowa kafelka"))
+        assertTrue(isWhiteTintedIconAssetKind("Ikona"))
+        assertTrue(isWhiteTintedIconAssetKind("  Ikona dodatkowa  "))
+        assertTrue(isWhiteTintedIconAssetKind("Piktogram kafelka"))
+        assertFalse(isWhiteTintedIconAssetKind("Tło kafelka"))
+        assertFalse(isWhiteTintedIconAssetKind("Fotografia"))
+    }
+
+    @Test
     fun fixedGroupCatalogContainsNoEmptyGroupsOrDuplicateDocuments() {
         val ids = documentDisplayOptions.map { it.first }
         assertEquals(ids.size, ids.toSet().size)
