@@ -4888,6 +4888,7 @@ private fun DemoDocumentsScreen(
 }
 
 @Composable
+@Composable
 private fun CredentialAppearanceEditorEntry(
     documentKey: String,
     onOpenAppearance: (String) -> Unit,
@@ -4908,6 +4909,8 @@ private fun CredentialAppearanceEditorEntry(
         }
     }
     Column(Modifier.fillMaxSize()) {
+        // OCR jest renderowany w jednym, stałym miejscu nad edytorem dokumentu.
+        // Formularz potomny nie może dodawać kolejnego panelu OCR do nagłówka.
         if (showOcrStage) {
             GeneralDocumentOcrEditor(documentKey, ocrFields, context) {
                 val snapshot = DemoIdentityStore.load(context).toMutableMap()
@@ -4949,8 +4952,6 @@ private fun CredentialAppearanceEditorEntry(
         }
     }
 }
-
-@Composable
 private fun CredentialAppearanceSettingsScreen(
     documentKey: String,
     onBack: () -> Unit,
