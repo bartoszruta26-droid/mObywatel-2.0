@@ -38,6 +38,24 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun everyCatalogEditorFieldIsAvailableUnderItsExactLabelInCredentialPreview() {
+        documentDisplayOptions.distinctBy { it.first }.forEach { (id, _, _) ->
+            val definitions = documentEditorFieldDefinitions(id)
+            val options = credentialFieldOptions(id).toMap()
+            definitions.forEach { definition ->
+                val key = "doc_${id}_${definition.key}"
+                assertEquals("Missing preview field label for $id/$key", definition.label, options[key])
+            }
+            val graphicFields = churchGraphicDocumentFields(id)
+                .ifEmpty { familyEntityGraphicDocumentFields(id) }
+                .ifEmpty { officialGraphicDocumentFields(id) }
+            graphicFields.forEach { (key, label) ->
+                assertEquals("Missing graphic-document field label for $id/$key", label, options[key])
+            }
+        }
+    }
+
+    @Test
     fun groupedOcrArchiveKeysUseOnlyTheSupportedSafeFormat() {
         assertTrue(isGroupedOcrArchiveField("groupedOcr_7f3a21"))
         assertFalse(isGroupedOcrArchiveField("groupedOcr:church:field_0"))

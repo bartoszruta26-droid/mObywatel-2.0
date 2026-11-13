@@ -1228,8 +1228,15 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (assetPreview != null) {
-                                Image(assetPreview.asImageBitmap(), contentDescription = asset.label,
-                                    modifier = Modifier.size(64.dp), contentScale = ContentScale.Fit)
+                                Image(
+                                    assetPreview.asImageBitmap(),
+                                    contentDescription = asset.label,
+                                    modifier = Modifier.size(64.dp),
+                                    contentScale = ContentScale.Fit,
+                                    colorFilter = if (asset.kind == "Ikona wektorowa kafelka")
+                                        androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
+                                    else null
+                                )
                             } else {
                                 Box(Modifier.size(64.dp).background(MaterialTheme.colorScheme.surfaceVariant),
                                     contentAlignment = Alignment.Center) {
