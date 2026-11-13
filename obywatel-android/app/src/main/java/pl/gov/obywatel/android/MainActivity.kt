@@ -2323,11 +2323,13 @@ private fun DocumentDetailsScreen(
         }
     }
     val options = credentialFieldOptions(normalizedId)
-    val selectedOptions = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) options
+    val selectedOptions = if (!settings.visibleFieldsConfigured) options
         else options.filter { it.first in settings.visibleFields }
     val previewFields = selectedOptions.map { (key, label) ->
-        Triple(key, label.uppercase(), previewValues[key].orEmpty().ifBlank { "—" })
+        Triple(key, label, previewValues[key].orEmpty().ifBlank { "—" })
     }
+    val (frontPreviewFields, reversePreviewFields) =
+        splitCredentialFieldsForSides(previewFields, settings.orientation)
     val holder = when {
         previewValues["studentNames"].orEmpty().isNotBlank() -> previewValues["studentNames"].orEmpty()
         previewValues["passportHolderNames"].orEmpty().isNotBlank() -> previewValues["passportHolderNames"].orEmpty()
@@ -2365,11 +2367,22 @@ private fun DocumentDetailsScreen(
                 title = title.uppercase(),
                 subtitle = "Podgląd danych zapisanych w aplikacji",
                 holderName = holder,
-                fields = previewFields,
+                fields = frontPreviewFields,
                 settings = settings,
                 photo = photoBitmap,
                 validity = validity
             )
+            if (reversePreviewFields.isNotEmpty()) {
+                UnifiedCredentialCard(
+                    documentKey = "${normalizedId}_reverse",
+                    title = "${title.uppercase()} — REWERS",
+                    subtitle = "Dalsze dane dokumentu",
+                    holderName = holder,
+                    fields = reversePreviewFields,
+                    settings = settings.copy(showPhoto = false, showFlag = false, showCrest = false, showLogo = false, showHologram = false),
+                    validity = validity
+                )
+            }
         } else {
             Text("Podgląd karty jest wyłączony w ustawieniach wyglądu tego dokumentu.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -5003,7 +5016,7 @@ private fun CredentialAppearanceSettingsScreen(
                 options.forEach { (key, label) ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
-                            checked = !state.value.visibleFieldsConfigured || state.value.visibleFields.isEmpty() || key in state.value.visibleFields,
+                            checked = !state.value.visibleFieldsConfigured || key in state.value.visibleFields,
                             onCheckedChange = { checked ->
                                 val current = if (state.value.visibleFieldsConfigured && state.value.visibleFields.isNotEmpty()) state.value.visibleFields
                                     else options.map { it.first }.toSet()
@@ -5488,7 +5501,8 @@ private fun AdditionalInformationSection(
 private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane") {
     val binding = LocalCredentialFieldVisibility.current
     val settings = binding?.settings?.value
-    val checked = settings?.let { !it.visibleFieldsConfigured || it.visibleFields.isEmpty() || key in it.visibleFields } ?: true
+    val selectableKeys = binding?.let { credentialFieldOptions(it.documentKey).map { option -> option.first }.toSet() }.orEmpty()
+    val checked = settings?.let { !it.visibleFieldsConfigured || key in it.visibleFields } ?: true
     val context = LocalContext.current
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -5500,12 +5514,12 @@ private fun DemoDataField(key: String, label: String, fields: MutableMap<String,
             placeholder = { Text(placeholder) },
             singleLine = true
         )
-        if (binding != null && binding.documentKey.isNotBlank()) {
+        if (binding != null && binding.documentKey.isNotBlank() && key in selectableKeys) {
             Checkbox(
                 checked = checked,
                 onCheckedChange = { selected ->
-                    val current = if (settings?.visibleFieldsConfigured == true && settings.visibleFields.isNotEmpty()) settings.visibleFields
-                        else (binding.fields.keys + credentialFieldOptions(binding.documentKey).map { it.first }).toSet()
+                    val current = if (settings?.visibleFieldsConfigured == true) settings.visibleFields
+                        else credentialFieldOptions(binding.documentKey).map { it.first }.toSet()
                     val next = if (selected) current + key else current - key
                     val updated = (settings ?: LegitimacyPreviewSettings()).copy(
                         visibleFields = next,
