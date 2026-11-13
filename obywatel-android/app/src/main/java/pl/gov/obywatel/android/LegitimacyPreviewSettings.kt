@@ -1491,7 +1491,8 @@ internal fun UnifiedCredentialCard(
                     }
                     if (settings.showHologram && settings.hologramAssetId.isNotBlank()) {
                         AnimatedHologram(
-                            Modifier.align(Alignment.BottomEnd)
+                            assetId = settings.hologramAssetId,
+                            modifier = Modifier.align(Alignment.BottomEnd)
                                 .offset(x = settings.hologramOffsetX.dp, y = settings.hologramOffsetY.dp)
                                 .size((cardWidth * 0.22f * settings.hologramScale).coerceIn(42.dp, 112.dp))
                                 .graphicsLayer { alpha = 0.46f }
@@ -1879,19 +1880,16 @@ internal fun CredentialValidityTile(valid: Boolean?) {
 }
 
 @Composable
-private fun AnimatedHologram(modifier: Modifier = Modifier) {
+private fun AnimatedHologram(assetId: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val movie = remember {
+    val movie = remember(context, assetId) {
         runCatching {
-            context.assets.open("mandala_hologram.gif.b64").use { input ->
-                val encoded = input.bufferedReader(Charsets.US_ASCII).use { it.readText() }
-                val gifBytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
-                java.io.ByteArrayInputStream(gifBytes).use { Movie.decodeStream(it) }
-            }
+            val bytes = DocumentBrandStore.fileBytes(context, assetId) ?: return@runCatching null
+            Movie.decodeStream(java.io.ByteArrayInputStream(bytes))
         }.getOrNull()
     }
     if (movie == null) return
-    var frameNanos by remember { mutableLongStateOf(0L) }
+    var frameNanos by remember(movie) { mutableLongStateOf(0L) }
     LaunchedEffect(movie) {
         while (true) withFrameNanos { frameNanos = it }
     }
