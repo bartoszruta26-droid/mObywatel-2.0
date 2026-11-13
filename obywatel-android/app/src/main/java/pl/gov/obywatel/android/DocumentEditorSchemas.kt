@@ -4,6 +4,8 @@ package pl.gov.obywatel.android
  * Schemat pól ewidencyjnych poszczególnych rodzajów dokumentów.
  * Klucze są stabilne między wydaniami i stanowią część formatu archiwum vCard.
  */
+internal const val DOCUMENT_EDITOR_SCHEMA_VERSION = "2"
+
 internal data class DocumentEditorFieldDefinition(
     val key: String,
     val label: String,
@@ -219,7 +221,6 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             Triple("legalBasis", "Statut / umowa / akt założycielski", ""),
             Triple("registryStatus", "Status wpisu / podmiotu", "")
         )
-        "insurance_vehicle" -> personal
         "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> fields(
             Triple("accountOwner", "Posiadacz rachunku / podmiot", ""),
             Triple("bankName", "Nazwa banku", ""),
