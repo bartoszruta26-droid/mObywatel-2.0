@@ -1101,8 +1101,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
             "imported" -> settingsDocumentEditor = "imported"
             "professional" -> settingsDocumentEditor = "professional"
-            "branding" -> settingsDocumentEditor = "graphic_catalog"
-            else -> { selectedEditorCategory = documentId; showDocumentsEditor = true }
+            else -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
         }
     }
 
@@ -4125,6 +4124,7 @@ private fun DemoDocumentsScreen(
     var saveMessage by remember { mutableStateOf("") }
     val editorTitle = when (categoryId) {
         "profile" -> "Dane osobowe i zdjęcie profilowe"
+        else -> if (categoryId.startsWith("catalog:")) documentDisplayOptions.firstOrNull { it.first == categoryId.removePrefix("catalog:") }?.second ?: "Dane dokumentu" else "Wszystkie dane i dokumenty"
         "family" -> "Dokument rodowy"
         "identity_card" -> "Dowód tożsamości"
         "parliament" -> "Legitymacja poselska"
@@ -4145,7 +4145,7 @@ private fun DemoDocumentsScreen(
         "disability" -> "disability"
         "passport" -> "passport"
         "loyalty_cards" -> "loyalty_cards"
-        else -> categoryId
+        else -> if (categoryId.startsWith("catalog:")) categoryId.removePrefix("catalog:") else categoryId
     }
     val appearance = rememberLegitimacyPreviewSettings(credentialKey)
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -4192,8 +4192,30 @@ private fun DemoDocumentsScreen(
                 "identity_card", "parliament", "training", "student", "disability", "passport",
                 "family", "church", "civil", "business", "bank_accounts", "children_health",
                 "vaccines", "professional", "imported", "signed_pdf", "entity"
-            )) {
+            ) || categoryId.startsWith("catalog:")) {
             GeneralDocumentOcrEditor(categoryId, fields, context) { saveMessage = it }
+        }
+        if (categoryId.startsWith("catalog:")) {
+            val documentId = categoryId.removePrefix("catalog:")
+            val fieldPrefix = "catalog_${documentId}_"
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Text("Dane tekstowe dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    Text("Wpisz dane zgodnie z oryginałem. Pola są ewidencyjne i nie zastępują dokumentu wystawionego przez uprawniony podmiot.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    DemoDataField(fieldPrefix + "holder", "Imię i nazwisko / posiadacz", fields)
+                    DemoDataField(fieldPrefix + "document_number", "Numer dokumentu / identyfikator", fields)
+                    DemoDataField(fieldPrefix + "issuer", "Wystawca / organ / podmiot", fields)
+                    DemoDataField(fieldPrefix + "issue_date", "Data wystawienia", fields, "DD-MM-RRRR")
+                    DemoDataField(fieldPrefix + "valid_until", "Data ważności / aktualizacji", fields, "DD-MM-RRRR")
+                    DemoDataField(fieldPrefix + "status", "Status dokumentu", fields)
+                    DemoDataField(fieldPrefix + "source", "Źródło danych / podstawa wpisu", fields)
+                    DemoDataField(fieldPrefix + "notes", "Informacje dodatkowe", fields)
+                }
+            }
         }
          if (categoryId == "all" || categoryId == "profile") {
         Card(
