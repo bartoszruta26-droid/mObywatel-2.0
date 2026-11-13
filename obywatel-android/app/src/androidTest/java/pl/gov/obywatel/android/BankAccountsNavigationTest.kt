@@ -118,7 +118,7 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
         // Kontrolki formularza leżą niżej w przewijanym ekranie.
         composeRule.onNodeWithText("Dodaj rachunek").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Zapisz dane").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Zapisz zmiany").performScrollTo().assertIsDisplayed()
         assertTrue(composeRule.onAllNodesWithText("Podgląd wyłącznie do odczytu.", substring = true).fetchSemanticsNodes().isEmpty())
     }
 
@@ -219,7 +219,7 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText("Tło legitymacji").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Wybierz tło z katalogu").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Wczytaj własne tło").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Grafika wektorowa podglądu kafelka").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Wektorowe tło kafelka dokumentu — wybierz podgląd").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Miniikona kafelka").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Kolor gradientowego tła kafelka — paleta heraldyczna").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Lazur").performScrollTo().assertIsDisplayed()
