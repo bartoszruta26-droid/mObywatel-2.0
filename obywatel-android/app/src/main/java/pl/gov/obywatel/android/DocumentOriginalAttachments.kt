@@ -154,6 +154,58 @@ private object OriginalAttachmentStore {
         updated.forEach { item -> json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime)) }
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(documentId, json.toString()).apply()
     }
+
+    /**
+     * Includes both attachment metadata and decrypted source bytes in the
+     * application archive. Export fails rather than silently omitting a
+     * missing/corrupt source file.
+     */
+    fun exportArchive(context: Context): String {
+        val entries = JSONArray()
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments")
+        preferences.all.toSortedMap().forEach { (documentId, rawValue) ->
+            require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu w załącznikach." }
+            val raw = rawValue as? String ?: error("Nieprawidłowy rejestr załączników: $documentId")
+            val items = JSONArray(raw)
+            for (index in 0 until items.length()) {
+                val item = items.getJSONObject(index)
+                val id = item.getString("id")
+                require(id.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
+                val encryptedFile = File(directory, "$id.enc")
+                require(encryptedFile.isFile) { "Brakuje pliku źródłowego załącznika: ${item.optString("name")}" }
+                val bytes = crypt(encryptedFile.readBytes(), false)
+                require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) { "Załącznik przekracza limit 25 MB lub jest pusty." }
+                entries.put(JSONObject()
+                    .put("documentId", documentId)
+                    .put("name", item.getString("name"))
+                    .put("mime", item.getString("mime"))
+                    .put("dataBase64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)))
+            }
+        }
+        return JSONObject().put("version", 1).put("attachments", entries).toString()
+    }
+
+    /** Imports source bytes and re-encrypts them with this installation's Android Keystore key. */
+    fun importArchive(context: Context, raw: String) {
+        val root = JSONObject(raw)
+        require(root.optInt("version") == 1) { "Nieobsługiwana wersja archiwum załączników." }
+        val entries = root.optJSONArray("attachments") ?: JSONArray()
+        val decoded = (0 until entries.length()).map { index ->
+            val item = entries.getJSONObject(index)
+            val documentId = item.getString("documentId")
+            require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu." }
+            val name = item.getString("name")
+            val mime = item.getString("mime")
+            val encoded = item.getString("dataBase64")
+            val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+            require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) { "Załącznik przekracza limit 25 MB lub jest pusty." }
+            Triple(documentId, Pair(name, mime), bytes)
+        }
+        decoded.forEach { (documentId, metadata, bytes) ->
+            add(context, documentId, metadata.first, metadata.second, bytes)
+        }
+    }
 }
 
 @Composable
