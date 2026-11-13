@@ -1295,6 +1295,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                     "familyHealthArchive" to exportFamilyHealthArchive(context),
                                     "medicalHistoryArchive" to exportMedicalHistoryArchive(context),
                                     "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context),
+                                    "originalAttachmentArchive" to OriginalAttachmentStore.exportArchive(context),
                                     "identityDocumentsArchive" to pl.gov.obywatel.android.ui.identity.exportIdentityDocumentsArchive(context),
                                     "localRegistryArchive" to pl.gov.obywatel.android.ui.registry.exportLocalRegistryArchive(context),
                                     "activityHistoryArchive" to exportActivityHistoryArchive(context)
@@ -1672,8 +1673,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 !it.startsWith("cs_") && !it.startsWith("dp_") &&
                                     it !in setOf(
                                         "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
-                                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
-                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive",
+                                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive", "originalAttachmentArchive",
+                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
                                     )
                             }
@@ -1689,6 +1690,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             incoming["familyHealthArchive"]?.let { importFamilyHealthArchive(context, it) }
                             incoming["medicalHistoryArchive"]?.let { importMedicalHistoryArchive(context, it) }
                             incoming["importedAttachmentArchive"]?.let { pl.gov.obywatel.android.data.ImportedDocumentStore.importArchive(context, it) }
+                            incoming["originalAttachmentArchive"]?.let { OriginalAttachmentStore.importArchive(context, it) }
                             incoming["identityDocumentsArchive"]?.let { pl.gov.obywatel.android.ui.identity.importIdentityDocumentsArchive(context, it) }
                             incoming["localRegistryArchive"]?.let { pl.gov.obywatel.android.ui.registry.importLocalRegistryArchive(context, it) }
                             incoming["activityHistoryArchive"]?.let { importActivityHistoryArchive(context, it) }
