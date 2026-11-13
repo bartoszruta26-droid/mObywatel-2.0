@@ -251,6 +251,9 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                 }
                 if (isBankRegister) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP).", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
                 DocumentOriginalAttachments(doc.id)
+                DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
+                    if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
+                }, documentType = previewKey)
                 OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
                     Text("Edytuj wygląd graficzny")
                 }
@@ -273,7 +276,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                         }.onFailure { message = "Błąd zapisu: ${it.message}" }
                     },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Zapisz dane") }
+                ) { Text("Zapisz zmiany") }
                 if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
             DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
