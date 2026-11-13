@@ -101,6 +101,26 @@ class DocumentGraphicCatalogTest {
     }
 
     @Test
+    fun armedServiceAndReenactmentDocumentsUseTheirIntendedPreviewTypes() {
+        val credentials = setOf(
+            "military_book", "martial_arts", "shooting_sport", "archery",
+            "security_guard", "historical_reenactment", "reenactment_event"
+        )
+        val records = setOf(
+            "tactical_training", "survival_training", "defense_training",
+            "reenactment_qualification"
+        )
+        credentials.forEach { id ->
+            assertEquals("$id must use a credential preview",
+                DocumentPreviewKind.CREDENTIAL, GraphicDocumentCatalog.find(id)?.kind)
+        }
+        records.forEach { id ->
+            assertEquals("$id must use a record preview",
+                DocumentPreviewKind.RECORD, GraphicDocumentCatalog.find(id)?.kind)
+        }
+    }
+
+    @Test
     fun sourceDocumentsKeepRecordPreviewInsteadOfCredentialMockup() {
         val recordIds = setOf(
             "registry", "birth_extract", "marriage_extract", "death_extract",
