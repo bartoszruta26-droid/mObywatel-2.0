@@ -1095,18 +1095,22 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "loyalty" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
             documentId == "disability" -> showDisabilitySettings = true
             documentId == "registry" -> showRegistryEditor = true
-            documentId == "bank_accounts" || documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts"
-            documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts"
-            documentId == "family" || documentId == "large_family" || (documentId.startsWith("rod_") && documentId != "rod_bank_accounts") -> settingsDocumentEditor = "family"
-            documentId == "church" || documentId.startsWith("church_") || documentId == "mission_travel" -> settingsDocumentEditor = "church"
-            documentId == "civil" || documentId in setOf("birth_extract", "marriage_extract", "death_extract", "vehicle_registration", "official") -> settingsDocumentEditor = "civil"
-            documentId == "business" || documentId == "entity" || (documentId.startsWith("entity_") && documentId != "entity_bank_accounts") ||
-                documentId.startsWith("organization_") -> settingsDocumentEditor = "business"
+            documentId == "bank_accounts" || documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts:$documentId"
+            documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts:$documentId"
+            documentId == "family" || documentId == "large_family" -> settingsDocumentEditor = "family"
+            documentId.startsWith("rod_") -> settingsDocumentEditor = "family:$documentId"
+            documentId == "church" || documentId == "mission_travel" -> settingsDocumentEditor = "church"
+            documentId.startsWith("church_") -> settingsDocumentEditor = if (churchGraphicDocumentTargets().any { it.first == documentId }) "church:$documentId" else "church"
+            documentId == "civil" -> settingsDocumentEditor = "civil"
+            documentId in setOf("birth_extract", "marriage_extract", "death_extract", "vehicle_registration", "official") ||
+                officialGraphicDocumentTargets().any { it.first == documentId } -> settingsDocumentEditor = "civil:$documentId"
+            documentId == "business" || documentId == "entity" || documentId.startsWith("organization_") -> settingsDocumentEditor = "business"
+            documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
             documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
             documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
             documentId == "imported" -> settingsDocumentEditor = "imported"
-            documentId == "professional" || documentId.startsWith("professional_") || documentId == "eu_education" -> settingsDocumentEditor = "professional"
+            documentId == "professional" -> settingsDocumentEditor = "professional"
             documentId == "branding" -> settingsDocumentEditor = "graphic_catalog"
             else -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
         }
@@ -1233,28 +1237,34 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
-                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
-                        FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                    (settingsDocumentEditor == "family" || settingsDocumentEditor?.startsWith("family:") == true) -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                        FamilyEntityDocumentsScreen(entityMode = false, initialDocumentId = settingsDocumentEditor?.substringAfter("family:", "")?.ifBlank { null },
+                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
-                        FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                    (settingsDocumentEditor == "business" || settingsDocumentEditor?.startsWith("business:") == true) -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                        FamilyEntityDocumentsScreen(entityMode = true, initialDocumentId = settingsDocumentEditor?.substringAfter("business:", "")?.ifBlank { null },
+                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
-                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                    (settingsDocumentEditor == "bank_accounts" || settingsDocumentEditor?.startsWith("bank_accounts:") == true) -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("bank_accounts:", "")?.ifBlank { null },
+                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "entity_bank_accounts" -> CredentialAppearanceEditorEntry("entity_bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
-                        FamilyEntityDocumentsScreen(entityMode = true, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                    settingsDocumentEditor?.startsWith("entity_bank_accounts:") == true -> CredentialAppearanceEditorEntry("entity_bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                        FamilyEntityDocumentsScreen(entityMode = true, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("entity_bank_accounts:", "")?.ifBlank { null },
+                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                    (settingsDocumentEditor == "church" || settingsDocumentEditor?.startsWith("church:") == true) -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
                         ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            initialDocumentId = settingsDocumentEditor?.substringAfter("church:", "")?.ifBlank { null },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                    (settingsDocumentEditor == "civil" || settingsDocumentEditor?.startsWith("civil:") == true) -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
                         OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            initialDocumentId = settingsDocumentEditor?.substringAfter("civil:", "")?.ifBlank { null },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
                     settingsDocumentEditor == "children_health" -> CredentialAppearanceEditorEntry("children", onOpenAppearance = { credentialAppearanceTarget = it }) {
