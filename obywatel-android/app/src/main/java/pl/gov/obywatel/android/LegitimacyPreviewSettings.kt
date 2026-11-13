@@ -103,7 +103,15 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "trainingCertificateNumber" to "Numer zaświadczenia o ukończeniu",
         "trainingForm" to "Forma kształcenia"
     )
-    "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf(
+    "professional" -> listOf(
+        "professionalTitle" to "ZAWÓD / ROLA",
+        "professionalNumber" to "NUMER DOKUMENTU / KWALIFIKACJI",
+        "professionalIssuer" to "ORGAN / WYSTAWCA",
+        "professionalValidity" to "WAŻNY DO",
+        "professionalSpeciality" to "REJESTR",
+        "professionalQualification" to "ZAKRES UPRAWNIEŃ"
+    )
+    "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "professionalTitle" to "Tytuł / kwalifikacja",
         "professionalNumber" to "Numer dokumentu", "professionalIssuer" to "Wystawca",
         "professionalValidity" to "Termin ważności", "professionalSpeciality" to "Specjalność",
@@ -257,9 +265,17 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "civilIssueDate" to "Data sporządzenia", "civilIssuer" to "Wystawca"
     )
     "profile" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
-        "contactPhone" to "Telefon", "contactEmail" to "E-mail", "contactOrganization" to "Organizacja",
-        "contactTitle" to "Stanowisko", "contactUrl" to "Strona internetowa", "contactAddress" to "Adres"
+        "firstNames" to "Imię / imiona", "lastName" to "Nazwisko",
+        "contactPhone" to "Telefon kontaktowy",
+        "contactEmail" to "Adres poczty elektronicznej",
+        "contactOrganization" to "Organizacja",
+        "contactTitle" to "Stanowisko",
+        "contactUrl" to "Strona internetowa",
+        "contactAddress" to "Adres kontaktowy",
+        "fatherNames" to "Imiona ojca",
+        "fatherSurname" to "Nazwisko ojca",
+        "motherNames" to "Imiona matki",
+        "motherSurname" to "Nazwisko rodowe matki"
     )
     "birth_extract" -> listOf("civilActType" to "Rodzaj aktu", "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "civilDocumentNumber" to "Numer aktu", "civilExtractType" to "Rodzaj odpisu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
     "marriage_extract" -> listOf("civilActType" to "Rodzaj aktu", "spouseNames" to "Małżonkowie", "marriageDate" to "Data zawarcia małżeństwa", "civilDocumentNumber" to "Numer aktu", "civilExtractType" to "Rodzaj odpisu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
