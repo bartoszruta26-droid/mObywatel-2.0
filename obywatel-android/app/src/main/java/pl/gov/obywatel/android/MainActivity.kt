@@ -5091,28 +5091,11 @@ private fun CredentialAppearanceSettingsScreen(
 @Composable
 private fun DisabilityDecisionPreview(fields: Map<String, String>) {
     if (LocalDocumentScreenMode.current == DocumentScreenMode.EDITOR) return
-    val authorityType = fields["disabilityAuthorityType"] ?: "powiat"
-    val label = when (authorityType) {
-        "foundation" -> "Dokument zespołu medycznego fundacji"
-        "other_law" -> "Dokument na podstawie odrębnych przepisów"
-        "medical_opinion" -> "Opinia / zaświadczenie medyczne"
-        "self_declaration" -> "Oświadczenie własne"
-        else -> "Ewidencja danych orzeczenia"
-    }
-    OwdDocumentArtworkCard(
-        imageRes = R.drawable.orzeczenie_rodowe_o_niepelnosprawnosci,
-        title = "Dane o niepełnosprawności",
-        subtitle = label,
-        holder = fields["disabilityPersonName"].orEmpty().ifBlank { "Dane osoby" },
-        details = "Nr: ${fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" }} • Stopień: ${fields["disabilityDegree"].orEmpty().ifBlank { "—" }}",
-        privateRecord = true,
-        credentialFields = listOf(
-            Triple("disabilityDecisionType", "RODZAJ ORZECZENIA", fields["disabilityDecisionType"].orEmpty()),
-            Triple("disabilityDecisionNumber", "NUMER ORZECZENIA", fields["disabilityDecisionNumber"].orEmpty()),
-            Triple("disabilityDegree", "STOPIEŃ", fields["disabilityDegree"].orEmpty()),
-            Triple("disabilityValidity", "OKRES OBOWIĄZYWANIA", fields["disabilityValidity"].orEmpty()),
-            Triple("disabilityIssuerName", "WYSTAWCA", fields["disabilityIssuerName"].orEmpty())
-        )
+    val settings = rememberLegitimacyPreviewSettings("disability").value
+    CredentialTemplatePreview(
+        documentKey = "disability",
+        settings = settings,
+        values = fields
     )
 }
 
@@ -5141,22 +5124,12 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
     val institution = if (student) fields["studentUniversity"].orEmpty() else fields["trainingInstitution"].orEmpty()
     val validity = if (student) fields["studentValidity"].orEmpty() else fields["trainingValidUntil"].orEmpty()
     val valid = credentialValidityForDocument(documentKey, fields)
-    val cardFields = if (student) listOf(
-        Triple("studentUniversity", "UCZELNIA", institution),
-        Triple("studentProgramme", "KIERUNEK", fields["studentProgramme"].orEmpty()),
-        Triple("studentCardNumber", "NUMER LEGITYMACJI", fields["studentCardNumber"].orEmpty()),
-        Triple("studentIssueDate", "DATA WYDANIA", fields["studentIssueDate"].orEmpty()),
-        Triple("studentValidity", "WAŻNA DO", validity)
-    ) else listOf(
-        Triple("trainingInstitution", "INSTYTUCJA", institution),
-        Triple("trainingCourseName", "KURS / KWALIFIKACJA", fields["trainingCourseName"].orEmpty()),
-        Triple("trainingCardNumber", "NUMER LEGITYMACJI", fields["trainingCardNumber"].orEmpty()),
-        Triple("trainingIssueDate", "DATA WYDANIA", fields["trainingIssueDate"].orEmpty()),
-        Triple("trainingValidUntil", "WAŻNA DO", validity)
-    )
+    val cardFields = credentialFieldOptions(documentKey).map { (key, label) ->
+        Triple(key, label, fields[key].orEmpty().ifBlank { "—" })
+    }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.showCard) {
-            UnifiedCredentialCard(
+            CredentialCardSides(
                 documentKey = documentKey,
                 title = if (student) "LEGITYMACJA UCZNIA / STUDENTA" else "LEGITYMACJA KURSANTA",
                 subtitle = institution,
@@ -5166,13 +5139,6 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                 photo = photoBitmap,
                 fallbackBackgroundRes = if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe,
                 validity = valid
-            )
-            if (settings.showReverse) LegitimacyReverseSide(
-                title = if (student) "Legitymacja szkolna — rewers" else "Legitymacja uczestnika kursu — rewers",
-                issuer = institution,
-                number = if (student) fields["studentCardNumber"].orEmpty() else fields["trainingCardNumber"].orEmpty(),
-                validity = validity,
-                orientation = settings.orientation
             )
         }
     }
@@ -5204,16 +5170,12 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
     val term = fields["mpTerm"].orEmpty()
     val expiry = fields["mpEnd"].orEmpty()
     val valid = credentialValidityForDocument(documentKey, fields)
-    val cardFields = listOf(
-        Triple("mpCardNumber", "NUMER LEGITYMACJI", number),
-        Triple("mpTerm", "KADENCJA", term),
-        Triple("mpCardIssueDate", "DATA WYDANIA", fields["mpCardIssueDate"].orEmpty()),
-        Triple("mpEnd", "KONIEC OKRESU", expiry),
-        Triple("mpIssuer", "WYSTAWCA", issuer)
-    )
+    val cardFields = credentialFieldOptions(documentKey).map { (key, label) ->
+        Triple(key, label, fields[key].orEmpty().ifBlank { "—" })
+    }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.showCard) {
-            UnifiedCredentialCard(
+            CredentialCardSides(
                 documentKey = documentKey,
                 title = "LEGITYMACJA POSELSKA",
                 subtitle = "SEJM RZECZYPOSPOLITEJ POLSKIEJ",
@@ -5223,9 +5185,6 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
                 photo = photoBitmap,
                 fallbackBackgroundRes = R.drawable.tlo_legitymacji_szare,
                 validity = valid
-            )
-            if (settings.showReverse) LegitimacyReverseSide(
-                "Legitymacja poselska — rewers", issuer, number, expiry, settings.orientation
             )
         }
     }
