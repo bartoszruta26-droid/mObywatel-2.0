@@ -17,16 +17,28 @@ class DocumentOcrParserTest {
  @Test fun blankTextHasNoSuggestions(){assertTrue(DocumentOcrParser.extract("identity_card"," ").isEmpty())}
 
  @Test fun documentSpecificCategoriesMapOcrIntoTheirOwnFields(){
-  val cases = listOf(
-   Triple("church","Osoba / duchowny / członek wspólnoty: JAN KOWALSKI","doc_church_clergyName"),
-   Triple("family","Osoba, której dotyczy wpis: ANNA KOWALSKA","doc_family_familyMember"),
-   Triple("business","Pełna nazwa podmiotu: FUNDACJA ARIA","doc_business_entityName"),
-   Triple("bank_accounts","Posiadacz rachunku / podmiot: JAN KOWALSKI","doc_bank_accounts_accountOwner"),
-   Triple("civil","Rodzaj aktu / zaświadczenia: AKT URODZENIA","doc_civil_actOrCertificateType")
-  )
-  cases.forEach { (category, text, expectedKey) ->
-   val result = DocumentOcrParser.extract(category,text)
-   assertTrue("category=$category result=$result", result.containsKey(expectedKey))
-  }
+  val bank = DocumentOcrParser.extract("bank_accounts","Posiadacz rachunku / podmiot: JAN KOWALSKI")
+  assertTrue("bank=$bank", bank.containsKey("doc_bank_accounts_accountOwner"))
+
+  val insurance = DocumentOcrParser.extract("insurance_vehicle","Numer polisy: OC-2026-123")
+  assertTrue("insurance=$insurance", insurance.containsKey("doc_insurance_vehicle_policyNumber"))
+
+  val foundation = DocumentOcrParser.extract("organization_foundation","Pełna nazwa fundacji: FUNDACJA ARIA")
+  assertTrue("foundation=$foundation", foundation.containsKey("doc_organization_foundation_foundationName"))
+
+  val churchId = churchGraphicDocumentTargets().first().first
+  val churchField = churchGraphicDocumentFields(churchId).first()
+  val church = DocumentOcrParser.extract(churchId,"${churchField.second}: JAN KOWALSKI")
+  assertTrue("church=$church", church.containsKey(churchField.first))
+
+  val familyId = familyEntityGraphicDocumentTargets().first().first
+  val familyField = familyEntityGraphicDocumentFields(familyId).first()
+  val family = DocumentOcrParser.extract(familyId,"${familyField.second}: ANNA KOWALSKA")
+  assertTrue("family=$family", family.containsKey(familyField.first))
+
+  val officialId = officialGraphicDocumentTargets().first().first
+  val officialField = officialGraphicDocumentFields(officialId).first()
+  val official = DocumentOcrParser.extract(officialId,"${officialField.second}: AKT")
+  assertTrue("official=$official", official.containsKey(officialField.first))
  }
 }
