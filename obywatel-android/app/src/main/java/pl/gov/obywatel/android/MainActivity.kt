@@ -1019,11 +1019,11 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
     id == "professional" || id.startsWith("professional_") ||
         id in setOf("training", "student", "eu_education") -> "Służba zawodowa"
+    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") -> "Służba zdrowotna"
     id == "civil" || id in setOf(
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
         "vehicle_registration", "official"
     ) || officialGraphicDocumentTargets().any { it.first == id } -> "Służba cywilna"
-    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") -> "Służba zdrowotna"
     id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ||
         documentBrandTargets.any { it.first == id } -> "Zasoby i dokumenty własne"
     else -> "Służba osobista"
