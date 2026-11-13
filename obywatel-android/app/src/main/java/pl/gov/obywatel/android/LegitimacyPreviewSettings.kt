@@ -484,7 +484,7 @@ internal object LegitimacyPreviewSettingsStore {
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
             tileBackgroundAssetId = p.getString("${key}_tile_background", "").orEmpty(),
-            tileVectorBackgroundAssetId = p.getString("global_document_tile_vector_background", p.getString("${key}_tile_vector_background", "")).orEmpty(),
+            tileVectorBackgroundAssetId = p.getString("${key}_tile_vector_background", p.getString("global_document_tile_vector_background", "")).orEmpty(),
             showHologram = p.getBoolean("${key}_show_hologram", false),
             hologramAssetId = p.getString("${key}_hologram_asset", "builtin_drawable_file_00000000db3c820aa85356eab8c60f10").orEmpty(),
             hologramAlpha = p.getFloat("${key}_hologram_alpha", 0.46f),
@@ -543,7 +543,6 @@ internal object LegitimacyPreviewSettingsStore {
                 .putBoolean("${key}_show_reverse", value.showReverse)
                 .putString("${key}_tile_background", value.tileBackgroundAssetId)
                 .putString("${key}_tile_vector_background", value.tileVectorBackgroundAssetId)
-                .putString("global_document_tile_vector_background", value.tileVectorBackgroundAssetId)
                 .putBoolean("${key}_show_hologram", value.showHologram)
                 .putFloat("${key}_hologram_alpha", value.hologramAlpha)
                 .putString("${key}_hologram_asset", value.hologramAssetId)
@@ -637,6 +636,11 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_font_family", value.fontFamily)
                 .putString("${key}_image_filter", value.imageFilter)
             // Parametry wzoru indywidualnego są zapisywane powyżej i nie mogą być usuwane.
+            if (value.tileVectorBackgroundAssetId.isBlank()) {
+                editor.remove("${key}_tile_vector_background")
+            } else {
+                editor.putString("${key}_tile_vector_background", value.tileVectorBackgroundAssetId)
+            }
         }
         check(editor.commit()) { "Nie udało się zapisać ustawień wyglądu legitymacji." }
     }
