@@ -278,11 +278,11 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
                     try {
                         totalPages = renderer.pageCount
                         require(totalPages > 0) { "Dokument PDF nie zawiera stron." }
-                        val pageLimit = minOf(totalPages, 20)
+                        val pageLimit = minOf(totalPages, 10)
                         for (pageIndex in 0 until pageLimit) {
                             val page = renderer.openPage(pageIndex)
                             try {
-                                val scale = minOf(1f, 1800f / maxOf(page.width, page.height))
+                                val scale = minOf(1f, 1400f / maxOf(page.width, page.height))
                                 val width = (page.width * scale).toInt().coerceAtLeast(1)
                                 val height = (page.height * scale).toInt().coerceAtLeast(1)
                                 val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -363,8 +363,8 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
 
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Odczyt dokumentu z filmu przez OCR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            Text("Nagraj krótki film, powoli pokazując dokument z bliska. Aplikacja pobierze do 24 klatek nagrania, rozpozna tekst na każdej z nich i połączy wyniki, aby uzupełnić pasujące pola. Możesz też wybrać wcześniej nagrany film albo zdjęcie/skan. OCR nie potwierdza autentyczności dokumentu.",
+            Text("Odczyt dokumentu przez OCR", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            Text("Możesz rozpoznać tekst ze zdjęcia, fotografii wykonanej aparatem, pliku PDF, pliku tekstowego albo filmu. OCR proponuje uzupełnienie pasujących pól; sprawdź każdą wartość. Odczyt PDF obejmuje maksymalnie 10 pierwszych stron. OCR nie potwierdza autentyczności dokumentu.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = {
                 runCatching {
