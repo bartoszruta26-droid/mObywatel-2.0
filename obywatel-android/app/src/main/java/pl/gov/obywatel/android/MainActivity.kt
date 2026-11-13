@@ -2361,7 +2361,7 @@ private fun DocumentDetailsScreen(
                 photo = photoBitmap,
                 validity = validity
             )
-            if (reversePreviewFields.isNotEmpty()) {
+            if (settings.showReverse && reversePreviewFields.isNotEmpty()) {
                 UnifiedCredentialCard(
                     documentKey = "${normalizedId}_reverse",
                     title = "${title.uppercase()} — REWERS",
