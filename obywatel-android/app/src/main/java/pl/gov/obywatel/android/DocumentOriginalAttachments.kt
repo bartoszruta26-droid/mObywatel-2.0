@@ -208,6 +208,10 @@ private object OriginalAttachmentStore {
     }
 }
 
+internal fun exportOriginalAttachmentArchive(context: Context): String = OriginalAttachmentStore.exportArchive(context)
+
+internal fun importOriginalAttachmentArchive(context: Context, raw: String) = OriginalAttachmentStore.importArchive(context, raw)
+
 @Composable
 internal fun DocumentOriginalAttachments(documentId: String, readOnly: Boolean = false) {
     val context = LocalContext.current
