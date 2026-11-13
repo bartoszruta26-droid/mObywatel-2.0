@@ -1085,27 +1085,28 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun openSettingsDocumentEditor(documentId: String) {
         showDocumentEditorCatalog = false
-        when (documentId) {
-            "profile" -> { selectedEditorCategory = "profile"; showDocumentsEditor = true }
-            "identity" -> { selectedEditorCategory = "identity_card"; showDocumentsEditor = true }
-            "passport" -> { selectedEditorCategory = "passport"; showDocumentsEditor = true }
-            "parliament" -> { selectedEditorCategory = "parliament"; showDocumentsEditor = true }
-            "training" -> { selectedEditorCategory = "training"; showDocumentsEditor = true }
-            "student" -> { selectedEditorCategory = "student"; showDocumentsEditor = true }
-            "loyalty" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
-            "disability", "disability_card" -> showDisabilitySettings = true
-            "registry" -> showRegistryEditor = true
-            "family" -> settingsDocumentEditor = "family"
-            "church" -> settingsDocumentEditor = "church"
-            "civil" -> settingsDocumentEditor = "civil"
-            "business", "entity", "organization_foundation", "organization_church",
-            "organization_company", "organization_association" -> settingsDocumentEditor = "business"
-            "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> settingsDocumentEditor = "bank_accounts"
-            "vaccines" -> settingsDocumentEditor = "vaccines"
-            "children" -> settingsDocumentEditor = "children_health"
-            "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
-            "imported" -> settingsDocumentEditor = "imported"
-            "professional" -> settingsDocumentEditor = "professional"
+        when {
+            documentId == "profile" -> { selectedEditorCategory = "profile"; showDocumentsEditor = true }
+            documentId == "identity" -> { selectedEditorCategory = "identity_card"; showDocumentsEditor = true }
+            documentId == "passport" -> { selectedEditorCategory = "passport"; showDocumentsEditor = true }
+            documentId == "parliament" -> { selectedEditorCategory = "parliament"; showDocumentsEditor = true }
+            documentId == "training" -> { selectedEditorCategory = "training"; showDocumentsEditor = true }
+            documentId == "student" -> { selectedEditorCategory = "student"; showDocumentsEditor = true }
+            documentId == "loyalty" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
+            documentId == "disability" -> showDisabilitySettings = true
+            documentId == "registry" -> showRegistryEditor = true
+            documentId == "family" || documentId == "large_family" || documentId.startsWith("rod_") -> settingsDocumentEditor = "family"
+            documentId == "church" || documentId.startsWith("church_") || documentId == "mission_travel" -> settingsDocumentEditor = "church"
+            documentId == "civil" || documentId in setOf("birth_extract", "marriage_extract", "death_extract", "criminal_record", "vehicle_registration", "insurance_vehicle", "official") -> settingsDocumentEditor = "civil"
+            documentId == "business" || documentId == "entity" || documentId.startsWith("entity_") ||
+                documentId.startsWith("organization_") -> settingsDocumentEditor = "business"
+            documentId == "bank_accounts" || documentId == "rod_bank_accounts" || documentId == "entity_bank_accounts" -> settingsDocumentEditor = "bank_accounts"
+            documentId == "vaccines" || documentId == "ehic" || documentId == "blood_donor" -> settingsDocumentEditor = "vaccines"
+            documentId == "children" -> settingsDocumentEditor = "children_health"
+            documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
+            documentId == "imported" -> settingsDocumentEditor = "imported"
+            documentId == "professional" || documentId.startsWith("professional_") || documentId == "eu_education" || documentId == "insurance_professional" -> settingsDocumentEditor = "professional"
+            documentId == "branding" -> settingsDocumentEditor = "graphic_catalog"
             else -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
         }
     }
@@ -4164,23 +4165,16 @@ private fun DemoDocumentsScreen(
         if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
         if (categoryId.startsWith("catalog:")) {
             val documentId = categoryId.removePrefix("catalog:")
-            val fieldPrefix = "catalog_${documentId}_"
+            val definitions = documentEditorFieldDefinitions(documentId)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Text("Dane tekstowe dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                    Text("Wpisz dane zgodnie z oryginałem. Pola są ewidencyjne i nie zastępują dokumentu wystawionego przez uprawniony podmiot.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    DemoDataField(fieldPrefix + "holder", "Imię i nazwisko / posiadacz", fields)
-                    DemoDataField(fieldPrefix + "document_number", "Numer dokumentu / identyfikator", fields)
-                    DemoDataField(fieldPrefix + "issuer", "Wystawca / organ / podmiot", fields)
-                    DemoDataField(fieldPrefix + "issue_date", "Data wystawienia", fields, "DD-MM-RRRR")
-                    DemoDataField(fieldPrefix + "valid_until", "Data ważności / aktualizacji", fields, "DD-MM-RRRR")
-                    DemoDataField(fieldPrefix + "status", "Status dokumentu", fields)
-                    DemoDataField(fieldPrefix + "source", "Źródło danych / podstawa wpisu", fields)
-                    DemoDataField(fieldPrefix + "notes", "Informacje dodatkowe", fields)
+                    Text("Dane właściwe dla dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    definitions.forEach { definition ->
+                        DemoDataField("doc_${documentId}_${definition.key}", definition.label, fields, definition.placeholder)
+                    }
                 }
             }
         }
