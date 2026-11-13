@@ -3501,22 +3501,22 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit, onEditGraphic: () -> Un
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
                     }
                 }
-                DemoDataField("disabilityAuthorityName", "Organ / podmiot / wystawca", fields)
-                DemoDataField("disabilityIssuerName", "Osoba podpisująca / wystawca", fields)
-                DemoDataField("disabilityLegalBasis", "Podstawa prawna lub regulacyjna", fields)
-                DemoDataField("disabilityFoundationStatute", "Statut / uchwała fundacji (jeśli dotyczy)", fields)
+                DemoDataField("disabilityAuthorityName", "Nazwa organu / podmiotu / wystawcy", fields)
+                DemoDataField("disabilityIssuerName", "Imię, nazwisko lub nazwa wystawcy", fields)
+                DemoDataField("disabilityLegalBasis", "Podstawa prawna / cel wydania", fields)
+                DemoDataField("disabilityFoundationStatute", "Podstawa statutowa / uchwała fundacji", fields)
                 Text("Dane osoby i dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                DemoDataField("disabilityPersonName", "Imię i nazwisko", fields)
+                DemoDataField("disabilityPersonName", "Osoba, której dotyczy orzeczenie", fields)
                 DemoDataField("disabilityBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
                 DemoDataField("disabilityPeselOrId", "PESEL / identyfikator", fields)
-                DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / zaświadczenia", fields)
+                DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / rozstrzygnięcia", fields)
                 DemoDataField("disabilityDecisionDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("disabilityDecisionPlace", "Miejsce wydania", fields)
                 Text("Ustalony stopień i okres", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityCategory", "Kategoria", fields)
                 DemoDataField("disabilityDegree", "Stopień niepełnosprawności", fields, "znaczny / umiarkowany / lekki")
                 DemoDataField("disabilityCauseCodes", "Symbole / przyczyny", fields)
-                DemoDataField("disabilityValidity", "Okres obowiązywania", fields, "na stałe / do DD-MM-RRRR")
+                DemoDataField("disabilityValidity", "Okres, na jaki ustalono status", fields, "na stałe / do DD-MM-RRRR")
                 DemoDataField("disabilityFromDate", "Data ustalenia niepełnosprawności", fields, "DD-MM-RRRR")
                 Text("Wskazania i potrzeby wsparcia", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityEmployment", "Zatrudnienie", fields)
@@ -3529,7 +3529,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit, onEditGraphic: () -> Un
                 Text("Metodologia i ocena funkcjonalna (opcjonalnie)", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityAssessmentMethod", "Metoda oceny (np. ICF)", fields)
                 DemoDataField("disabilityWhodasScore", "WHODAS 2.0 — wynik / data oceny", fields)
-                DemoDataField("disabilityMedicalQualification", "Kwalifikacje osoby oceniającej", fields)
+                DemoDataField("disabilityMedicalQualification", "Zawód / kwalifikacje osoby wystawiającej", fields)
                 DemoDataField("disabilityAppealInfo", "Tryb odwołania / weryfikacji", fields)
                 androidx.compose.material3.Button(
                     onClick = {
@@ -4737,10 +4737,10 @@ private fun DemoDocumentsScreen(
                 when (authorityType) {
                     "powiat" -> {
                         DemoDataField("disabilityCounty", "Powiat / miasto na prawach powiatu", fields)
-                        DemoDataField("disabilityLegalBasis", "Podstawa prawna", fields, "Ustawa z 27.08.1997 r. i przepisy wykonawcze")
+                        DemoDataField("disabilityLegalBasis", "Podstawa prawna / cel wydania", fields, "Ustawa z 27.08.1997 r. i przepisy wykonawcze")
                     }
                     "other_law" -> {
-                        DemoDataField("disabilityLegalBasis", "Odrębna podstawa prawna", fields)
+                        DemoDataField("disabilityLegalBasis", "Podstawa prawna / cel wydania", fields)
                         DemoDataField("disabilityLegalProvision", "Przepis określający skutki lub równoważność", fields)
                         DemoDataField("disabilityEquivalentEffect", "Zakres uznania / równoważności", fields)
                     }
@@ -4751,7 +4751,7 @@ private fun DemoDocumentsScreen(
                     }
                     "medical_opinion" -> {
                         DemoDataField("disabilityMedicalQualification", "Zawód / kwalifikacje osoby wystawiającej", fields)
-                        DemoDataField("disabilityLegalBasis", "Podstawa i cel wydania opinii / zaświadczenia", fields)
+                        DemoDataField("disabilityLegalBasis", "Podstawa prawna / cel wydania", fields)
                     }
                     "self_declaration" -> {
                         DemoDataField("disabilitySelfDeclarationDate", "Data złożenia oświadczenia", fields, "DD-MM-RRRR")
