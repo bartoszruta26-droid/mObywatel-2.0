@@ -195,13 +195,13 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (readOnly) {
-                val settings = rememberLegitimacyPreviewSettings(previewKey).value.copy(visibleFieldsConfigured = false)
-                UnifiedCredentialCard(
+                val settings = rememberLegitimacyPreviewSettings(previewKey).value
+                CredentialCardSides(
                     documentKey = previewKey,
                     title = doc.title.uppercase(),
                     subtitle = doc.section,
                     holderName = previewFields.firstOrNull()?.third?.takeIf { it != "—" } ?: "DANE EWIDENCYJNE",
-                    fields = previewFields.take(12),
+                    fields = previewFields,
                     settings = settings
                 )
                 Text("Podgląd wyłącznie do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia → konkretny dokument.",
@@ -240,11 +240,12 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                         }, modifier = Modifier.weight(1f), enabled = accountCount > 1) { Text("Usuń ostatni") }
                     }
                 } else doc.fields.forEachIndexed { index, label ->
-                    OutlinedTextField(
+                    DocumentFieldEditor(
+                        documentKey = previewKey,
+                        fieldKey = "field_$index",
+                        label = label,
                         value = local["f$index"].orEmpty(),
                         onValueChange = { local["f$index"] = it },
-                        label = { Text(label) },
-                        modifier = Modifier.fillMaxWidth(),
                         minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1,
                         maxLines = 5
                     )
