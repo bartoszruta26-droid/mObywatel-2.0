@@ -63,7 +63,15 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
     val subdocumentFields = churchGraphicDocumentFields(documentKey)
         .ifEmpty { familyEntityGraphicDocumentFields(documentKey) }
         .ifEmpty { officialGraphicDocumentFields(documentKey) }
-    if (subdocumentFields.isNotEmpty()) return subdocumentFields + listOf("details" to "Informacje dodatkowe")
+    // Pola katalogowe są zapisywane w magazynie pod prefiksem doc_<id>_.
+    // Używamy tych samych kluczy w edytorze, ustawieniach widoczności i podglądzie karty.
+    val schemaFields = documentEditorFieldDefinitions(documentKey).map { definition ->
+        "doc_${documentKey}_${definition.key}" to definition.label
+    }
+    if (subdocumentFields.isNotEmpty()) {
+        return (subdocumentFields + listOf("details" to "Informacje dodatkowe") + schemaFields)
+            .distinctBy { it.first }
+    }
     return (when (documentKey) {
     "parliament" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji",
@@ -187,7 +195,23 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "documentNumber" to "Numer dokumentu",
         "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca"
     )
-}) + listOf("details" to "Informacje dodatkowe")
+} + listOf("details" to "Informacje dodatkowe") + schemaFields).distinctBy { it.first }
+}
+
+internal fun credentialVisibleFields(
+    fields: List<Triple<String, String, String>>,
+    visibleFieldsConfigured: Boolean,
+    visibleFieldKeys: Set<String>
+): List<Triple<String, String, String>> =
+    if (!visibleFieldsConfigured) fields else fields.filter { it.first in visibleFieldKeys }
+
+internal fun splitCredentialFieldsForSides(
+    fields: List<Triple<String, String, String>>,
+    orientation: String
+): Pair<List<Triple<String, String, String>>, List<Triple<String, String, String>>> {
+    val frontCapacity = if (orientation == "POZIOMA") 8 else 5
+    return if (fields.size > frontCapacity) fields.take(frontCapacity) to fields.drop(frontCapacity)
+    else fields to emptyList()
 }
 
 internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
@@ -1398,9 +1422,7 @@ internal fun UnifiedCredentialCard(
         settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?: DocumentBrandStore.imageForDocument(context, documentKey, title, "Logo")
     }
-    val visible = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) fields else fields.filter {
-        it.first in settings.visibleFields
-    }
+    val visible = credentialVisibleFields(fields, settings.visibleFieldsConfigured, settings.visibleFields)
     val sharePayload = remember(documentKey, holderName, visible) {
         buildString {
             append("OWD-CREDENTIAL|1\n")
@@ -1946,7 +1968,11 @@ internal fun CredentialTemplatePreview(
     val title = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "Wspólny wzór legitymacji"
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
     val options = credentialFieldOptions(documentKey)
-    val selected = if (!settings.visibleFieldsConfigured || settings.visibleFields.isEmpty()) options else options.filter { it.first in settings.visibleFields }
+    val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
+    val selectedCardFields = selected.map { (key, label) ->
+        Triple(key, label, values?.get(key).orEmpty().ifBlank { "—" })
+    }
+    val (frontFields, reverseFields) = splitCredentialFieldsForSides(selectedCardFields, settings.orientation)
     val holderName = values?.get("studentNames").orEmpty().ifBlank {
         values?.get("passportHolderNames").orEmpty().ifBlank {
             values?.get("disabilityPersonName").orEmpty().ifBlank {
@@ -1970,12 +1996,24 @@ internal fun CredentialTemplatePreview(
             title = title,
             subtitle = "",
             holderName = holderName,
-            fields = selected.map { (key, label) -> Triple(key, label, values?.get(key).orEmpty().ifBlank { "—" }) },
+            fields = frontFields,
             settings = settings,
             photo = photo,
             assetRevision = assetRevision,
             validity = values?.let { credentialValidityForDocument(documentKey, it) } ?: true
         )
+        if (reverseFields.isNotEmpty()) {
+            UnifiedCredentialCard(
+                documentKey = "${documentKey}_reverse",
+                title = "${title} — REWERS",
+                subtitle = "Dalsze dane dokumentu",
+                holderName = holderName,
+                fields = reverseFields,
+                settings = settings.copy(showPhoto = false, showFlag = false, showCrest = false, showLogo = false, showHologram = false),
+                assetRevision = assetRevision,
+                validity = values?.let { credentialValidityForDocument(documentKey, it) } ?: true
+            )
+        }
     } else {
         Text("Podgląd legitymacji jest wyłączony.", color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall)
