@@ -75,18 +75,33 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
     }
     return (when (documentKey) {
     "parliament" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji",
-        "mpTerm" to "Kadencja", "mpDistrict" to "Okręg wyborczy", "mpStart" to "Początek mandatu",
-        "mpEnd" to "Koniec mandatu", "mpCardIssueDate" to "Data wydania", "mpIssuer" to "Wystawca"
+        "mpCardNumber" to "Numer ewidencyjny legitymacji", "mpTerm" to "Kadencja",
+        "mpDistrict" to "Okręg wyborczy", "mpStart" to "Data rozpoczęcia mandatu",
+        "mpEnd" to "Data zakończenia mandatu", "mpCardIssueDate" to "Data wydania legitymacji",
+        "mpIssuer" to "Organ / osoba wystawiająca", "mpStatus" to "Status legitymacji",
+        "mpMandateSource" to "Źródło potwierdzenia mandatu", "mpOathDate" to "Data złożenia ślubowania",
+        "mpOathPlace" to "Miejsce / okoliczności wypowiedzenia ślubowania",
+        "mpOathEvidence" to "Źródło potwierdzenia (np. protokół, nagranie, publikacja)"
     )
     "training" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "trainingInstitution" to "Instytucja",
-        "trainingCourseName" to "Kurs / kwalifikacja", "trainingCardNumber" to "Numer legitymacji",
-        "trainingIssueDate" to "Data wydania", "trainingValidUntil" to "Termin ważności",
-        "trainingCourseCode" to "Kod kursu", "trainingStartDate" to "Data rozpoczęcia",
-        "trainingEndDate" to "Data zakończenia", "trainingStatus" to "Status uczestnictwa",
-        "trainingIssuer" to "Wystawca", "trainingCompletionDate" to "Data ukończenia",
-        "trainingHours" to "Liczba godzin", "trainingAssessment" to "Wynik", "trainingCertificateNumber" to "Numer zaświadczenia"
+        "trainingInstitution" to "Nazwa instytucji szkoleniowej",
+        "trainingInstitutionAddress" to "Adres instytucji",
+        "trainingInstitutionRegistry" to "Numer wpisu / rejestru instytucji (jeśli dotyczy)",
+        "trainingCardNumber" to "Numer legitymacji uczestnika",
+        "trainingCourseName" to "Nazwa kursu / kierunek kształcenia",
+        "trainingCourseCode" to "Symbol lub numer kursu",
+        "trainingStartDate" to "Data rozpoczęcia kursu",
+        "trainingEndDate" to "Planowana data zakończenia kursu",
+        "trainingIssueDate" to "Data wydania legitymacji",
+        "trainingValidUntil" to "Ważna do",
+        "trainingStatus" to "Status uczestnictwa",
+        "trainingIssuer" to "Osoba upoważniona do wystawienia",
+        "trainingSignature" to "Imię i nazwisko / podpis wystawcy",
+        "trainingCompletionDate" to "Rzeczywista data ukończenia kursu",
+        "trainingHours" to "Liczba godzin kształcenia",
+        "trainingAssessment" to "Zaliczenie / egzamin / wynik",
+        "trainingCertificateNumber" to "Numer zaświadczenia o ukończeniu",
+        "trainingForm" to "Forma kształcenia"
     )
     "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "professionalTitle" to "Tytuł / kwalifikacja",
@@ -95,12 +110,21 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "professionalQualification" to "Zakres kwalifikacji"
     )
     "student" -> listOf(
-        "studentNames" to "Imię i nazwisko", "studentUniversity" to "Uczelnia",
-        "studentProgramme" to "Kierunek", "studentCardNumber" to "Numer legitymacji",
-        "studentIssueDate" to "Data wydania", "studentValidity" to "Termin ważności",
-        "studentFaculty" to "Wydział", "studentLevel" to "Poziom studiów",
-        "studentProfile" to "Profil / forma", "studentYear" to "Rok i semestr",
-        "studentAcademicYear" to "Rok akademicki", "studentStatus" to "Status"
+        "studentUniversity" to "Nazwa uczelni",
+        "studentUniversityAddress" to "Adres uczelni",
+        "studentUniversityId" to "Identyfikator uczelni / jednostki",
+        "studentCardNumber" to "Numer legitymacji / numer albumu",
+        "studentNames" to "Imię i nazwisko studenta zapisane w dokumencie",
+        "studentFaculty" to "Wydział / jednostka organizacyjna",
+        "studentProgramme" to "Kierunek studiów",
+        "studentLevel" to "Poziom studiów",
+        "studentProfile" to "Profil / forma studiów",
+        "studentYear" to "Rok i semestr studiów",
+        "studentAcademicYear" to "Rok akademicki",
+        "studentIssueDate" to "Data wydania dokumentu",
+        "studentValidity" to "Termin ważności / aktualizacji",
+        "studentStatus" to "Status studenta",
+        "studentIssuer" to "Osoba / jednostka wydająca"
     )
     "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> listOf(
         "account_name" to "Nazwa własna rachunku",
