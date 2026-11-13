@@ -19,7 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -366,7 +366,16 @@ private val tileIconChoices = listOf(
     "tile_ic_student_outline" to "Uczeń / student",
     "tile_ic_disability_outline" to "Niepełnosprawność",
     "tile_ic_church_outline" to "Kościół", "tile_ic_civil_outline" to "Cywilny",
-    "tile_ic_business_outline" to "Podmiot / firma"
+    "tile_ic_business_outline" to "Podmiot / firma",
+    "mob_abroad" to "Usługi zagraniczne", "mob_cyber_safety" to "Cyberbezpieczeństwo",
+    "mob_document_check" to "Weryfikacja dokumentu", "mob_environment" to "Środowisko",
+    "mob_health" to "Zdrowie", "mob_payments" to "Płatności",
+    "mob_penalties" to "Mandaty", "mob_pesel_check" to "Weryfikacja PESEL",
+    "mob_pesel_lock" to "Zastrzeż PESEL", "mob_ticket" to "Bilety",
+    "mob_transport" to "Transport",
+    "service_folder" to "Folder usług", "service_pesel_check" to "Kontrola PESEL",
+    "service_pesel_lock" to "Blokada PESEL", "service_prescription" to "Recepta",
+    "service_profile" to "Profil", "service_ticket" to "Bilet"
 )
 
 private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
@@ -1886,7 +1895,7 @@ private fun AnimatedHologram(modifier: Modifier = Modifier) {
     LaunchedEffect(movie) {
         while (true) withFrameNanos { frameNanos = it }
     }
-    Canvas(modifier) {
+    ComposeCanvas(modifier) {
         val duration = movie.duration().coerceAtLeast(1)
         movie.setTime(((frameNanos / 1_000_000L) % duration).toInt())
         val sourceWidth = movie.width().coerceAtLeast(1).toFloat()
