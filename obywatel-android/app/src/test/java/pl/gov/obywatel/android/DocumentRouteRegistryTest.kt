@@ -17,7 +17,7 @@ class DocumentRouteRegistryTest {
             "marriage_extract", "death_extract", "large_family", "blood_donor", "disability_card",
             "vehicle_registration", "insurance_vehicle", "insurance_professional", "insurance_private",
             "insurance_business", "criminal_record", "mission_travel", "ehic", "eu_education", "military_book", "martial_arts",
-            "shooting_sport", "archery", "tactical_training", "survival_training", "security_guard", "defense_training",
+            "shooting_sport", "archery", "tactical_training", "survival_training", "security_guard", "defense_training", "historical_reenactment", "reenactment_qualification", "reenactment_event",
             "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister",
             "church_missionary", "professional", "professional_medical", "professional_education",
             "professional_therapeutic", "professional_other", "organization_foundation",
