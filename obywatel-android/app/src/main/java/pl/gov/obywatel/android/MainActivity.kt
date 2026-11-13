@@ -1063,7 +1063,8 @@ private val documentIconChoices = listOf(
     "tile_ic_disability_outline" to "Orzeczenia i zaświadczenia",
     "tile_ic_church_outline" to "Dokumenty kościelne",
     "tile_ic_civil_outline" to "Dokumenty cywilne",
-    "tile_ic_business_outline" to "Dokumenty firmowe i podmiotowe"
+    "tile_ic_business_outline" to "Dokumenty firmowe i podmiotowe",
+    "tile_ic_armed_service_outline" to "Służba wojskowa"
 )
 private fun loadDefaultDocumentIcon(context: Context): String =
     context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
