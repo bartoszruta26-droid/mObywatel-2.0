@@ -1196,23 +1196,23 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
-                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
+                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false), showOcrStage = false {
                         FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
+                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false), showOcrStage = false {
                         FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
+                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false), showOcrStage = false {
                         FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
+                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false), showOcrStage = false {
                         ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
+                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false), showOcrStage = false {
                         OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
@@ -4492,9 +4492,41 @@ private fun CredentialAppearanceEditorEntry(
     documentKey: String,
     onOpenAppearance: (String) -> Unit,
     showAppearanceAction: Boolean = true,
+    showOcrStage: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val ocrPrefix = "groupedOcr:$documentKey:"
+    val ocrFields = remember(documentKey) {
+        mutableStateMapOf<String, String>().apply {
+            DemoIdentityStore.load(context).filterKeys { it.startsWith(ocrPrefix) }
+                .forEach { (key, value) -> put(key.removePrefix(ocrPrefix), value) }
+        }
+    }
     Column(Modifier.fillMaxSize()) {
+        if (showOcrStage) {
+            GeneralDocumentOcrEditor(documentKey, ocrFields, context) {
+                val snapshot = DemoIdentityStore.load(context).toMutableMap()
+                ocrFields.forEach { (key, value) -> snapshot[ocrPrefix + key] = value }
+                DemoIdentityStore.save(context, snapshot)
+            }
+            val suggestions = ocrFields.filterKeys { it != "${documentKey}OcrText" && it.isNotBlank() }
+            if (suggestions.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Propozycje odczytane przez OCR — do ręcznej weryfikacji",
+                            color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.Bold)
+                        suggestions.forEach { (key, value) ->
+                            Text("${key}: ${value}", color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
         Box(Modifier.weight(1f)) { content() }
         if (showAppearanceAction) {
             OutlinedButton(
