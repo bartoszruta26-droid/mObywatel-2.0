@@ -1182,7 +1182,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showDocumentsEditor -> DemoDocumentsScreen(
                         categoryId = selectedEditorCategory,
                         onBack = { showDocumentsEditor = false; showSettingsMenu = true },
-                        onOpenSharedAppearance = { showCredentialAppearanceEditor = true },
                         onOpenDocumentAppearance = { key -> credentialAppearanceTarget = key }
                     )
                     showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }) {
@@ -3931,7 +3930,6 @@ private val LocalCredentialFieldVisibility = androidx.compose.runtime.compositio
 private fun DemoDocumentsScreen(
     categoryId: String = "all",
     onBack: () -> Unit,
-    onOpenSharedAppearance: () -> Unit = {},
     onOpenDocumentAppearance: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -4006,7 +4004,11 @@ private fun DemoDocumentsScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        if (categoryId in setOf("identity_card", "parliament", "training", "student", "disability", "passport")) {
+        if (categoryId in setOf(
+                "identity_card", "parliament", "training", "student", "disability", "passport",
+                "family", "church", "civil", "business", "bank_accounts", "children_health",
+                "vaccines", "professional", "imported", "signed_pdf", "entity"
+            )) {
             GeneralDocumentOcrEditor(categoryId, fields, context) { saveMessage = it }
         }
          if (categoryId == "all" || categoryId == "profile") {
@@ -4470,11 +4472,6 @@ private fun DemoDocumentsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Zapisz dane i zdjęcie") }
                 if (saveMessage.isNotBlank()) Text(saveMessage, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        if (categoryId != "all") {
-            OutlinedButton(onClick = onOpenSharedAppearance, modifier = Modifier.fillMaxWidth()) {
-                Text("Edytuj wspólny wzór wszystkich legitymacji")
             }
         }
         if (categoryId != "all") {
