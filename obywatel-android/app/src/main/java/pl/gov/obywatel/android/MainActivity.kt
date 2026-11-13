@@ -4392,9 +4392,6 @@ private fun DemoDocumentsScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        if (categoryId != "all") {
-            GeneralDocumentOcrEditor(if (categoryId.startsWith("catalog:")) categoryId.removePrefix("catalog:") else categoryId, fields, context) { saveMessage = it }
-        }
         if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
         if (categoryId.startsWith("catalog:")) {
             val documentId = categoryId.removePrefix("catalog:")
