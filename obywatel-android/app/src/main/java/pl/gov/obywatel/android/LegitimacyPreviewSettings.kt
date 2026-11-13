@@ -108,12 +108,17 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "trainingForm" to "Forma kształcenia"
     )
     "professional" -> listOf(
-        "professionalTitle" to "ZAWÓD / ROLA",
-        "professionalNumber" to "NUMER DOKUMENTU / KWALIFIKACJI",
-        "professionalIssuer" to "ORGAN / WYSTAWCA",
-        "professionalValidity" to "WAŻNY DO",
-        "professionalSpeciality" to "REJESTR",
-        "professionalQualification" to "ZAKRES UPRAWNIEŃ"
+        "professionalTitle" to "Nazwa zawodu / roli",
+        "professionalNumber" to "Numer dokumentu / kwalifikacji",
+        "professionalNumberType" to "Rodzaj numeru dokumentu",
+        "professionalIssuer" to "Organ / wystawca",
+        "professionalIssueDate" to "Data wydania",
+        "professionalValidity" to "Ważny do / bezterminowo",
+        "professionalSpeciality" to "Nazwa rejestru",
+        "professionalRegisterUrl" to "Adres rejestru / wpisu",
+        "professionalQualification" to "Zakres uprawnień / czynności",
+        "professionalLegalBasis" to "Podstawa prawna / regulaminowa",
+        "professionalStatus" to "Status (np. aktywny, wygasły, do weryfikacji)"
     )
     "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "professionalTitle" to "Tytuł / kwalifikacja",
