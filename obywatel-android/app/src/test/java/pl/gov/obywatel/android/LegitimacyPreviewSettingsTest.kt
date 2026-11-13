@@ -3,10 +3,17 @@
 package pl.gov.obywatel.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LegitimacyPreviewSettingsTest {
+    @Test
+    fun reverseSideIsHiddenByDefault() {
+        assertFalse("Rewers wszystkich dokumentów ma być domyślnie ukryty.",
+            LegitimacyPreviewSettings().showReverse)
+    }
+
     @Test
     fun explicitlyEmptyVisibleFieldSelectionHidesEveryField() {
         val fields = listOf(
