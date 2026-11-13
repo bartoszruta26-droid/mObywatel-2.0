@@ -308,7 +308,7 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "documentNumber" to "Numer dokumentu",
         "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca"
     )
-} + listOf("details" to "Informacje dodatkowe") + schemaFields).distinctBy { it.first }
+} + schemaFields).distinctBy { it.first }
 }
 
 internal fun credentialVisibleFields(
