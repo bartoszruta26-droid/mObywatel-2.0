@@ -143,21 +143,19 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "studentStatus" to "Status studenta",
         "studentIssuer" to "Osoba / jednostka wydająca"
     )
-    "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> listOf(
-        "account_name" to "Nazwa własna rachunku",
-        "account_bank" to "Bank / instytucja prowadząca",
-        "account_currency" to "Waluta",
-        "account_iban" to "Numer rachunku / IBAN",
-        "account_bic" to "Kod BIC / SWIFT",
-        "account_holder" to "Posiadacz / współposiadacze",
-        "account_type" to "Rodzaj rachunku",
-        "account_country" to "Kraj prowadzenia rachunku",
-        "account_status" to "Status rachunku",
-        "account_open_date" to "Data otwarcia",
-        "account_close_date" to "Data zamknięcia",
-        "account_purpose" to "Cel / przeznaczenie",
-        "account_notes" to "Uwagi"
-    )
+    "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> buildList {
+        val labels = listOf(
+            "Nazwa własna rachunku", "Bank / instytucja prowadząca",
+            "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT",
+            "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku",
+            "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi"
+        )
+        repeat(30) { accountIndex ->
+            labels.forEachIndexed { fieldIndex, label ->
+                add("account_${accountIndex}_${fieldIndex}" to "${label} · rachunek ${accountIndex + 1}")
+            }
+        }
+    }
     "identity" -> listOf(
         "firstNames" to "Imię / imiona", "lastName" to "Nazwisko",
         "birthDate" to "Data urodzenia", "birthPlace" to "Miejsce urodzenia",
@@ -276,20 +274,6 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
     "loyalty" -> listOf(
         "loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz"
     )
-    "bank_accounts" -> buildList {
-        val labels = listOf(
-            "Nazwa własna rachunku", "Bank / instytucja prowadząca",
-            "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT",
-            "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku",
-            "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi"
-        )
-        repeat(30) { accountIndex ->
-            labels.forEachIndexed { fieldIndex, label ->
-                val key = "account_${accountIndex}_${fieldIndex}"
-                add(key to "${label} · rachunek ${accountIndex + 1}")
-            }
-        }
-    }
     "children" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
         "childRelationship" to "Relacja", "guardianName" to "Opiekun", "childDocumentNumber" to "Numer dokumentu"
