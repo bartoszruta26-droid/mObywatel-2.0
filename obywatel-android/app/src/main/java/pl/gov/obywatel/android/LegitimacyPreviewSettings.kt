@@ -2116,6 +2116,74 @@ private fun AnimatedHologram(assetId: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+internal fun DocumentFieldEditor(
+    documentKey: String,
+    fieldKey: String,
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String = "Wpisz dane",
+    minLines: Int = 1,
+    maxLines: Int = 1
+) {
+    val binding = rememberLegitimacyPreviewSettings(documentKey)
+    val settings = binding.value
+    val selectedSide = credentialFieldSide(
+        fieldKey, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
+    )
+    val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            placeholder = { Text(placeholder) },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = minLines,
+            maxLines = maxLines
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(
+                CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                CREDENTIAL_FIELD_FRONT to "Awers",
+                CREDENTIAL_FIELD_BACK to "Rewers"
+            ).forEach { (target, caption) ->
+                Row(
+                    Modifier.weight(1f).clickable {
+                        val current = binding.value
+                        val updated = current.copy(
+                            fieldSides = current.fieldSides + (fieldKey to target),
+                            visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
+                                current.visibleFields - fieldKey else current.visibleFields + fieldKey,
+                            visibleFieldsConfigured = true
+                        )
+                        LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                        binding.value = updated
+                    },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    androidx.compose.material3.RadioButton(
+                        selected = selectedSide == target,
+                        onClick = {
+                            val current = binding.value
+                            val updated = current.copy(
+                                fieldSides = current.fieldSides + (fieldKey to target),
+                                visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
+                                    current.visibleFields - fieldKey else current.visibleFields + fieldKey,
+                                visibleFieldsConfigured = true
+                            )
+                            LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                            binding.value = updated
+                        }
+                    )
+                    Text(caption, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 internal fun CredentialCardSides(
     documentKey: String,
     title: String,
