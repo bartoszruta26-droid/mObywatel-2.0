@@ -490,6 +490,11 @@ private val legacyDocumentEditorFieldKeys = setOf(
 internal fun isGroupedOcrArchiveField(key: String): Boolean =
     key.matches(Regex("groupedOcr_[0-9a-f]{1,8}"))
 
+internal fun isSupportedDynamicDocumentField(key: String): Boolean =
+    isGroupedOcrArchiveField(key) ||
+        key.matches(Regex("registry_[A-Za-z0-9_-]{1,40}_(source|checked|documentDate|notes)")) ||
+        key.matches(Regex("loyalty(?:[1-9]|1[0-9]|2[0-5])(?:Store|Number|OcrText|Qr|Barcode)"))
+
 internal fun documentEditorImportableFieldKeys(): Set<String> =
     documentEditorFieldKeys() + legacyDocumentEditorFieldKeys +
         documentDisplayOptions.distinctBy { it.first }.map { (id, _, _) -> "${id}OcrText" } +
