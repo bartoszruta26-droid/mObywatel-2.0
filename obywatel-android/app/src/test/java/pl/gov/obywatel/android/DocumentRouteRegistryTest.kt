@@ -13,7 +13,7 @@ class DocumentRouteRegistryTest {
     fun everyDocumentVisibilityTileHasAnExplicitRoute() {
         val visibleTileIds = setOf(
             "profile", "identity", "passport", "registry", "family", "parliament", "training",
-            "student", "disability", "church", "civil", "business", "bank_accounts", "vaccines",
+            "student", "disability", "church", "civil", "business", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts", "vaccines",
             "signed_pdf", "imported", "children", "branding", "loyalty", "birth_extract",
             "marriage_extract", "death_extract", "large_family", "blood_donor", "disability_card",
             "vehicle_registration", "insurance_vehicle", "insurance_professional", "insurance_private",
@@ -25,7 +25,10 @@ class DocumentRouteRegistryTest {
             "organization_church", "organization_company", "organization_association", "entity", "official"
         )
 
-        assertEquals(visibleTileIds, DocumentRouteRegistry.routes.keys - setOf("identity_card", "loyalty_cards"))
+        val catalogTileIds = documentDisplayOptions.map { it.first }.toSet()
+        assertEquals("The route registry must cover the live visibility catalog.", catalogTileIds,
+            DocumentRouteRegistry.routes.keys - setOf("identity_card", "loyalty_cards"))
+        assertEquals(visibleTileIds, catalogTileIds)
         visibleTileIds.forEach { id -> assertNotNull("Missing route for $id", DocumentRouteRegistry.find(id)) }
     }
 
@@ -100,10 +103,16 @@ class DocumentRouteRegistryTest {
 
     @Test
     fun featureScreensAreExplicitlySpecializedAndLegacyAliasesRemainCompatible() {
-        listOf("registry", "bank_accounts", "vaccines", "signed_pdf", "imported", "branding", "children")
-            .forEach { id ->
-                assertEquals(id, DocumentRouteType.SPECIALIZED, DocumentRouteRegistry.find(id)?.type)
+        listOf(
+            "registry", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
+            "vaccines", "signed_pdf", "imported", "branding", "children"
+        ).forEach { id ->
+            val route = requireNotNull(DocumentRouteRegistry.find(id))
+            assertEquals(id, DocumentRouteType.SPECIALIZED, route.type)
+            if (id == "rod_bank_accounts" || id == "entity_bank_accounts") {
+                assertEquals("The specialized route must preserve the selected bank register.", id, route.destination)
             }
+        }
 
         assertEquals("identity", DocumentRouteRegistry.find("identity_card")?.documentId)
         assertEquals("loyalty", DocumentRouteRegistry.find("loyalty_cards")?.documentId)
