@@ -13,7 +13,7 @@ private const val DOCUMENT_GROUP_PREFS = "document_group_catalog"
 private const val DOCUMENT_GROUPS_KEY = "groups"
 private const val DOCUMENT_GROUP_ASSIGNMENTS_KEY = "assignments"
 private val legacyDocumentGroupNames = mapOf(
-    "Służba zbrojna" to "Służba wojskowa",
+    "Służba wojskowa" to "Służba zbrojna",
     "Dokumenty osobiste i tożsamościowe" to "Służba osobista",
     "Dokumenty kościelne" to "Służba kościelna",
     "Dokumenty rodowe i rodzinne" to "Służba rodowa",
