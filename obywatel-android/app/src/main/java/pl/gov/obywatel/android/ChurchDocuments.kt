@@ -198,9 +198,6 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                 Triple("churchField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            if (!readOnly) OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Edytuj wygląd graficzny i podgląd tego dokumentu")
-            }
             if (readOnly) {
                 val settings = rememberLegitimacyPreviewSettings(brandDocumentType).value.copy(visibleFieldsConfigured = false)
                 UnifiedCredentialCard(
@@ -235,6 +232,18 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                         maxLines = 6
                     )
                 }
+                OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Edytuj wygląd graficzny")
+                }
+                Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                UnifiedCredentialCard(
+                    documentKey = brandDocumentType,
+                    title = doc.title.uppercase(),
+                    subtitle = churchOwner.ifBlank { "DOKUMENT KOŚCIELNY" },
+                    holderName = churchOwner.ifBlank { "DANE WYSTAWCY" },
+                    fields = previewFields.take(12),
+                    settings = rememberLegitimacyPreviewSettings(brandDocumentType).value
+                )
                 Button(onClick = {
                     runCatching {
                         ChurchDocumentStore.save(context, records + (doc.id to local))
