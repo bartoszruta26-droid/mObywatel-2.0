@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Movie
 import android.graphics.RectF
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -18,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -34,9 +36,11 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.*
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
@@ -278,6 +282,12 @@ internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
     val tileBackgroundAssetId: String = "",
+    val tileVectorBackgroundAssetId: String = "",
+    val showHologram: Boolean = false,
+    val hologramAssetId: String = "builtin_hologram_mandala",
+    val hologramOffsetX: Float = 0f,
+    val hologramOffsetY: Float = 0f,
+    val hologramScale: Float = 1f,
     val tileIconAssetId: String = "",
     val tileVectorMotifId: String = "auto",
     val tileGradientPaletteId: String = "auto",
@@ -464,6 +474,12 @@ internal object LegitimacyPreviewSettingsStore {
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
             tileBackgroundAssetId = p.getString("${key}_tile_background", "").orEmpty(),
+            tileVectorBackgroundAssetId = p.getString("${key}_tile_vector_background", "").orEmpty(),
+            showHologram = p.getBoolean("${key}_show_hologram", false),
+            hologramAssetId = p.getString("${key}_hologram_asset", "builtin_hologram_mandala").orEmpty(),
+            hologramOffsetX = p.getFloat("${key}_hologram_x", 0f),
+            hologramOffsetY = p.getFloat("${key}_hologram_y", 0f),
+            hologramScale = p.getFloat("${key}_hologram_scale", 1f),
             tileIconAssetId = p.getString("${key}_tile_icon", "").orEmpty(),
             tileVectorMotifId = p.getString("${key}_tile_vector_motif", "auto").orEmpty(),
             tileGradientPaletteId = p.getString("${key}_tile_gradient_palette", "auto").orEmpty(),
@@ -515,6 +531,12 @@ internal object LegitimacyPreviewSettingsStore {
             editor.putBoolean("${key}_show_card", value.showCard)
                 .putBoolean("${key}_show_reverse", value.showReverse)
                 .putString("${key}_tile_background", value.tileBackgroundAssetId)
+                .putString("${key}_tile_vector_background", value.tileVectorBackgroundAssetId)
+                .putBoolean("${key}_show_hologram", value.showHologram)
+                .putString("${key}_hologram_asset", value.hologramAssetId)
+                .putFloat("${key}_hologram_x", value.hologramOffsetX)
+                .putFloat("${key}_hologram_y", value.hologramOffsetY)
+                .putFloat("${key}_hologram_scale", value.hologramScale)
                 .putString("${key}_orientation", value.orientation)
                 .putBoolean("${key}_show_photo", value.showPhoto)
                 .putBoolean("${key}_show_flag", value.showFlag)
@@ -553,6 +575,12 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_flag", value.flagAssetId)
                 .putString("${key}_background", value.backgroundAssetId)
                 .putString("${key}_tile_background", value.tileBackgroundAssetId)
+                .putString("${key}_tile_vector_background", value.tileVectorBackgroundAssetId)
+                .putBoolean("${key}_show_hologram", value.showHologram)
+                .putString("${key}_hologram_asset", value.hologramAssetId)
+                .putFloat("${key}_hologram_x", value.hologramOffsetX)
+                .putFloat("${key}_hologram_y", value.hologramOffsetY)
+                .putFloat("${key}_hologram_scale", value.hologramScale)
                 .putString("${key}_tile_icon", value.tileIconAssetId)
                 .putString("${key}_tile_vector_motif", value.tileVectorMotifId)
                 .putString("${key}_tile_gradient_palette", value.tileGradientPaletteId)
@@ -979,6 +1007,16 @@ internal fun LegitimacyPreviewSettingsPanel(
             OutlinedButton(onClick = { tileBackgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
                 modifier = Modifier.fillMaxWidth()) { Text("Wczytaj własne tło kafelka") }
 
+            GraphicAssetPreviewGrid(
+                title = "Grafika wektorowa tła kafelka — wybierz podgląd",
+                selectedId = settings.tileVectorBackgroundAssetId,
+                choices = remember(documentKey, assets) {
+                    listOf(Triple("", "Domyślne wektorowe tło", null)) +
+                        assets.filter { it.kind == "Grafika wektorowa tła kafelków" }
+                            .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                },
+                onSelect = { update(settings.copy(tileVectorBackgroundAssetId = it)) }
+            )
             Text("Grafika wektorowa podglądu kafelka", fontWeight = FontWeight.SemiBold)
             Text("Wybierz wektorowy motyw ilustracji kafelka. Wybór jest zapisywany oddzielnie dla każdego dokumentu.",
                 style = MaterialTheme.typography.bodySmall)
@@ -1012,6 +1050,26 @@ internal fun LegitimacyPreviewSettingsPanel(
                     repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
+            Text("Animowany hologram", fontWeight = FontWeight.SemiBold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = settings.showHologram, onCheckedChange = { update(settings.copy(showHologram = it)) })
+                Text("Wyświetlaj animowany hologram na legitymacji")
+            }
+            GraphicAssetPreviewGrid(
+                title = "Wybór hologramu z zasobów — podgląd",
+                selectedId = settings.hologramAssetId,
+                choices = remember(documentKey, assets) {
+                    assets.filter { it.kind == "Animowany hologram" }
+                        .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                },
+                onSelect = { update(settings.copy(hologramAssetId = it)) }
+            )
+            Text("Rozmiar hologramu: ${"%.2f".format(settings.hologramScale)}")
+            Slider(settings.hologramScale, { update(settings.copy(hologramScale = it)) }, valueRange = 0.45f..1.8f)
+            Text("Położenie poziome hologramu: ${settings.hologramOffsetX.toInt()} dp")
+            Slider(settings.hologramOffsetX, { update(settings.copy(hologramOffsetX = it)) }, valueRange = -120f..120f)
+            Text("Położenie pionowe hologramu: ${settings.hologramOffsetY.toInt()} dp")
+            Slider(settings.hologramOffsetY, { update(settings.copy(hologramOffsetY = it)) }, valueRange = -120f..120f)
             Text("Kolor gradientowego tła kafelka — paleta heraldyczna", fontWeight = FontWeight.SemiBold)
             tileGradientPaletteOptions.chunked(4).forEach { row ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1422,6 +1480,14 @@ internal fun UnifiedCredentialCard(
                             alpha = 0.88f
                         )
                     }
+                    if (settings.showHologram && settings.hologramAssetId.isNotBlank()) {
+                        AnimatedHologram(
+                            Modifier.align(Alignment.BottomEnd)
+                                .offset(x = settings.hologramOffsetX.dp, y = settings.hologramOffsetY.dp)
+                                .size((cardWidth * 0.22f * settings.hologramScale).coerceIn(42.dp, 112.dp))
+                                .graphicsLayer { alpha = 0.46f }
+                        )
+                    }
                     Row(
                         Modifier.fillMaxSize().padding(
                             horizontal = horizontalPadding,
@@ -1800,6 +1866,36 @@ internal fun CredentialValidityTile(valid: Boolean?) {
             )
             Text(label, fontSize = 15.sp, color = tint, fontWeight = FontWeight.SemiBold)
         }
+    }
+}
+
+@Composable
+private fun AnimatedHologram(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val movie = remember {
+        runCatching {
+            context.assets.open("mandala_hologram.gif").use { Movie.decodeStream(it) }
+        }.getOrNull()
+    }
+    if (movie == null) return
+    var frameNanos by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(movie) {
+        while (true) withFrameNanos { frameNanos = it }
+    }
+    Canvas(modifier) {
+        val duration = movie.duration().coerceAtLeast(1)
+        movie.setTime(((frameNanos / 1_000_000L) % duration).toInt())
+        val sourceWidth = movie.width().coerceAtLeast(1).toFloat()
+        val sourceHeight = movie.height().coerceAtLeast(1).toFloat()
+        val scale = minOf(size.width / sourceWidth, size.height / sourceHeight)
+        val left = (size.width - sourceWidth * scale) / 2f
+        val top = (size.height - sourceHeight * scale) / 2f
+        val canvas = drawContext.canvas.nativeCanvas
+        val saveCount = canvas.save()
+        canvas.translate(left, top)
+        canvas.scale(scale, scale)
+        movie.draw(canvas, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+        canvas.restoreToCount(saveCount)
     }
 }
 
