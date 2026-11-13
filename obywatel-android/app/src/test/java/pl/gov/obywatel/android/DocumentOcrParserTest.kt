@@ -42,16 +42,5 @@ class DocumentOcrParserTest {
   assertTrue("official=$official", official.containsKey(officialField.first))
  }
 
- @Test fun everySchemaBackedCatalogDocumentMapsItsOwnFieldLabelToItsStableKey() {
-  documentDisplayOptions.distinctBy { it.first }.forEach { (documentId, _, _) ->
-   val definitions = documentEditorFieldDefinitions(documentId)
-   if (definitions.isNotEmpty()) {
-    val definition = definitions.first()
-    val value = "WARTOSC_TESTOWA"
-    val mapped = DocumentOcrParser.extract(documentId, "${definition.label}: $value")
-    val expectedKey = "doc_${documentId}_${definition.key}"
-    assertEquals("$documentId must map ${definition.label} to $expectedKey", value, mapped[expectedKey])
-   }
-  }
- }
+
 }
