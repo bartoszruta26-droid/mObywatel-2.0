@@ -3673,9 +3673,16 @@ private fun DocumentsWalletScreen(
                 visibleDocuments.filter { documentPlacements[it.id] == "dashboard" && category in it.categories }
             }
             if (entries.isNotEmpty()) {
-                Text(category, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 5.dp))
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (category == "Służba wojskowa") {
+                        Image(painterResource(R.drawable.tile_ic_armed_service_outline),
+                            contentDescription = null, modifier = Modifier.size(34.dp))
+                    }
+                    Text(category, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 5.dp))
+                }
                 if (documentCardStyle == "list") {
                     entries.forEach { document ->
                         Card(
