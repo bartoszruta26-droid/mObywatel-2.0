@@ -9,6 +9,17 @@ import org.junit.Test
 
 class DocumentGraphicCatalogTest {
     @Test
+    fun graphicAssetLibraryHasDedicatedVectorTileAndHologramGroups() {
+        val kinds = DocumentBrandStore.assetKinds()
+        assertTrue("Vector tile backgrounds need their own asset group",
+            "Grafika wektorowa tła kafelków" in kinds)
+        assertTrue("Vector tile icons need their own asset group",
+            "Ikona wektorowa kafelka" in kinds)
+        assertTrue("Animated holograms need their own asset group",
+            "Animowany hologram" in kinds)
+    }
+
+    @Test
     fun allAuditedDocumentsHaveUniqueIndependentDefinitions() {
         val expected = setOf(
             "registry", "birth_extract", "marriage_extract", "death_extract", "large_family",
