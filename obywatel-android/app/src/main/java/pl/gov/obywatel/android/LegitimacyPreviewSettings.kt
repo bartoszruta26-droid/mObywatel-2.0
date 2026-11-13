@@ -284,7 +284,8 @@ internal data class LegitimacyPreviewSettings(
     val tileBackgroundAssetId: String = "",
     val tileVectorBackgroundAssetId: String = "",
     val showHologram: Boolean = false,
-    val hologramAssetId: String = "builtin_hologram_mandala",
+    val hologramAssetId: String = "builtin_drawable_file_00000000db3c820aa85356eab8c60f10",
+    val hologramAlpha: Float = 0.46f,
     val hologramOffsetX: Float = 0f,
     val hologramOffsetY: Float = 0f,
     val hologramScale: Float = 1f,
@@ -483,9 +484,10 @@ internal object LegitimacyPreviewSettingsStore {
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
             tileBackgroundAssetId = p.getString("${key}_tile_background", "").orEmpty(),
-            tileVectorBackgroundAssetId = p.getString("${key}_tile_vector_background", "").orEmpty(),
+            tileVectorBackgroundAssetId = p.getString("global_document_tile_vector_background", p.getString("${key}_tile_vector_background", "")).orEmpty(),
             showHologram = p.getBoolean("${key}_show_hologram", false),
-            hologramAssetId = p.getString("${key}_hologram_asset", "builtin_hologram_mandala").orEmpty(),
+            hologramAssetId = p.getString("${key}_hologram_asset", "builtin_drawable_file_00000000db3c820aa85356eab8c60f10").orEmpty(),
+            hologramAlpha = p.getFloat("${key}_hologram_alpha", 0.46f),
             hologramOffsetX = p.getFloat("${key}_hologram_x", 0f),
             hologramOffsetY = p.getFloat("${key}_hologram_y", 0f),
             hologramScale = p.getFloat("${key}_hologram_scale", 1f),
@@ -541,7 +543,9 @@ internal object LegitimacyPreviewSettingsStore {
                 .putBoolean("${key}_show_reverse", value.showReverse)
                 .putString("${key}_tile_background", value.tileBackgroundAssetId)
                 .putString("${key}_tile_vector_background", value.tileVectorBackgroundAssetId)
+                .putString("global_document_tile_vector_background", value.tileVectorBackgroundAssetId)
                 .putBoolean("${key}_show_hologram", value.showHologram)
+                .putFloat("${key}_hologram_alpha", value.hologramAlpha)
                 .putString("${key}_hologram_asset", value.hologramAssetId)
                 .putFloat("${key}_hologram_x", value.hologramOffsetX)
                 .putFloat("${key}_hologram_y", value.hologramOffsetY)
@@ -585,7 +589,9 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_background", value.backgroundAssetId)
                 .putString("${key}_tile_background", value.tileBackgroundAssetId)
                 .putString("${key}_tile_vector_background", value.tileVectorBackgroundAssetId)
+                .putString("global_document_tile_vector_background", value.tileVectorBackgroundAssetId)
                 .putBoolean("${key}_show_hologram", value.showHologram)
+                .putFloat("${key}_hologram_alpha", value.hologramAlpha)
                 .putString("${key}_hologram_asset", value.hologramAssetId)
                 .putFloat("${key}_hologram_x", value.hologramOffsetX)
                 .putFloat("${key}_hologram_y", value.hologramOffsetY)
@@ -1017,7 +1023,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 modifier = Modifier.fillMaxWidth()) { Text("Wczytaj własne tło kafelka") }
 
             GraphicAssetPreviewGrid(
-                title = "Grafika wektorowa tła kafelka — wybierz podgląd",
+                title = "Wspólne wektorowe tło kafelków dokumentów — wybierz podgląd",
                 selectedId = settings.tileVectorBackgroundAssetId,
                 choices = remember(documentKey, assets) {
                     listOf(Triple("", "Domyślne wektorowe tło", null)) +
@@ -1027,7 +1033,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 onSelect = { update(settings.copy(tileVectorBackgroundAssetId = it)) }
             )
             Text("Grafika wektorowa podglądu kafelka", fontWeight = FontWeight.SemiBold)
-            Text("Wybierz wektorowy motyw ilustracji kafelka. Wybór jest zapisywany oddzielnie dla każdego dokumentu.",
+            Text("To ustawienie dotyczy wszystkich dokumentów wyświetlanych w Główne → Dokumenty. Nie zmienia kafelków usług ani pozostałych elementów interfejsu.",
                 style = MaterialTheme.typography.bodySmall)
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 tileVectorMotifOptions.forEach { (id, label) ->
@@ -1073,6 +1079,8 @@ internal fun LegitimacyPreviewSettingsPanel(
                 },
                 onSelect = { update(settings.copy(hologramAssetId = it)) }
             )
+            Text("Przezroczystość hologramu: ${(settings.hologramAlpha * 100).toInt()}%")
+            Slider(settings.hologramAlpha, { update(settings.copy(hologramAlpha = it)) }, valueRange = 0f..1f)
             Text("Rozmiar hologramu: ${"%.2f".format(settings.hologramScale)}")
             Slider(settings.hologramScale, { update(settings.copy(hologramScale = it)) }, valueRange = 0.45f..1.8f)
             Text("Położenie poziome hologramu: ${settings.hologramOffsetX.toInt()} dp")
@@ -1495,7 +1503,7 @@ internal fun UnifiedCredentialCard(
                             modifier = Modifier.align(Alignment.BottomEnd)
                                 .offset(x = settings.hologramOffsetX.dp, y = settings.hologramOffsetY.dp)
                                 .size((cardWidth * 0.22f * settings.hologramScale).coerceIn(42.dp, 112.dp))
-                                .graphicsLayer { alpha = 0.46f }
+                                .graphicsLayer { alpha = settings.hologramAlpha.coerceIn(0f, 1f) }
                         )
                     }
                     Row(
