@@ -42,6 +42,8 @@ object DocumentRouteRegistry {
         group("civil", "Formularze dokumentów"),
         group("business", "Dokumenty rejestru podmiotów"),
         specialized("bank_accounts", "bank_accounts"),
+        specialized("rod_bank_accounts", "rod_bank_accounts"),
+        specialized("entity_bank_accounts", "entity_bank_accounts"),
         specialized("vaccines", "vaccines"),
         specialized("signed_pdf", "signed_pdf"),
         specialized("imported", "imported"),
