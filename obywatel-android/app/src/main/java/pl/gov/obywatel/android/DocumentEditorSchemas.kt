@@ -488,6 +488,14 @@ private val legacyDocumentEditorFieldKeys = setOf(
     "personExtraVerifiedAt", "personExtraVerifiedBy", "personExtraNotes"
 )
 
+internal fun documentArchiveImportKeys(): Set<String> = setOf(
+    "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion",
+    "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+    "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
+    "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
+    "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
+)
+
 internal fun isGroupedOcrArchiveField(key: String): Boolean =
     key.matches(Regex("groupedOcr_[0-9a-f]{1,8}"))
 
