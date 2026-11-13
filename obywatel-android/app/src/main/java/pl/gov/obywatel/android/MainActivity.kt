@@ -3489,62 +3489,59 @@ private fun documentTileIconResource(context: Context, documentKey: String, fall
 }
 
 private fun documentTileWatermarkResource(documentKey: String): Int = when {
-    // Dokumenty kościelne i misyjne: motyw sakralny.
-    documentKey.startsWith("church_") ||
-        documentKey in setOf("church", "organization_church") ->
+    // Sakralne i misyjne dokumenty Kościoła oraz wspólnot.
+    documentKey.startsWith("church_") || documentKey in setOf("church", "organization_church") ->
         R.drawable.tile_watermark_sacred
 
-    // Tożsamość, dane osoby i dokumenty podróży.
-    documentKey in setOf("identity", "identity_card", "profile") ->
+    // Tożsamość, profil i dokumenty identyfikacyjne.
+    documentKey in setOf("identity", "identity_card", "profile", "parliament") ->
         R.drawable.tile_watermark_identity
+
+    // Paszporty, podróże, dokumenty zagraniczne i komunikacyjne.
     documentKey in setOf("passport", "mission_travel") ->
         R.drawable.tile_watermark_travel
-
-    // Finanse, ubezpieczenia i rozliczenia.
-    documentKey in setOf("bank_accounts", "insurance_business") ->
-        R.drawable.tile_watermark_finance
-
-    // Karty i dokumenty obsługiwane przede wszystkim cyfrowo.
-    documentKey in setOf("signed_pdf", "imported", "branding", "loyalty", "loyalty_cards") ->
-        R.drawable.tile_watermark_digital
-
-    // Pojazdy i dokumentacja komunikacyjna.
     documentKey in setOf("vehicle_registration", "insurance_vehicle") ->
         R.drawable.tile_watermark_transport
 
-    // Uprawnienia, kwalifikacje i ubezpieczenie zawodowe.
-    documentKey in setOf(
-        "professional", "professional_medical", "professional_education",
-        "professional_therapeutic", "professional_other", "insurance_professional"
-    ) ->
+    // Finanse, rachunki i ubezpieczenia.
+    documentKey == "bank_accounts" || documentKey == "insurance_business" ||
+        documentKey.startsWith("insurance_") ->
+        R.drawable.tile_watermark_finance
+
+    // Dokumenty elektroniczne, importowane i karty handlowe.
+    documentKey in setOf("signed_pdf", "imported", "branding", "loyalty", "loyalty_cards") ->
+        R.drawable.tile_watermark_digital
+
+    // Kwalifikacje, zawody, uprawnienia i dokumenty służbowe.
+    documentKey.startsWith("professional_") || documentKey in setOf("professional", "training", "insurance_professional") ->
         R.drawable.tile_watermark_professional
 
-    // Rodzina, stan cywilny i dokumenty członków rodziny.
-    documentKey in setOf(
-        "family", "children", "birth_extract", "marriage_extract",
-        "death_extract", "large_family", "insurance_private"
+    // Rodzina, Ród i akty stanu cywilnego.
+    documentKey.startsWith("rod_") || documentKey in setOf(
+        "family", "children", "birth_extract", "marriage_extract", "death_extract",
+        "large_family", "insurance_private"
     ) ->
         R.drawable.tile_watermark_family
 
-    // Zdrowie, niepełnosprawność i uprawnienia medyczne.
-    documentKey in setOf(
-        "disability", "vaccines", "ehic", "blood_donor", "disability_card"
-    ) ->
+    // Zdrowie, opieka, szczepienia i orzeczenia.
+    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card") ||
+        documentKey.startsWith("medical_") ->
         R.drawable.tile_watermark_medical
 
-    // Edukacja i potwierdzenia nauki lub szkolenia.
+    // Nauka, szkolenia i potwierdzanie kwalifikacji edukacyjnych.
     documentKey in setOf("student", "training", "eu_education") ->
         R.drawable.tile_watermark_education
 
-    // Rejestry, dokumenty urzędowe i obywatelskie.
-    documentKey in setOf(
-        "civil", "official", "registry", "business", "entity",
-        "organization_foundation", "organization_company",
-        "organization_association", "parliament", "criminal_record"
-    ) ->
+    // Rejestry, podmioty prawne, fundacje, stowarzyszenia i dokumenty urzędowe.
+    documentKey.startsWith("organization_") || documentKey.startsWith("entity_") ||
+        documentKey in setOf(
+            "civil", "official", "registry", "business", "entity",
+            "organization_foundation", "organization_company",
+            "organization_association", "parliament", "criminal_record"
+        ) ->
         R.drawable.tile_watermark_civic
 
-    // Ogólne dokumenty ochronne i poświadczenia bez odrębnej kategorii.
+    // Każdy pozostały typ ma czytelny, neutralny znak zabezpieczający.
     else -> R.drawable.tile_watermark_security
 }
 
@@ -3571,46 +3568,52 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
             else -> DocumentBrandStore.preview(context, tileBackgroundAssetId)
         }
     }
-    val defaultPalette = when (documentKey) {
-        "identity" -> listOf(Color(0xFF0756A5), Color(0xFF078FD0), Color(0xFF42B9D8))
-        "profile" -> listOf(Color(0xFF3155A6), Color(0xFF527BCB), Color(0xFF70B7D8))
-        "passport", "mission_travel" -> listOf(Color(0xFF123C78), Color(0xFF315F9D), Color(0xFF4C91B8))
-        "registry", "business", "entity" -> listOf(Color(0xFF174C58), Color(0xFF287F79), Color(0xFF67B89C))
-        "family", "children" -> listOf(Color(0xFF704477), Color(0xFF9A6392), Color(0xFFD08D9B))
-        "parliament", "official" -> listOf(Color(0xFF6B3A35), Color(0xFF9A5546), Color(0xFFD18B61))
-        "training", "student", "eu_education" -> listOf(Color(0xFF394A83), Color(0xFF526FB0), Color(0xFF8A9FD0))
-        "disability", "vaccines", "ehic", "blood_donor", "disability_card" ->
-            listOf(Color(0xFF17645C), Color(0xFF278F83), Color(0xFF75C3A6))
-        "church", "organization_church" -> listOf(Color(0xFF57437E), Color(0xFF7660A5), Color(0xFFB19ACD))
-        "civil", "birth_extract", "marriage_extract", "death_extract" ->
-            listOf(Color(0xFF76522D), Color(0xFFAD8046), Color(0xFFD6B77B))
-        "bank_accounts" -> listOf(Color(0xFF20516A), Color(0xFF337E9C), Color(0xFF80B7C8))
-        "signed_pdf", "imported" -> listOf(Color(0xFF424C65), Color(0xFF66738F), Color(0xFFA3AEC2))
-        "branding" -> listOf(Color(0xFF5A456B), Color(0xFF87628F), Color(0xFFC19AC0))
-        "loyalty" -> listOf(Color(0xFF8A4D2F), Color(0xFFBD7544), Color(0xFFE0B06D))
-        else -> {
-            val paletteIndex = documentKey.hashCode().ushr(1) % 4
-            when (paletteIndex) {
-                0 -> listOf(Color(0xFF24527A), Color(0xFF397FA0), Color(0xFF78B9C7))
-                1 -> listOf(Color(0xFF4B477D), Color(0xFF716CA8), Color(0xFFA8A4D0))
-                2 -> listOf(Color(0xFF356451), Color(0xFF548D70), Color(0xFFA0C59A))
-                else -> listOf(Color(0xFF76513D), Color(0xFFAA7957), Color(0xFFD5B18A))
-            }
-        }
+    val defaultPalette = when {
+        documentKey.startsWith("church_") || documentKey in setOf("church", "organization_church") ->
+            listOf(Color(0xFF4A145F), Color(0xFF762B83), Color(0xFFB27BB5))
+        documentKey.startsWith("rod_") || documentKey in setOf(
+            "family", "children", "birth_extract", "marriage_extract", "death_extract",
+            "large_family", "insurance_private"
+        ) -> listOf(Color(0xFF9B315D), Color(0xFFD45B83), Color(0xFFF0A0B4))
+        documentKey in setOf("disability", "disability_card", "vaccines", "ehic", "blood_donor") ||
+            documentKey.startsWith("medical_") -> listOf(Color(0xFF064B35), Color(0xFF167A50), Color(0xFF71A878))
+        documentKey in setOf("student", "training", "eu_education") ||
+            documentKey.startsWith("professional_education") -> listOf(Color(0xFF25205F), Color(0xFF4D4696), Color(0xFF9994D0))
+        documentKey in setOf("bank_accounts", "insurance_business", "insurance_vehicle", "insurance_professional") ||
+            documentKey.startsWith("insurance_") || documentKey.startsWith("entity_") ->
+            listOf(Color(0xFF003F87), Color(0xFF1769AA), Color(0xFF5AA6D1))
+        documentKey in setOf("vehicle_registration", "mission_travel", "passport") ->
+            listOf(Color(0xFF176B83), Color(0xFF3C9FB0), Color(0xFF9AD5D4))
+        documentKey in setOf("signed_pdf", "imported", "branding", "loyalty", "loyalty_cards") ->
+            listOf(Color(0xFF171717), Color(0xFF424242), Color(0xFF777777))
+        documentKey.startsWith("professional_") || documentKey == "professional" ->
+            listOf(Color(0xFF003F87), Color(0xFF1769AA), Color(0xFF5AA6D1))
+        documentKey.startsWith("organization_") || documentKey in setOf("registry", "business", "entity") ->
+            listOf(Color(0xFF064B35), Color(0xFF167A50), Color(0xFF71A878))
+        documentKey in setOf("identity", "identity_card", "profile", "parliament") ->
+            listOf(Color(0xFF003F87), Color(0xFF1769AA), Color(0xFF5AA6D1))
+        documentKey in setOf("civil", "official", "criminal_record", "registry_extract") ->
+            listOf(Color(0xFF790018), Color(0xFFB5122B), Color(0xFFE36A72))
+        else -> listOf(Color(0xFF46515B), Color(0xFF89949E), Color(0xFFD5DCE2))
     }
     val selectedPaletteId = tilePreferences.getString("${documentKey}_tile_gradient_palette", "auto").orEmpty()
     val palette = tileGradientPaletteOptions.firstOrNull { it.id == selectedPaletteId && it.id != "auto" }
         ?.colors?.map { Color(android.graphics.Color.parseColor(it)) } ?: defaultPalette
     val motif = when {
-        documentKey in setOf("identity", "passport", "official", "disability_card") -> 0
-        documentKey in setOf("profile", "student", "training") -> 1
-        documentKey in setOf("registry", "business", "entity", "parliament", "bank_accounts") -> 2
-        documentKey in setOf("church", "organization_church") -> 3
-        documentKey in setOf("family", "children", "birth_extract", "marriage_extract") -> 4
-        documentKey in setOf("mission_travel", "ehic", "vehicle_registration") -> 5
-        documentKey in setOf("student", "training", "eu_education") -> 6
-        documentKey in setOf("disability", "vaccines", "blood_donor") -> 7
-        else -> documentKey.hashCode().ushr(1) % 8
+        documentKey.startsWith("church_") || documentKey in setOf("church", "organization_church") -> 3
+        documentKey.startsWith("rod_") || documentKey in setOf(
+            "family", "children", "birth_extract", "marriage_extract", "death_extract", "large_family"
+        ) -> 4
+        documentKey in setOf("disability", "disability_card", "vaccines", "blood_donor", "ehic") ||
+            documentKey.startsWith("medical_") -> 7
+        documentKey in setOf("student", "training", "eu_education") ||
+            documentKey.startsWith("professional_education") -> 6
+        documentKey in setOf("passport", "mission_travel", "vehicle_registration") -> 5
+        documentKey.startsWith("professional_") || documentKey == "professional" -> 6
+        documentKey.startsWith("organization_") || documentKey.startsWith("entity_") ||
+            documentKey in setOf("registry", "business", "entity", "parliament", "bank_accounts") -> 2
+        documentKey in setOf("identity", "identity_card", "profile", "official", "criminal_record") -> 0
+        else -> 1
     }
     val selectedMotif = tilePreferences.getString("${documentKey}_tile_vector_motif", "auto").orEmpty()
     val activeMotif = selectedMotif.toIntOrNull()?.takeIf { it in 0..7 } ?: motif
