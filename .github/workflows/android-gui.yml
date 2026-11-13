@@ -109,3 +109,4 @@ jobs:
           fail_on_unmatched_files: true
 
 # Validation rerun: 2026-11-12 — run emulator UI tests on current integrated main.
+# Main validation refresh: 2026-11-13 — execute post-merge GUI checks.
