@@ -1031,7 +1031,7 @@ private val armedServiceDocumentIds = setOf(
     "tactical_training", "survival_training", "security_guard", "defense_training",
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
-private val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
+internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
     id to if (id == "identity" || id in armedServiceDocumentIds) "dashboard" else "hidden"
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
