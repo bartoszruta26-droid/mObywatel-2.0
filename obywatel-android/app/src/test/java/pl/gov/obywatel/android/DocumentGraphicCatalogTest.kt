@@ -29,7 +29,9 @@ class DocumentGraphicCatalogTest {
             "church_cardinal", "church_abbot", "church_minister", "church_missionary",
             "professional_medical", "professional_education", "professional_therapeutic",
             "professional_other", "organization_foundation", "organization_church",
-            "organization_company", "organization_association", "official", "loyalty_cards"
+            "organization_company", "organization_association", "official", "loyalty_cards", "military_book", "martial_arts", "shooting_sport", "archery",
+            "tactical_training", "survival_training", "security_guard", "defense_training",
+            "historical_reenactment", "reenactment_qualification", "reenactment_event"
         )
         val definitions = GraphicDocumentCatalog.definitions
         assertTrue(definitions.map { it.id }.toSet().containsAll(expected))
@@ -82,10 +84,10 @@ class DocumentGraphicCatalogTest {
             nestedTargets.all { it.first in visibilityIds })
         assertTrue("Both family and entity bank registers must have independent visibility",
             setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts").all { it in visibilityIds })
-        assertEquals("Dokumenty kościelne", documentVisibilityGroup("church_minutes"))
-        assertEquals("Dokumenty rodowe i rodzinne", documentVisibilityGroup("rod_birth_record"))
-        assertEquals("Dokumenty firmowe i podmiotowe", documentVisibilityGroup("entity_foundation_statute"))
-        assertEquals("Dokumenty cywilne i urzędowe", documentVisibilityGroup("birth_extract"))
+        assertEquals("Służba kościelna", documentVisibilityGroup("church_minutes"))
+        assertEquals("Służba rodowa", documentVisibilityGroup("rod_birth_record"))
+        assertEquals("Służba gospodarcza", documentVisibilityGroup("entity_foundation_statute"))
+        assertEquals("Służba cywilna", documentVisibilityGroup("birth_extract"))
     }
 
     @Test
@@ -104,7 +106,7 @@ class DocumentGraphicCatalogTest {
             "registry", "birth_extract", "marriage_extract", "death_extract",
             "vehicle_registration", "insurance_vehicle", "insurance_professional",
             "insurance_private", "insurance_business", "criminal_record", "mission_travel",
-            "eu_education", "organization_foundation", "organization_church",
+            "eu_education", "organization_foundation", "organization_church", "tactical_training", "survival_training", "defense_training", "reenactment_qualification",
             "organization_company", "organization_association", "official"
         )
         recordIds.forEach { id ->
@@ -117,7 +119,7 @@ class DocumentGraphicCatalogTest {
         val credentialIds = setOf(
             "large_family", "blood_donor", "disability_card", "ehic", "church_bishop",
             "church_archbishop", "church_cardinal", "church_abbot", "church_minister",
-            "church_missionary", "professional_medical", "professional_education",
+            "church_missionary", "professional_medical", "professional_education", "military_book", "martial_arts", "shooting_sport", "archery", "security_guard", "historical_reenactment", "reenactment_event",
             "professional_therapeutic", "professional_other", "loyalty_cards"
         )
         credentialIds.forEach { id ->
