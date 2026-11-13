@@ -65,9 +65,10 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         .ifEmpty { officialGraphicDocumentFields(documentKey) }
     // Pola katalogowe są zapisywane w magazynie pod prefiksem doc_<id>_.
     // Używamy tych samych kluczy w edytorze, ustawieniach widoczności i podglądzie karty.
-    val schemaFields = documentEditorFieldDefinitions(documentKey).map { definition ->
-        "doc_${documentKey}_${definition.key}" to definition.label
-    }
+    val schemaFields = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) emptyList() else
+        documentEditorFieldDefinitions(documentKey).map { definition ->
+            "doc_${documentKey}_${definition.key}" to definition.label
+        }
     if (subdocumentFields.isNotEmpty()) {
         return (subdocumentFields + listOf("details" to "Informacje dodatkowe") + schemaFields)
             .distinctBy { it.first }
