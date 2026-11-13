@@ -2312,13 +2312,13 @@ private fun DocumentDetailsScreen(
         }
     }
     val options = credentialFieldOptions(normalizedId)
-    val selectedOptions = if (!settings.visibleFieldsConfigured) options
-        else options.filter { it.first in settings.visibleFields }
-    val previewFields = selectedOptions.map { (key, label) ->
+    val previewFields = options.map { (key, label) ->
         Triple(key, label, previewValues[key].orEmpty().ifBlank { "—" })
     }
     val (frontPreviewFields, reversePreviewFields) =
-        splitCredentialFieldsForSides(previewFields, settings.orientation)
+        splitCredentialFieldsForSides(
+            previewFields, settings.orientation, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
+        )
     val holder = when {
         previewValues["studentNames"].orEmpty().isNotBlank() -> previewValues["studentNames"].orEmpty()
         previewValues["passportHolderNames"].orEmpty().isNotBlank() -> previewValues["passportHolderNames"].orEmpty()
@@ -2361,7 +2361,7 @@ private fun DocumentDetailsScreen(
                 photo = photoBitmap,
                 validity = validity
             )
-            if (reversePreviewFields.isNotEmpty()) {
+            if (settings.showReverse && reversePreviewFields.isNotEmpty()) {
                 UnifiedCredentialCard(
                     documentKey = "${normalizedId}_reverse",
                     title = "${title.uppercase()} — REWERS",
@@ -3501,22 +3501,22 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit, onEditGraphic: () -> Un
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
                     }
                 }
-                DemoDataField("disabilityAuthorityName", "Organ / podmiot / wystawca", fields)
-                DemoDataField("disabilityIssuerName", "Osoba podpisująca / wystawca", fields)
-                DemoDataField("disabilityLegalBasis", "Podstawa prawna lub regulacyjna", fields)
-                DemoDataField("disabilityFoundationStatute", "Statut / uchwała fundacji (jeśli dotyczy)", fields)
+                DemoDataField("disabilityAuthorityName", "Nazwa organu / podmiotu / wystawcy", fields)
+                DemoDataField("disabilityIssuerName", "Imię, nazwisko lub nazwa wystawcy", fields)
+                DemoDataField("disabilityLegalBasis", "Podstawa prawna / cel wydania", fields)
+                DemoDataField("disabilityFoundationStatute", "Podstawa statutowa / uchwała fundacji", fields)
                 Text("Dane osoby i dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                DemoDataField("disabilityPersonName", "Imię i nazwisko", fields)
+                DemoDataField("disabilityPersonName", "Osoba, której dotyczy orzeczenie", fields)
                 DemoDataField("disabilityBirthDate", "Data urodzenia", fields, "DD-MM-RRRR")
                 DemoDataField("disabilityPeselOrId", "PESEL / identyfikator", fields)
-                DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / zaświadczenia", fields)
+                DemoDataField("disabilityDecisionNumber", "Numer orzeczenia / rozstrzygnięcia", fields)
                 DemoDataField("disabilityDecisionDate", "Data wydania", fields, "DD-MM-RRRR")
                 DemoDataField("disabilityDecisionPlace", "Miejsce wydania", fields)
                 Text("Ustalony stopień i okres", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityCategory", "Kategoria", fields)
                 DemoDataField("disabilityDegree", "Stopień niepełnosprawności", fields, "znaczny / umiarkowany / lekki")
                 DemoDataField("disabilityCauseCodes", "Symbole / przyczyny", fields)
-                DemoDataField("disabilityValidity", "Okres obowiązywania", fields, "na stałe / do DD-MM-RRRR")
+                DemoDataField("disabilityValidity", "Okres, na jaki ustalono status", fields, "na stałe / do DD-MM-RRRR")
                 DemoDataField("disabilityFromDate", "Data ustalenia niepełnosprawności", fields, "DD-MM-RRRR")
                 Text("Wskazania i potrzeby wsparcia", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityEmployment", "Zatrudnienie", fields)
@@ -3529,7 +3529,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit, onEditGraphic: () -> Un
                 Text("Metodologia i ocena funkcjonalna (opcjonalnie)", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 DemoDataField("disabilityAssessmentMethod", "Metoda oceny (np. ICF)", fields)
                 DemoDataField("disabilityWhodasScore", "WHODAS 2.0 — wynik / data oceny", fields)
-                DemoDataField("disabilityMedicalQualification", "Kwalifikacje osoby oceniającej", fields)
+                DemoDataField("disabilityMedicalQualification", "Zawód / kwalifikacje osoby wystawiającej", fields)
                 DemoDataField("disabilityAppealInfo", "Tryb odwołania / weryfikacji", fields)
                 androidx.compose.material3.Button(
                     onClick = {
@@ -4737,10 +4737,10 @@ private fun DemoDocumentsScreen(
                 when (authorityType) {
                     "powiat" -> {
                         DemoDataField("disabilityCounty", "Powiat / miasto na prawach powiatu", fields)
-                        DemoDataField("disabilityLegalBasis", "Podstawa prawna", fields, "Ustawa z 27.08.1997 r. i przepisy wykonawcze")
+                        DemoDataField("disabilityLegalBasis", "Podstawa prawna / cel wydania", fields, "Ustawa z 27.08.1997 r. i przepisy wykonawcze")
                     }
                     "other_law" -> {
-                        DemoDataField("disabilityLegalBasis", "Odrębna podstawa prawna", fields)
+                        DemoDataField("disabilityLegalBasis", "Podstawa prawna / cel wydania", fields)
                         DemoDataField("disabilityLegalProvision", "Przepis określający skutki lub równoważność", fields)
                         DemoDataField("disabilityEquivalentEffect", "Zakres uznania / równoważności", fields)
                     }
@@ -4751,7 +4751,7 @@ private fun DemoDocumentsScreen(
                     }
                     "medical_opinion" -> {
                         DemoDataField("disabilityMedicalQualification", "Zawód / kwalifikacje osoby wystawiającej", fields)
-                        DemoDataField("disabilityLegalBasis", "Podstawa i cel wydania opinii / zaświadczenia", fields)
+                        DemoDataField("disabilityLegalBasis", "Podstawa prawna / cel wydania", fields)
                     }
                     "self_declaration" -> {
                         DemoDataField("disabilitySelfDeclarationDate", "Data złożenia oświadczenia", fields, "DD-MM-RRRR")
@@ -5001,23 +5001,47 @@ private fun CredentialAppearanceSettingsScreen(
         }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Pola wyświetlane na legitymacji", fontWeight = FontWeight.Bold)
+                Text("Miejsce wyświetlania każdego pola", fontWeight = FontWeight.Bold)
+                Text("Wybierz osobno dla każdej danej: ukryta, awers albo rewers. Rewers pozostaje ukryty, dopóki go nie włączysz.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 options.forEach { (key, label) ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = !state.value.visibleFieldsConfigured || key in state.value.visibleFields,
-                            onCheckedChange = { checked ->
-                                val current = if (state.value.visibleFieldsConfigured) state.value.visibleFields
-                                    else options.map { it.first }.toSet()
-                                val updated = state.value.copy(
-                                    visibleFields = if (checked) current + key else current - key,
-                                    visibleFieldsConfigured = true
-                                )
-                                LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
-                                state.value = updated
+                    val side = credentialFieldSide(key, state.value.visibleFieldsConfigured, state.value.visibleFields, state.value.fieldSides)
+                    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(
+                                CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                                CREDENTIAL_FIELD_FRONT to "Awers",
+                                CREDENTIAL_FIELD_BACK to "Rewers"
+                            ).forEach { (target, caption) ->
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)
+                                    .clickable {
+                                        val updated = state.value.copy(
+                                            fieldSides = state.value.fieldSides + (key to target),
+                                            visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) state.value.visibleFields - key
+                                                else state.value.visibleFields + key,
+                                            visibleFieldsConfigured = true
+                                        )
+                                        LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                                        state.value = updated
+                                    }) {
+                                    androidx.compose.material3.RadioButton(
+                                        selected = side == target,
+                                        onClick = {
+                                            val updated = state.value.copy(
+                                                fieldSides = state.value.fieldSides + (key to target),
+                                                visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) state.value.visibleFields - key
+                                                    else state.value.visibleFields + key,
+                                                visibleFieldsConfigured = true
+                                            )
+                                            LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                                            state.value = updated
+                                        }
+                                    )
+                                    Text(caption, style = MaterialTheme.typography.labelSmall)
+                                }
                             }
-                        )
-                        Text(label, style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
             }
@@ -5067,28 +5091,11 @@ private fun CredentialAppearanceSettingsScreen(
 @Composable
 private fun DisabilityDecisionPreview(fields: Map<String, String>) {
     if (LocalDocumentScreenMode.current == DocumentScreenMode.EDITOR) return
-    val authorityType = fields["disabilityAuthorityType"] ?: "powiat"
-    val label = when (authorityType) {
-        "foundation" -> "Dokument zespołu medycznego fundacji"
-        "other_law" -> "Dokument na podstawie odrębnych przepisów"
-        "medical_opinion" -> "Opinia / zaświadczenie medyczne"
-        "self_declaration" -> "Oświadczenie własne"
-        else -> "Ewidencja danych orzeczenia"
-    }
-    OwdDocumentArtworkCard(
-        imageRes = R.drawable.orzeczenie_rodowe_o_niepelnosprawnosci,
-        title = "Dane o niepełnosprawności",
-        subtitle = label,
-        holder = fields["disabilityPersonName"].orEmpty().ifBlank { "Dane osoby" },
-        details = "Nr: ${fields["disabilityDecisionNumber"].orEmpty().ifBlank { "—" }} • Stopień: ${fields["disabilityDegree"].orEmpty().ifBlank { "—" }}",
-        privateRecord = true,
-        credentialFields = listOf(
-            Triple("disabilityDecisionType", "RODZAJ ORZECZENIA", fields["disabilityDecisionType"].orEmpty()),
-            Triple("disabilityDecisionNumber", "NUMER ORZECZENIA", fields["disabilityDecisionNumber"].orEmpty()),
-            Triple("disabilityDegree", "STOPIEŃ", fields["disabilityDegree"].orEmpty()),
-            Triple("disabilityValidity", "OKRES OBOWIĄZYWANIA", fields["disabilityValidity"].orEmpty()),
-            Triple("disabilityIssuerName", "WYSTAWCA", fields["disabilityIssuerName"].orEmpty())
-        )
+    val settings = rememberLegitimacyPreviewSettings("disability").value
+    CredentialTemplatePreview(
+        documentKey = "disability",
+        settings = settings,
+        values = fields
     )
 }
 
@@ -5117,22 +5124,12 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
     val institution = if (student) fields["studentUniversity"].orEmpty() else fields["trainingInstitution"].orEmpty()
     val validity = if (student) fields["studentValidity"].orEmpty() else fields["trainingValidUntil"].orEmpty()
     val valid = credentialValidityForDocument(documentKey, fields)
-    val cardFields = if (student) listOf(
-        Triple("studentUniversity", "UCZELNIA", institution),
-        Triple("studentProgramme", "KIERUNEK", fields["studentProgramme"].orEmpty()),
-        Triple("studentCardNumber", "NUMER LEGITYMACJI", fields["studentCardNumber"].orEmpty()),
-        Triple("studentIssueDate", "DATA WYDANIA", fields["studentIssueDate"].orEmpty()),
-        Triple("studentValidity", "WAŻNA DO", validity)
-    ) else listOf(
-        Triple("trainingInstitution", "INSTYTUCJA", institution),
-        Triple("trainingCourseName", "KURS / KWALIFIKACJA", fields["trainingCourseName"].orEmpty()),
-        Triple("trainingCardNumber", "NUMER LEGITYMACJI", fields["trainingCardNumber"].orEmpty()),
-        Triple("trainingIssueDate", "DATA WYDANIA", fields["trainingIssueDate"].orEmpty()),
-        Triple("trainingValidUntil", "WAŻNA DO", validity)
-    )
+    val cardFields = credentialFieldOptions(documentKey).map { (key, label) ->
+        Triple(key, label, fields[key].orEmpty().ifBlank { "—" })
+    }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.showCard) {
-            UnifiedCredentialCard(
+            CredentialCardSides(
                 documentKey = documentKey,
                 title = if (student) "LEGITYMACJA UCZNIA / STUDENTA" else "LEGITYMACJA KURSANTA",
                 subtitle = institution,
@@ -5142,13 +5139,6 @@ private fun SchoolLegitimacyPreview(fields: Map<String, String>, photoBase64: St
                 photo = photoBitmap,
                 fallbackBackgroundRes = if (student) R.drawable.tlo_legitymacji_niebieskie else R.drawable.tlo_legitymacji_brazowe,
                 validity = valid
-            )
-            if (settings.showReverse) LegitimacyReverseSide(
-                title = if (student) "Legitymacja szkolna — rewers" else "Legitymacja uczestnika kursu — rewers",
-                issuer = institution,
-                number = if (student) fields["studentCardNumber"].orEmpty() else fields["trainingCardNumber"].orEmpty(),
-                validity = validity,
-                orientation = settings.orientation
             )
         }
     }
@@ -5180,16 +5170,12 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
     val term = fields["mpTerm"].orEmpty()
     val expiry = fields["mpEnd"].orEmpty()
     val valid = credentialValidityForDocument(documentKey, fields)
-    val cardFields = listOf(
-        Triple("mpCardNumber", "NUMER LEGITYMACJI", number),
-        Triple("mpTerm", "KADENCJA", term),
-        Triple("mpCardIssueDate", "DATA WYDANIA", fields["mpCardIssueDate"].orEmpty()),
-        Triple("mpEnd", "KONIEC OKRESU", expiry),
-        Triple("mpIssuer", "WYSTAWCA", issuer)
-    )
+    val cardFields = credentialFieldOptions(documentKey).map { (key, label) ->
+        Triple(key, label, fields[key].orEmpty().ifBlank { "—" })
+    }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (settings.showCard) {
-            UnifiedCredentialCard(
+            CredentialCardSides(
                 documentKey = documentKey,
                 title = "LEGITYMACJA POSELSKA",
                 subtitle = "SEJM RZECZYPOSPOLITEJ POLSKIEJ",
@@ -5199,9 +5185,6 @@ private fun ParliamentaryCredentialPreview(fields: Map<String, String>) {
                 photo = photoBitmap,
                 fallbackBackgroundRes = R.drawable.tlo_legitymacji_szare,
                 validity = valid
-            )
-            if (settings.showReverse) LegitimacyReverseSide(
-                "Legitymacja poselska — rewers", issuer, number, expiry, settings.orientation
             )
         }
     }
@@ -5487,37 +5470,68 @@ private fun AdditionalInformationSection(
 }
 
 @Composable
-private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane") {
+private fun DemoDataField(
+    key: String,
+    label: String,
+    fields: MutableMap<String, String>,
+    placeholder: String = "Wpisz dane",
+    storageKey: String = key
+) {
     val binding = LocalCredentialFieldVisibility.current
     val settings = binding?.settings?.value
     val selectableKeys = binding?.let { credentialFieldOptions(it.documentKey).map { option -> option.first }.toSet() }.orEmpty()
-    val checked = settings?.let { !it.visibleFieldsConfigured || key in it.visibleFields } ?: true
+    val side = settings?.let {
+        credentialFieldSide(key, it.visibleFieldsConfigured, it.visibleFields, it.fieldSides)
+    } ?: CREDENTIAL_FIELD_FRONT
     val context = LocalContext.current
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
-            value = fields[key] ?: "",
-            onValueChange = { fields[key] = it },
+            value = fields[storageKey] ?: "",
+            onValueChange = { fields[storageKey] = it },
             modifier = Modifier.weight(1f),
             label = { Text(label) },
             placeholder = { Text(placeholder) },
             singleLine = true
         )
         if (binding != null && binding.documentKey.isNotBlank() && key in selectableKeys) {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = { selected ->
-                    val current = if (settings?.visibleFieldsConfigured == true) settings.visibleFields
-                        else credentialFieldOptions(binding.documentKey).map { it.first }.toSet()
-                    val next = if (selected) current + key else current - key
-                    val updated = (settings ?: LegitimacyPreviewSettings()).copy(
-                        visibleFields = next,
-                        visibleFieldsConfigured = true
-                    )
-                    LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
-                    binding.settings.value = updated
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    listOf(
+                        CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                        CREDENTIAL_FIELD_FRONT to "Awers",
+                        CREDENTIAL_FIELD_BACK to "Rewers"
+                    ).forEach { (target, caption) ->
+                        Row(Modifier.weight(1f).clickable {
+                            val currentSettings = binding.settings.value
+                            val updated = currentSettings.copy(
+                                fieldSides = currentSettings.fieldSides + (key to target),
+                                visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) currentSettings.visibleFields - key
+                                    else currentSettings.visibleFields + key,
+                                visibleFieldsConfigured = true
+                            )
+                            LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
+                            binding.settings.value = updated
+                        }, verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.RadioButton(
+                                selected = side == target,
+                                onClick = {
+                                    val currentSettings = binding.settings.value
+                                    val updated = currentSettings.copy(
+                                        fieldSides = currentSettings.fieldSides + (key to target),
+                                        visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) currentSettings.visibleFields - key
+                                            else currentSettings.visibleFields + key,
+                                        visibleFieldsConfigured = true
+                                    )
+                                    LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
+                                    binding.settings.value = updated
+                                }
+                            )
+                            Text(caption, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
-            )
+            }
         }
     }
 }

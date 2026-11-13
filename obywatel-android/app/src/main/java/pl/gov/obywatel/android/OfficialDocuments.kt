@@ -183,17 +183,18 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, in
         } else {
             val type=officialDocTypes.first { it.id==selected }
             val values=records[type.id].orEmpty()
+            val settingsState = rememberLegitimacyPreviewSettings(type.id)
             val local = remember(type.id, records) { mutableStateMapOf<String, String>().apply { putAll(values) } }
             Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
             if(type.note.isNotBlank()) Card(colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.secondaryContainer)) {
                 Text(type.note,Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.bodySmall)
             }
             if (readOnly) {
-                val previewSettings = rememberLegitimacyPreviewSettings(type.id).value.copy(visibleFieldsConfigured = false)
-                val previewFields = type.fields.take(12).mapIndexed { index, label ->
-                    Triple("officialField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
+                val previewSettings = settingsState.value
+                val previewFields = type.fields.mapIndexed { index, label ->
+                    Triple("field_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
                 }
-                UnifiedCredentialCard(
+                CredentialCardSides(
                     documentKey = type.id,
                     title = type.title.uppercase(),
                     subtitle = "PODGLĄD EWIDENCYJNY",
@@ -205,8 +206,17 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, in
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
                 GeneralDocumentOcrEditor("civil", local, context) { status = it }
-                type.fields.forEachIndexed { index,label ->
-                    OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local["f$index"]=it},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
+                type.fields.forEachIndexed { index, label ->
+                    DocumentFieldEditor(
+                        documentKey = type.id,
+                        fieldKey = "field_$index",
+                        label = label,
+                        settingsState = settingsState,
+                        value = local["f$index"].orEmpty(),
+                        onValueChange = { local["f$index"] = it },
+                        minLines = if (index >= 6) 2 else 1,
+                        maxLines = 4
+                    )
                 }
                 DocumentOriginalAttachments(type.id)
             }
@@ -214,17 +224,17 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, in
                 OutlinedButton(onClick = { onEditGraphic(type.id) }, modifier = Modifier.fillMaxWidth()) {
                     Text("Edytuj wygląd graficzny")
                 }
-                val previewFields = type.fields.take(12).mapIndexed { index, label ->
-                    Triple("officialField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
+                val previewFields = type.fields.mapIndexed { index, label ->
+                    Triple("field_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
                 }
                 Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                UnifiedCredentialCard(
+                CredentialCardSides(
                     documentKey = type.id,
                     title = type.title.uppercase(),
                     subtitle = "PODGLĄD EWIDENCYJNY",
                     holderName = local.values.firstOrNull { it.isNotBlank() } ?: "DANE DOKUMENTU",
                     fields = previewFields,
-                    settings = rememberLegitimacyPreviewSettings(type.id).value
+                    settings = settingsState.value
                 )
             }
             if(type.id=="criminal_record") {

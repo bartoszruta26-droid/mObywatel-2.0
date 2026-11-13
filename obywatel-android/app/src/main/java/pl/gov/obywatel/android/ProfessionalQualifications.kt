@@ -345,19 +345,24 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit, readOnly: Bool
                     if (p.registerName.isNotBlank()) Text("Rejestr: " + p.registerName, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     Text("Status: " + p.status, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                     if (readOnly) {
-                        val previewSettings = rememberLegitimacyPreviewSettings("professional").value.copy(visibleFieldsConfigured = false)
-                        UnifiedCredentialCard(
+                        val previewSettings = rememberLegitimacyPreviewSettings("professional").value
+                        CredentialCardSides(
                             documentKey = "professional",
                             title = p.profession.uppercase(),
                             subtitle = p.issuer.ifBlank { "KWALIFIKACJA ZAWODOWA" },
                             holderName = p.profession,
                             fields = listOf(
-                                Triple("professionalTitle", "ZAWÓD / ROLA", p.profession),
-                                Triple("professionalNumber", "NUMER DOKUMENTU / KWALIFIKACJI", p.number.ifBlank { "—" }),
-                                Triple("professionalIssuer", "ORGAN / WYSTAWCA", p.issuer.ifBlank { "—" }),
-                                Triple("professionalValidity", "WAŻNY DO", p.validUntil.ifBlank { "—" }),
-                                Triple("professionalSpeciality", "REJESTR", p.registerName.ifBlank { "—" }),
-                                Triple("professionalQualification", "ZAKRES UPRAWNIEŃ", p.scope.ifBlank { "—" })
+                                Triple("professionalTitle", "Nazwa zawodu / roli", p.profession),
+                                Triple("professionalNumber", "Numer dokumentu / kwalifikacji", p.number.ifBlank { "—" }),
+                                Triple("professionalNumberType", "Rodzaj numeru dokumentu", if (p.numberType == "pwzf") "PWZ/PWZF" else "Inny dokument"),
+                                Triple("professionalIssuer", "Organ / wystawca", p.issuer.ifBlank { "—" }),
+                                Triple("professionalIssueDate", "Data wydania", p.issueDate.ifBlank { "—" }),
+                                Triple("professionalValidity", "Ważny do / bezterminowo", p.validUntil.ifBlank { "—" }),
+                                Triple("professionalSpeciality", "Nazwa rejestru", p.registerName.ifBlank { "—" }),
+                                Triple("professionalRegisterUrl", "Adres rejestru / wpisu", p.registerUrl.ifBlank { "—" }),
+                                Triple("professionalQualification", "Zakres uprawnień / czynności", p.scope.ifBlank { "—" }),
+                                Triple("professionalLegalBasis", "Podstawa prawna / regulaminowa", p.legalBasis.ifBlank { "—" }),
+                                Triple("professionalStatus", "Status (np. aktywny, wygasły, do weryfikacji)", p.status.ifBlank { "—" })
                             ),
                             settings = previewSettings
                         )

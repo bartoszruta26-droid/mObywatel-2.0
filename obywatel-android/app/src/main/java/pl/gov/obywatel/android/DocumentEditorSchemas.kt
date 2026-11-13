@@ -18,7 +18,7 @@ private fun fields(vararg definitions: Triple<String, String, String>) =
 internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEditorFieldDefinition> {
     return when (documentId) {
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
-        "disability", "church", "civil", "business", "entity", "rod_bank_accounts", "entity_bank_accounts",
+        "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "imported", "children", "branding", "loyalty", "loyalty_cards",
         "professional" -> emptyList()
         else -> when {
@@ -430,7 +430,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
 internal fun documentUsesDedicatedEditor(documentId: String): Boolean =
     documentId in setOf(
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
-        "disability", "church", "civil", "business", "entity", "rod_bank_accounts", "entity_bank_accounts",
+        "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "imported", "children", "branding", "loyalty", "loyalty_cards",
         "professional"
     ) || churchGraphicDocumentTargets().any { it.first == documentId } ||

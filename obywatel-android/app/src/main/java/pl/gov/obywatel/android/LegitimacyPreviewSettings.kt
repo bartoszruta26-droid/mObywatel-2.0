@@ -65,82 +65,185 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         .ifEmpty { officialGraphicDocumentFields(documentKey) }
     // Pola katalogowe są zapisywane w magazynie pod prefiksem doc_<id>_.
     // Używamy tych samych kluczy w edytorze, ustawieniach widoczności i podglądzie karty.
-    val schemaFields = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) emptyList() else
+    val schemaFields = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY ||
+        documentKey in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts")) emptyList() else
         documentEditorFieldDefinitions(documentKey).map { definition ->
             "doc_${documentKey}_${definition.key}" to definition.label
         }
-    if (subdocumentFields.isNotEmpty()) {
-        return (subdocumentFields + listOf("details" to "Informacje dodatkowe") + schemaFields)
-            .distinctBy { it.first }
-    }
+    // Formularze podrzędne mają własny, rzeczywisty zestaw pól field_N.
+    // Nie dopisujemy do niego ogólnych etykiet ani pól z innego schematu.
+    if (subdocumentFields.isNotEmpty()) return subdocumentFields.distinctBy { it.first }
+
+    // Dokumenty katalogowe edytują dokładnie definicje z DocumentEditorSchemas.
+    // Dodanie poniżej ogólnych pól imię/nazwisko tworzyło etykiety-widma.
+    if (schemaFields.isNotEmpty()) return schemaFields.distinctBy { it.first }
+
     return (when (documentKey) {
     "parliament" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "mpCardNumber" to "Numer legitymacji",
-        "mpTerm" to "Kadencja", "mpDistrict" to "Okręg wyborczy", "mpStart" to "Początek mandatu",
-        "mpEnd" to "Koniec mandatu", "mpCardIssueDate" to "Data wydania", "mpIssuer" to "Wystawca"
+        "mpCardNumber" to "Numer ewidencyjny legitymacji", "mpTerm" to "Kadencja",
+        "mpDistrict" to "Okręg wyborczy", "mpStart" to "Data rozpoczęcia mandatu",
+        "mpEnd" to "Data zakończenia mandatu", "mpCardIssueDate" to "Data wydania legitymacji",
+        "mpIssuer" to "Organ / osoba wystawiająca", "mpStatus" to "Status legitymacji",
+        "mpMandateSource" to "Źródło potwierdzenia mandatu", "mpOathDate" to "Data złożenia ślubowania",
+        "mpOathPlace" to "Miejsce / okoliczności wypowiedzenia ślubowania",
+        "mpOathEvidence" to "Źródło potwierdzenia (np. protokół, nagranie, publikacja)"
     )
     "training" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "trainingInstitution" to "Instytucja",
-        "trainingCourseName" to "Kurs / kwalifikacja", "trainingCardNumber" to "Numer legitymacji",
-        "trainingIssueDate" to "Data wydania", "trainingValidUntil" to "Termin ważności",
-        "trainingCourseCode" to "Kod kursu", "trainingStartDate" to "Data rozpoczęcia",
-        "trainingEndDate" to "Data zakończenia", "trainingStatus" to "Status uczestnictwa",
-        "trainingIssuer" to "Wystawca", "trainingCompletionDate" to "Data ukończenia",
-        "trainingHours" to "Liczba godzin", "trainingAssessment" to "Wynik", "trainingCertificateNumber" to "Numer zaświadczenia"
+        "trainingInstitution" to "Nazwa instytucji szkoleniowej",
+        "trainingInstitutionAddress" to "Adres instytucji",
+        "trainingInstitutionRegistry" to "Numer wpisu / rejestru instytucji (jeśli dotyczy)",
+        "trainingCardNumber" to "Numer legitymacji uczestnika",
+        "trainingCourseName" to "Nazwa kursu / kierunek kształcenia",
+        "trainingCourseCode" to "Symbol lub numer kursu",
+        "trainingStartDate" to "Data rozpoczęcia kursu",
+        "trainingEndDate" to "Planowana data zakończenia kursu",
+        "trainingIssueDate" to "Data wydania legitymacji",
+        "trainingValidUntil" to "Ważna do",
+        "trainingStatus" to "Status uczestnictwa",
+        "trainingIssuer" to "Osoba upoważniona do wystawienia",
+        "trainingSignature" to "Imię i nazwisko / podpis wystawcy",
+        "trainingCompletionDate" to "Rzeczywista data ukończenia kursu",
+        "trainingHours" to "Liczba godzin kształcenia",
+        "trainingAssessment" to "Zaliczenie / egzamin / wynik",
+        "trainingCertificateNumber" to "Numer zaświadczenia o ukończeniu",
+        "trainingForm" to "Forma kształcenia"
     )
-    "professional", "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf(
+    "professional" -> listOf(
+        "professionalTitle" to "Nazwa zawodu / roli",
+        "professionalNumber" to "Numer dokumentu / kwalifikacji",
+        "professionalNumberType" to "Rodzaj numeru dokumentu",
+        "professionalIssuer" to "Organ / wystawca",
+        "professionalIssueDate" to "Data wydania",
+        "professionalValidity" to "Ważny do / bezterminowo",
+        "professionalSpeciality" to "Nazwa rejestru",
+        "professionalRegisterUrl" to "Adres rejestru / wpisu",
+        "professionalQualification" to "Zakres uprawnień / czynności",
+        "professionalLegalBasis" to "Podstawa prawna / regulaminowa",
+        "professionalStatus" to "Status (np. aktywny, wygasły, do weryfikacji)"
+    )
+    "professional_medical", "professional_education", "professional_therapeutic", "professional_other" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "professionalTitle" to "Tytuł / kwalifikacja",
         "professionalNumber" to "Numer dokumentu", "professionalIssuer" to "Wystawca",
         "professionalValidity" to "Termin ważności", "professionalSpeciality" to "Specjalność",
         "professionalQualification" to "Zakres kwalifikacji"
     )
     "student" -> listOf(
-        "studentNames" to "Imię i nazwisko", "studentUniversity" to "Uczelnia",
-        "studentProgramme" to "Kierunek", "studentCardNumber" to "Numer legitymacji",
-        "studentIssueDate" to "Data wydania", "studentValidity" to "Termin ważności",
-        "studentFaculty" to "Wydział", "studentLevel" to "Poziom studiów",
-        "studentProfile" to "Profil / forma", "studentYear" to "Rok i semestr",
-        "studentAcademicYear" to "Rok akademicki", "studentStatus" to "Status"
+        "studentUniversity" to "Nazwa uczelni",
+        "studentUniversityAddress" to "Adres uczelni",
+        "studentUniversityId" to "Identyfikator uczelni / jednostki",
+        "studentCardNumber" to "Numer legitymacji / numer albumu",
+        "studentNames" to "Imię i nazwisko studenta zapisane w dokumencie",
+        "studentFaculty" to "Wydział / jednostka organizacyjna",
+        "studentProgramme" to "Kierunek studiów",
+        "studentLevel" to "Poziom studiów",
+        "studentProfile" to "Profil / forma studiów",
+        "studentYear" to "Rok i semestr studiów",
+        "studentAcademicYear" to "Rok akademicki",
+        "studentIssueDate" to "Data wydania dokumentu",
+        "studentValidity" to "Termin ważności / aktualizacji",
+        "studentStatus" to "Status studenta",
+        "studentIssuer" to "Osoba / jednostka wydająca"
     )
-    "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> listOf(
-        "account_name" to "Nazwa własna rachunku",
-        "account_bank" to "Bank / instytucja prowadząca",
-        "account_currency" to "Waluta",
-        "account_iban" to "Numer rachunku / IBAN",
-        "account_bic" to "Kod BIC / SWIFT",
-        "account_holder" to "Posiadacz / współposiadacze",
-        "account_type" to "Rodzaj rachunku",
-        "account_country" to "Kraj prowadzenia rachunku",
-        "account_status" to "Status rachunku",
-        "account_open_date" to "Data otwarcia",
-        "account_close_date" to "Data zamknięcia",
-        "account_purpose" to "Cel / przeznaczenie",
-        "account_notes" to "Uwagi"
-    )
+    "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> buildList {
+        val labels = listOf(
+            "Nazwa własna rachunku", "Bank / instytucja prowadząca",
+            "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT",
+            "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku",
+            "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi"
+        )
+        repeat(30) { accountIndex ->
+            labels.forEachIndexed { fieldIndex, label ->
+                add("account_${accountIndex}_${fieldIndex}" to label)
+            }
+        }
+    }
     "identity" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
-        "birthPlace" to "Miejsce urodzenia", "citizenship" to "Obywatelstwo", "sex" to "Płeć",
-        "pesel" to "PESEL", "idNumber" to "Numer dokumentu", "idIssueDate" to "Data wydania",
-        "idExpiryDate" to "Data ważności", "idIssuer" to "Organ wydający"
+        "firstNames" to "Imię / imiona", "lastName" to "Nazwisko",
+        "birthDate" to "Data urodzenia", "birthPlace" to "Miejsce urodzenia",
+        "citizenship" to "Obywatelstwo", "sex" to "Płeć (dane deklarowane)",
+        "birthSurname" to "Nazwisko rodowe", "pesel" to "Numer PESEL",
+        "idNumber" to "Numer dokumentu tożsamości", "idIssueDate" to "Data wydania",
+        "idExpiryDate" to "Data ważności", "idIssuer" to "Organ wydający",
+        "idStatus" to "Status dokumentu",
+        "idPreviousNumber" to "Numer poprzedniego dokumentu (jeśli dotyczy)",
+        "idLossOrInvalidationDate" to "Data utraty / unieważnienia"
     )
     "passport" -> listOf(
-        "passportHolderNames" to "Imię i nazwisko", "passportNumber" to "Numer paszportu",
-        "passportCitizenship" to "Obywatelstwo", "birthDate" to "Data urodzenia",
-        "passportIssueDate" to "Data wydania", "passportExpiryDate" to "Data ważności",
-        "passportType" to "Rodzaj paszportu", "passportCountry" to "Państwo wydania",
-        "passportIssuer" to "Organ wydający"
+        "passportNumber" to "Numer dokumentu paszportowego",
+        "passportCountry" to "Państwo wydania",
+        "passportIssueDate" to "Data wydania",
+        "passportExpiryDate" to "Data ważności",
+        "passportIssuer" to "Organ wydający",
+        "passportType" to "Rodzaj dokumentu podróży",
+        "passportHolderNames" to "Imiona i nazwisko zapisane w paszporcie",
+        "passportBirthPlace" to "Miejsce urodzenia",
+        "passportCitizenship" to "Obywatelstwo w dokumencie",
+        "passportSex" to "Płeć w dokumencie",
+        "passportStatus" to "Status dokumentu",
+        "passportLossDate" to "Data utraty / unieważnienia"
     )
     "family", "organization_family" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "familyName" to "Nazwa Rodu",
-        "familyLine" to "Linia / gałąź", "familyRole" to "Miejsce w Rodzie",
-        "familyDocNumber" to "Numer dokumentu", "familyIssueDate" to "Data sporządzenia",
-        "familyRegistry" to "Prowadzący ewidencję", "familySource" to "Podstawa wpisu"
+        "familyDocNumber" to "Numer rodowego dokumentu",
+        "familyName" to "Nazwa rodu",
+        "familyLine" to "Linia / gałąź rodu",
+        "familyRole" to "Miejsce w strukturze rodu",
+        "familyRegistry" to "Osoba lub organ prowadzący ewidencję",
+        "familyIssueDate" to "Data sporządzenia",
+        "familyExpiryDate" to "Data przeglądu / aktualizacji wpisu",
+        "familySource" to "Podstawa wpisu / dokument źródłowy",
+        "familyRegistryPlace" to "Miejsce prowadzenia ewidencji",
+        "familyResidence" to "Miejsce zamieszkania (wpis dobrowolny)",
+        "familyFatherLine" to "Linia rodowa ojca",
+        "familyMotherLine" to "Linia rodowa matki",
+        "familyNotes" to "Uwagi ewidencyjne",
+        "familyHolderSignature" to "Imię i nazwisko posiadacza / podpis",
+        "familyRegistrarSignature" to "Imię i nazwisko wystawcy / podpis"
     )
     "disability" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "disabilityDecisionType" to "Rodzaj orzeczenia",
-        "disabilityDecisionNumber" to "Numer orzeczenia", "disabilityCaseNumber" to "Numer sprawy",
-        "disabilityDegree" to "Stopień", "disabilityValidity" to "Okres obowiązywania",
-        "disabilityIssuerName" to "Wystawca", "disabilityLegalBasis" to "Podstawa prawna"
+        "disabilityAuthorityName" to "Nazwa organu / podmiotu / wystawcy",
+        "disabilityIssuerName" to "Imię, nazwisko lub nazwa wystawcy",
+        "disabilityCounty" to "Powiat / miasto na prawach powiatu",
+        "disabilityLegalBasis" to "Podstawa prawna / cel wydania",
+        "disabilityLegalProvision" to "Przepis określający skutki lub równoważność",
+        "disabilityEquivalentEffect" to "Zakres uznania / równoważności",
+        "disabilityFoundationName" to "Fundacja / podmiot prowadzący",
+        "disabilityFoundationStatute" to "Podstawa statutowa / uchwała fundacji",
+        "disabilityFoundationLegalBasis" to "Podstawa prawna i regulacyjna wskazana przez wystawcę",
+        "disabilityMedicalQualification" to "Zawód / kwalifikacje osoby wystawiającej",
+        "disabilitySelfDeclarationDate" to "Data złożenia oświadczenia",
+        "disabilitySelfDeclarationBasis" to "Podstawa i cel oświadczenia",
+        "disabilityDecisionNumber" to "Numer orzeczenia / rozstrzygnięcia",
+        "disabilityDecisionDate" to "Data wydania",
+        "disabilityDecisionPlace" to "Miejsce wydania",
+        "disabilityPersonName" to "Osoba, której dotyczy orzeczenie",
+        "disabilityBirthDate" to "Data urodzenia",
+        "disabilityPeselOrId" to "PESEL / identyfikator ewidencyjny",
+        "disabilityCategory" to "Kategoria",
+        "disabilityDegree" to "Stopień niepełnosprawności",
+        "disabilityCauseCodes" to "Symbole przyczyn (maks. 3 w orzeczeniu powiatowym)",
+        "disabilityValidity" to "Okres, na jaki ustalono status",
+        "disabilityFromDate" to "Data, od której ustalono niepełnosprawność",
+        "disabilityEmployment" to "Wskazania dotyczące zatrudnienia",
+        "disabilityTraining" to "Wskazania dotyczące szkolenia",
+        "disabilityTherapy" to "Terapia zajęciowa / rehabilitacja",
+        "disabilityAssistiveDevices" to "Przedmioty ortopedyczne / środki pomocnicze",
+        "disabilityCare" to "Opieka / pomoc innej osoby",
+        "disabilityMobility" to "Środowiskowy system wsparcia",
+        "disabilityParking" to "Wskazania dotyczące karty parkingowej",
+        "disabilityAssessmentMethod" to "Metoda oceny (np. ICF)",
+        "disabilityWhodasScore" to "WHODAS 2.0 — wynik / data oceny",
+        "disabilityMedicalAssessment" to "Lekarz / osoba dokonująca oceny",
+        "disabilityPanelMembers" to "Skład zespołu / osoby uczestniczące w ocenie",
+        "disabilityChairperson" to "Przewodniczący zespołu",
+        "disabilitySignature" to "Osoba podpisująca / zatwierdzająca",
+        "disabilityAppealInfo" to "Tryb odwołania / weryfikacji",
+        "disabilityApplicationDate" to "Data złożenia wniosku",
+        "disabilityCaseNumber" to "Numer sprawy",
+        "disabilityDeliveryDate" to "Data doręczenia rozstrzygnięcia",
+        "disabilityDecisionType" to "Rodzaj rozstrzygnięcia",
+        "disabilityAppealOutcome" to "Wynik odwołania / sprzeciwu",
+        "disabilityDuplicateInfo" to "Duplikat / zmiana dokumentu",
+        "disabilitySourceAttachment" to "Nazwa / opis dokumentu źródłowego"
     )
     "church", "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "churchRole" to "Posługa / godność",
@@ -151,12 +254,26 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "entityName" to "Nazwa podmiotu", "entityKrs" to "Numer KRS", "entityNip" to "NIP",
         "entityRegon" to "REGON", "entityRepresentative" to "Reprezentant"
     )
-    "loyalty", "loyalty_cards" -> listOf(
+    "loyalty_cards" -> buildList {
+        repeat(25) { index ->
+            val number = index + 1
+            val prefix = "loyalty$number"
+            add("${prefix}Store" to "Sklep / marka")
+            add("${prefix}Program" to "Nazwa programu lojalnościowego")
+            add("${prefix}Number" to "Numer karty nadany przez sklep")
+            add("${prefix}LocalId" to "Lokalny numer ewidencyjny")
+            add("${prefix}Barcode" to "Treść kodu kreskowego")
+            add("${prefix}Qr" to "Treść kodu QR")
+            add("${prefix}Status" to "Status karty")
+        }
+        add("loyaltyExtraSource" to "Źródło danych / dokument źródłowy")
+        add("loyaltyExtraLegalBasis" to "Podstawa prawna / regulaminowa")
+        add("loyaltyExtraVerifiedAt" to "Data ostatniej weryfikacji danych")
+        add("loyaltyExtraVerifiedBy" to "Podmiot / osoba potwierdzająca dane")
+        add("loyaltyExtraNotes" to "Adnotacje i informacje uzupełniające")
+    }
+    "loyalty" -> listOf(
         "loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz"
-    )
-    "bank_accounts" -> listOf(
-        "bankName" to "Bank", "accountName" to "Nazwa rachunku", "accountNumber" to "Numer rachunku",
-        "accountOwner" to "Właściciel", "accountCurrency" to "Waluta", "accountStatus" to "Status rachunku"
     )
     "children" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
@@ -172,9 +289,17 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "civilIssueDate" to "Data sporządzenia", "civilIssuer" to "Wystawca"
     )
     "profile" -> listOf(
-        "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
-        "contactPhone" to "Telefon", "contactEmail" to "E-mail", "contactOrganization" to "Organizacja",
-        "contactTitle" to "Stanowisko", "contactUrl" to "Strona internetowa", "contactAddress" to "Adres"
+        "firstNames" to "Imię / imiona", "lastName" to "Nazwisko",
+        "contactPhone" to "Telefon kontaktowy",
+        "contactEmail" to "Adres poczty elektronicznej",
+        "contactOrganization" to "Organizacja",
+        "contactTitle" to "Stanowisko",
+        "contactUrl" to "Strona internetowa",
+        "contactAddress" to "Adres kontaktowy",
+        "fatherNames" to "Imiona ojca",
+        "fatherSurname" to "Nazwisko ojca",
+        "motherNames" to "Imiona matki",
+        "motherSurname" to "Nazwisko rodowe matki"
     )
     "birth_extract" -> listOf("civilActType" to "Rodzaj aktu", "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia", "civilDocumentNumber" to "Numer aktu", "civilExtractType" to "Rodzaj odpisu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
     "marriage_extract" -> listOf("civilActType" to "Rodzaj aktu", "spouseNames" to "Małżonkowie", "marriageDate" to "Data zawarcia małżeństwa", "civilDocumentNumber" to "Numer aktu", "civilExtractType" to "Rodzaj odpisu", "civilIssueDate" to "Data wydania", "civilIssuer" to "Wystawca")
@@ -196,7 +321,7 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "documentNumber" to "Numer dokumentu",
         "issueDate" to "Data wydania", "expiryDate" to "Termin ważności", "issuer" to "Wystawca"
     )
-} + listOf("details" to "Informacje dodatkowe") + schemaFields).distinctBy { it.first }
+} + schemaFields).distinctBy { it.first }
 }
 
 internal fun credentialVisibleFields(
@@ -206,13 +331,32 @@ internal fun credentialVisibleFields(
 ): List<Triple<String, String, String>> =
     if (!visibleFieldsConfigured) fields else fields.filter { it.first in visibleFieldKeys }
 
+internal const val CREDENTIAL_FIELD_HIDDEN = "NONE"
+internal const val CREDENTIAL_FIELD_FRONT = "FRONT"
+internal const val CREDENTIAL_FIELD_BACK = "BACK"
+
+internal fun credentialFieldSide(
+    key: String,
+    visibleFieldsConfigured: Boolean,
+    visibleFieldKeys: Set<String>,
+    fieldSides: Map<String, String>
+): String = fieldSides[key]?.takeIf { it in setOf(CREDENTIAL_FIELD_HIDDEN, CREDENTIAL_FIELD_FRONT, CREDENTIAL_FIELD_BACK) }
+    ?: if (!visibleFieldsConfigured || key in visibleFieldKeys) CREDENTIAL_FIELD_FRONT else CREDENTIAL_FIELD_HIDDEN
+
 internal fun splitCredentialFieldsForSides(
     fields: List<Triple<String, String, String>>,
-    orientation: String
+    orientation: String,
+    visibleFieldsConfigured: Boolean = false,
+    visibleFieldKeys: Set<String> = emptySet(),
+    fieldSides: Map<String, String> = emptyMap()
 ): Pair<List<Triple<String, String, String>>, List<Triple<String, String, String>>> {
-    val frontCapacity = if (orientation == "POZIOMA") 8 else 5
-    return if (fields.size > frontCapacity) fields.take(frontCapacity) to fields.drop(frontCapacity)
-    else fields to emptyList()
+    val front = fields.filter { (key, _, _) ->
+        credentialFieldSide(key, visibleFieldsConfigured, visibleFieldKeys, fieldSides) == CREDENTIAL_FIELD_FRONT
+    }
+    val back = fields.filter { (key, _, _) ->
+        credentialFieldSide(key, visibleFieldsConfigured, visibleFieldKeys, fieldSides) == CREDENTIAL_FIELD_BACK
+    }
+    return front to back
 }
 
 internal fun isCredentialValidByExpiry(rawExpiry: String): Boolean {
@@ -327,6 +471,7 @@ internal data class LegitimacyPreviewSettings(
     val orientation: String = "PIONOWA",
     val visibleFields: Set<String> = emptySet(),
     val visibleFieldsConfigured: Boolean = false,
+    val fieldSides: Map<String, String> = emptyMap(),
     val showPhoto: Boolean = true,
     val showFlag: Boolean = true,
     val showCrest: Boolean = true,
@@ -505,6 +650,10 @@ internal object LegitimacyPreviewSettingsStore {
     fun load(context: Context, key: String): LegitimacyPreviewSettings {
         val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val storedVisibleFields = p.getStringSet("${key}_visible_fields", emptySet())?.toSet().orEmpty()
+        val storedFieldSides = p.getStringSet("${key}_field_sides", emptySet()).orEmpty().mapNotNull { entry ->
+            val separator = entry.lastIndexOf("::")
+            if (separator <= 0) null else entry.substring(0, separator) to entry.substring(separator + 2)
+        }.toMap()
         return LegitimacyPreviewSettings(
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
@@ -528,6 +677,7 @@ internal object LegitimacyPreviewSettingsStore {
             orientation = p.getString("${key}_orientation", "PIONOWA").orEmpty(),
             visibleFields = storedVisibleFields,
             visibleFieldsConfigured = p.getBoolean("${key}_visible_fields_configured", storedVisibleFields.isNotEmpty()),
+            fieldSides = storedFieldSides,
             showPhoto = p.getBoolean("${key}_show_photo", true),
             showFlag = p.getBoolean("${key}_show_flag", true),
             showCrest = p.getBoolean("${key}_show_crest", true),
@@ -628,6 +778,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_caption_position", value.captionPosition)
                 .putStringSet("${key}_visible_fields", value.visibleFields)
                 .putBoolean("${key}_visible_fields_configured", value.visibleFieldsConfigured)
+                .putStringSet("${key}_field_sides", value.fieldSides.map { (field, side) -> "${field}::${side}" }.toSet())
                 .putString("${key}_font_color", value.fontColor)
                 .putBoolean("${key}_individual_appearance_configured", value.individualAppearanceConfigured)
                 .putBoolean("${key}_show_card", value.showCard)
@@ -1960,6 +2111,124 @@ private fun AnimatedHologram(assetId: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+internal fun DocumentFieldEditor(
+    documentKey: String,
+    fieldKey: String,
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    settingsState: androidx.compose.runtime.MutableState<LegitimacyPreviewSettings>,
+    placeholder: String = "Wpisz dane",
+    minLines: Int = 1,
+    maxLines: Int = 1
+) {
+    val settings = settingsState.value
+    val selectedSide = credentialFieldSide(
+        fieldKey, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
+    )
+    val context = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            placeholder = { Text(placeholder) },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = minLines,
+            maxLines = maxLines
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(
+                CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                CREDENTIAL_FIELD_FRONT to "Awers",
+                CREDENTIAL_FIELD_BACK to "Rewers"
+            ).forEach { (target, caption) ->
+                Row(
+                    Modifier.weight(1f).clickable {
+                        val current = settingsState.value
+                        val updated = current.copy(
+                            fieldSides = current.fieldSides + (fieldKey to target),
+                            visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
+                                current.visibleFields - fieldKey else current.visibleFields + fieldKey,
+                            visibleFieldsConfigured = true
+                        )
+                        LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                        settingsState.value = updated
+                    },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    androidx.compose.material3.RadioButton(
+                        selected = selectedSide == target,
+                        onClick = {
+                            val current = settingsState.value
+                            val updated = current.copy(
+                                fieldSides = current.fieldSides + (fieldKey to target),
+                                visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
+                                    current.visibleFields - fieldKey else current.visibleFields + fieldKey,
+                                visibleFieldsConfigured = true
+                            )
+                            LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                            settingsState.value = updated
+                        }
+                    )
+                    Text(caption, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun CredentialCardSides(
+    documentKey: String,
+    title: String,
+    subtitle: String,
+    holderName: String,
+    fields: List<Triple<String, String, String>>,
+    settings: LegitimacyPreviewSettings,
+    photo: Bitmap? = null,
+    fallbackBackgroundRes: Int = R.drawable.tlo_legitymacji_szare,
+    assetRevision: Int = 0,
+    validity: Boolean? = null
+) {
+    val (frontFields, reverseFields) = splitCredentialFieldsForSides(
+        fields, settings.orientation, settings.visibleFieldsConfigured,
+        settings.visibleFields, settings.fieldSides
+    )
+    if (!settings.showCard) {
+        Text("Podgląd legitymacji jest wyłączony.", color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+        return
+    }
+    UnifiedCredentialCard(
+        documentKey = documentKey,
+        title = title,
+        subtitle = subtitle,
+        holderName = holderName,
+        fields = frontFields,
+        settings = settings,
+        photo = photo,
+        fallbackBackgroundRes = fallbackBackgroundRes,
+        assetRevision = assetRevision,
+        validity = validity
+    )
+    if (settings.showReverse && reverseFields.isNotEmpty()) {
+        UnifiedCredentialCard(
+            documentKey = "${documentKey}_reverse",
+            title = "${title} — REWERS",
+            subtitle = "Dalsze dane dokumentu",
+            holderName = holderName,
+            fields = reverseFields,
+            settings = settings.copy(showPhoto = false, showFlag = false, showCrest = false,
+                showLogo = false, showHologram = false),
+            fallbackBackgroundRes = fallbackBackgroundRes,
+            assetRevision = assetRevision,
+            validity = validity
+        )
+    }
+}
+
+@Composable
 internal fun CredentialTemplatePreview(
     documentKey: String,
     settings: LegitimacyPreviewSettings,
@@ -1968,17 +2237,35 @@ internal fun CredentialTemplatePreview(
 ) {
     val title = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "Wspólny wzór legitymacji"
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
-    val options = credentialFieldOptions(documentKey)
-    val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
-    val selectedCardFields = selected.map { (key, label) ->
+    val allOptions = credentialFieldOptions(documentKey)
+    val activeLoyaltyCount = if (documentKey == "loyalty_cards") {
+        val storedCount = values?.get("loyaltyCardCount")?.toIntOrNull()
+        storedCount?.coerceIn(1, 25) ?: (1..25).lastOrNull { number ->
+            listOf("Store", "Program", "Number", "LocalId", "Barcode", "Qr", "Status")
+                .any { suffix -> values?.get("loyalty$number$suffix").orEmpty().isNotBlank() }
+        } ?: 1
+    } else 25
+    val options = if (documentKey == "loyalty_cards") allOptions.filter { (key, _) ->
+        val cardNumber = Regex("^loyalty(\\d+)(Store|Program|Number|LocalId|Barcode|Qr|Status)$")
+            .matchEntire(key)?.groupValues?.getOrNull(1)?.toIntOrNull()
+        cardNumber == null || cardNumber <= activeLoyaltyCount
+    } else allOptions
+    val selectedCardFields = options.map { (key, label) ->
         Triple(key, label, values?.get(key).orEmpty().ifBlank { "—" })
     }
-    val (frontFields, reverseFields) = splitCredentialFieldsForSides(selectedCardFields, settings.orientation)
-    val holderName = values?.get("studentNames").orEmpty().ifBlank {
-        values?.get("passportHolderNames").orEmpty().ifBlank {
-            values?.get("disabilityPersonName").orEmpty().ifBlank {
-                listOf(values?.get("firstNames").orEmpty(), values?.get("lastName").orEmpty())
-                    .filter { it.isNotBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
+    val (frontFields, reverseFields) = splitCredentialFieldsForSides(
+        selectedCardFields, settings.orientation, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
+    )
+    val loyaltyHolder = if (documentKey == "loyalty_cards") {
+        values?.get("loyalty1Store").orEmpty().ifBlank { values?.get("loyalty1Program").orEmpty() }
+    } else ""
+    val holderName = loyaltyHolder.ifBlank {
+        values?.get("studentNames").orEmpty().ifBlank {
+            values?.get("passportHolderNames").orEmpty().ifBlank {
+                values?.get("disabilityPersonName").orEmpty().ifBlank {
+                    listOf(values?.get("firstNames").orEmpty(), values?.get("lastName").orEmpty())
+                        .filter { it.isNotBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
+                }
             }
         }
     }
@@ -2003,7 +2290,7 @@ internal fun CredentialTemplatePreview(
             assetRevision = assetRevision,
             validity = values?.let { credentialValidityForDocument(documentKey, it) } ?: true
         )
-        if (reverseFields.isNotEmpty()) {
+        if (settings.showReverse && reverseFields.isNotEmpty()) {
             UnifiedCredentialCard(
                 documentKey = "${documentKey}_reverse",
                 title = "${title} — REWERS",

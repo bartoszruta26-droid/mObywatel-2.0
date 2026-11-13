@@ -194,18 +194,19 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
             // Każdy dokument podrzędny ma własny klucz wyglądu; DocumentBrandStore
             // samodzielnie stosuje przypisania odziedziczone z typu nadrzędnego.
             val brandDocumentType = doc.id
+            val settingsState = rememberLegitimacyPreviewSettings(brandDocumentType)
             val previewFields = doc.fields.mapIndexed { index, label ->
                 Triple("churchField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (readOnly) {
-                val settings = rememberLegitimacyPreviewSettings(brandDocumentType).value.copy(visibleFieldsConfigured = false)
-                UnifiedCredentialCard(
+                val settings = settingsState.value
+                CredentialCardSides(
                     documentKey = brandDocumentType,
                     title = doc.title.uppercase(),
                     subtitle = churchOwner.ifBlank { "DOKUMENT KOŚCIELNY" },
                     holderName = churchOwner.ifBlank { "DANE WYSTAWCY" },
-                    fields = previewFields.take(12),
+                    fields = previewFields,
                     settings = settings
                 )
                 Text(doc.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -217,11 +218,13 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                     Text(doc.note, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.bodySmall)
                 }
                 doc.fields.forEachIndexed { index, label ->
-                    OutlinedTextField(
+                    DocumentFieldEditor(
+                        documentKey = brandDocumentType,
+                        fieldKey = "churchField_$index",
+                        label = label,
+                        settingsState = settingsState,
                         value = local["f$index"].orEmpty(),
                         onValueChange = { local["f$index"] = it },
-                        label = { Text(label) },
-                        modifier = Modifier.fillMaxWidth(),
                         minLines = if (label.contains("Treść") || label.contains("Zakres") || label.contains("Uwagi")) 3 else 1,
                         maxLines = 6
                     )
@@ -240,13 +243,13 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                     Text("Edytuj wygląd graficzny")
                 }
                 Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                UnifiedCredentialCard(
+                CredentialCardSides(
                     documentKey = brandDocumentType,
                     title = doc.title.uppercase(),
                     subtitle = churchOwner.ifBlank { "DOKUMENT KOŚCIELNY" },
                     holderName = churchOwner.ifBlank { "DANE WYSTAWCY" },
-                    fields = previewFields.take(12),
-                    settings = rememberLegitimacyPreviewSettings(brandDocumentType).value
+                    fields = previewFields,
+                    settings = settingsState.value
                 )
                 Button(onClick = {
                     runCatching {

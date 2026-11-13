@@ -181,12 +181,13 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             var accountCount by remember(doc.id) { mutableIntStateOf((saved["accountCount"]?.toIntOrNull() ?: 1).coerceIn(1, 30)) }
             val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
             val previewKey = if (isBankRegister) "bank_accounts" else doc.id
+            val settingsState = rememberLegitimacyPreviewSettings(previewKey)
             val previewFields = if (isBankRegister) {
                 buildList {
                     repeat(accountCount) { accountIndex ->
                         accountFields.forEachIndexed { fieldIndex, label ->
                             val value = local["account_${accountIndex}_${fieldIndex}"].orEmpty().ifBlank { "—" }
-                            add(Triple("account_${accountIndex}_${fieldIndex}", "${label.uppercase()} · RACHUNEK ${accountIndex + 1}", value))
+                            add(Triple("account_${accountIndex}_${fieldIndex}", label.uppercase(), value))
                         }
                     }
                 }
@@ -195,13 +196,13 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (readOnly) {
-                val settings = rememberLegitimacyPreviewSettings(previewKey).value.copy(visibleFieldsConfigured = false)
-                UnifiedCredentialCard(
+                val settings = settingsState.value
+                CredentialCardSides(
                     documentKey = previewKey,
                     title = doc.title.uppercase(),
                     subtitle = doc.section,
                     holderName = previewFields.firstOrNull()?.third?.takeIf { it != "—" } ?: "DANE EWIDENCYJNE",
-                    fields = previewFields.take(12),
+                    fields = previewFields,
                     settings = settings
                 )
                 Text("Podgląd wyłącznie do odczytu. Zmiana danych jest dostępna w Więcej → Ustawienia → konkretny dokument.",
@@ -217,12 +218,13 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                                 Text("Rachunek bankowy ${accountIndex + 1}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                 accountFields.forEachIndexed { fieldIndex, label ->
                                     val key = "account_${accountIndex}_${fieldIndex}"
-                                    OutlinedTextField(
+                                    DocumentFieldEditor(
+                                        documentKey = previewKey,
+                                        fieldKey = key,
+                                        label = label,
+                                        settingsState = settingsState,
                                         value = local[key].orEmpty(),
                                         onValueChange = { local[key] = it },
-                                        label = { Text(label) },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        singleLine = fieldIndex in listOf(2, 3, 4, 8, 9, 10),
                                         minLines = if (fieldIndex == 12) 2 else 1,
                                         maxLines = 4
                                     )
@@ -240,11 +242,13 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                         }, modifier = Modifier.weight(1f), enabled = accountCount > 1) { Text("Usuń ostatni") }
                     }
                 } else doc.fields.forEachIndexed { index, label ->
-                    OutlinedTextField(
+                    DocumentFieldEditor(
+                        documentKey = previewKey,
+                        fieldKey = "field_$index",
+                        label = label,
+                        settingsState = settingsState,
                         value = local["f$index"].orEmpty(),
                         onValueChange = { local["f$index"] = it },
-                        label = { Text(label) },
-                        modifier = Modifier.fillMaxWidth(),
                         minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1,
                         maxLines = 5
                     )
@@ -258,13 +262,13 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                     Text("Edytuj wygląd graficzny")
                 }
                 Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                UnifiedCredentialCard(
+                CredentialCardSides(
                     documentKey = previewKey,
                     title = doc.title.uppercase(),
                     subtitle = doc.section,
                     holderName = previewFields.firstOrNull()?.third?.takeIf { it != "—" } ?: "DANE EWIDENCYJNE",
-                    fields = previewFields.take(12),
-                    settings = rememberLegitimacyPreviewSettings(previewKey).value
+                    fields = previewFields,
+                    settings = settingsState.value
                 )
                 Button(
                     onClick = {

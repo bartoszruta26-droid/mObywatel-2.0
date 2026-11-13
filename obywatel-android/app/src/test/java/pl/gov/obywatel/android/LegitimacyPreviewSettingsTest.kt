@@ -3,10 +3,17 @@
 package pl.gov.obywatel.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LegitimacyPreviewSettingsTest {
+    @Test
+    fun reverseSideIsHiddenByDefault() {
+        assertFalse("Rewers wszystkich dokumentów ma być domyślnie ukryty.",
+            LegitimacyPreviewSettings().showReverse)
+    }
+
     @Test
     fun explicitlyEmptyVisibleFieldSelectionHidesEveryField() {
         val fields = listOf(
@@ -20,18 +27,105 @@ class LegitimacyPreviewSettingsTest {
     }
 
     @Test
-    fun excessCredentialFieldsAreMovedToReverseSide() {
-        val portraitFields = (1..7).map { Triple("p$it", "Pole $it", "Wartość $it") }
-        val (portraitFront, portraitReverse) = splitCredentialFieldsForSides(portraitFields, "PIONOWA")
-        assertEquals(5, portraitFront.size)
-        assertEquals(2, portraitReverse.size)
-        assertEquals(portraitFields.drop(5), portraitReverse)
+    fun fieldsArePlacedOnlyOnTheExplicitlySelectedSide() {
+        val fields = (1..7).map { Triple("p$it", "Pole $it", "Wartość $it") }
+        val (front, reverse) = splitCredentialFieldsForSides(
+            fields,
+            "PIONOWA",
+            visibleFieldsConfigured = true,
+            visibleFieldKeys = fields.map { it.first }.toSet(),
+            fieldSides = mapOf(
+                "p1" to CREDENTIAL_FIELD_FRONT,
+                "p2" to CREDENTIAL_FIELD_BACK,
+                "p3" to CREDENTIAL_FIELD_HIDDEN
+            )
+        )
+        assertEquals(listOf("p1", "p4", "p5", "p6", "p7"), front.map { it.first })
+        assertEquals(listOf("p2"), reverse.map { it.first })
+        assertTrue("Ukryte i niewybrane pola nie mogą być automatycznie przenoszone na rewers.",
+            "p3" !in front.map { it.first } && "p3" !in reverse.map { it.first })
+    }
 
-        val landscapeFields = (1..10).map { Triple("l$it", "Pole $it", "Wartość $it") }
-        val (landscapeFront, landscapeReverse) = splitCredentialFieldsForSides(landscapeFields, "POZIOMA")
-        assertEquals(8, landscapeFront.size)
-        assertEquals(2, landscapeReverse.size)
-        assertEquals(landscapeFields.drop(8), landscapeReverse)
+    @Test
+    fun documentFieldOptionsMatchTextEditorKeysAndLabels() {
+        val identityOptions = credentialFieldOptions("identity").toMap()
+        assertEquals("Status dokumentu", identityOptions["idStatus"])
+        assertEquals("Numer poprzedniego dokumentu (jeśli dotyczy)", identityOptions["idPreviousNumber"])
+        assertEquals("Data utraty / unieważnienia", identityOptions["idLossOrInvalidationDate"])
+        assertEquals(
+            listOf("passportNumber", "passportCountry", "passportIssueDate", "passportExpiryDate",
+                "passportIssuer", "passportType", "passportHolderNames", "passportBirthPlace",
+                "passportCitizenship", "passportSex", "passportStatus", "passportLossDate"),
+            credentialFieldOptions("passport").map { it.first }
+        )
+        val familyOptions = credentialFieldOptions("family")
+        assertTrue("Podgląd Rodu musi mieć pola wynikające z formularza.",
+            familyOptions.isNotEmpty() && familyOptions.none { it.first == "details" })
+        val disabilityKeys = credentialFieldOptions("disability").map { it.first }
+        assertTrue("Podgląd nie może dopisywać ogólnej etykiety bez pola w edytorze.",
+            "details" !in disabilityKeys && "details" !in credentialFieldOptions("identity").map { it.first })
+        assertTrue("Pole sprawy musi istnieć w podglądzie.", "disabilityCaseNumber" in disabilityKeys)
+        assertTrue("Pole załącznika źródłowego musi istnieć w podglądzie.", "disabilitySourceAttachment" in disabilityKeys)
+        assertTrue("Podgląd nie może dodawać nieistniejącego pola PESEL o innym kluczu.", "pesel" !in disabilityKeys)
+    }
+
+
+    @Test
+    fun loyaltyCardPreviewUsesNumberedEditorKeysForAllTwentyFiveCards() {
+        val options = credentialFieldOptions("loyalty_cards")
+        val keys = options.map { it.first }
+        assertEquals(180, options.size)
+        assertEquals("loyalty1Store", keys.first())
+        assertTrue("Każda karta musi mieć własny numer sklepu.",
+            (1..25).all { "loyalty${it}Store" in keys })
+        assertTrue("Każda karta musi mieć własny numer karty.",
+            (1..25).all { "loyalty${it}Number" in keys })
+        assertTrue("Podgląd nie może używać ogólnych, nieistniejących kluczy.",
+            listOf("loyaltyName", "loyaltyNumber", "loyaltyHolder").none { it in keys })
+        assertTrue("Dane źródłowe i weryfikacyjne muszą mieć te same klucze co edytor.",
+            listOf("loyaltyExtraSource", "loyaltyExtraLegalBasis", "loyaltyExtraVerifiedAt",
+                "loyaltyExtraVerifiedBy", "loyaltyExtraNotes").all { it in keys })
+    }
+
+    @Test
+    fun dynamicChurchFamilyAndOfficialPreviewsReuseTheirEditorFieldDefinitions() {
+        val churchId = "church_orders"
+        assertEquals(churchGraphicDocumentFields(churchId), credentialFieldOptions(churchId))
+
+        val familyId = familyEntityGraphicDocumentTargets().first().first
+        assertEquals(familyEntityGraphicDocumentFields(familyId), credentialFieldOptions(familyId))
+
+        val officialId = "birth_extract"
+        assertEquals(officialGraphicDocumentFields(officialId), credentialFieldOptions(officialId))
+    }
+
+    @Test
+    fun bankAccountPreviewKeysMatchTheDynamicThirtyAccountEditor() {
+        val options = credentialFieldOptions("bank_accounts").map { it.first }
+        assertEquals(390, options.size)
+        assertTrue("Pierwsze konto musi odpowiadać kluczom formularza.",
+            (0..12).all { "account_0_${it}" in options })
+        assertTrue("Trzydzieste konto musi odpowiadać kluczom formularza.",
+            (0..12).all { "account_29_${it}" in options })
+    }
+
+    @Test
+    fun schemaBackedDocumentPreviewUsesOnlyEditorDefinitions() {
+        val documentId = "professional_medical"
+        val expected = documentEditorFieldDefinitions(documentId).map {
+            "doc_${documentId}_${it.key}" to it.label
+        }
+        assertEquals(expected, credentialFieldOptions(documentId))
+    }
+
+    @Test
+    fun profilePreviewDoesNotInventBirthDateAndIncludesParentFields() {
+        val options = credentialFieldOptions("profile").toMap()
+        assertEquals("Telefon kontaktowy", options["contactPhone"])
+        assertEquals("Imiona ojca", options["fatherNames"])
+        assertEquals("Nazwisko rodowe matki", options["motherSurname"])
+        assertTrue("Profil nie powinien dodawać pola, którego edytor profilu nie wyświetla.",
+            "birthDate" !in options)
     }
 
     @Test

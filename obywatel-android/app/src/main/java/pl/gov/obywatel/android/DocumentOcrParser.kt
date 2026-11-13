@@ -43,6 +43,13 @@ internal object DocumentOcrParser {
                 Rule("disabilityBirthDate",listOf("data urodzenia")),Rule("disabilityPeselOrId",listOf("pesel","identyfikator")),
                 Rule("disabilityDegree",listOf("stopien niepelnosprawnosci","stopien")),Rule("disabilityCauseCodes",listOf("symbol przyczyny")),
                 Rule("disabilityValidity",listOf("okres","wazne do","data waznosci")),Rule("disabilityAuthorityName",listOf("nazwa organu","zespol do spraw")))
+            "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> listOf(
+                Rule("account_0_5", listOf("posiadacz rachunku / podmiot", "posiadacz / współposiadacze", "posiadacz rachunku podmiot", "posiadacz wspolposiadacze", "account holder", "account owner")),
+                Rule("account_0_1", listOf("nazwa banku", "bank instytucja prowadzaca")),
+                Rule("account_0_3", listOf("numer rachunku iban", "iban")),
+                Rule("account_0_2", listOf("waluta")),
+                Rule("account_0_4", listOf("kod bic swift", "swift", "bic"))
+            )
             else -> when {
                 churchGraphicDocumentTargets().any { it.first == categoryId } ->
                     churchGraphicDocumentFields(categoryId).map { (key, label) -> Rule(key, listOf(label)) }
