@@ -38,6 +38,13 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun groupedOcrArchiveKeysUseOnlyTheSupportedSafeFormat() {
+        assertTrue(isGroupedOcrArchiveField("groupedOcr_7f3a21"))
+        assertFalse(isGroupedOcrArchiveField("groupedOcr:church:field_0"))
+        assertFalse(isGroupedOcrArchiveField("groupedOcr_../../file"))
+    }
+
+    @Test
     fun archiveImportAllowlistIncludesDedicatedAndCatalogEditorFields() {
         val keys = documentEditorImportableFieldKeys()
         assertTrue("passportNumber" in keys)
