@@ -1,0 +1,167 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="200dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+
+    <!--
+      Cross-field fractal watermark.
+      Four-way symmetry, nested rosettes and interlaced guilloche lines form
+      a repeatable ornamental system inspired by harmony, justice, truth and love.
+      Low-contrast white strokes preserve the foreground tile content.
+    -->
+
+    <!-- Outer cross silhouette: broad vertical stem and horizontal arms. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.30"
+        android:strokeWidth="1.1"
+        android:pathData="M128,4 L192,4 L192,68 L284,68 L284,132 L192,132
+            L192,196 L128,196 L128,132 L36,132 L36,68 L128,68 Z
+            M136,12 L184,12 L184,76 L276,76 L276,124 L184,124
+            L184,188 L136,188 L136,124 L44,124 L44,76 L136,76 Z" />
+
+    <!-- Repeating diamond lattice follows the arms of the cross. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.20"
+        android:strokeWidth="0.75"
+        android:pathData="M136,0 L160,24 L184,0
+            M136,200 L160,176 L184,200
+            M32,76 L56,100 L32,124
+            M288,76 L264,100 L288,124
+            M144,16 L160,32 L176,16
+            M144,184 L160,168 L176,184
+            M48,84 L64,100 L48,116
+            M272,84 L256,100 L272,116
+            M120,68 L136,84 L120,100 L136,116 L120,132
+            M200,68 L184,84 L200,100 L184,116 L200,132
+            M128,60 L160,92 L192,60
+            M128,140 L160,108 L192,140" />
+
+    <!-- Central twelve-petal rosette, nested at three scales. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.40"
+        android:strokeWidth="1.0"
+        android:pathData="M160,66
+            C168,80 180,92 194,100
+            C180,108 168,120 160,134
+            C152,120 140,108 126,100
+            C140,92 152,80 160,66 Z
+            M160,76
+            C166,86 174,94 184,100
+            C174,106 166,114 160,124
+            C154,114 146,106 136,100
+            C146,94 154,86 160,76 Z
+            M160,86
+            C164,92 169,97 176,100
+            C169,103 164,108 160,114
+            C156,108 151,103 144,100
+            C151,97 156,92 160,86 Z" />
+
+    <!-- Concentric rings and equal axes establish visual balance. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.27"
+        android:strokeWidth="0.7"
+        android:pathData="M160,54 L160,146 M114,100 L206,100
+            M127,67 L193,133 M193,67 L127,133
+            M160,58 C183,58 202,77 202,100
+            C202,123 183,142 160,142
+            C137,142 118,123 118,100
+            C118,77 137,58 160,58 Z
+            M160,48 C189,48 212,71 212,100
+            C212,129 189,152 160,152
+            C131,152 108,129 108,100
+            C108,71 131,48 160,48 Z" />
+
+    <!-- Small self-similar rosettes repeat on all four arms. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.27"
+        android:strokeWidth="0.75"
+        android:pathData="M160,12 C165,21 171,27 180,32
+            C171,37 165,43 160,52 C155,43 149,37 140,32
+            C149,27 155,21 160,12 Z
+            M160,22 C163,28 167,31 173,32
+            C167,35 163,38 160,44 C157,38 153,35 147,32
+            C153,31 157,28 160,22 Z
+            M160,148 C165,157 171,163 180,168
+            C171,173 165,179 160,188 C155,179 149,173 140,168
+            C149,163 155,157 160,148 Z
+            M160,158 C163,164 167,167 173,168
+            C167,171 163,174 160,180 C157,174 153,171 147,168
+            C153,167 157,164 160,158 Z
+            M44,100 C53,95 59,89 64,80
+            C69,89 75,95 84,100 C75,105 69,111 64,120
+            C59,111 53,105 44,100 Z
+            M54,100 C60,97 63,93 64,87
+            C67,93 70,97 76,100 C70,103 67,107 64,113
+            C63,107 60,103 54,100 Z
+            M236,100 C245,95 251,89 256,80
+            C261,89 267,95 276,100 C267,105 261,111 256,120
+            C251,111 245,105 236,100 Z
+            M246,100 C252,97 255,93 256,87
+            C259,93 262,97 268,100 C262,103 259,107 256,113
+            C255,107 252,103 246,100 Z" />
+
+    <!-- Interlaced curves create a fine, repeatable guilloche texture. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.19"
+        android:strokeWidth="0.65"
+        android:pathData="M136,14 C148,26 148,38 136,50
+            C124,62 124,74 136,86
+            M144,14 C156,26 156,38 144,50
+            C132,62 132,74 144,86
+            M176,14 C164,26 164,38 176,50
+            C188,62 188,74 176,86
+            M184,14 C172,26 172,38 184,50
+            C196,62 196,74 184,86
+            M136,114 C148,126 148,138 136,150
+            C124,162 124,174 136,186
+            M144,114 C156,126 156,138 144,150
+            C132,162 132,174 144,186
+            M176,114 C164,126 164,138 176,150
+            C188,162 188,174 176,186
+            M184,114 C172,126 172,138 184,150
+            C196,162 196,174 184,186
+            M38,84 C50,96 62,96 74,84
+            C86,72 98,72 110,84
+            M38,92 C50,104 62,104 74,92
+            C86,80 98,80 110,92
+            M38,116 C50,104 62,104 74,116
+            C86,128 98,128 110,116
+            M210,84 C222,96 234,96 246,84
+            C258,72 270,72 282,84
+            M210,92 C222,104 234,104 246,92
+            C258,80 270,80 282,92
+            M210,116 C222,104 234,104 246,116
+            C258,128 270,128 282,116" />
+
+    <!-- Faceted corner diamonds and fine radial rays. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.18"
+        android:strokeWidth="0.65"
+        android:pathData="M116,4 L128,16 L116,28 L104,16 Z
+            M204,4 L216,16 L204,28 L192,16 Z
+            M116,172 L128,184 L116,196 L104,184 Z
+            M204,172 L216,184 L204,196 L192,184 Z
+            M4,60 L20,76 L4,92 L-12,76 Z
+            M316,60 L300,76 L316,92 L332,76 Z
+            M4,108 L20,124 L4,140 L-12,124 Z
+            M316,108 L300,124 L316,140 L332,124 Z
+            M152,4 L160,12 L168,4
+            M152,196 L160,188 L168,196
+            M36,92 L44,100 L36,108
+            M284,92 L276,100 L284,108" />
+</vector>
