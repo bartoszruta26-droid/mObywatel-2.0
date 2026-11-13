@@ -1092,7 +1092,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "parliament" -> { selectedEditorCategory = "parliament"; showDocumentsEditor = true }
             documentId == "training" -> { selectedEditorCategory = "training"; showDocumentsEditor = true }
             documentId == "student" -> { selectedEditorCategory = "student"; showDocumentsEditor = true }
-            documentId == "loyalty" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
+            documentId == "loyalty" || documentId == "loyalty_cards" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
             documentId == "disability" -> showDisabilitySettings = true
             documentId == "registry" -> showRegistryEditor = true
             documentId == "bank_accounts" -> { selectedEditorCategory = "catalog:bank_accounts"; showDocumentsEditor = true }
