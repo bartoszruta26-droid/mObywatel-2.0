@@ -1033,6 +1033,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 context.getSharedPreferences("legitimacy_preview_preferences", Context.MODE_PRIVATE)
                     .getString("${documentKey}_tile_vector_background", "").orEmpty()
             }
+            Text("Wektorowe tło kafelka dokumentu — wybierz podgląd", fontWeight = FontWeight.SemiBold)
             GraphicAssetPreviewGrid(
                 title = if (isGlobalDocumentAppearance)
                     "Wspólne wektorowe tło kafelków wszystkich dokumentów"
