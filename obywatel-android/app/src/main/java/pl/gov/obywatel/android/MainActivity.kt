@@ -602,6 +602,26 @@ private fun EntryBackground() {
 }
 
 @Composable
+private fun ApplicationBrandTitle(color: Color) {
+    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        Text(
+            "mObywatelska 2.0",
+            color = color,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            softWrap = false
+        )
+        Text(
+            "aplikacja",
+            color = color.copy(alpha = 0.92f),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
     val foreground = Color(0xFFFFF1D1)
     Box(Modifier.fillMaxSize()) {
@@ -620,12 +640,7 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
                     modifier = Modifier.size(64.dp),
                     contentScale = ContentScale.Fit
                 )
-                Text(
-                    "mObywatel",
-                    color = foreground,
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                ApplicationBrandTitle(foreground)
             }
             Spacer(Modifier.height(34.dp))
             Text(
@@ -693,12 +708,7 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 BrandMark(size = 72.dp)
-                Text(
-                    "mObywatel",
-                    color = cream,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                ApplicationBrandTitle(cream)
             }
             Spacer(Modifier.height(38.dp))
             Text(
@@ -1200,6 +1210,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun openSettingsDocumentEditor(documentId: String) {
         showDocumentEditorCatalog = false
+        showSettingsMenu = false
+        showDemoDocuments = false
+        selectedDocumentId = null
+        activeService = null
         when {
             documentId == "profile" -> { selectedEditorCategory = "profile"; showDocumentsEditor = true }
             documentId == "identity" -> { selectedEditorCategory = "identity_card"; showDocumentsEditor = true }
@@ -1210,14 +1224,23 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "loyalty" || documentId == "loyalty_cards" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
             documentId == "disability" -> showDisabilitySettings = true
             documentId == "registry" -> showRegistryEditor = true
-            documentId == "bank_accounts" -> { selectedEditorCategory = "catalog:bank_accounts"; showDocumentsEditor = true }
+            documentId == "bank_accounts" -> settingsDocumentEditor = "bank_accounts:rod_bank_accounts"
             documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts:rod_bank_accounts"
             documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts:entity_bank_accounts"
             documentId == "family" -> settingsDocumentEditor = "family"
             documentId.startsWith("rod_") -> settingsDocumentEditor = "family:$documentId"
             documentId == "church" -> settingsDocumentEditor = "church"
             documentId == "mission_travel" -> { selectedEditorCategory = "catalog:mission_travel"; showDocumentsEditor = true }
-            documentId.startsWith("church_") -> settingsDocumentEditor = if (churchGraphicDocumentTargets().any { it.first == documentId }) "church:$documentId" else "church"
+            documentId.startsWith("church_") || churchGraphicDocumentTargets().any { it.first == documentId } -> {
+                if (churchGraphicDocumentTargets().any { it.first == documentId }) {
+                    settingsDocumentEditor = "church:$documentId"
+                } else {
+                    // Category aliases such as church_bishop have their own
+                    // schema-backed form; they must not fall back to the group list.
+                    selectedEditorCategory = "catalog:$documentId"
+                    showDocumentsEditor = true
+                }
+            }
             documentId == "civil" -> settingsDocumentEditor = "civil"
             documentId in setOf("birth_extract", "marriage_extract", "death_extract", "vehicle_registration", "official") ||
                 officialGraphicDocumentTargets().any { it.first == documentId } -> settingsDocumentEditor = "civil:$documentId"
@@ -1287,21 +1310,21 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         // Keep the source ID intact unless the registry declares a legacy alias.
         val route = DocumentRouteRegistry.find(documentId)
         if (route == null) {
-            selectedDocumentId = documentId
+            openSettingsDocumentEditor(documentId)
             return
         }
         when (route.type) {
             DocumentRouteType.GROUP -> activeService = requireNotNull(route.destination)
-            DocumentRouteType.DOCUMENT -> selectedDocumentId = route.documentId
+            DocumentRouteType.DOCUMENT -> openSettingsDocumentEditor(route.documentId)
             DocumentRouteType.SPECIALIZED -> when (route.destination) {
-                "registry_extract" -> activeService = "Odpis z rejestru podmiotów"
-                "children" -> activeService = "Dane dzieci"
+                "registry_extract" -> openSettingsDocumentEditor("registry")
+                "children" -> openSettingsDocumentEditor("children")
                 "bank_accounts" -> showBankAccounts = true
-                "vaccines" -> activeService = "eKarta Szczepień"
-                "signed_pdf" -> activeService = "Dokumenty PDF i podpisy elektroniczne"
-                "imported" -> showImportedDocuments = true
+                "vaccines" -> openSettingsDocumentEditor("vaccines")
+                "signed_pdf" -> openSettingsDocumentEditor("signed_pdf")
+                "imported" -> openSettingsDocumentEditor("imported")
                 "branding" -> activeService = "Zasoby identyfikacji dokumentów"
-                else -> selectedDocumentId = route.documentId
+                else -> openSettingsDocumentEditor(route.documentId)
             }
         }
     }
@@ -1365,16 +1388,14 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    (settingsDocumentEditor == "bank_accounts" || settingsDocumentEditor?.startsWith("bank_accounts:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("bank_accounts:", "")?.ifBlank { "bank_accounts" } ?: "bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                    (settingsDocumentEditor == "bank_accounts" || settingsDocumentEditor?.startsWith("bank_accounts:") == true) ->
                         FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("bank_accounts:", "")?.ifBlank { null },
                             onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
-                    }
-                    settingsDocumentEditor?.startsWith("entity_bank_accounts:") == true -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("entity_bank_accounts:", "")?.ifBlank { "entity_bank_accounts" } ?: "entity_bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                    settingsDocumentEditor?.startsWith("entity_bank_accounts:") == true ->
                         FamilyEntityDocumentsScreen(entityMode = true, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("entity_bank_accounts:", "")?.ifBlank { null },
                             onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
-                    }
                     (settingsDocumentEditor == "church" || settingsDocumentEditor?.startsWith("church:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("church:", "")?.ifBlank { "church" } ?: "church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("church:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("church:") == true) {
                         ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             initialDocumentId = settingsDocumentEditor?.substringAfter("church:", "")?.ifBlank { null },
@@ -3583,7 +3604,7 @@ private fun DocumentsWalletScreen(
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Dokumenty", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
-            "Wybierz dokument. Grupy porządkują katalog, a każda pozycja otwiera bezpośrednio podgląd dokumentu.",
+            "Wybierz dokument. Grupy porządkują katalog, a każda pozycja otwiera bezpośrednio formularz edycji. Podgląd i edycja graficzna są dostępne w formularzu.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
         )
         categories.forEach { category ->
@@ -3613,14 +3634,18 @@ private fun DocumentsWalletScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(11.dp)
                                 ) {
-                                    Image(painter = painterResource(documentTileIconResource(context, document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
-                                        contentDescription = document.title, modifier = Modifier.size(30.dp))
+                                    Image(
+                                        painter = painterResource(documentTileIconResource(context, document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
+                                        contentDescription = document.title,
+                                        modifier = Modifier.size(30.dp),
+                                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+                                    )
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                         Text(document.title, color = Color.White, fontWeight = FontWeight.SemiBold,
                                             style = MaterialTheme.typography.bodyMedium)
                                         Text(document.subtitle, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodySmall)
                                     }
-                                    Text("Podgląd  ›", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                    Text("Edytuj  ›", color = Color.White, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -3667,7 +3692,8 @@ private fun DocumentsWalletScreen(
                                             contentDescription = "Ikona wektorowa: " + document.title,
                                             modifier = Modifier.align(Alignment.TopEnd)
                                                 .padding(8.dp)
-                                                .size(if (documentCardStyle == "small") 22.dp else 26.dp)
+                                                .size(if (documentCardStyle == "small") 22.dp else 26.dp),
+                                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
                                         )
                                     }
                                 }
@@ -3724,9 +3750,12 @@ private fun DashboardDocumentGrid(
                                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
                                         maxLines = 2, overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.weight(1f).padding(end = 8.dp))
-                                    Image(painterResource(documentTileIconResource(context, id, iconRes)),
+                                    Image(
+                                        painter = painterResource(documentTileIconResource(context, id, iconRes)),
                                         contentDescription = "Ikona wektorowa: " + title,
-                                        modifier = Modifier.size(22.dp))
+                                        modifier = Modifier.size(22.dp),
+                                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+                                    )
                                 }
                             }
                         } else {
@@ -3736,10 +3765,13 @@ private fun DashboardDocumentGrid(
                                     style = if (tileStyle == "small") MaterialTheme.typography.labelSmall else MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(0.78f).padding(10.dp))
-                                Image(painterResource(documentTileIconResource(context, id, iconRes)),
+                                Image(
+                                    painter = painterResource(documentTileIconResource(context, id, iconRes)),
                                     contentDescription = "Ikona wektorowa: " + title,
                                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
-                                        .size(if (tileStyle == "small") 20.dp else 24.dp))
+                                        .size(if (tileStyle == "small") 20.dp else 24.dp),
+                                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+                                )
                             }
                         }
                     }
