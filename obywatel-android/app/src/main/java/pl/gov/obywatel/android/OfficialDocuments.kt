@@ -208,6 +208,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, on
                 type.fields.forEachIndexed { index,label ->
                     OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local["f$index"]=it},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
                 }
+                DocumentOriginalAttachments(type.id)
             }
             if (!readOnly) {
                 OutlinedButton(onClick = { onEditGraphic(type.id) }, modifier = Modifier.fillMaxWidth()) {
