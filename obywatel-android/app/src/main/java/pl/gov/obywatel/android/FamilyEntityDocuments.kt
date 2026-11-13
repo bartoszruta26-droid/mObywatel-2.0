@@ -217,12 +217,12 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                                 Text("Rachunek bankowy ${accountIndex + 1}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                 accountFields.forEachIndexed { fieldIndex, label ->
                                     val key = "account_${accountIndex}_${fieldIndex}"
-                                    OutlinedTextField(
+                                    DocumentFieldEditor(
+                                        documentKey = previewKey,
+                                        fieldKey = key,
+                                        label = label,
                                         value = local[key].orEmpty(),
                                         onValueChange = { local[key] = it },
-                                        label = { Text(label) },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        singleLine = fieldIndex in listOf(2, 3, 4, 8, 9, 10),
                                         minLines = if (fieldIndex == 12) 2 else 1,
                                         maxLines = 4
                                     )
@@ -259,12 +259,12 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                     Text("Edytuj wygląd graficzny")
                 }
                 Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                UnifiedCredentialCard(
+                CredentialCardSides(
                     documentKey = previewKey,
                     title = doc.title.uppercase(),
                     subtitle = doc.section,
                     holderName = previewFields.firstOrNull()?.third?.takeIf { it != "—" } ?: "DANE EWIDENCYJNE",
-                    fields = previewFields.take(12),
+                    fields = previewFields,
                     settings = rememberLegitimacyPreviewSettings(previewKey).value
                 )
                 Button(
