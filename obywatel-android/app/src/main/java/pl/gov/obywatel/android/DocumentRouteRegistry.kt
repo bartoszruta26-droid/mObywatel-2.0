@@ -28,7 +28,7 @@ object DocumentRouteRegistry {
         id to DocumentRoute(id, DocumentRouteType.SPECIALIZED, destination)
 
     /** Every identifier exposed by the document visibility settings is registered. */
-    val routes: Map<String, DocumentRoute> = listOf(
+    val routes: Map<String, DocumentRoute> = (listOf(
         document("profile"),
         document("identity"),
         document("passport"),
@@ -96,7 +96,14 @@ object DocumentRouteRegistry {
         // Compatibility aliases used by older callers.
         document("identity_card", "identity"),
         document("loyalty_cards", "loyalty")
-    ).associate { it }
+    ) +
+        // Keep the route registry synchronized with every schema-backed catalog entry.
+        // Explicit GROUP/SPECIALIZED routes above take precedence over generated document routes.
+        documentBrandTargets.map { (id, _) -> document(id) } +
+        churchGraphicDocumentTargets().map { (id, _) -> document(id) } +
+        familyEntityGraphicDocumentTargets().map { (id, _) -> document(id) } +
+        officialGraphicDocumentTargets().map { (id, _) -> document(id) }
+    ).distinctBy { it.first }.associate { it }
 
     fun find(documentId: String): DocumentRoute? = routes[documentId]
 }
