@@ -241,12 +241,12 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                     Text("Edytuj wygląd graficzny")
                 }
                 Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                UnifiedCredentialCard(
+                CredentialCardSides(
                     documentKey = brandDocumentType,
                     title = doc.title.uppercase(),
                     subtitle = churchOwner.ifBlank { "DOKUMENT KOŚCIELNY" },
                     holderName = churchOwner.ifBlank { "DANE WYSTAWCY" },
-                    fields = previewFields.take(12),
+                    fields = previewFields,
                     settings = rememberLegitimacyPreviewSettings(brandDocumentType).value
                 )
                 Button(onClick = {
