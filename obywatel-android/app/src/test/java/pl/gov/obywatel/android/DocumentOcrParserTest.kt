@@ -15,4 +15,13 @@ class DocumentOcrParserTest {
   assertEquals("KOWALSKI",m["lastName"]);assertEquals("JAN ADAM",m["firstNames"])
  }
  @Test fun blankTextHasNoSuggestions(){assertTrue(DocumentOcrParser.extract("identity_card"," ").isEmpty())}
+
+ @Test fun groupedDocumentCategoriesUseConservativeCommonOcrRules(){
+  listOf("church","family","business","bank_accounts","civil").forEach { category ->
+   val m=DocumentOcrParser.extract(category,"IMIONA: JAN ADAM\\nNAZWISKO: KOWALSKI\\nDATA URODZENIA: 12.03.1980")
+   assertEquals("category=$category", "JAN ADAM",m["firstNames"])
+   assertEquals("category=$category", "KOWALSKI",m["lastName"])
+   assertEquals("category=$category", "12.03.1980",m["birthDate"])
+  }
+ }
 }
