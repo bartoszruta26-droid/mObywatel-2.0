@@ -2252,19 +2252,35 @@ internal fun CredentialTemplatePreview(
 ) {
     val title = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "Wspólny wzór legitymacji"
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
-    val options = credentialFieldOptions(documentKey)
-    val selected = if (!settings.visibleFieldsConfigured) options else options.filter { it.first in settings.visibleFields }
+    val allOptions = credentialFieldOptions(documentKey)
+    val activeLoyaltyCount = if (documentKey == "loyalty_cards") {
+        val storedCount = values?.get("loyaltyCardCount")?.toIntOrNull()
+        storedCount?.coerceIn(1, 25) ?: (1..25).lastOrNull { number ->
+            listOf("Store", "Program", "Number", "LocalId", "Barcode", "Qr", "Status")
+                .any { suffix -> values?.get("loyalty$number$suffix").orEmpty().isNotBlank() }
+        } ?: 1
+    } else 25
+    val options = if (documentKey == "loyalty_cards") allOptions.filter { (key, _) ->
+        val cardNumber = Regex("^loyalty(\\d+)(Store|Program|Number|LocalId|Barcode|Qr|Status)$")
+            .matchEntire(key)?.groupValues?.getOrNull(1)?.toIntOrNull()
+        cardNumber == null || cardNumber <= activeLoyaltyCount
+    } else allOptions
     val selectedCardFields = options.map { (key, label) ->
         Triple(key, label, values?.get(key).orEmpty().ifBlank { "—" })
     }
     val (frontFields, reverseFields) = splitCredentialFieldsForSides(
         selectedCardFields, settings.orientation, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
     )
-    val holderName = values?.get("studentNames").orEmpty().ifBlank {
-        values?.get("passportHolderNames").orEmpty().ifBlank {
-            values?.get("disabilityPersonName").orEmpty().ifBlank {
-                listOf(values?.get("firstNames").orEmpty(), values?.get("lastName").orEmpty())
-                    .filter { it.isNotBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
+    val loyaltyHolder = if (documentKey == "loyalty_cards") {
+        values?.get("loyalty1Store").orEmpty().ifBlank { values?.get("loyalty1Program").orEmpty() }
+    } else ""
+    val holderName = loyaltyHolder.ifBlank {
+        values?.get("studentNames").orEmpty().ifBlank {
+            values?.get("passportHolderNames").orEmpty().ifBlank {
+                values?.get("disabilityPersonName").orEmpty().ifBlank {
+                    listOf(values?.get("firstNames").orEmpty(), values?.get("lastName").orEmpty())
+                        .filter { it.isNotBlank() }.joinToString(" ").ifBlank { "IMIĘ I NAZWISKO" }
+                }
             }
         }
     }
