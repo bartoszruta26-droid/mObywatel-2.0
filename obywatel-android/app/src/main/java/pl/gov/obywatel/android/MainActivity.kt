@@ -4311,6 +4311,7 @@ private data class CredentialFieldVisibilityBinding(
     val fields: MutableMap<String, String>
 )
 private val LocalCredentialFieldVisibility = androidx.compose.runtime.compositionLocalOf<CredentialFieldVisibilityBinding?> { null }
+internal val LocalDocumentOcrStageRendered = androidx.compose.runtime.compositionLocalOf { false }
 
 @Composable
 private fun DemoDocumentsScreen(
@@ -4937,7 +4938,9 @@ private fun CredentialAppearanceEditorEntry(
                 DocumentOriginalAttachments(documentKey)
             }
         }
-        Box(Modifier.weight(1f)) { content() }
+        CompositionLocalProvider(LocalDocumentOcrStageRendered provides showOcrStage) {
+            Box(Modifier.weight(1f)) { content() }
+        }
         if (showAppearanceAction) {
             OutlinedButton(
                 onClick = { onOpenAppearance(documentKey) },
