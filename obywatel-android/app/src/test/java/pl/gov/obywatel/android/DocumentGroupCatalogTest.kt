@@ -38,6 +38,18 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun everyCatalogEditorFieldIsAvailableUnderItsExactLabelInCredentialPreview() {
+        documentDisplayOptions.distinctBy { it.first }.forEach { (id, _, _) ->
+            val definitions = documentEditorFieldDefinitions(id)
+            val options = credentialFieldOptions(id).toMap()
+            definitions.forEach { definition ->
+                val key = "doc_${id}_${definition.key}"
+                assertEquals("Missing preview field label for $id/$key", definition.label, options[key])
+            }
+        }
+    }
+
+    @Test
     fun groupedOcrArchiveKeysUseOnlyTheSupportedSafeFormat() {
         assertTrue(isGroupedOcrArchiveField("groupedOcr_7f3a21"))
         assertFalse(isGroupedOcrArchiveField("groupedOcr:church:field_0"))
