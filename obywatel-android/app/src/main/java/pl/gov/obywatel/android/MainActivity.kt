@@ -1714,7 +1714,11 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         runCatching {
                             val current = DemoIdentityStore.loadStrict(context)
                             val profileValues = incoming.filterKeys {
-                                !it.startsWith("cs_") && !it.startsWith("dp_") &&
+                                // Importuj wyłącznie pola należące do aktualnego modelu profilu.
+                                // Nieznane lub wycofane nazwy pól ze starszych archiwów vCard
+                                // są pomijane — nie tworzymy przez nie osieroconych wpisów.
+                                it in current.keys &&
+                                    !it.startsWith("cs_") && !it.startsWith("dp_") &&
                                     it !in setOf(
                                         "documentCatalogManifest", "documentCatalogGroupOrder", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
@@ -1782,11 +1786,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
                                     )
                             }
+                            val recognizedCount = profileValues.size + auxiliaryCount
                             val changed = profileValues.keys.count { persisted[it] == profileValues[it] } + auxiliaryCount
-                            require(changed == incoming.size) {
-                                "Weryfikacja importu wykazała niezgodność części pól lub ustawień."
+                            require(changed == recognizedCount) {
+                                "Weryfikacja importu wykazała niezgodność części rozpoznanych pól lub ustawień."
                             }
-                            "Zaimportowano i zweryfikowano ${changed} pól oraz ustawień. Łącznie zapisano ${persisted.size} pól profilu."
+                            val ignoredCount = incoming.size - recognizedCount
+                            "Zaimportowano i zweryfikowano ${changed} rozpoznanych pól oraz ustawień. Pominięto ${ignoredCount.coerceAtLeast(0)} pól o nieaktualnych lub nieobsługiwanych nazwach. Łącznie zapisano ${persisted.size} pól profilu."
                         }.onSuccess { importStatus = it }
                             .onFailure { importStatus = "Błąd importu lub weryfikacji: ${it.message ?: "nieznany błąd"}" }
                         pendingImport = null
