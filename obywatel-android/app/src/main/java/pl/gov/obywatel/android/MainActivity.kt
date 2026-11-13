@@ -673,6 +673,29 @@ private fun ApplicationBrandTitle(color: Color) {
 }
 
 @Composable
+private fun EntryFooter(foreground: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth().height(64.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Text(
+            "Więcej o Krajowym Planie\nOdbudowy",
+            modifier = Modifier.weight(1f),
+            color = foreground,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            "wersja\n4.93.1\n(6704)",
+            color = foreground,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
     val foreground = Color(0xFFFFF1D1)
     Box(Modifier.fillMaxSize()) {
@@ -719,25 +742,7 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
                 Text("Zaloguj się", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
             }
             Spacer(Modifier.height(18.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().height(64.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Text(
-                    "Więcej o Krajowym Planie\nOdbudowy",
-                    modifier = Modifier.weight(1f),
-                    color = foreground,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "wersja\n4.93.1\n(6704)",
-                    color = foreground,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            EntryFooter(foreground)
         }
     }
 }
@@ -835,23 +840,7 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                 Text("Zaloguj się", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
             }
             Spacer(Modifier.height(18.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().height(64.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Text(
-                    "Więcej o Krajowym Planie",
-                    color = cream,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    "wersja",
-                    color = cream,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+            EntryFooter(cream)
         }
     }
 }
