@@ -8,6 +8,33 @@ import org.junit.Test
 
 class LegitimacyPreviewSettingsTest {
     @Test
+    fun explicitlyEmptyVisibleFieldSelectionHidesEveryField() {
+        val fields = listOf(
+            Triple("firstNames", "Imiona", "Anna"),
+            Triple("lastName", "Nazwisko", "Kowalska")
+        )
+
+        assertEquals(fields, credentialVisibleFields(fields, false, emptySet()))
+        assertTrue(credentialVisibleFields(fields, true, emptySet()).isEmpty())
+        assertEquals(listOf(fields.first()), credentialVisibleFields(fields, true, setOf("firstNames")))
+    }
+
+    @Test
+    fun excessCredentialFieldsAreMovedToReverseSide() {
+        val portraitFields = (1..7).map { Triple("p$it", "Pole $it", "Wartość $it") }
+        val (portraitFront, portraitReverse) = splitCredentialFieldsForSides(portraitFields, "PIONOWA")
+        assertEquals(5, portraitFront.size)
+        assertEquals(2, portraitReverse.size)
+        assertEquals(portraitFields.drop(5), portraitReverse)
+
+        val landscapeFields = (1..10).map { Triple("l$it", "Pole $it", "Wartość $it") }
+        val (landscapeFront, landscapeReverse) = splitCredentialFieldsForSides(landscapeFields, "POZIOMA")
+        assertEquals(8, landscapeFront.size)
+        assertEquals(2, landscapeReverse.size)
+        assertEquals(landscapeFields.drop(8), landscapeReverse)
+    }
+
+    @Test
     fun sharedAppearanceOverridesLayoutButPreservesDocumentAssetsAndFields() {
         val document = LegitimacyPreviewSettings(
             showCard = true,
