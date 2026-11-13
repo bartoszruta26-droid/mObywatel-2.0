@@ -1,0 +1,89 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="160dp"
+    android:viewportWidth="256"
+    android:viewportHeight="160">
+
+    <!-- Repeating geometric lattice: interlocking hexagons and recursive diamonds. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.30"
+        android:strokeWidth="0.9"
+        android:pathData="M0,40 L32,22 L64,40 L96,22 L128,40 L160,22 L192,40 L224,22 L256,40
+            M0,120 L32,138 L64,120 L96,138 L128,120 L160,138 L192,120 L224,138 L256,120
+            M32,22 L32,58 L64,76 L64,112 L96,138
+            M96,22 L96,58 L128,76 L128,112 L160,138
+            M160,22 L160,58 L192,76 L192,112 L224,138
+            M224,22 L224,58 L256,76
+            M0,76 L32,58 L64,76 L96,58 L128,76 L160,58 L192,76 L224,58 L256,76" />
+
+    <!-- Main eight-fold rosette, built from nested self-similar diamond petals. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.42"
+        android:strokeWidth="1.15"
+        android:pathData="M190,18
+            C198,34 206,42 222,50 C206,58 198,66 190,82
+            C182,66 174,58 158,50 C174,42 182,34 190,18 Z
+            M190,28 C196,40 202,44 214,50 C202,56 196,60 190,72
+            C184,60 178,56 166,50 C178,44 184,40 190,28 Z
+            M190,38 C194,45 197,47 204,50 C197,53 194,55 190,62
+            C186,55 183,53 176,50 C183,47 186,45 190,38 Z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.34"
+        android:strokeWidth="0.85"
+        android:pathData="M190,8 L190,92 M148,50 L232,50
+            M160,20 L220,80 M220,20 L160,80
+            M169,20 L211,80 M211,20 L169,80
+            M190,18 C208,28 212,32 222,50 C212,68 208,72 190,82
+            C172,72 168,68 158,50 C168,32 172,28 190,18 Z" />
+
+    <!-- Smaller repeated rosettes create the recursive/fractal rhythm. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.25"
+        android:strokeWidth="0.8"
+        android:pathData="M54,8 C59,18 64,23 74,28 C64,33 59,38 54,48
+            C49,38 44,33 34,28 C44,23 49,18 54,8 Z
+            M54,16 C58,23 61,25 68,28 C61,31 58,33 54,40
+            C50,33 47,31 40,28 C47,25 50,23 54,16 Z
+            M54,88 C59,98 64,103 74,108 C64,113 59,118 54,128
+            C49,118 44,113 34,108 C44,103 49,98 54,88 Z
+            M54,96 C58,103 61,105 68,108 C61,111 58,113 54,120
+            C50,113 47,111 40,108 C47,105 50,103 54,96 Z" />
+
+    <!-- Recursive corner diamonds and fine construction lines. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.22"
+        android:strokeWidth="0.7"
+        android:pathData="M8,8 L24,24 L8,40 L-8,24 Z
+            M24,8 L40,24 L24,40 L8,24 Z
+            M8,88 L24,104 L8,120 L-8,104 Z
+            M24,88 L40,104 L24,120 L8,104 Z
+            M232,88 L248,104 L232,120 L216,104 Z
+            M248,88 L264,104 L248,120 L232,104 Z
+            M110,8 L128,26 L146,8
+            M110,152 L128,134 L146,152
+            M110,8 L128,8 L128,26
+            M128,134 L128,152 L146,152" />
+
+    <!-- Fine nested arcs suggest guilloche engraving without obscuring tile text. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.18"
+        android:strokeWidth="0.65"
+        android:pathData="M140,104 C154,90 168,90 182,104 C196,118 210,118 224,104
+            M140,112 C154,98 168,98 182,112 C196,126 210,126 224,112
+            M140,120 C154,106 168,106 182,120 C196,134 210,134 224,120
+            M80,48 C92,36 104,36 116,48 C128,60 140,60 152,48
+            M80,56 C92,44 104,44 116,56 C128,68 140,68 152,56" />
+</vector>
