@@ -145,10 +145,10 @@ internal object OfficialDocumentStore {
 }
 
 @Composable
-internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, onEditGraphic:(String)->Unit = {}) {
+internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, initialDocumentId:String?=null, onEditGraphic:(String)->Unit = {}) {
     val context= LocalContext.current
     var records by remember { mutableStateOf(OfficialDocumentStore.load(context)) }
-    var selected by remember { mutableStateOf<String?>(null) }
+    var selected by remember(initialDocumentId) { mutableStateOf(initialDocumentId) }
     var status by remember { mutableStateOf("") }
     var refresh by remember { mutableIntStateOf(0) }
     val attachmentPicker= rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
