@@ -16,6 +16,23 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun serviceGroupNamesAreUsedAndLegacyNamesMigrateToTheirNewCounterparts() {
+        assertEquals("Służba rodowa", documentVisibilityGroup("family"))
+        assertEquals("Służba osobista", documentVisibilityGroup("identity"))
+        assertEquals("Służba cywilna", documentVisibilityGroup("birth_extract"))
+        assertEquals("Służba państwowa", documentVisibilityGroup("parliament"))
+        assertEquals("Służba kościelna", documentVisibilityGroup("church_bishop"))
+        assertEquals("Służba wojskowa", documentVisibilityGroup("military_book"))
+        assertEquals("Służba wojskowa", documentVisibilityGroup("historical_reenactment"))
+        assertEquals("Służba zawodowa", documentVisibilityGroup("professional_medical"))
+        assertEquals("Służba finansowa", documentVisibilityGroup("bank_accounts"))
+        assertEquals("Służba zdrowotna", documentVisibilityGroup("disability_card"))
+        assertEquals("Służba wojskowa", migrateDocumentGroupName("Służba zbrojna"))
+        assertEquals("Służba rodowa", migrateDocumentGroupName("Dokumenty rodowe i rodzinne"))
+        assertEquals("Moja własna grupa", migrateDocumentGroupName("Moja własna grupa"))
+    }
+
+    @Test
     fun fixedGroupCatalogContainsNoEmptyGroupsOrDuplicateDocuments() {
         val ids = documentDisplayOptions.map { it.first }
         assertEquals(ids.size, ids.toSet().size)
