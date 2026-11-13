@@ -231,6 +231,7 @@ internal object DocumentBrandStore {
                 val kind = when {
                     name.startsWith("tile_watermark_") -> "Grafika wektorowa tła kafelków"
                     name.startsWith("tile_ic_") || name.startsWith("mob_") || name.startsWith("service_") -> "Ikona wektorowa kafelka"
+                    name == "file_00000000db3c820aa85356eab8c60f10" -> "Animowany hologram"
                     "hologram" in lower -> "Grafika hologramu / zabezpieczenia"
                     name in setOf(
                         "file_00000000532082108d561dcd2385f8f9",
@@ -400,7 +401,7 @@ internal object DocumentBrandStore {
             val name = asset.file.removePrefix("resource:")
             val id = context.resources.getIdentifier(name, "drawable", context.packageName)
             if (id == 0) return null
-            return null // Android drawable resources are referenced by stable resource name, not exported as opaque files.
+            return context.resources.openRawResource(id).use { it.readBytes() }
         } else if (asset.file.startsWith("builtin:")) {
             val stored = context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
             if (asset.file.endsWith(".b64")) android.util.Base64.decode(String(stored, Charsets.US_ASCII), android.util.Base64.DEFAULT) else stored
