@@ -3053,39 +3053,64 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Eksportuj wszystkie dane", "Zapisz jedno archiwum .vcf", Icons.Filled.Description, onExportAll)
         ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
         if (importStatus.isNotBlank()) Text(importStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-        Text("Dane profilu i dokumenty", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-        ProfileActionCard("Odpis z rejestru podmiotów", "Wprowadzanie i aktualizacja danych podmiotów", Icons.Filled.AccountBalance, onEditRegistry)
-        ProfileActionCard("Dane osobowe", "Zdjęcie profilowe, dane osoby i rodziców",
-            Icons.Filled.AccountCircle, { onEditDocuments("profile") })
-        ProfileActionCard("Dowód tożsamości", "Dane dokumentu tożsamości",
-            Icons.Filled.CreditCard, { onEditDocuments("identity_card") })
-        ProfileActionCard("Dane paszportowe", "Dane dokumentu podróży",
-            Icons.Filled.Public, { onEditDocuments("passport") })
-        ProfileActionCard("Dokument rodowy", "Dane ewidencji rodowej",
-            Icons.Filled.Fingerprint, { onEditDocuments("family") })
-        ProfileActionCard("Legitymacja poselska", "Ewidencja danych i źródeł potwierdzenia",
-            Icons.Filled.AccountBalance, { onEditDocuments("parliament") })
-        ProfileActionCard("Legitymacja kursanta", "Ewidencja danych uczestnika kursu lub szkolenia",
-            Icons.Filled.Description, { onEditDocuments("training") })
-        ProfileActionCard("Legitymacja ucznia/studenta", "Ewidencja danych uczelni i statusu",
-            Icons.Filled.Badge, { onEditDocuments("student") })
-        ProfileActionCard("Dokumenty kwalifikacji zawodowych", "Ewidencja zawodów, numerów dokumentów, rejestrów i potwierdzeń kwalifikacji",
-            Icons.Filled.Badge, { onEditOtherDocuments("professional") })
-        ProfileActionCard("Orzeczenia i zaświadczenia", "Ewidencja danych o rozstrzygnięciach",
-            Icons.Filled.HealthAndSafety, onEditDisability)
-        ProfileActionCard("Karty lojalnościowe sklepów", "Ewidencja do 10 kart, numerów i kodów kreskowych oraz QR",
-            Icons.Filled.CreditCard, { onEditDocuments("loyalty_cards") })
-        ProfileActionCard("Dokumenty rodowe", "Księgi, akty i rejestry Rodu", Icons.Filled.Fingerprint, { onEditOtherDocuments("family") })
-        ProfileActionCard("Dokumenty kościelne", "Dokumenty liturgiczne i organizacyjne", Icons.Filled.AccountBalance, { onEditOtherDocuments("church") })
-        ProfileActionCard("Dokumenty cywilne", "Akty i dokumenty cywilne", Icons.Filled.Description, { onEditOtherDocuments("civil") })
-        ProfileActionCard("Dane dzieci i dane medyczne", "Edycja danych dzieci, opiekunów, alergii, grupy krwi i uwag medycznych", Icons.Filled.AccountCircle, { onEditOtherDocuments("children_health") })
-        ProfileActionCard("Dane karty szczepień", "Edycja historii dawek, preparatów, serii, placówek i terminów kolejnych szczepień", Icons.Filled.HealthAndSafety, { onEditOtherDocuments("vaccines") })
-        ProfileActionCard("Dokumenty firmowe i podmiotowe", "Dokumenty spółek, fundacji i organizacji", Icons.Filled.Business, { onEditOtherDocuments("business") })
-        ProfileActionCard("Konta bankowe", "Osobna ewidencja rachunków prywatnych i podmiotowych", Icons.Filled.AccountBalance, { onEditOtherDocuments("bank_accounts") })
-        ProfileActionCard("Dokumenty własne — pliki", "Dodawanie, porządkowanie i usuwanie importowanych plików", Icons.Filled.Description, { onEditOtherDocuments("imported") })
-        ProfileActionCard("Pliki PDF i podpisy", "Import dokumentów, dołączanie plików podpisów i zarządzanie ewidencją", Icons.Filled.PictureAsPdf, { onEditOtherDocuments("signed_pdf") })
-        ProfileActionCard("Indywidualna edycja pozostałych dokumentów", "Osobny podgląd, fotografia lub skan, flaga, godło, herb, logo, tło i pola każdego dokumentu",
-            Icons.Filled.Description, { onEditOtherDocuments("graphic_catalog") })
+        Text("Dokumenty — katalog wspólny", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Text("Lista jest budowana z tego samego rejestru dokumentów co katalog i ustawienia widoczności. Zmiana grupy lub dodanie dokumentu aktualizuje wszystkie widoki.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        val settingsGroups = listOf(
+            "Dokumenty osobiste i tożsamościowe",
+            "Dokumenty cywilne i urzędowe",
+            "Dokumenty kościelne",
+            "Dokumenty rodowe i rodzinne",
+            "Dokumenty firmowe i podmiotowe",
+            "Dokumenty zawodowe i edukacyjne",
+            "Dokumenty zdrowotne i rodzinne",
+            "Pliki i pozostałe dokumenty"
+        )
+        settingsGroups.forEach { group ->
+            val entries = documentDisplayOptions.distinctBy { it.first }
+                .filter { documentVisibilityGroup(it.first) == group }
+            if (entries.isNotEmpty()) {
+                Text(group, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleSmall)
+                entries.forEach { (id, title, _) ->
+                    val action: () -> Unit = {
+                        when (id) {
+                            "profile" -> onEditDocuments("profile")
+                            "identity" -> onEditDocuments("identity_card")
+                            "passport" -> onEditDocuments("passport")
+                            "family" -> onEditOtherDocuments("family")
+                            "parliament" -> onEditDocuments("parliament")
+                            "training" -> onEditDocuments("training")
+                            "student" -> onEditDocuments("student")
+                            "disability" -> onEditDisability()
+                            "church" -> onEditOtherDocuments("church")
+                            "civil" -> onEditOtherDocuments("civil")
+                            "business", "entity" -> onEditOtherDocuments("business")
+                            "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> onEditOtherDocuments("bank_accounts")
+                            "vaccines" -> onEditOtherDocuments("vaccines")
+                            "children" -> onEditOtherDocuments("children_health")
+                            "signed_pdf" -> onEditOtherDocuments("signed_pdf")
+                            "imported" -> onEditOtherDocuments("imported")
+                            "professional" -> onEditOtherDocuments("professional")
+                            "registry" -> onEditRegistry()
+                            "loyalty" -> onEditDocuments("loyalty_cards")
+                            else -> onEditOtherDocuments("graphic_catalog")
+                        }
+                    }
+                    val icon = when (group) {
+                        "Dokumenty kościelne" -> Icons.Filled.AccountBalance
+                        "Dokumenty rodowe i rodzinne" -> Icons.Filled.Fingerprint
+                        "Dokumenty firmowe i podmiotowe" -> Icons.Filled.Business
+                        "Dokumenty zawodowe i edukacyjne" -> Icons.Filled.Badge
+                        "Dokumenty zdrowotne i rodzinne" -> Icons.Filled.HealthAndSafety
+                        "Pliki i pozostałe dokumenty" -> Icons.Filled.Description
+                        "Dokumenty cywilne i urzędowe" -> Icons.Filled.Description
+                        else -> Icons.Filled.CreditCard
+                    }
+                    ProfileActionCard(title, "Otwórz ustawienia danych i dokumentu", icon, action)
+                }
+            }
+        }
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
@@ -3261,62 +3286,53 @@ private fun DocumentsWalletScreen(
         val icon: ImageVector = Icons.Filled.Description
     )
 
-    val documents = listOf(
-        CatalogDocument("profile", "Dane osobowe profilu", "Dane kontaktowe i podstawowe dane rodzinne", listOf("Osobiste", "Cywilne", "Rodowe"), "0", icon = Icons.Filled.AccountCircle),
-        CatalogDocument("identity", "Dowód tożsamości", "Dane dokumentu tożsamości i identyfikacyjne", listOf("Państwowe", "Cywilne", "Rodowe", "OC", "Osobiste"), "1", icon = Icons.Filled.CreditCard),
-        CatalogDocument("passport", "Dane paszportowe", "Dane paszportu i status dokumentu", listOf("Państwowe", "Cywilne", "Rodowe", "Osobiste"), "2", icon = Icons.Filled.Public),
-        CatalogDocument("registry", "Odpis z rejestru podmiotów", "Podgląd danych podmiotów i wpisów rejestrowych", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "Rejestry"), service = "Odpis z rejestru podmiotów", icon = Icons.Filled.AccountBalance),
-        CatalogDocument("family", "Dokument rodowy", "Księgi, akty i dane ewidencji Rodu", listOf("Cywilne", "Kościelne", "Rodowe", "OC", "Osobiste", "Rejestry"), "3", icon = Icons.Filled.Fingerprint),
-        CatalogDocument("parliament", "Legitymacja poselska", "Dane legitymacji i kadencji", listOf("Państwowe", "Cywilne", "Osobiste", "Zawodowe"), "4", icon = Icons.Filled.AccountBalance),
-        CatalogDocument("training", "Legitymacja kursanta", "Dane uczestnictwa w kursie i instytucji szkolącej", listOf("Osobiste", "Zawodowe", "Rejestry"), "5", icon = Icons.Filled.Description),
-        CatalogDocument("student", "Legitymacja ucznia / studenta", "Dane edukacyjne i identyfikator legitymacji", listOf("Państwowe", "Osobiste", "Zawodowe"), "6", icon = Icons.Filled.Badge),
-        CatalogDocument("disability", "Orzeczenia i zaświadczenia", "Dane orzeczeń, stopnia i okresu obowiązywania", listOf("Państwowe", "Cywilne", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), "7", icon = Icons.Filled.HealthAndSafety),
-        CatalogDocument("church", "Dokumenty kościelne", "Dokumenty kościelne, liturgiczne i organizacyjne", listOf("Kościelne", "Rodowe", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty Kościelne", icon = Icons.Filled.AccountBalance),
-        CatalogDocument("civil", "Dokumenty cywilne", "Formularze, oświadczenia i akty cywilne", listOf("Państwowe", "Cywilne", "Rodowe", "Osobiste", "Rejestry"), service = "Formularze dokumentów", icon = Icons.Filled.Description),
-        CatalogDocument("business", "Dokumenty firmowe i podmiotowe", "Dane organizacji, firm i jednostek", listOf("Cywilne", "Kościelne", "Rodowe", "Zawodowe", "Rejestry"), service = "Dokumenty rejestru podmiotów", icon = Icons.Filled.Business),
-        CatalogDocument("bank_accounts", "Konta bankowe", "Ewidencja rachunków bankowych", listOf("Państwowe", "Cywilne", "Osobiste", "Rejestry"), service = "Konta bankowe", icon = Icons.Filled.Payments),
-        CatalogDocument("vaccines", "Książeczka szczepień WHO", "Historia szczepień i dawek", listOf("Zdrowotne", "Osobiste", "Rodowe"), service = "eKarta Szczepień", icon = Icons.Filled.HealthAndSafety),
-        CatalogDocument("signed_pdf", "Dokumenty PDF i podpisy", "Pliki PDF, podgląd oraz ewidencja importu podpisanych dokumentów", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty PDF i podpisy elektroniczne", icon = Icons.Filled.PictureAsPdf),
-        CatalogDocument("branding", "Zasoby identyfikacji dokumentów", "Flagi, godła, herby, pieczęcie, logo i grafiki dokumentów", listOf("Państwowe", "Kościelne", "Rodowe", "Zawodowe", "Rejestry"), service = "Zasoby identyfikacji dokumentów", icon = Icons.Filled.Description),
-        CatalogDocument("imported", "Dokumenty własne — pliki", "Importowane pliki PDF, DOCX i obrazy", listOf("Państwowe", "Cywilne", "Kościelne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Zawodowe", "Rejestry"), service = "Dokumenty własne — pliki", icon = Icons.Filled.Description),
-        CatalogDocument("children", "Dokumentacja dzieci", "Rodzinna ewidencja danych i dokumentacji dzieci", listOf("Cywilne", "Rodowe", "OC", "Zdrowotne", "Osobiste", "Rejestry"), service = "Dane dzieci", icon = Icons.Filled.AccountCircle),
-        CatalogDocument("loyalty", "Karty lojalnościowe sklepów", "Do 25 kart, numery i kody QR / kreskowe", listOf("Osobiste", "Cywilne"), "8", icon = Icons.Filled.CreditCard)
+    val catalogGroupOrder = listOf(
+        "Dokumenty osobiste i tożsamościowe",
+        "Dokumenty cywilne i urzędowe",
+        "Dokumenty kościelne",
+        "Dokumenty rodowe i rodzinne",
+        "Dokumenty firmowe i podmiotowe",
+        "Dokumenty zawodowe i edukacyjne",
+        "Dokumenty zdrowotne i rodzinne",
+        "Pliki i pozostałe dokumenty"
     )
-    val knownDocumentIds = documents.map { it.id }.toSet()
-    val additionalDocuments = documentDisplayOptions.filter { it.first !in knownDocumentIds }.map { (id, title, _) ->
-        val categoriesForDocument = when {
-            id.startsWith("church_") -> listOf("Kościelne", "Osobiste", "Zawodowe", "Misyjne", "Rejestry")
-            id == "organization_church" -> listOf("Kościelne", "Organizacyjne", "Rejestry")
-            id.startsWith("professional_") || id == "professional" -> listOf("Zawodowe", "Edukacja", "Osobiste", "Rejestry")
-            id.startsWith("organization_") || id == "entity" -> listOf("Organizacyjne", "Cywilne", "Kościelne", "Rejestry")
-            id.startsWith("insurance_") -> listOf("OC", "Finansowe", "Osobiste")
-            id in setOf("birth_extract", "marriage_extract", "death_extract") -> listOf("Cywilne", "Rodzinne", "Rodowe", "Rejestry")
-            id in setOf("vehicle_registration") -> listOf("Państwowe", "Transport", "OC")
-            id in setOf("ehic", "blood_donor", "disability_card") -> listOf("Zdrowotne", "Państwowe", "Osobiste")
-            id in setOf("large_family") -> listOf("Rodzinne", "Państwowe", "Osobiste")
-            id in setOf("mission_travel") -> listOf("Misyjne", "Kościelne", "Zawodowe", "Osobiste")
-            id in setOf("eu_education") -> listOf("Edukacja", "Zawodowe", "Państwowe")
-            id == "criminal_record" -> listOf("Państwowe", "Cywilne", "Rejestry", "Osobiste")
-            id == "official" -> listOf("Państwowe", "Cywilne", "Rejestry")
-            else -> listOf("Pozostałe")
-        }
+    val documents = documentDisplayOptions.distinctBy { it.first }.map { (id, title, _) ->
+        val group = documentVisibilityGroup(id)
         val service = when {
-            id.startsWith("church_") || id == "organization_church" -> "Dokumenty Kościelne"
-            id.startsWith("professional_") || id == "professional" -> "Dokumenty kwalifikacji zawodowych"
-            id.startsWith("organization_") || id == "entity" -> "Dokumenty rejestru podmiotów"
-            id in setOf("birth_extract", "marriage_extract", "death_extract", "official") -> "Formularze dokumentów"
+            id == "bank_accounts" || id == "rod_bank_accounts" || id == "entity_bank_accounts" -> "Konta bankowe"
+            id == "imported" -> "Dokumenty własne — pliki"
+            id == "signed_pdf" -> "Dokumenty PDF i podpisy elektroniczne"
+            id == "branding" -> "Zasoby identyfikacji dokumentów"
+            id == "children" -> "Dane dzieci"
+            id == "vaccines" -> "eKarta Szczepień"
+            id == "church" || id.startsWith("church_") || id == "organization_church" -> "Dokumenty Kościelne"
+            id == "professional" || id.startsWith("professional_") -> "Dokumenty kwalifikacji zawodowych"
+            id == "business" || id == "entity" || id.startsWith("organization_") || id.startsWith("entity_") -> "Dokumenty rejestru podmiotów"
+            id == "civil" || id == "official" || id in setOf("birth_extract", "marriage_extract", "death_extract") -> "Formularze dokumentów"
             else -> "Pozostałe dokumenty"
         }
-        CatalogDocument(id, title, "Dokument i dane: $title", categoriesForDocument, service = service,
-            icon = Icons.Filled.Description)
+        val icon = when (group) {
+            "Dokumenty kościelne" -> Icons.Filled.AccountBalance
+            "Dokumenty rodowe i rodzinne" -> Icons.Filled.Fingerprint
+            "Dokumenty firmowe i podmiotowe" -> Icons.Filled.Business
+            "Dokumenty zawodowe i edukacyjne" -> Icons.Filled.Badge
+            "Dokumenty zdrowotne i rodzinne" -> Icons.Filled.HealthAndSafety
+            "Pliki i pozostałe dokumenty" -> Icons.Filled.Description
+            "Dokumenty cywilne i urzędowe" -> Icons.Filled.Description
+            else -> Icons.Filled.CreditCard
+        }
+        CatalogDocument(
+            id = id,
+            title = title,
+            subtitle = "Dane dokumentu i ewidencja: $title",
+            categories = listOf(group),
+            service = service,
+            icon = icon
+        )
     }
-    val allDocuments = documents + additionalDocuments
+    val allDocuments = documents
     val visibleDocuments = allDocuments.filter { documentPlacements[it.id] != "hidden" }
-    val categories = listOf(
-        "Państwowe", "Cywilne", "Kościelne", "Rodowe", "Rodzinne", "OC", "Zdrowotne",
-        "Osobiste", "Zawodowe", "Edukacja", "Organizacyjne", "Misyjne", "Transport",
-        "Finansowe", "Rejestry", "Pozostałe", "Inne dokumenty"
-    )
+    val categories = catalogGroupOrder
 
     fun openDocument(document: CatalogDocument) {
         onOpenDetails(document.id)
