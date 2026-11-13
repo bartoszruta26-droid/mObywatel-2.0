@@ -226,6 +226,8 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         "disabilityCare" to "Opieka / pomoc innej osoby",
         "disabilityMobility" to "Środowiskowy system wsparcia",
         "disabilityParking" to "Wskazania dotyczące karty parkingowej",
+        "disabilityAssessmentMethod" to "Metoda oceny (np. ICF)",
+        "disabilityWhodasScore" to "WHODAS 2.0 — wynik / data oceny",
         "disabilityMedicalAssessment" to "Lekarz / osoba dokonująca oceny",
         "disabilityPanelMembers" to "Skład zespołu / osoby uczestniczące w ocenie",
         "disabilityChairperson" to "Przewodniczący zespołu",
