@@ -5018,7 +5018,7 @@ private fun CredentialAppearanceSettingsScreen(
                         Checkbox(
                             checked = !state.value.visibleFieldsConfigured || key in state.value.visibleFields,
                             onCheckedChange = { checked ->
-                                val current = if (state.value.visibleFieldsConfigured && state.value.visibleFields.isNotEmpty()) state.value.visibleFields
+                                val current = if (state.value.visibleFieldsConfigured) state.value.visibleFields
                                     else options.map { it.first }.toSet()
                                 val updated = state.value.copy(
                                     visibleFields = if (checked) current + key else current - key,
