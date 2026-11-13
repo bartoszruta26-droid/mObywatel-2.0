@@ -177,8 +177,8 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithContentDescription("Dokumenty").performClick()
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithTag("dashboard-document-passport").assertIsDisplayed()
-        composeRule.onNodeWithTag("dashboard-document-training").assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-document-passport").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag("dashboard-document-training").performScrollTo().assertIsDisplayed()
     }
 
     @Test
