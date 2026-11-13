@@ -437,6 +437,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             )
             else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
         }
+}
 
 internal fun documentUsesDedicatedEditor(documentId: String): Boolean =
     documentId in setOf(
