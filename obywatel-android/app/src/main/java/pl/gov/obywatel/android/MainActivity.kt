@@ -1673,7 +1673,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 !it.startsWith("cs_") && !it.startsWith("dp_") &&
                                     it !in setOf(
                                         "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
-                                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive", "originalAttachmentArchive",
+                                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
                                     )
@@ -1714,7 +1714,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                     it in setOf(
                                         "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
-                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive",
+                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
                                     )
                             }
