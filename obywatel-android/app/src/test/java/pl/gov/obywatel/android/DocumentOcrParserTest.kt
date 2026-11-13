@@ -40,6 +40,7 @@ class DocumentOcrParserTest {
   val officialField = officialGraphicDocumentFields(officialId).first()
   val official = DocumentOcrParser.extract(officialId,"${officialField.second}: AKT")
   assertTrue("official=$official", official.containsKey(officialField.first))
+ }
 
  @Test fun everySchemaBackedCatalogDocumentMapsItsOwnFieldLabelToItsStableKey() {
   documentDisplayOptions.distinctBy { it.first }.forEach { (documentId, _, _) ->
