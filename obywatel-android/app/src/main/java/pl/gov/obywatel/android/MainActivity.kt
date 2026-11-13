@@ -3606,7 +3606,7 @@ private fun DocumentsWalletScreen(
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Dokumenty", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
-            "Wybierz dokument. Grupy porządkują katalog, a każda pozycja otwiera bezpośrednio podgląd dokumentu.",
+            "Wybierz dokument. Grupy porządkują katalog, a każda pozycja otwiera bezpośrednio formularz edycji. Podgląd i edycja graficzna są dostępne w formularzu.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
         )
         categories.forEach { category ->
@@ -3647,7 +3647,7 @@ private fun DocumentsWalletScreen(
                                             style = MaterialTheme.typography.bodyMedium)
                                         Text(document.subtitle, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodySmall)
                                     }
-                                    Text("Podgląd  ›", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                    Text("Edytuj  ›", color = Color.White, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
