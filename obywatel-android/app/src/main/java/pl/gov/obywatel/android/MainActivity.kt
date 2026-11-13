@@ -473,8 +473,18 @@ private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
 
 @Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
-    val foreground = MaterialTheme.colorScheme.onBackground
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    val context = LocalContext.current
+    val appearance = LocalApplicationAppearance.current
+    val foreground = Color(0xFFFFF1D1)
+    Box(Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(applicationDrawable(context, appearance.loginBackground,
+                R.drawable.file_00000000e0e4820a839fa3184993f41b)),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Box(Modifier.fillMaxSize().background(Color(0x55000000)))
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.Top
@@ -1172,7 +1182,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showDocumentsEditor -> DemoDocumentsScreen(
                         categoryId = selectedEditorCategory,
                         onBack = { showDocumentsEditor = false; showSettingsMenu = true },
-                        onOpenSharedAppearance = { showCredentialAppearanceEditor = true }
+                        onOpenSharedAppearance = { showCredentialAppearanceEditor = true },
+                        onOpenDocumentAppearance = { key -> credentialAppearanceTarget = key }
                     )
                     showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
@@ -3920,7 +3931,8 @@ private val LocalCredentialFieldVisibility = androidx.compose.runtime.compositio
 private fun DemoDocumentsScreen(
     categoryId: String = "all",
     onBack: () -> Unit,
-    onOpenSharedAppearance: () -> Unit = {}
+    onOpenSharedAppearance: () -> Unit = {},
+    onOpenDocumentAppearance: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val fields = remember {
