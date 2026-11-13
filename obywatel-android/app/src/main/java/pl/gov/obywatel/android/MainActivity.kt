@@ -4188,11 +4188,7 @@ private fun DemoDocumentsScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        if (categoryId in setOf(
-                "identity_card", "parliament", "training", "student", "disability", "passport",
-                "family", "church", "civil", "business", "bank_accounts", "children_health",
-                "vaccines", "professional", "imported", "signed_pdf", "entity"
-            ) || categoryId.startsWith("catalog:")) {
+        if (categoryId != "all") {
             GeneralDocumentOcrEditor(categoryId, fields, context) { saveMessage = it }
         }
         if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
