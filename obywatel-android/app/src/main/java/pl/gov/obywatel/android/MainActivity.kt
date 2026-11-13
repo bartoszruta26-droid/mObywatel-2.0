@@ -4124,7 +4124,6 @@ private fun DemoDocumentsScreen(
     var saveMessage by remember { mutableStateOf("") }
     val editorTitle = when (categoryId) {
         "profile" -> "Dane osobowe i zdjęcie profilowe"
-        else -> if (categoryId.startsWith("catalog:")) documentDisplayOptions.firstOrNull { it.first == categoryId.removePrefix("catalog:") }?.second ?: "Dane dokumentu" else "Wszystkie dane i dokumenty"
         "family" -> "Dokument rodowy"
         "identity_card" -> "Dowód tożsamości"
         "parliament" -> "Legitymacja poselska"
@@ -4133,7 +4132,9 @@ private fun DemoDocumentsScreen(
         "disability" -> "Orzeczenia i zaświadczenia"
         "loyalty_cards" -> "Karty lojalnościowe"
         "passport" -> "Dane paszportowe"
-        else -> "Wszystkie dane i dokumenty"
+        else -> if (categoryId.startsWith("catalog:")) {
+            documentDisplayOptions.firstOrNull { it.first == categoryId.removePrefix("catalog:") }?.second ?: "Dane dokumentu"
+        } else "Wszystkie dane i dokumenty"
     }
     val credentialKey = when (categoryId) {
         "identity_card" -> "identity"
