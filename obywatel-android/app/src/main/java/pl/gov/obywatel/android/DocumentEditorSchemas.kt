@@ -423,7 +423,119 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
                 Triple("assetSource", "Źródło zasobu", ""),
                 Triple("usageRights", "Prawa i zakres użycia", "")
             )
-            else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
+            "military_book" -> fields(
+            Triple("holderName", "Imię i nazwisko żołnierza", ""),
+            Triple("serviceNumber", "Numer ewidencyjny / wojskowy", ""),
+            Triple("peselOrId", "PESEL / identyfikator", ""),
+            Triple("militaryRank", "Stopień wojskowy", ""),
+            Triple("militaryCategory", "Kategoria zdolności do służby", ""),
+            Triple("serviceBranch", "Rodzaj sił zbrojnych / formacja", ""),
+            Triple("militaryUnit", "Jednostka wojskowa", ""),
+            Triple("serviceType", "Rodzaj służby", "zasadnicza / zawodowa / terytorialna / rezerwa"),
+            Triple("serviceStart", "Data rozpoczęcia służby", "DD-MM-RRRR"),
+            Triple("serviceEnd", "Data zakończenia / przeniesienia do rezerwy", "DD-MM-RRRR"),
+            Triple("bookSeriesNumber", "Seria i numer książeczki", ""),
+            Triple("issuingAuthority", "Organ wydający", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validityStatus", "Status dokumentu", "aktywny / archiwalny / do wymiany"),
+            Triple("sourceDocument", "Dokument źródłowy / podstawa wpisu", "")
+        )
+        "martial_arts" -> fields(
+            Triple("holderName", "Imię i nazwisko posiadacza", ""),
+            Triple("discipline", "Dyscyplina / styl sztuk walki", ""),
+            Triple("club", "Klub / szkoła / organizacja", ""),
+            Triple("rankGrade", "Stopień / pas / klasa", ""),
+            Triple("certificateNumber", "Numer legitymacji / certyfikatu", ""),
+            Triple("awardingOrganization", "Organizacja nadająca stopień", ""),
+            Triple("awardDate", "Data nadania stopnia", "DD-MM-RRRR"),
+            Triple("coach", "Trener / instruktor", ""),
+            Triple(" instructorQualification", "Kwalifikacje instruktora", ""),
+            Triple("medicalRestrictions", "Ograniczenia udziału / uwagi zdrowotne", ""),
+            Triple("validity", "Ważność / status członkostwa", "")
+        )
+        "shooting_sport" -> fields(
+            Triple("holderName", "Imię i nazwisko posiadacza", ""),
+            Triple("sportOrganization", "Klub / stowarzyszenie strzeleckie", ""),
+            Triple("licenseNumber", "Numer licencji sportowej", ""),
+            Triple("licenseDiscipline", "Dyscypliny sportowe ujęte w licencji", ""),
+            Triple("licenseIssuer", "Organ wydający licencję", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validUntil", "Termin ważności", "DD-MM-RRRR"),
+            Triple("membershipNumber", "Numer członkowski", ""),
+            Triple("competitionClass", "Klasa / kategoria sportowa", ""),
+            Triple("competitionAchievements", "Osiągnięcia i wyniki zawodów", ""),
+            Triple("documentStatus", "Status licencji / dokumentu", "")
+        )
+        "archery" -> fields(
+            Triple("holderName", "Imię i nazwisko posiadacza", ""),
+            Triple("discipline", "Odmiana łucznictwa", "sportowe / terenowe / tradycyjne"),
+            Triple("club", "Klub / organizacja", ""),
+            Triple("licenseNumber", "Numer licencji / legitymacji", ""),
+            Triple("classification", "Klasa sportowa / stopień", ""),
+            Triple("equipmentCategory", "Kategoria sprzętowa / konkurencja", ""),
+            Triple("coach", "Trener / instruktor", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validUntil", "Termin ważności", "DD-MM-RRRR"),
+            Triple("achievements", "Osiągnięcia / wyniki zawodów", ""),
+            Triple("status", "Status członkostwa / licencji", "")
+        )
+        "tactical_training" -> fields(
+            Triple("participantName", "Imię i nazwisko uczestnika", ""),
+            Triple("courseName", "Nazwa szkolenia", ""),
+            Triple("trainingProvider", "Organizator / podmiot szkolący", ""),
+            Triple("trainingScope", "Zakres tematyczny szkolenia", ""),
+            Triple("trainingLevel", "Poziom / moduł", ""),
+            Triple("completionDate", "Data ukończenia", "DD-MM-RRRR"),
+            Triple("hours", "Liczba godzin", ""),
+            Triple("instructor", "Prowadzący / instruktor", ""),
+            Triple("certificateNumber", "Numer certyfikatu", ""),
+            Triple("assessment", "Sposób zaliczenia / wynik", ""),
+            Triple("legalBasis", "Podstawa organizacyjna / regulamin", ""),
+            Triple("status", "Status / ważność", "")
+        )
+        "survival_training" -> fields(
+            Triple("participantName", "Imię i nazwisko uczestnika", ""),
+            Triple("courseName", "Nazwa kursu / poziom", ""),
+            Triple("provider", "Organizator / podmiot szkolący", ""),
+            Triple("environment", "Środowisko szkolenia", "leśne / górskie / wodne / miejskie"),
+            Triple("modules", "Zrealizowane moduły", "pierwsza pomoc / nawigacja / łączność / bezpieczeństwo"),
+            Triple("completionDate", "Data ukończenia", "DD-MM-RRRR"),
+            Triple("hours", "Liczba godzin", ""),
+            Triple("instructor", "Instruktor / ratownik prowadzący", ""),
+            Triple("certificateNumber", "Numer certyfikatu", ""),
+            Triple("firstAidQualification", "Kwalifikacje pierwszej pomocy", ""),
+            Triple("validUntil", "Termin odnowienia, jeśli dotyczy", "DD-MM-RRRR"),
+            Triple("status", "Status dokumentu", "")
+        )
+        "security_guard" -> fields(
+            Triple("holderName", "Imię i nazwisko posiadacza", ""),
+            Triple("qualificationName", "Nazwa kwalifikacji / uprawnienia", ""),
+            Triple("registerNumber", "Numer wpisu do rejestru, jeśli dotyczy", ""),
+            Triple("certificateNumber", "Numer świadectwa / certyfikatu", ""),
+            Triple("issuingAuthority", "Organ / podmiot wydający", ""),
+            Triple("trainingProvider", "Podmiot szkolący", ""),
+            Triple("qualificationDate", "Data uzyskania kwalifikacji", "DD-MM-RRRR"),
+            Triple("validUntil", "Termin ważności / odnowienia", "DD-MM-RRRR"),
+            Triple("scope", "Zakres uprawnień wskazany w dokumencie", ""),
+            Triple("employer", "Pracodawca / agencja ochrony", ""),
+            Triple("medicalFitness", "Orzeczenie o zdolności, jeśli dotyczy", ""),
+            Triple("status", "Status wpisu / uprawnienia", "")
+        )
+        "defense_training" -> fields(
+            Triple("participantName", "Imię i nazwisko uczestnika", ""),
+            Triple("programName", "Nazwa programu / szkolenia obronnego", ""),
+            Triple("organizer", "Organizator / jednostka prowadząca", ""),
+            Triple("trainingType", "Rodzaj szkolenia", "powszechne / obywatelskie / specjalistyczne"),
+            Triple("scope", "Zakres szkolenia", ""),
+            Triple("completionDate", "Data ukończenia", "DD-MM-RRRR"),
+            Triple("hours", "Liczba godzin", ""),
+            Triple("certificateNumber", "Numer zaświadczenia", ""),
+            Triple("instructor", "Prowadzący", ""),
+            Triple("legalBasis", "Podstawa prawna / programowa", ""),
+            Triple("validUntil", "Termin aktualizacji, jeśli dotyczy", "DD-MM-RRRR"),
+            Triple("status", "Status dokumentu", "")
+        )
+        else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
         }
 }
 
