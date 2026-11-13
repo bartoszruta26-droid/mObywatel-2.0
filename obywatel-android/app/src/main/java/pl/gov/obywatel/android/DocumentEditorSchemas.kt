@@ -449,7 +449,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("awardingOrganization", "Organizacja nadająca stopień", ""),
             Triple("awardDate", "Data nadania stopnia", "DD-MM-RRRR"),
             Triple("coach", "Trener / instruktor", ""),
-            Triple(" instructorQualification", "Kwalifikacje instruktora", ""),
+            Triple("instructorQualification", "Kwalifikacje instruktora", ""),
             Triple("medicalRestrictions", "Ograniczenia udziału / uwagi zdrowotne", ""),
             Triple("validity", "Ważność / status członkostwa", "")
         )
