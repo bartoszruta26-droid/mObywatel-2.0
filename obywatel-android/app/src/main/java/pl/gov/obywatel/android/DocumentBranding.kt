@@ -116,13 +116,13 @@ internal object DocumentBrandStore {
     private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
     private val kinds = listOf(
-        "Ikona wektorowa", "Ikona", "Tło dokumentu", "Tło kafelka", "Herb", "Godło", "Logo",
+        "Ikona wektorowa", "Ikona wektorowa kafelka", "Grafika wektorowa tła kafelków", "Animowany hologram", "Ikona", "Tło dokumentu", "Tło kafelka", "Herb", "Godło", "Logo",
         "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
         "Załącznik tekstowy", "Załącznik", "Fotografia", "Znak wodny",
         "Grafika hologramu / zabezpieczenia"
     )
     private val imageKinds = setOf(
-        "Ikona wektorowa", "Ikona", "Tło dokumentu", "Tło kafelka", "Herb", "Godło", "Logo",
+        "Ikona wektorowa", "Ikona wektorowa kafelka", "Grafika wektorowa tła kafelków", "Animowany hologram", "Ikona", "Tło dokumentu", "Tło kafelka", "Herb", "Godło", "Logo",
         "Pieczęć", "Wzór podpisu odręcznego", "Flaga", "Fotografia", "Znak wodny",
         "Grafika hologramu / zabezpieczenia"
     )
@@ -229,6 +229,8 @@ internal object DocumentBrandStore {
                 val name = field.name
                 val lower = name.lowercase(Locale.ROOT)
                 val kind = when {
+                    name.startsWith("tile_watermark_") -> "Grafika wektorowa tła kafelków"
+                    name.startsWith("tile_ic_") -> "Ikona wektorowa kafelka"
                     name in setOf(
                         "file_00000000532082108d561dcd2385f8f9",
                         "file_0000000077d4820aa3b7115d85ab9a7d",
@@ -262,6 +264,7 @@ internal object DocumentBrandStore {
         }
     }
     private val builtInAssets = listOf(
+        BrandAsset("builtin_hologram_mandala", "Zasoby aplikacji", "Animowany hologram", "Mandala holograficzna — animowana", "builtin:mandala_hologram.gif", rights = "Grafika autorska wygenerowana dla aplikacji"),
         BrandAsset("builtin_polish_emblem", "Zasoby aplikacji", "Godło", "Godło Polski — grafika zasobów aplikacji", "resource:institutions_eagle_emblem"),
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
         BrandAsset("builtin_rodu_dab", "Katalog heraldyczny", "Herb", "Herb rodowy — dąb", "builtin:heraldry/herb-rodu-klasyczny.svg"),
