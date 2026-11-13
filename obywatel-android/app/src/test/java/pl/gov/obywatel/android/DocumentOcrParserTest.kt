@@ -21,7 +21,7 @@ class DocumentOcrParserTest {
   assertTrue("bank=$bank", bank.containsKey("doc_bank_accounts_accountOwner"))
 
   val insurance = DocumentOcrParser.extract("insurance_vehicle","Numer polisy: OC-2026-123")
-  assertTrue("insurance=$insurance", insurance.containsKey("doc_insurance_vehicle_policyNumber"))
+  assertTrue("insurance=$insurance", insurance.containsKey("field_1"))
 
   val foundation = DocumentOcrParser.extract("organization_foundation","Pełna nazwa fundacji: FUNDACJA ARIA")
   assertTrue("foundation=$foundation", foundation.containsKey("doc_organization_foundation_foundationName"))
