@@ -209,7 +209,9 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 Text(doc.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                GeneralDocumentOcrEditor(if (bankAccountsOnly) "bank_accounts" else if (entityMode) "business" else "family", local, context) { message = it }
+                if (!LocalDocumentOcrStageRendered.current) {
+                    GeneralDocumentOcrEditor(if (bankAccountsOnly) "bank_accounts" else if (entityMode) "business" else "family", local, context) { message = it }
+                }
                 if (isBankRegister) {
                     Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Nie przechowuj PIN-ów, haseł ani kodów autoryzacyjnych.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     repeat(accountCount) { accountIndex ->

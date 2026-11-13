@@ -2127,57 +2127,87 @@ internal fun DocumentFieldEditor(
         fieldKey, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
     )
     val context = LocalContext.current
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { Text(label) },
-            placeholder = { Text(placeholder) },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = minLines,
-            maxLines = maxLines
+    val compactLayout = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 600
+
+    fun updateSide(target: String) {
+        val current = settingsState.value
+        val updated = current.copy(
+            fieldSides = current.fieldSides + (fieldKey to target),
+            visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
+                current.visibleFields - fieldKey else current.visibleFields + fieldKey,
+            visibleFieldsConfigured = true
         )
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+        settingsState.value = updated
+    }
+
+    @Composable
+    fun SideSelector() {
+        Column(
+            modifier = if (compactLayout) Modifier.fillMaxWidth()
+                else Modifier.widthIn(min = 176.dp, max = 216.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp)
+        ) {
             listOf(
-                CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                CREDENTIAL_FIELD_HIDDEN to "Brak",
                 CREDENTIAL_FIELD_FRONT to "Awers",
                 CREDENTIAL_FIELD_BACK to "Rewers"
             ).forEach { (target, caption) ->
                 Row(
-                    Modifier.weight(1f).clickable {
-                        val current = settingsState.value
-                        val updated = current.copy(
-                            fieldSides = current.fieldSides + (fieldKey to target),
-                            visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
-                                current.visibleFields - fieldKey else current.visibleFields + fieldKey,
-                            visibleFieldsConfigured = true
-                        )
-                        LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
-                        settingsState.value = updated
-                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { updateSide(target) }
+                        .padding(horizontal = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     androidx.compose.material3.RadioButton(
                         selected = selectedSide == target,
-                        onClick = {
-                            val current = settingsState.value
-                            val updated = current.copy(
-                                fieldSides = current.fieldSides + (fieldKey to target),
-                                visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
-                                    current.visibleFields - fieldKey else current.visibleFields + fieldKey,
-                                visibleFieldsConfigured = true
-                            )
-                            LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
-                            settingsState.value = updated
-                        }
+                        onClick = { updateSide(target) }
                     )
-                    Text(caption, style = MaterialTheme.typography.labelSmall)
+                    Text(caption, style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
     }
-}
 
+    if (compactLayout) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                label = { Text(label) },
+                placeholder = { Text(placeholder) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = minLines,
+                maxLines = maxLines
+            )
+            SideSelector()
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                label = { Text(label) },
+                placeholder = { Text(placeholder) },
+                modifier = Modifier.weight(1f),
+                minLines = minLines,
+                maxLines = maxLines
+            )
+            SideSelector()
+        }
+    }
+}
 @Composable
 internal fun CredentialCardSides(
     documentKey: String,

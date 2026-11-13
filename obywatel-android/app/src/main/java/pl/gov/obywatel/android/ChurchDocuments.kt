@@ -213,7 +213,9 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                 Text("Podgląd wyłącznie do odczytu. Edycja jest dostępna w Więcej → Ustawienia → Dokumenty kościelne.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
-                GeneralDocumentOcrEditor("church", local, context) { message = it }
+                if (!LocalDocumentOcrStageRendered.current) {
+                    GeneralDocumentOcrEditor("church", local, context) { message = it }
+                }
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                     Text(doc.note, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.bodySmall)
                 }

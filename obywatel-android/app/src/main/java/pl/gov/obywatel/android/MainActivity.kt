@@ -4205,6 +4205,16 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
             alpha = 0.30f,
             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
         )
+        // Delikatna, wspólna warstwa zabezpieczająca: samopodobna rozeta
+        // geometryczna pozostaje czytelna na wszystkich tłach kategorii.
+        Image(
+            painter = painterResource(R.drawable.tile_watermark_fractal),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.FillBounds,
+            alpha = 0.13f,
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+        )
     }
 }
 
@@ -4311,6 +4321,7 @@ private data class CredentialFieldVisibilityBinding(
     val fields: MutableMap<String, String>
 )
 private val LocalCredentialFieldVisibility = androidx.compose.runtime.compositionLocalOf<CredentialFieldVisibilityBinding?> { null }
+internal val LocalDocumentOcrStageRendered = androidx.compose.runtime.compositionLocalOf { false }
 
 @Composable
 private fun DemoDocumentsScreen(
@@ -4392,9 +4403,6 @@ private fun DemoDocumentsScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        if (categoryId != "all") {
-            GeneralDocumentOcrEditor(if (categoryId.startsWith("catalog:")) categoryId.removePrefix("catalog:") else categoryId, fields, context) { saveMessage = it }
-        }
         if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
         if (categoryId.startsWith("catalog:")) {
             val documentId = categoryId.removePrefix("catalog:")
@@ -4908,6 +4916,8 @@ private fun CredentialAppearanceEditorEntry(
         }
     }
     Column(Modifier.fillMaxSize()) {
+        // OCR jest renderowany w jednym, stałym miejscu nad edytorem dokumentu.
+        // Formularz potomny nie może dodawać kolejnego panelu OCR do nagłówka.
         if (showOcrStage) {
             GeneralDocumentOcrEditor(documentKey, ocrFields, context) {
                 val snapshot = DemoIdentityStore.load(context).toMutableMap()
@@ -4938,7 +4948,9 @@ private fun CredentialAppearanceEditorEntry(
                 DocumentOriginalAttachments(documentKey)
             }
         }
-        Box(Modifier.weight(1f)) { content() }
+        CompositionLocalProvider(LocalDocumentOcrStageRendered provides showOcrStage) {
+            Box(Modifier.weight(1f)) { content() }
+        }
         if (showAppearanceAction) {
             OutlinedButton(
                 onClick = { onOpenAppearance(documentKey) },
