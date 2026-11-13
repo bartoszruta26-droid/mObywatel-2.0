@@ -18,7 +18,7 @@ class DocumentOcrParserTest {
 
  @Test fun documentSpecificCategoriesMapOcrIntoTheirOwnFields(){
   val bank = DocumentOcrParser.extract("bank_accounts","Posiadacz rachunku / podmiot: JAN KOWALSKI")
-  assertTrue("bank=$bank", bank.containsKey("doc_bank_accounts_accountOwner"))
+  assertTrue("bank=$bank", bank.containsKey("account_0_5"))
 
   val insurance = DocumentOcrParser.extract("insurance_vehicle","Numer polisy: OC-2026-123")
   assertTrue("insurance=$insurance", insurance.containsKey("field_1"))
