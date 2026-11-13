@@ -1214,7 +1214,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showDocumentsEditor = false; showSettingsMenu = true },
                         onOpenDocumentAppearance = { key -> credentialAppearanceTarget = key }
                     )
-                    showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }, showOriginalAttachment = false) {
+                    showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }, showOriginalAttachment = true) {
                         EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
                     }
                     settingsDocumentEditor == "imported" -> CredentialAppearanceEditorEntry("imported", onOpenAppearance = { credentialAppearanceTarget = it }) {
