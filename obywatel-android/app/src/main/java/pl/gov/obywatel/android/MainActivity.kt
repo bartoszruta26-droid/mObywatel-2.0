@@ -1874,13 +1874,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 text = {
                     val current = remember { DemoIdentityStore.load(context) }
                     val supportedProfileKeys = current.keys + documentEditorImportableFieldKeys()
-                    val supportedArchiveKeys = setOf(
-                        "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion",
-                        "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
-                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
-                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
-                        "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
-                    )
+                    val supportedArchiveKeys = documentArchiveImportKeys()
                     val recognizedIncoming = incoming.keys.count { it in supportedProfileKeys || it in supportedArchiveKeys || it.startsWith("cs_") || it.startsWith("dp_") || isSupportedDynamicDocumentField(it) }
                     val overwritten = incoming.keys.count { it in supportedProfileKeys && current.containsKey(it) }
                     val added = recognizedIncoming - overwritten
