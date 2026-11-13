@@ -1097,15 +1097,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "registry" -> showRegistryEditor = true
             documentId == "family" || documentId == "large_family" || documentId.startsWith("rod_") -> settingsDocumentEditor = "family"
             documentId == "church" || documentId.startsWith("church_") || documentId == "mission_travel" -> settingsDocumentEditor = "church"
-            documentId == "civil" || documentId in setOf("birth_extract", "marriage_extract", "death_extract", "criminal_record", "vehicle_registration", "insurance_vehicle", "official") -> settingsDocumentEditor = "civil"
+            documentId == "civil" || documentId in setOf("birth_extract", "marriage_extract", "death_extract", "vehicle_registration", "official") -> settingsDocumentEditor = "civil"
             documentId == "business" || documentId == "entity" || documentId.startsWith("entity_") ||
                 documentId.startsWith("organization_") -> settingsDocumentEditor = "business"
-            documentId == "bank_accounts" || documentId == "rod_bank_accounts" || documentId == "entity_bank_accounts" -> settingsDocumentEditor = "bank_accounts"
-            documentId == "vaccines" || documentId == "ehic" || documentId == "blood_donor" -> settingsDocumentEditor = "vaccines"
+            documentId == "bank_accounts" || documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts"
+            documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts"
+            documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
             documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
             documentId == "imported" -> settingsDocumentEditor = "imported"
-            documentId == "professional" || documentId.startsWith("professional_") || documentId == "eu_education" || documentId == "insurance_professional" -> settingsDocumentEditor = "professional"
+            documentId == "professional" || documentId.startsWith("professional_") || documentId == "eu_education" -> settingsDocumentEditor = "professional"
             documentId == "branding" -> settingsDocumentEditor = "graphic_catalog"
             else -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
         }
@@ -1242,6 +1243,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     }
                     settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
                         FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
+                    }
+                    settingsDocumentEditor == "entity_bank_accounts" -> CredentialAppearanceEditorEntry("entity_bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                        FamilyEntityDocumentsScreen(entityMode = true, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
                     settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
@@ -1764,6 +1769,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     TextButton(onClick = {
                         runCatching {
                             val current = DemoIdentityStore.loadStrict(context)
+                            val importedSchemaVersion = incoming["documentEditorSchemaVersion"]?.toIntOrNull() ?: 1
+                            require(importedSchemaVersion in 1..DOCUMENT_EDITOR_SCHEMA_VERSION.toInt()) {
+                                "Archiwum używa nieobsługiwanej wersji schematu dokumentów: $importedSchemaVersion."
+                            }
                             val profileValues = incoming.filterKeys {
                                 // Importuj wyłącznie pola należące do aktualnego modelu profilu.
                                 // Nieznane lub wycofane nazwy pól ze starszych archiwów vCard
@@ -4164,7 +4173,7 @@ private fun DemoDocumentsScreen(
             fontWeight = FontWeight.Bold
         )
         if (categoryId != "all") {
-            GeneralDocumentOcrEditor(categoryId, fields, context) { saveMessage = it }
+            GeneralDocumentOcrEditor(if (categoryId.startsWith("catalog:")) categoryId.removePrefix("catalog:") else categoryId, fields, context) { saveMessage = it }
         }
         if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
         if (categoryId.startsWith("catalog:")) {
