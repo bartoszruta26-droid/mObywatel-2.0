@@ -43,8 +43,16 @@ internal object DocumentOcrParser {
                 Rule("disabilityBirthDate",listOf("data urodzenia")),Rule("disabilityPeselOrId",listOf("pesel","identyfikator")),
                 Rule("disabilityDegree",listOf("stopien niepelnosprawnosci","stopien")),Rule("disabilityCauseCodes",listOf("symbol przyczyny")),
                 Rule("disabilityValidity",listOf("okres","wazne do","data waznosci")),Rule("disabilityAuthorityName",listOf("nazwa organu","zespol do spraw")))
-            else -> documentEditorFieldDefinitions(categoryId).map { definition ->
-                Rule("doc_${categoryId}_${definition.key}", listOf(definition.label))
+            else -> when {
+                churchGraphicDocumentTargets().any { it.first == categoryId } ->
+                    churchGraphicDocumentFields(categoryId).map { (key, label) -> Rule(key, listOf(label)) }
+                familyEntityGraphicDocumentTargets().any { it.first == categoryId } ->
+                    familyEntityGraphicDocumentFields(categoryId).map { (key, label) -> Rule(key, listOf(label)) }
+                officialGraphicDocumentTargets().any { it.first == categoryId } ->
+                    officialGraphicDocumentFields(categoryId).map { (key, label) -> Rule(key, listOf(label)) }
+                else -> documentEditorFieldDefinitions(categoryId).map { definition ->
+                    Rule("doc_${categoryId}_${definition.key}", listOf(definition.label))
+                }
             }
         }
         val out=linkedMapOf<String,String>()
