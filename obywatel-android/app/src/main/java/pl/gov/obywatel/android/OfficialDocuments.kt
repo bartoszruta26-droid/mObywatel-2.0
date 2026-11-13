@@ -183,7 +183,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, on
         } else {
             val type=officialDocTypes.first { it.id==selected }
             val values=records[type.id].orEmpty()
-            var local by remember(type.id, records) { mutableStateOf(values) }
+            val local = remember(type.id, records) { mutableStateMapOf<String, String>().apply { putAll(values) } }
             Text(type.title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,color=MaterialTheme.colorScheme.onSurface)
             if (!readOnly) OutlinedButton(onClick = { onEditGraphic(type.id) }, modifier = Modifier.fillMaxWidth()) {
                 Text("Edytuj wygląd graficzny i podgląd tego dokumentu")
@@ -207,8 +207,9 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, on
                 Text("Podgląd wyłącznie do odczytu. Edycja jest dostępna w Więcej → Ustawienia → dokumenty cywilne.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
+                GeneralDocumentOcrEditor("civil", local, context) { status = it }
                 type.fields.forEachIndexed { index,label ->
-                    OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local=local+(("f$index") to it)},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
+                    OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local["f$index"]=it},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
                 }
             }
             if(type.id=="criminal_record") {
