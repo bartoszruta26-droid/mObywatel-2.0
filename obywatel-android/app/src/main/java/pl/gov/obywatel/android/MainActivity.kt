@@ -828,12 +828,12 @@ internal val documentDisplayOptions = (listOf(
         }
         Triple(id, title, icon)
     }
-) + churchGraphicDocumentTargets().map { (id, title) -> Triple(id, title, R.drawable.tile_ic_church_outline) } +
+ + churchGraphicDocumentTargets().map { (id, title) -> Triple(id, title, R.drawable.tile_ic_church_outline) } +
     familyEntityGraphicDocumentTargets().map { (id, title) ->
         Triple(id, title, if (id.startsWith("rod_")) R.drawable.documents_family_record else R.drawable.lib_ic_building)
     } +
     officialGraphicDocumentTargets().map { (id, title) -> Triple(id, title, R.drawable.lib_ic_document) }
-.distinctBy { it.first }
+).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
