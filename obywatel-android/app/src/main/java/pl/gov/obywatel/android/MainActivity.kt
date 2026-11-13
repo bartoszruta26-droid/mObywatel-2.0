@@ -947,6 +947,10 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    // Keep the core identity documents in an explicit, stable bucket. These IDs
+    // must remain visible in the visibility catalog even as new groups evolve.
+    id in setOf("profile", "identity", "passport") ->
+        "Dokumenty osobiste i tożsamościowe"
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } ->
         "Dokumenty kościelne"
