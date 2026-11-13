@@ -3513,24 +3513,24 @@ private fun documentTileWatermarkResource(documentKey: String): Int = when {
         R.drawable.tile_watermark_digital
 
     // Kwalifikacje, zawody, uprawnienia i dokumenty służbowe.
-    documentKey.startsWith("professional_") || documentKey in setOf("professional", "training", "insurance_professional") ->
+    documentKey in setOf("student", "training", "eu_education") ->
+        R.drawable.tile_watermark_education
+
+    // Kwalifikacje zawodowe i dokumenty uprawnień.
+    documentKey.startsWith("professional_") || documentKey in setOf("professional", "insurance_professional") ->
         R.drawable.tile_watermark_professional
 
     // Rodzina, Ród i akty stanu cywilnego.
     documentKey.startsWith("rod_") || documentKey in setOf(
         "family", "children", "birth_extract", "marriage_extract", "death_extract",
-        "large_family", "insurance_private"
+        "large_family"
     ) ->
         R.drawable.tile_watermark_family
 
     // Zdrowie, opieka, szczepienia i orzeczenia.
-    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card") ||
-        documentKey.startsWith("medical_") ->
+    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card",
+        "professional_medical", "professional_therapeutic") || documentKey.startsWith("medical_") ->
         R.drawable.tile_watermark_medical
-
-    // Nauka, szkolenia i potwierdzanie kwalifikacji edukacyjnych.
-    documentKey in setOf("student", "training", "eu_education") ->
-        R.drawable.tile_watermark_education
 
     // Rejestry, podmioty prawne, fundacje, stowarzyszenia i dokumenty urzędowe.
     documentKey.startsWith("organization_") || documentKey.startsWith("entity_") ||
@@ -3573,13 +3573,13 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
             listOf(Color(0xFF4A145F), Color(0xFF762B83), Color(0xFFB27BB5))
         documentKey.startsWith("rod_") || documentKey in setOf(
             "family", "children", "birth_extract", "marriage_extract", "death_extract",
-            "large_family", "insurance_private"
+            "large_family"
         ) -> listOf(Color(0xFF9B315D), Color(0xFFD45B83), Color(0xFFF0A0B4))
-        documentKey in setOf("disability", "disability_card", "vaccines", "ehic", "blood_donor") ||
-            documentKey.startsWith("medical_") -> listOf(Color(0xFF064B35), Color(0xFF167A50), Color(0xFF71A878))
+        documentKey in setOf("disability", "disability_card", "vaccines", "ehic", "blood_donor",
+            "professional_medical", "professional_therapeutic") || documentKey.startsWith("medical_") -> listOf(Color(0xFF064B35), Color(0xFF167A50), Color(0xFF71A878))
         documentKey in setOf("student", "training", "eu_education") ||
             documentKey.startsWith("professional_education") -> listOf(Color(0xFF25205F), Color(0xFF4D4696), Color(0xFF9994D0))
-        documentKey in setOf("bank_accounts", "insurance_business", "insurance_vehicle", "insurance_professional") ||
+        documentKey in setOf("bank_accounts", "insurance_business", "insurance_vehicle", "insurance_professional", "insurance_private") ||
             documentKey.startsWith("insurance_") || documentKey.startsWith("entity_") ->
             listOf(Color(0xFF003F87), Color(0xFF1769AA), Color(0xFF5AA6D1))
         documentKey in setOf("vehicle_registration", "mission_travel", "passport") ->
@@ -3604,8 +3604,8 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
         documentKey.startsWith("rod_") || documentKey in setOf(
             "family", "children", "birth_extract", "marriage_extract", "death_extract", "large_family"
         ) -> 4
-        documentKey in setOf("disability", "disability_card", "vaccines", "blood_donor", "ehic") ||
-            documentKey.startsWith("medical_") -> 7
+        documentKey in setOf("disability", "disability_card", "vaccines", "blood_donor", "ehic",
+            "professional_medical", "professional_therapeutic") || documentKey.startsWith("medical_") -> 7
         documentKey in setOf("student", "training", "eu_education") ||
             documentKey.startsWith("professional_education") -> 6
         documentKey in setOf("passport", "mission_travel", "vehicle_registration") -> 5
