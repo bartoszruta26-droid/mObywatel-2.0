@@ -356,6 +356,50 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
     }
 }
 
+private val legacyDocumentEditorFieldKeys = setOf(
+    "birthDate", "birthPlace", "birthSurname", "citizenship", "contactAddress", "contactEmail",
+    "contactOrganization", "contactPhone", "contactTitle", "contactUrl", "disabilityAppealInfo",
+    "disabilityAppealOutcome", "disabilityApplicationDate", "disabilityAssessmentMethod",
+    "disabilityAssistiveDevices", "disabilityAuthorityName", "disabilityAuthorityType",
+    "disabilityBirthDate", "disabilityCare", "disabilityCaseNumber", "disabilityCategory",
+    "disabilityCauseCodes", "disabilityChairperson", "disabilityCounty", "disabilityDecisionDate",
+    "disabilityDecisionNumber", "disabilityDecisionPlace", "disabilityDecisionType", "disabilityDegree",
+    "disabilityDeliveryDate", "disabilityDuplicateInfo", "disabilityEmployment",
+    "disabilityEquivalentEffect", "disabilityFoundationLegalBasis", "disabilityFoundationName",
+    "disabilityFoundationStatute", "disabilityFromDate", "disabilityIssuerName",
+    "disabilityLegalBasis", "disabilityLegalProvision", "disabilityMedicalAssessment",
+    "disabilityMedicalQualification", "disabilityMobility", "disabilityPanelMembers",
+    "disabilityParking", "disabilityPersonName", "disabilityPeselOrId",
+    "disabilitySelfDeclarationBasis", "disabilitySelfDeclarationDate", "disabilitySignature",
+    "disabilitySourceAttachment", "disabilityTherapy", "disabilityTraining", "disabilityValidity",
+    "disabilityWhodasScore", "familyDocNumber", "familyExpiryDate", "familyFatherLine",
+    "familyHolderSignature", "familyIssueDate", "familyLine", "familyMotherLine", "familyName",
+    "familyNotes", "familyRegistrarSignature", "familyRegistry", "familyRegistryPlace",
+    "familyResidence", "familyRole", "familySource", "fatherNames", "fatherSurname",
+    "firstNames", "idExpiryDate", "idIssueDate", "idIssuer", "idLossOrInvalidationDate",
+    "idNumber", "idPreviousNumber", "idStatus", "lastName", "loyaltyCardCount", "motherNames",
+    "motherSurname", "mpCardIssueDate", "mpCardNumber", "mpDistrict", "mpEnd", "mpIssuer",
+    "mpMandateSource", "mpOathDate", "mpOathEvidence", "mpOathPlace", "mpStart", "mpStatus",
+    "mpTerm", "passportBirthPlace", "passportCitizenship", "passportCountry", "passportExpiryDate",
+    "passportHolderNames", "passportIssueDate", "passportIssuer", "passportLossDate",
+    "passportNumber", "passportSex", "passportStatus", "passportType", "pesel", "photo",
+    "sex", "studentAcademicYear", "studentCardNumber", "studentFaculty", "studentIssueDate",
+    "studentIssuer", "studentLevel", "studentNames", "studentProfile", "studentProgramme",
+    "studentStatus", "studentUniversity", "studentUniversityAddress", "studentUniversityId",
+    "studentValidity", "studentYear", "trainingAssessment", "trainingCardNumber",
+    "trainingCertificateNumber", "trainingCompletionDate", "trainingCourseCode",
+    "trainingCourseName", "trainingEndDate", "trainingForm", "trainingHours",
+    "trainingInstitution", "trainingInstitutionAddress", "trainingInstitutionRegistry",
+    "trainingIssueDate", "trainingIssuer", "trainingSignature", "trainingStartDate",
+    "trainingStatus", "trainingValidUntil", "personExtraSource", "personExtraLegalBasis",
+    "personExtraVerifiedAt", "personExtraVerifiedBy", "personExtraNotes"
+)
+
+internal fun documentEditorImportableFieldKeys(): Set<String> =
+    documentEditorFieldKeys() + legacyDocumentEditorFieldKeys +
+        documentDisplayOptions.distinctBy { it.first }.map { (id, _, _) -> "${id}OcrText" } +
+        setOf("identity_cardOcrText", "loyalty_cardsOcrText", "profileOcrText")
+
 internal fun documentEditorFieldKeys(): Set<String> = documentDisplayOptions
     .distinctBy { it.first }
     .flatMap { (id, _, _) -> documentEditorFieldDefinitions(id).map { field -> "doc_${id}_${field.key}" } }
