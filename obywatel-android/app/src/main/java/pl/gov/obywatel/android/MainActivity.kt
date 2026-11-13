@@ -1197,25 +1197,25 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
-                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
                         FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
                         FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
                         FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
                         ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false) {
                         OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
                     settingsDocumentEditor == "children_health" -> CredentialAppearanceEditorEntry("children", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
