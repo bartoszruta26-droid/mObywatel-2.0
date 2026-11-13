@@ -4888,7 +4888,6 @@ private fun DemoDocumentsScreen(
 }
 
 @Composable
-@Composable
 private fun CredentialAppearanceEditorEntry(
     documentKey: String,
     onOpenAppearance: (String) -> Unit,
