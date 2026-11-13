@@ -27,6 +27,20 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
         Triple("annotations", "Adnotacje urzędowe i uwagi", "")
     )
     return when (documentId) {
+        "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
+        "disability", "church", "civil", "business", "entity", "rod_bank_accounts", "entity_bank_accounts",
+        "vaccines", "signed_pdf", "imported", "children", "branding", "loyalty", "loyalty_cards",
+        "professional" -> emptyList()
+        else -> when {
+            churchGraphicDocumentTargets().any { it.first == documentId } ||
+                familyEntityGraphicDocumentTargets().any { it.first == documentId } ||
+                officialGraphicDocumentTargets().any { it.first == documentId } -> emptyList()
+            else -> documentEditorFieldDefinitionsForCatalog(documentId)
+        }
+    }
+}
+
+private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<DocumentEditorFieldDefinition> = when (documentId) {
         "birth_extract" -> fields(
             Triple("childName", "Imię i nazwisko dziecka", ""),
             Triple("birthDate", "Data i godzina urodzenia", "DD-MM-RRRR"),
@@ -206,21 +220,63 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             Triple("legalBasis", "Podstawa prawna / standard kwalifikacji", ""),
             Triple("continuingEducation", "Doskonalenie zawodowe / punkty edukacyjne", "")
         )
-        "organization_foundation", "organization_church", "organization_company",
-        "organization_association", "entity", "business" -> fields(
-            Triple("entityName", "Pełna nazwa podmiotu", ""),
-            Triple("legalForm", "Forma prawna / ustrojowa", ""),
-            Triple("registrationNumber", "Numer KRS / rejestru / ewidencji", ""),
-            Triple("taxNumber", "NIP", ""),
-            Triple("statisticalNumber", "REGON / inny identyfikator", ""),
-            Triple("registeredOffice", "Siedziba i adres", ""),
-            Triple("establishmentDate", "Data utworzenia / wpisu", "DD-MM-RRRR"),
-            Triple("representation", "Zasady reprezentacji", ""),
-            Triple("management", "Organ zarządzający / osoby uprawnione", ""),
-            Triple("supervision", "Organ nadzorczy / kontrolny", ""),
-            Triple("legalBasis", "Statut / umowa / akt założycielski", ""),
-            Triple("registryStatus", "Status wpisu / podmiotu", "")
+        "organization_foundation" -> fields(
+            Triple("foundationName", "Pełna nazwa fundacji", ""),
+            Triple("foundationKrs", "Numer KRS fundacji", ""),
+            Triple("foundationNip", "NIP fundacji", ""),
+            Triple("foundationRegon", "REGON fundacji", ""),
+            Triple("foundationSeat", "Siedziba fundacji", ""),
+            Triple("foundationPurpose", "Cele statutowe", ""),
+            Triple("foundationFounder", "Fundator / fundatorzy", ""),
+            Triple("foundationBoard", "Zarząd fundacji", ""),
+            Triple("foundationSupervision", "Rada fundacji / organ nadzoru", ""),
+            Triple("foundationStatute", "Data i wersja statutu", ""),
+            Triple("foundationRepresentation", "Sposób reprezentacji", ""),
+            Triple("foundationRegistryStatus", "Status w KRS", "")
         )
+        "organization_church" -> fields(
+            Triple("churchEntityName", "Pełna nazwa Kościoła / wspólnoty", ""),
+            Triple("churchLegalStatus", "Status prawny / wyznaniowy", ""),
+            Triple("churchRegister", "Rejestr / ewidencja / podstawa uznania", ""),
+            Triple("churchJurisdiction", "Jurysdykcja / struktura terytorialna", ""),
+            Triple("churchHead", "Zwierzchnik / organ kierujący", ""),
+            Triple("churchRepresentation", "Zasady reprezentacji", ""),
+            Triple("churchStatute", "Statut / prawo wewnętrzne", ""),
+            Triple("churchSeat", "Siedziba główna", ""),
+            Triple("churchUnits", "Jednostki organizacyjne", ""),
+            Triple("churchNip", "NIP (jeżeli nadany)", ""),
+            Triple("churchRegon", "REGON (jeżeli nadany)", ""),
+            Triple("churchStatus", "Status jednostki", "")
+        )
+        "organization_company" -> fields(
+            Triple("companyName", "Firma / pełna nazwa przedsiębiorstwa", ""),
+            Triple("companyForm", "Forma prawna spółki / przedsiębiorstwa", ""),
+            Triple("companyKrs", "Numer KRS / CEIDG", ""),
+            Triple("companyNip", "NIP", ""),
+            Triple("companyRegon", "REGON", ""),
+            Triple("companySeat", "Siedziba i adres", ""),
+            Triple("companyShareholders", "Wspólnicy / akcjonariusze", ""),
+            Triple("companyManagement", "Zarząd / osoby prowadzące", ""),
+            Triple("companyRepresentation", "Sposób reprezentacji", ""),
+            Triple("companyBusinessScope", "Przedmiot działalności / PKD", ""),
+            Triple("companyRegistrationDate", "Data wpisu / rozpoczęcia", "DD-MM-RRRR"),
+            Triple("companyStatus", "Status działalności", "")
+        )
+        "organization_association" -> fields(
+            Triple("associationName", "Pełna nazwa stowarzyszenia", ""),
+            Triple("associationKrs", "Numer KRS / ewidencji", ""),
+            Triple("associationNip", "NIP", ""),
+            Triple("associationRegon", "REGON", ""),
+            Triple("associationSeat", "Siedziba i adres", ""),
+            Triple("associationPurpose", "Cele i przedmiot działalności", ""),
+            Triple("associationMembers", "Członkowie / liczebność", ""),
+            Triple("associationBoard", "Zarząd stowarzyszenia", ""),
+            Triple("associationSupervision", "Komisja rewizyjna / nadzór", ""),
+            Triple("associationStatute", "Statut / data uchwalenia", ""),
+            Triple("associationRepresentation", "Zasady reprezentacji", ""),
+            Triple("associationStatus", "Status w rejestrze", "")
+        )
+        "entity", "business" -> emptyList()
         "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> fields(
             Triple("accountOwner", "Posiadacz rachunku / podmiot", ""),
             Triple("bankName", "Nazwa banku", ""),
@@ -342,19 +398,8 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
                 Triple("assetSource", "Źródło zasobu", ""),
                 Triple("usageRights", "Prawa i zakres użycia", "")
             )
-            else -> fields(
-                Triple("recordSubject", "Przedmiot dokumentu", ""),
-                Triple("recordHolder", "Osoba / podmiot, którego dotyczy", ""),
-                Triple("recordingInstitution", "Instytucja prowadząca / wystawca", ""),
-                Triple("recordReference", "Numer ewidencyjny / identyfikator", ""),
-                Triple("recordDate", "Data wpisu / wydania", "DD-MM-RRRR"),
-                Triple("recordValidity", "Okres obowiązywania", ""),
-                Triple("recordScope", "Zakres potwierdzanych danych / uprawnień", ""),
-                Triple("recordSource", "Dokument źródłowy / podstawa wpisu", "")
-            )
+            else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
         }
-    }
-}
 
 private val legacyDocumentEditorFieldKeys = setOf(
     "birthDate", "birthPlace", "birthSurname", "citizenship", "contactAddress", "contactEmail",
