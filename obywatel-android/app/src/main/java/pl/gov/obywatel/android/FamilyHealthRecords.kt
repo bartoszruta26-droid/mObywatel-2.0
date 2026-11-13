@@ -327,7 +327,11 @@ private object FamilyHealthStore {
     private const val FILE_NAME = "family_health_records.enc"
     private const val KEY_ALIAS = "obywatel_family_health_aes"
 
-    fun load(context: Context): List<FamilyChildRecord> = runCatching {
+    fun load(context: Context): List<FamilyChildRecord> =
+        runCatching { loadStrict(context) }.getOrElse { emptyList() }
+
+    /** Strict read for backup/restore: corrupted or undecryptable data must never become an empty archive. */
+    private fun loadStrict(context: Context): List<FamilyChildRecord> {
         val file = File(context.noBackupFilesDir, FILE_NAME)
         if (!file.exists()) return emptyList()
         val bytes = file.readBytes()
@@ -335,12 +339,12 @@ private object FamilyHealthStore {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, bytes.copyOfRange(0, 12)))
         val root = JSONObject(String(cipher.doFinal(bytes.copyOfRange(12, bytes.size)), Charsets.UTF_8))
-        val array = root.optJSONArray("children") ?: JSONArray()
-        (0 until array.length()).map { i ->
+        val array = root.optJSONArray("children") ?: error("Archiwum danych rodzinnych nie zawiera listy dzieci.")
+        return (0 until array.length()).map { i ->
             val o = array.getJSONObject(i)
             val vaccines = o.optJSONArray("vaccines") ?: JSONArray()
             FamilyChildRecord(
-                id = o.optString("id", UUID.randomUUID().toString()),
+                id = o.optString("id").takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString(),
                 firstName = o.optString("firstName"), lastName = o.optString("lastName"),
                 birthDate = o.optString("birthDate"), pesel = o.optString("pesel"),
                 sex = o.optString("sex"), birthPlace = o.optString("birthPlace"),
@@ -349,7 +353,7 @@ private object FamilyHealthStore {
                 photoBase64 = o.optString("photoBase64"),
                 vaccines = (0 until vaccines.length()).map { j ->
                     val v = vaccines.getJSONObject(j)
-                    FamilyVaccineEntry(id = v.optString("id", UUID.randomUUID().toString()),
+                    FamilyVaccineEntry(id = v.optString("id").takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString(),
                         date = v.optString("date"), vaccine = v.optString("vaccine"),
                         disease = v.optString("disease"), dose = v.optString("dose"),
                         batch = v.optString("batch"), manufacturer = v.optString("manufacturer"),
@@ -358,7 +362,7 @@ private object FamilyHealthStore {
                 }
             )
         }
-    }.getOrElse { emptyList() }
+    }
 
     fun save(context: Context, children: List<FamilyChildRecord>) {
         val array = JSONArray()
@@ -391,7 +395,7 @@ private object FamilyHealthStore {
 
     fun exportArchive(context: Context): String {
         val children = JSONArray()
-        load(context).forEach { child ->
+        loadStrict(context).forEach { child ->
             val vaccines = JSONArray()
             child.vaccines.forEach { v ->
                 vaccines.put(JSONObject().put("id", v.id).put("date", v.date).put("vaccine", v.vaccine)
@@ -434,7 +438,7 @@ private object FamilyHealthStore {
                 }
             )
         }
-        val merged = load(context).associateBy { it.id }.toMutableMap()
+        val merged = loadStrict(context).associateBy { it.id }.toMutableMap()
         imported.forEach { merged[it.id] = it }
         save(context, merged.values.toList())
     }
