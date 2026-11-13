@@ -72,6 +72,17 @@ internal object GraphicDocumentCatalog {
         GraphicDocumentDefinition("organization_company", "Dokumenty przedsiębiorstwa", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
         GraphicDocumentDefinition("organization_association", "Dokumenty stowarzyszenia", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
         GraphicDocumentDefinition("official", "Pozostałe dokumenty urzędowe", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
+        GraphicDocumentDefinition("military_book", "Książeczka wojskowa", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("martial_arts", "Legitymacja sztuk walki", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("shooting_sport", "Legitymacja strzelecka i sportowa", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("archery", "Legitymacja łucznicza", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("tactical_training", "Certyfikat szkolenia taktycznego", DocumentPreviewKind.RECORD, "Skan / fotografia certyfikatu"),
+        GraphicDocumentDefinition("survival_training", "Certyfikat surwiwalu i ratownictwa terenowego", DocumentPreviewKind.RECORD, "Skan / fotografia certyfikatu"),
+        GraphicDocumentDefinition("security_guard", "Legitymacja i kwalifikacje ochroniarskie", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("defense_training", "Dokument szkolenia obronnego", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
+        GraphicDocumentDefinition("historical_reenactment", "Legitymacja członka grupy rekonstrukcji historycznej", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("reenactment_qualification", "Certyfikat kwalifikacji rekonstruktora", DocumentPreviewKind.RECORD, "Skan / fotografia certyfikatu"),
+        GraphicDocumentDefinition("reenactment_event", "Karta uczestnictwa w wydarzeniu historycznym", DocumentPreviewKind.CREDENTIAL),
         GraphicDocumentDefinition("loyalty_cards", "Karty lojalnościowe sklepów", DocumentPreviewKind.CREDENTIAL)
     )
 
