@@ -194,9 +194,6 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                 Triple("field_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            if (!readOnly) OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Edytuj wygląd graficzny i podgląd tego dokumentu")
-            }
             if (readOnly) {
                 val settings = rememberLegitimacyPreviewSettings(previewKey).value.copy(visibleFieldsConfigured = false)
                 UnifiedCredentialCard(
@@ -253,6 +250,18 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                     )
                 }
                 if (isBankRegister) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP).", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
+                OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Edytuj wygląd graficzny")
+                }
+                Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                UnifiedCredentialCard(
+                    documentKey = previewKey,
+                    title = doc.title.uppercase(),
+                    subtitle = doc.section,
+                    holderName = previewFields.firstOrNull()?.third?.takeIf { it != "—" } ?: "DANE EWIDENCYJNE",
+                    fields = previewFields.take(12),
+                    settings = rememberLegitimacyPreviewSettings(previewKey).value
+                )
                 Button(
                     onClick = {
                         runCatching {
