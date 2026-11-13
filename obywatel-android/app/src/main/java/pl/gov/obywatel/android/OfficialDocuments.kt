@@ -237,10 +237,10 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, on
             if(!readOnly) Button(onClick={
                 runCatching { OfficialDocumentStore.save(context,records+(type.id to local)); records=OfficialDocumentStore.load(context); status="Zapisano dane lokalnie." }
                     .onFailure { status="Błąd zapisu: ${it.message}" }
-            },modifier=Modifier.fillMaxWidth()) { Text("Zapisz dane") }
+            },modifier=Modifier.fillMaxWidth()) { Text("Zapisz zmiany") }
             DocumentPdfExportButton(type.title, local.mapKeys { (key, _) ->
                 if (key.startsWith("f")) type.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
-            })
+            }, documentType = type.id)
             if(status.isNotBlank()) Text(status,color=MaterialTheme.colorScheme.primary,style=MaterialTheme.typography.bodySmall)
             TextButton(onClick={selected=null;status=""}) { Text("Wróć do katalogu") }
         }
