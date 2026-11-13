@@ -992,27 +992,12 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var pendingImport by remember { mutableStateOf<Map<String, String>?>(null) }
     var importStatus by remember { mutableStateOf("") }
     var exportSnapshot by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var pendingExportUri by remember { mutableStateOf<Uri?>(null) }
     val exportVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/vcard")) { uri ->
-        if (uri != null) runCatching {
-            require(exportSnapshot.isNotEmpty()) { "Brak zapisanych danych do eksportu." }
-            val payload = VCardCodec.encodeArchive(exportSnapshot)
-            val bytes = payload.toByteArray(Charsets.UTF_8)
-            val output = context.contentResolver.openOutputStream(uri, "wt")
-                ?: error("Android nie udostępnił strumienia zapisu dla wybranego pliku.")
-            output.use {
-                it.write(bytes)
-                it.flush()
-            }
-            val savedBytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                ?: error("Nie można ponownie odczytać zapisanego pliku vCard.")
-            require(savedBytes.isNotEmpty()) { "Zapisany plik vCard jest pusty." }
-            require(savedBytes.contentEquals(bytes)) {
-                "Weryfikacja zapisu nie powiodła się: zawartość pliku różni się od eksportowanych danych."
-            }
-            "Zapisano ${exportSnapshot.size} pól (${bytes.size} bajtów) do pliku vCard."
-        }.onSuccess { importStatus = it }
-            .onFailure { importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}" }
-        else {
+        if (uri != null) {
+            pendingExportUri = uri
+            importStatus = "Wybrano miejsce zapisu. Potwierdź zapis archiwum; istniejący plik o tej nazwie może zostać zastąpiony."
+        } else {
             importStatus = "Eksport anulowany — plik nie został zapisany."
         }
     }
@@ -1292,10 +1277,23 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
                         onEditOtherDocuments = { key -> settingsDocumentEditor = key; showSettingsMenu = false },
                         onExportAll = {
+                            val catalogManifest = org.json.JSONArray().apply {
+                                documentDisplayOptions.distinctBy { it.first }.forEach { (id, title, _) ->
+                                    put(org.json.JSONObject().apply {
+                                        put("id", id)
+                                        put("title", title)
+                                        put("group", documentVisibilityGroup(id))
+                                    })
+                                }
+                            }.toString()
+                            val allCatalogPlacements = documentDisplayOptions.distinctBy { it.first }.associate { (id, _, _) ->
+                                id to (loadDocumentPlacements(context)[id] ?: if (id == "identity") "dashboard" else "hidden")
+                            }
                             exportSnapshot = DemoIdentityStore.load(context) +
                                 LegitimacyPreviewSettingsStore.exportAll(context) +
-                                loadDocumentPlacements(context).mapKeys { "dp_${it.key}" } +
+                                allCatalogPlacements.mapKeys { "dp_${it.key}" } +
                                 mapOf(
+                                    "documentCatalogManifest" to catalogManifest,
                                     "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
                                     "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
                                     "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
@@ -1662,6 +1660,41 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 }
             )
         }
+        pendingExportUri?.let { destinationUri ->
+            AlertDialog(
+                onDismissRequest = { pendingExportUri = null },
+                title = { Text("Potwierdzenie eksportu vCard") },
+                text = {
+                    Text("Zapiszesz ${exportSnapshot.size} pól oraz katalog dokumentów z ich grupami i ustawieniami widoczności. Jeżeli w wybranym miejscu istnieje plik o tej samej nazwie, jego zawartość zostanie zastąpiona. Czy kontynuować?")
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        runCatching {
+                            require(exportSnapshot.isNotEmpty()) { "Brak danych do eksportu." }
+                            val bytes = VCardCodec.encodeArchive(exportSnapshot).toByteArray(Charsets.UTF_8)
+                            val output = context.contentResolver.openOutputStream(destinationUri, "wt")
+                                ?: error("Android nie udostępnił strumienia zapisu dla wybranego pliku.")
+                            output.use { it.write(bytes); it.flush() }
+                            val savedBytes = context.contentResolver.openInputStream(destinationUri)?.use { it.readBytes() }
+                                ?: error("Nie można ponownie odczytać zapisanego pliku vCard.")
+                            require(savedBytes.isNotEmpty()) { "Zapisany plik vCard jest pusty." }
+                            require(savedBytes.contentEquals(bytes)) {
+                                "Weryfikacja zapisu nie powiodła się: zawartość pliku różni się od eksportowanych danych."
+                            }
+                            "Zapisano ${exportSnapshot.size} pól i katalog dokumentów (${bytes.size} bajtów) do pliku vCard."
+                        }.onSuccess { importStatus = it }
+                            .onFailure { importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}" }
+                        pendingExportUri = null
+                    }) { Text("Potwierdź zapis") }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        pendingExportUri = null
+                        importStatus = "Eksport anulowany — plik docelowy nie został zmieniony."
+                    }) { Text("Anuluj") }
+                }
+            )
+        }
         pendingImport?.let { incoming ->
             AlertDialog(
                 onDismissRequest = { pendingImport = null },
@@ -1682,7 +1715,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val profileValues = incoming.filterKeys {
                                 !it.startsWith("cs_") && !it.startsWith("dp_") &&
                                     it !in setOf(
-                                        "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "documentCatalogManifest", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
@@ -1705,8 +1738,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             incoming["localRegistryArchive"]?.let { pl.gov.obywatel.android.ui.registry.importLocalRegistryArchive(context, it) }
                             incoming["activityHistoryArchive"]?.let { importActivityHistoryArchive(context, it) }
                             LegitimacyPreviewSettingsStore.importAll(context, incoming)
-                            val importedPlacements = incoming.filterKeys { it.startsWith("dp_") }
-                                .mapKeys { it.key.removePrefix("dp_") }
+                            val knownDocumentIds = documentDisplayOptions.map { it.first }.toSet()
+                            val importedPlacements = incoming.filterKeys {
+                                it.startsWith("dp_") && it.removePrefix("dp_") in knownDocumentIds
+                            }.mapKeys { it.key.removePrefix("dp_") }
                                 .mapValues { (_, value) -> value }
                             if (importedPlacements.isNotEmpty()) {
                                 val mergedPlacements = loadDocumentPlacements(context).toMutableMap().apply {
@@ -1722,7 +1757,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val auxiliaryCount = incoming.keys.count {
                                 it.startsWith("cs_") || it.startsWith("dp_") ||
                                     it in setOf(
-                                        "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "documentCatalogManifest", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
