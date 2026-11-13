@@ -4205,6 +4205,16 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
             alpha = 0.30f,
             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
         )
+        // Delikatna, wspólna warstwa zabezpieczająca: samopodobna rozeta
+        // geometryczna pozostaje czytelna na wszystkich tłach kategorii.
+        Image(
+            painter = painterResource(R.drawable.tile_watermark_fractal),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.FillBounds,
+            alpha = 0.13f,
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+        )
     }
 }
 
@@ -4951,6 +4961,8 @@ private fun CredentialAppearanceEditorEntry(
         }
     }
 }
+
+@Composable
 private fun CredentialAppearanceSettingsScreen(
     documentKey: String,
     onBack: () -> Unit,
