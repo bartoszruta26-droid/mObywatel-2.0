@@ -208,19 +208,54 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("canonicalBasis", "Podstawa kanoniczna / statutowa", ""),
             Triple("termOfOffice", "Czas trwania urzędu / posługi", "")
         )
-        "professional", "professional_medical", "professional_education",
-        "professional_therapeutic", "professional_other" -> fields(
-            Triple("qualificationHolder", "Osoba posiadająca kwalifikację", ""),
-            Triple("profession", "Zawód / specjalność", ""),
-            Triple("qualificationName", "Nazwa kwalifikacji lub tytułu", ""),
-            Triple("qualificationLevel", "Poziom / stopień kwalifikacji", ""),
-            Triple("awardingInstitution", "Instytucja nadająca kwalifikację", ""),
-            Triple("certificateNumber", "Numer dyplomu / certyfikatu", ""),
-            Triple("issueDate", "Data uzyskania", "DD-MM-RRRR"),
-            Triple("validUntil", "Termin ważności / recertyfikacji", "DD-MM-RRRR / bezterminowo"),
-            Triple("professionalScope", "Zakres uprawnień / kompetencji", ""),
-            Triple("legalBasis", "Podstawa prawna / standard kwalifikacji", ""),
-            Triple("continuingEducation", "Doskonalenie zawodowe / punkty edukacyjne", "")
+        "professional_medical" -> fields(
+            Triple("medicalQualificationHolder", "Osoba posiadająca kwalifikację medyczną", ""),
+            Triple("medicalProfession", "Zawód medyczny / specjalność", ""),
+            Triple("medicalLicenseNumber", "Numer prawa wykonywania zawodu / rejestru", ""),
+            Triple("medicalChamber", "Samorząd zawodowy / izba", ""),
+            Triple("medicalSpecialty", "Specjalizacja / dziedzina", ""),
+            Triple("medicalAwardingBody", "Organ nadający kwalifikację", ""),
+            Triple("medicalIssueDate", "Data uzyskania uprawnienia", "DD-MM-RRRR"),
+            Triple("medicalValidUntil", "Termin ważności / weryfikacji", "DD-MM-RRRR / bezterminowo"),
+            Triple("medicalPracticeScope", "Zakres czynności i uprawnień", ""),
+            Triple("medicalRestrictions", "Ograniczenia / warunki wykonywania zawodu", ""),
+            Triple("medicalCpd", "Doskonalenie zawodowe", "")
+        )
+        "professional_education" -> fields(
+            Triple("educatorName", "Osoba posiadająca kwalifikację edukacyjną", ""),
+            Triple("educationProfession", "Zawód / funkcja edukacyjna", ""),
+            Triple("educationSubject", "Przedmiot / dziedzina nauczania", ""),
+            Triple("educationLevel", "Poziom i typ kształcenia", ""),
+            Triple("educationInstitution", "Uczelnia / placówka nadająca kwalifikację", ""),
+            Triple("educationCertificate", "Numer dyplomu / świadectwa", ""),
+            Triple("educationIssueDate", "Data uzyskania", "DD-MM-RRRR"),
+            Triple("educationTeachingScope", "Zakres uprawnień do nauczania", ""),
+            Triple("educationAccreditation", "Akredytacja / uznanie kwalifikacji", ""),
+            Triple("educationRenewal", "Termin aktualizacji / doskonalenia", "")
+        )
+        "professional_therapeutic" -> fields(
+            Triple("therapistName", "Osoba posiadająca kwalifikację terapeutyczną", ""),
+            Triple("therapyMethod", "Metoda / rodzaj terapii", ""),
+            Triple("therapyQualificationLevel", "Poziom przygotowania i kwalifikacji", ""),
+            Triple("therapyTrainingProvider", "Podmiot szkolący / certyfikujący", ""),
+            Triple("therapyCertificateNumber", "Numer certyfikatu", ""),
+            Triple("therapyIssueDate", "Data uzyskania kwalifikacji", "DD-MM-RRRR"),
+            Triple("therapyPracticeScope", "Zakres praktyki i kompetencji", ""),
+            Triple("therapyIndications", "Wskazania / zakres zastosowania", ""),
+            Triple("therapyContraindications", "Przeciwwskazania / ograniczenia", ""),
+            Triple("therapySupervision", "Wymagany nadzór / doskonalenie", "")
+        )
+        "professional_other" -> fields(
+            Triple("otherQualificationHolder", "Osoba posiadająca kwalifikację", ""),
+            Triple("otherProfession", "Zawód / funkcja", ""),
+            Triple("otherQualificationName", "Nazwa kwalifikacji / tytułu", ""),
+            Triple("otherQualificationLevel", "Poziom kwalifikacji", ""),
+            Triple("otherAwardingBody", "Instytucja nadająca", ""),
+            Triple("otherCertificateNumber", "Numer dokumentu", ""),
+            Triple("otherIssueDate", "Data uzyskania", "DD-MM-RRRR"),
+            Triple("otherValidUntil", "Termin ważności", "DD-MM-RRRR / bezterminowo"),
+            Triple("otherCompetenceScope", "Zakres kompetencji", ""),
+            Triple("otherLegalBasis", "Podstawa prawna / regulaminowa", "")
         )
         "organization_foundation" -> fields(
             Triple("foundationName", "Pełna nazwa fundacji", ""),
