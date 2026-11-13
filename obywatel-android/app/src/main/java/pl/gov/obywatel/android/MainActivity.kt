@@ -4449,6 +4449,7 @@ private fun DemoDocumentsScreen(
         }
         }
         if (categoryId != "all") {
+            DocumentOriginalAttachments(credentialKey)
             Text("Wygląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             OutlinedButton(
                 onClick = { onOpenDocumentAppearance(credentialKey) },
