@@ -205,7 +205,9 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, in
                 Text("Podgląd wyłącznie do odczytu. Edycja jest dostępna w Więcej → Ustawienia → dokumenty cywilne.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
-                GeneralDocumentOcrEditor("civil", local, context) { status = it }
+                if (!LocalDocumentOcrStageRendered.current) {
+                    GeneralDocumentOcrEditor("civil", local, context) { status = it }
+                }
                 type.fields.forEachIndexed { index, label ->
                     DocumentFieldEditor(
                         documentKey = type.id,
