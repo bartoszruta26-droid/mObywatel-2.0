@@ -4195,6 +4195,7 @@ private fun DemoDocumentsScreen(
             ) || categoryId.startsWith("catalog:")) {
             GeneralDocumentOcrEditor(categoryId, fields, context) { saveMessage = it }
         }
+        if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
         if (categoryId.startsWith("catalog:")) {
             val documentId = categoryId.removePrefix("catalog:")
             val fieldPrefix = "catalog_${documentId}_"
@@ -4655,13 +4656,7 @@ private fun DemoDocumentsScreen(
         }
         }
         if (categoryId != "all") {
-            DocumentOriginalAttachments(credentialKey)
             Text("Wygląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            OutlinedButton(
-                onClick = { onOpenDocumentAppearance(credentialKey) },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Edytuj wygląd graficzny") }
-            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
         }
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -4677,11 +4672,16 @@ private fun DemoDocumentsScreen(
                             .onFailure { saveMessage = "Błąd zapisu: ${it.localizedMessage ?: "nieznany błąd"}" }
                     },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Zapisz dane i zdjęcie") }
+                ) { Text("Zapisz dane") }
                 if (saveMessage.isNotBlank()) Text(saveMessage, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
         }
         if (categoryId != "all") {
+            OutlinedButton(
+                onClick = { onOpenDocumentAppearance(credentialKey) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Przejdź do edycji graficznej") }
+            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
             DocumentPdfExportButton(editorTitle, fields.toMap(), documentType = credentialKey)
         }
         Text(
