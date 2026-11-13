@@ -423,7 +423,159 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
                 Triple("assetSource", "Źródło zasobu", ""),
                 Triple("usageRights", "Prawa i zakres użycia", "")
             )
-            else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
+            documentId == "military_book" -> fields(
+            Triple("holderName", "Imię i nazwisko żołnierza", ""),
+            Triple("serviceNumber", "Numer ewidencyjny / wojskowy", ""),
+            Triple("peselOrId", "PESEL / identyfikator", ""),
+            Triple("militaryRank", "Stopień wojskowy", ""),
+            Triple("militaryCategory", "Kategoria zdolności do służby", ""),
+            Triple("serviceBranch", "Rodzaj sił zbrojnych / formacja", ""),
+            Triple("militaryUnit", "Jednostka wojskowa", ""),
+            Triple("serviceType", "Rodzaj służby", "zasadnicza / zawodowa / terytorialna / rezerwa"),
+            Triple("serviceStart", "Data rozpoczęcia służby", "DD-MM-RRRR"),
+            Triple("serviceEnd", "Data zakończenia / przeniesienia do rezerwy", "DD-MM-RRRR"),
+            Triple("bookSeriesNumber", "Seria i numer książeczki", ""),
+            Triple("issuingAuthority", "Organ wydający", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validityStatus", "Status dokumentu", "aktywny / archiwalny / do wymiany"),
+            Triple("sourceDocument", "Dokument źródłowy / podstawa wpisu", "")
+        )
+        documentId == "martial_arts" -> fields(
+            Triple("holderName", "Imię i nazwisko posiadacza", ""),
+            Triple("discipline", "Dyscyplina / styl sztuk walki", ""),
+            Triple("club", "Klub / szkoła / organizacja", ""),
+            Triple("rankGrade", "Stopień / pas / klasa", ""),
+            Triple("certificateNumber", "Numer legitymacji / certyfikatu", ""),
+            Triple("awardingOrganization", "Organizacja nadająca stopień", ""),
+            Triple("awardDate", "Data nadania stopnia", "DD-MM-RRRR"),
+            Triple("coach", "Trener / instruktor", ""),
+            Triple("instructorQualification", "Kwalifikacje instruktora", ""),
+            Triple("medicalRestrictions", "Ograniczenia udziału / uwagi zdrowotne", ""),
+            Triple("validity", "Ważność / status członkostwa", "")
+        )
+        documentId == "shooting_sport" -> fields(
+            Triple("holderName", "Imię i nazwisko posiadacza", ""),
+            Triple("sportOrganization", "Klub / stowarzyszenie strzeleckie", ""),
+            Triple("licenseNumber", "Numer licencji sportowej", ""),
+            Triple("licenseDiscipline", "Dyscypliny sportowe ujęte w licencji", ""),
+            Triple("licenseIssuer", "Organ wydający licencję", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validUntil", "Termin ważności", "DD-MM-RRRR"),
+            Triple("membershipNumber", "Numer członkowski", ""),
+            Triple("competitionClass", "Klasa / kategoria sportowa", ""),
+            Triple("competitionAchievements", "Osiągnięcia i wyniki zawodów", ""),
+            Triple("documentStatus", "Status licencji / dokumentu", "")
+        )
+        documentId == "archery" -> fields(
+            Triple("holderName", "Imię i nazwisko posiadacza", ""),
+            Triple("discipline", "Odmiana łucznictwa", "sportowe / terenowe / tradycyjne"),
+            Triple("club", "Klub / organizacja", ""),
+            Triple("licenseNumber", "Numer licencji / legitymacji", ""),
+            Triple("classification", "Klasa sportowa / stopień", ""),
+            Triple("equipmentCategory", "Kategoria sprzętowa / konkurencja", ""),
+            Triple("coach", "Trener / instruktor", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validUntil", "Termin ważności", "DD-MM-RRRR"),
+            Triple("achievements", "Osiągnięcia / wyniki zawodów", ""),
+            Triple("status", "Status członkostwa / licencji", "")
+        )
+        documentId == "tactical_training" -> fields(
+            Triple("participantName", "Imię i nazwisko uczestnika", ""),
+            Triple("courseName", "Nazwa szkolenia", ""),
+            Triple("trainingProvider", "Organizator / podmiot szkolący", ""),
+            Triple("trainingScope", "Zakres tematyczny szkolenia", ""),
+            Triple("trainingLevel", "Poziom / moduł", ""),
+            Triple("completionDate", "Data ukończenia", "DD-MM-RRRR"),
+            Triple("hours", "Liczba godzin", ""),
+            Triple("instructor", "Prowadzący / instruktor", ""),
+            Triple("certificateNumber", "Numer certyfikatu", ""),
+            Triple("assessment", "Sposób zaliczenia / wynik", ""),
+            Triple("legalBasis", "Podstawa organizacyjna / regulamin", ""),
+            Triple("status", "Status / ważność", "")
+        )
+        documentId == "survival_training" -> fields(
+            Triple("participantName", "Imię i nazwisko uczestnika", ""),
+            Triple("courseName", "Nazwa kursu / poziom", ""),
+            Triple("provider", "Organizator / podmiot szkolący", ""),
+            Triple("environment", "Środowisko szkolenia", "leśne / górskie / wodne / miejskie"),
+            Triple("modules", "Zrealizowane moduły", "pierwsza pomoc / nawigacja / łączność / bezpieczeństwo"),
+            Triple("completionDate", "Data ukończenia", "DD-MM-RRRR"),
+            Triple("hours", "Liczba godzin", ""),
+            Triple("instructor", "Instruktor / ratownik prowadzący", ""),
+            Triple("certificateNumber", "Numer certyfikatu", ""),
+            Triple("firstAidQualification", "Kwalifikacje pierwszej pomocy", ""),
+            Triple("validUntil", "Termin odnowienia, jeśli dotyczy", "DD-MM-RRRR"),
+            Triple("status", "Status dokumentu", "")
+        )
+        documentId == "security_guard" -> fields(
+            Triple("holderName", "Imię i nazwisko posiadacza", ""),
+            Triple("qualificationName", "Nazwa kwalifikacji / uprawnienia", ""),
+            Triple("registerNumber", "Numer wpisu do rejestru, jeśli dotyczy", ""),
+            Triple("certificateNumber", "Numer świadectwa / certyfikatu", ""),
+            Triple("issuingAuthority", "Organ / podmiot wydający", ""),
+            Triple("trainingProvider", "Podmiot szkolący", ""),
+            Triple("qualificationDate", "Data uzyskania kwalifikacji", "DD-MM-RRRR"),
+            Triple("validUntil", "Termin ważności / odnowienia", "DD-MM-RRRR"),
+            Triple("scope", "Zakres uprawnień wskazany w dokumencie", ""),
+            Triple("employer", "Pracodawca / agencja ochrony", ""),
+            Triple("medicalFitness", "Orzeczenie o zdolności, jeśli dotyczy", ""),
+            Triple("status", "Status wpisu / uprawnienia", "")
+        )
+        documentId == "defense_training" -> fields(
+            Triple("participantName", "Imię i nazwisko uczestnika", ""),
+            Triple("programName", "Nazwa programu / szkolenia obronnego", ""),
+            Triple("organizer", "Organizator / jednostka prowadząca", ""),
+            Triple("trainingType", "Rodzaj szkolenia", "powszechne / obywatelskie / specjalistyczne"),
+            Triple("scope", "Zakres szkolenia", ""),
+            Triple("completionDate", "Data ukończenia", "DD-MM-RRRR"),
+            Triple("hours", "Liczba godzin", ""),
+            Triple("certificateNumber", "Numer zaświadczenia", ""),
+            Triple("instructor", "Prowadzący", ""),
+            Triple("legalBasis", "Podstawa prawna / programowa", ""),
+            Triple("validUntil", "Termin aktualizacji, jeśli dotyczy", "DD-MM-RRRR"),
+            Triple("status", "Status dokumentu", "")
+        )
+        documentId == "historical_reenactment" -> fields(
+            Triple("holderName", "Imię i nazwisko rekonstruktora", ""),
+            Triple("reenactmentGroup", "Grupa / stowarzyszenie rekonstrukcyjne", ""),
+            Triple("membershipNumber", "Numer legitymacji członkowskiej", ""),
+            Triple("historicalPeriod", "Rekonstruowana epoka / okres historyczny", ""),
+            Triple("historicalFormation", "Formacja / środowisko historyczne", ""),
+            Triple("reenactmentRole", "Rola / funkcja odtwórcza", ""),
+            Triple("membershipStart", "Data przyjęcia do grupy", "DD-MM-RRRR"),
+            Triple("membershipStatus", "Status członkostwa", "aktywne / zawieszone / archiwalne"),
+            Triple("groupRepresentative", "Osoba upoważniona do potwierdzenia członkostwa", ""),
+            Triple("documentNumber", "Numer legitymacji", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validUntil", "Termin ważności, jeśli dotyczy", "DD-MM-RRRR")
+        )
+        documentId == "reenactment_qualification" -> fields(
+            Triple("holderName", "Imię i nazwisko uczestnika", ""),
+            Triple("qualificationTitle", "Nazwa kwalifikacji rekonstruktorskiej", ""),
+            Triple("historicalPeriod", "Epoka / okres historyczny", ""),
+            Triple("specialization", "Specjalizacja historyczna", ""),
+            Triple("trainingProvider", "Organizator szkolenia", ""),
+            Triple("trainingScope", "Zakres szkolenia i kompetencji", ""),
+            Triple("completionDate", "Data ukończenia", "DD-MM-RRRR"),
+            Triple("assessment", "Sposób i wynik weryfikacji", ""),
+            Triple("certificateNumber", "Numer certyfikatu", ""),
+            Triple("issuingAuthority", "Podmiot wydający", ""),
+            Triple("validUntil", "Termin aktualizacji, jeśli dotyczy", "DD-MM-RRRR")
+        )
+        documentId == "reenactment_event" -> fields(
+            Triple("participantName", "Imię i nazwisko uczestnika", ""),
+            Triple("eventName", "Nazwa wydarzenia / inscenizacji", ""),
+            Triple("eventOrganizer", "Organizator / instytucja", ""),
+            Triple("eventDate", "Data wydarzenia", "DD-MM-RRRR"),
+            Triple("eventLocation", "Miejsce wydarzenia", ""),
+            Triple("historicalPeriod", "Epoka / temat historyczny", ""),
+            Triple("reenactmentGroup", "Grupa reprezentowana przez uczestnika", ""),
+            Triple("participantRole", "Rola uczestnika", ""),
+            Triple("participationStatus", "Status udziału", "zgłoszony / potwierdzony / zrealizowany"),
+            Triple("authorizationNumber", "Numer zgłoszenia / potwierdzenia", ""),
+            Triple("organizerContact", "Kontakt organizatora", "")
+        )
+        else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
         }
 }
 
