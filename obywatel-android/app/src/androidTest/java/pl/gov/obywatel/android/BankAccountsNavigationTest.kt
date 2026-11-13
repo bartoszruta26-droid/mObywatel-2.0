@@ -115,11 +115,13 @@ class BankAccountsNavigationTest {
         expandEditorGroup("Dokumenty finansowe")
         composeRule.onNodeWithText("Konta bankowe").performScrollTo().performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Dane właściwe dla dokumentu").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Numer rachunku IBAN").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Waluta rachunku").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Zapisz dane").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Przejdź do edycji graficznej").performScrollTo().assertIsDisplayed()
+        // Potwierdź, że otwarto bezpośrednio dedykowany formularz rejestru rachunków,
+        // a nie katalog dokumentów ani sam podgląd.
+        composeRule.onNodeWithText("Rachunek bankowy 1").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Numer rachunku / IBAN").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Waluta (np. PLN, EUR, USD, CHF)").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Zapisz zmiany").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Edytuj wygląd graficzny").performScrollTo().assertIsDisplayed()
     }
 
     @Test
