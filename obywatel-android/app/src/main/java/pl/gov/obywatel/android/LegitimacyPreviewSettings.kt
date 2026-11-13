@@ -2164,7 +2164,7 @@ internal fun DocumentFieldEditor(
                     androidx.compose.material3.RadioButton(
                         selected = selectedSide == target,
                         onClick = { updateSide(target) },
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                     Text(
                         caption,
