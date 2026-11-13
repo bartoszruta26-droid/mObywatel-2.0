@@ -42,6 +42,9 @@ class DocumentGroupCatalogTest {
         assertTrue(isGroupedOcrArchiveField("groupedOcr_7f3a21"))
         assertFalse(isGroupedOcrArchiveField("groupedOcr:church:field_0"))
         assertFalse(isGroupedOcrArchiveField("groupedOcr_../../file"))
+        assertTrue(isSupportedDynamicDocumentField("loyalty12Number"))
+        assertTrue(isSupportedDynamicDocumentField("registry_foundation_notes"))
+        assertFalse(isSupportedDynamicDocumentField("unknownField_123"))
     }
 
     @Test
