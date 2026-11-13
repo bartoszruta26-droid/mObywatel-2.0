@@ -33,6 +33,18 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun armedServiceDocumentsAreVisibleByDefault() {
+        val armedIds = setOf(
+            "military_book", "martial_arts", "shooting_sport", "archery",
+            "tactical_training", "survival_training", "security_guard", "defense_training",
+            "historical_reenactment", "reenactment_qualification", "reenactment_event"
+        )
+        assertTrue(armedIds.all { defaultDocumentPlacements[it] == "dashboard" })
+        assertEquals("Służba zbrojna", documentVisibilityGroup("military_book"))
+        assertTrue("Służba zbrojna" in documentVisibilityGroupOrder)
+    }
+
+    @Test
     fun fixedGroupCatalogContainsNoEmptyGroupsOrDuplicateDocuments() {
         val ids = documentDisplayOptions.map { it.first }
         assertEquals(ids.size, ids.toSet().size)
