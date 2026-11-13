@@ -1224,7 +1224,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "loyalty" || documentId == "loyalty_cards" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
             documentId == "disability" -> showDisabilitySettings = true
             documentId == "registry" -> showRegistryEditor = true
-            documentId == "bank_accounts" -> settingsDocumentEditor = "bank_accounts"
+            documentId == "bank_accounts" -> settingsDocumentEditor = "bank_accounts:rod_bank_accounts"
             documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts:rod_bank_accounts"
             documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts:entity_bank_accounts"
             documentId == "family" -> settingsDocumentEditor = "family"
