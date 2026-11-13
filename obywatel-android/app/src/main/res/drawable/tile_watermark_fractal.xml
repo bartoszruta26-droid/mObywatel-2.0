@@ -1,89 +1,148 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="256dp"
-    android:height="160dp"
-    android:viewportWidth="256"
-    android:viewportHeight="160">
+    android:width="320dp"
+    android:height="200dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
 
-    <!-- Repeating geometric lattice: interlocking hexagons and recursive diamonds. -->
+    <!--
+      Fractal guilloche watermark.
+      The repeated four-way symmetry expresses harmony, truth and justice;
+      the interlaced heart/leaf curves are an ornamental reference to love.
+      Keep this artwork monochrome and low-contrast: the tile title remains primary.
+    -->
+
+    <!-- Continuous-looking lattice: repeated diamond cells and diagonal bonds. -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFFFF"
-        android:strokeAlpha="0.30"
-        android:strokeWidth="0.9"
-        android:pathData="M0,40 L32,22 L64,40 L96,22 L128,40 L160,22 L192,40 L224,22 L256,40
-            M0,120 L32,138 L64,120 L96,138 L128,120 L160,138 L192,120 L224,138 L256,120
-            M32,22 L32,58 L64,76 L64,112 L96,138
-            M96,22 L96,58 L128,76 L128,112 L160,138
-            M160,22 L160,58 L192,76 L192,112 L224,138
-            M224,22 L224,58 L256,76
-            M0,76 L32,58 L64,76 L96,58 L128,76 L160,58 L192,76 L224,58 L256,76" />
-
-    <!-- Main eight-fold rosette, built from nested self-similar diamond petals. -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeAlpha="0.42"
-        android:strokeWidth="1.15"
-        android:pathData="M190,18
-            C198,34 206,42 222,50 C206,58 198,66 190,82
-            C182,66 174,58 158,50 C174,42 182,34 190,18 Z
-            M190,28 C196,40 202,44 214,50 C202,56 196,60 190,72
-            C184,60 178,56 166,50 C178,44 184,40 190,28 Z
-            M190,38 C194,45 197,47 204,50 C197,53 194,55 190,62
-            C186,55 183,53 176,50 C183,47 186,45 190,38 Z" />
-
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeAlpha="0.34"
+        android:strokeAlpha="0.20"
         android:strokeWidth="0.85"
-        android:pathData="M190,8 L190,92 M148,50 L232,50
-            M160,20 L220,80 M220,20 L160,80
-            M169,20 L211,80 M211,20 L169,80
-            M190,18 C208,28 212,32 222,50 C212,68 208,72 190,82
-            C172,72 168,68 158,50 C168,32 172,28 190,18 Z" />
+        android:pathData="M0,25 L40,0 L80,25 L120,0 L160,25 L200,0 L240,25 L280,0 L320,25
+            M0,75 L40,50 L80,75 L120,50 L160,75 L200,50 L240,75 L280,50 L320,75
+            M0,125 L40,100 L80,125 L120,100 L160,125 L200,100 L240,125 L280,100 L320,125
+            M0,175 L40,150 L80,175 L120,150 L160,175 L200,150 L240,175 L280,150 L320,175
+            M40,0 L40,50 L80,75 L80,125 L120,150 L120,200
+            M120,0 L120,50 L160,75 L160,125 L200,150 L200,200
+            M200,0 L200,50 L240,75 L240,125 L280,150 L280,200
+            M280,0 L280,50 L320,75
+            M0,25 L40,50 L0,75
+            M0,125 L40,150 L0,175
+            M320,125 L280,150 L320,175" />
 
-    <!-- Smaller repeated rosettes create the recursive/fractal rhythm. -->
+    <!-- Main rosette: twelvefold radial petals, nested at three scales. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.35"
+        android:strokeWidth="1.05"
+        android:pathData="M160,28
+            C169,43 177,51 192,60 C177,69 169,77 160,92
+            C151,77 143,69 128,60 C143,51 151,43 160,28 Z
+            M160,36
+            C166,47 173,53 184,60 C173,67 166,73 160,84
+            C154,73 147,67 136,60 C147,53 154,47 160,36 Z
+            M160,44
+            C164,52 169,56 176,60 C169,64 164,68 160,76
+            C156,68 151,64 144,60 C151,56 156,52 160,44 Z" />
+
+    <!-- Equal-armed axis and concentric construction rings: balance and integrity. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.26"
+        android:strokeWidth="0.75"
+        android:pathData="M160,14 L160,106 M114,60 L206,60
+            M127,27 L193,93 M193,27 L127,93
+            M160,20
+            C184,20 200,36 200,60
+            C200,84 184,100 160,100
+            C136,100 120,84 120,60
+            C120,36 136,20 160,20 Z
+            M160,10
+            C188,10 210,32 210,60
+            C210,88 188,110 160,110
+            C132,110 110,88 110,60
+            C110,32 132,10 160,10 Z" />
+
+    <!-- Four smaller rosettes repeat the main motif at a reduced scale. -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFFFF"
         android:strokeAlpha="0.25"
         android:strokeWidth="0.8"
-        android:pathData="M54,8 C59,18 64,23 74,28 C64,33 59,38 54,48
-            C49,38 44,33 34,28 C44,23 49,18 54,8 Z
-            M54,16 C58,23 61,25 68,28 C61,31 58,33 54,40
-            C50,33 47,31 40,28 C47,25 50,23 54,16 Z
-            M54,88 C59,98 64,103 74,108 C64,113 59,118 54,128
-            C49,118 44,113 34,108 C44,103 49,98 54,88 Z
-            M54,96 C58,103 61,105 68,108 C61,111 58,113 54,120
-            C50,113 47,111 40,108 C47,105 50,103 54,96 Z" />
+        android:pathData="M56,12 C62,23 68,29 80,36 C68,43 62,49 56,60
+            C50,49 44,43 32,36 C44,29 50,23 56,12 Z
+            M56,22 C60,29 64,33 72,36 C64,39 60,43 56,50
+            C52,43 48,39 40,36 C48,33 52,29 56,22 Z
+            M264,12 C270,23 276,29 288,36 C276,43 270,49 264,60
+            C258,49 252,43 240,36 C252,29 258,23 264,12 Z
+            M264,22 C268,29 272,33 280,36 C272,39 268,43 264,50
+            C260,43 256,39 248,36 C256,33 260,29 264,22 Z
+            M56,140 C62,151 68,157 80,164 C68,171 62,177 56,188
+            C50,177 44,171 32,164 C44,157 50,151 56,140 Z
+            M56,150 C60,157 64,161 72,164 C64,167 60,171 56,178
+            C52,171 48,167 40,164 C48,161 52,157 56,150 Z
+            M264,140 C270,151 276,157 288,164 C276,171 270,177 264,188
+            C258,177 252,171 240,164 C252,157 258,151 264,140 Z
+            M264,150 C268,157 272,161 280,164 C272,167 268,171 264,178
+            C260,171 256,167 248,164 C256,161 260,157 264,150 Z" />
 
-    <!-- Recursive corner diamonds and fine construction lines. -->
+    <!-- Interlaced paired curves: a restrained heart/leaf-inspired guilloche. -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFFFF"
         android:strokeAlpha="0.22"
-        android:strokeWidth="0.7"
-        android:pathData="M8,8 L24,24 L8,40 L-8,24 Z
-            M24,8 L40,24 L24,40 L8,24 Z
-            M8,88 L24,104 L8,120 L-8,104 Z
-            M24,88 L40,104 L24,120 L8,104 Z
-            M232,88 L248,104 L232,120 L216,104 Z
-            M248,88 L264,104 L248,120 L232,104 Z
-            M110,8 L128,26 L146,8
-            M110,152 L128,134 L146,152
-            M110,8 L128,8 L128,26
-            M128,134 L128,152 L146,152" />
+        android:strokeWidth="0.75"
+        android:pathData="M112,126
+            C126,108 144,108 160,126
+            C176,144 194,144 208,126
+            M112,134
+            C126,116 144,116 160,134
+            C176,152 194,152 208,134
+            M112,142
+            C126,124 144,124 160,142
+            C176,160 194,160 208,142
+            M112,126
+            C126,144 144,144 160,126
+            C176,108 194,108 208,126
+            M112,134
+            C126,152 144,152 160,134
+            C176,116 194,116 208,134" />
 
-    <!-- Fine nested arcs suggest guilloche engraving without obscuring tile text. -->
+    <!-- Nested diamonds and fine radial facets in the corners. -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFFFF"
-        android:strokeAlpha="0.18"
-        android:strokeWidth="0.65"
-        android:pathData="M140,104 C154,90 168,90 182,104 C196,118 210,118 224,104
-            M140,112 C154,98 168,98 182,112 C196,126 210,126 224,112
-            M140,120 C154,106 168,106 182,120 C196,134 210,134 224,120
-            M80,48 C92,36 104,36 116,48 C128,60 140,60 152,48
-            M80,56 C92,44 104,44 116,56 C128,68 140,68 152,56" />
+        android:strokeAlpha="0.20"
+        android:strokeWidth="0.7"
+        android:pathData="M8,8 L24,24 L8,40 L-8,24 Z
+            M24,8 L40,24 L24,40 L8,24 Z
+            M8,160 L24,176 L8,192 L-8,176 Z
+            M24,160 L40,176 L24,192 L8,176 Z
+            M296,8 L312,24 L296,40 L280,24 Z
+            M312,8 L328,24 L312,40 L296,24 Z
+            M296,160 L312,176 L296,192 L280,176 Z
+            M312,160 L328,176 L312,192 L296,176 Z
+            M96,12 L112,28 L96,44 L80,28 Z
+            M224,12 L240,28 L224,44 L208,28 Z
+            M96,156 L112,172 L96,188 L80,172 Z
+            M224,156 L240,172 L224,188 L208,172 Z" />
+
+    <!-- Fine arcs, nested rings and short radial rays add engraving depth. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.16"
+        android:strokeWidth="0.6"
+        android:pathData="M16,92 C32,76 48,76 64,92 C80,108 96,108 112,92
+            M16,100 C32,84 48,84 64,100 C80,116 96,116 112,100
+            M208,92 C224,76 240,76 256,92 C272,108 288,108 304,92
+            M208,100 C224,84 240,84 256,100 C272,116 288,116 304,100
+            M144,8 C152,0 168,0 176,8
+            M144,192 C152,200 168,200 176,192
+            M8,60 C0,52 0,68 8,60
+            M312,60 C320,52 320,68 312,60
+            M160,2 L160,10 M160,110 L160,118
+            M102,60 L110,60 M210,60 L218,60" />
+
 </vector>
