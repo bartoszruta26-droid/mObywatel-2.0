@@ -20,18 +20,48 @@ class LegitimacyPreviewSettingsTest {
     }
 
     @Test
-    fun excessCredentialFieldsAreMovedToReverseSide() {
-        val portraitFields = (1..7).map { Triple("p$it", "Pole $it", "Wartość $it") }
-        val (portraitFront, portraitReverse) = splitCredentialFieldsForSides(portraitFields, "PIONOWA")
-        assertEquals(5, portraitFront.size)
-        assertEquals(2, portraitReverse.size)
-        assertEquals(portraitFields.drop(5), portraitReverse)
+    fun fieldsArePlacedOnlyOnTheExplicitlySelectedSide() {
+        val fields = (1..7).map { Triple("p$it", "Pole $it", "Wartość $it") }
+        val (front, reverse) = splitCredentialFieldsForSides(
+            fields,
+            "PIONOWA",
+            visibleFieldsConfigured = true,
+            visibleFieldKeys = fields.map { it.first }.toSet(),
+            fieldSides = mapOf(
+                "p1" to CREDENTIAL_FIELD_FRONT,
+                "p2" to CREDENTIAL_FIELD_BACK,
+                "p3" to CREDENTIAL_FIELD_HIDDEN
+            )
+        )
+        assertEquals(listOf("p1", "p4", "p5", "p6", "p7"), front.map { it.first })
+        assertEquals(listOf("p2"), reverse.map { it.first })
+        assertTrue("Ukryte i niewybrane pola nie mogą być automatycznie przenoszone na rewers.",
+            "p3" !in front.map { it.first } && "p3" !in reverse.map { it.first })
+    }
 
-        val landscapeFields = (1..10).map { Triple("l$it", "Pole $it", "Wartość $it") }
-        val (landscapeFront, landscapeReverse) = splitCredentialFieldsForSides(landscapeFields, "POZIOMA")
-        assertEquals(8, landscapeFront.size)
-        assertEquals(2, landscapeReverse.size)
-        assertEquals(landscapeFields.drop(8), landscapeReverse)
+    @Test
+    fun documentFieldOptionsMatchTextEditorKeysAndLabels() {
+        assertEquals(
+            listOf("idStatus", "idPreviousNumber", "idLossOrInvalidationDate"),
+            credentialFieldOptions("identity").takeLast(3).map { it.first }
+        )
+        assertEquals(
+            listOf("passportNumber", "passportCountry", "passportIssueDate", "passportExpiryDate",
+                "passportIssuer", "passportType", "passportHolderNames", "passportBirthPlace",
+                "passportCitizenship", "passportSex", "passportStatus", "passportLossDate"),
+            credentialFieldOptions("passport").map { it.first }
+        )
+        assertEquals(
+            listOf("familyDocNumber", "familyName", "familyLine", "familyRole", "familyRegistry",
+                "familyIssueDate", "familyExpiryDate", "familySource", "familyRegistryPlace",
+                "familyResidence", "familyFatherLine", "familyMotherLine", "familyNotes",
+                "familyHolderSignature", "familyRegistrarSignature"),
+            credentialFieldOptions("family").map { it.first }
+        )
+        val disabilityKeys = credentialFieldOptions("disability").map { it.first }
+        assertTrue("Pole sprawy musi istnieć w podglądzie.", "disabilityCaseNumber" in disabilityKeys)
+        assertTrue("Pole załącznika źródłowego musi istnieć w podglądzie.", "disabilitySourceAttachment" in disabilityKeys)
+        assertTrue("Podgląd nie może dodawać nieistniejącego pola PESEL o innym kluczu.", "pesel" !in disabilityKeys)
     }
 
     @Test
