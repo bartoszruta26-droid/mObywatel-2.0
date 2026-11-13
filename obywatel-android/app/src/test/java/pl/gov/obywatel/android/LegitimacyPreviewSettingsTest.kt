@@ -55,6 +55,8 @@ class LegitimacyPreviewSettingsTest {
         assertTrue("Podgląd Rodu musi mieć pola wynikające z formularza.",
             familyOptions.isNotEmpty() && familyOptions.none { it.first == "details" })
         val disabilityKeys = credentialFieldOptions("disability").map { it.first }
+        assertTrue("Podgląd nie może dopisywać ogólnej etykiety bez pola w edytorze.",
+            "details" !in disabilityKeys && "details" !in credentialFieldOptions("identity").map { it.first })
         assertTrue("Pole sprawy musi istnieć w podglądzie.", "disabilityCaseNumber" in disabilityKeys)
         assertTrue("Pole załącznika źródłowego musi istnieć w podglądzie.", "disabilitySourceAttachment" in disabilityKeys)
         assertTrue("Podgląd nie może dodawać nieistniejącego pola PESEL o innym kluczu.", "pesel" !in disabilityKeys)
