@@ -1315,7 +1315,20 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
         when (route.type) {
             DocumentRouteType.GROUP -> activeService = requireNotNull(route.destination)
-            DocumentRouteType.DOCUMENT -> openSettingsDocumentEditor(route.documentId)
+            DocumentRouteType.DOCUMENT -> {
+                // Kafelek dokumentu służy do podglądu; edycja pozostaje dostępna
+                // wyłącznie z ustawień dokumentu.
+                showDocumentEditorCatalog = false
+                showSettingsMenu = false
+                showDemoDocuments = false
+                showDocumentsEditor = false
+                showRegistryEditor = false
+                showDisabilitySettings = false
+                showBankAccounts = false
+                settingsDocumentEditor = null
+                activeService = null
+                selectedDocumentId = route.documentId
+            }
             DocumentRouteType.SPECIALIZED -> when (route.destination) {
                 "registry_extract" -> openSettingsDocumentEditor("registry")
                 "children" -> openSettingsDocumentEditor("children")
