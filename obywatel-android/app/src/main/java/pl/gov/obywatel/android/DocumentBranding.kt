@@ -230,7 +230,7 @@ internal object DocumentBrandStore {
                 val lower = name.lowercase(Locale.ROOT)
                 val kind = when {
                     name.startsWith("tile_watermark_") -> "Grafika wektorowa tła kafelków"
-                    name.startsWith("tile_ic_") -> "Ikona wektorowa kafelka"
+                    name.startsWith("tile_ic_") || name.startsWith("mob_") || name.startsWith("service_") -> "Ikona wektorowa kafelka"
                     name in setOf(
                         "file_00000000532082108d561dcd2385f8f9",
                         "file_0000000077d4820aa3b7115d85ab9a7d",
@@ -264,7 +264,7 @@ internal object DocumentBrandStore {
         }
     }
     private val builtInAssets = listOf(
-        BrandAsset("builtin_hologram_mandala", "Zasoby aplikacji", "Animowany hologram", "Mandala holograficzna — animowana", "builtin:mandala_hologram.gif", rights = "Grafika autorska wygenerowana dla aplikacji"),
+        BrandAsset("builtin_hologram_mandala", "Zasoby aplikacji", "Animowany hologram", "Mandala holograficzna — animowana", "builtin:mandala_hologram.gif.b64", rights = "Grafika autorska wygenerowana dla aplikacji"),
         BrandAsset("builtin_polish_emblem", "Zasoby aplikacji", "Godło", "Godło Polski — grafika zasobów aplikacji", "resource:institutions_eagle_emblem"),
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
         BrandAsset("builtin_rodu_dab", "Katalog heraldyczny", "Herb", "Herb rodowy — dąb", "builtin:heraldry/herb-rodu-klasyczny.svg"),
@@ -342,11 +342,12 @@ internal object DocumentBrandStore {
                 drawable.draw(canvas)
             }
         }
-        val bytes = if (asset.file.startsWith("builtin:")) {
+        val storedBytes = if (asset.file.startsWith("builtin:")) {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
         } else {
             crypt(File(dir(context), asset.file).readBytes(), false)
         }
+        val bytes = if (asset.file.endsWith(".b64")) android.util.Base64.decode(String(storedBytes, Charsets.US_ASCII), android.util.Base64.DEFAULT) else storedBytes
         decodeImage(bytes)
     }.getOrNull()
     private fun assignmentKeys(documentType: String, owner: String): List<String> {
@@ -400,7 +401,8 @@ internal object DocumentBrandStore {
             if (id == 0) return null
             return null // Android drawable resources are referenced by stable resource name, not exported as opaque files.
         } else if (asset.file.startsWith("builtin:")) {
-            context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
+            val stored = context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
+            if (asset.file.endsWith(".b64")) android.util.Base64.decode(String(stored, Charsets.US_ASCII), android.util.Base64.DEFAULT) else stored
         } else crypt(File(dir(context), asset.file).readBytes(), false)
     }.getOrNull()
 
