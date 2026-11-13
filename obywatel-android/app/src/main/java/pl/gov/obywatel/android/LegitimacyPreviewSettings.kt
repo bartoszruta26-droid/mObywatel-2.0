@@ -2159,7 +2159,7 @@ internal fun DocumentFieldEditor(
                     androidx.compose.material3.RadioButton(
                         selected = selectedSide == target,
                         onClick = {
-                            val current = binding.value
+                            val current = settingsState.value
                             val updated = current.copy(
                                 fieldSides = current.fieldSides + (fieldKey to target),
                                 visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
@@ -2167,7 +2167,7 @@ internal fun DocumentFieldEditor(
                                 visibleFieldsConfigured = true
                             )
                             LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
-                            binding.value = updated
+                            settingsState.value = updated
                         }
                     )
                     Text(caption, style = MaterialTheme.typography.labelSmall)
