@@ -43,6 +43,11 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
     }
 
+    private fun expandEditorGroup(title: String) {
+        composeRule.onNodeWithText(title).performScrollTo().performClick()
+        composeRule.waitForIdle()
+    }
+
     private fun enterDemoMode() {
         // Plansza z godłem jest wyświetlana przez 1,5 s przed ekranem powitalnym.
         composeRule.waitUntil(timeoutMillis = 5_000) {
@@ -62,7 +67,7 @@ class BankAccountsNavigationTest {
         openSettingsMenu()
         composeRule.onNodeWithText("Widoczność dokumentów").performScrollTo().performClick()
         composeRule.waitForIdle()
-        expandVisibilityGroup("Dokumenty firmowe i podmiotowe")
+        expandVisibilityGroup("Dokumenty finansowe")
         composeRule.onNodeWithTag("document-placement-bank_accounts-dashboard")
             .performScrollTo().performClick()
         composeRule.waitForIdle()
@@ -103,22 +108,18 @@ class BankAccountsNavigationTest {
     }
 
     @Test
-    fun settingsKeepBankAccountsEditable() {
-        enterDemoMode()
-        composeRule.onNodeWithContentDescription("Więcej").performClick()
+    fun settingsOpenDedicatedBankAccountEditorFromDocumentCatalog() {
+        openSettingsMenu()
+        composeRule.onNodeWithText("Edytuj dane dokumentów").performScrollTo().performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Ustawienia").performScrollTo().performClick()
+        expandEditorGroup("Dokumenty finansowe")
         composeRule.onNodeWithText("Konta bankowe").performScrollTo().performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithTag("bank-accounts-screen-title").assertIsDisplayed()
-        composeRule.onNodeWithText("Rejestr posiadanych rachunków bankowych (PLN i waluty obce)")
-            .performScrollTo()
-            .performClick()
-        composeRule.waitForIdle()
-        // Kontrolki formularza leżą niżej w przewijanym ekranie.
-        composeRule.onNodeWithText("Dodaj rachunek").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Zapisz zmiany").performScrollTo().assertIsDisplayed()
-        assertTrue(composeRule.onAllNodesWithText("Podgląd wyłącznie do odczytu.", substring = true).fetchSemanticsNodes().isEmpty())
+        composeRule.onNodeWithText("Dane właściwe dla dokumentu").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Numer rachunku IBAN").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Waluta rachunku").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Zapisz dane").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Przejdź do edycji graficznej").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -210,9 +211,12 @@ class BankAccountsNavigationTest {
     @Test
     fun individualCredentialEditorExposesBackgroundSelectors() {
         openSettingsMenu()
+        composeRule.onNodeWithText("Edytuj dane dokumentów").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        expandEditorGroup("Dokumenty zawodowe i edukacyjne")
         composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().performClick()
         composeRule.waitForIdle()
-        composeRule.onNodeWithText("Edytuj wygląd graficzny").performScrollTo().performClick()
+        composeRule.onNodeWithText("Przejdź do edycji graficznej").performScrollTo().performClick()
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText("Tło legitymacji").performScrollTo().assertIsDisplayed()
