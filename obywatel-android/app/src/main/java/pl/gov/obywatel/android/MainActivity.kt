@@ -2932,6 +2932,33 @@ private fun DocumentVisibilitySettingsScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.weight(1f)
                                 )
+                                Box {
+                                    TextButton(
+                                        onClick = { expandedDocumentIcon = if (expandedDocumentIcon == id) null else id },
+                                        modifier = Modifier.testTag("document-icon-selector-$id")
+                                    ) { Text("Ikona", style = MaterialTheme.typography.labelSmall) }
+                                    DropdownMenu(
+                                        expanded = expandedDocumentIcon == id,
+                                        onDismissRequest = { expandedDocumentIcon = null }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("Automatycznie — ikona przypisana do dokumentu") },
+                                            onClick = {
+                                                onDocumentIconOverridesChange(documentIconOverrides - id)
+                                                expandedDocumentIcon = null
+                                            }
+                                        )
+                                        documentIconChoices.forEach { (resource, label) ->
+                                            DropdownMenuItem(
+                                                text = { Text(label) },
+                                                onClick = {
+                                                    onDocumentIconOverridesChange(documentIconOverrides + (id to resource))
+                                                    expandedDocumentIcon = null
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
                                 listOf("dashboard" to "Dokument", "other" to "Inny dokument", "hidden" to "Ukryj").forEach { (value, label) ->
                                     Row(
                                         modifier = Modifier.testTag("document-placement-$id-$value")
