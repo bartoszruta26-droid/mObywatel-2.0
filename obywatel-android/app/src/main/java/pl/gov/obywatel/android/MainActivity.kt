@@ -828,6 +828,11 @@ internal val documentDisplayOptions = (listOf(
         }
         Triple(id, title, icon)
     }
+) + churchGraphicDocumentTargets().map { (id, title) -> Triple(id, title, R.drawable.tile_ic_church_outline) } +
+    familyEntityGraphicDocumentTargets().map { (id, title) ->
+        Triple(id, title, if (id.startsWith("rod_")) R.drawable.documents_family_record else R.drawable.lib_ic_building)
+    } +
+    officialGraphicDocumentTargets().map { (id, title) -> Triple(id, title, R.drawable.lib_ic_document) }
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
@@ -1184,7 +1189,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showDocumentsEditor = false; showSettingsMenu = true },
                         onOpenDocumentAppearance = { key -> credentialAppearanceTarget = key }
                     )
-                    showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }, showOriginalAttachment = false) {
                         EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
                     }
                     settingsDocumentEditor == "imported" -> CredentialAppearanceEditorEntry("imported", onOpenAppearance = { credentialAppearanceTarget = it }) {
@@ -1196,23 +1201,23 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
-                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
+                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false, showOriginalAttachment = false) {
                         FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
+                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false, showOriginalAttachment = false) {
                         FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
+                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false, showOriginalAttachment = false) {
                         FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
+                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false, showOriginalAttachment = false) {
                         ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
+                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false, showOriginalAttachment = false) {
                         OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
@@ -2863,9 +2868,9 @@ private fun DocumentVisibilitySettingsScreen(
                 Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
             }
         }
-        val groupedVisibilityDocuments = documentDisplayOptions.groupBy { (id, _, _) ->
-            documentVisibilityGroup(id)
-        }
+        val groupedVisibilityDocuments = documentDisplayOptions
+            .distinctBy { it.first }
+            .groupBy { (id, _, _) -> documentVisibilityGroup(id) }
         val visibilityGroupOrder = listOf(
             "Dokumenty osobiste i tożsamościowe",
             "Dokumenty cywilne i urzędowe",
@@ -2904,52 +2909,41 @@ private fun DocumentVisibilitySettingsScreen(
                     }
                     if (expanded) {
                         groupDocuments.forEach { (id, title, iconRes) ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        Image(painter = painterResource(resolveDocumentIconResource(
-                                            LocalContext.current, id, defaultDocumentIcon, documentIconOverrides
-                                        )), contentDescription = null, modifier = Modifier.size(42.dp))
-                                        Text(title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
-                                            modifier = Modifier.weight(1f))
-                                    }
-                                    Box {
-                                        OutlinedButton(onClick = { expandedDocumentIcon = id }, modifier = Modifier.fillMaxWidth().testTag("document-icon-selector-$id")) {
-                                            val selected = documentIconOverrides[id]
-                                            Text(if (selected == null) "Ikona domyślna: " +
-                                                (if (defaultDocumentIcon == "automatic") "automatyczna" else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second.orEmpty())
-                                                else documentIconChoices.firstOrNull { it.first == selected }?.second ?: "Ikona indywidualna")
-                                        }
-                                        DropdownMenu(expanded = expandedDocumentIcon == id, onDismissRequest = { expandedDocumentIcon = null }) {
-                                            DropdownMenuItem(text = { Text("Użyj ikony domyślnej") }, onClick = {
-                                                onDocumentIconOverridesChange(documentIconOverrides - id); expandedDocumentIcon = null
-                                            })
-                                            documentIconChoices.forEach { (resource, label) ->
-                                                DropdownMenuItem(text = { Text(label) }, onClick = {
-                                                    onDocumentIconOverridesChange(documentIconOverrides + (id to resource))
-                                                    expandedDocumentIcon = null
-                                                })
-                                            }
-                                        }
-                                    }
-                                    listOf("dashboard" to "Dokumenty", "other" to "Inne dokumenty", "hidden" to "Ukryj").forEach { (value, label) ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(9.dp))
-                                                .background(if (documentPlacements[id] == value) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-                                                .clickable { onDocumentPlacementsChange(documentPlacements + (id to value)) }
-                                                .testTag("document-placement-$id-$value")
-                                                .padding(horizontal = 8.dp, vertical = 3.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            RadioButton(
-                                                selected = documentPlacements[id] == value,
-                                                onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) }
-                                            )
-                                            Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
-                                        }
+                                Image(
+                                    painter = painterResource(resolveDocumentIconResource(
+                                        LocalContext.current, id, defaultDocumentIcon, documentIconOverrides
+                                    )),
+                                    contentDescription = "Ikona: $title",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                                Text(
+                                    title,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                listOf("dashboard" to "Dok.", "other" to "Inne", "hidden" to "Ukryj").forEach { (value, label) ->
+                                    Row(
+                                        modifier = Modifier.testTag("document-placement-$id-$value")
+                                            .clickable { onDocumentPlacementsChange(documentPlacements + (id to value)) },
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(0.dp)
+                                    ) {
+                                        RadioButton(
+                                            selected = documentPlacements[id] == value,
+                                            onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) },
+                                            modifier = Modifier.size(34.dp)
+                                        )
+                                        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                             }
@@ -4494,6 +4488,7 @@ private fun CredentialAppearanceEditorEntry(
     onOpenAppearance: (String) -> Unit,
     showAppearanceAction: Boolean = true,
     showOcrStage: Boolean = true,
+    showOriginalAttachment: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -4526,6 +4521,11 @@ private fun CredentialAppearanceEditorEntry(
                         }
                     }
                 }
+            }
+        }
+        if (showOriginalAttachment) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                DocumentOriginalAttachments(documentKey)
             }
         }
         Box(Modifier.weight(1f)) { content() }
