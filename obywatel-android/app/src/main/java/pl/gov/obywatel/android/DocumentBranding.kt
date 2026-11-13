@@ -724,6 +724,18 @@ internal fun defaultDocumentBackground(context: Context, title: String): Bitmap?
             normalized.contains("profil") || normalized.contains("obywatel") ->
             R.drawable.doc_01_dowod_tozsamosci_obywatelski
 
+        // Dokumenty służby zbrojnej — legitymacje i certyfikaty otrzymują
+        // tła odpowiadające rodzajowi dokumentu zamiast ogólnego baneru.
+        normalized.contains("wojskow") || normalized.contains("sztuk walki") ||
+            normalized.contains("strzeleck") || normalized.contains("łucznicz") ||
+            normalized.contains("lucznicz") || normalized.contains("ochroniarsk") ->
+            R.drawable.doc_02_legitymacja_zawodowa
+        normalized.contains("rekonstrukc") ->
+            R.drawable.doc_06_przynaleznosc_rodowa_organizacyjna
+        normalized.contains("taktycz") || normalized.contains("surwiwal") ||
+            normalized.contains("szkolenia obronnego") || normalized.contains("certyfikat") ->
+            R.drawable.doc_03_certyfikat_ukonczenia_kursu
+
         // Legitymacje i dokumenty zawodowe.
         normalized.contains("poselsk") || normalized.contains("senatorsk") || normalized.contains("parlament") ->
             R.drawable.documents_deputy_legitimacy
