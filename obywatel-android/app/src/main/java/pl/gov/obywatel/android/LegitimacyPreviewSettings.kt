@@ -2127,6 +2127,7 @@ internal fun DocumentFieldEditor(
         fieldKey, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
     )
     val context = LocalContext.current
+    val compactLayout = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 600
 
     fun updateSide(target: String) {
         val current = settingsState.value
@@ -2140,22 +2141,11 @@ internal fun DocumentFieldEditor(
         settingsState.value = updated
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { Text(label) },
-            placeholder = { Text(placeholder) },
-            modifier = Modifier.weight(1f),
-            minLines = minLines,
-            maxLines = maxLines
-        )
+    @Composable
+    fun SideSelector() {
         Column(
-            modifier = Modifier.widthIn(min = 176.dp, max = 216.dp),
+            modifier = if (compactLayout) Modifier.fillMaxWidth()
+                else Modifier.widthIn(min = 176.dp, max = 216.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             listOf(
@@ -2176,13 +2166,45 @@ internal fun DocumentFieldEditor(
                         selected = selectedSide == target,
                         onClick = { updateSide(target) }
                     )
-                    Text(
-                        caption,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Text(caption, style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface)
                 }
             }
+        }
+    }
+
+    if (compactLayout) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                label = { Text(label) },
+                placeholder = { Text(placeholder) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = minLines,
+                maxLines = maxLines
+            )
+            SideSelector()
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                label = { Text(label) },
+                placeholder = { Text(placeholder) },
+                modifier = Modifier.weight(1f),
+                minLines = minLines,
+                maxLines = maxLines
+            )
+            SideSelector()
         }
     }
 }
