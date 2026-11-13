@@ -5470,7 +5470,13 @@ private fun AdditionalInformationSection(
 }
 
 @Composable
-private fun DemoDataField(key: String, label: String, fields: MutableMap<String, String>, placeholder: String = "Wpisz dane") {
+private fun DemoDataField(
+    key: String,
+    label: String,
+    fields: MutableMap<String, String>,
+    placeholder: String = "Wpisz dane",
+    storageKey: String = key
+) {
     val binding = LocalCredentialFieldVisibility.current
     val settings = binding?.settings?.value
     val selectableKeys = binding?.let { credentialFieldOptions(it.documentKey).map { option -> option.first }.toSet() }.orEmpty()
@@ -5481,8 +5487,8 @@ private fun DemoDataField(key: String, label: String, fields: MutableMap<String,
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
-            value = fields[key] ?: "",
-            onValueChange = { fields[key] = it },
+            value = fields[storageKey] ?: "",
+            onValueChange = { fields[storageKey] = it },
             modifier = Modifier.weight(1f),
             label = { Text(label) },
             placeholder = { Text(placeholder) },
