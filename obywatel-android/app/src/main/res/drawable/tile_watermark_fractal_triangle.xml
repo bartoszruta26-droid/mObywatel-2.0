@@ -1,0 +1,48 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="200dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+    <!-- Trójkątny ornament fraktalny: symetria, powtarzalność i czytelna hierarchia detalu. -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.24" android:strokeWidth="0.9"
+        android:pathData="M160,8 L306,184 L14,184 Z M160,22 L292,176 L28,176 Z M160,38 L274,168 L46,168 Z"/>
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.18" android:strokeWidth="0.7"
+        android:pathData="M160,8 L160,184 M14,184 L233,96 M306,184 L87,96 M87,96 L233,96
+            M160,22 L28,176 M160,22 L292,176 M46,168 L274,168
+            M160,38 L160,168 M46,168 L233,96 M274,168 L87,96"/>
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.39" android:strokeWidth="1.0"
+        android:pathData="M160,66 C169,80 180,89 194,96 C180,103 169,112 160,126
+            C151,112 140,103 126,96 C140,89 151,80 160,66 Z
+            M160,76 C166,87 174,92 184,96 C174,100 166,105 160,116
+            C154,105 146,100 136,96 C146,92 154,87 160,76 Z
+            M160,85 C164,91 169,94 176,96 C169,98 164,101 160,107
+            C156,101 151,98 144,96 C151,94 156,91 160,85 Z"/>
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.26" android:strokeWidth="0.75"
+        android:pathData="M160,30 C166,40 172,45 182,50 C172,55 166,60 160,70
+            C154,60 148,55 138,50 C148,45 154,40 160,30 Z
+            M160,122 C166,132 172,137 182,142 C172,147 166,152 160,162
+            C154,152 148,147 138,142 C148,137 154,132 160,122 Z
+            M52,158 C62,153 68,147 73,137 C78,147 84,153 94,158
+            C84,163 78,169 73,179 C68,169 62,163 52,158 Z
+            M226,158 C236,153 242,147 247,137 C252,147 258,153 268,158
+            C258,163 252,169 247,179 C242,169 236,163 226,158 Z"/>
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.19" android:strokeWidth="0.65"
+        android:pathData="M78,92 C96,74 116,74 134,92 C152,110 168,110 186,92
+            M72,100 C94,78 118,78 138,100 C158,122 174,122 194,100
+            M242,92 C224,74 204,74 186,92 C168,110 152,110 134,92
+            M248,100 C226,78 202,78 182,100 C162,122 146,122 126,100
+            M96,132 C116,116 132,116 148,132 M224,132 C204,116 188,116 172,132"/>
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.18" android:strokeWidth="0.7"
+        android:pathData="M160,8 L172,22 L160,36 L148,22 Z
+            M14,184 L28,170 L42,184 L28,198 Z
+            M306,184 L292,170 L278,184 L292,198 Z
+            M160,48 L170,58 L160,68 L150,58 Z
+            M73,137 L83,147 L73,157 L63,147 Z
+            M247,137 L257,147 L247,157 L237,147 Z"/>
+</vector>
