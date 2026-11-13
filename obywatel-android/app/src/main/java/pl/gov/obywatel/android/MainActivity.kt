@@ -2312,13 +2312,13 @@ private fun DocumentDetailsScreen(
         }
     }
     val options = credentialFieldOptions(normalizedId)
-    val selectedOptions = if (!settings.visibleFieldsConfigured) options
-        else options.filter { it.first in settings.visibleFields }
-    val previewFields = selectedOptions.map { (key, label) ->
+    val previewFields = options.map { (key, label) ->
         Triple(key, label, previewValues[key].orEmpty().ifBlank { "—" })
     }
     val (frontPreviewFields, reversePreviewFields) =
-        splitCredentialFieldsForSides(previewFields, settings.orientation)
+        splitCredentialFieldsForSides(
+            previewFields, settings.orientation, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
+        )
     val holder = when {
         previewValues["studentNames"].orEmpty().isNotBlank() -> previewValues["studentNames"].orEmpty()
         previewValues["passportHolderNames"].orEmpty().isNotBlank() -> previewValues["passportHolderNames"].orEmpty()
@@ -5001,23 +5001,47 @@ private fun CredentialAppearanceSettingsScreen(
         }
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Pola wyświetlane na legitymacji", fontWeight = FontWeight.Bold)
+                Text("Miejsce wyświetlania każdego pola", fontWeight = FontWeight.Bold)
+                Text("Wybierz osobno dla każdej danej: ukryta, awers albo rewers. Rewers pozostaje ukryty, dopóki go nie włączysz.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 options.forEach { (key, label) ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = !state.value.visibleFieldsConfigured || key in state.value.visibleFields,
-                            onCheckedChange = { checked ->
-                                val current = if (state.value.visibleFieldsConfigured) state.value.visibleFields
-                                    else options.map { it.first }.toSet()
-                                val updated = state.value.copy(
-                                    visibleFields = if (checked) current + key else current - key,
-                                    visibleFieldsConfigured = true
-                                )
-                                LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
-                                state.value = updated
+                    val side = credentialFieldSide(key, state.value.visibleFieldsConfigured, state.value.visibleFields, state.value.fieldSides)
+                    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(
+                                CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                                CREDENTIAL_FIELD_FRONT to "Awers",
+                                CREDENTIAL_FIELD_BACK to "Rewers"
+                            ).forEach { (target, caption) ->
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)
+                                    .clickable {
+                                        val updated = state.value.copy(
+                                            fieldSides = state.value.fieldSides + (key to target),
+                                            visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) state.value.visibleFields - key
+                                                else state.value.visibleFields + key,
+                                            visibleFieldsConfigured = true
+                                        )
+                                        LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                                        state.value = updated
+                                    }) {
+                                    androidx.compose.material3.RadioButton(
+                                        selected = side == target,
+                                        onClick = {
+                                            val updated = state.value.copy(
+                                                fieldSides = state.value.fieldSides + (key to target),
+                                                visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) state.value.visibleFields - key
+                                                    else state.value.visibleFields + key,
+                                                visibleFieldsConfigured = true
+                                            )
+                                            LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                                            state.value = updated
+                                        }
+                                    )
+                                    Text(caption, style = MaterialTheme.typography.labelSmall)
+                                }
                             }
-                        )
-                        Text(label, style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
             }
@@ -5491,7 +5515,9 @@ private fun DemoDataField(key: String, label: String, fields: MutableMap<String,
     val binding = LocalCredentialFieldVisibility.current
     val settings = binding?.settings?.value
     val selectableKeys = binding?.let { credentialFieldOptions(it.documentKey).map { option -> option.first }.toSet() }.orEmpty()
-    val checked = settings?.let { !it.visibleFieldsConfigured || key in it.visibleFields } ?: true
+    val side = settings?.let {
+        credentialFieldSide(key, it.visibleFieldsConfigured, it.visibleFields, it.fieldSides)
+    } ?: CREDENTIAL_FIELD_FRONT
     val context = LocalContext.current
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -5504,20 +5530,43 @@ private fun DemoDataField(key: String, label: String, fields: MutableMap<String,
             singleLine = true
         )
         if (binding != null && binding.documentKey.isNotBlank() && key in selectableKeys) {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = { selected ->
-                    val current = if (settings?.visibleFieldsConfigured == true) settings.visibleFields
-                        else credentialFieldOptions(binding.documentKey).map { it.first }.toSet()
-                    val next = if (selected) current + key else current - key
-                    val updated = (settings ?: LegitimacyPreviewSettings()).copy(
-                        visibleFields = next,
-                        visibleFieldsConfigured = true
-                    )
-                    LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
-                    binding.settings.value = updated
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    listOf(
+                        CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                        CREDENTIAL_FIELD_FRONT to "Awers",
+                        CREDENTIAL_FIELD_BACK to "Rewers"
+                    ).forEach { (target, caption) ->
+                        Row(Modifier.weight(1f).clickable {
+                            val currentSettings = binding.settings.value
+                            val updated = currentSettings.copy(
+                                fieldSides = currentSettings.fieldSides + (key to target),
+                                visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) currentSettings.visibleFields - key
+                                    else currentSettings.visibleFields + key,
+                                visibleFieldsConfigured = true
+                            )
+                            LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
+                            binding.settings.value = updated
+                        }, verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.material3.RadioButton(
+                                selected = side == target,
+                                onClick = {
+                                    val currentSettings = binding.settings.value
+                                    val updated = currentSettings.copy(
+                                        fieldSides = currentSettings.fieldSides + (key to target),
+                                        visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) currentSettings.visibleFields - key
+                                            else currentSettings.visibleFields + key,
+                                        visibleFieldsConfigured = true
+                                    )
+                                    LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
+                                    binding.settings.value = updated
+                                }
+                            )
+                            Text(caption, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
-            )
+            }
         }
     }
 }
