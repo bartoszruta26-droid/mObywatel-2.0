@@ -487,6 +487,9 @@ private val legacyDocumentEditorFieldKeys = setOf(
     "personExtraVerifiedAt", "personExtraVerifiedBy", "personExtraNotes"
 )
 
+internal fun isGroupedOcrArchiveField(key: String): Boolean =
+    key.matches(Regex("groupedOcr_[0-9a-f]{1,8}"))
+
 internal fun documentEditorImportableFieldKeys(): Set<String> =
     documentEditorFieldKeys() + legacyDocumentEditorFieldKeys +
         documentDisplayOptions.distinctBy { it.first }.map { (id, _, _) -> "${id}OcrText" } +
