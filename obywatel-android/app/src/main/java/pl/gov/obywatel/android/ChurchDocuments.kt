@@ -199,13 +199,13 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (readOnly) {
-                val settings = rememberLegitimacyPreviewSettings(brandDocumentType).value.copy(visibleFieldsConfigured = false)
-                UnifiedCredentialCard(
+                val settings = rememberLegitimacyPreviewSettings(brandDocumentType).value
+                CredentialCardSides(
                     documentKey = brandDocumentType,
                     title = doc.title.uppercase(),
                     subtitle = churchOwner.ifBlank { "DOKUMENT KOŚCIELNY" },
                     holderName = churchOwner.ifBlank { "DANE WYSTAWCY" },
-                    fields = previewFields.take(12),
+                    fields = previewFields,
                     settings = settings
                 )
                 Text(doc.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -217,11 +217,12 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                     Text(doc.note, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.bodySmall)
                 }
                 doc.fields.forEachIndexed { index, label ->
-                    OutlinedTextField(
+                    DocumentFieldEditor(
+                        documentKey = brandDocumentType,
+                        fieldKey = "churchField_$index",
+                        label = label,
                         value = local["f$index"].orEmpty(),
                         onValueChange = { local["f$index"] = it },
-                        label = { Text(label) },
-                        modifier = Modifier.fillMaxWidth(),
                         minLines = if (label.contains("Treść") || label.contains("Zakres") || label.contains("Uwagi")) 3 else 1,
                         maxLines = 6
                     )
