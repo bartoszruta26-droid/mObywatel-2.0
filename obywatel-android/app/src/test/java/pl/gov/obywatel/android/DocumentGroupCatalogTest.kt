@@ -46,6 +46,12 @@ class DocumentGroupCatalogTest {
                 val key = "doc_${id}_${definition.key}"
                 assertEquals("Missing preview field label for $id/$key", definition.label, options[key])
             }
+            val graphicFields = churchGraphicDocumentFields(id)
+                .ifEmpty { familyEntityGraphicDocumentFields(id) }
+                .ifEmpty { officialGraphicDocumentFields(id) }
+            graphicFields.forEach { (key, label) ->
+                assertEquals("Missing graphic-document field label for $id/$key", label, options[key])
+            }
         }
     }
 
