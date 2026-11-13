@@ -82,8 +82,9 @@ private object OriginalAttachmentStore {
         require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) { "Plik musi mieć od 1 bajta do 25 MB." }
         val safeMime = mime.substringBefore(';').trim().lowercase()
         require(safeMime == "application/pdf" || safeMime.startsWith("image/") ||
-            safeMime == "text/plain" || safeMime == "text/csv" || safeMime == "text/xml" ||
-            safeMime == "application/xml") { "Obsługiwane są PDF, obrazy JPG/PNG/WebP oraz pliki tekstowe." }
+            safeMime.startsWith("text/") || safeMime == "application/xml") {
+            "Obsługiwane są PDF, obrazy JPG/PNG/WebP oraz pliki tekstowe."
+        }
         if (safeMime == "application/pdf") require(bytes.size >= 5 && String(bytes, 0, 5, Charsets.US_ASCII) == "%PDF-") {
             "Wybrany plik nie ma prawidłowego nagłówka PDF."
         }
@@ -110,13 +111,14 @@ private object OriginalAttachmentStore {
         val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
             ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
             ?: uri.lastPathSegment?.substringAfterLast('/') ?: "Oryginał dokumentu"
-        val mime = (context.contentResolver.getType(uri)
+        val reportedMime = context.contentResolver.getType(uri)?.lowercase()
+        val mime = ((reportedMime?.takeIf { it != "application/octet-stream" && it != "binary/octet-stream" })
             ?: when (name.substringAfterLast('.', "").lowercase()) {
                 "pdf" -> "application/pdf"
                 "jpg", "jpeg" -> "image/jpeg"
                 "png" -> "image/png"
                 "webp" -> "image/webp"
-                "txt" -> "text/plain"
+                "txt", "md", "log", "rtf" -> "text/plain"
                 "csv" -> "text/csv"
                 "xml" -> "application/xml"
                 else -> ""
