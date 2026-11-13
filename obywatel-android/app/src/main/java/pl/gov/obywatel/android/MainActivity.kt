@@ -117,7 +117,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Image as ImageIcon
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
@@ -424,7 +424,7 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
                 OcrRoundAction("Aparat", Icons.Filled.PhotoCamera, enabled = !processing) {
                     cameraPhoto.launch(null)
                 }
-                OcrRoundAction("Zdjęcie", Icons.Filled.Image, enabled = !processing) {
+                OcrRoundAction("Zdjęcie", Icons.Filled.ImageIcon, enabled = !processing) {
                     photoPicker.launch("image/*")
                 }
             }
