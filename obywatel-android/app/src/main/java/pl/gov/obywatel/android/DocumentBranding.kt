@@ -231,6 +231,7 @@ internal object DocumentBrandStore {
                 val kind = when {
                     name.startsWith("tile_watermark_") -> "Grafika wektorowa tła kafelków"
                     name.startsWith("tile_ic_") || name.startsWith("mob_") || name.startsWith("service_") -> "Ikona wektorowa kafelka"
+                    "hologram" in lower -> "Grafika hologramu / zabezpieczenia"
                     name in setOf(
                         "file_00000000532082108d561dcd2385f8f9",
                         "file_0000000077d4820aa3b7115d85ab9a7d",
