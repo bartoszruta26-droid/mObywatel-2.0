@@ -69,10 +69,14 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         documentEditorFieldDefinitions(documentKey).map { definition ->
             "doc_${documentKey}_${definition.key}" to definition.label
         }
-    if (subdocumentFields.isNotEmpty()) {
-        return (subdocumentFields + listOf("details" to "Informacje dodatkowe") + schemaFields)
-            .distinctBy { it.first }
-    }
+    // Formularze podrzędne mają własny, rzeczywisty zestaw pól field_N.
+    // Nie dopisujemy do niego ogólnych etykiet ani pól z innego schematu.
+    if (subdocumentFields.isNotEmpty()) return subdocumentFields.distinctBy { it.first }
+
+    // Dokumenty katalogowe edytują dokładnie definicje z DocumentEditorSchemas.
+    // Dodanie poniżej ogólnych pól imię/nazwisko tworzyło etykiety-widma.
+    if (schemaFields.isNotEmpty()) return schemaFields.distinctBy { it.first }
+
     return (when (documentKey) {
     "parliament" -> listOf(
         "mpCardNumber" to "Numer ewidencyjny legitymacji", "mpTerm" to "Kadencja",
