@@ -1776,7 +1776,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val auxiliaryCount = incoming.keys.count {
                                 it.startsWith("cs_") || it.startsWith("dp_") ||
                                     it in setOf(
-                                        "documentCatalogManifest", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "documentCatalogManifest", "documentCatalogGroupOrder", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
