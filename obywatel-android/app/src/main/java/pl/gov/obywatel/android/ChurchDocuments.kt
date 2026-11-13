@@ -188,7 +188,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
         } else {
             val doc = churchDocs.first { it.id == selected }
             val saved = records[doc.id].orEmpty()
-            var local by remember(doc.id) { mutableStateOf(saved) }
+            val local = remember(doc.id) { mutableStateMapOf<String, String>().apply { putAll(saved) } }
             val churchNameIndex = doc.fields.indexOfFirst { it.contains("Pełna nazwa Kościoła", ignoreCase = true) || it.contains("nazwa wspólnoty", ignoreCase = true) }
             val churchOwner = if (churchNameIndex >= 0) local["f$churchNameIndex"].orEmpty() else ""
             // Każdy dokument podrzędny ma własny klucz wyglądu; DocumentBrandStore
@@ -215,6 +215,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                 Text("Podgląd wyłącznie do odczytu. Edycja jest dostępna w Więcej → Ustawienia → Dokumenty kościelne.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
+                GeneralDocumentOcrEditor("church", local, context) { message = it }
                 AssignedDocumentBrandPreview(
                     documentType = brandDocumentType,
                     owner = churchOwner,
@@ -222,12 +223,12 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                     subtitle = "Herb, godło lub logo wystawcy"
                 )
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                    Text(doc.note, Modifier.padding(12.dp), color = Color(0xFF284B64), style = MaterialTheme.typography.bodySmall)
+                    Text(doc.note, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.bodySmall)
                 }
                 doc.fields.forEachIndexed { index, label ->
                     OutlinedTextField(
                         value = local["f$index"].orEmpty(),
-                        onValueChange = { local = local + ("f$index" to it) },
+                        onValueChange = { local["f$index"] = it },
                         label = { Text(label) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = if (label.contains("Treść") || label.contains("Zakres") || label.contains("Uwagi")) 3 else 1,
