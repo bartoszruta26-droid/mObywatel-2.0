@@ -276,10 +276,20 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
     "loyalty" -> listOf(
         "loyaltyName" to "Nazwa programu", "loyaltyNumber" to "Numer karty", "loyaltyHolder" to "Posiadacz"
     )
-    "bank_accounts" -> listOf(
-        "bankName" to "Bank", "accountName" to "Nazwa rachunku", "accountNumber" to "Numer rachunku",
-        "accountOwner" to "Właściciel", "accountCurrency" to "Waluta", "accountStatus" to "Status rachunku"
-    )
+    "bank_accounts" -> buildList {
+        val labels = listOf(
+            "Nazwa własna rachunku", "Bank / instytucja prowadząca",
+            "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT",
+            "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku",
+            "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi"
+        )
+        repeat(30) { accountIndex ->
+            labels.forEachIndexed { fieldIndex, label ->
+                val key = "account_${accountIndex}_${fieldIndex}"
+                add(key to "${label} · rachunek ${accountIndex + 1}")
+            }
+        }
+    }
     "children" -> listOf(
         "firstNames" to "Imiona", "lastName" to "Nazwisko", "birthDate" to "Data urodzenia",
         "childRelationship" to "Relacja", "guardianName" to "Opiekun", "childDocumentNumber" to "Numer dokumentu"
