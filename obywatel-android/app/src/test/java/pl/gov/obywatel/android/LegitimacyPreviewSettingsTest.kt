@@ -41,27 +41,43 @@ class LegitimacyPreviewSettingsTest {
 
     @Test
     fun documentFieldOptionsMatchTextEditorKeysAndLabels() {
-        assertEquals(
-            listOf("idStatus", "idPreviousNumber", "idLossOrInvalidationDate"),
-            credentialFieldOptions("identity").takeLast(3).map { it.first }
-        )
+        val identityOptions = credentialFieldOptions("identity").toMap()
+        assertEquals("Status dokumentu", identityOptions["idStatus"])
+        assertEquals("Numer poprzedniego dokumentu (jeśli dotyczy)", identityOptions["idPreviousNumber"])
+        assertEquals("Data utraty / unieważnienia", identityOptions["idLossOrInvalidationDate"])
         assertEquals(
             listOf("passportNumber", "passportCountry", "passportIssueDate", "passportExpiryDate",
                 "passportIssuer", "passportType", "passportHolderNames", "passportBirthPlace",
                 "passportCitizenship", "passportSex", "passportStatus", "passportLossDate"),
             credentialFieldOptions("passport").map { it.first }
         )
-        assertEquals(
-            listOf("familyDocNumber", "familyName", "familyLine", "familyRole", "familyRegistry",
-                "familyIssueDate", "familyExpiryDate", "familySource", "familyRegistryPlace",
-                "familyResidence", "familyFatherLine", "familyMotherLine", "familyNotes",
-                "familyHolderSignature", "familyRegistrarSignature"),
-            credentialFieldOptions("family").map { it.first }
-        )
+        val familyOptions = credentialFieldOptions("family")
+        assertTrue("Podgląd Rodu musi mieć pola wynikające z formularza.",
+            familyOptions.isNotEmpty() && familyOptions.none { it.first == "details" })
         val disabilityKeys = credentialFieldOptions("disability").map { it.first }
         assertTrue("Pole sprawy musi istnieć w podglądzie.", "disabilityCaseNumber" in disabilityKeys)
         assertTrue("Pole załącznika źródłowego musi istnieć w podglądzie.", "disabilitySourceAttachment" in disabilityKeys)
         assertTrue("Podgląd nie może dodawać nieistniejącego pola PESEL o innym kluczu.", "pesel" !in disabilityKeys)
+    }
+
+
+    @Test
+    fun schemaBackedDocumentPreviewUsesOnlyEditorDefinitions() {
+        val documentId = "professional_medical"
+        val expected = documentEditorFieldDefinitions(documentId).map {
+            "doc_${documentId}_${it.key}" to it.label
+        }
+        assertEquals(expected, credentialFieldOptions(documentId))
+    }
+
+    @Test
+    fun profilePreviewDoesNotInventBirthDateAndIncludesParentFields() {
+        val options = credentialFieldOptions("profile").toMap()
+        assertEquals("Telefon kontaktowy", options["contactPhone"])
+        assertEquals("Imiona ojca", options["fatherNames"])
+        assertEquals("Nazwisko rodowe matki", options["motherSurname"])
+        assertTrue("Profil nie powinien dodawać pola, którego edytor profilu nie wyświetla.",
+            "birthDate" !in options)
     }
 
     @Test
