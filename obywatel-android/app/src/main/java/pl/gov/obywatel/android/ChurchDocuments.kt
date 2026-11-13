@@ -227,6 +227,9 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                     )
                 }
                 DocumentOriginalAttachments(doc.id)
+                DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
+                    if (key.startsWith("f")) doc.fields.getOrNull(key.removePrefix("f").toIntOrNull() ?: -1) ?: key else key
+                }, documentType = brandDocumentType, ownerDefault = churchOwner)
                 AssignedDocumentBrandPreview(
                     documentType = brandDocumentType,
                     owner = churchOwner,
@@ -251,7 +254,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                         records = ChurchDocumentStore.load(context)
                         message = "Zapisano dane lokalnie."
                     }.onFailure { message = "Błąd zapisu: ${it.message}" }
-                }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz dane") }
+                }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz zmiany") }
                 if (message.isNotBlank()) Text(message, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
             DocumentPdfExportButton(doc.title, local.mapKeys { (key, _) ->
