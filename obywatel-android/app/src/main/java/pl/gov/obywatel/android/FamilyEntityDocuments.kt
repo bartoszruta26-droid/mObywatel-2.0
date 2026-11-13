@@ -181,6 +181,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             var accountCount by remember(doc.id) { mutableIntStateOf((saved["accountCount"]?.toIntOrNull() ?: 1).coerceIn(1, 30)) }
             val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
             val previewKey = if (isBankRegister) "bank_accounts" else doc.id
+            val settingsState = rememberLegitimacyPreviewSettings(previewKey)
             val previewFields = if (isBankRegister) {
                 buildList {
                     repeat(accountCount) { accountIndex ->
@@ -195,7 +196,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (readOnly) {
-                val settings = rememberLegitimacyPreviewSettings(previewKey).value
+                val settings = settingsState.value
                 CredentialCardSides(
                     documentKey = previewKey,
                     title = doc.title.uppercase(),
@@ -221,6 +222,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                                         documentKey = previewKey,
                                         fieldKey = key,
                                         label = label,
+                                        settingsState = settingsState,
                                         value = local[key].orEmpty(),
                                         onValueChange = { local[key] = it },
                                         minLines = if (fieldIndex == 12) 2 else 1,
@@ -244,6 +246,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                         documentKey = previewKey,
                         fieldKey = "field_$index",
                         label = label,
+                        settingsState = settingsState,
                         value = local["f$index"].orEmpty(),
                         onValueChange = { local["f$index"] = it },
                         minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1,
@@ -265,7 +268,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                     subtitle = doc.section,
                     holderName = previewFields.firstOrNull()?.third?.takeIf { it != "—" } ?: "DANE EWIDENCYJNE",
                     fields = previewFields,
-                    settings = rememberLegitimacyPreviewSettings(previewKey).value
+                    settings = settingsState.value
                 )
                 Button(
                     onClick = {
