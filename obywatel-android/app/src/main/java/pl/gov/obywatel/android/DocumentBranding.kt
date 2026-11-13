@@ -106,7 +106,18 @@ internal val documentBrandTargets = (listOf(
     "bank_accounts" to "Konta bankowe",
     "children" to "Dokumentacja dzieci",
     "vaccines" to "Karta szczepień",
-    "civil" to "Dokumenty cywilne"
+    "civil" to "Dokumenty cywilne",
+    "military_book" to "Książeczka wojskowa",
+    "martial_arts" to "Legitymacja sztuk walki",
+    "shooting_sport" to "Legitymacja strzelecka i sportowa",
+    "archery" to "Legitymacja łucznicza",
+    "tactical_training" to "Certyfikat szkolenia taktycznego",
+    "survival_training" to "Certyfikat surwiwalu i ratownictwa terenowego",
+    "security_guard" to "Legitymacja i kwalifikacje ochroniarskie",
+    "defense_training" to "Dokument szkolenia obronnego",
+    "historical_reenactment" to "Legitymacja rekonstruktora historycznego",
+    "reenactment_qualification" to "Certyfikat kwalifikacji rekonstruktora",
+    "reenactment_event" to "Karta uczestnictwa w wydarzeniu historycznym"
 ) + churchGraphicDocumentTargets() + familyEntityGraphicDocumentTargets() +
     officialGraphicDocumentTargets()).distinctBy { it.first }
 
