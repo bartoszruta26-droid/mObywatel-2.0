@@ -3553,7 +3553,7 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
     val context = LocalContext.current
     val tilePreferences = context.getSharedPreferences("legitimacy_preview_preferences", Context.MODE_PRIVATE)
     val tileBackgroundAssetId = tilePreferences.getString("${documentKey}_tile_background", "").orEmpty()
-    val tileVectorBackgroundAssetId = tilePreferences.getString("${documentKey}_tile_vector_background", "").orEmpty()
+    val tileVectorBackgroundAssetId = tilePreferences.getString("global_document_tile_vector_background", "").orEmpty()
     val tileVectorBackgroundBitmap = remember(documentKey, tileVectorBackgroundAssetId) { tileVectorBackgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
     val tileBackgroundBitmap = remember(documentKey, tileBackgroundAssetId) {
         when {
