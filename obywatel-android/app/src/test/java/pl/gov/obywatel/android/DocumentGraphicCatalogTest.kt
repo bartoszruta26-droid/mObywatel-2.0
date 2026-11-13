@@ -44,6 +44,23 @@ class DocumentGraphicCatalogTest {
     }
 
     @Test
+    fun armedServiceDocumentsHaveIndependentGraphicAssignmentTargets() {
+        val armedIds = setOf(
+            "military_book", "martial_arts", "shooting_sport", "archery",
+            "tactical_training", "survival_training", "security_guard", "defense_training",
+            "historical_reenactment", "reenactment_qualification", "reenactment_event"
+        )
+        val targets = documentBrandTargets.map { it.first }.toSet()
+        assertTrue("Every armed-service document must have its own asset assignment target.",
+            targets.containsAll(armedIds))
+        assertTrue("Every armed-service document must be visible in the document catalog.",
+            documentDisplayOptions.map { it.first }.toSet().containsAll(armedIds))
+        armedIds.forEach { id ->
+            assertNotNull("Missing graphic editor for $id", GraphicDocumentCatalog.find(id))
+        }
+    }
+
+    @Test
     fun previouslyMissingDocumentAndSubdocumentTypesAreAvailable() {
         val expected = setOf(
             "identity", "passport", "parliament", "training", "student", "family",
