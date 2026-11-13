@@ -1760,7 +1760,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 title = { Text("Import danych vCard") },
                 text = {
                     val current = remember { DemoIdentityStore.load(context) }
-                    val supportedProfileKeys = current.keys + documentEditorFieldKeys()
+                    val supportedProfileKeys = current.keys + documentEditorImportableFieldKeys()
                     val supportedArchiveKeys = setOf(
                         "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion",
                         "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
@@ -1788,7 +1788,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 // Importuj wyłącznie pola należące do aktualnego modelu profilu.
                                 // Nieznane lub wycofane nazwy pól ze starszych archiwów vCard
                                 // są pomijane — nie tworzymy przez nie osieroconych wpisów.
-                                (it in current.keys || it in documentEditorFieldKeys()) &&
+                                (it in current.keys || it in documentEditorImportableFieldKeys()) &&
                                     !it.startsWith("cs_") && !it.startsWith("dp_")
                             }
                             val mergedProfile = current.toMutableMap().apply { putAll(profileValues) }
