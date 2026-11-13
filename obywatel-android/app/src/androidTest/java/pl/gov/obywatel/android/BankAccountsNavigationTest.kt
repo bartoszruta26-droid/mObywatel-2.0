@@ -4,7 +4,6 @@ package pl.gov.obywatel.android
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso
 import org.junit.Assert.assertTrue
 import org.junit.Before
 
@@ -129,7 +128,7 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Motyw i kolory").assertIsDisplayed()
 
-        Espresso.pressBack()
+        composeRule.activity.onBackPressedDispatcher.onBackPressed()
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText("Wspólny wygląd legitymacji")
