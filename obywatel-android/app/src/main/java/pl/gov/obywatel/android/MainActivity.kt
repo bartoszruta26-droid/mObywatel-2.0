@@ -3104,7 +3104,7 @@ private fun DocumentEditorCatalogScreen(
     onBack: () -> Unit
 ) {
     var newGroupName by remember { mutableStateOf("") }
-    var expandedGroups by remember { mutableStateOf(configuration.groups.toSet()) }
+    var expandedGroups by remember { mutableStateOf(emptySet<String>()) }
     var groupMenuDocument by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf("") }
     val documents = documentDisplayOptions.distinctBy { it.first }
