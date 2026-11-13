@@ -1040,6 +1040,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
     }
     var documentPlacements by remember(context) { mutableStateOf(loadDocumentPlacements(context)) }
+    var documentGroupConfiguration by remember(context) { mutableStateOf(loadDocumentGroupConfiguration(context)) }
     var documentCardStyle by remember(context) { mutableStateOf(loadDocumentCardStyle(context)) }
     var defaultDocumentIcon by remember(context) { mutableStateOf(loadDefaultDocumentIcon(context)) }
     var documentIconOverrides by remember(context) { mutableStateOf(loadDocumentIconOverrides(context)) }
@@ -1049,6 +1050,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showDocumentsEditor by remember { mutableStateOf(false) }
     var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
+    var showDocumentEditorCatalog by remember { mutableStateOf(false) }
     var showApplicationAppearanceSettings by remember { mutableStateOf(false) }
     var showDocumentVisibilitySettings by remember { mutableStateOf(false) }
     var showDocumentBrandAssets by remember { mutableStateOf(false) }
@@ -1076,6 +1078,34 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         showDocumentVisibilitySettings = true
     }
 
+    fun openSettingsDocumentEditor(documentId: String) {
+        showDocumentEditorCatalog = false
+        when (documentId) {
+            "profile" -> { selectedEditorCategory = "profile"; showDocumentsEditor = true }
+            "identity" -> { selectedEditorCategory = "identity_card"; showDocumentsEditor = true }
+            "passport" -> { selectedEditorCategory = "passport"; showDocumentsEditor = true }
+            "parliament" -> { selectedEditorCategory = "parliament"; showDocumentsEditor = true }
+            "training" -> { selectedEditorCategory = "training"; showDocumentsEditor = true }
+            "student" -> { selectedEditorCategory = "student"; showDocumentsEditor = true }
+            "loyalty" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
+            "disability", "disability_card" -> showDisabilitySettings = true
+            "registry" -> showRegistryEditor = true
+            "family" -> settingsDocumentEditor = "family"
+            "church" -> settingsDocumentEditor = "church"
+            "civil" -> settingsDocumentEditor = "civil"
+            "business", "entity", "organization_foundation", "organization_church",
+            "organization_company", "organization_association" -> settingsDocumentEditor = "business"
+            "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> settingsDocumentEditor = "bank_accounts"
+            "vaccines" -> settingsDocumentEditor = "vaccines"
+            "children" -> settingsDocumentEditor = "children_health"
+            "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
+            "imported" -> settingsDocumentEditor = "imported"
+            "professional" -> settingsDocumentEditor = "professional"
+            "branding" -> settingsDocumentEditor = "graphic_catalog"
+            else -> { selectedEditorCategory = documentId; showDocumentsEditor = true }
+        }
+    }
+
     fun handleSystemBack() {
         when {
             credentialAppearanceTarget != null -> credentialAppearanceTarget = null
@@ -1091,6 +1121,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             showDocumentVisibilitySettings -> { showDocumentVisibilitySettings = false; showSettingsMenu = true }
             documentBrandTarget != null -> { documentBrandTarget = null; showSettingsMenu = true }
             showDocumentBrandAssets -> { showDocumentBrandAssets = false; showSettingsMenu = true }
+            showDocumentEditorCatalog -> { showDocumentEditorCatalog = false; showSettingsMenu = true }
             showSettingsMenu -> showSettingsMenu = false
             selectedDocumentId != null -> selectedDocumentId = null
             showDemoDocuments -> showDemoDocuments = false
@@ -1103,7 +1134,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1260,6 +1291,15 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         },
                         onBack = { showDocumentVisibilitySettings = false; showSettingsMenu = true }
                     )
+                    showDocumentEditorCatalog -> DocumentEditorCatalogScreen(
+                        configuration = documentGroupConfiguration,
+                        onConfigurationChange = { updated ->
+                            saveDocumentGroupConfiguration(context, updated)
+                            documentGroupConfiguration = updated
+                        },
+                        onOpenDocument = ::openSettingsDocumentEditor,
+                        onBack = { showDocumentEditorCatalog = false; showSettingsMenu = true }
+                    )
                     showSettingsMenu -> SettingsMenuScreen(
                         documentPlacements = documentPlacements,
                         onDocumentPlacementsChange = { updated ->
@@ -1269,6 +1309,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showSettingsMenu = false },
                         onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
                         onManageCredentialAppearance = { showSettingsMenu = false; showCredentialAppearanceEditor = true },
+                        onManageDocumentEditing = { showSettingsMenu = false; showDocumentEditorCatalog = true },
                         onManageDocumentVisibility = { openDocumentVisibilityCatalog() },
                         onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
                         onEditDocumentBranding = { target -> showSettingsMenu = false; documentBrandTarget = target },
@@ -3051,10 +3092,96 @@ private fun DocumentVisibilitySettingsScreen(
 }
 
 @Composable
+private fun DocumentEditorCatalogScreen(
+    configuration: DocumentGroupConfiguration,
+    onConfigurationChange: (DocumentGroupConfiguration) -> Unit,
+    onOpenDocument: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    var newGroupName by remember { mutableStateOf("") }
+    var expandedGroups by remember { mutableStateOf(configuration.groups.toSet()) }
+    var groupMenuDocument by remember { mutableStateOf<String?>(null) }
+    var status by remember { mutableStateOf("") }
+    val documents = documentDisplayOptions.distinctBy { it.first }
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("‹  Powrót do ustawień", color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
+        Text("Edytuj dane dokumentów", style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Text("Każdy dokument należy do jednej grupy. Rozwiń grupę, aby otworzyć formularz dokumentu lub zmienić jego przypisanie.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Dodaj grupę dokumentów", fontWeight = FontWeight.SemiBold)
+                OutlinedTextField(value = newGroupName, onValueChange = { newGroupName = it; status = "" },
+                    modifier = Modifier.fillMaxWidth(), label = { Text("Nazwa nowej grupy") }, singleLine = true)
+                Button(onClick = {
+                    runCatching { addDocumentGroup(configuration, newGroupName) }
+                        .onSuccess {
+                            onConfigurationChange(it)
+                            expandedGroups = expandedGroups + newGroupName.trim()
+                            newGroupName = ""
+                            status = "Dodano grupę."
+                        }
+                        .onFailure { status = it.localizedMessage ?: "Nie można dodać grupy." }
+                }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj grupę") }
+                if (status.isNotBlank()) Text(status, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        configuration.groups.forEach { group ->
+            val entries = documents.filter { configuration.assignments[it.first] == group }
+            val expanded = group in expandedGroups
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                        .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
+                        .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                        Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+                        Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
+                    }
+                    if (expanded) entries.forEach { (id, title, iconRes) ->
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable { onOpenDocument(id) }
+                            .padding(horizontal = 8.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(32.dp))
+                            Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                            Box {
+                                TextButton(onClick = { groupMenuDocument = id }) { Text("Grupa") }
+                                DropdownMenu(expanded = groupMenuDocument == id, onDismissRequest = { groupMenuDocument = null }) {
+                                    configuration.groups.forEach { targetGroup ->
+                                        DropdownMenuItem(text = { Text(targetGroup) }, onClick = {
+                                            onConfigurationChange(assignDocumentToGroup(configuration, id, targetGroup))
+                                            groupMenuDocument = null
+                                        })
+                                    }
+                                }
+                            }
+                            TextButton(onClick = { onOpenDocument(id) }) { Text("Edytuj") }
+                        }
+                    }
+                }
+            }
+        }
+        Text("Liczba dokumentów w katalogu: ${documents.size}. Każdy dokument ma przypisaną dokładnie jedną grupę.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(12.dp))
+    }
+}
+
+@Composable
 private fun SettingsMenuScreen(
     documentPlacements: Map<String, String>,
     onManageApplicationAppearance: () -> Unit,
     onManageCredentialAppearance: () -> Unit,
+    onManageDocumentEditing: () -> Unit,
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit,
     onManageDocumentVisibility: () -> Unit,
@@ -3119,55 +3246,12 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Eksportuj wszystkie dane", "Zapisz jedno archiwum .vcf", Icons.Filled.Description, onExportAll)
         ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
         if (importStatus.isNotBlank()) Text(importStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-        Text("Dokumenty — katalog wspólny", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-        Text("Lista jest budowana z tego samego rejestru dokumentów co katalog i ustawienia widoczności. Zmiana grupy lub dodanie dokumentu aktualizuje wszystkie widoki.",
-            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        val settingsGroups = documentVisibilityGroupOrder
-        settingsGroups.forEach { group ->
-            val entries = documentDisplayOptions.distinctBy { it.first }
-                .filter { documentVisibilityGroup(it.first) == group }
-            if (entries.isNotEmpty()) {
-                Text(group, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleSmall)
-                entries.forEach { (id, title, _) ->
-                    val action: () -> Unit = {
-                        when (id) {
-                            "profile" -> onEditDocuments("profile")
-                            "identity" -> onEditDocuments("identity_card")
-                            "passport" -> onEditDocuments("passport")
-                            "family" -> onEditOtherDocuments("family")
-                            "parliament" -> onEditDocuments("parliament")
-                            "training" -> onEditDocuments("training")
-                            "student" -> onEditDocuments("student")
-                            "disability" -> onEditDisability()
-                            "church" -> onEditOtherDocuments("church")
-                            "civil" -> onEditOtherDocuments("civil")
-                            "business", "entity" -> onEditOtherDocuments("business")
-                            "bank_accounts", "rod_bank_accounts", "entity_bank_accounts" -> onEditOtherDocuments("bank_accounts")
-                            "vaccines" -> onEditOtherDocuments("vaccines")
-                            "children" -> onEditOtherDocuments("children_health")
-                            "signed_pdf" -> onEditOtherDocuments("signed_pdf")
-                            "imported" -> onEditOtherDocuments("imported")
-                            "professional" -> onEditOtherDocuments("professional")
-                            "registry" -> onEditRegistry()
-                            "loyalty" -> onEditDocuments("loyalty_cards")
-                            else -> onEditOtherDocuments("graphic_catalog")
-                        }
-                    }
-                    val icon = when (group) {
-                        "Dokumenty kościelne" -> Icons.Filled.AccountBalance
-                        "Dokumenty rodowe i rodzinne" -> Icons.Filled.Fingerprint
-                        "Dokumenty firmowe i podmiotowe" -> Icons.Filled.Business
-                        "Dokumenty zawodowe i edukacyjne" -> Icons.Filled.Badge
-                        "Dokumenty zdrowotne i rodzinne" -> Icons.Filled.HealthAndSafety
-                        "Pliki i pozostałe dokumenty" -> Icons.Filled.Description
-                        "Dokumenty cywilne i urzędowe" -> Icons.Filled.Description
-                        else -> Icons.Filled.CreditCard
-                    }
-                    ProfileActionCard(title, "Otwórz ustawienia danych i dokumentu", icon, action)
-                }
-            }
-        }
+        ProfileActionCard(
+            "Edytuj dane dokumentów",
+            "Otwórz katalog wszystkich dokumentów, uporządkowany w rozwijane grupy. Każdy dokument ma osobny formularz edycji.",
+            Icons.Filled.Description,
+            onManageDocumentEditing
+        )
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
