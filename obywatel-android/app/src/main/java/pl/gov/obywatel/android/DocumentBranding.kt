@@ -110,6 +110,10 @@ internal val documentBrandTargets = (listOf(
 ) + churchGraphicDocumentTargets() + familyEntityGraphicDocumentTargets() +
     officialGraphicDocumentTargets()).distinctBy { it.first }
 
+internal fun isWhiteTintedIconAssetKind(kind: String): Boolean =
+    kind.trim().contains("ikona", ignoreCase = true) ||
+        kind.trim().contains("piktogram", ignoreCase = true)
+
 internal object DocumentBrandStore {
     private const val ALIAS = "document_brand_assets_aes"
     private const val INDEX = "document-brand-assets.enc"
@@ -1233,7 +1237,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                     contentDescription = asset.label,
                                     modifier = Modifier.size(64.dp),
                                     contentScale = ContentScale.Fit,
-                                    colorFilter = if (asset.kind in setOf("Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona"))
+                                    colorFilter = if (isWhiteTintedIconAssetKind(asset.kind))
                                         androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
                                     else null
                                 )
