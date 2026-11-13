@@ -189,11 +189,11 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, in
                 Text(type.note,Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.bodySmall)
             }
             if (readOnly) {
-                val previewSettings = rememberLegitimacyPreviewSettings(type.id).value.copy(visibleFieldsConfigured = false)
-                val previewFields = type.fields.take(12).mapIndexed { index, label ->
-                    Triple("officialField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
+                val previewSettings = rememberLegitimacyPreviewSettings(type.id).value
+                val previewFields = type.fields.mapIndexed { index, label ->
+                    Triple("field_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
                 }
-                UnifiedCredentialCard(
+                CredentialCardSides(
                     documentKey = type.id,
                     title = type.title.uppercase(),
                     subtitle = "PODGLĄD EWIDENCYJNY",
@@ -205,8 +205,16 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, in
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
                 GeneralDocumentOcrEditor("civil", local, context) { status = it }
-                type.fields.forEachIndexed { index,label ->
-                    OutlinedTextField(value=local["f$index"].orEmpty(),onValueChange={local["f$index"]=it},label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=index<6)
+                type.fields.forEachIndexed { index, label ->
+                    DocumentFieldEditor(
+                        documentKey = type.id,
+                        fieldKey = "field_$index",
+                        label = label,
+                        value = local["f$index"].orEmpty(),
+                        onValueChange = { local["f$index"] = it },
+                        minLines = if (index >= 6) 2 else 1,
+                        maxLines = 4
+                    )
                 }
                 DocumentOriginalAttachments(type.id)
             }
@@ -218,7 +226,7 @@ internal fun OfficialDocumentsScreen(onBack:()->Unit, readOnly:Boolean=false, in
                     Triple("officialField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
                 }
                 Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                UnifiedCredentialCard(
+                CredentialCardSides(
                     documentKey = type.id,
                     title = type.title.uppercase(),
                     subtitle = "PODGLĄD EWIDENCYJNY",
