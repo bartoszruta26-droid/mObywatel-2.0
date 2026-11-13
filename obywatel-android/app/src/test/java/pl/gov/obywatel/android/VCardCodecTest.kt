@@ -242,4 +242,17 @@ END:VCARD
         assertArrayEquals(photoBytes, java.util.Base64.getDecoder().decode(imported.getValue("photo")))
     }
 
+    @Test
+    fun archiveRoundTripsChildrenVaccinationsAndOriginalDocumentAttachments() {
+        val familyHealth = """{"version":1,"children":[{"id":"child-1","firstName":"Anna","lastName":"Kowalska","birthDate":"2018-04-05","pesel":"18040512345","allergies":"jaja","guardian":"Jan Kowalski","photoBase64":"YW5uYQ==","vaccines":[{"id":"dose-1","date":"2024-01-10","vaccine":"MMR","disease":"odra, świnka, różyczka","dose":"2/2","batch":"LOT-123","manufacturer":"Producent","provider":"Lekarz","facility":"Przychodnia","nextDate":"2030-01-10","notes":"reakcja miejscowa"}]}]}"""
+        val originalAttachments = """{"version":1,"attachments":[{"documentId":"child_vaccination_card","name":"Książeczka szczepień.pdf","mime":"application/pdf","dataBase64":"JVBERi0xLjQ="}]}"""
+        val fields = linkedMapOf(
+            "familyHealthArchive" to familyHealth,
+            "originalAttachmentArchive" to originalAttachments,
+            "familyEntityDocumentArchive" to """{"rod_birth_extract":{"field_0":"Anna"}}""",
+            "officialDocumentArchive" to """{"passport":{"number":"PA123"}}"""
+        )
+        assertEquals(fields, VCardCodec.decodeForImport(VCardCodec.encodeArchive(fields)))
+    }
+
 }
