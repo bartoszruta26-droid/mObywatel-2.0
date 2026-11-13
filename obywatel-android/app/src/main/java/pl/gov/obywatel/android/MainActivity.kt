@@ -965,6 +965,14 @@ internal val documentDisplayOptions = (listOf(
     Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
     Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
     Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document)
+    Triple("military_book", "Książeczka wojskowa", R.drawable.lib_ic_document),
+    Triple("martial_arts", "Legitymacja sztuk walki", R.drawable.work),
+    Triple("shooting_sport", "Legitymacja strzelecka i sportowa", R.drawable.lib_ic_document),
+    Triple("archery", "Legitymacja łucznicza", R.drawable.work),
+    Triple("tactical_training", "Certyfikaty szkolenia taktycznego", R.drawable.lib_ic_document),
+    Triple("survival_training", "Certyfikaty surwiwalu i ratownictwa terenowego", R.drawable.lib_ic_document),
+    Triple("security_guard", "Legitymacja i kwalifikacje ochroniarskie", R.drawable.lib_ic_lock),
+    Triple("defense_training", "Dokumenty szkolenia obronnego", R.drawable.lib_ic_document)
 ) + documentBrandTargets
     .filterNot { (id, _) -> listOf(
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
@@ -997,6 +1005,8 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    id in setOf("military_book", "martial_arts", "shooting_sport", "archery", "tactical_training", "survival_training", "security_guard", "defense_training") ->
+        "Służba zbrojna"
     // Keep the core identity documents in an explicit, stable bucket. These IDs
     // must remain visible in the visibility catalog even as new groups evolve.
     id in setOf("profile", "identity", "passport") ->
@@ -1029,6 +1039,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
     else -> "Dokumenty osobiste i tożsamościowe"
 }
 internal val documentVisibilityGroupOrder = listOf(
+    "Służba zbrojna",
     "Dokumenty osobiste i tożsamościowe",
     "Dokumenty publiczne i obywatelskie",
     "Dokumenty cywilne i urzędowe",
