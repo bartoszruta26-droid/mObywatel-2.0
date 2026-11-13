@@ -23,6 +23,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -159,16 +160,16 @@ internal fun DocumentOriginalAttachments(documentId: String, readOnly: Boolean =
     val items = remember(documentId) { mutableStateListOf<OriginalAttachment>().apply {
         addAll(OriginalAttachmentStore.list(context, documentId))
     } }
-    varStatusHolder(documentId) { message -> status = message }
+    val status = remember(documentId) { mutableStateOf("") }
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching { OriginalAttachmentStore.addFile(context, documentId, uri) }
-            .onSuccess { items.clear(); items.addAll(OriginalAttachmentStore.list(context, documentId)); status = "Dołączono oryginał dokumentu." }
-            .onFailure { status = it.localizedMessage ?: "Nie udało się dołączyć pliku." }
+            .onSuccess { items.clear(); items.addAll(OriginalAttachmentStore.list(context, documentId)); status.value = "Dołączono oryginał dokumentu." }
+            .onFailure { status.value = it.localizedMessage ?: "Nie udało się dołączyć pliku." }
     }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         if (bitmap != null) runCatching { OriginalAttachmentStore.addPhoto(context, documentId, bitmap) }
-            .onSuccess { items.clear(); items.addAll(OriginalAttachmentStore.list(context, documentId)); status = "Dołączono zdjęcie oryginału." }
-            .onFailure { status = it.localizedMessage ?: "Nie udało się zapisać zdjęcia." }
+            .onSuccess { items.clear(); items.addAll(OriginalAttachmentStore.list(context, documentId)); status.value = "Dołączono zdjęcie oryginału." }
+            .onFailure { status.value = it.localizedMessage ?: "Nie udało się zapisać zdjęcia." }
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Card(Modifier.fillMaxWidth()) {
@@ -197,11 +198,8 @@ internal fun DocumentOriginalAttachments(documentId: String, readOnly: Boolean =
                         }) { Text("Usuń") }
                     }
                 }
-                if (status.isNotBlank()) Text(status, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+                if (status.value.isNotBlank()) Text(status.value, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
 }
-
-@Composable
-private fun varStatusHolder(documentId: String, onStatus: @Composable (String) -> Unit) { }
