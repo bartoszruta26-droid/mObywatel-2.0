@@ -1095,9 +1095,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "loyalty" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
             documentId == "disability" -> showDisabilitySettings = true
             documentId == "registry" -> showRegistryEditor = true
-            documentId == "bank_accounts" || documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts:$documentId"
-            documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts:$documentId"
-            documentId == "family" || documentId == "large_family" -> settingsDocumentEditor = "family"
+            documentId == "bank_accounts" -> { selectedEditorCategory = "catalog:bank_accounts"; showDocumentsEditor = true }
+            documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts:rod_bank_accounts"
+            documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts:entity_bank_accounts"
+            documentId == "family" -> settingsDocumentEditor = "family"
             documentId.startsWith("rod_") -> settingsDocumentEditor = "family:$documentId"
             documentId == "church" || documentId == "mission_travel" -> settingsDocumentEditor = "church"
             documentId.startsWith("church_") -> settingsDocumentEditor = if (churchGraphicDocumentTargets().any { it.first == documentId }) "church:$documentId" else "church"
