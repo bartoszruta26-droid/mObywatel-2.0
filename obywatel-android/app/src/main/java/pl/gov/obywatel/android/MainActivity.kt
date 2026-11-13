@@ -1042,6 +1042,7 @@ internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id,
     id to if (id == "identity" || id in armedServiceDocumentIds) "dashboard" else "hidden"
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
+private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
 private const val DOCUMENT_CARD_STYLE_KEY = "document_card_style"
 private fun loadDocumentCardStyle(context: Context): String =
     context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
@@ -1139,6 +1140,16 @@ private fun loadDocumentPlacements(context: Context): Map<String, String> {
         }
         editor.putBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, true)
         check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności dokumentów." }
+    }
+    if (!prefs.getBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, false)) {
+        // Jednorazowo aktywuj nową grupę także u osób aktualizujących starszą
+        // instalację, w której ustawienia widoczności mogły już być zapisane.
+        val editor = prefs.edit()
+        armedServiceDocumentIds.forEach { id ->
+            editor.putString(DOCUMENT_DISPLAY_KEY_PREFIX + id, "dashboard")
+        }
+        editor.putBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, true)
+        check(editor.commit()) { "Nie udało się aktywować grupy Służba zbrojna." }
     }
     return documentDisplayOptions.associate { (id, _, _) ->
         val savedPlacement = prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + id, null)
@@ -5034,7 +5045,7 @@ private fun CredentialAppearanceSettingsScreen(
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Miejsce wyświetlania każdego pola", fontWeight = FontWeight.Bold)
-                Text("Wybierz osobno dla każdej danej: ukryta, awers albo rewers. Rewers pozostaje ukryty, dopóki go nie włączysz.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Wybierz osobno dla każdej danej: brak, awers albo rewers. Rewers pozostaje pusty, dopóki go nie włączysz.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 options.forEach { (key, label) ->
                     val side = credentialFieldSide(key, state.value.visibleFieldsConfigured, state.value.visibleFields, state.value.fieldSides)
                     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -5075,7 +5086,7 @@ private fun CredentialAppearanceSettingsScreen(
                                             LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
                                             state.value = updated
                                         },
-                                        modifier = Modifier.size(30.dp)
+                                        modifier = Modifier.size(24.dp)
                                     )
                                     Text(caption, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                                 }
@@ -5571,7 +5582,7 @@ private fun DemoDataField(
                                 LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
                                 binding.settings.value = updated
                             },
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                         Text(caption, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                     }
