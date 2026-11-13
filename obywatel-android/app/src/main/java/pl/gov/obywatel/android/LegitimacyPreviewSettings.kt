@@ -152,7 +152,7 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         )
         repeat(30) { accountIndex ->
             labels.forEachIndexed { fieldIndex, label ->
-                add("account_${accountIndex}_${fieldIndex}" to "${label} · rachunek ${accountIndex + 1}")
+                add("account_${accountIndex}_${fieldIndex}" to label)
             }
         }
     }
@@ -257,13 +257,13 @@ internal fun credentialFieldOptions(documentKey: String): List<Pair<String, Stri
         repeat(25) { index ->
             val number = index + 1
             val prefix = "loyalty$number"
-            add("${prefix}Store" to "Karta $number — sklep / marka")
-            add("${prefix}Program" to "Karta $number — nazwa programu")
-            add("${prefix}Number" to "Karta $number — numer karty nadany przez sklep")
-            add("${prefix}LocalId" to "Karta $number — lokalny numer ewidencyjny")
-            add("${prefix}Barcode" to "Karta $number — treść kodu kreskowego")
-            add("${prefix}Qr" to "Karta $number — treść kodu QR")
-            add("${prefix}Status" to "Karta $number — status")
+            add("${prefix}Store" to "Sklep / marka")
+            add("${prefix}Program" to "Nazwa programu lojalnościowego")
+            add("${prefix}Number" to "Numer karty nadany przez sklep")
+            add("${prefix}LocalId" to "Lokalny numer ewidencyjny")
+            add("${prefix}Barcode" to "Treść kodu kreskowego")
+            add("${prefix}Qr" to "Treść kodu QR")
+            add("${prefix}Status" to "Status karty")
         }
         add("loyaltyExtraSource" to "Źródło danych / dokument źródłowy")
         add("loyaltyExtraLegalBasis" to "Podstawa prawna / regulaminowa")
