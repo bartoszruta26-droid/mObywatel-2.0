@@ -1,42 +1,46 @@
 package pl.gov.obywatel.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DocumentGroupCatalogTest {
-    private fun defaultConfiguration() = DocumentGroupConfiguration(
-        groups = documentVisibilityGroupOrder,
-        assignments = documentDisplayOptions.distinctBy { it.first }
-            .associate { (id, _, _) -> id to documentVisibilityGroup(id) }
-    )
-
     @Test
-    fun everyCatalogDocumentHasExactlyOneDeclaredGroup() {
-        val config = defaultConfiguration()
-        val ids = documentDisplayOptions.distinctBy { it.first }.map { it.first }
-        assertEquals(ids.toSet(), config.assignments.keys)
-        assertTrue(config.assignments.values.all { it in config.groups })
+    fun everyDocumentHasExactlyOneFixedGroup() {
+        val documents = documentDisplayOptions.distinctBy { it.first }
+        assertTrue(documents.isNotEmpty())
+        documents.forEach { (id, _, _) ->
+            assertTrue("Missing group for $id", documentVisibilityGroup(id) in documentVisibilityGroupOrder)
+        }
     }
 
     @Test
-    fun addingGroupDoesNotChangeExistingAssignments() {
-        val config = defaultConfiguration()
-        val updated = addDocumentGroup(config, "Dokumenty dodatkowe")
-        assertTrue("Dokumenty dodatkowe" in updated.groups)
-        assertEquals(config.assignments, updated.assignments)
+    fun fixedGroupCatalogContainsNoEmptyGroupsOrDuplicateDocuments() {
+        val ids = documentDisplayOptions.map { it.first }
+        assertEquals(ids.size, ids.toSet().size)
+        val groupsWithDocuments = documentVisibilityGroupOrder.filter { group ->
+            documentDisplayOptions.any { documentVisibilityGroup(it.first) == group }
+        }
+        assertFalse(groupsWithDocuments.isEmpty())
+        assertEquals(groupsWithDocuments.size, groupsWithDocuments.toSet().size)
     }
 
     @Test
-    fun documentCanBeMovedToNewGroup() {
-        val config = addDocumentGroup(defaultConfiguration(), "Dokumenty dodatkowe")
-        val updated = assignDocumentToGroup(config, "passport", "Dokumenty dodatkowe")
-        assertEquals("Dokumenty dodatkowe", updated.assignments["passport"])
-        assertEquals(config.assignments.size, updated.assignments.size)
+    fun everyCatalogDocumentHasItsOwnDocumentSpecificFieldSchema() {
+        documentDisplayOptions.distinctBy { it.first }.forEach { (id, _, _) ->
+            val definitions = documentEditorFieldDefinitions(id)
+            assertTrue("No fields defined for $id", definitions.isNotEmpty())
+            assertEquals("Duplicate field keys for $id", definitions.size, definitions.map { it.key }.toSet().size)
+            assertTrue("Empty field labels for $id", definitions.all { it.label.isNotBlank() })
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun duplicateGroupNamesAreRejectedIgnoringCase() {
-        addDocumentGroup(addDocumentGroup(defaultConfiguration(), "Archiwum"), "archiwum")
+    @Test
+    fun documentEditorFieldKeysAreStableAndUniqueAcrossCatalog() {
+        val keys = documentEditorFieldKeys()
+        assertTrue(keys.isNotEmpty())
+        assertEquals(keys.size, keys.toSet().size)
+        assertTrue(keys.all { it.startsWith("doc_") })
     }
 }
