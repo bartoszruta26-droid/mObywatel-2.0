@@ -1046,7 +1046,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
     }
     var documentPlacements by remember(context) { mutableStateOf(loadDocumentPlacements(context)) }
-    var documentGroupConfiguration by remember(context) { mutableStateOf(loadDocumentGroupConfiguration(context)) }
     var documentCardStyle by remember(context) { mutableStateOf(loadDocumentCardStyle(context)) }
     var defaultDocumentIcon by remember(context) { mutableStateOf(loadDefaultDocumentIcon(context)) }
     var documentIconOverrides by remember(context) { mutableStateOf(loadDocumentIconOverrides(context)) }
@@ -1297,11 +1296,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showDocumentVisibilitySettings = false; showSettingsMenu = true }
                     )
                     showDocumentEditorCatalog -> DocumentEditorCatalogScreen(
-                        configuration = documentGroupConfiguration,
-                        onConfigurationChange = { updated ->
-                            saveDocumentGroupConfiguration(context, updated)
-                            documentGroupConfiguration = updated
-                        },
                         onOpenDocument = ::openSettingsDocumentEditor,
                         onBack = { showDocumentEditorCatalog = false; showSettingsMenu = true }
                     )
@@ -3098,15 +3092,10 @@ private fun DocumentVisibilitySettingsScreen(
 
 @Composable
 private fun DocumentEditorCatalogScreen(
-    configuration: DocumentGroupConfiguration,
-    onConfigurationChange: (DocumentGroupConfiguration) -> Unit,
     onOpenDocument: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    var newGroupName by remember { mutableStateOf("") }
     var expandedGroups by remember { mutableStateOf(emptySet<String>()) }
-    var groupMenuDocument by remember { mutableStateOf<String?>(null) }
-    var status by remember { mutableStateOf("") }
     val documents = documentDisplayOptions.distinctBy { it.first }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -3117,65 +3106,39 @@ private fun DocumentEditorCatalogScreen(
             fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Edytuj dane dokumentów", style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-        Text("Każdy dokument należy do jednej grupy. Rozwiń grupę, aby otworzyć formularz dokumentu lub zmienić jego przypisanie.",
+        Text("Dokumenty są uporządkowane według ich przeznaczenia. Każdy dokument ma przypisaną stałą grupę.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Dodaj grupę dokumentów", fontWeight = FontWeight.SemiBold)
-                OutlinedTextField(value = newGroupName, onValueChange = { newGroupName = it; status = "" },
-                    modifier = Modifier.fillMaxWidth(), label = { Text("Nazwa nowej grupy") }, singleLine = true)
-                Button(onClick = {
-                    runCatching { addDocumentGroup(configuration, newGroupName) }
-                        .onSuccess {
-                            onConfigurationChange(it)
-                            expandedGroups = expandedGroups + newGroupName.trim()
-                            newGroupName = ""
-                            status = "Dodano grupę."
-                        }
-                        .onFailure { status = it.localizedMessage ?: "Nie można dodać grupy." }
-                }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj grupę") }
-                if (status.isNotBlank()) Text(status, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        configuration.groups.forEach { group ->
-            val entries = documents.filter { configuration.assignments[it.first] == group }
-            val expanded = group in expandedGroups
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                        .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
-                        .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                        Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
-                        Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
-                    }
-                    if (expanded) entries.forEach { (id, title, iconRes) ->
+        documentVisibilityGroupOrder.forEach { group ->
+            val entries = documents.filter { documentVisibilityGroup(it.first) == group }
+                .sortedBy { it.second.lowercase(java.util.Locale("pl", "PL")) }
+            if (entries.isNotEmpty()) {
+                val expanded = group in expandedGroups
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { onOpenDocument(id) }
-                            .padding(horizontal = 8.dp, vertical = 7.dp),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(32.dp))
-                            Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface,
-                                style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
-                            Box {
-                                TextButton(onClick = { groupMenuDocument = id }) { Text("Grupa") }
-                                DropdownMenu(expanded = groupMenuDocument == id, onDismissRequest = { groupMenuDocument = null }) {
-                                    configuration.groups.forEach { targetGroup ->
-                                        DropdownMenuItem(text = { Text(targetGroup) }, onClick = {
-                                            onConfigurationChange(assignDocumentToGroup(configuration, id, targetGroup))
-                                            groupMenuDocument = null
-                                        })
-                                    }
-                                }
+                            .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
+                            .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                            Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+                            Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
+                        }
+                        if (expanded) entries.forEach { (id, title, iconRes) ->
+                            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { onOpenDocument(id) }
+                                .padding(horizontal = 8.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(32.dp))
+                                Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface,
+                                    style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                                TextButton(onClick = { onOpenDocument(id) }) { Text("Edytuj") }
                             }
-                            TextButton(onClick = { onOpenDocument(id) }) { Text("Edytuj") }
                         }
                     }
                 }
             }
         }
-        Text("Liczba dokumentów w katalogu: ${documents.size}. Każdy dokument ma przypisaną dokładnie jedną grupę.",
+        Text("Liczba dokumentów: ${documents.size}. Każdy dokument jest przypisany do jednej grupy.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(12.dp))
     }
