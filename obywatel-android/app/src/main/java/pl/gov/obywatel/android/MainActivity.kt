@@ -3225,6 +3225,10 @@ private fun DocumentVisibilitySettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        if (groupTitle == "Służba zbrojna") {
+                            Image(painterResource(R.drawable.tile_ic_armed_service_outline),
+                                contentDescription = null, modifier = Modifier.size(34.dp))
+                        }
                         Text(groupTitle, color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         Text("${groupDocuments.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -3340,6 +3344,10 @@ private fun DocumentEditorCatalogScreen(
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                             .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
                             .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (group == "Służba zbrojna") {
+                                Image(painterResource(R.drawable.tile_ic_armed_service_outline),
+                                    contentDescription = null, modifier = Modifier.size(34.dp))
+                            }
                             Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                             Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
                             Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
@@ -3682,9 +3690,18 @@ private fun DocumentsWalletScreen(
                 visibleDocuments.filter { documentPlacements[it.id] == "dashboard" && category in it.categories }
             }
             if (entries.isNotEmpty()) {
-                Text(category, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 5.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (category == "Służba zbrojna") {
+                        Image(painterResource(R.drawable.tile_ic_armed_service_outline),
+                            contentDescription = null, modifier = Modifier.size(34.dp))
+                    }
+                    Text(category, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 5.dp))
+                }
                 if (documentCardStyle == "list") {
                     entries.forEach { document ->
                         Card(
