@@ -52,8 +52,12 @@ class DocumentGroupCatalogTest {
         val keys = documentEditorImportableFieldKeys()
         assertTrue("passportNumber" in keys)
         assertTrue("disabilityDecisionNumber" in keys)
-        assertTrue("doc_insurance_vehicle_policyNumber" in keys)
         assertTrue("passportOcrText" in keys)
+        assertTrue(documentArchiveImportKeys().containsAll(setOf(
+            "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+            "professionalQualificationArchive", "documentCatalogManifest"
+        )))
+        assertTrue("insurance_vehicle" in officialGraphicDocumentTargets().map { it.first })
     }
 
     @Test
