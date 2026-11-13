@@ -16,12 +16,17 @@ class DocumentOcrParserTest {
  }
  @Test fun blankTextHasNoSuggestions(){assertTrue(DocumentOcrParser.extract("identity_card"," ").isEmpty())}
 
- @Test fun groupedDocumentCategoriesUseConservativeCommonOcrRules(){
-  listOf("church","family","business","bank_accounts","civil").forEach { category ->
-   val m=DocumentOcrParser.extract(category,"IMIONA: JAN ADAM\nNAZWISKO: KOWALSKI\nDATA URODZENIA: 12.03.1980")
-   assertEquals("category=$category", "JAN ADAM",m["firstNames"])
-   assertEquals("category=$category", "KOWALSKI",m["lastName"])
-   assertEquals("category=$category", "12.03.1980",m["birthDate"])
+ @Test fun documentSpecificCategoriesMapOcrIntoTheirOwnFields(){
+  val cases = listOf(
+   Triple("church","Osoba / duchowny / członek wspólnoty: JAN KOWALSKI","doc_church_clergyName"),
+   Triple("family","Osoba, której dotyczy wpis: ANNA KOWALSKA","doc_family_familyMember"),
+   Triple("business","Pełna nazwa podmiotu: FUNDACJA ARIA","doc_business_entityName"),
+   Triple("bank_accounts","Posiadacz rachunku / podmiot: JAN KOWALSKI","doc_bank_accounts_accountOwner"),
+   Triple("civil","Rodzaj aktu / zaświadczenia: AKT URODZENIA","doc_civil_actOrCertificateType")
+  )
+  cases.forEach { (category, text, expectedKey) ->
+   val result = DocumentOcrParser.extract(category,text)
+   assertTrue("category=$category result=$result", result.containsKey(expectedKey))
   }
  }
 }
