@@ -839,27 +839,27 @@ internal fun documentVisibilityGroup(id: String): String = when {
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } ->
         "Dokumenty kościelne"
-    id == "family" || id.startsWith("rod_") || id == "large_family" ->
+    id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" ->
         "Dokumenty rodowe i rodzinne"
-    id == "bank_accounts" ->
+    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") ->
         "Dokumenty finansowe"
     id == "parliament" ->
         "Dokumenty publiczne i obywatelskie"
     id == "business" || id == "entity" || id == "registry" ||
-        id == "entity_bank_accounts" || id == "insurance_business" ||
         id.startsWith("entity_") || id.startsWith("organization_") ->
         "Dokumenty firmowe i podmiotowe"
-    id == "insurance_professional" || id == "professional" || id.startsWith("professional_") ||
+    id == "professional" || id.startsWith("professional_") ||
         id in setOf("training", "student", "eu_education") ->
         "Dokumenty zawodowe i edukacyjne"
     id == "civil" || id in setOf(
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
-        "vehicle_registration", "insurance_vehicle", "official"
+        "vehicle_registration", "official"
     ) || officialGraphicDocumentTargets().any { it.first == id } ->
         "Dokumenty cywilne i urzędowe"
     id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") ->
         "Dokumenty zdrowotne i rodzinne"
-    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ->
+    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ||
+        documentBrandTargets.any { it.first == id } ->
         "Pliki i pozostałe dokumenty"
     else -> "Dokumenty osobiste i tożsamościowe"
 }
