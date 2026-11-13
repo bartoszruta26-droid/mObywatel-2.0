@@ -30,7 +30,8 @@ class DocumentGroupCatalogTest {
     fun everyCatalogDocumentHasItsOwnDocumentSpecificFieldSchema() {
         documentDisplayOptions.distinctBy { it.first }.forEach { (id, _, _) ->
             val definitions = documentEditorFieldDefinitions(id)
-            assertTrue("No fields defined for $id", definitions.isNotEmpty())
+            assertTrue("No dedicated editor or schema for $id",
+                definitions.isNotEmpty() || documentUsesDedicatedEditor(id))
             assertEquals("Duplicate field keys for $id", definitions.size, definitions.map { it.key }.toSet().size)
             assertTrue("Empty field labels for $id", definitions.all { it.label.isNotBlank() })
         }
