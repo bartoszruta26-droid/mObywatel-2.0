@@ -16,16 +16,6 @@ private fun fields(vararg definitions: Triple<String, String, String>) =
     definitions.map { DocumentEditorFieldDefinition(it.first, it.second, it.third) }
 
 internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEditorFieldDefinition> {
-    val personal = fields(
-        Triple("documentName", "Nazwa / rodzaj dokumentu", "np. zaświadczenie, decyzja, legitymacja"),
-        Triple("personName", "Osoba, której dotyczy dokument", "Imię i nazwisko"),
-        Triple("referenceNumber", "Numer ewidencyjny / znak sprawy", ""),
-        Triple("issuingAuthority", "Organ lub podmiot prowadzący ewidencję", ""),
-        Triple("issueDate", "Data wydania / sporządzenia", "DD-MM-RRRR"),
-        Triple("validity", "Okres obowiązywania / data ważności", "DD-MM-RRRR lub bezterminowo"),
-        Triple("legalBasis", "Podstawa prawna lub regulaminowa", ""),
-        Triple("annotations", "Adnotacje urzędowe i uwagi", "")
-    )
     return when (documentId) {
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "rod_bank_accounts", "entity_bank_accounts",
@@ -107,6 +97,18 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("validTo", "Koniec ochrony", "DD-MM-RRRR"),
             Triple("premium", "Składka i częstotliwość płatności", ""),
             Triple("claimsContact", "Kontakt do zgłoszenia szkody", "")
+        )
+        "mission_travel" -> fields(
+            Triple("travellerName", "Osoba odbywająca podróż", ""),
+            Triple("missionTitle", "Nazwa misji / delegacji", ""),
+            Triple("destination", "Miejsce docelowe i trasa", ""),
+            Triple("organizingInstitution", "Organizator / jednostka delegująca", ""),
+            Triple("purpose", "Cel podróży służbowej / misyjnej", ""),
+            Triple("authorizationNumber", "Numer polecenia / upoważnienia", ""),
+            Triple("departureDate", "Data rozpoczęcia", "DD-MM-RRRR"),
+            Triple("returnDate", "Data zakończenia", "DD-MM-RRRR"),
+            Triple("responsiblePerson", "Osoba odpowiedzialna / kontakt", ""),
+            Triple("fundingSource", "Źródło finansowania", "")
         )
         "criminal_record" -> fields(
             Triple("applicantName", "Imię i nazwisko osoby, której dotyczy zaświadczenie", ""),
@@ -400,6 +402,16 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             )
             else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
         }
+
+internal fun documentUsesDedicatedEditor(documentId: String): Boolean =
+    documentId in setOf(
+        "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
+        "disability", "church", "civil", "business", "entity", "rod_bank_accounts", "entity_bank_accounts",
+        "vaccines", "signed_pdf", "imported", "children", "branding", "loyalty", "loyalty_cards",
+        "professional"
+    ) || churchGraphicDocumentTargets().any { it.first == documentId } ||
+        familyEntityGraphicDocumentTargets().any { it.first == documentId } ||
+        officialGraphicDocumentTargets().any { it.first == documentId }
 
 private val legacyDocumentEditorFieldKeys = setOf(
     "birthDate", "birthPlace", "birthSurname", "citizenship", "contactAddress", "contactEmail",
