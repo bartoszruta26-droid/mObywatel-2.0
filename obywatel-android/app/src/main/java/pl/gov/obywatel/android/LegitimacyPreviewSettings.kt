@@ -484,7 +484,7 @@ internal object LegitimacyPreviewSettingsStore {
             showCard = p.getBoolean("${key}_show_card", true),
             showReverse = p.getBoolean("${key}_show_reverse", false),
             tileBackgroundAssetId = p.getString("${key}_tile_background", "").orEmpty(),
-            tileVectorBackgroundAssetId = p.getString("${key}_tile_vector_background", p.getString("global_document_tile_vector_background", "")).orEmpty(),
+            tileVectorBackgroundAssetId = p.getString("${key}_tile_vector_background", "").orEmpty(),
             showHologram = p.getBoolean("${key}_show_hologram", false),
             hologramAssetId = p.getString("${key}_hologram_asset", "builtin_drawable_file_00000000db3c820aa85356eab8c60f10").orEmpty(),
             hologramAlpha = p.getFloat("${key}_hologram_alpha", 0.46f),
