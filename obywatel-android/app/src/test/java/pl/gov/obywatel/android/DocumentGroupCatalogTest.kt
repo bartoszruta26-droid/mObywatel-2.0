@@ -42,5 +42,6 @@ class DocumentGroupCatalogTest {
         assertTrue(keys.isNotEmpty())
         assertEquals(keys.size, keys.toSet().size)
         assertTrue(keys.all { it.startsWith("doc_") })
+        assertTrue(keys.all { it.length <= 64 && it.matches(Regex("[A-Za-z0-9_-]+")) })
     }
 }
