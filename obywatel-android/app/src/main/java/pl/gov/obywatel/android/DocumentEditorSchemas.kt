@@ -423,7 +423,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
                 Triple("assetSource", "Źródło zasobu", ""),
                 Triple("usageRights", "Prawa i zakres użycia", "")
             )
-            "military_book" -> fields(
+            documentId == "military_book" -> fields(
             Triple("holderName", "Imię i nazwisko żołnierza", ""),
             Triple("serviceNumber", "Numer ewidencyjny / wojskowy", ""),
             Triple("peselOrId", "PESEL / identyfikator", ""),
@@ -440,7 +440,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("validityStatus", "Status dokumentu", "aktywny / archiwalny / do wymiany"),
             Triple("sourceDocument", "Dokument źródłowy / podstawa wpisu", "")
         )
-        "martial_arts" -> fields(
+        documentId == "martial_arts" -> fields(
             Triple("holderName", "Imię i nazwisko posiadacza", ""),
             Triple("discipline", "Dyscyplina / styl sztuk walki", ""),
             Triple("club", "Klub / szkoła / organizacja", ""),
@@ -453,7 +453,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("medicalRestrictions", "Ograniczenia udziału / uwagi zdrowotne", ""),
             Triple("validity", "Ważność / status członkostwa", "")
         )
-        "shooting_sport" -> fields(
+        documentId == "shooting_sport" -> fields(
             Triple("holderName", "Imię i nazwisko posiadacza", ""),
             Triple("sportOrganization", "Klub / stowarzyszenie strzeleckie", ""),
             Triple("licenseNumber", "Numer licencji sportowej", ""),
@@ -466,7 +466,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("competitionAchievements", "Osiągnięcia i wyniki zawodów", ""),
             Triple("documentStatus", "Status licencji / dokumentu", "")
         )
-        "archery" -> fields(
+        documentId == "archery" -> fields(
             Triple("holderName", "Imię i nazwisko posiadacza", ""),
             Triple("discipline", "Odmiana łucznictwa", "sportowe / terenowe / tradycyjne"),
             Triple("club", "Klub / organizacja", ""),
@@ -479,7 +479,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("achievements", "Osiągnięcia / wyniki zawodów", ""),
             Triple("status", "Status członkostwa / licencji", "")
         )
-        "tactical_training" -> fields(
+        documentId == "tactical_training" -> fields(
             Triple("participantName", "Imię i nazwisko uczestnika", ""),
             Triple("courseName", "Nazwa szkolenia", ""),
             Triple("trainingProvider", "Organizator / podmiot szkolący", ""),
@@ -493,7 +493,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("legalBasis", "Podstawa organizacyjna / regulamin", ""),
             Triple("status", "Status / ważność", "")
         )
-        "survival_training" -> fields(
+        documentId == "survival_training" -> fields(
             Triple("participantName", "Imię i nazwisko uczestnika", ""),
             Triple("courseName", "Nazwa kursu / poziom", ""),
             Triple("provider", "Organizator / podmiot szkolący", ""),
@@ -507,7 +507,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("validUntil", "Termin odnowienia, jeśli dotyczy", "DD-MM-RRRR"),
             Triple("status", "Status dokumentu", "")
         )
-        "security_guard" -> fields(
+        documentId == "security_guard" -> fields(
             Triple("holderName", "Imię i nazwisko posiadacza", ""),
             Triple("qualificationName", "Nazwa kwalifikacji / uprawnienia", ""),
             Triple("registerNumber", "Numer wpisu do rejestru, jeśli dotyczy", ""),
@@ -521,7 +521,7 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("medicalFitness", "Orzeczenie o zdolności, jeśli dotyczy", ""),
             Triple("status", "Status wpisu / uprawnienia", "")
         )
-        "defense_training" -> fields(
+        documentId == "defense_training" -> fields(
             Triple("participantName", "Imię i nazwisko uczestnika", ""),
             Triple("programName", "Nazwa programu / szkolenia obronnego", ""),
             Triple("organizer", "Organizator / jednostka prowadząca", ""),
@@ -534,6 +534,46 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("legalBasis", "Podstawa prawna / programowa", ""),
             Triple("validUntil", "Termin aktualizacji, jeśli dotyczy", "DD-MM-RRRR"),
             Triple("status", "Status dokumentu", "")
+        )
+        documentId == "historical_reenactment" -> fields(
+            Triple("holderName", "Imię i nazwisko rekonstruktora", ""),
+            Triple("reenactmentGroup", "Grupa / stowarzyszenie rekonstrukcyjne", ""),
+            Triple("membershipNumber", "Numer legitymacji członkowskiej", ""),
+            Triple("historicalPeriod", "Rekonstruowana epoka / okres historyczny", ""),
+            Triple("historicalFormation", "Formacja / środowisko historyczne", ""),
+            Triple("reenactmentRole", "Rola / funkcja odtwórcza", ""),
+            Triple("membershipStart", "Data przyjęcia do grupy", "DD-MM-RRRR"),
+            Triple("membershipStatus", "Status członkostwa", "aktywne / zawieszone / archiwalne"),
+            Triple("groupRepresentative", "Osoba upoważniona do potwierdzenia członkostwa", ""),
+            Triple("documentNumber", "Numer legitymacji", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validUntil", "Termin ważności, jeśli dotyczy", "DD-MM-RRRR")
+        )
+        documentId == "reenactment_qualification" -> fields(
+            Triple("holderName", "Imię i nazwisko uczestnika", ""),
+            Triple("qualificationTitle", "Nazwa kwalifikacji rekonstruktorskiej", ""),
+            Triple("historicalPeriod", "Epoka / okres historyczny", ""),
+            Triple("specialization", "Specjalizacja historyczna", ""),
+            Triple("trainingProvider", "Organizator szkolenia", ""),
+            Triple("trainingScope", "Zakres szkolenia i kompetencji", ""),
+            Triple("completionDate", "Data ukończenia", "DD-MM-RRRR"),
+            Triple("assessment", "Sposób i wynik weryfikacji", ""),
+            Triple("certificateNumber", "Numer certyfikatu", ""),
+            Triple("issuingAuthority", "Podmiot wydający", ""),
+            Triple("validUntil", "Termin aktualizacji, jeśli dotyczy", "DD-MM-RRRR")
+        )
+        documentId == "reenactment_event" -> fields(
+            Triple("participantName", "Imię i nazwisko uczestnika", ""),
+            Triple("eventName", "Nazwa wydarzenia / inscenizacji", ""),
+            Triple("eventOrganizer", "Organizator / instytucja", ""),
+            Triple("eventDate", "Data wydarzenia", "DD-MM-RRRR"),
+            Triple("eventLocation", "Miejsce wydarzenia", ""),
+            Triple("historicalPeriod", "Epoka / temat historyczny", ""),
+            Triple("reenactmentGroup", "Grupa reprezentowana przez uczestnika", ""),
+            Triple("participantRole", "Rola uczestnika", ""),
+            Triple("participationStatus", "Status udziału", "zgłoszony / potwierdzony / zrealizowany"),
+            Triple("authorizationNumber", "Numer zgłoszenia / potwierdzenia", ""),
+            Triple("organizerContact", "Kontakt organizatora", "")
         )
         else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
         }
