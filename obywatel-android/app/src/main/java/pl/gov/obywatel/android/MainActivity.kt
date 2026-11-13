@@ -1319,7 +1319,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             DocumentRouteType.SPECIALIZED -> when (route.destination) {
                 "registry_extract" -> openSettingsDocumentEditor("registry")
                 "children" -> openSettingsDocumentEditor("children")
-                "bank_accounts" -> openSettingsDocumentEditor("bank_accounts")
+                "bank_accounts" -> showBankAccounts = true
                 "vaccines" -> openSettingsDocumentEditor("vaccines")
                 "signed_pdf" -> openSettingsDocumentEditor("signed_pdf")
                 "imported" -> openSettingsDocumentEditor("imported")
