@@ -965,14 +965,17 @@ internal val documentDisplayOptions = (listOf(
     Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
     Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
     Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document),
-    Triple("military_book", "Książeczka wojskowa", R.drawable.lib_ic_document),
-    Triple("martial_arts", "Legitymacja sztuk walki", R.drawable.work),
-    Triple("shooting_sport", "Legitymacja strzelecka i sportowa", R.drawable.lib_ic_document),
-    Triple("archery", "Legitymacja łucznicza", R.drawable.work),
-    Triple("tactical_training", "Certyfikaty szkolenia taktycznego", R.drawable.lib_ic_document),
-    Triple("survival_training", "Certyfikaty surwiwalu i ratownictwa terenowego", R.drawable.lib_ic_document),
-    Triple("security_guard", "Legitymacja i kwalifikacje ochroniarskie", R.drawable.lib_ic_lock),
-    Triple("defense_training", "Dokumenty szkolenia obronnego", R.drawable.lib_ic_document)
+    Triple("military_book", "Książeczka wojskowa", R.drawable.tile_ic_armed_service_outline),
+    Triple("martial_arts", "Legitymacja sztuk walki", R.drawable.tile_ic_armed_service_outline),
+    Triple("shooting_sport", "Legitymacja strzelecka i sportowa", R.drawable.tile_ic_armed_service_outline),
+    Triple("archery", "Legitymacja łucznicza", R.drawable.tile_ic_armed_service_outline),
+    Triple("tactical_training", "Certyfikaty szkolenia taktycznego", R.drawable.tile_ic_armed_service_outline),
+    Triple("survival_training", "Certyfikaty surwiwalu i ratownictwa terenowego", R.drawable.tile_ic_armed_service_outline),
+    Triple("security_guard", "Legitymacja i kwalifikacje ochroniarskie", R.drawable.tile_ic_armed_service_outline),
+    Triple("defense_training", "Dokumenty szkolenia obronnego", R.drawable.tile_ic_armed_service_outline),
+    Triple("historical_reenactment", "Legitymacja członka grupy rekonstrukcji historycznej", R.drawable.tile_ic_armed_service_outline),
+    Triple("reenactment_qualification", "Certyfikat kwalifikacji rekonstruktora", R.drawable.tile_ic_armed_service_outline),
+    Triple("reenactment_event", "Karta uczestnictwa w wydarzeniu historycznym", R.drawable.tile_ic_armed_service_outline)
 ) + documentBrandTargets
     .filterNot { (id, _) -> listOf(
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
@@ -1005,51 +1008,23 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
-    id in setOf("military_book", "martial_arts", "shooting_sport", "archery", "tactical_training", "survival_training", "security_guard", "defense_training") ->
-        "Służba zbrojna"
-    // Keep the core identity documents in an explicit, stable bucket. These IDs
-    // must remain visible in the visibility catalog even as new groups evolve.
-    id in setOf("profile", "identity", "passport") ->
-        "Dokumenty osobiste i tożsamościowe"
-    id == "church" || id.startsWith("church_") || id == "organization_church" ||
-        id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } ->
-        "Dokumenty kościelne"
-    id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" ->
-        "Dokumenty rodowe i rodzinne"
-    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") ->
-        "Dokumenty finansowe"
-    id == "parliament" ->
-        "Dokumenty publiczne i obywatelskie"
-    id == "business" || id == "entity" || id == "registry" ||
-        id.startsWith("entity_") || id.startsWith("organization_") ->
-        "Dokumenty firmowe i podmiotowe"
-    id == "professional" || id.startsWith("professional_") ||
-        id in setOf("training", "student", "eu_education") ->
-        "Dokumenty zawodowe i edukacyjne"
-    id == "civil" || id in setOf(
-        "birth_extract", "marriage_extract", "death_extract", "criminal_record",
-        "vehicle_registration", "official"
-    ) || officialGraphicDocumentTargets().any { it.first == id } ->
-        "Dokumenty cywilne i urzędowe"
-    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") ->
-        "Dokumenty zdrowotne i rodzinne"
-    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ||
-        documentBrandTargets.any { it.first == id } ->
-        "Pliki i pozostałe dokumenty"
-    else -> "Dokumenty osobiste i tożsamościowe"
+    id in setOf("military_book", "martial_arts", "shooting_sport", "archery", "tactical_training", "survival_training", "security_guard", "defense_training", "historical_reenactment", "reenactment_qualification", "reenactment_event") -> "Służba wojskowa"
+    id in setOf("profile", "identity", "passport") -> "Służba osobista"
+    id == "church" || id.startsWith("church_") || id == "organization_church" || id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
+    id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
+    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
+    id == "parliament" -> "Służba państwowa"
+    id == "business" || id == "entity" || id == "registry" || id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
+    id == "professional" || id.startsWith("professional_") || id in setOf("training", "student", "eu_education") -> "Służba zawodowa"
+    id == "civil" || id in setOf("birth_extract", "marriage_extract", "death_extract", "criminal_record", "vehicle_registration", "official") || officialGraphicDocumentTargets().any { it.first == id } -> "Służba cywilna"
+    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") -> "Służba zdrowotna"
+    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") || documentBrandTargets.any { it.first == id } -> "Zasoby i dokumenty własne"
+    else -> "Służba osobista"
 }
 internal val documentVisibilityGroupOrder = listOf(
-    "Służba zbrojna",
-    "Dokumenty osobiste i tożsamościowe",
-    "Dokumenty publiczne i obywatelskie",
-    "Dokumenty cywilne i urzędowe",
-    "Dokumenty kościelne",
-    "Dokumenty rodowe i rodzinne",
-    "Dokumenty firmowe i podmiotowe",
-    "Dokumenty finansowe",
-    "Dokumenty zawodowe i edukacyjne",
-    "Dokumenty zdrowotne i rodzinne",
-    "Pliki i pozostałe dokumenty"
+    "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
+    "Służba kościelna", "Służba wojskowa", "Służba zawodowa", "Służba gospodarcza",
+    "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
 private val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
     id to if (id == "identity") "dashboard" else "hidden"
@@ -5021,7 +4996,7 @@ private fun CredentialAppearanceSettingsScreen(
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             listOf(
-                                CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                                CREDENTIAL_FIELD_HIDDEN to "Brak",
                                 CREDENTIAL_FIELD_FRONT to "Awers",
                                 CREDENTIAL_FIELD_BACK to "Rewers"
                             ).forEach { (target, caption) ->
