@@ -2116,12 +2116,12 @@ internal fun DocumentFieldEditor(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
+    settingsState: androidx.compose.runtime.MutableState<LegitimacyPreviewSettings>,
     placeholder: String = "Wpisz dane",
     minLines: Int = 1,
     maxLines: Int = 1
 ) {
-    val binding = rememberLegitimacyPreviewSettings(documentKey)
-    val settings = binding.value
+    val settings = settingsState.value
     val selectedSide = credentialFieldSide(
         fieldKey, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
     )
@@ -2144,7 +2144,7 @@ internal fun DocumentFieldEditor(
             ).forEach { (target, caption) ->
                 Row(
                     Modifier.weight(1f).clickable {
-                        val current = binding.value
+                        val current = settingsState.value
                         val updated = current.copy(
                             fieldSides = current.fieldSides + (fieldKey to target),
                             visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN)
@@ -2152,7 +2152,7 @@ internal fun DocumentFieldEditor(
                             visibleFieldsConfigured = true
                         )
                         LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
-                        binding.value = updated
+                        settingsState.value = updated
                     },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
