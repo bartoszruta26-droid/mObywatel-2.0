@@ -1026,19 +1026,32 @@ internal fun LegitimacyPreviewSettingsPanel(
             OutlinedButton(onClick = { tileBackgroundPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
                 modifier = Modifier.fillMaxWidth()) { Text("Wczytaj własne tło kafelka") }
 
+            val isGlobalDocumentAppearance = documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY
+            val selectedDocumentTileVectorBackground = if (isGlobalDocumentAppearance) {
+                settings.tileVectorBackgroundAssetId
+            } else {
+                context.getSharedPreferences("legitimacy_preview_preferences", Context.MODE_PRIVATE)
+                    .getString("${documentKey}_tile_vector_background", "").orEmpty()
+            }
             GraphicAssetPreviewGrid(
-                title = "Wspólne wektorowe tło kafelków dokumentów — wybierz podgląd",
-                selectedId = settings.tileVectorBackgroundAssetId,
+                title = if (isGlobalDocumentAppearance)
+                    "Wspólne wektorowe tło kafelków wszystkich dokumentów"
+                else "Wektorowe tło kafelka tego dokumentu",
+                selectedId = selectedDocumentTileVectorBackground,
                 choices = remember(documentKey, assets) {
-                    listOf(Triple("", "Domyślne wektorowe tło", null)) +
+                    listOf(Triple("", if (isGlobalDocumentAppearance) "Domyślne wspólne tło" else "Użyj wspólnego tła dokumentów", null)) +
                         assets.filter { it.kind == "Grafika wektorowa tła kafelków" }
                             .map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
                 },
                 onSelect = { update(settings.copy(tileVectorBackgroundAssetId = it)) }
             )
-            Text("Grafika wektorowa podglądu kafelka", fontWeight = FontWeight.SemiBold)
-            Text("To ustawienie dotyczy wszystkich dokumentów wyświetlanych w Główne → Dokumenty. Nie zmienia kafelków usług ani pozostałych elementów interfejsu.",
-                style = MaterialTheme.typography.bodySmall)
+            Text(
+                if (isGlobalDocumentAppearance)
+                    "Wspólne tło jest używane przez wszystkie dokumenty w Główne → Dokumenty, zarówno pogrupowane, jak i niepogrupowane. Dokument może otrzymać własne tło w jego ustawieniach."
+                else
+                    "Wybór grafiki zastępuje wspólne tło wyłącznie dla tego dokumentu. Opcja „Użyj wspólnego tła dokumentów” przywraca dziedziczenie ustawienia globalnego.",
+                style = MaterialTheme.typography.bodySmall
+            )
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 tileVectorMotifOptions.forEach { (id, label) ->
                     FilterChip(selected = settings.tileVectorMotifId == id, onClick = { update(settings.copy(tileVectorMotifId = id)) }, label = { Text(label) })
