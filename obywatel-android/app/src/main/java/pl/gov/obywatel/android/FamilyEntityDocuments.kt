@@ -177,7 +177,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
         } else {
             val doc = catalog.first { it.id == selected }
             val saved = records[doc.id].orEmpty()
-            var local by remember(doc.id) { mutableStateOf(saved) }
+            val local = remember(doc.id) { mutableStateMapOf<String, String>().apply { putAll(saved) } }
             var accountCount by remember(doc.id) { mutableIntStateOf((saved["accountCount"]?.toIntOrNull() ?: 1).coerceIn(1, 30)) }
             val isBankRegister = doc.id == "rod_bank_accounts" || doc.id == "entity_bank_accounts"
             val previewKey = if (isBankRegister) "bank_accounts" else doc.id
@@ -211,6 +211,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 Text(doc.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                GeneralDocumentOcrEditor(if (bankAccountsOnly) "bank_accounts" else if (entityMode) "business" else "family", local, context) { message = it }
                 if (isBankRegister) {
                     Text("Rejestr obsługuje do 30 rachunków w różnych bankach i walutach. Nie przechowuj PIN-ów, haseł ani kodów autoryzacyjnych.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     repeat(accountCount) { accountIndex ->
@@ -221,7 +222,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                                     val key = "account_${accountIndex}_${fieldIndex}"
                                     OutlinedTextField(
                                         value = local[key].orEmpty(),
-                                        onValueChange = { local = local + (key to it) },
+                                        onValueChange = { local[key] = it },
                                         label = { Text(label) },
                                         modifier = Modifier.fillMaxWidth(),
                                         singleLine = fieldIndex in listOf(2, 3, 4, 8, 9, 10),
@@ -237,14 +238,14 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                         OutlinedButton(onClick = {
                             if (accountCount > 1) {
                                 accountCount--
-                                local = local.filterKeys { key -> !key.startsWith("account_${accountCount}_") }
+                                local.keys.filter { key -> key.startsWith("account_${accountCount}_") }.forEach { local.remove(it) }
                             }
                         }, modifier = Modifier.weight(1f), enabled = accountCount > 1) { Text("Usuń ostatni") }
                     }
                 } else doc.fields.forEachIndexed { index, label ->
                     OutlinedTextField(
                         value = local["f$index"].orEmpty(),
-                        onValueChange = { local = local + ("f$index" to it) },
+                        onValueChange = { local["f$index"] = it },
                         label = { Text(label) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = if (label.contains("Treść") || label.contains("Uwagi") || label.contains("Podstawa")) 3 else 1,
