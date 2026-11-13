@@ -188,7 +188,7 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
         } else {
             val doc = churchDocs.first { it.id == selected }
             val saved = records[doc.id].orEmpty()
-            var local by remember(doc.id) { mutableStateOf(saved) }
+            val local = remember(doc.id) { mutableStateMapOf<String, String>().apply { putAll(saved) } }
             val churchNameIndex = doc.fields.indexOfFirst { it.contains("Pełna nazwa Kościoła", ignoreCase = true) || it.contains("nazwa wspólnoty", ignoreCase = true) }
             val churchOwner = if (churchNameIndex >= 0) local["f$churchNameIndex"].orEmpty() else ""
             // Każdy dokument podrzędny ma własny klucz wyglądu; DocumentBrandStore
@@ -198,9 +198,6 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                 Triple("churchField_$index", label.uppercase(), local["f$index"].orEmpty().ifBlank { "—" })
             }
             Text(doc.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            if (!readOnly) OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Edytuj wygląd graficzny i podgląd tego dokumentu")
-            }
             if (readOnly) {
                 val settings = rememberLegitimacyPreviewSettings(brandDocumentType).value.copy(visibleFieldsConfigured = false)
                 UnifiedCredentialCard(
@@ -215,25 +212,39 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                 Text("Podgląd wyłącznie do odczytu. Edycja jest dostępna w Więcej → Ustawienia → Dokumenty kościelne.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
-                AssignedDocumentBrandPreview(
-                    documentType = brandDocumentType,
-                    owner = churchOwner,
-                    title = "Znak przypisany do dokumentu",
-                    subtitle = "Herb, godło lub logo wystawcy"
-                )
+                GeneralDocumentOcrEditor("church", local, context) { message = it }
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                    Text(doc.note, Modifier.padding(12.dp), color = Color(0xFF284B64), style = MaterialTheme.typography.bodySmall)
+                    Text(doc.note, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.bodySmall)
                 }
                 doc.fields.forEachIndexed { index, label ->
                     OutlinedTextField(
                         value = local["f$index"].orEmpty(),
-                        onValueChange = { local = local + ("f$index" to it) },
+                        onValueChange = { local["f$index"] = it },
                         label = { Text(label) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = if (label.contains("Treść") || label.contains("Zakres") || label.contains("Uwagi")) 3 else 1,
                         maxLines = 6
                     )
                 }
+                DocumentOriginalAttachments(doc.id)
+                AssignedDocumentBrandPreview(
+                    documentType = brandDocumentType,
+                    owner = churchOwner,
+                    title = "Znak przypisany do dokumentu",
+                    subtitle = "Herb, godło lub logo wystawcy"
+                )
+                OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Edytuj wygląd graficzny")
+                }
+                Text("Podgląd dokumentu", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                UnifiedCredentialCard(
+                    documentKey = brandDocumentType,
+                    title = doc.title.uppercase(),
+                    subtitle = churchOwner.ifBlank { "DOKUMENT KOŚCIELNY" },
+                    holderName = churchOwner.ifBlank { "DANE WYSTAWCY" },
+                    fields = previewFields.take(12),
+                    settings = rememberLegitimacyPreviewSettings(brandDocumentType).value
+                )
                 Button(onClick = {
                     runCatching {
                         ChurchDocumentStore.save(context, records + (doc.id to local))

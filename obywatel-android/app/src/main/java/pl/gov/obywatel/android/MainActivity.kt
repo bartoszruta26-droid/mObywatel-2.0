@@ -150,7 +150,7 @@ import pl.gov.obywatel.android.ui.services.PublicServicesScreen
 import kotlinx.coroutines.delay
 
 @Composable
-private fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<String, String>, context: Context, saveMessage: (String) -> Unit) {
+internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<String, String>, context: Context, saveMessage: (String) -> Unit) {
     var processing by remember { mutableStateOf(false) }
     var recognizedText by remember { mutableStateOf(fields["${categoryId}OcrText"].orEmpty()) }
     var mappedCount by remember { mutableIntStateOf(0) }
@@ -473,8 +473,18 @@ private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
 
 @Composable
 private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
-    val foreground = MaterialTheme.colorScheme.onBackground
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    val context = LocalContext.current
+    val appearance = LocalApplicationAppearance.current
+    val foreground = Color(0xFFFFF1D1)
+    Box(Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(applicationDrawable(context, appearance.loginBackground,
+                R.drawable.file_00000000e0e4820a839fa3184993f41b)),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        Box(Modifier.fillMaxSize().background(Color(0x55000000)))
         Column(
             Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 28.dp),
             verticalArrangement = Arrangement.Top
@@ -1172,7 +1182,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showDocumentsEditor -> DemoDocumentsScreen(
                         categoryId = selectedEditorCategory,
                         onBack = { showDocumentsEditor = false; showSettingsMenu = true },
-                        onOpenSharedAppearance = { showCredentialAppearanceEditor = true }
+                        onOpenDocumentAppearance = { key -> credentialAppearanceTarget = key }
                     )
                     showRegistryEditor -> CredentialAppearanceEditorEntry("entity", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         EntityRegistryExtractScreen(onBack = { showRegistryEditor = false; showSettingsMenu = true }, editable = true)
@@ -1186,25 +1196,25 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
-                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "family" -> CredentialAppearanceEditorEntry("family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
                         FamilyEntityDocumentsScreen(entityMode = false, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "business" -> CredentialAppearanceEditorEntry("business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
                         FamilyEntityDocumentsScreen(entityMode = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "bank_accounts" -> CredentialAppearanceEditorEntry("bank_accounts", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
                         FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "church" -> CredentialAppearanceEditorEntry("church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
                         ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }) {
+                    settingsDocumentEditor == "civil" -> CredentialAppearanceEditorEntry("civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = false, showOcrStage = false) {
                         OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> graphicEditorReturnTarget = settingsDocumentEditor ?: "graphic_catalog"; settingsDocumentEditor = "graphic:$key" })
+                            onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
                     settingsDocumentEditor == "children_health" -> CredentialAppearanceEditorEntry("children", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         FamilyHealthRecordsScreen(initialSection = "children", onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
@@ -3920,7 +3930,7 @@ private val LocalCredentialFieldVisibility = androidx.compose.runtime.compositio
 private fun DemoDocumentsScreen(
     categoryId: String = "all",
     onBack: () -> Unit,
-    onOpenSharedAppearance: () -> Unit = {}
+    onOpenDocumentAppearance: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val fields = remember {
@@ -3994,7 +4004,11 @@ private fun DemoDocumentsScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        if (categoryId in setOf("identity_card", "parliament", "training", "student", "disability", "passport")) {
+        if (categoryId in setOf(
+                "identity_card", "parliament", "training", "student", "disability", "passport",
+                "family", "church", "civil", "business", "bank_accounts", "children_health",
+                "vaccines", "professional", "imported", "signed_pdf", "entity"
+            )) {
             GeneralDocumentOcrEditor(categoryId, fields, context) { saveMessage = it }
         }
          if (categoryId == "all" || categoryId == "profile") {
@@ -4434,9 +4448,18 @@ private fun DemoDocumentsScreen(
             }
         }
         }
+        if (categoryId != "all") {
+            DocumentOriginalAttachments(credentialKey)
+            Text("Wygląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            OutlinedButton(
+                onClick = { onOpenDocumentAppearance(credentialKey) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Edytuj wygląd graficzny") }
+            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
+        }
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Konfiguracja i zapis", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                Text("Zapis dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 Text("Dane i zdjęcie są zabezpieczane przed nieuprawnionym dostępem.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 androidx.compose.material3.Button(
                     onClick = {
@@ -4453,20 +4476,7 @@ private fun DemoDocumentsScreen(
             }
         }
         if (categoryId != "all") {
-            Text("Grafiki przypisane do tego dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            Text("Indywidualny wzór graficzny legitymacji", fontWeight = FontWeight.Bold)
-            Text("Ustawienia poniżej dotyczą wyłącznie tego dokumentu i zastępują w nim odpowiednie parametry wzoru wspólnego.",
-                style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(onClick = onOpenSharedAppearance, modifier = Modifier.fillMaxWidth()) {
-                Text("Edytuj wspólny wzór wszystkich legitymacji")
-            }
-            LegitimacyPreviewSettingsPanel(
-                documentKey = credentialKey,
-                settings = appearance.value,
-                onChange = { appearance.value = it },
-                assetSelectionOnly = true
-            )
-            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
+            DocumentPdfExportButton(editorTitle, fields.toMap(), documentType = credentialKey)
         }
         Text(
             "Dane są zabezpieczane z użyciem mechanizmów systemu Android. Zachowaj ostrożność: mogą zawierać informacje wrażliwe.",
@@ -4482,15 +4492,50 @@ private fun DemoDocumentsScreen(
 private fun CredentialAppearanceEditorEntry(
     documentKey: String,
     onOpenAppearance: (String) -> Unit,
+    showAppearanceAction: Boolean = true,
+    showOcrStage: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val ocrPrefix = "groupedOcr:$documentKey:"
+    val ocrFields = remember(documentKey) {
+        mutableStateMapOf<String, String>().apply {
+            DemoIdentityStore.load(context).filterKeys { it.startsWith(ocrPrefix) }
+                .forEach { (key, value) -> put(key.removePrefix(ocrPrefix), value) }
+        }
+    }
     Column(Modifier.fillMaxSize()) {
+        if (showOcrStage) {
+            GeneralDocumentOcrEditor(documentKey, ocrFields, context) {
+                val snapshot = DemoIdentityStore.load(context).toMutableMap()
+                ocrFields.forEach { (key, value) -> snapshot[ocrPrefix + key] = value }
+                DemoIdentityStore.save(context, snapshot)
+            }
+            val suggestions = ocrFields.filterKeys { it != "${documentKey}OcrText" && it.isNotBlank() }
+            if (suggestions.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Propozycje odczytane przez OCR — do ręcznej weryfikacji",
+                            color = MaterialTheme.colorScheme.onSecondaryContainer, fontWeight = FontWeight.Bold)
+                        suggestions.forEach { (key, value) ->
+                            Text("${key}: ${value}", color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+        }
         Box(Modifier.weight(1f)) { content() }
-        OutlinedButton(
-            onClick = { onOpenAppearance(documentKey) },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            Text("Podgląd legitymacji, zdjęcie, flaga, godło i tło")
+        if (showAppearanceAction) {
+            OutlinedButton(
+                onClick = { onOpenAppearance(documentKey) },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text("Edytuj wygląd graficzny")
+            }
         }
     }
 }
@@ -4600,7 +4645,7 @@ private fun CredentialAppearanceSettingsScreen(
             documentKey = documentKey,
             settings = state.value,
             onChange = { state.value = it },
-            assetSelectionOnly = true
+            assetSelectionOnly = false
         )
         val previewValues = savedValues.toMap() + (
             "photo" to (savedValues[documentPhotoKey] ?: savedValues["photo"].orEmpty())

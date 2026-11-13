@@ -213,6 +213,8 @@ class BankAccountsNavigationTest {
         openSettingsMenu()
         composeRule.onNodeWithText("Legitymacja kursanta").performScrollTo().performClick()
         composeRule.waitForIdle()
+        composeRule.onNodeWithText("Edytuj wygląd graficzny").performScrollTo().performClick()
+        composeRule.waitForIdle()
 
         composeRule.onNodeWithText("Tło legitymacji").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Wybierz tło z katalogu").performScrollTo().assertIsDisplayed()
