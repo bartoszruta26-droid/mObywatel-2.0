@@ -1100,12 +1100,14 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts:entity_bank_accounts"
             documentId == "family" -> settingsDocumentEditor = "family"
             documentId.startsWith("rod_") -> settingsDocumentEditor = "family:$documentId"
-            documentId == "church" || documentId == "mission_travel" -> settingsDocumentEditor = "church"
+            documentId == "church" -> settingsDocumentEditor = "church"
+            documentId == "mission_travel" -> { selectedEditorCategory = "catalog:mission_travel"; showDocumentsEditor = true }
             documentId.startsWith("church_") -> settingsDocumentEditor = if (churchGraphicDocumentTargets().any { it.first == documentId }) "church:$documentId" else "church"
             documentId == "civil" -> settingsDocumentEditor = "civil"
             documentId in setOf("birth_extract", "marriage_extract", "death_extract", "vehicle_registration", "official") ||
                 officialGraphicDocumentTargets().any { it.first == documentId } -> settingsDocumentEditor = "civil:$documentId"
-            documentId == "business" || documentId == "entity" || documentId.startsWith("organization_") -> settingsDocumentEditor = "business"
+            documentId == "business" || documentId == "entity" -> settingsDocumentEditor = "business"
+            documentId.startsWith("organization_") -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
             documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
             documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
