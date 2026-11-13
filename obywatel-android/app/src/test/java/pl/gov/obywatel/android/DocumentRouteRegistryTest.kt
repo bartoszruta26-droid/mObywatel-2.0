@@ -28,7 +28,7 @@ class DocumentRouteRegistryTest {
     }
 
     @Test
-    fun concreteDocumentTilesKeepTheirOwnIdsInsteadOfOpeningGroupScreens() {
+    fun concreteDocumentTilesKeepTheirOwnIdsForDirectFormEditing() {
         val concreteDocumentIds = setOf(
             "birth_extract", "marriage_extract", "death_extract", "insurance_vehicle",
             "insurance_professional", "insurance_private", "insurance_business",
@@ -45,6 +45,16 @@ class DocumentRouteRegistryTest {
             assertEquals("$id must preserve its identifier", id, route.documentId)
             assertNull("$id must not point to a group/specialized destination", route.destination)
         }
+    }
+
+    @Test
+    fun genericChurchTitleTilesHaveDedicatedSchemaBackedFormFields() {
+        listOf("church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister", "church_missionary")
+            .forEach { id ->
+                val definitions = documentEditorFieldDefinitions(id)
+                assertNotNull("Missing schema for $id", definitions)
+                org.junit.Assert.assertTrue("$id must expose form fields", definitions.isNotEmpty())
+            }
     }
 
     @Test
