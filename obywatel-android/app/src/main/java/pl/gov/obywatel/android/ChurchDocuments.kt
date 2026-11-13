@@ -213,12 +213,6 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
             } else {
                 GeneralDocumentOcrEditor("church", local, context) { message = it }
-                AssignedDocumentBrandPreview(
-                    documentType = brandDocumentType,
-                    owner = churchOwner,
-                    title = "Znak przypisany do dokumentu",
-                    subtitle = "Herb, godło lub logo wystawcy"
-                )
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
                     Text(doc.note, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.bodySmall)
                 }
@@ -232,6 +226,12 @@ internal fun ChurchDocumentsScreen(onBack: () -> Unit, readOnly: Boolean = false
                         maxLines = 6
                     )
                 }
+                AssignedDocumentBrandPreview(
+                    documentType = brandDocumentType,
+                    owner = churchOwner,
+                    title = "Znak przypisany do dokumentu",
+                    subtitle = "Herb, godło lub logo wystawcy"
+                )
                 OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
                     Text("Edytuj wygląd graficzny")
                 }
