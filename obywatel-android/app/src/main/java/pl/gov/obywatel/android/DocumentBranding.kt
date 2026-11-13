@@ -1233,7 +1233,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                     contentDescription = asset.label,
                                     modifier = Modifier.size(64.dp),
                                     contentScale = ContentScale.Fit,
-                                    colorFilter = if (asset.kind == "Ikona wektorowa kafelka")
+                                    colorFilter = if (asset.kind in setOf("Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona"))
                                         androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
                                     else null
                                 )
