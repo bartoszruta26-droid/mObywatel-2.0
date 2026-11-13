@@ -346,7 +346,7 @@ internal fun ProfessionalQualificationsScreen(onBack: () -> Unit, readOnly: Bool
                     Text("Status: " + p.status, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                     if (readOnly) {
                         val previewSettings = rememberLegitimacyPreviewSettings("professional").value
-                        UnifiedCredentialCard(
+                        CredentialCardSides(
                             documentKey = "professional",
                             title = p.profession.uppercase(),
                             subtitle = p.issuer.ifBlank { "KWALIFIKACJA ZAWODOWA" },
