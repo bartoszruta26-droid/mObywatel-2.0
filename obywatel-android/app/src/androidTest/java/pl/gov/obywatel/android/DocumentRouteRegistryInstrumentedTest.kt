@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
  * the same Android runtime used by the application.
  *
  * Both home sections call MainActivity.openDocumentCard, therefore the
- * registry contract below is shared by "Dokumenty" and "Inne dokumenty".
+ * form-routing contract below is shared by "Dokumenty" and "Inne dokumenty".
  */
 @RunWith(AndroidJUnit4::class)
 class DocumentRouteRegistryInstrumentedTest {
@@ -49,7 +49,7 @@ class DocumentRouteRegistryInstrumentedTest {
     )
 
     @Test
-    fun allTwentyFiveIndividualTilesResolveToTheirOwnDocumentPreview() {
+    fun allTwentyFiveIndividualTilesResolveToTheirOwnDocumentFormRoute() {
         individualDocumentIds.forEach { id ->
             val route = DocumentRouteRegistry.find(id)
             assertNotNull("Missing route for $id", route)
@@ -61,7 +61,7 @@ class DocumentRouteRegistryInstrumentedTest {
     }
 
     @Test
-    fun sampleTilesFromBothHomeSectionsUseTheSameExplicitRegistry() {
+    fun sampleTilesFromBothHomeSectionsUseTheSameExplicitFormRegistry() {
         // Representative IDs assigned to the two home sections by visibility settings.
         val dokumentySection = listOf("church_bishop", "birth_extract", "professional_medical")
         val inneDokumentySection = listOf("church_missionary", "vehicle_registration", "professional_other")
