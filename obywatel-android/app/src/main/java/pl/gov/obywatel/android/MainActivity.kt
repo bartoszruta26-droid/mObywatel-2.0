@@ -1336,6 +1336,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 mapOf(
                                     "documentCatalogManifest" to catalogManifest,
                                     "documentCatalogGroupOrder" to org.json.JSONArray(documentVisibilityGroupOrder).toString(),
+                                    "documentEditorSchemaVersion" to DOCUMENT_EDITOR_SCHEMA_VERSION,
                                     "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
                                     "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
                                     "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
@@ -1743,8 +1744,17 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 title = { Text("Import danych vCard") },
                 text = {
                     val current = remember { DemoIdentityStore.load(context) }
-                    val overwritten = incoming.keys.count { current.containsKey(it) }
-                    val added = incoming.size - overwritten
+                    val supportedProfileKeys = current.keys + documentEditorFieldKeys()
+                    val supportedArchiveKeys = setOf(
+                        "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion",
+                        "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
+                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
+                        "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
+                    )
+                    val recognizedIncoming = incoming.keys.count { it in supportedProfileKeys || it in supportedArchiveKeys || it.startsWith("cs_") || it.startsWith("dp_") }
+                    val overwritten = incoming.keys.count { it in supportedProfileKeys && current.containsKey(it) }
+                    val added = recognizedIncoming - overwritten
                     Text(
                         "Plik zawiera ${incoming.size} pól. Nowe: ${added}; zastąpią istniejące: ${overwritten}. " +
                             "Dane zostaną połączone z profilem. Po zapisie aplikacja sprawdzi zgodność zapisanych wartości."
@@ -1758,14 +1768,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 // Importuj wyłącznie pola należące do aktualnego modelu profilu.
                                 // Nieznane lub wycofane nazwy pól ze starszych archiwów vCard
                                 // są pomijane — nie tworzymy przez nie osieroconych wpisów.
-                                it in current.keys &&
-                                    !it.startsWith("cs_") && !it.startsWith("dp_") &&
-                                    it !in setOf(
-                                        "documentCatalogManifest", "documentCatalogGroupOrder", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
-                                        "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
-                                        "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
-                                        "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
-                                    )
+                                (it in current.keys || it in documentEditorFieldKeys()) &&
+                                    !it.startsWith("cs_") && !it.startsWith("dp_")
                             }
                             val mergedProfile = current.toMutableMap().apply { putAll(profileValues) }
                             PersonalDataPropagation.apply(mergedProfile)
@@ -1821,7 +1825,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val auxiliaryCount = incoming.keys.count {
                                 it.startsWith("cs_") || it.startsWith("dp_") ||
                                     it in setOf(
-                                        "documentCatalogManifest", "documentCatalogGroupOrder", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
