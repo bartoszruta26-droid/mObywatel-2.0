@@ -16,7 +16,8 @@ class DocumentRouteRegistryTest {
             "signed_pdf", "imported", "children", "branding", "loyalty", "birth_extract",
             "marriage_extract", "death_extract", "large_family", "blood_donor", "disability_card",
             "vehicle_registration", "insurance_vehicle", "insurance_professional", "insurance_private",
-            "insurance_business", "criminal_record", "mission_travel", "ehic", "eu_education",
+            "insurance_business", "criminal_record", "mission_travel", "ehic", "eu_education", "military_book", "martial_arts",
+            "shooting_sport", "archery", "tactical_training", "survival_training", "security_guard", "defense_training",
             "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister",
             "church_missionary", "professional", "professional_medical", "professional_education",
             "professional_therapeutic", "professional_other", "organization_foundation",
@@ -33,6 +34,8 @@ class DocumentRouteRegistryTest {
             "birth_extract", "marriage_extract", "death_extract", "insurance_vehicle",
             "insurance_professional", "insurance_private", "insurance_business",
             "vehicle_registration", "criminal_record", "mission_travel", "ehic", "eu_education",
+            "military_book", "martial_arts", "shooting_sport", "archery", "tactical_training",
+            "survival_training", "security_guard", "defense_training",
             "large_family", "blood_donor", "disability_card", "church_bishop", "church_archbishop",
             "church_cardinal", "church_abbot", "church_minister", "church_missionary",
             "professional_medical", "professional_education", "professional_therapeutic",
@@ -44,6 +47,20 @@ class DocumentRouteRegistryTest {
             assertEquals("$id must open its own document", DocumentRouteType.DOCUMENT, route.type)
             assertEquals("$id must preserve its identifier", id, route.documentId)
             assertNull("$id must not point to a group/specialized destination", route.destination)
+        }
+    }
+
+    @Test
+    fun armedServiceDocumentsBelongToTheirOwnGroupAndHaveDedicatedFields() {
+        val ids = listOf(
+            "military_book", "martial_arts", "shooting_sport", "archery",
+            "tactical_training", "survival_training", "security_guard", "defense_training"
+        )
+        assertTrue("Służba zbrojna" in documentVisibilityGroupOrder)
+        ids.forEach { id ->
+            assertEquals("Służba zbrojna", documentVisibilityGroup(id))
+            assertTrue("$id must have a tailored schema", documentEditorFieldDefinitions(id).isNotEmpty())
+            assertEquals("$id must open its own preview", DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
         }
     }
 
