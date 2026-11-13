@@ -4446,9 +4446,17 @@ private fun DemoDocumentsScreen(
             }
         }
         }
+        if (categoryId != "all") {
+            Text("Wygląd dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            OutlinedButton(
+                onClick = { onOpenDocumentAppearance(credentialKey) },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Edytuj wygląd graficzny") }
+            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
+        }
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Konfiguracja i zapis", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                Text("Zapis dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                 Text("Dane i zdjęcie są zabezpieczane przed nieuprawnionym dostępem.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 androidx.compose.material3.Button(
                     onClick = {
@@ -4465,20 +4473,12 @@ private fun DemoDocumentsScreen(
             }
         }
         if (categoryId != "all") {
-            Text("Grafiki przypisane do tego dokumentu", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            Text("Indywidualny wzór graficzny legitymacji", fontWeight = FontWeight.Bold)
-            Text("Ustawienia poniżej dotyczą wyłącznie tego dokumentu i zastępują w nim odpowiednie parametry wzoru wspólnego.",
-                style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = onOpenSharedAppearance, modifier = Modifier.fillMaxWidth()) {
                 Text("Edytuj wspólny wzór wszystkich legitymacji")
             }
-            LegitimacyPreviewSettingsPanel(
-                documentKey = credentialKey,
-                settings = appearance.value,
-                onChange = { appearance.value = it },
-                assetSelectionOnly = true
-            )
-            CredentialTemplatePreview(credentialKey, appearance.value, values = fields.toMap())
+        }
+        if (categoryId != "all") {
+            DocumentPdfExportButton(editorTitle, fields.toMap(), documentType = credentialKey)
         }
         Text(
             "Dane są zabezpieczane z użyciem mechanizmów systemu Android. Zachowaj ostrożność: mogą zawierać informacje wrażliwe.",
@@ -4494,15 +4494,18 @@ private fun DemoDocumentsScreen(
 private fun CredentialAppearanceEditorEntry(
     documentKey: String,
     onOpenAppearance: (String) -> Unit,
+    showAppearanceAction: Boolean = true,
     content: @Composable () -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
         Box(Modifier.weight(1f)) { content() }
-        OutlinedButton(
-            onClick = { onOpenAppearance(documentKey) },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            Text("Podgląd legitymacji, zdjęcie, flaga, godło i tło")
+        if (showAppearanceAction) {
+            OutlinedButton(
+                onClick = { onOpenAppearance(documentKey) },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text("Edytuj wygląd graficzny")
+            }
         }
     }
 }
@@ -4612,7 +4615,7 @@ private fun CredentialAppearanceSettingsScreen(
             documentKey = documentKey,
             settings = state.value,
             onChange = { state.value = it },
-            assetSelectionOnly = true
+            assetSelectionOnly = false
         )
         val previewValues = savedValues.toMap() + (
             "photo" to (savedValues[documentPhotoKey] ?: savedValues["photo"].orEmpty())
