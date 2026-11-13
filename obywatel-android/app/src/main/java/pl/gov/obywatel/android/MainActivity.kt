@@ -4690,18 +4690,23 @@ private fun CredentialAppearanceEditorEntry(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-    val ocrPrefix = "groupedOcr:$documentKey:"
+    val ocrStorageKey = "groupedOcr_${documentKey.hashCode().toUInt().toString(16)}"
     val ocrFields = remember(documentKey) {
         mutableStateMapOf<String, String>().apply {
-            DemoIdentityStore.load(context).filterKeys { it.startsWith(ocrPrefix) }
-                .forEach { (key, value) -> put(key.removePrefix(ocrPrefix), value) }
+            val encoded = DemoIdentityStore.load(context)[ocrStorageKey]
+            runCatching {
+                val saved = JSONObject(encoded ?: "{}")
+                saved.keys().forEach { key -> put(key, saved.optString(key)) }
+            }
         }
     }
     Column(Modifier.fillMaxSize()) {
         if (showOcrStage) {
             GeneralDocumentOcrEditor(documentKey, ocrFields, context) {
                 val snapshot = DemoIdentityStore.load(context).toMutableMap()
-                ocrFields.forEach { (key, value) -> snapshot[ocrPrefix + key] = value }
+                val savedOcr = JSONObject()
+                ocrFields.forEach { (key, value) -> savedOcr.put(key, value) }
+                snapshot[ocrStorageKey] = savedOcr.toString()
                 DemoIdentityStore.save(context, snapshot)
             }
             val suggestions = ocrFields.filterKeys { it != "${documentKey}OcrText" && it.isNotBlank() }
