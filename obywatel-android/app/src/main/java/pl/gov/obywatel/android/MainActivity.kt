@@ -241,7 +241,116 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
         }.start()
     }
 
+    fun recognizeTextFile(uri: Uri) {
+        runCatching {
+            val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                var total = 0
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    total += count
+                    require(total <= 5 * 1024 * 1024) { "Plik tekstowy przekracza limit 5 MB." }
+                    output.write(buffer, 0, count)
+                }
+                output.toByteArray()
+            } ?: error("Nie można otworzyć pliku tekstowego.")
+            require(bytes.isNotEmpty()) { "Plik tekstowy jest pusty." }
+            runCatching {
+                Charsets.UTF_8.newDecoder()
+                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                    .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+            }.getOrElse { String(bytes, java.nio.charset.Charset.forName("windows-1250")) }
+        }.onSuccess { applyRecognizedText(it) }
+            .onFailure { saveMessage("Nie można odczytać pliku tekstowego: ${it.localizedMessage ?: "błąd pliku"}") }
+    }
+
+    fun recognizePdf(uri: Uri) {
+        processing = true
+        Thread {
+            val pages = mutableListOf<Bitmap>()
+            var totalPages = 0
+            val error = runCatching {
+                context.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                    val renderer = android.graphics.pdf.PdfRenderer(descriptor)
+                    try {
+                        totalPages = renderer.pageCount
+                        require(totalPages > 0) { "Dokument PDF nie zawiera stron." }
+                        val pageLimit = minOf(totalPages, 20)
+                        for (pageIndex in 0 until pageLimit) {
+                            val page = renderer.openPage(pageIndex)
+                            try {
+                                val scale = minOf(1f, 1800f / maxOf(page.width, page.height))
+                                val width = (page.width * scale).toInt().coerceAtLeast(1)
+                                val height = (page.height * scale).toInt().coerceAtLeast(1)
+                                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                page.render(bitmap, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                pages.add(bitmap)
+                            } finally { page.close() }
+                        }
+                    } finally { renderer.close() }
+                } ?: error("Nie można otworzyć pliku PDF.")
+            }.exceptionOrNull()
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                if (error != null) {
+                    pages.forEach { if (!it.isRecycled) it.recycle() }
+                    processing = false
+                    saveMessage("Nie można przetworzyć PDF: ${error.localizedMessage ?: "błąd dokumentu"}")
+                    return@post
+                }
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                val recognizedPages = mutableListOf<String>()
+                lateinit var processPage: (Int) -> Unit
+                processPage = { index ->
+                    if (index >= pages.size) {
+                        recognizer.close()
+                        pages.forEach { if (!it.isRecycled) it.recycle() }
+                        applyRecognizedText(recognizedPages.joinToString("\n"))
+                        if (totalPages > pages.size) saveMessage("OCR przetworzył pierwsze ${pages.size} z ${totalPages} stron PDF. Sprawdź tekst i w razie potrzeby podziel dokument.")
+                        processing = false
+                    } else {
+                        val bitmap = pages[index]
+                        recognizer.process(InputImage.fromBitmap(bitmap, 0))
+                            .addOnSuccessListener { if (it.text.isNotBlank()) recognizedPages.add(it.text) }
+                            .addOnFailureListener { /* Pojedyncza strona bez czytelnego tekstu nie przerywa analizy. */ }
+                            .addOnCompleteListener { if (!bitmap.isRecycled) bitmap.recycle(); processPage(index + 1) }
+                    }
+                }
+                processPage(0)
+            }
+        }.start()
+    }
+
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { if (it != null) recognizeImage(it) }
+    val documentOcrPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val mime = context.contentResolver.getType(uri).orEmpty().lowercase()
+            val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0).orEmpty() else "" }.orEmpty()
+            when {
+                mime == "application/pdf" || name.endsWith(".pdf", true) -> recognizePdf(uri)
+                mime.startsWith("text/") || name.substringAfterLast('.', "").lowercase() in setOf("txt", "csv", "md", "rtf", "xml") -> recognizeTextFile(uri)
+                mime.startsWith("image/") || name.substringAfterLast('.', "").lowercase() in setOf("jpg", "jpeg", "png", "webp") -> recognizeImage(uri)
+                else -> saveMessage("Wybierz PDF, JPG/PNG/WebP albo plik tekstowy.")
+            }
+        }
+    }
+    val cameraPhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        if (bitmap != null) {
+            processing = true
+            val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+            recognizer.process(InputImage.fromBitmap(bitmap, 0))
+                .addOnSuccessListener { applyRecognizedText(it.text) }
+                .addOnFailureListener { saveMessage("OCR zdjęcia nie powiódł się: ${it.localizedMessage ?: "błąd odczytu"}") }
+                .addOnCompleteListener {
+                    recognizer.close()
+                    if (!bitmap.isRecycled) bitmap.recycle()
+                    processing = false
+                }
+        } else saveMessage("Fotografowanie dokumentu anulowano.")
+    }
     val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { if (it != null) recognizeVideo(it, false) }
     val videoCamera = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { captured ->
         val uri = pendingVideoUri
@@ -265,6 +374,8 @@ internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<Str
                     .onFailure { saveMessage("Nie można uruchomić kamery wideo: ${it.localizedMessage ?: "błąd przygotowania nagrania"}") }
             }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Nagraj film dokumentu") }
             OutlinedButton(onClick = { videoPicker.launch("video/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz nagrany film") }
+            OutlinedButton(onClick = { documentOcrPicker.launch(arrayOf("application/pdf", "image/*", "text/plain", "text/*")) }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wczytaj PDF, JPG lub plik tekstowy") }
+            OutlinedButton(onClick = { cameraPhoto.launch(null) }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Zrób zdjęcie dokumentu do OCR") }
             OutlinedButton(onClick = { photoPicker.launch("image/*") }, enabled = !processing, modifier = Modifier.fillMaxWidth()) { Text("Wybierz zdjęcie lub skan") }
             if (processing) Text("Analiza klatek filmu i uzupełnianie pól…", color = MaterialTheme.colorScheme.primary)
             if (mappedCount > 0) Text("Wstępnie uzupełniono $mappedCount pustych pól", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
