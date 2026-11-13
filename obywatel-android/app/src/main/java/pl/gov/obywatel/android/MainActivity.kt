@@ -2997,7 +2997,12 @@ private fun DocumentVisibilitySettingsScreen(
                                     TextButton(
                                         onClick = { expandedDocumentIcon = if (expandedDocumentIcon == id) null else id },
                                         modifier = Modifier.testTag("document-icon-selector-$id")
-                                    ) { Text("Ikona", style = MaterialTheme.typography.labelSmall) }
+                                    ) {
+                                        val selectedIconLabel = documentIconChoices.firstOrNull {
+                                            it.first == documentIconOverrides[id]
+                                        }?.second
+                                        Text(selectedIconLabel ?: "Ikona", style = MaterialTheme.typography.labelSmall)
+                                    }
                                     DropdownMenu(
                                         expanded = expandedDocumentIcon == id,
                                         onDismissRequest = { expandedDocumentIcon = null }
