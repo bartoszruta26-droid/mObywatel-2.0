@@ -187,7 +187,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                     repeat(accountCount) { accountIndex ->
                         accountFields.forEachIndexed { fieldIndex, label ->
                             val value = local["account_${accountIndex}_${fieldIndex}"].orEmpty().ifBlank { "—" }
-                            add(Triple("account_${accountIndex}_${fieldIndex}", "${label.uppercase()} · RACHUNEK ${accountIndex + 1}", value))
+                            add(Triple("account_${accountIndex}_${fieldIndex}", label.uppercase(), value))
                         }
                     }
                 }
