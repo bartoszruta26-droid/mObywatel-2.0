@@ -1874,7 +1874,11 @@ private fun AnimatedHologram(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val movie = remember {
         runCatching {
-            context.assets.open("mandala_hologram.gif").use { Movie.decodeStream(it) }
+            context.assets.open("mandala_hologram.gif.b64").use { input ->
+                val encoded = input.bufferedReader(Charsets.US_ASCII).use { it.readText() }
+                val gifBytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+                java.io.ByteArrayInputStream(gifBytes).use { Movie.decodeStream(it) }
+            }
         }.getOrNull()
     }
     if (movie == null) return
