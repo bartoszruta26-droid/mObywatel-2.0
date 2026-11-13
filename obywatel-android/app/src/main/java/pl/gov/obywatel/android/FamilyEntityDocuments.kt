@@ -250,6 +250,7 @@ internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit
                     )
                 }
                 if (isBankRegister) Text("Dla rachunków walutowych wpisuj kod ISO 4217 waluty (np. EUR, USD, CHF, GBP).", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.labelSmall)
+                DocumentOriginalAttachments(doc.id)
                 OutlinedButton(onClick = { onEditGraphic(doc.id) }, modifier = Modifier.fillMaxWidth()) {
                     Text("Edytuj wygląd graficzny")
                 }
