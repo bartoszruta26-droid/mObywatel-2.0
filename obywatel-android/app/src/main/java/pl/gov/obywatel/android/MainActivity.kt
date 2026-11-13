@@ -1095,13 +1095,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "loyalty" -> { selectedEditorCategory = "loyalty_cards"; showDocumentsEditor = true }
             documentId == "disability" -> showDisabilitySettings = true
             documentId == "registry" -> showRegistryEditor = true
-            documentId == "family" || documentId == "large_family" || documentId.startsWith("rod_") -> settingsDocumentEditor = "family"
-            documentId == "church" || documentId.startsWith("church_") || documentId == "mission_travel" -> settingsDocumentEditor = "church"
-            documentId == "civil" || documentId in setOf("birth_extract", "marriage_extract", "death_extract", "vehicle_registration", "official") -> settingsDocumentEditor = "civil"
-            documentId == "business" || documentId == "entity" || documentId.startsWith("entity_") ||
-                documentId.startsWith("organization_") -> settingsDocumentEditor = "business"
             documentId == "bank_accounts" || documentId == "rod_bank_accounts" -> settingsDocumentEditor = "bank_accounts"
             documentId == "entity_bank_accounts" -> settingsDocumentEditor = "entity_bank_accounts"
+            documentId == "family" || documentId == "large_family" || (documentId.startsWith("rod_") && documentId != "rod_bank_accounts") -> settingsDocumentEditor = "family"
+            documentId == "church" || documentId.startsWith("church_") || documentId == "mission_travel" -> settingsDocumentEditor = "church"
+            documentId == "civil" || documentId in setOf("birth_extract", "marriage_extract", "death_extract", "vehicle_registration", "official") -> settingsDocumentEditor = "civil"
+            documentId == "business" || documentId == "entity" || (documentId.startsWith("entity_") && documentId != "entity_bank_accounts") ||
+                documentId.startsWith("organization_") -> settingsDocumentEditor = "business"
             documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
             documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
