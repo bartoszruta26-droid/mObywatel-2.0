@@ -1770,7 +1770,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
                     )
-                    val recognizedIncoming = incoming.keys.count { it in supportedProfileKeys || it in supportedArchiveKeys || it.startsWith("cs_") || it.startsWith("dp_") || isGroupedOcrArchiveField(it) }
+                    val recognizedIncoming = incoming.keys.count { it in supportedProfileKeys || it in supportedArchiveKeys || it.startsWith("cs_") || it.startsWith("dp_") || isSupportedDynamicDocumentField(it) }
                     val overwritten = incoming.keys.count { it in supportedProfileKeys && current.containsKey(it) }
                     val added = recognizedIncoming - overwritten
                     Text(
@@ -1790,7 +1790,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 // Importuj wyłącznie pola należące do aktualnego modelu profilu.
                                 // Nieznane lub wycofane nazwy pól ze starszych archiwów vCard
                                 // są pomijane — nie tworzymy przez nie osieroconych wpisów.
-                                (it in current.keys || it in documentEditorImportableFieldKeys() || isGroupedOcrArchiveField(it)) &&
+                                (it in current.keys || it in documentEditorImportableFieldKeys() || isSupportedDynamicDocumentField(it)) &&
                                     !it.startsWith("cs_") && !it.startsWith("dp_")
                             }
                             val mergedProfile = current.toMutableMap().apply { putAll(profileValues) }
