@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android.ui.home
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
@@ -156,10 +158,29 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(
-            Modifier.fillMaxSize().padding(14.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
+        Box(Modifier.fillMaxSize()) {
+            val watermark = when (item.id) {
+                "documents" -> R.drawable.tile_watermark_digital
+                "identity" -> R.drawable.tile_watermark_identity
+                "registry" -> R.drawable.tile_watermark_civic
+                "verify" -> R.drawable.tile_watermark_security
+                "profile" -> R.drawable.tile_watermark_family
+                "security" -> R.drawable.tile_watermark_security
+                "payments" -> R.drawable.tile_watermark_finance
+                "health" -> R.drawable.tile_watermark_medical
+                else -> R.drawable.tile_watermark_fractal_triangle
+            }
+            Image(
+                painter = painterResource(watermark),
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.BottomEnd)
+                    .size(116.dp)
+                    .graphicsLayer { alpha = 0.10f }
+            )
+            Column(
+                Modifier.fillMaxSize().padding(14.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
             Box(
                 modifier = Modifier.size(48.dp)
                     .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)),
@@ -177,6 +198,7 @@ private fun ServiceCard(item: ServiceItem, onClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                 Text(item.subtitle, style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             }
         }
     }

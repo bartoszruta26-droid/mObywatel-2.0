@@ -5,6 +5,8 @@
             <solid android:color="?android:attr/colorBackground"/>
         </shape>
     </item>
+    <item android:width="280dp" android:height="175dp" android:gravity="center"
+        android:drawable="@drawable/start_watermark_simple"/>
     <item android:width="184dp" android:height="184dp" android:gravity="center"
         android:drawable="@drawable/file_00000000532082108d561dcd2385f8f9"/>
 </layer-list>
