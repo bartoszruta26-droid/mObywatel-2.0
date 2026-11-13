@@ -1,0 +1,148 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="200dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+
+    <!--
+      Circular fractal guilloche watermark.
+      Concentric order, radial symmetry and repeated rosettes suggest harmony,
+      justice and truth; interlaced curves add a restrained love-inspired motif.
+      Monochrome low-opacity strokes keep tile content legible.
+    -->
+
+    <!-- Three concentric circular boundaries and radial construction axes. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.23"
+        android:strokeWidth="0.85"
+        android:pathData="M160,8
+            C212,8 254,49 254,100
+            C254,151 212,192 160,192
+            C108,192 66,151 66,100
+            C66,49 108,8 160,8 Z
+            M160,18
+            C206,18 244,55 244,100
+            C244,145 206,182 160,182
+            C114,182 76,145 76,100
+            C76,55 114,18 160,18 Z
+            M160,30
+            C199,30 232,61 232,100
+            C232,139 199,170 160,170
+            C121,170 88,139 88,100
+            C88,61 121,30 160,30 Z
+            M160,8 L160,192 M66,100 L254,100
+            M93,33 L227,167 M227,33 L93,167
+            M119,15 L201,185 M201,15 L119,185" />
+
+    <!-- Sixteen-petal central rosette, nested at three scales. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.38"
+        android:strokeWidth="1.0"
+        android:pathData="M160,42
+            C169,57 178,66 193,75
+            C208,84 218,91 218,100
+            C218,109 208,116 193,125
+            C178,134 169,143 160,158
+            C151,143 142,134 127,125
+            C112,116 102,109 102,100
+            C102,91 112,84 127,75
+            C142,66 151,57 160,42 Z
+            M160,54
+            C167,66 175,73 187,81
+            C199,88 208,94 208,100
+            C208,106 199,112 187,119
+            C175,127 167,134 160,146
+            C153,134 145,127 133,119
+            C121,112 112,106 112,100
+            C112,94 121,88 133,81
+            C145,73 153,66 160,54 Z
+            M160,66
+            C166,75 172,82 181,87
+            C190,92 198,96 198,100
+            C198,104 190,108 181,113
+            C172,118 166,125 160,134
+            C154,125 148,118 139,113
+            C130,108 122,104 122,100
+            C122,96 130,92 139,87
+            C148,82 154,75 160,66 Z" />
+
+    <!-- Repeated radial petals and small circular nodes. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.28"
+        android:strokeWidth="0.75"
+        android:pathData="M160,18 C166,27 172,32 181,36
+            C172,40 166,45 160,54 C154,45 148,40 139,36
+            C148,32 154,27 160,18 Z
+            M160,146 C166,155 172,160 181,164
+            C172,168 166,173 160,182 C154,173 148,168 139,164
+            C148,160 154,155 160,146 Z
+            M78,100 C87,94 92,88 96,79
+            C100,88 105,94 114,100 C105,106 100,112 96,121
+            C92,112 87,106 78,100 Z
+            M206,100 C215,94 220,88 224,79
+            C228,88 233,94 242,100 C233,106 228,112 224,121
+            C220,112 215,106 206,100 Z
+            M160,10 L160,18 M160,182 L160,190
+            M66,100 L74,100 M246,100 L254,100" />
+
+    <!-- Interlaced guilloche curves create a fine, continuous ornamental field. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.20"
+        android:strokeWidth="0.7"
+        android:pathData="M94,57 C112,39 132,39 150,57
+            C168,75 188,75 206,57
+            M88,65 C108,45 132,45 152,65
+            C172,85 192,85 212,65
+            M94,143 C112,161 132,161 150,143
+            C168,125 188,125 206,143
+            M88,135 C108,155 132,155 152,135
+            C172,115 192,115 212,135
+            M94,57 C112,75 132,75 150,57
+            C168,39 188,39 206,57
+            M94,143 C112,125 132,125 150,143
+            C168,161 188,161 206,143
+            M118,28 C128,42 142,48 160,48
+            C178,48 192,42 202,28
+            M118,172 C128,158 142,152 160,152
+            C178,152 192,158 202,172" />
+
+    <!-- Four nested diamond medallions anchor the circular field. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.21"
+        android:strokeWidth="0.7"
+        android:pathData="M160,2 L172,14 L160,26 L148,14 Z
+            M160,174 L172,186 L160,198 L148,186 Z
+            M62,100 L74,88 L86,100 L74,112 Z
+            M234,100 L246,88 L258,100 L246,112 Z
+            M112,18 L122,28 L112,38 L102,28 Z
+            M208,18 L218,28 L208,38 L198,28 Z
+            M112,162 L122,172 L112,182 L102,172 Z
+            M208,162 L218,172 L208,182 L198,172 Z" />
+
+    <!-- Fine radial rays and secondary arcs complete the engraved appearance. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeAlpha="0.16"
+        android:strokeWidth="0.6"
+        android:pathData="M132,12 C144,22 176,22 188,12
+            M132,188 C144,178 176,178 188,188
+            M72,72 C84,84 84,116 72,128
+            M248,72 C236,84 236,116 248,128
+            M104,44 C118,54 128,64 138,78
+            M216,44 C202,54 192,64 182,78
+            M104,156 C118,146 128,136 138,122
+            M216,156 C202,146 192,136 182,122
+            M160,34 L160,42 M160,158 L160,166
+            M94,100 L102,100 M218,100 L226,100" />
+</vector>
