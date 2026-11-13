@@ -3504,8 +3504,8 @@ private fun documentTileWatermarkResource(documentKey: String): Int = when {
         R.drawable.tile_watermark_transport
 
     // Finanse, rachunki i ubezpieczenia.
-    documentKey == "bank_accounts" || documentKey == "insurance_business" ||
-        documentKey.startsWith("insurance_") ->
+    documentKey in setOf("bank_accounts", "insurance_business", "insurance_private") ||
+        (documentKey.startsWith("insurance_") && documentKey != "insurance_professional") ->
         R.drawable.tile_watermark_finance
 
     // Dokumenty elektroniczne, importowane i karty handlowe.
@@ -3515,6 +3515,11 @@ private fun documentTileWatermarkResource(documentKey: String): Int = when {
     // Kwalifikacje, zawody, uprawnienia i dokumenty służbowe.
     documentKey in setOf("student", "training", "eu_education") ->
         R.drawable.tile_watermark_education
+
+    // Zdrowie, opieka, szczepienia i orzeczenia, także kwalifikacje medyczne.
+    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card",
+        "professional_medical", "professional_therapeutic") || documentKey.startsWith("medical_") ->
+        R.drawable.tile_watermark_medical
 
     // Kwalifikacje zawodowe i dokumenty uprawnień.
     documentKey.startsWith("professional_") || documentKey in setOf("professional", "insurance_professional") ->
@@ -3526,11 +3531,6 @@ private fun documentTileWatermarkResource(documentKey: String): Int = when {
         "large_family"
     ) ->
         R.drawable.tile_watermark_family
-
-    // Zdrowie, opieka, szczepienia i orzeczenia.
-    documentKey in setOf("disability", "vaccines", "ehic", "blood_donor", "disability_card",
-        "professional_medical", "professional_therapeutic") || documentKey.startsWith("medical_") ->
-        R.drawable.tile_watermark_medical
 
     // Rejestry, podmioty prawne, fundacje, stowarzyszenia i dokumenty urzędowe.
     documentKey.startsWith("organization_") || documentKey.startsWith("entity_") ||
