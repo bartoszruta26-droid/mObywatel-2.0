@@ -3553,6 +3553,8 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
     val context = LocalContext.current
     val tilePreferences = context.getSharedPreferences("legitimacy_preview_preferences", Context.MODE_PRIVATE)
     val tileBackgroundAssetId = tilePreferences.getString("${documentKey}_tile_background", "").orEmpty()
+    val tileVectorBackgroundAssetId = tilePreferences.getString("${documentKey}_tile_vector_background", "").orEmpty()
+    val tileVectorBackgroundBitmap = remember(documentKey, tileVectorBackgroundAssetId) { tileVectorBackgroundAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
     val tileBackgroundBitmap = remember(documentKey, tileBackgroundAssetId) {
         when {
             tileBackgroundAssetId.isBlank() -> null
@@ -3612,12 +3614,15 @@ private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifi
         Image(tileBackgroundBitmap.asImageBitmap(), contentDescription = "Indywidualne tło kafelka dokumentu",
             modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop)
     }
+    if (tileVectorBackgroundBitmap != null) {
+        Image(tileVectorBackgroundBitmap.asImageBitmap(), contentDescription = "Wektorowe tło kafelka dokumentu", modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop, alpha = 0.24f)
+    }
     ComposeCanvas(Modifier.matchParentSize()) {
         drawRect(brush = Brush.linearGradient(
             colors = palette,
             start = Offset(0f, size.height),
             end = Offset(size.width, 0f)
-        ), alpha = if (tileBackgroundBitmap != null) 0.22f else 1f)
+        ), alpha = if (tileBackgroundBitmap != null || tileVectorBackgroundBitmap != null) 0.22f else 1f)
         val cx = size.width * 0.82f
         val cy = size.height * 0.28f
         val radius = maxOf(size.width, size.height) * 0.34f
