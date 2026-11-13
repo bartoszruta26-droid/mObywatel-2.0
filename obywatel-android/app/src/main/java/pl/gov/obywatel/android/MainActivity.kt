@@ -1294,6 +1294,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 allCatalogPlacements.mapKeys { "dp_${it.key}" } +
                                 mapOf(
                                     "documentCatalogManifest" to catalogManifest,
+                                    "documentCatalogGroupOrder" to org.json.JSONArray(documentVisibilityGroupOrder).toString(),
                                     "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
                                     "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
                                     "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
@@ -1715,7 +1716,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val profileValues = incoming.filterKeys {
                                 !it.startsWith("cs_") && !it.startsWith("dp_") &&
                                     it !in setOf(
-                                        "documentCatalogManifest", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "documentCatalogManifest", "documentCatalogGroupOrder", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
@@ -1739,8 +1740,26 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             incoming["activityHistoryArchive"]?.let { importActivityHistoryArchive(context, it) }
                             LegitimacyPreviewSettingsStore.importAll(context, incoming)
                             val knownDocumentIds = documentDisplayOptions.map { it.first }.toSet()
+                            val importedCatalogIds = incoming["documentCatalogManifest"]?.let { rawManifest ->
+                                val manifest = org.json.JSONArray(rawManifest)
+                                buildSet {
+                                    for (index in 0 until manifest.length()) {
+                                        val item = manifest.optJSONObject(index)
+                                            ?: error("Nieprawidłowy wpis katalogu dokumentów w archiwum.")
+                                        val id = item.optString("id").trim()
+                                        val title = item.optString("title").trim()
+                                        val group = item.optString("group").trim()
+                                        require(id.isNotBlank() && title.isNotBlank() && group in documentVisibilityGroupOrder) {
+                                            "Archiwum zawiera nieprawidłowy opis dokumentu: $id."
+                                        }
+                                        require(add(id)) { "Archiwum zawiera powtórzony identyfikator dokumentu: $id." }
+                                    }
+                                }
+                            } ?: knownDocumentIds
                             val importedPlacements = incoming.filterKeys {
-                                it.startsWith("dp_") && it.removePrefix("dp_") in knownDocumentIds
+                                it.startsWith("dp_") &&
+                                    it.removePrefix("dp_") in knownDocumentIds &&
+                                    it.removePrefix("dp_") in importedCatalogIds
                             }.mapKeys { it.key.removePrefix("dp_") }
                                 .mapValues { (_, value) -> value }
                             if (importedPlacements.isNotEmpty()) {
