@@ -356,7 +356,9 @@ class PaymentLedgerDatabaseTest {
 
         val upgraded = openDatabase()
         try {
-            assertEquals("pre-v4-entry", upgraded.readAll().single().accountingEntryId())
+            val preservedEntry = upgraded.readAll().single()
+            assertEquals("USD", preservedEntry.currencyCode)
+            assertEquals(0, BigDecimal("749.33").compareTo(preservedEntry.signedAmount))
             assertEquals(emptyList<StoredFinancialTransaction>(), upgraded.readFinancialTransactions())
             val transaction = FinancialTransaction(
                 id = "after-migration",
