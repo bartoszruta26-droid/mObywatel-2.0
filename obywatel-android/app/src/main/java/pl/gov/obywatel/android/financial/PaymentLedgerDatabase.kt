@@ -310,13 +310,30 @@ class PaymentLedgerDatabase(
             accountingEntryIds.forEach { entryId ->
                 db.query(
                     TABLE_ENTRIES,
-                    arrayOf("accounting_entry_id"),
+                    arrayOf("currency_code", "signed_amount"),
                     "accounting_entry_id = ?",
                     arrayOf(entryId),
                     null, null, null
                 ).use { cursor ->
                     require(cursor.moveToFirst()) {
                         "Nie znaleziono powiązanego zapisu bankowego."
+                    }
+                    val currency = cursor.getString(0)
+                    val signedAmount = java.math.BigDecimal(cursor.getString(1))
+                    val absoluteAmount = signedAmount.abs()
+                    val matchesFrom = transaction.fromAssetCode == currency &&
+                        signedAmount.signum() < 0 &&
+                        transaction.fromAmount?.compareTo(absoluteAmount) == 0
+                    val matchesTo = transaction.toAssetCode == currency &&
+                        signedAmount.signum() > 0 &&
+                        transaction.toAmount?.compareTo(absoluteAmount) == 0
+                    val matchesFee = transaction.fee?.let { fee ->
+                        fee.assetCode == currency &&
+                            signedAmount.signum() < 0 &&
+                            fee.amount.compareTo(absoluteAmount) == 0
+                    } == true
+                    require(matchesFrom || matchesTo || matchesFee) {
+                        "Powiązany zapis bankowy nie odpowiada kwocie i walucie transakcji ani prowizji."
                     }
                 }
             }
