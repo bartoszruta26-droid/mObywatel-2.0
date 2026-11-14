@@ -30,10 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pl.gov.obywatel.android.financial.BankStatementEntry
-import pl.gov.obyvatel.android.financial.PaymentLedgerRepository
-import java.math.BigDecimal
-import java.text.NumberFormat
-import java.util.Locale
+import pl.gov.obywatel.android.financial.PaymentLedgerRepository
 
 /** Ekran rejestru odczytuje dane z SQLite przez repozytorium pracujące na IO. */
 @Composable
