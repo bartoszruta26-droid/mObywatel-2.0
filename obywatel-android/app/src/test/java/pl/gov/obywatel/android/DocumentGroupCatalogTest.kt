@@ -30,6 +30,9 @@ class DocumentGroupCatalogTest {
         assertEquals("Służba zbrojna", migrateDocumentGroupName("Służba zbrojna"))
         assertEquals("Służba rodowa", migrateDocumentGroupName("Dokumenty rodowe i rodzinne"))
         assertEquals("Moja własna grupa", migrateDocumentGroupName("Moja własna grupa"))
+        assertEquals("Służba fundacyjna", migrateDocumentGroupAssignment("organization_foundation", "Służba gospodarcza"))
+        assertEquals("Służba stowarzyszeniowa", migrateDocumentGroupAssignment("organization_association", "Służba gospodarcza"))
+        assertEquals("Moja własna grupa", migrateDocumentGroupAssignment("organization_foundation", "Moja własna grupa"))
     }
 
     @Test
@@ -43,6 +46,37 @@ class DocumentGroupCatalogTest {
         assertEquals("dashboard", defaultDocumentPlacements["identity"])
         assertEquals("Służba zbrojna", documentVisibilityGroup("military_book"))
         assertTrue("Służba zbrojna" in documentVisibilityGroupOrder)
+    }
+
+    @Test
+    fun foundationBusinessAndAssociationServicesEachHaveThreeIndependentCompleteDocumentSets() {
+        val expected = mapOf(
+            "foundation" to "Służba fundacyjna",
+            "business" to "Służba gospodarcza",
+            "association" to "Służba stowarzyszeniowa"
+        )
+        val subjectPrefixes = listOf("legal_person_unit", "natural_person_unit", "legal_person")
+        expected.forEach { (service, group) ->
+            val documents = familyEntityDocumentsForService(service)
+            assertTrue("$group must contain documents", documents.isNotEmpty())
+            assertEquals("$group must have unique document IDs", documents.size, documents.map { it.first }.toSet().size)
+            subjectPrefixes.forEach { subject ->
+                val subset = documents.filter { it.first.startsWith("service_${service}_${subject}_") }
+                assertTrue("$group is missing the $subject document set", subset.isNotEmpty())
+                subset.forEach { (id, _) ->
+                    assertEquals("$id must be assigned to $group", group, documentVisibilityGroup(id))
+                    assertTrue("$id must have dedicated preview fields", familyEntityGraphicDocumentFields(id).isNotEmpty())
+                }
+            }
+            assertEquals("Every service must expose exactly the three required subject sets", 3,
+                documents.mapNotNull { id -> subjectPrefixes.firstOrNull { id.first.startsWith("service_${service}_${it}_") } }.toSet().size)
+        }
+        assertEquals("Służba fundacyjna", documentVisibilityGroup("organization_foundation"))
+        assertEquals("Służba gospodarcza", documentVisibilityGroup("organization_company"))
+        assertEquals("Służba stowarzyszeniowa", documentVisibilityGroup("organization_association"))
+        assertTrue("Służba fundacyjna" in documentVisibilityGroupOrder)
+        assertTrue("Służba gospodarcza" in documentVisibilityGroupOrder)
+        assertTrue("Służba stowarzyszeniowa" in documentVisibilityGroupOrder)
     }
 
     @Test

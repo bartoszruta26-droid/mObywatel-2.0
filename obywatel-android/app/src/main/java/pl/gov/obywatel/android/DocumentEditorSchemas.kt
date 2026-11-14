@@ -630,7 +630,7 @@ private val legacyDocumentEditorFieldKeys = setOf(
 
 internal fun documentArchiveImportKeys(): Set<String> = setOf(
     "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion",
-    "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+    "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive", "documentGroupConfiguration",
     "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
     "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
     "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"

@@ -77,14 +77,130 @@ private val entityDocs = listOf(
     RegistryDoc(if (title.contains("rachunków bankowych")) "entity_bank_accounts" else "entity_${section.hashCode().toUInt().toString(16)}_${index}", title, section, if (title.contains("rachunków bankowych")) emptyList() else fields.distinct(), "Ewidencja dokumentu podmiotu. Wpisane dane nie potwierdzają samodzielnie aktualnego stanu rejestru; dokument urzędowy należy dołączyć jako źródło.")
 } }
 
+// Każda służba podmiotowa ma trzy niezależne zestawy: osoby prawne,
+// jednostki organizacyjne osób prawnych oraz jednostki organizacyjne osób fizycznych.
+// Identyfikatory są trwałe i rozdzielają dane oraz wygląd dokumentów między zestawami.
+private data class EntityServiceDefinition(val key: String, val group: String, val label: String)
+private data class EntitySubjectDefinition(val key: String, val label: String)
+
+private val entityServices = listOf(
+    EntityServiceDefinition("foundation", "Służba fundacyjna", "Fundacja"),
+    EntityServiceDefinition("business", "Służba gospodarcza", "Podmiot gospodarczy"),
+    EntityServiceDefinition("association", "Służba stowarzyszeniowa", "Stowarzyszenie")
+)
+private val entitySubjects = listOf(
+    EntitySubjectDefinition("legal_person", "Osoby prawne"),
+    EntitySubjectDefinition("legal_person_unit", "Jednostki organizacyjne osób prawnych"),
+    EntitySubjectDefinition("natural_person_unit", "Jednostki organizacyjne osób fizycznych")
+)
+
+private val organizationalUnitTemplates = listOf(
+    "Utworzenie i status jednostki" to listOf(
+        "Akt utworzenia jednostki organizacyjnej", "Regulamin jednostki organizacyjnej",
+        "Statut jednostki organizacyjnej", "Zgłoszenie jednostki do ewidencji",
+        "Zaświadczenie o wpisie jednostki do rejestru", "Akt likwidacji jednostki organizacyjnej"
+    ),
+    "Kierownictwo i reprezentacja jednostki" to listOf(
+        "Akt powołania kierownika jednostki", "Akt odwołania kierownika jednostki",
+        "Pełnomocnictwo jednostki", "Upoważnienie do reprezentowania jednostki",
+        "Rejestr osób uprawnionych do reprezentacji", "Regulamin organizacyjny jednostki"
+    ),
+    "Działalność i majątek jednostki" to listOf(
+        "Rejestr działalności jednostki", "Ewidencja składników majątku jednostki",
+        "Rejestr umów i zobowiązań jednostki", "Protokół przekazania majątku jednostki",
+        "Rejestr rachunków bankowych jednostki", "Sprawozdanie z działalności jednostki"
+    )
+)
+
+private fun serviceSubjectDocuments(): List<RegistryDoc> = buildList {
+    entityServices.forEach { service ->
+        entitySubjects.forEach { subject ->
+            val sourceDocs = if (subject.key == "legal_person") {
+                val base = entityDocs.filterNot { doc ->
+                    doc.id == "entity_bank_accounts" || doc.title.contains("CEIDG", ignoreCase = true) ||
+                        (service.key != "business" && listOf("spółki", "wspólnik", "akcjonarius", "udział", "akcyjna", "wkładu", "inwestycyjna")
+                            .any { token -> doc.title.contains(token, ignoreCase = true) })
+                }
+                val specificTitles = when (service.key) {
+                    "foundation" -> listOf(
+                        "Akt ustanowienia fundacji", "Oświadczenie fundatora",
+                        "Rejestr fundatorów", "Uchwała Zarządu Fundacji",
+                        "Sprawozdanie z działalności fundacji", "Sprawozdanie finansowe fundacji",
+                        "Rejestr dotacji i darowizn", "Rejestr realizacji celów statutowych"
+                    )
+                    "association" -> listOf(
+                        "Rejestr członków stowarzyszenia", "Deklaracja członkowska",
+                        "Uchwała o przyjęciu członka", "Uchwała o skreśleniu członka",
+                        "Rejestr składek członkowskich", "Protokół walnego zebrania członków",
+                        "Lista obecności walnego zebrania", "Uchwała walnego zebrania członków"
+                    )
+                    else -> emptyList()
+                }
+                base + specificTitles.mapIndexed { index, title ->
+                    RegistryDoc(
+                        id = "service_${service.key}_legal_person_specific_${index}",
+                        title = title,
+                        section = if (service.key == "foundation") "Fundatorzy, cele i sprawozdawczość" else "Członkostwo i walne zebranie",
+                        fields = listOf("Pełna nazwa podmiotu", "Numer KRS", "Numer dokumentu / uchwały", "Organ właściwy", "Osoby, których dotyczy wpis", "Data podjęcia / sporządzenia", "Treść / zakres", "Podstawa statutowa", "Osoba sporządzająca", "Podpisy / potwierdzenia", "Załączniki", "Status", "Uwagi"),
+                        note = "Dokument właściwy dla kategorii: ${service.group}. Wpis ewidencyjny nie zastępuje wymaganych uchwał, zgłoszeń ani dokumentów źródłowych."
+                    )
+                }
+            } else {
+                organizationalUnitTemplates.flatMap { (section, titles) ->
+                    titles.mapIndexed { index, title ->
+                        val subjectName = if (subject.key == "legal_person_unit") "jednostki organizacyjnej osoby prawnej"
+                            else "jednostki organizacyjnej osoby fizycznej"
+                        val fields = when {
+                            title.contains("powołania") || title.contains("odwołania") ->
+                                listOf("Nazwa jednostki", "Osoba obejmująca / tracąca funkcję", "Organ lub osoba powołująca", "Data uchwały / decyzji", "Zakres kompetencji", "Okres pełnienia funkcji")
+                            title.contains("Pełnomocnictwo") || title.contains("Upoważnienie") ->
+                                listOf("Nazwa jednostki", "Mocodawca", "Pełnomocnik", "Zakres umocowania", "Data udzielenia", "Okres obowiązywania")
+                            title.contains("majątku") || title.contains("rachunków") || title.contains("umów") ->
+                                listOf("Nazwa jednostki", "Składnik / przedmiot ewidencji", "Identyfikator", "Właściciel / dysponent", "Wartość / waluta", "Data i podstawa wpisu")
+                            else -> listOf("Nazwa jednostki", "Rodzaj jednostki", "Podmiot nadrzędny / osoba prowadząca", "Adres jednostki", "Data utworzenia", "Podstawa organizacyjna", "Zakres działania", "Osoba odpowiedzialna", "Dokument źródłowy", "Status", "Uwagi")
+                        }
+                        RegistryDoc(
+                            id = "service_${service.key}_${subject.key}_unit_${section.hashCode().toUInt().toString(16)}_${index}",
+                            title = "${service.label} — ${title.lowercase()}",
+                            section = "${subject.label} · ${section}",
+                            fields = fields.distinct() + listOf("Data sporządzenia / aktualizacji", "Osoba wprowadzająca dane", "Załączniki / plik źródłowy", "Status dokumentu", "Uwagi"),
+                            note = "Ewidencja ${subjectName}. Wpis w aplikacji ma charakter pomocniczy i nie zastępuje wymaganego wpisu w rejestrze ani dokumentu źródłowego."
+                        )
+                    }
+                }
+            }
+            sourceDocs.forEach { source ->
+                val suffix = source.id.removePrefix("entity_")
+                add(
+                    source.copy(
+                        id = "service_${service.key}_${subject.key}_${suffix}",
+                        title = "${service.label} — ${source.title.lowercase()}",
+                        section = "${subject.label} · ${source.section}",
+                        note = "Zestaw ${subject.label.lowercase()} przypisany do kategorii: ${service.group}. ${source.note}"
+                    )
+                )
+            }
+        }
+    }
+}
+
+private val serviceSubjectDocumentCatalog by lazy { serviceSubjectDocuments() }
+
 internal fun familyEntityGraphicDocumentTargets(): List<Pair<String, String>> =
-    (rodDocs + entityDocs)
+    (rodDocs + entityDocs + serviceSubjectDocumentCatalog)
         .filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
         .map { it.id to it.title }
 
 internal fun familyEntityGraphicDocumentFields(documentId: String): List<Pair<String, String>> =
-    (rodDocs + entityDocs).firstOrNull { it.id == documentId }?.fields.orEmpty()
+    (rodDocs + entityDocs + serviceSubjectDocumentCatalog).firstOrNull { it.id == documentId }?.fields.orEmpty()
         .mapIndexed { index, label -> "field_$index" to label }
+
+internal fun familyEntityDocumentsForService(serviceKey: String): List<Pair<String, String>> {
+    require(entityServices.any { it.key == serviceKey }) { "Nieznana służba podmiotowa: $serviceKey" }
+    return serviceSubjectDocumentCatalog
+        .filter { it.id.startsWith("service_${serviceKey}_") }
+        .map { it.id to it.title }
+}
 
 internal object FamilyEntityDocumentStore {
     private const val ALIAS = "family_entity_docs_aes"
@@ -143,17 +259,31 @@ internal object FamilyEntityDocumentStore {
 }
 
 @Composable
-internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false, readOnly: Boolean = false, initialDocumentId: String? = null, onEditGraphic: (String) -> Unit = {}) {
+internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false, readOnly: Boolean = false, initialDocumentId: String? = null, onEditGraphic: (String) -> Unit = {}, serviceKey: String? = null) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val bankDocuments = (rodDocs + entityDocs).filter { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
-    val catalog = if (bankAccountsOnly) bankDocuments else (if (entityMode) entityDocs else rodDocs).filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
+    val catalog = when {
+        bankAccountsOnly -> bankDocuments
+        serviceKey != null -> serviceSubjectDocumentCatalog.filter { it.id.startsWith("service_${serviceKey}_") }
+        else -> (if (entityMode) entityDocs else rodDocs).filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
+    }
     var records by remember { mutableStateOf(FamilyEntityDocumentStore.load(context)) }
     var selected by remember(initialDocumentId) { mutableStateOf(initialDocumentId) }
     var message by remember { mutableStateOf("") }
     val accountFields = listOf("Nazwa własna rachunku", "Bank / instytucja prowadząca", "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT", "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku", "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi")
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp).then(if (bankAccountsOnly) Modifier.testTag("bank-accounts-screen-title") else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text(if (bankAccountsOnly) "Konta bankowe" else if (entityMode) "Dokumenty rejestru podmiotów" else "Dokumenty Rodowe", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(
+            when {
+                bankAccountsOnly -> "Konta bankowe"
+                serviceKey == "foundation" -> "Służba fundacyjna"
+                serviceKey == "business" -> "Służba gospodarcza"
+                serviceKey == "association" -> "Służba stowarzyszeniowa"
+                entityMode -> "Dokumenty rejestru podmiotów"
+                else -> "Dokumenty Rodowe"
+            },
+            style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold
+        )
         Text(if (bankAccountsOnly) "Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej." else "Katalog formularzy. Podgląd jest oddzielony od edycji, a dane są przechowywane lokalnie w postaci zaszyfrowanej.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (selected == null) {
             catalog.groupBy { it.section }.forEach { (section, docs) ->
