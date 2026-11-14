@@ -620,6 +620,8 @@ private fun ApplicationEntryFlow(onAppearanceChange: (ApplicationAppearance) -> 
     }
 }
 
+private val ENTRY_BRAND_MARK_SIZE = 64.dp
+
 @Composable
 private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
     val context = LocalContext.current
@@ -708,12 +710,7 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Image(
-                    painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
-                    contentDescription = "Godło Polski w zaokrąglonym kwadratowym znaku aplikacji",
-                    modifier = Modifier.size(64.dp),
-                    contentScale = ContentScale.Fit
-                )
+                BrandMark(size = ENTRY_BRAND_MARK_SIZE)
                 ApplicationBrandTitle(foreground)
             }
             Spacer(Modifier.height(34.dp))
@@ -763,7 +760,7 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                BrandMark(size = 72.dp)
+                BrandMark(size = ENTRY_BRAND_MARK_SIZE)
                 ApplicationBrandTitle(cream)
             }
             Spacer(Modifier.height(38.dp))
@@ -929,6 +926,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("entity_bank_accounts", "Rachunki bankowe podmiotów", R.drawable.lib_ic_wallet),
     Triple("vaccines", "Książeczka szczepień WHO", R.drawable.lib_ic_medical_record),
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
+    Triple("receipts", "Rachunki", R.drawable.lib_ic_document_signed),
     Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
     Triple("children", "Dokumentacja dzieci", R.drawable.family),
     Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.lib_ic_image),
@@ -1014,12 +1012,17 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
     id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
     id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
+    id.startsWith("service_foundation_") -> "Służba fundacyjna"
+    id.startsWith("service_business_") -> "Służba gospodarcza"
+    id.startsWith("service_association_") -> "Służba stowarzyszeniowa"
     id in setOf("org_president", "org_general_director", "org_regional_director", "org_county_director", "org_local_representative", "org_general_secretary", "org_treasurer", "org_ambassador", "org_foreign_representative", "org_proxy", "org_delegate") -> "Służba gospodarcza"
     id in setOf("org_members_rights_ombudsman", "org_patient_ombudsman", "org_family_ombudsman", "civil_mediator", "civil_arbitrator", "civil_social_caretaker", "civil_org_curator") -> "Służba cywilna"
     id in setOf("civil_expert", "civil_appraiser", "civil_auditor", "civil_internal_inspector", "civil_controller", "civil_consultant") -> "Służba zawodowa"
     id == "civil_rescuer" -> "Służba zdrowotna"
     id == "parliament" || id in setOf("mayor", "village_head", "county_starosta", "citizen_record", "ombudsman", "children_ombudsman", "patient_ombudsman", "pretrial_mediator", "milicja_officer", "foreign_service_member", "diplomat", "consul", "ambassador", "foreign_mission_head", "consular_employee", "inspector") -> "Służba państwowa"
-    id == "business" || id == "entity" || id == "registry" ||
+    id == "organization_foundation" -> "Służba fundacyjna"
+    id == "organization_association" -> "Służba stowarzyszeniowa"
+    id == "organization_company" || id == "business" || id == "entity" || id == "registry" ||
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
     id == "professional" || id.startsWith("professional_") ||
         id in setOf("training", "student", "eu_education") -> "Służba zawodowa"
@@ -1028,13 +1031,14 @@ internal fun documentVisibilityGroup(id: String): String = when {
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
         "vehicle_registration", "official"
     ) || officialGraphicDocumentTargets().any { it.first == id } -> "Służba cywilna"
-    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ||
+    id in setOf("imported", "signed_pdf", "receipts", "branding", "loyalty", "loyalty_cards") ||
         documentBrandTargets.any { it.first == id } -> "Zasoby i dokumenty własne"
     else -> "Służba osobista"
 }
 internal val documentVisibilityGroupOrder = listOf(
     "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
-    "Służba kościelna", "Służba zbrojna", "Służba zawodowa", "Służba gospodarcza",
+    "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
+    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
@@ -1044,7 +1048,7 @@ private fun documentGroupIconResource(group: String): Int = when (group) {
     "Służba kościelna" -> R.drawable.tile_ic_church_outline
     "Służba zbrojna" -> R.drawable.tile_ic_armed_service_outline
     "Służba zawodowa" -> R.drawable.tile_ic_student_outline
-    "Służba gospodarcza" -> R.drawable.tile_ic_business_outline
+    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa" -> R.drawable.tile_ic_business_outline
     "Służba finansowa" -> R.drawable.lib_ic_wallet
     "Służba zdrowotna" -> R.drawable.tile_ic_disability_outline
     "Zasoby i dokumenty własne" -> R.drawable.lib_ic_folder
@@ -1056,7 +1060,7 @@ private val armedServiceDocumentIds = setOf(
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to if (id == "identity") "dashboard" else "hidden"
+    id to if (id == "identity" || id == "receipts") "dashboard" else "hidden"
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
@@ -1269,6 +1273,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showIdentityDesigner by remember { mutableStateOf(false) }
     var showCredentialAppearanceEditor by remember { mutableStateOf(false) }
     var showImportedDocuments by remember { mutableStateOf(false) }
+    var showReceipts by remember { mutableStateOf(false) }
     var showBankAccounts by remember { mutableStateOf(false) }
     var showPublicServicesBrowser by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
@@ -1320,10 +1325,12 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 officialGraphicDocumentTargets().any { it.first == documentId } -> settingsDocumentEditor = "civil:$documentId"
             documentId == "business" || documentId == "entity" -> settingsDocumentEditor = "business"
             documentId.startsWith("organization_") -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
-            documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
+            documentId.startsWith("service_") -> settingsDocumentEditor = "service:$documentId"
+                        documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
             documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
             documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
+            documentId == "receipts" -> showReceipts = true
             documentId == "imported" -> settingsDocumentEditor = "imported"
             documentId == "professional" -> settingsDocumentEditor = "professional"
             documentId == "branding" -> settingsDocumentEditor = "graphic_catalog"
@@ -1339,6 +1346,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> showImportedDocuments = false
+            showReceipts -> showReceipts = false
             showBankAccounts -> showBankAccounts = false
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
@@ -1359,7 +1367,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1409,6 +1417,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 "bank_accounts" -> showBankAccounts = true
                 "vaccines" -> openSettingsDocumentEditor("vaccines")
                 "signed_pdf" -> openSettingsDocumentEditor("signed_pdf")
+                "receipts" -> showReceipts = true
                 "imported" -> openSettingsDocumentEditor("imported")
                 "branding" -> activeService = "Zasoby identyfikacji dokumentów"
                 else -> openSettingsDocumentEditor(route.documentId)
@@ -1447,6 +1456,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
+                    showReceipts -> ReceiptDocumentsScreen(onBack = { showReceipts = false })
+                    settingsDocumentEditor == "receipts" -> ReceiptTemplateSettingsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
                     showDocumentsEditor -> DemoDocumentsScreen(
                         categoryId = selectedEditorCategory,
@@ -1474,6 +1485,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         FamilyEntityDocumentsScreen(entityMode = true, initialDocumentId = settingsDocumentEditor?.substringAfter("business:", "")?.ifBlank { null },
                             onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
+                    }
+                    settingsDocumentEditor?.startsWith("service:") == true -> {
+                        val serviceDocumentId = settingsDocumentEditor!!.substringAfter("service:")
+                        val serviceKey = serviceDocumentId.removePrefix("service_").substringBefore("_")
+                        CredentialAppearanceEditorEntry(serviceDocumentId, onOpenAppearance = { credentialAppearanceTarget = it },
+                            showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                            FamilyEntityDocumentsScreen(entityMode = true, serviceKey = serviceKey, initialDocumentId = serviceDocumentId,
+                                onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                                onEditGraphic = { key -> credentialAppearanceTarget = key })
+                        }
                     }
                     (settingsDocumentEditor == "bank_accounts" || settingsDocumentEditor?.startsWith("bank_accounts:") == true) ->
                         CredentialAppearanceEditorEntry(
@@ -1569,14 +1590,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
+                        onEditReceipts = { showSettingsMenu = false; settingsDocumentEditor = "receipts" },
                         onEditOtherDocuments = { key -> settingsDocumentEditor = key; showSettingsMenu = false },
                         onExportAll = {
+                            val groupConfiguration = loadDocumentGroupConfiguration(context)
                             val catalogManifest = org.json.JSONArray().apply {
                                 documentDisplayOptions.distinctBy { it.first }.forEach { (id, title, _) ->
                                     put(org.json.JSONObject().apply {
                                         put("id", id)
                                         put("title", title)
-                                        put("group", documentVisibilityGroup(id))
+                                        put("group", groupConfiguration.assignments[id] ?: documentVisibilityGroup(id))
                                     })
                                 }
                             }.toString()
@@ -1588,7 +1611,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 allCatalogPlacements.mapKeys { "dp_${it.key}" } +
                                 mapOf(
                                     "documentCatalogManifest" to catalogManifest,
-                                    "documentCatalogGroupOrder" to org.json.JSONArray(documentVisibilityGroupOrder).toString(),
+                                    "documentCatalogGroupOrder" to org.json.JSONArray(groupConfiguration.groups).toString(),
+                                    "documentGroupConfiguration" to exportDocumentGroupConfiguration(context),
                                     "documentEditorSchemaVersion" to DOCUMENT_EDITOR_SCHEMA_VERSION,
                                     "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
                                     "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
@@ -1653,6 +1677,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null }, readOnly = true)
                     activeService == "Dokumenty kwalifikacji zawodowych" -> ProfessionalQualificationsScreen(onBack = { activeService = null }, readOnly = true)
                     activeService == "Pozostałe dokumenty" -> ServiceDetailScreen(title = activeService!!, onBack = { activeService = null }, onOpenDocuments = { activeService = null; showDemoDocuments = true })
+                    activeService == "Służba fundacyjna" -> FamilyEntityDocumentsScreen(entityMode = true, serviceKey = "foundation", readOnly = true, onBack = { activeService = null })
+                    activeService == "Służba gospodarcza" -> FamilyEntityDocumentsScreen(entityMode = true, serviceKey = "business", readOnly = true, onBack = { activeService = null })
+                    activeService == "Służba stowarzyszeniowa" -> FamilyEntityDocumentsScreen(entityMode = true, serviceKey = "association", readOnly = true, onBack = { activeService = null })
                     activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, readOnly = true, onBack = { activeService = null })
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null }, readOnly = true)
                     activeService == "Zasoby identyfikacji dokumentów" -> DocumentBrandAssetsScreen(onBack = { activeService = null }, readOnly = true)
@@ -2037,6 +2064,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val mergedProfile = current.toMutableMap().apply { putAll(profileValues) }
                             PersonalDataPropagation.apply(mergedProfile)
                             DemoIdentityStore.save(context, mergedProfile)
+                            incoming["documentGroupConfiguration"]?.let { importDocumentGroupConfiguration(context, it) }
                             incoming["churchDocumentArchive"]?.let { ChurchDocumentStore.importArchive(context, it) }
                             incoming["familyEntityDocumentArchive"]?.let { FamilyEntityDocumentStore.importArchive(context, it) }
                             incoming["officialDocumentArchive"]?.let { OfficialDocumentStore.importArchive(context, it) }
@@ -2063,7 +2091,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         val group = item.optString("group").trim()
                                         require(
                                             id.isNotBlank() && title.isNotBlank() &&
-                                                migrateDocumentGroupName(group) in documentVisibilityGroupOrder
+                                                migrateDocumentGroupName(group) in loadDocumentGroupConfiguration(context).groups
                                         ) {
                                             "Archiwum zawiera nieprawidłowy opis dokumentu: $id."
                                         }
@@ -2099,7 +2127,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val auxiliaryCount = incoming.keys.count {
                                 it.startsWith("cs_") || it.startsWith("dp_") ||
                                     it in setOf(
-                                        "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "documentCatalogManifest", "documentCatalogGroupOrder", "documentGroupConfiguration", "documentEditorSchemaVersion", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
@@ -3460,6 +3488,7 @@ private fun SettingsMenuScreen(
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
     onEditRegistry: () -> Unit,
+    onEditReceipts: () -> Unit,
     onEditOtherDocuments: (String) -> Unit,
     onExportAll: () -> Unit,
     onImportAll: () -> Unit,
@@ -3522,6 +3551,7 @@ private fun SettingsMenuScreen(
             Icons.Filled.Description,
             onManageDocumentEditing
         )
+        ProfileActionCard("Rachunki", "Modyfikacja wzoru papierowego rachunku i treści pola Uwagi", Icons.Filled.Description, onEditReceipts)
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
@@ -3704,6 +3734,7 @@ private fun DocumentsWalletScreen(
             id == "bank_accounts" || id == "rod_bank_accounts" || id == "entity_bank_accounts" -> "Konta bankowe"
             id == "imported" -> "Dokumenty własne — pliki"
             id == "signed_pdf" -> "Dokumenty PDF i podpisy elektroniczne"
+            id == "receipts" -> "Rachunki"
             id == "branding" -> "Zasoby identyfikacji dokumentów"
             id == "children" -> "Dane dzieci"
             id == "vaccines" -> "eKarta Szczepień"

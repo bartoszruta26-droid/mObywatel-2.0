@@ -19,7 +19,7 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
     return when (documentId) {
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
-        "vaccines", "signed_pdf", "imported", "children", "branding", "loyalty", "loyalty_cards",
+        "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
         "professional" -> emptyList()
         else -> when {
             churchGraphicDocumentTargets().any { it.first == documentId } ||
@@ -583,7 +583,7 @@ internal fun documentUsesDedicatedEditor(documentId: String): Boolean =
     documentId in setOf(
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
-        "vaccines", "signed_pdf", "imported", "children", "branding", "loyalty", "loyalty_cards",
+        "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
         "professional"
     ) || churchGraphicDocumentTargets().any { it.first == documentId } ||
         familyEntityGraphicDocumentTargets().any { it.first == documentId } ||
@@ -630,7 +630,7 @@ private val legacyDocumentEditorFieldKeys = setOf(
 
 internal fun documentArchiveImportKeys(): Set<String> = setOf(
     "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion",
-    "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+    "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive", "documentGroupConfiguration",
     "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
     "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
     "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"

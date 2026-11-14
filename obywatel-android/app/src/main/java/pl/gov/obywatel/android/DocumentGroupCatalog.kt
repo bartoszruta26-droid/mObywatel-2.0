@@ -20,6 +20,9 @@ private val legacyDocumentGroupNames = mapOf(
     "Dokumenty finansowe" to "Służba finansowa",
     "Dokumenty publiczne i obywatelskie" to "Służba państwowa",
     "Dokumenty firmowe i podmiotowe" to "Służba gospodarcza",
+    "Dokumenty fundacji" to "Służba fundacyjna",
+    "Dokumenty przedsiębiorstwa" to "Służba gospodarcza",
+    "Dokumenty stowarzyszenia" to "Służba stowarzyszeniowa",
     "Dokumenty zawodowe i edukacyjne" to "Służba zawodowa",
     "Dokumenty cywilne i urzędowe" to "Służba cywilna",
     "Dokumenty zdrowotne i rodzinne" to "Służba zdrowotna",
@@ -28,6 +31,12 @@ private val legacyDocumentGroupNames = mapOf(
 
 internal fun migrateDocumentGroupName(name: String): String =
     legacyDocumentGroupNames[name] ?: name
+
+internal fun migrateDocumentGroupAssignment(documentId: String, group: String): String = when {
+    documentId == "organization_foundation" && group == "Służba gospodarcza" -> "Służba fundacyjna"
+    documentId == "organization_association" && group == "Służba gospodarcza" -> "Służba stowarzyszeniowa"
+    else -> group
+}
 
 
 internal fun loadDocumentGroupConfiguration(context: Context): DocumentGroupConfiguration {
@@ -47,7 +56,8 @@ internal fun loadDocumentGroupConfiguration(context: Context): DocumentGroupConf
     }.getOrDefault(emptyMap())
     val assignments = documentDisplayOptions.distinctBy { it.first }.associate { (id, _, _) ->
         val defaultGroup = documentVisibilityGroup(id)
-        val selected = savedAssignments[id]?.takeIf { it in groups } ?: defaultGroup
+        val migratedAssignment = savedAssignments[id]?.let { migrateDocumentGroupAssignment(id, it) }
+        val selected = migratedAssignment?.takeIf { it in groups } ?: defaultGroup
         id to selected
     }
     return DocumentGroupConfiguration(groups, assignments)
@@ -70,6 +80,48 @@ internal fun saveDocumentGroupConfiguration(
         .putString(DOCUMENT_GROUP_ASSIGNMENTS_KEY, JSONObject(assignments).toString())
         .commit()
     check(committed) { "Nie udało się zapisać grup dokumentów." }
+}
+
+internal fun exportDocumentGroupConfiguration(context: Context): String {
+    val configuration = loadDocumentGroupConfiguration(context)
+    return JSONObject().apply {
+        put("schemaVersion", 1)
+        put("groups", JSONArray(configuration.groups))
+        put("assignments", JSONObject(configuration.assignments))
+    }.toString()
+}
+
+internal fun importDocumentGroupConfiguration(context: Context, raw: String) {
+    val root = JSONObject(raw)
+    require(root.optInt("schemaVersion", 1) == 1) { "Nieobsługiwana wersja konfiguracji grup dokumentów." }
+    val groupsArray = root.optJSONArray("groups") ?: error("Archiwum nie zawiera listy grup dokumentów.")
+    val groups = buildList {
+        for (index in 0 until groupsArray.length()) add(groupsArray.optString(index).trim())
+    }
+    require(groups.isNotEmpty() && groups.all { it.isNotBlank() } && groups.distinct().size == groups.size) {
+        "Archiwum zawiera nieprawidłową listę grup dokumentów."
+    }
+    require(documentVisibilityGroupOrder.all { it in groups }) {
+        "Archiwum nie zawiera wszystkich standardowych grup dokumentów."
+    }
+    val rawAssignments = root.optJSONObject("assignments")
+        ?: error("Archiwum nie zawiera przypisań dokumentów do grup.")
+    val knownIds = documentDisplayOptions.map { it.first }.toSet()
+    val assignments = buildMap {
+        rawAssignments.keys().forEach { id ->
+            val group = rawAssignments.optString(id).trim()
+            require(id in knownIds && group in groups) {
+                "Archiwum zawiera nieprawidłowe przypisanie grupy dla dokumentu: $id."
+            }
+            put(id, group)
+        }
+    }
+    val configuration = DocumentGroupConfiguration(groups, assignments)
+    saveDocumentGroupConfiguration(context, configuration)
+    val restored = loadDocumentGroupConfiguration(context)
+    require(restored.groups == groups && assignments.all { (id, group) -> restored.assignments[id] == group }) {
+        "Weryfikacja importu konfiguracji grup dokumentów nie powiodła się."
+    }
 }
 
 internal fun addDocumentGroup(
