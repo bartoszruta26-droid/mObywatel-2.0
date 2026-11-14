@@ -337,12 +337,10 @@ class PaymentLedgerDatabase(
                     }
                 }
             }
-            db.delete(
-                TABLE_TRANSACTION_BANK_ENTRIES,
-                "transaction_id = ?",
-                arrayOf(transaction.id)
-            )
-            db.delete(TABLE_TRANSACTION_FEES, "transaction_id = ?", arrayOf(transaction.id))
+            // Aktualizacja istniejącego rekordu nie może używać CONFLICT_REPLACE:
+            // SQLite REPLACE wykonuje usunięcie i ponowny INSERT, co uruchamia akcje
+            // ON DELETE i może naruszyć semantykę zachowania relacji.
+            // Najpierw aktualizujemy rekord nadrzędny, a następnie wymieniamy relacje.
             val values = ContentValues().apply {
                 put("transaction_id", transaction.id)
                 put("executed_at", transaction.executedAt.toString())
@@ -356,12 +354,32 @@ class PaymentLedgerDatabase(
                 put("raw_description", transaction.rawDescription)
                 put("parse_status", transaction.parseStatus.name)
             }
-            val insertedTransaction = db.insertWithOnConflict(
-                TABLE_FINANCIAL_TRANSACTIONS, null, values, SQLiteDatabase.CONFLICT_REPLACE
+            val updated = db.update(
+                TABLE_FINANCIAL_TRANSACTIONS,
+                values,
+                "transaction_id = ?",
+                arrayOf(transaction.id)
             )
-            check(insertedTransaction != -1L) {
-                "Nie udało się zapisać transakcji finansowej."
+            if (updated == 0) {
+                val insertedTransaction = db.insert(
+                    TABLE_FINANCIAL_TRANSACTIONS,
+                    null,
+                    values
+                )
+                check(insertedTransaction != -1L) {
+                    "Nie udało się zapisać transakcji finansowej."
+                }
             }
+            db.delete(
+                TABLE_TRANSACTION_BANK_ENTRIES,
+                "transaction_id = ?",
+                arrayOf(transaction.id)
+            )
+            db.delete(
+                TABLE_TRANSACTION_FEES,
+                "transaction_id = ?",
+                arrayOf(transaction.id)
+            )
             transaction.fee?.let { fee ->
                 val feeValues = ContentValues().apply {
                     put("transaction_id", transaction.id)
