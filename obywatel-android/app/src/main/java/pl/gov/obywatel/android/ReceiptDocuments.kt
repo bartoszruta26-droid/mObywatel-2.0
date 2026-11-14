@@ -166,6 +166,14 @@ private fun receiptMoneyCents(raw:String):Long {
     if(s.isBlank()) return 0L
     return runCatching { java.math.BigDecimal(s).multiply(java.math.BigDecimal(100)).setScale(0,java.math.RoundingMode.HALF_UP).longValueExact() }.getOrDefault(0L).coerceAtLeast(0)
 }
+private fun receiptLineAmountCents(quantity:String,unitPrice:String):Long {
+    val q=runCatching { java.math.BigDecimal(quantity.trim().replace(',','.')) }.getOrDefault(java.math.BigDecimal.ZERO)
+    if(q.signum()<=0) return 0L
+    return runCatching {
+        q.multiply(java.math.BigDecimal(receiptMoneyCents(unitPrice)))
+            .setScale(0,java.math.RoundingMode.HALF_UP).longValueExact().coerceAtLeast(0L)
+    }.getOrDefault(0L)
+}
 private fun receiptMoneyLabel(cents:Long):String = "%d zł %02d gr".format(Locale("pl"),cents/100,cents%100)
 private fun receiptNumberWords(n:Long):String {
     val ones=listOf("zero","jeden","dwa","trzy","cztery","pięć","sześć","siedem","osiem","dziewięć")
@@ -258,11 +266,18 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
                 OutlinedTextField(pkwiu[i],{v->pkwiu=pkwiu.toMutableList().also{it[i]=v}},label={Text("PKWiU")},modifier=Modifier.weight(1f))
                 OutlinedTextField(units[i],{v->units=units.toMutableList().also{it[i]=v}},label={Text("Jm")},modifier=Modifier.weight(0.7f))
                 OutlinedTextField(quantities[i],{v->quantities=quantities.toMutableList().also{it[i]=v}},label={Text("Ilość")},modifier=Modifier.weight(0.8f))
-                OutlinedTextField(prices[i],{v->prices=prices.toMutableList().also{it[i]=v}},label={Text("Cena (zł i gr)")},modifier=Modifier.weight(1f))
+                OutlinedTextField(prices[i],{v->prices=prices.toMutableList().also{it[i]=v}},label={Text("Cena jednostkowa (zł i gr)")},modifier=Modifier.weight(1f))
             }
+            OutlinedTextField(
+                receiptMoneyLabel(receiptLineAmountCents(quantities[i],prices[i])),
+                {},
+                label={Text("Wartość pozycji – ilość × cena jednostkowa")},
+                modifier=Modifier.fillMaxWidth(),
+                readOnly=true
+            )
         }
         OutlinedTextField(signature,{signature=it},label={Text("Imię i nazwisko osoby wystawiającej")},modifier=Modifier.fillMaxWidth())
-        val totalCents=names.indices.fold(0L) { acc,i -> val q=runCatching{java.math.BigDecimal(quantities[i].replace(',', '.'))}.getOrDefault(java.math.BigDecimal.ZERO); acc+q.multiply(java.math.BigDecimal(receiptMoneyCents(prices[i]))).setScale(0,java.math.RoundingMode.HALF_UP).toLong() }.coerceAtLeast(0L)
+        val totalCents=names.indices.fold(0L) { acc,i -> acc+receiptLineAmountCents(quantities[i],prices[i]) }
         val total=totalCents/100.0
         val words=receiptAmountInWords(totalCents)
         OutlinedTextField(words,{ },label={Text("Wartość słownie – wyliczana automatycznie")},modifier=Modifier.fillMaxWidth(),readOnly=true)
@@ -379,7 +394,7 @@ private fun buildReceiptPdf(c:Context,no:String,date:String,seller:String,buyer:
     val xs=listOf(35f,60f,250f,310f,345f,390f,465f)
     headers.forEachIndexed{i,s->canvas.drawText(s,xs[i],top+22f,p)}
     var y=top+35f
-    names.forEachIndexed{i,n-> val rowHeight=maxOf(45f,kotlin.math.ceil(p.measureText(n)/180f).toInt()*13f+22f); canvas.drawRect(30f,y,565f,y+rowHeight,border);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f,maxWidth=180f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(receiptMoneyLabel(receiptMoneyCents(prices[i])),if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(receiptMoneyCents(prices[i]).toDouble()/100.0);canvas.drawText(receiptMoneyLabel(kotlin.math.round(v*100).toLong()),if(showPkwiu) 465f else 480f,y+25f,p);y+=rowHeight }
+    names.forEachIndexed{i,n-> val rowHeight=maxOf(45f,kotlin.math.ceil(p.measureText(n)/180f).toInt()*13f+22f); canvas.drawRect(30f,y,565f,y+rowHeight,border);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f,maxWidth=180f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(receiptMoneyLabel(receiptMoneyCents(prices[i])),if(showPkwiu) 390f else 380f,y+25f,p);val lineCents=receiptLineAmountCents(qty[i],prices[i]);canvas.drawText(receiptMoneyLabel(lineCents),if(showPkwiu) 465f else 480f,y+25f,p);y+=rowHeight }
     y+=20f; line(y); txt("Słownie: $words",35f,y+18f,maxWidth=350f); canvas.drawText("Razem: ${receiptMoneyLabel(kotlin.math.round(total*100).toLong())}",390f,y+18f,bold)
     y+=65f; canvas.drawText("Do zapłaty: ${receiptMoneyLabel(kotlin.math.round(total*100).toLong())}",80f,y,bold); y+=55f; txt("Imię i nazwisko oraz podpis osoby upoważnionej do wystawienia rachunku: $signature",35f,y)
     y+=35f; val notes=receiptNotes(c); val notesPaint=Paint(p).apply{textSize=7.5f}; var yy=y; notes.split("\n").forEach{row->yy=txt(row,35f,yy,notesPaint,maxWidth=520f)+2f}
