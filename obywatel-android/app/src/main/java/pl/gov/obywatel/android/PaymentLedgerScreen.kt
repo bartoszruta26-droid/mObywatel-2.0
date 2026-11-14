@@ -44,6 +44,14 @@ import pl.gov.obywatel.android.financial.PaymentAccountScope
 import pl.gov.obywatel.android.financial.StoredFinancialTransaction
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
 import pl.gov.obywatel.android.financial.PaymentLedgerJsonCodec
+import pl.gov.obywatel.android.Fee
+import pl.gov.obywatel.android.FinancialRecordSource
+import pl.gov.obywatel.android.FinancialParseStatus
+import pl.gov.obywatel.android.FinancialTransaction
+import pl.gov.obywatel.android.FinancialTransactionType
+import java.math.BigDecimal
+import java.time.Instant
+import java.util.UUID
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
@@ -62,6 +70,16 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var message by remember { mutableStateOf<String?>(null) }
     var accountScopeId by remember { mutableStateOf("ipko-account-1") }
     var accountScopes by remember { mutableStateOf<List<PaymentAccountScope>>(emptyList()) }
+    var transactionType by remember { mutableStateOf(FinancialTransactionType.EXCHANGE) }
+    var executedAtText by remember { mutableStateOf(Instant.now().toString()) }
+    var fromAssetText by remember { mutableStateOf("PLN") }
+    var fromAmountText by remember { mutableStateOf("") }
+    var toAssetText by remember { mutableStateOf("USD") }
+    var toAmountText by remember { mutableStateOf("") }
+    var feeAssetText by remember { mutableStateOf("") }
+    var feeAmountText by remember { mutableStateOf("") }
+    var selectedBankEntryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var editingTransactionId by remember { mutableStateOf<String?>(null) }
     var expandedExchangeIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     val exchangeOperations = remember(entries) { BankExchangeOperationProjector.project(entries) }
     val groupedEntryIds = remember(exchangeOperations) {
@@ -83,6 +101,49 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 error = exception.message ?: "Nie udało się odczytać rejestru."
             } finally {
                 loading = false
+            }
+        }
+    }
+
+    fun resetTransactionForm() {
+        editingTransactionId = null
+        transactionType = FinancialTransactionType.EXCHANGE
+        executedAtText = Instant.now().toString()
+        fromAssetText = "PLN"
+        fromAmountText = ""
+        toAssetText = "USD"
+        toAmountText = ""
+        feeAssetText = ""
+        feeAmountText = ""
+        selectedBankEntryIds = emptySet()
+    }
+
+    fun saveTransactionForm() {
+        scope.launch {
+            try {
+                val fromCode = if (transactionType == FinancialTransactionType.DEPOSIT) null else fromAssetText.trim().uppercase()
+                val toCode = if (transactionType == FinancialTransactionType.WITHDRAWAL) null else toAssetText.trim().uppercase()
+                val transaction = FinancialTransaction(
+                    id = editingTransactionId ?: UUID.randomUUID().toString(),
+                    executedAt = Instant.parse(executedAtText.trim()),
+                    type = transactionType,
+                    fromAssetCode = fromCode,
+                    fromAmount = fromCode?.let { BigDecimal(fromAmountText.trim()) },
+                    toAssetCode = toCode,
+                    toAmount = toCode?.let { BigDecimal(toAmountText.trim()) },
+                    fee = if (feeAmountText.isBlank() && feeAssetText.isBlank()) null else
+                        Fee(feeAssetText.trim().uppercase(), BigDecimal(feeAmountText.trim())),
+                    source = FinancialRecordSource.MANUAL,
+                    parseStatus = FinancialParseStatus.MANUAL
+                )
+                transaction.validate()
+                repository.saveFinancialTransaction(transaction, selectedBankEntryIds)
+                message = if (editingTransactionId == null) "Zapisano transakcję." else "Zaktualizowano transakcję."
+                error = null
+                resetTransactionForm()
+                reload()
+            } catch (exception: Exception) {
+                error = exception.message ?: "Nie udało się zapisać transakcji."
             }
         }
     }
@@ -293,6 +354,45 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         if (!loading && entries.isEmpty() && error == null) {
             Text("Rejestr jest pusty. Możesz zaimportować archiwum JSON.")
         }
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(if (editingTransactionId == null) "Ręczne dodawanie transakcji" else "Edycja transakcji", style = MaterialTheme.typography.titleMedium)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(FinancialTransactionType.entries.toList(), key = { it.name }) { type ->
+                        Button(onClick = { transactionType = type }) {
+                            Text(if (transactionType == type) "✓ $type" else type.name)
+                        }
+                    }
+                }
+                OutlinedTextField(value = executedAtText, onValueChange = { executedAtText = it }, label = { Text("Data i czas ISO-8601") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                if (transactionType != FinancialTransactionType.DEPOSIT) {
+                    OutlinedTextField(value = fromAssetText, onValueChange = { fromAssetText = it }, label = { Text("Aktywo oddane") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = fromAmountText, onValueChange = { fromAmountText = it }, label = { Text("Ilość oddana") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                if (transactionType != FinancialTransactionType.WITHDRAWAL) {
+                    OutlinedTextField(value = toAssetText, onValueChange = { toAssetText = it }, label = { Text("Aktywo otrzymane") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = toAmountText, onValueChange = { toAmountText = it }, label = { Text("Ilość otrzymana") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                OutlinedTextField(value = feeAssetText, onValueChange = { feeAssetText = it }, label = { Text("Aktywo prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = feeAmountText, onValueChange = { feeAmountText = it }, label = { Text("Kwota prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Text("Wybierz zapisy bankowe do powiązania")
+                entries.forEach { bankEntry ->
+                    val entryId = bankEntry.accountingEntryId()
+                    val selected = entryId in selectedBankEntryIds
+                    Button(onClick = {
+                        selectedBankEntryIds = if (selected) selectedBankEntryIds - entryId else selectedBankEntryIds + entryId
+                    }) {
+                        Text((if (selected) "✓ " else "") + "\${bankEntry.bookingDate} • \${bankEntry.signedAmount.toPlainString()} \${bankEntry.currencyCode}")
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { saveTransactionForm() }, enabled = !loading) {
+                        Text(if (editingTransactionId == null) "Zapisz transakcję" else "Zapisz zmiany")
+                    }
+                    if (editingTransactionId != null) Button(onClick = { resetTransactionForm() }) { Text("Anuluj") }
+                }
+            }
+        }
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -325,6 +425,18 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                                 "Zapisy bankowe powiązane: ${stored.accountingEntryIds.size}",
                                 style = MaterialTheme.typography.bodySmall
                             )
+                            Button(onClick = {
+                                editingTransactionId = transaction.id
+                                transactionType = transaction.type
+                                executedAtText = transaction.executedAt.toString()
+                                fromAssetText = transaction.fromAssetCode.orEmpty()
+                                fromAmountText = transaction.fromAmount?.toPlainString().orEmpty()
+                                toAssetText = transaction.toAssetCode.orEmpty()
+                                toAmountText = transaction.toAmount?.toPlainString().orEmpty()
+                                feeAssetText = transaction.fee?.assetCode.orEmpty()
+                                feeAmountText = transaction.fee?.amount?.toPlainString().orEmpty()
+                                selectedBankEntryIds = stored.accountingEntryIds.toSet()
+                            }) { Text("Edytuj") }
                         }
                     }
                 }
