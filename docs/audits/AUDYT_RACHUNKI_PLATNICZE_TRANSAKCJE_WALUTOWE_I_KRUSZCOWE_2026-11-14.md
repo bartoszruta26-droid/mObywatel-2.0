@@ -2131,7 +2131,7 @@ Na tym etapie ekran wyświetla istniejące transakcje, ale nie zawiera jeszcze f
 - `PaymentLedgerDatabaseTest.kt`: test trwałości transakcji, prowizji i relacji po ponownym otwarciu bazy;
 - test odrzucenia nieistniejącego zapisu bankowego i wycofania transakcji;
 - test odrzucenia zapisu bankowego o niezgodnej walucie/kwocie;
-- test migracji wersji 3 → 4, zachowania istniejącego zapisu bankowego i możliwości utworzenia transakcji po migracji.
+- test migracji wersji 3 → 4, zachowania istniejącego zapisu bankowego i możliwości utworzenia transakcji po migracji. W kontroli testu poprawiono asercję: identyfikator księgowy jest deterministycznie wyliczany z pól wpisu, więc test migracji sprawdza zachowanie waluty i wartości, a relację FK weryfikuje po istniejącym kluczu zapisanym w SQLite.
 
 Są to testy dodane do repozytorium; ich wykonanie wymaga wyniku GitHub Actions dla rewizji kodowej etapu 2M.
 
@@ -2141,21 +2141,21 @@ Są to testy dodane do repozytorium; ich wykonanie wymaga wyniku GitHub Actions 
 - `PaymentLedgerRepository.kt` — `457f28bba3e6ac8a824f7b87a5b6080cfa51d390`;
 - `FinancialModels.kt` — `7cbc9347c7fe710904417aa5a0cbaea4c84974c1`;
 - `PaymentLedgerScreen.kt` — `c07c1e771b2ec06399a120d81aa579ea1fd84462`;
-- `PaymentLedgerDatabaseTest.kt` — `76a344a86800ea9ed50d8c845b1e4da45f457434`;
+- `PaymentLedgerDatabaseTest.kt` — `f088ef50a831b913926499d3d2831664147ca31b`;
 - `FinancialModelsTest.kt` — `8d4839cb774a7e84cb7a9ec6eaebdfba6e7f01c5`.
 
 Po zapisie ponownie pobrano wszystkie sześć plików z GitHub i sprawdzono obecność migracji 3 → 4, tabel, ograniczeń kluczy obcych, metod repozytorium, prezentacji transakcji i prowizji oraz testów. Kontrola treści potwierdziła również, że wersja schematu wynosi 4.
 
 ### 36.8. Status CI i ograniczenia
 
-Kontrolowana rewizja kodowa: `76a344a86800ea9ed50d8c845b1e4da45f457434`.
+Kontrolowana rewizja kodowa po korekcie testu migracji: `f088ef50a831b913926499d3d2831664147ca31b`.
 
 | Kontrola | Stan w chwili aktualizacji audytu |
 |---|---|
 | Repository compliance / REUSE | Sukces |
-| Android prototype build | W toku; Gradle jeszcze się konfigurował |
-| Android JVM unit tests | Oczekują na krok testów |
-| Android GUI validation | W toku; konfiguracja SDK/emulatora |
+| Android prototype build | Dla poprzedniego SHA zadanie anulowano przed testami; nowe uruchomienie dla SHA `f088ef5` oczekuje na start |
+| Android JVM unit tests | Oczekują na świeże uruchomienie dla SHA `f088ef5` |
+| Android GUI validation | Dla poprzedniego SHA zadanie anulowano; świeża walidacja oczekuje na start |
 | Testy Compose | Oczekują na wykonanie |
 | Test migracji SQLite 3 → 4 | Dodany; oczekuje na CI |
 | Debug APK | Brak artefaktu dla tej rewizji w chwili kontroli |
