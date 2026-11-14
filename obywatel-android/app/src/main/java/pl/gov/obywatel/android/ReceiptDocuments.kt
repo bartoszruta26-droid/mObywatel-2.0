@@ -53,7 +53,7 @@ private object ReceiptStore {
         val a=JSONArray(); items.forEach { a.put(JSONObject().put("id",it.id).put("name",it.name).put("createdAt",it.createdAt)) }
         index(c).writeText(a.toString())
     }
-    fun import(c:Context,uri:Uri):ReceiptRecord {
+    fun importPdf(c:Context,uri:Uri):ReceiptRecord {
         val bytes=c.contentResolver.openInputStream(uri)?.use{it.readBytes()} ?: error("Nie można odczytać PDF.")
         val name=c.contentResolver.query(uri,null,null,null,null)?.use{cur-> if(cur.moveToFirst()) { val i=cur.getColumnIndex(OpenableColumns.DISPLAY_NAME); if(i>=0) cur.getString(i) else null } else null} ?: "rachunek.pdf"
         return put(c,name,bytes)
@@ -96,7 +96,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
     var units by remember { mutableStateOf(listOf("szt.","","")) }; var quantities by remember { mutableStateOf(listOf("1","","")) }
     var prices by remember { mutableStateOf(listOf("0,00","","")) }
     var replaceId by remember { mutableStateOf<String?>(null) }
-    val importPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri-> if(uri!=null) runCatching { val old=replaceId; val b=c.contentResolver.openInputStream(uri)?.use{it.readBytes()} ?: error("Nie można odczytać PDF."); val record=if(old!=null) ReceiptStore.put(c,"Rachunek – plik podmieniony.pdf",b,old) else ReceiptStore.import(c,uri); records=ReceiptStore.list(c); status="Zapisano: ${record.name}" }.onFailure{status="Błąd PDF: ${it.message}"}; replaceId=null }
+    val importPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri-> if(uri!=null) runCatching { val old=replaceId; val b=c.contentResolver.openInputStream(uri)?.use{it.readBytes()} ?: error("Nie można odczytać PDF."); val record=if(old!=null) ReceiptStore.put(c,"Rachunek – plik podmieniony.pdf",b,old) else ReceiptStore.importPdf(c,uri); records=ReceiptStore.list(c); status="Zapisano: ${record.name}" }.onFailure{status="Błąd PDF: ${it.message}"}; replaceId=null }
     val savePicker=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")){uri-> if(uri!=null) runCatching { val temp=File(c.cacheDir,"receipt-export.pdf"); temp.writeBytes(pendingPdfBytes); c.contentResolver.openOutputStream(uri)?.use{it.write(pendingPdfBytes)} ?: error("Nie można zapisać PDF."); val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pendingPdfBytes); records=ReceiptStore.list(c); status="Wygenerowano i zapisano rachunek PDF: ${rec.name}" }.onFailure{status="Błąd zapisu PDF: ${it.message}"} }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text("‹  Powrót",Modifier.clickable(onClick=onBack),color=MaterialTheme.colorScheme.primary)
