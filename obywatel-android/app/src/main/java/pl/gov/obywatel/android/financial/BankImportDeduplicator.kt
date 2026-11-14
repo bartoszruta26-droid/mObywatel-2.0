@@ -53,19 +53,14 @@ data class BankStatementEntry(
     }
 
     /**
-     * Łączy różne zapisy (np. obciążenie USD i uznanie CHF) należące do jednej wymiany.
-     * Nie służy do deduplikacji zapisów — dwa zapisy z tym samym numerem FX pozostają osobne.
+     * Łączy różne zapisy kantorowe tej samej wymiany, także z różnych zakresów rachunków.
+     * Nie jest kluczem deduplikacji. Data ogranicza ryzyko ponownego użycia referencji.
      */
     fun exchangeOperationId(): String? {
+        if (!operationType.uppercase(Locale.ROOT).contains("WYMIANA W KANTORZE")) return null
         val reference = normalize(bankOperationReference.orEmpty())
         if (reference.isEmpty()) return null
-        // Referencja bankowa nie musi być globalnie unikalna. Zakres rachunku
-        // i data księgowania ograniczają ryzyko połączenia niezależnych operacji.
-        val identity = listOf(
-            accountScopeId.trim(),
-            bookingDate.toString(),
-            reference
-        ).joinToString("|")
+        val identity = listOf(bookingDate.toString(), reference).joinToString("|")
         return "bank-operation-" + sha256("PKO|" + identity)
     }
 
