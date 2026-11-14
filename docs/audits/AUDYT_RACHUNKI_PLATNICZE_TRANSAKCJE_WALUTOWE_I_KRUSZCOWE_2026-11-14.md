@@ -2573,3 +2573,61 @@ Po zapisie wymagane są ponowne odczyty plików i świeże przebiegi CI dla koń
 3. Rozważyć wymuszenie wyboru wyłącznie z listy (bez swobodnego kodu), po zapewnieniu migracji lub inicjalnego zestawu aktywów.
 4. Dodać kontrolowany katalog walut i jednostek/standardów kruszców, z datą wersji źródła.
 5. Pozytywnie zweryfikować ochronę historycznych definicji również dla prowizji.
+
+
+---
+
+## 44. Etap 2N.8 — zgodność wsteczna aktywów historycznych i test prowizji (14 listopada 2026 r.)
+
+### 44.1. Wyniki CI dla poprzedniej rewizji
+
+Dla SHA `f83a3823812ba6b397c290ce1a2a5db75345a449` potwierdzono:
+- Repository compliance — sukces (run `43635946184`);
+- Android prototype build — sukces; testy JVM i budowanie debug APK zakończone powodzeniem (run `43635946207`);
+- Android GUI validation — testy JVM zakończone powodzeniem, testy Compose na emulatorze pozostawały w toku podczas kontroli (run `43635946160`). Nie oznaczono całego zadania GUI jako zaliczonego.
+
+### 44.2. Wykryte ryzyko zgodności wstecznej
+
+W formularzu transakcji walidacja wymagała istnienia każdego kodu w lokalnym słowniku. Starsze transakcje zaimportowane przed wprowadzeniem słownika mogły zawierać poprawne historycznie kody, których użytkownik nie zarejestrował. Samo otwarcie i ponowne zapisanie takiej transakcji mogło zostać zablokowane, nawet gdy kod i kwota pozostawały bez zmian.
+
+### 44.3. Wykonana poprawka
+
+W `PaymentLedgerScreen.kt`:
+- rozpoznawane są rekordy pochodzące ze źródeł innych niż `MANUAL`;
+- jeśli kod aktywa i odpowiadająca mu kwota pozostają dokładnie niezmienione względem rekordu historycznego, brak definicji w słowniku nie blokuje zachowania tej wartości;
+- każda zmiana kodu lub kwoty nadal wymaga definicji aktywa i przechodzi walidację precyzji;
+- reguła dotyczy strony oddawanej, otrzymywanej i prowizji;
+- rekordy ręczne nadal wymagają aktywa ze słownika.
+
+To rozwiązanie zachowuje dane historyczne, nie tworząc fikcyjnych definicji aktywów i nie osłabiając walidacji nowych wartości.
+
+### 44.4. Test ochrony aktywa użytego wyłącznie jako prowizja
+
+W `PaymentLedgerDatabaseTest.kt` dodano test `assetUsedOnlyAsTransactionFeeKeepsItsHistoricalDefinitionImmutable`:
+- zapisuje aktywo kruszcowe wyłącznie jako aktywo prowizji;
+- dopuszcza zmianę nazwy opisowej;
+- odrzuca zmianę próby i jednostki;
+- potwierdza zachowanie kodu aktywa w zapisanej prowizji.
+
+Test rozszerza pokrycie metody `isAssetReferenced()` o odwołanie wyłącznie z tabeli prowizji.
+
+### 44.5. Zmienione pliki i rewizje
+
+- `PaymentLedgerScreen.kt` — commit `237866ba2cf5cb33cd31b35f7f3cae393f7473b9`, blob `0a712efbf040b6af6776b84507f9a2c95a141fe6`;
+- `PaymentLedgerDatabaseTest.kt` — commit `c1bc76f46bb04a5e4c14e8b66ff3847b8ce8ad9c`, blob `2d0a89a0b1cb2b3c7fe2404efc7ad774978710d7`.
+
+### 44.6. Weryfikacja i ograniczenia
+
+Zmiany zapisano na gałęzi `feature/payment-ledger-stage-1`. Należy ponownie pobrać oba pliki z GitHub i sprawdzić treść po zapisie. Nowe przebiegi CI muszą potwierdzić kompilację, test JVM, test instrumentacyjny prowizji oraz testy Compose. Samo dodanie testu nie oznacza jego wykonania.
+
+Nie dodano jeszcze testu Compose dedykowanego formularzowi słownika i scenariuszowi edycji historycznego rekordu. Nie dodano również automatycznego katalogu ISO 4217 ani wersjonowania definicji aktywów.
+
+**Status etapu 2N.8:** poprawka zgodności wstecznej i test prowizji zapisane; ponowny odczyt plików i CI dla nowej rewizji wymagane. PR #68 pozostaje otwarty i niescalony.
+
+### 44.7. Następne działania
+
+1. Zweryfikować świeże CI dla nowego SHA.
+2. Dodać testy Compose dla dodawania aktywa, wyboru aktywa i walidacji precyzji.
+3. Dodać test scenariusza edycji importowanej transakcji z kodem spoza słownika.
+4. Zweryfikować obsługę zera, wartości ujemnych i nadmiarowej skali zgodnie z regułami modelu.
+5. Po przejściu testów przeprowadzić końcowy przegląd migracji, eksportu/importu i zachowania historii.
