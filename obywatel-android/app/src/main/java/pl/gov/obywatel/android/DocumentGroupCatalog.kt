@@ -82,6 +82,48 @@ internal fun saveDocumentGroupConfiguration(
     check(committed) { "Nie udało się zapisać grup dokumentów." }
 }
 
+internal fun exportDocumentGroupConfiguration(context: Context): String {
+    val configuration = loadDocumentGroupConfiguration(context)
+    return JSONObject().apply {
+        put("schemaVersion", 1)
+        put("groups", JSONArray(configuration.groups))
+        put("assignments", JSONObject(configuration.assignments))
+    }.toString()
+}
+
+internal fun importDocumentGroupConfiguration(context: Context, raw: String) {
+    val root = JSONObject(raw)
+    require(root.optInt("schemaVersion", 1) == 1) { "Nieobsługiwana wersja konfiguracji grup dokumentów." }
+    val groupsArray = root.optJSONArray("groups") ?: error("Archiwum nie zawiera listy grup dokumentów.")
+    val groups = buildList {
+        for (index in 0 until groupsArray.length()) add(groupsArray.optString(index).trim())
+    }
+    require(groups.isNotEmpty() && groups.all { it.isNotBlank() } && groups.distinct().size == groups.size) {
+        "Archiwum zawiera nieprawidłową listę grup dokumentów."
+    }
+    require(documentVisibilityGroupOrder.all { it in groups }) {
+        "Archiwum nie zawiera wszystkich standardowych grup dokumentów."
+    }
+    val rawAssignments = root.optJSONObject("assignments")
+        ?: error("Archiwum nie zawiera przypisań dokumentów do grup.")
+    val knownIds = documentDisplayOptions.map { it.first }.toSet()
+    val assignments = buildMap {
+        rawAssignments.keys().forEach { id ->
+            val group = rawAssignments.optString(id).trim()
+            require(id in knownIds && group in groups) {
+                "Archiwum zawiera nieprawidłowe przypisanie grupy dla dokumentu: $id."
+            }
+            put(id, group)
+        }
+    }
+    val configuration = DocumentGroupConfiguration(groups, assignments)
+    saveDocumentGroupConfiguration(context, configuration)
+    val restored = loadDocumentGroupConfiguration(context)
+    require(restored.groups == groups && assignments.all { (id, group) -> restored.assignments[id] == group }) {
+        "Weryfikacja importu konfiguracji grup dokumentów nie powiodła się."
+    }
+}
+
 internal fun addDocumentGroup(
     configuration: DocumentGroupConfiguration,
     name: String
