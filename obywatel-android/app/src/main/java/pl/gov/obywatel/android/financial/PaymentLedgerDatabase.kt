@@ -42,12 +42,88 @@ class PaymentLedgerDatabase(
         db.execSQL(
             "CREATE INDEX idx_payment_booking_date ON $TABLE_ENTRIES(booking_date)"
         )
+        createAccountScopesTable(db)
+        seedDefaultAccountScope(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Migracje kolejnych wersji należy dopisywać sekwencyjnie; nie usuwamy danych.
+        // Migracje są sekwencyjne i zachowują istniejące zapisy księgowe.
         if (oldVersion < 2) {
-            // Wersja 1 jest pierwszą wersją schematu; brak destrukcyjnych zmian.
+            createAccountScopesTable(db)
+            // Dotychczas używane aliasy zostają zarejestrowane bez zmiany identyfikatorów wpisów.
+            db.execSQL(
+                "INSERT OR IGNORE INTO $TABLE_ACCOUNT_SCOPES(account_scope_id, display_name) " +
+                    "SELECT DISTINCT account_scope_id, account_scope_id FROM $TABLE_ENTRIES"
+            )
+            seedDefaultAccountScope(db)
+        }
+    }
+
+    private fun createAccountScopesTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS $TABLE_ACCOUNT_SCOPES (
+                account_scope_id TEXT PRIMARY KEY NOT NULL,
+                display_name TEXT NOT NULL UNIQUE
+            )
+            """.trimIndent()
+        )
+    }
+
+    private fun seedDefaultAccountScope(db: SQLiteDatabase) {
+        val values = ContentValues().apply {
+            put("account_scope_id", DEFAULT_ACCOUNT_SCOPE_ID)
+            put("display_name", DEFAULT_ACCOUNT_SCOPE_NAME)
+        }
+        db.insertWithOnConflict(TABLE_ACCOUNT_SCOPES, null, values, SQLiteDatabase.CONFLICT_IGNORE)
+    }
+
+    /** Zwraca wyłącznie lokalne pseudonimy i ich etykiety — bez numerów rachunków. */
+    fun getAccountScopes(): List<PaymentAccountScope> {
+        val result = mutableListOf<PaymentAccountScope>()
+        readableDatabase.query(
+            TABLE_ACCOUNT_SCOPES,
+            arrayOf("account_scope_id", "display_name"),
+            null, null, null, null, "display_name COLLATE NOCASE ASC"
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                result += PaymentAccountScope(cursor.getString(0), cursor.getString(1))
+            }
+        }
+        return result
+    }
+
+    /** Dodaje alias lub aktualizuje jego etykietę; nie zmienia identyfikatorów zapisów. */
+    fun saveAccountScope(accountScopeId: String, displayName: String) {
+        val normalizedId = accountScopeId.trim()
+        val normalizedName = displayName.trim()
+        require(normalizedId.matches(Regex("[A-Za-z0-9._-]{1,64}"))) {
+            "Pseudonim rachunku musi mieć 1–64 znaki ASCII, cyfry, kropkę, myślnik lub podkreślenie."
+        }
+        require(normalizedName.length in 1..64) { "Nazwa aliasu musi mieć 1–64 znaki." }
+
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            db.query(
+                TABLE_ACCOUNT_SCOPES,
+                arrayOf("account_scope_id"),
+                "display_name = ? AND account_scope_id <> ?",
+                arrayOf(normalizedName, normalizedId),
+                null, null, null
+            ).use { cursor ->
+                require(!cursor.moveToFirst()) { "Taka nazwa aliasu jest już przypisana do innego pseudonimu." }
+            }
+            val values = ContentValues().apply {
+                put("account_scope_id", normalizedId)
+                put("display_name", normalizedName)
+            }
+            db.insertWithOnConflict(
+                TABLE_ACCOUNT_SCOPES, null, values, SQLiteDatabase.CONFLICT_REPLACE
+            )
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
         }
     }
 
@@ -167,10 +243,18 @@ class PaymentLedgerDatabase(
 
     companion object {
         const val DATABASE_NAME = "payment_ledger.db"
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 2
+        const val DEFAULT_ACCOUNT_SCOPE_ID = "ipko-account-1"
+        const val DEFAULT_ACCOUNT_SCOPE_NAME = "Rachunek iPKO 1"
         private const val TABLE_ENTRIES = "bank_statement_entries"
+        private const val TABLE_ACCOUNT_SCOPES = "payment_account_scopes"
     }
 }
+
+data class PaymentAccountScope(
+    val accountScopeId: String,
+    val displayName: String
+)
 
 data class BatchImportSummary(
     val inserted: Int,
