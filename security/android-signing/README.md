@@ -23,13 +23,21 @@
    openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in mobywatel-android-signing-private.zip.enc -out mobywatel-android-signing-private.zip
    ```
    OpenSSL poprosi o hasło. Nie wpisuj go do historii poleceń.
-4. Rozpakuj ZIP. Zawiera plik keystore `.p12`, jego wariant Base64, plik hasła keystore oraz instrukcję dodania sekretów GitHub Actions.
+4. Rozpakuj ZIP. Zawiera prywatny plik keystore `.p12` oraz plik `ANDROID_KEY_PASSWORD.txt` z hasłem do tego keystore.
+5. Aby przygotować Base64 do sekretu GitHub, użyj:
+   ```sh
+   base64 -w0 mobywatel-upload-key.p12
+   ```
+   W PowerShell:
+   ```powershell
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("mobywatel-upload-key.p12"))
+   ```
 
 ## Sekrety GitHub Actions
 
 W ustawieniach repozytorium: **Settings → Secrets and variables → Actions** dodaj:
 
-- `ANDROID_KEYSTORE_BASE64` — cała zawartość `mobywatel-upload-key.p12.base64`
+- `ANDROID_KEYSTORE_BASE64` — Base64 całego pliku `mobywatel-upload-key.p12`
 - `ANDROID_KEYSTORE_PASSWORD` — wartość z `ANDROID_KEY_PASSWORD.txt`
 - `ANDROID_KEY_ALIAS` — `mobywatel-upload`
 - `ANDROID_KEY_PASSWORD` — ta sama wartość co `ANDROID_KEYSTORE_PASSWORD`
