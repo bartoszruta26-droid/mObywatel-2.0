@@ -2404,3 +2404,60 @@ Korekta dotyczy wyłącznie prezentacji dostępnych powiązań. Walidacja zgodno
 - Testy jednostkowe, instrumentacyjne, Compose i kompilacja APK dla nowego SHA pozostają do potwierdzenia przez CI.
 
 **Status etapu 2N.4:** korekta zapisana; weryfikacja automatyczna oczekuje na uruchomienie/zakończenie CI. PR #68 pozostaje otwarty i niescalony.
+
+
+---
+
+## 41. Etap 2N.5 — trwały rejestr aktywów walutowych i kruszcowych (14 listopada 2026 r.)
+
+### 41.1. Cel i zakres
+
+Rozpoczęto realizację trwałego słownika aktywów wykorzystywanych w transakcjach finansowych. Dotychczas model `Asset` istniał w warstwie domenowej, lecz brakowało tabeli SQLite i metod repozytorium, które zachowywałyby definicje walut i kruszców pomiędzy uruchomieniami aplikacji.
+
+### 41.2. Wykonane zmiany
+
+- Podniesiono wersję bazy `PaymentLedgerDatabase` z 4 do 5.
+- Dodano tabelę `financial_assets` z polami: kod aktywa (klucz główny), nazwa, rodzaj, jednostka, precyzja dziesiętna, próba kruszcu i czas aktualizacji.
+- Dodano indeks po rodzaju aktywa.
+- Dodano migrację z wersji 4 do 5, która tworzy tabelę aktywów bez usuwania dotychczasowych tabel i danych.
+- Dodano `saveAsset()`: waliduje model, aktualizuje istniejący kod lub wstawia nowy rekord.
+- Dodano `readAssets()`: odtwarza modele `Asset` w stabilnej kolejności.
+- Udostępniono `getAssets()` i `saveAsset()` przez `PaymentLedgerRepository`; operacje repozytorium działają na `Dispatchers.IO`.
+- Zachowano wartości ilościowe jako parametry modelu i pola całkowite/tekstowe; nie wprowadzono typów zmiennoprzecinkowych.
+
+### 41.3. Testy dodane
+
+W `PaymentLedgerDatabaseTest.kt` dodano:
+- `assetRegistryPersistsAndUpdatesCurrencyAndMetalDefinitions` — zapis waluty i kruszcu, odczyt, aktualizację nazwy/precyzji istniejącej waluty oraz ponowny odczyt po zamknięciu i otwarciu bazy;
+- `versionFourMigrationCreatesAssetRegistryWithoutDroppingLegacyTables` — migrację bazy v4 do v5, zapis aktywa po migracji i sprawdzenie zachowania przykładowej tabeli starszej wersji.
+
+Testy zostały dodane do zestawu instrumentacyjnego Android; ich obecność nie oznacza, że zostały już wykonane.
+
+### 41.4. Pliki i rewizje
+
+- `PaymentLedgerDatabase.kt` — commit `54d4c5007455884bcd064597f0ff19fe3e35f1b2`, blob `74479d38fbc33d0b1b416cdbf999d65aef06da5c`;
+- `PaymentLedgerRepository.kt` — commit `b754a4564f4665e2b1674e9a663538d2f7982f43`, blob `7e79508e6a4cc3bde4b78ff955a1001ae088dc1c`;
+- `PaymentLedgerDatabaseTest.kt` — commit `6111e6d3aa2b7af703790e35ff31aa966e2d6648`, blob `78b39af59e432c806fbd880914dc0ebddf2b1885`;
+- gałąź: `feature/payment-ledger-stage-1`; PR #68.
+
+### 41.5. Kontrola po zapisie i status CI
+
+Wszystkie trzy pliki ponownie pobrano z GitHub. Potwierdzono obecność tabeli i metod rejestru aktywów, metod repozytorium oraz obu nowych testów.
+
+Dla końcowego SHA `6111e6d3aa2b7af703790e35ff31aa966e2d6648` GitHub Actions utworzył:
+- Repository compliance (alfa), run `43633661192` — oczekuje;
+- Android GUI validation, run `43633661151` — w kolejce;
+- Android prototype build, run `43633661210` — w kolejce.
+
+Wcześniejsze uruchomienia na pośrednich commitach zostały anulowane wskutek kolejnych aktualizacji gałęzi. Nie są wynikiem testowym dla końcowego SHA. Nie potwierdzono jeszcze kompilacji, testów JVM, testów instrumentacyjnych, testów Compose ani APK dla rewizji `6111e6d3aa2b7af703790e35ff31aa966e2d6648`.
+
+### 41.6. Ograniczenia i dalszy zakres
+
+Ten etap dostarcza trwałą warstwę danych i API repozytorium, ale nie kończy obsługi rejestru aktywów w interfejsie. Do wykonania pozostają:
+1. ekran przeglądania, dodawania i edycji aktywów;
+2. wybór aktywa ze słownika w formularzu transakcji zamiast swobodnego wpisywania kodu;
+3. reguły słownika walut zgodne z aktualnym katalogiem ISO 4217 oraz katalog jednostek/standardów próby dla kruszców;
+4. zabezpieczenie przed zmianą definicji aktywa w sposób naruszający historyczną interpretację transakcji;
+5. testy UI i pełne wykonanie CI dla końcowego SHA.
+
+**Status etapu 2N.5:** warstwa SQLite, migracja i API repozytorium zapisane; testy dodane; weryfikacja automatyczna oczekuje na zakończenie CI. PR #68 pozostaje otwarty i niescalony.
