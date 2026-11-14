@@ -2518,3 +2518,58 @@ Po potwierdzeniu CI należy kontynuować 2N.7:
 3. walidacja liczby miejsc dziesiętnych względem definicji aktywa;
 4. testy Compose dla dodawania, edycji i wyboru aktywów;
 5. dopiero w następnej kolejności rozważyć pełny katalog walut ISO 4217 i wersjonowanie definicji.
+
+
+---
+
+## 43. Etap 2N.7 — słownik aktywów w interfejsie i walidacja precyzji (14 listopada 2026 r.)
+
+### 43.1. Korekta błędu wykrytego przez CI po etapie 2N.6
+
+Przebiegi Androida dla SHA `8e3f61c30657484a20b1609a81426bab81b86dfb` zakończyły się niepowodzeniem na kompilacji Kotlin. Przyczyną było odwołanie do niezdefiniowanej stałej `TABLE_FINANCIAL_TRANSACTION_FEES` w metodzie ochrony historii aktywów. Faktyczna stała tabeli w bazie to `TABLE_TRANSACTION_FEES`.
+
+Korekta:
+- zastąpiono błędną nazwę rzeczywistą stałą `TABLE_TRANSACTION_FEES`;
+- zachowano kontrolę odwołań w tabelach transakcji i prowizji;
+- plik ponownie pobrano po zapisie i sprawdzono zgodność nazwy z deklaracją stałej.
+
+### 43.2. Interfejs zarządzania aktywami
+
+W `PaymentLedgerScreen.kt` dodano:
+- sekcję „Słownik walut i kruszców”;
+- wybór rodzaju definicji: waluta lub kruszec;
+- pola kodu, nazwy, jednostki, precyzji oraz opcjonalnej próby;
+- zapis przez `PaymentLedgerRepository.saveAsset()`;
+- odświeżanie i wyświetlanie zarejestrowanych definicji.
+
+### 43.3. Wybór aktywa w transakcji
+
+W formularzu transakcji dodano wybór zarejestrowanych aktywów dla:
+- aktywa oddawanego;
+- aktywa otrzymywanego;
+- aktywa prowizji.
+
+Pola tekstowe pozostawiono jako możliwość wprowadzenia kodu, ale zapis jest blokowany, jeśli kod nie istnieje w słowniku. Dla ilości stron transakcji i prowizji sprawdzana jest maksymalna liczba miejsc dziesiętnych zgodnie z definicją aktywa. Wartości pozostają typu `BigDecimal`.
+
+### 43.4. Ograniczenia i jawne założenia
+
+Walidacja modelu waluty sprawdza trzyliterowy wzorzec kodu, ale nie pobiera aktualnego katalogu ISO 4217; nie należy utożsamiać tego z pełną walidacją kodów ISO. Słownik jest lokalny i wymaga wprowadzenia definicji przez użytkownika. Nie dodano automatycznego katalogu walut ani notowań NBP.
+
+### 43.5. Pliki zmienione
+
+- `PaymentLedgerDatabase.kt` — poprawka stałej tabeli prowizji; commit `d1ad7ac6fddfbd8e0e15136520939a8b31521c98`, blob `3b62942bbd001da901a910a1714bc8c652d0d470`;
+- `PaymentLedgerScreen.kt` — UI słownika, selektory aktywów i kontrola precyzji; commit `ec0d4c9289e10a29e8578a0ea430245569f4ae30`, blob `c9b4160481becf9ffb60602af50a9e41aa82171a`.
+
+### 43.6. Weryfikacja
+
+Po zapisie wymagane są ponowne odczyty plików i świeże przebiegi CI dla końcowego SHA. Poprzedni CI wykazał błąd kompilacji Kotlin; nie zaliczono testów JVM ani instrumentacyjnych dla tej rewizji. Nie publikować APK przed zielonym wynikiem kompilacji i testów.
+
+**Status etapu 2N.7:** kod interfejsu i walidacji zapisany; oczekuje na kompilację, testy i kontrolę UI w CI.
+
+### 43.7. Dalsze prace
+
+1. Wykonać świeże CI dla końcowego SHA i naprawić wszystkie wykryte błędy.
+2. Dodać testy UI słownika, wyboru aktywów i walidacji precyzji.
+3. Rozważyć wymuszenie wyboru wyłącznie z listy (bez swobodnego kodu), po zapewnieniu migracji lub inicjalnego zestawu aktywów.
+4. Dodać kontrolowany katalog walut i jednostek/standardów kruszców, z datą wersji źródła.
+5. Pozytywnie zweryfikować ochronę historycznych definicji również dla prowizji.
