@@ -11,9 +11,12 @@ import android.database.sqlite.SQLiteOpenHelper
  * Lokalny magazyn zapisów wyciągów. Kwoty są przechowywane jako tekst dziesiętny,
  * aby zachować dokładność BigDecimal. Unikalny klucz zabezpiecza przed ponownym importem.
  */
-class PaymentLedgerDatabase(context: Context) : SQLiteOpenHelper(
+class PaymentLedgerDatabase(
+    context: Context,
+    databaseName: String = DATABASE_NAME
+) : SQLiteOpenHelper(
     context.applicationContext,
-    DATABASE_NAME,
+    databaseName,
     null,
     DATABASE_VERSION
 ) {
