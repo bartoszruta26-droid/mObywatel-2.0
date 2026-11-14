@@ -10,7 +10,7 @@ SPDX-License-Identifier: CC0-1.0
 - **Gałąź audytowana:** `feature/payment-ledger-stage-1`
 - **Commit bazowy:** `631aa68ed0e2bcbedd70201751214bd4c08fd5cc`
 - **Obszar:** `obywatel-android` (Android, Kotlin, Jetpack Compose)
-- **Status:** etapy 1–2H wdrożone; etap 2I obejmuje parser XML iPKO oraz integrację z ekranem importu, podglądem i atomowym zapisem. Parser CSV/XLS i adapter PDF oraz pełny model transakcji/aktywów pozostają do wykonania. Wyniki CI należy oceniać według konkretnego SHA, a PR #68 pozostaje otwarty i niescalony.
+- **Status:** etapy 1–2L wdrożone w gałęzi PR; etap 2M dodaje trwały model transakcji finansowych, prowizji i relacji do zapisów bankowych oraz migrację SQLite 3 → 4. Weryfikacja CI etapu 2M trwa dla konkretnego SHA; parser CSV/XLS, adapter PDF, pełna obsługa JSON transakcji/darowizn, formularze ręczne i notowania NBP pozostają do wykonania. PR #68 pozostaje otwarty i niescalony.
 - **Cel:** przygotowanie nowego, domyślnie widocznego kafelka **Rachunki płatnicze** dla lokalnej ewidencji transakcji wymiany walut i operacji na kruszcach, importu/eksportu danych w JSON oraz wyceny historycznej i bieżącej z wykorzystaniem publicznych danych NBP.
 
 > **Zasada nadrzędna:** rejestr ma wiernie przechowywać to, co faktycznie wydarzyło się w transakcji, i wyraźnie oddzielać dane źródłowe od obliczeń, wycen referencyjnych i hipotetycznych wyników. Kurs NBP nie jest kursem wykonania transakcji w banku ani ofertą, po której użytkownik może rzeczywiście kupić lub sprzedać walutę czy kruszec.
@@ -2064,3 +2064,108 @@ Zmiana identyfikatora nie zmienia kluczy księgowych ani danych źródłowych; w
 ### 35.7. Następny etap
 
 Po zielonym CI dla etapu 2L należy przejść do trwałego modelu transakcji finansowych i prowizji, powiązanego z zapisami bankowymi bez ich scalania. Równolegle należy wykonać test urządzeniowy SAF. Adapter PDF powinien być oparty na rzeczywistym wzorcu i testach ekstrakcji; parserów CSV/XLS nie należy implementować bez plików wzorcowych.
+
+## 36. Etap 2M — trwały model transakcji finansowych, prowizji i relacji do zapisów bankowych (14 listopada 2026 r.)
+
+### 36.1. Cel i zakres
+
+Celem etapu jest oddzielenie pojedynczego zapisu księgowego z wyciągu bankowego od transakcji finansowej opisującej zdarzenie ekonomiczne. Transakcja może mieć stronę oddaną i otrzymaną, prowizję oraz jeden lub więcej powiązanych zapisów źródłowych. Nie wolno usuwać ani scalać źródłowych nóg FX.
+
+### 36.2. Zmiany w SQLite — migracja 3 → 4
+
+Podniesiono `PaymentLedgerDatabase.DATABASE_VERSION` z 3 do 4. Dodano migrację sekwencyjną, która tworzy trzy tabele:
+
+1. `financial_transactions`
+   - klucz główny `transaction_id`;
+   - data i czas wykonania jako ISO-8601;
+   - typ transakcji, aktywo i kwota strony oddanej oraz otrzymanej;
+   - źródło, identyfikator zewnętrzny, opcjonalny opis i status parsowania;
+   - kwoty są przechowywane jako tekst dziesiętny, bez konwersji do `Float`/`Double`.
+
+2. `financial_transaction_fees`
+   - relacja 1:1 do transakcji;
+   - kod aktywa prowizji i kwota jako tekst dziesiętny;
+   - klucz obcy z `ON DELETE CASCADE`.
+
+3. `financial_transaction_bank_entries`
+   - relacja wiele zapisów bankowych do jednej transakcji;
+   - klucze obce do transakcji i `bank_statement_entries`;
+   - `accounting_entry_id` ma ograniczenie `UNIQUE`, zatem jeden zapis bankowy nie może zostać przypisany do wielu transakcji;
+   - usunięcie transakcji usuwa wyłącznie relacje, a nie źródłowe zapisy bankowe.
+
+Włączono egzekwowanie kluczy obcych SQLite przez `setForeignKeyConstraintsEnabled(true)`. Migracja nie usuwa ani nie przepisuje istniejących zapisów wyciągów i aliasów rachunków.
+
+### 36.3. Walidacja domenowa
+
+Rozszerzono `FinancialTransaction.validate()`:
+- `EXCHANGE`, `METAL_BUY` i `METAL_SELL` wymagają obu stron i różnych kodów aktywów;
+- `DEPOSIT` wymaga wyłącznie strony otrzymanej;
+- `WITHDRAWAL` wymaga wyłącznie strony oddanej;
+- prowizja musi być nieujemna i wyrażona w aktywie jednej ze stron transakcji;
+- istniejące wymagania dodatnich ilości i parowania kodu aktywa z kwotą pozostają zachowane.
+
+### 36.4. Atomowy zapis i kontrola powiązań
+
+Dodano w `PaymentLedgerDatabase`:
+- `saveFinancialTransaction(transaction, accountingEntryIds)` — waliduje model, sprawdza istnienie zapisów bankowych, sprawdza zgodność waluty, wartości bezwzględnej kwoty i kierunku (obciążenie/uznanie) z jedną ze stron transakcji albo prowizją, a następnie zapisuje transakcję, prowizję i relacje w jednej transakcji SQLite;
+- `readFinancialTransactions()` — odtwarza model transakcji, prowizję i listę identyfikatorów źródłowych zapisów.
+
+Powiązanie jest odrzucane, gdy identyfikator źródłowy nie istnieje albo jego waluta/kwota/kierunek nie odpowiadają transakcji. Błąd powoduje wycofanie całego zapisu. Ograniczenie unikalności zapobiega wielokrotnemu przypisaniu tego samego zapisu bankowego.
+
+### 36.5. Repozytorium i ekran
+
+Dodano w `PaymentLedgerRepository` metody `saveFinancialTransaction` i `getFinancialTransactions`. Operacje SQLite są wykonywane przez `Dispatchers.IO`.
+
+Ekran `PaymentLedgerScreen` odczytuje zapisane transakcje i pokazuje:
+- typ i czas transakcji;
+- kwotę oraz aktywo oddane;
+- kwotę oraz aktywo otrzymane;
+- prowizję wraz z aktywem;
+- liczbę powiązanych zapisów bankowych.
+
+Na tym etapie ekran wyświetla istniejące transakcje, ale nie zawiera jeszcze formularza ich ręcznego tworzenia ani edycji. Nie rozszerzono jeszcze wersjonowanego JSON: obecny `PaymentLedgerJsonCodec` nadal obsługuje zapisy wyciągów bankowych, a transakcje i prowizje nie są jeszcze częścią eksportu/importu JSON.
+
+### 36.6. Testy dodane
+
+- `FinancialModelsTest.kt`: test wymogu dwóch różnych aktywów dla wymiany, zgodności aktywa prowizji oraz reguł stron wpłaty/wypłaty;
+- `PaymentLedgerDatabaseTest.kt`: test trwałości transakcji, prowizji i relacji po ponownym otwarciu bazy;
+- test odrzucenia nieistniejącego zapisu bankowego i wycofania transakcji;
+- test odrzucenia zapisu bankowego o niezgodnej walucie/kwocie;
+- test migracji wersji 3 → 4, zachowania istniejącego zapisu bankowego i możliwości utworzenia transakcji po migracji.
+
+Są to testy dodane do repozytorium; ich wykonanie wymaga wyniku GitHub Actions dla rewizji kodowej etapu 2M.
+
+### 36.7. Zmienione pliki i commity
+
+- `PaymentLedgerDatabase.kt` — `e2a2986e42fe52630719688797640e8a52b987d5`;
+- `PaymentLedgerRepository.kt` — `457f28bba3e6ac8a824f7b87a5b6080cfa51d390`;
+- `FinancialModels.kt` — `7cbc9347c7fe710904417aa5a0cbaea4c84974c1`;
+- `PaymentLedgerScreen.kt` — `c07c1e771b2ec06399a120d81aa579ea1fd84462`;
+- `PaymentLedgerDatabaseTest.kt` — `76a344a86800ea9ed50d8c845b1e4da45f457434`;
+- `FinancialModelsTest.kt` — `8d4839cb774a7e84cb7a9ec6eaebdfba6e7f01c5`.
+
+Po zapisie ponownie pobrano wszystkie sześć plików z GitHub i sprawdzono obecność migracji 3 → 4, tabel, ograniczeń kluczy obcych, metod repozytorium, prezentacji transakcji i prowizji oraz testów. Kontrola treści potwierdziła również, że wersja schematu wynosi 4.
+
+### 36.8. Status CI i ograniczenia
+
+Kontrolowana rewizja kodowa: `76a344a86800ea9ed50d8c845b1e4da45f457434`.
+
+| Kontrola | Stan w chwili aktualizacji audytu |
+|---|---|
+| Repository compliance / REUSE | Sukces |
+| Android prototype build | W toku; Gradle jeszcze się konfigurował |
+| Android JVM unit tests | Oczekują na krok testów |
+| Android GUI validation | W toku; konfiguracja SDK/emulatora |
+| Testy Compose | Oczekują na wykonanie |
+| Test migracji SQLite 3 → 4 | Dodany; oczekuje na CI |
+| Debug APK | Brak artefaktu dla tej rewizji w chwili kontroli |
+
+Wcześniejsze zadania dla SHA `65911c8` zostały anulowane podczas aktualizacji gałęzi i nie są dowodem dla etapu 2M. Nie oznacza się etapu 2M jako przetestowanego ani nie publikuje APK przed uzyskaniem wyników dla aktualnego kodowego SHA.
+
+### 36.9. Dalsze prace
+
+1. Uzyskać zielone CI dla migracji i testów etapu 2M; poprawić ewentualne błędy z logów.
+2. Dodać formularz ręcznego tworzenia i edycji transakcji, prowizji oraz wiązania z zapisami bankowymi.
+3. Rozszerzyć wersjonowany JSON o transakcje i prowizje z zachowaniem kompatybilności wstecznej.
+4. Dodać trwały rejestr aktywów i reguły precyzji dla walut oraz kruszców.
+5. Następnie przejść do parsera PDF opartego na rzeczywistym wzorcu iPKO oraz importu CSV/XLS wyłącznie na podstawie dostępnych plików wzorcowych.
