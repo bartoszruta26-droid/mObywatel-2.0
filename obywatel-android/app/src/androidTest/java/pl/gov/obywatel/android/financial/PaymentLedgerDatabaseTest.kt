@@ -160,4 +160,82 @@ class PaymentLedgerDatabaseTest {
             second.close()
         }
     }
+    @Test
+    fun versionTwoMigrationRebuildsExchangeIdsAndClearsNonExchangeReferences() {
+        val legacy = object : SQLiteOpenHelper(context, databaseName, null, 2) {
+            override fun onCreate(db: SQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE bank_statement_entries (
+                        accounting_entry_id TEXT PRIMARY KEY NOT NULL,
+                        exchange_operation_id TEXT,
+                        account_scope_id TEXT NOT NULL,
+                        booking_date TEXT NOT NULL,
+                        currency_code TEXT NOT NULL,
+                        signed_amount TEXT NOT NULL,
+                        operation_type TEXT NOT NULL,
+                        bank_operation_reference TEXT,
+                        description TEXT NOT NULL DEFAULT ''
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE TABLE payment_account_scopes (" +
+                        "account_scope_id TEXT PRIMARY KEY NOT NULL, display_name TEXT NOT NULL UNIQUE)"
+                )
+                fun insert(
+                    id: String,
+                    scope: String,
+                    type: String,
+                    currency: String,
+                    amount: String
+                ) {
+                    db.insert(
+                        "bank_statement_entries",
+                        null,
+                        ContentValues().apply {
+                            put("accounting_entry_id", id)
+                            put("exchange_operation_id", "old-reference-only-id")
+                            put("account_scope_id", scope)
+                            put("booking_date", "2026-03-04")
+                            put("currency_code", currency)
+                            put("signed_amount", amount)
+                            put("operation_type", type)
+                            put("bank_operation_reference", "90124777")
+                            put("description", "")
+                        }
+                    )
+                }
+                insert("legacy-fx", "fx-account", "WYMIANA W KANTORZE - OBCIĄŻENIE", "USD", "-8000.00")
+                insert("legacy-transfer", "fx-account", "PRZELEW ZEWNĘTRZNY", "PLN", "100.00")
+            }
+
+            override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+        }
+        legacy.writableDatabase
+        legacy.close()
+
+        val upgraded = openDatabase()
+        try {
+            val fxEntry = upgraded.readAll().single { it.operationType.contains("WYMIANA") }
+            val transferEntry = upgraded.readAll().single { it.operationType.contains("PRZELEW") }
+            val storedIds = mutableMapOf<String, String?>()
+            upgraded.readableDatabase.query(
+                "bank_statement_entries",
+                arrayOf("accounting_entry_id", "exchange_operation_id"),
+                null, null, null, null, null
+            ).use { cursor ->
+                while (cursor.moveToNext()) {
+                    storedIds[cursor.getString(0)] =
+                        if (cursor.isNull(1)) null else cursor.getString(1)
+                }
+            }
+            assertEquals(fxEntry.exchangeOperationId(), storedIds["legacy-fx"])
+            assertEquals(null, transferEntry.exchangeOperationId())
+            assertEquals(null, storedIds["legacy-transfer"])
+        } finally {
+            upgraded.close()
+        }
+    }
+
 }
