@@ -104,4 +104,49 @@ class FinancialModelsTest {
                 .setScale(2, java.math.RoundingMode.HALF_EVEN)
         )
     }
+    @Test
+    fun exchangeRequiresTwoDifferentAssetsAndFeeMustUseOneTransactionAsset() {
+        val valid = FinancialTransaction(
+            id = "tx-valid",
+            executedAt = Instant.parse("2026-11-14T10:00:00Z"),
+            type = FinancialTransactionType.EXCHANGE,
+            fromAssetCode = "PLN",
+            fromAmount = BigDecimal("1000"),
+            toAssetCode = "EUR",
+            toAmount = BigDecimal("230"),
+            fee = Fee("PLN", BigDecimal("2.50"))
+        )
+        valid.validate()
+
+        assertThrows(IllegalArgumentException::class.java) {
+            valid.copy(toAssetCode = null, toAmount = null).validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            valid.copy(toAssetCode = "PLN").validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            valid.copy(fee = Fee("USD", BigDecimal("1"))).validate()
+        }
+    }
+
+    @Test
+    fun depositAndWithdrawalRequireCorrectSingleSide() {
+        val deposit = FinancialTransaction(
+            id = "deposit",
+            executedAt = Instant.parse("2026-11-14T10:00:00Z"),
+            type = FinancialTransactionType.DEPOSIT,
+            fromAssetCode = null,
+            fromAmount = null,
+            toAssetCode = "PLN",
+            toAmount = BigDecimal("100")
+        )
+        deposit.validate()
+        assertThrows(IllegalArgumentException::class.java) {
+            deposit.copy(fromAssetCode = "PLN", fromAmount = BigDecimal("100")).validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            deposit.copy(type = FinancialTransactionType.WITHDRAWAL).validate()
+        }
+    }
+
 }
