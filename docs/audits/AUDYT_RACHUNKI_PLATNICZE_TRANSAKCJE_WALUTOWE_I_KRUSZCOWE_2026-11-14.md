@@ -2142,20 +2142,22 @@ Są to testy dodane do repozytorium; ich wykonanie wymaga wyniku GitHub Actions 
 - `FinancialModels.kt` — `7cbc9347c7fe710904417aa5a0cbaea4c84974c1`;
 - `PaymentLedgerScreen.kt` — `c07c1e771b2ec06399a120d81aa579ea1fd84462`;
 - `PaymentLedgerDatabaseTest.kt` — `f088ef50a831b913926499d3d2831664147ca31b`;
-- `FinancialModelsTest.kt` — `8d4839cb774a7e84cb7a9ec6eaebdfba6e7f01c5`.
+- `FinancialModelsTest.kt` — `8d4839cb774a7e84cb7a9ec6eaebdfba6e7f01c5`;
+- `BankImportDeduplicatorTest.kt` — `3bd0cc3cce34ef0cd728d9286c077a0a33f42ae1`.
 
 Po zapisie ponownie pobrano wszystkie sześć plików z GitHub i sprawdzono obecność migracji 3 → 4, tabel, ograniczeń kluczy obcych, metod repozytorium, prezentacji transakcji i prowizji oraz testów. Kontrola treści potwierdziła również, że wersja schematu wynosi 4.
 
 ### 36.8. Status CI i ograniczenia
 
-Kontrolowana rewizja kodowa po korekcie obsługi błędu zapisu: `6f3ec4bfa6ed21c74da77bad3c72416077bfef1b`.
+Kontrolowana rewizja kodowa po korekcie testu tożsamości FX: `3bd0cc3cce34ef0cd728d9286c077a0a33f42ae1`.
 
 | Kontrola | Stan w chwili aktualizacji audytu |
 |---|---|
 | Repository compliance / REUSE | Sukces |
-| Android prototype build | Oczekuje na świeże uruchomienie dla SHA `6f3ec4b` |
-| Android JVM unit tests | Oczekują na świeże uruchomienie dla SHA `6f3ec4b` |
-| Android GUI validation | Oczekuje na świeże uruchomienie dla SHA `6f3ec4b` |
+| Android prototype build — JVM unit tests | Sukces dla SHA `3bd0cc3`; 133 testy, bez błędów po korekcie testu daty FX |
+| Android prototype build — debug APK | W toku podczas aktualizacji audytu |
+| Android GUI validation — JVM unit tests | Sukces dla SHA `3bd0cc3` |
+| Android GUI validation — Compose/emulator | W toku podczas aktualizacji audytu |
 | Testy Compose | Oczekują na wykonanie |
 | Test migracji SQLite 3 → 4 | Dodany; oczekuje na CI |
 | Debug APK | Brak artefaktu dla tej rewizji w chwili kontroli |
