@@ -14,7 +14,7 @@ class DocumentRouteRegistryTest {
         val visibleTileIds = setOf(
             "profile", "identity", "passport", "registry", "family", "parliament", "training",
             "student", "disability", "church", "civil", "business", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts", "vaccines",
-            "signed_pdf", "imported", "children", "branding", "loyalty", "birth_extract",
+            "signed_pdf", "imported", "children", "branding", "loyalty", "payment_transactions", "birth_extract",
             "marriage_extract", "death_extract", "large_family", "blood_donor", "disability_card",
             "vehicle_registration", "insurance_vehicle", "insurance_professional", "insurance_private",
             "insurance_business", "criminal_record", "mission_travel", "ehic", "eu_education", "military_book", "martial_arts",
@@ -110,7 +110,7 @@ class DocumentRouteRegistryTest {
     fun featureScreensAreExplicitlySpecializedAndLegacyAliasesRemainCompatible() {
         listOf(
             "registry", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
-            "vaccines", "signed_pdf", "imported", "branding", "children"
+            "vaccines", "signed_pdf", "imported", "branding", "children", "payment_transactions"
         ).forEach { id ->
             val route = requireNotNull(DocumentRouteRegistry.find(id))
             assertEquals(id, DocumentRouteType.SPECIALIZED, route.type)
@@ -123,6 +123,15 @@ class DocumentRouteRegistryTest {
         assertEquals("loyalty", DocumentRouteRegistry.find("loyalty_cards")?.documentId)
         assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find("identity_card")?.type)
         assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find("loyalty_cards")?.type)
+    }
+
+    @Test
+    fun paymentLedgerIsASpecializedFinancialServiceAndIsVisibleByDefault() {
+        val route = requireNotNull(DocumentRouteRegistry.find("payment_transactions"))
+        assertEquals(DocumentRouteType.SPECIALIZED, route.type)
+        assertEquals("payment_transactions", route.destination)
+        assertEquals("Służba finansowa", documentVisibilityGroup("payment_transactions"))
+        assertEquals("dashboard", defaultDocumentPlacements["payment_transactions"])
     }
 
     @Test
