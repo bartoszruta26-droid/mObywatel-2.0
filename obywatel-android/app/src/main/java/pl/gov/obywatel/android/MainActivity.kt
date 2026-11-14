@@ -926,6 +926,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("entity_bank_accounts", "Rachunki bankowe podmiotów", R.drawable.lib_ic_wallet),
     Triple("vaccines", "Książeczka szczepień WHO", R.drawable.lib_ic_medical_record),
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
+    Triple("receipts", "Rachunki", R.drawable.lib_ic_document_signed),
     Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
     Triple("children", "Dokumentacja dzieci", R.drawable.family),
     Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.lib_ic_image),
@@ -1030,7 +1031,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
         "vehicle_registration", "official"
     ) || officialGraphicDocumentTargets().any { it.first == id } -> "Służba cywilna"
-    id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ||
+    id in setOf("imported", "signed_pdf", "receipts", "branding", "loyalty", "loyalty_cards") ||
         documentBrandTargets.any { it.first == id } -> "Zasoby i dokumenty własne"
     else -> "Służba osobista"
 }
@@ -1272,6 +1273,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showIdentityDesigner by remember { mutableStateOf(false) }
     var showCredentialAppearanceEditor by remember { mutableStateOf(false) }
     var showImportedDocuments by remember { mutableStateOf(false) }
+    var showReceipts by remember { mutableStateOf(false) }
     var showBankAccounts by remember { mutableStateOf(false) }
     var showPublicServicesBrowser by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
@@ -1328,6 +1330,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
             documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
+            documentId == "receipts" -> showReceipts = true
             documentId == "imported" -> settingsDocumentEditor = "imported"
             documentId == "professional" -> settingsDocumentEditor = "professional"
             documentId == "branding" -> settingsDocumentEditor = "graphic_catalog"
@@ -1343,6 +1346,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> showImportedDocuments = false
+            showReceipts -> showReceipts = false
             showBankAccounts -> showBankAccounts = false
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
             showRegistryEditor -> { showRegistryEditor = false; showSettingsMenu = true }
@@ -1363,7 +1367,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1413,6 +1417,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 "bank_accounts" -> showBankAccounts = true
                 "vaccines" -> openSettingsDocumentEditor("vaccines")
                 "signed_pdf" -> openSettingsDocumentEditor("signed_pdf")
+                "receipts" -> showReceipts = true
                 "imported" -> openSettingsDocumentEditor("imported")
                 "branding" -> activeService = "Zasoby identyfikacji dokumentów"
                 else -> openSettingsDocumentEditor(route.documentId)
@@ -1451,6 +1456,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
+                    showReceipts -> ReceiptDocumentsScreen(onBack = { showReceipts = false })
+                    settingsDocumentEditor == "receipts" -> ReceiptTemplateSettingsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
                     showDocumentsEditor -> DemoDocumentsScreen(
                         categoryId = selectedEditorCategory,
@@ -1583,6 +1590,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onEditDocuments = { category -> selectedEditorCategory = category; showSettingsMenu = false; showDocumentsEditor = true },
                         onEditDisability = { showSettingsMenu = false; showDisabilitySettings = true },
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
+                        onEditReceipts = { showSettingsMenu = false; settingsDocumentEditor = "receipts" },
                         onEditOtherDocuments = { key -> settingsDocumentEditor = key; showSettingsMenu = false },
                         onExportAll = {
                             val groupConfiguration = loadDocumentGroupConfiguration(context)
@@ -3480,6 +3488,7 @@ private fun SettingsMenuScreen(
     onEditDocuments: (String) -> Unit,
     onEditDisability: () -> Unit,
     onEditRegistry: () -> Unit,
+    onEditReceipts: () -> Unit,
     onEditOtherDocuments: (String) -> Unit,
     onExportAll: () -> Unit,
     onImportAll: () -> Unit,
@@ -3542,6 +3551,7 @@ private fun SettingsMenuScreen(
             Icons.Filled.Description,
             onManageDocumentEditing
         )
+        ProfileActionCard("Rachunki", "Modyfikacja wzoru papierowego rachunku i treści pola Uwagi", Icons.Filled.Description, onEditReceipts)
         ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
             Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
@@ -3724,6 +3734,7 @@ private fun DocumentsWalletScreen(
             id == "bank_accounts" || id == "rod_bank_accounts" || id == "entity_bank_accounts" -> "Konta bankowe"
             id == "imported" -> "Dokumenty własne — pliki"
             id == "signed_pdf" -> "Dokumenty PDF i podpisy elektroniczne"
+            id == "receipts" -> "Rachunki"
             id == "branding" -> "Zasoby identyfikacji dokumentów"
             id == "children" -> "Dane dzieci"
             id == "vaccines" -> "eKarta Szczepień"
