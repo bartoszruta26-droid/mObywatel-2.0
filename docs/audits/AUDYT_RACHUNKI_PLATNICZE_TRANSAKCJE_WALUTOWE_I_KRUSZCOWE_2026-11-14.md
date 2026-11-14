@@ -1516,7 +1516,7 @@ Dodano `androidTest/.../PaymentLedgerRepositoryTest.kt` z dwoma scenariuszami:
 1. **Pełny cykl i idempotencja:** utworzenie archiwum w bazie źródłowej, eksport JSON, import do odrębnej pustej bazy, porównanie odczytanych wpisów, ponowny import i oczekiwanie na zero nowych wpisów oraz dwa duplikaty.
 2. **Konflikt bez zmiany danych:** zapis bazowego rekordu, przygotowanie archiwum z tą samą referencją i inną kwotą, potwierdzenie konfliktu w podglądzie, odrzucenie importu oraz porównanie bazy przed i po próbie.
 
-Testy korzystają z trzech osobnych nazw baz testowych, usuwanych w metodzie `@After`. Ich dodanie nie jest równoznaczne z wykonaniem; wymagają uruchomienia na emulatorze/urządzeniu w CI.
+Testy korzystają z trzech osobnych nazw baz testowych, usuwanych w metodzie `@After`. Scenariusz konfliktu obejmuje teraz jednocześnie jeden poprawny nowy wpis i jeden wpis konfliktowy; oczekiwaniem jest odrzucenie całej paczki bez zapisania również poprawnego wpisu. Dodatkowe testy JVM sprawdzają zmianę daty, waluty, kierunku i typu operacji przy tej samej referencji oraz konflikt wewnątrz jednej paczki. Dodanie testów nie jest równoznaczne z ich wykonaniem; wymagają uruchomienia w CI.
 
 ### 28.4. Kontrola poprawności kodu po zmianach
 
@@ -1553,7 +1553,7 @@ Kontrola tekstowa nie zastępuje kompilacji Kotlin, testów Android Instrumented
 | Limit wielkości importowanego JSON | Zaimplementowany: 10 MiB |
 | Izolowana baza testowa repozytorium | Zaimplementowana |
 | Test eksport → import → ponowny import | Dodany; oczekuje na wykonanie CI |
-| Test konfliktu i niezmienności bazy | Dodany; oczekuje na wykonanie CI |
+| Test konfliktu i niezmienności bazy, również przy mieszanej paczce | Dodany; oczekuje na wykonanie CI |\n| Testy konfliktów po zmianie daty, waluty, kierunku i typu oraz wewnątrz paczki | Dodane; oczekują na wykonanie CI |
 | Kontrola konfliktu i zapis w jednej transakcji SQLite | Zaimplementowane |
 | Kompilacja Android po etapie 2H | Oczekuje na wynik CI |
 | Testy JVM i instrumentacyjne po etapie 2H | Oczekują na wynik CI |
