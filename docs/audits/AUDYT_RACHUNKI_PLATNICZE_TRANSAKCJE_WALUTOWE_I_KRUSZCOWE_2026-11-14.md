@@ -853,3 +853,225 @@ Nie blokują one przygotowania architektury, ale blokują uznanie parsera za got
 - [ ] Skompilować APK i wykonać test regresji istniejących rachunków.
 
 **Zasada kontynuacji:** każdy etap kończyć testami i czytelnym podsumowaniem w PR. Nie scalać zmian częściowych bez kontroli regresji, a dane rzeczywistych operacji finansowych pozostawić poza repozytorium.
+
+
+---
+
+## 18. Rozszerzenie zakresu: rejestr darowizn gotówkowych
+
+### 18.1. Cel i miejsce funkcji
+
+Moduł „Rachunki płatnicze” powinien obejmować również ewidencję **darowizn otrzymanych w gotówce**. Darowizny są odrębnym rodzajem zdarzenia finansowego: nie są wymianą walutową, zakupem aktywa ani przychodem ze sprzedaży. Powinny być przechowywane w tej samej domenie finansowej, ale w osobnym typie rekordu i z własnymi regułami walidacji oraz raportowania.
+
+W interfejsie należy dodać sekcję **Darowizny gotówkowe**, dostępną z pulpitu „Rachunki płatnicze” oraz z listy operacji. Na ekranie głównym może być widoczne podsumowanie liczby darowizn i ich łącznej wartości w wybranym okresie.
+
+### 18.2. Obowiązkowe i zalecane dane darowizny
+
+Każdy rekord darowizny powinien obejmować:
+
+**Pola wymagane do zapisania rekordu:**
+- unikalny identyfikator UUID;
+- datę otrzymania darowizny;
+- kwotę darowizny;
+- walutę gotówki, np. PLN, EUR lub USD;
+- **pełną nazwę organizacji, na rzecz której przekazano darowiznę**;
+- **cel darowizny** — opis przeznaczenia środków, np. pomoc rodzinom, zakup sprzętu medycznego, edukacja dzieci, działalność statutowa, konkretny projekt lub zbiórka;
+- status rekordu, np. roboczy / potwierdzony / skorygowany.
+
+Nazwa organizacji i cel darowizny są polami obowiązkowymi. Aplikacja nie powinna pozwalać zatwierdzić darowizny bez ich uzupełnienia. Jeżeli darowizna jest anonimowa wobec obdarowanego albo dane darczyńcy nie są znane, nie należy blokować zapisu z tego powodu.
+
+**Pola dodatkowe:**
+- imię i nazwisko darczyńcy — wyłącznie gdy użytkownik ma uzasadnioną potrzebę i podstawę do ich zapisania;
+- oznaczenie „darowizna anonimowa”;
+- nazwa zbiórki, kampanii lub projektu;
+- osoba przyjmująca gotówkę / kasjer;
+- miejsce przyjęcia środków;
+- numer pokwitowania lub dokumentu potwierdzającego;
+- opis lub uwagi;
+- załącznik, np. zdjęcie pokwitowania, z zachowaniem zasad ochrony danych;
+- informacja, czy darowizna została wpłacona do kasy, na rachunek bankowy, czy pozostaje w przechowaniu;
+- data i kwota późniejszego przekazania środków organizacji, jeśli ewidencja ma obejmować także rozliczenie zbiórki;
+- źródło wprowadzenia rekordu: ręcznie / import JSON / inny zatwierdzony import.
+
+Należy odróżnić **organizację będącą beneficjentem darowizny** od podmiotu lub osoby, która fizycznie przyjęła gotówkę. W razie potrzeby powinny to być dwa osobne pola.
+
+### 18.3. Model danych
+
+Rekomendowany jest osobny model domenowy, np. `CashDonation`, zamiast dopisywania niejednoznacznych pól do modelu wymiany walutowej.
+
+Przykładowy model logiczny:
+
+```kotlin
+data class CashDonation(
+    val id: String,
+    val receivedAt: Instant,
+    val amount: BigDecimal,
+    val currencyCode: String,
+    val beneficiaryOrganizationName: String,
+    val purpose: String,
+    val donorName: String?,
+    val isAnonymous: Boolean,
+    val campaignName: String?,
+    val collectedBy: String?,
+    val receiptNumber: String?,
+    val custodyStatus: DonationCustodyStatus,
+    val transferredAt: Instant?,
+    val transferredAmount: BigDecimal?,
+    val transferredCurrencyCode: String?,
+    val note: String?,
+    val source: DonationRecordSource,
+    val createdAt: Instant,
+    val updatedAt: Instant
+)
+```
+
+Model jest propozycją i powinien zostać dostosowany do faktycznej wersji Kotlin oraz przyjętej architektury bazy danych. Kwoty muszą być przechowywane jako wartości dziesiętne o jawnej precyzji; nie stosować `Float` ani `Double` do obliczeń finansowych.
+
+### 18.4. Formularz i przebieg rejestracji
+
+Formularz „Dodaj darowiznę gotówkową” powinien zawierać:
+1. datę otrzymania;
+2. kwotę;
+3. wybór waluty;
+4. nazwę organizacji-beneficjenta;
+5. cel darowizny;
+6. opcjonalne dane darczyńcy albo oznaczenie anonimowości;
+7. opcjonalną nazwę zbiórki/projektu;
+8. osobę przyjmującą środki;
+9. numer pokwitowania;
+10. informację o miejscu przechowywania lub przekazaniu gotówki;
+11. uwagi i opcjonalny załącznik.
+
+Walidacja:
+- kwota musi być większa od zera;
+- waluta musi być rozpoznana przez słownik aktywów;
+- nazwa organizacji po usunięciu zbędnych spacji nie może być pusta;
+- cel darowizny nie może być pusty;
+- data musi być poprawna;
+- kwota przekazania organizacji nie może przekraczać kwoty przyjętej, chyba że użytkownik rejestruje osobno dodatkowe środki lub korektę;
+- nie wolno automatycznie oznaczać darowizny jako przekazanej organizacji wyłącznie na podstawie jej przyjęcia.
+
+Po zapisaniu aplikacja powinna wyświetlić szczegóły darowizny i umożliwić wygenerowanie lub dołączenie pokwitowania, jeżeli zakres dokumentów i wymogi prawne zostaną odrębnie ustalone. Sam wpis w aplikacji nie powinien być przedstawiany jako urzędowe potwierdzenie darowizny.
+
+### 18.5. Ewidencja przepływu gotówki i rozliczenie zbiórki
+
+Warto rozdzielić trzy zdarzenia:
+- **otrzymanie darowizny** — powstaje zapis wpływu gotówkowego;
+- **wpłata gotówki do kasy lub na rachunek** — jest transferem środków, a nie kolejną darowizną;
+- **przekazanie środków organizacji** — jest rozchodem / rozliczeniem z beneficjentem, powiązanym z jedną lub wieloma darowiznami.
+
+Dzięki temu ta sama kwota nie zostanie podwójnie policzona jako darowizna przyjęta i ponownie jako darowizna przekazana. Przy zbiórkach obejmujących wiele wpłat aplikacja powinna pozwolić filtrować rekordy według organizacji, celu, kampanii, okresu i statusu rozliczenia.
+
+### 18.6. Raporty i zestawienia
+
+Dodać następujące zestawienia:
+- suma darowizn według organizacji;
+- suma darowizn według celu;
+- suma według kampanii / projektu;
+- suma według waluty;
+- zestawienie dzienne, miesięczne i roczne;
+- darowizny przyjęte, lecz jeszcze nieprzekazane;
+- darowizny przekazane i pozostałe środki;
+- lista rekordów bez numeru pokwitowania lub wymagających uzupełnienia.
+
+Kwoty w różnych walutach należy raportować osobno, chyba że użytkownik wybierze przeliczenie na walutę bazową. Przeliczenie ma być oznaczone jako referencyjne i zawierać kurs, datę oraz źródło. Nie wolno sumować np. 100 PLN i 100 EUR jako jednej kwoty bez przeliczenia.
+
+### 18.7. Import i eksport JSON
+
+Wersjonowany format archiwum powinien otrzymać odrębną kolekcję, np. `cashDonations`, bez zmiany semantyki istniejących pól `transactions`.
+
+Przykładowy rekord:
+
+```json
+{
+  "id": "uuid",
+  "receivedAt": "2026-11-14T12:30:00Z",
+  "amount": "250.00",
+  "currencyCode": "PLN",
+  "beneficiaryOrganizationName": "Fundacja Przykładowa",
+  "purpose": "Zakup materiałów edukacyjnych dla dzieci",
+  "donorName": null,
+  "isAnonymous": true,
+  "campaignName": "Edukacja dla rodzin",
+  "receiptNumber": "D-2026-001",
+  "custodyStatus": "HELD"
+}
+```
+
+Powyższe dane są wyłącznie przykładem struktury, a nie rzeczywistym rekordem. Import musi sprawdzać obecność nazwy organizacji i celu, poprawność kwoty, waluty i daty. Duplikaty należy rozpoznawać przede wszystkim po UUID, a przy imporcie z zewnętrznego źródła dodatkowo po numerze pokwitowania i zestawie danych pomocniczych; nie scalać automatycznie dwóch darowizn o takiej samej kwocie.
+
+Eksport powinien umożliwiać:
+- całą ewidencję;
+- wybrany zakres dat;
+- wybraną organizację;
+- wybrany cel lub kampanię;
+- same darowizny albo pełne archiwum finansowe.
+
+### 18.8. Prywatność, bezpieczeństwo i rzetelność ewidencji
+
+Dane darczyńców mogą stanowić dane osobowe. Ich gromadzenie powinno być opcjonalne, ograniczone do niezbędnego zakresu i uzasadnione celem ewidencji. Nie należy wymagać danych darczyńcy, jeśli ewidencja ma służyć wyłącznie wykazaniu kwoty, organizacji i celu.
+
+Należy zapewnić:
+- ograniczenie dostępu do lokalnej ewidencji;
+- brak danych darczyńców i kwot w logach diagnostycznych;
+- bezpieczne załączniki i eksport;
+- historię korekt, bez cichego nadpisywania istotnych danych;
+- możliwość poprawienia błędnego wpisu z odnotowaniem zmiany;
+- możliwość usunięcia danych zgodnie z przyjętą polityką retencji;
+- wyraźne odróżnienie danych wpisanych przez użytkownika od danych potwierdzonych dokumentem.
+
+Audyt nie przesądza o obowiązkach prawnych, podatkowych ani rachunkowych konkretnej organizacji. Przed wdrożeniem funkcji jako formalnej księgi kasowej lub systemu pokwitowań należy osobno zweryfikować właściwe przepisy, status organizacji, sposób prowadzenia zbiórki i wymagane dokumenty. Funkcja w tej aplikacji jest na tym etapie ewidencją pomocniczą, a nie certyfikowanym systemem księgowym.
+
+### 18.9. Testy i kryteria akceptacyjne darowizn
+
+Testy jednostkowe:
+- brak nazwy organizacji;
+- brak celu darowizny;
+- kwota zerowa, ujemna i zbyt precyzyjna;
+- nieznany kod waluty;
+- darowizna anonimowa bez danych darczyńcy;
+- darowizna z opcjonalnym numerem pokwitowania;
+- dwie darowizny o tej samej kwocie i dacie, ale różnych identyfikatorach;
+- częściowe i pełne przekazanie zebranej kwoty;
+- przekazanie większej kwoty niż stan środków;
+- raporty wielowalutowe;
+- import/eksport JSON z zachowaniem organizacji i celu.
+
+Testy UI i integracyjne:
+- sekcja darowizn dostępna z kafelka;
+- zapis wymaga nazwy organizacji i celu;
+- można zapisać darowiznę anonimową;
+- edycja i korekta pozostawiają ślad;
+- import JSON nie gubi danych organizacji, celu, kwoty ani waluty;
+- zestawienia nie liczą transferu do organizacji jako drugiej darowizny;
+- funkcja nie wpływa na istniejące rachunki sprzedaży ani transakcje wymiany.
+
+**Dodatkowe kryteria akceptacyjne:**
+1. Użytkownik może zarejestrować darowiznę gotówkową w wybranej walucie.
+2. Nazwa organizacji i cel darowizny są obowiązkowe.
+3. Dane darczyńcy pozostają opcjonalne.
+4. Można oznaczyć darowiznę jako anonimową.
+5. Można odnotować pokwitowanie i późniejsze przekazanie środków.
+6. Raporty grupują darowizny według organizacji i celu.
+7. Dane darowizn są eksportowane i importowane w JSON.
+8. Operacje przyjęcia, wpłaty i przekazania gotówki są rozróżnione i nie powodują podwójnego liczenia.
+
+### 18.10. Aktualizacja planu realizacji
+
+Zakres darowizn należy włączyć do planu jako osobny podetap:
+- **Etap 2A — ewidencja darowizn gotówkowych:** model `CashDonation`, formularz, walidacja, lista, szczegóły, status przechowywania i przekazania;
+- **Etap 4A — archiwum JSON darowizn:** eksport/import kolekcji `cashDonations`, walidacja i scalanie;
+- **Etap 7A — raporty darowizn:** zestawienia według organizacji, celu, kampanii, waluty i okresu;
+- **Etap 8A — testy prywatności i integralności:** anonimowość darczyńcy, brak wycieku danych do logów i brak podwójnego księgowania.
+
+### 18.11. Aktualizacja listy kontrolnej
+
+- [ ] Dodać osobny model `CashDonation`.
+- [ ] Dodać sekcję „Darowizny gotówkowe” w module „Rachunki płatnicze”.
+- [ ] Wymagać nazwy organizacji-beneficjenta i celu darowizny.
+- [ ] Umożliwić ewidencję anonimową bez danych darczyńcy.
+- [ ] Dodać datę, kwotę, walutę, pokwitowanie i status przechowywania środków.
+- [ ] Rozróżnić przyjęcie darowizny, wpłatę gotówki i przekazanie środków.
+- [ ] Dodać raporty według organizacji i celu.
+- [ ] Dodać kolekcję `cashDonations` do wersjonowanego JSON.
+- [ ] Dodać testy walidacji, importu/eksportu, raportowania i prywatności.
