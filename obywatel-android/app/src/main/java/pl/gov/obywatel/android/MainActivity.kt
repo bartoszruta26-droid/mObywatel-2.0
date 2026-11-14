@@ -1585,12 +1585,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onEditRegistry = { showSettingsMenu = false; showRegistryEditor = true },
                         onEditOtherDocuments = { key -> settingsDocumentEditor = key; showSettingsMenu = false },
                         onExportAll = {
+                            val groupConfiguration = loadDocumentGroupConfiguration(context)
                             val catalogManifest = org.json.JSONArray().apply {
                                 documentDisplayOptions.distinctBy { it.first }.forEach { (id, title, _) ->
                                     put(org.json.JSONObject().apply {
                                         put("id", id)
                                         put("title", title)
-                                        put("group", documentVisibilityGroup(id))
+                                        put("group", groupConfiguration.assignments[id] ?: documentVisibilityGroup(id))
                                     })
                                 }
                             }.toString()
@@ -1602,7 +1603,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 allCatalogPlacements.mapKeys { "dp_${it.key}" } +
                                 mapOf(
                                     "documentCatalogManifest" to catalogManifest,
-                                    "documentCatalogGroupOrder" to org.json.JSONArray(documentVisibilityGroupOrder).toString(),
+                                    "documentCatalogGroupOrder" to org.json.JSONArray(groupConfiguration.groups).toString(),
+                                    "documentGroupConfiguration" to exportDocumentGroupConfiguration(context),
                                     "documentEditorSchemaVersion" to DOCUMENT_EDITOR_SCHEMA_VERSION,
                                     "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
                                     "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
@@ -2054,6 +2056,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val mergedProfile = current.toMutableMap().apply { putAll(profileValues) }
                             PersonalDataPropagation.apply(mergedProfile)
                             DemoIdentityStore.save(context, mergedProfile)
+                            incoming["documentGroupConfiguration"]?.let { importDocumentGroupConfiguration(context, it) }
                             incoming["churchDocumentArchive"]?.let { ChurchDocumentStore.importArchive(context, it) }
                             incoming["familyEntityDocumentArchive"]?.let { FamilyEntityDocumentStore.importArchive(context, it) }
                             incoming["officialDocumentArchive"]?.let { OfficialDocumentStore.importArchive(context, it) }
@@ -2080,7 +2083,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         val group = item.optString("group").trim()
                                         require(
                                             id.isNotBlank() && title.isNotBlank() &&
-                                                migrateDocumentGroupName(group) in documentVisibilityGroupOrder
+                                                migrateDocumentGroupName(group) in loadDocumentGroupConfiguration(context).groups
                                         ) {
                                             "Archiwum zawiera nieprawidłowy opis dokumentu: $id."
                                         }
@@ -2116,7 +2119,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             val auxiliaryCount = incoming.keys.count {
                                 it.startsWith("cs_") || it.startsWith("dp_") ||
                                     it in setOf(
-                                        "documentCatalogManifest", "documentCatalogGroupOrder", "documentEditorSchemaVersion", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
+                                        "documentCatalogManifest", "documentCatalogGroupOrder", "documentGroupConfiguration", "documentEditorSchemaVersion", "churchDocumentArchive", "familyEntityDocumentArchive", "officialDocumentArchive",
                                         "signedPdfArchive", "brandAssetArchive", "professionalQualificationArchive",
                                         "familyHealthArchive", "medicalHistoryArchive", "importedAttachmentArchive", "originalAttachmentArchive",
                                         "identityDocumentsArchive", "localRegistryArchive", "activityHistoryArchive"
