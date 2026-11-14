@@ -19,6 +19,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +37,8 @@ import kotlinx.coroutines.withContext
 import pl.gov.obywatel.android.financial.BankStatementEntry
 import pl.gov.obywatel.android.financial.BankImportPreview
 import pl.gov.obywatel.android.financial.PaymentLedgerRepository
+import pl.gov.obywatel.android.financial.BankStatementXmlParser
+import pl.gov.obywatel.android.financial.PaymentLedgerJsonCodec
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
@@ -51,6 +54,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var pendingJson by remember { mutableStateOf<String?>(null) }
     var importPreview by remember { mutableStateOf<BankImportPreview?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
+    var accountScopeId by remember { mutableStateOf("ipko-account-1") }
 
     fun reload() {
         scope.launch {
@@ -86,6 +90,32 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     pendingJson = null
                     importPreview = null
                     error = exception.message ?: "Nie udało się przygotować importu."
+                }
+            }
+        }
+    }
+    val xmlImportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    val archiveJson = withContext(Dispatchers.IO) {
+                        val input = context.contentResolver.openInputStream(uri)
+                            ?: throw IllegalStateException("Nie można odczytać wybranego pliku XML.")
+                        val xml = input.use { readUtf8Limited(it, MAX_IMPORT_BYTES) }
+                        val parsedEntries = BankStatementXmlParser.parse(xml, accountScopeId.trim())
+                        PaymentLedgerJsonCodec.encode(parsedEntries)
+                    }
+                    val preview = repository.previewJson(archiveJson)
+                    pendingJson = archiveJson
+                    importPreview = preview
+                    message = "XML iPKO odczytano. Sprawdź podgląd przed zatwierdzeniem."
+                    error = null
+                } catch (exception: Exception) {
+                    pendingJson = null
+                    importPreview = null
+                    error = exception.message ?: "Nie udało się odczytać pliku XML."
                 }
             }
         }
@@ -131,13 +161,24 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Import i eksport danych", style = MaterialTheme.typography.titleMedium)
+                OutlinedTextField(
+                    value = accountScopeId,
+                    onValueChange = { accountScopeId = it },
+                    label = { Text("Lokalny pseudonim rachunku") },
+                    supportingText = { Text("Wpisz alias, np. ipko-account-1. Nie podawaj numeru rachunku.") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { importLauncher.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }) {
                         Text("Importuj JSON")
                     }
-                    Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
-                        Text("Eksportuj JSON")
+                    Button(onClick = { xmlImportLauncher.launch(arrayOf("application/xml", "text/xml", "application/octet-stream")) }) {
+                        Text("Importuj XML iPKO")
                     }
+                }
+                Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
+                    Text("Eksportuj JSON")
                 }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
                 importPreview?.let { preview ->
@@ -234,7 +275,7 @@ private fun readUtf8Limited(input: InputStream, maxBytes: Int): String {
         val count = input.read(buffer)
         if (count < 0) break
         total += count
-        require(total <= maxBytes) { "Plik JSON przekracza limit 10 MB." }
+        require(total <= maxBytes) { "Plik przekracza limit 10 MB." }
         output.write(buffer, 0, count)
     }
     return output.toString(Charsets.UTF_8.name())
