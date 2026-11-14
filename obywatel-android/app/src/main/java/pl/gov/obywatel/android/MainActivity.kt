@@ -1014,7 +1014,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
     id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
     id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
-    id == "parliament" -> "Służba państwowa"
+    id == "parliament" || id in setOf("mayor", "village_head", "county_starosta", "citizen_record", "ombudsman", "children_ombudsman", "patient_ombudsman", "pretrial_mediator", "milicja_officer", "foreign_service_member", "diplomat", "consul", "ambassador", "foreign_mission_head", "consular_employee", "inspector") -> "Służba państwowa"
     id == "business" || id == "entity" || id == "registry" ||
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
     id == "professional" || id.startsWith("professional_") ||
@@ -1033,16 +1033,30 @@ internal val documentVisibilityGroupOrder = listOf(
     "Służba kościelna", "Służba zbrojna", "Służba zawodowa", "Służba gospodarcza",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
+private fun documentGroupIconResource(group: String): Int = when (group) {
+    "Służba osobista" -> R.drawable.lib_ic_account
+    "Służba rodowa" -> R.drawable.lib_ic_group
+    "Służba cywilna", "Służba państwowa" -> R.drawable.tile_ic_civil_outline
+    "Służba kościelna" -> R.drawable.tile_ic_church_outline
+    "Służba zbrojna" -> R.drawable.tile_ic_armed_service_outline
+    "Służba zawodowa" -> R.drawable.tile_ic_student_outline
+    "Służba gospodarcza" -> R.drawable.tile_ic_business_outline
+    "Służba finansowa" -> R.drawable.lib_ic_wallet
+    "Służba zdrowotna" -> R.drawable.tile_ic_disability_outline
+    "Zasoby i dokumenty własne" -> R.drawable.lib_ic_folder
+    else -> R.drawable.lib_ic_document
+}
 private val armedServiceDocumentIds = setOf(
     "military_book", "martial_arts", "shooting_sport", "archery",
     "tactical_training", "survival_training", "security_guard", "defense_training",
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to if (id == "identity" || id in armedServiceDocumentIds) "dashboard" else "hidden"
+    id to if (id == "identity") "dashboard" else "hidden"
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
+private const val ARMED_SERVICE_DASHBOARD_CLEANUP_MIGRATION_KEY = "armed_service_dashboard_cleanup_v1"
 private const val DOCUMENT_CARD_STYLE_KEY = "document_card_style"
 private fun loadDocumentCardStyle(context: Context): String =
     context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
@@ -1142,14 +1156,20 @@ private fun loadDocumentPlacements(context: Context): Map<String, String> {
         check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności dokumentów." }
     }
     if (!prefs.getBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, false)) {
-        // Jednorazowo aktywuj nową grupę także u osób aktualizujących starszą
-        // instalację, w której ustawienia widoczności mogły już być zapisane.
+        // Dodanie grupy do katalogu nie oznacza zgody na publikację jej kafelków.
+        check(prefs.edit().putBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, true).commit()) {
+            "Nie udało się zapisać migracji widoczności służby zbrojnej."
+        }
+    }
+    if (!prefs.getBoolean(ARMED_SERVICE_DASHBOARD_CLEANUP_MIGRATION_KEY, false)) {
+        // Cofnij automatyczne przypisanie do pulpitu z poprzedniej wersji.
         val editor = prefs.edit()
         armedServiceDocumentIds.forEach { id ->
-            editor.putString(DOCUMENT_DISPLAY_KEY_PREFIX + id, "dashboard")
+            val key = DOCUMENT_DISPLAY_KEY_PREFIX + id
+            if (prefs.getString(key, null) == "dashboard") editor.putString(key, "hidden")
         }
-        editor.putBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, true)
-        check(editor.commit()) { "Nie udało się aktywować grupy Służba zbrojna." }
+        editor.putBoolean(ARMED_SERVICE_DASHBOARD_CLEANUP_MIGRATION_KEY, true)
+        check(editor.commit()) { "Nie udało się uporządkować widoczności służby zbrojnej." }
     }
     return documentDisplayOptions.associate { (id, _, _) ->
         val savedPlacement = prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + id, null)
@@ -1441,30 +1461,42 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
-                    (settingsDocumentEditor == "family" || settingsDocumentEditor?.startsWith("family:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("family:", "")?.ifBlank { "family" } ?: "family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("family:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("family:") == true) {
+                    (settingsDocumentEditor == "family" || settingsDocumentEditor?.startsWith("family:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("family:", "")?.ifBlank { "family" } ?: "family", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
                         FamilyEntityDocumentsScreen(entityMode = false, initialDocumentId = settingsDocumentEditor?.substringAfter("family:", "")?.ifBlank { null },
                             onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    (settingsDocumentEditor == "business" || settingsDocumentEditor?.startsWith("business:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("business:", "")?.ifBlank { "business" } ?: "business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("business:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("business:") == true) {
+                    (settingsDocumentEditor == "business" || settingsDocumentEditor?.startsWith("business:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("business:", "")?.ifBlank { "business" } ?: "business", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
                         FamilyEntityDocumentsScreen(entityMode = true, initialDocumentId = settingsDocumentEditor?.substringAfter("business:", "")?.ifBlank { null },
                             onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
                     (settingsDocumentEditor == "bank_accounts" || settingsDocumentEditor?.startsWith("bank_accounts:") == true) ->
-                        FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("bank_accounts:", "")?.ifBlank { null },
-                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> credentialAppearanceTarget = key })
+                        CredentialAppearanceEditorEntry(
+                            settingsDocumentEditor?.substringAfter("bank_accounts:", "")?.ifBlank { "rod_bank_accounts" } ?: "rod_bank_accounts",
+                            onOpenAppearance = { credentialAppearanceTarget = it },
+                            showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true
+                        ) {
+                            FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("bank_accounts:", "")?.ifBlank { null },
+                                onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                                onEditGraphic = { key -> credentialAppearanceTarget = key })
+                        }
                     settingsDocumentEditor?.startsWith("entity_bank_accounts:") == true ->
-                        FamilyEntityDocumentsScreen(entityMode = true, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("entity_bank_accounts:", "")?.ifBlank { null },
-                            onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
-                            onEditGraphic = { key -> credentialAppearanceTarget = key })
-                    (settingsDocumentEditor == "church" || settingsDocumentEditor?.startsWith("church:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("church:", "")?.ifBlank { "church" } ?: "church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("church:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("church:") == true) {
+                        CredentialAppearanceEditorEntry(
+                            settingsDocumentEditor?.substringAfter("entity_bank_accounts:", "")?.ifBlank { "entity_bank_accounts" } ?: "entity_bank_accounts",
+                            onOpenAppearance = { credentialAppearanceTarget = it },
+                            showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true
+                        ) {
+                            FamilyEntityDocumentsScreen(entityMode = true, bankAccountsOnly = true, initialDocumentId = settingsDocumentEditor?.substringAfter("entity_bank_accounts:", "")?.ifBlank { null },
+                                onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                                onEditGraphic = { key -> credentialAppearanceTarget = key })
+                        }
+                    (settingsDocumentEditor == "church" || settingsDocumentEditor?.startsWith("church:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("church:", "")?.ifBlank { "church" } ?: "church", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
                         ChurchDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             initialDocumentId = settingsDocumentEditor?.substringAfter("church:", "")?.ifBlank { null },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
                     }
-                    (settingsDocumentEditor == "civil" || settingsDocumentEditor?.startsWith("civil:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("civil:", "")?.ifBlank { "civil" } ?: "civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = settingsDocumentEditor?.startsWith("civil:") == true, showOriginalAttachment = settingsDocumentEditor?.startsWith("civil:") == true) {
+                    (settingsDocumentEditor == "civil" || settingsDocumentEditor?.startsWith("civil:") == true) -> CredentialAppearanceEditorEntry(settingsDocumentEditor?.substringAfter("civil:", "")?.ifBlank { "civil" } ?: "civil", onOpenAppearance = { credentialAppearanceTarget = it }, showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
                         OfficialDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             initialDocumentId = settingsDocumentEditor?.substringAfter("civil:", "")?.ifBlank { null },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
@@ -1907,16 +1939,28 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             BottomNavigation(
                 selectedTab = selectedTab,
                 onSelect = {
+                    // Nawigacja dolna zawsze wraca do wybranego ekranu głównego.
                     selectedTab = it
                     activeService = null
                     showDemoDocuments = false
-                    selectedDocumentId = null
                     showDocumentsEditor = false
                     showSettingsMenu = false
+                    showDocumentEditorCatalog = false
+                    showApplicationAppearanceSettings = false
+                    showDocumentVisibilitySettings = false
+                    showDocumentBrandAssets = false
+                    documentBrandTarget = null
                     showRegistryEditor = false
+                    settingsDocumentEditor = null
+                    credentialAppearanceTarget = null
+                    selectedDocumentId = null
                     showDisabilitySettings = false
                     showCertificates = false
+                    showIdentityDesigner = false
+                    showCredentialAppearanceEditor = false
+                    showImportedDocuments = false
                     showBankAccounts = false
+                    showPublicServicesBrowser = false
                 }
             )
         }
@@ -2013,7 +2057,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         val id = item.optString("id").trim()
                                         val title = item.optString("title").trim()
                                         val group = item.optString("group").trim()
-                                        require(id.isNotBlank() && title.isNotBlank() && group in documentVisibilityGroupOrder) {
+                                        require(
+                                            id.isNotBlank() && title.isNotBlank() &&
+                                                migrateDocumentGroupName(group) in documentVisibilityGroupOrder
+                                        ) {
                                             "Archiwum zawiera nieprawidłowy opis dokumentu: $id."
                                         }
                                         require(add(id)) { "Archiwum zawiera powtórzony identyfikator dokumentu: $id." }
@@ -2025,13 +2072,21 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                     it.removePrefix("dp_") in knownDocumentIds &&
                                     it.removePrefix("dp_") in importedCatalogIds
                             }.mapKeys { it.key.removePrefix("dp_") }
-                                .mapValues { (_, value) -> value }
+                            require(importedPlacements.values.all { it in setOf("dashboard", "other", "hidden") }) {
+                                "Archiwum zawiera nieprawidłowe ustawienie widoczności dokumentu."
+                            }
                             if (importedPlacements.isNotEmpty()) {
+                                // Ustawienia z jawnie wskazanego archiwum mają pierwszeństwo
+                                // przed wartościami lokalnymi, również dla służby zbrojnej.
                                 val mergedPlacements = loadDocumentPlacements(context).toMutableMap().apply {
-                                    putAll(importedPlacements.filterValues { it in setOf("dashboard", "other", "hidden") })
+                                    putAll(importedPlacements)
                                 }
                                 saveDocumentPlacements(context, mergedPlacements)
-                                documentPlacements = mergedPlacements
+                                val verifiedPlacements = loadDocumentPlacements(context)
+                                require(importedPlacements.all { (id, placement) -> verifiedPlacements[id] == placement }) {
+                                    "Weryfikacja importu nie potwierdziła wszystkich ustawień widoczności dokumentów."
+                                }
+                                documentPlacements = verifiedPlacements
                             }
                             val persisted = DemoIdentityStore.loadStrict(context)
                             require(profileValues.all { (key, value) -> persisted[key] == value }) {
@@ -3236,10 +3291,11 @@ private fun DocumentVisibilitySettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        if (groupTitle == "Służba zbrojna") {
-                            Image(painterResource(R.drawable.tile_ic_armed_service_outline),
-                                contentDescription = null, modifier = Modifier.size(34.dp))
-                        }
+                        Image(
+                            painter = painterResource(documentGroupIconResource(groupTitle)),
+                            contentDescription = "Ikona grupy: $groupTitle",
+                            modifier = Modifier.size(34.dp)
+                        )
                         Text(groupTitle, color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         Text("${groupDocuments.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -3355,10 +3411,11 @@ private fun DocumentEditorCatalogScreen(
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                             .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
                             .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                            if (group == "Służba zbrojna") {
-                                Image(painterResource(R.drawable.tile_ic_armed_service_outline),
-                                    contentDescription = null, modifier = Modifier.size(34.dp))
-                            }
+                            Image(
+                                painter = painterResource(documentGroupIconResource(group)),
+                                contentDescription = "Ikona grupy: $group",
+                                modifier = Modifier.size(34.dp)
+                            )
                             Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                             Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
                             Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
@@ -4434,7 +4491,13 @@ private fun DemoDocumentsScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
+        if (categoryId != "all") {
+            GeneralDocumentOcrEditor(credentialKey, fields, context) { message ->
+                saveMessage = message
+                DemoIdentityStore.save(context, fields.toMap())
+            }
+            DocumentOriginalAttachments(credentialKey)
+        }
         if (categoryId.startsWith("catalog:")) {
             val documentId = categoryId.removePrefix("catalog:")
             val definitions = documentEditorFieldDefinitions(documentId)
@@ -5048,20 +5111,41 @@ private fun CredentialAppearanceSettingsScreen(
                 Text("Wybierz osobno dla każdej danej: brak, awers albo rewers. Rewers pozostaje pusty, dopóki go nie włączysz.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 options.forEach { (key, label) ->
                     val side = credentialFieldSide(key, state.value.visibleFieldsConfigured, state.value.visibleFields, state.value.fieldSides)
-                    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                        Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            listOf(
-                                CREDENTIAL_FIELD_HIDDEN to "Brak",
-                                CREDENTIAL_FIELD_FRONT to "Awers",
-                                CREDENTIAL_FIELD_BACK to "Rewers"
-                            ).forEach { (target, caption) ->
-                                Row(
-                                    Modifier.weight(1f).clip(RoundedCornerShape(6.dp)).clickable {
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            label,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        listOf(
+                            CREDENTIAL_FIELD_HIDDEN to "Brak",
+                            CREDENTIAL_FIELD_FRONT to "Awers",
+                            CREDENTIAL_FIELD_BACK to "Rewers"
+                        ).forEach { (target, caption) ->
+                            Row(
+                                Modifier.width(58.dp).clip(RoundedCornerShape(6.dp)).clickable {
+                                    val updated = state.value.copy(
+                                        fieldSides = state.value.fieldSides + (key to target),
+                                        visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) state.value.visibleFields - key
+                                            else state.value.visibleFields + key,
+                                        visibleFieldsConfigured = true
+                                    )
+                                    LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
+                                    state.value = updated
+                                },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(1.dp)
+                            ) {
+                                androidx.compose.material3.RadioButton(
+                                    selected = side == target,
+                                    onClick = {
                                         val updated = state.value.copy(
                                             fieldSides = state.value.fieldSides + (key to target),
                                             visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) state.value.visibleFields - key
@@ -5071,25 +5155,9 @@ private fun CredentialAppearanceSettingsScreen(
                                         LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
                                         state.value = updated
                                     },
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                ) {
-                                    androidx.compose.material3.RadioButton(
-                                        selected = side == target,
-                                        onClick = {
-                                            val updated = state.value.copy(
-                                                fieldSides = state.value.fieldSides + (key to target),
-                                                visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) state.value.visibleFields - key
-                                                    else state.value.visibleFields + key,
-                                                visibleFieldsConfigured = true
-                                            )
-                                            LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
-                                            state.value = updated
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Text(caption, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
-                                }
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(caption, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                             }
                         }
                     }

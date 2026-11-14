@@ -62,3 +62,10 @@ Import wymaga potwierdzenia użytkownika. Wartości o identycznych nazwach są z
 Ekran wyboru danych udostępniania wyświetla wszystkie niepuste pola zapisane w lokalnym profilu. Użytkownik może zaznaczyć całość jednym wyborem albo odznaczyć pojedyncze pola. Przed transferem wymagane jest świadome potwierdzenie zakresu i celu.
 
 **Ograniczenie implementacji:** obecny ekran nadal generuje i skanuje ofertę sesji QR; nie wykonuje jeszcze kompletnego transferu wybranego zestawu vCard między urządzeniami. Wybrane pola muszą zostać w kolejnym etapie powiązane z trwałym stanem sesji, zgodą odbiorcy, szyfrowanym kanałem transportowym i potwierdzeniem odbioru. Samo utworzenie QR nie oznacza wysłania danych.
+
+### Dokumenty urzędowe i nowe dokumenty grupy „Służba państwowa”
+
+Eksport archiwum obejmuje również wpisy przechowywane przez `OfficialDocumentStore` pod kluczem `officialDocumentArchive`. Archiwum zapisuje mapę identyfikatorów dokumentów na mapy ich pól; dlatego nowe typy dodane do katalogu (m.in. wójt, sołtys, starosta, rzecznicy, mediator, dokument historyczny MO oraz członek służby zagranicznej, dyplomata, konsul, ambasador, kierownik placówki, pracownik konsularny i inspektor) są przenoszone bez potrzeby dodawania osobnych właściwości vCard dla każdego typu. Import przywraca te same identyfikatory i wartości pól, a nieznane przyszłe identyfikatory pozostają zachowane w archiwum jako dane aplikacyjne.
+
+Test regresyjny `vCardArchiveRoundTripsEveryNewStateServiceDocumentRecord` sprawdza zachowanie wszystkich nowych identyfikatorów dokumentów w cyklu eksport–import. Załączniki plikowe przechowywane osobno w zaszyfrowanym katalogu `official-document-files` nie są częścią obecnego `officialDocumentArchive`; nie należy utożsamiać ich z polami formularzy ani deklarować ich eksportu w vCard.
+

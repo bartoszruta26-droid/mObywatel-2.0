@@ -6,6 +6,21 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Monotoniczny numer kompilacji wspólny dla lokalnych i CI buildów.
+ // Pozwala instalatorowi Androida rozpoznać każdą kolejną kompilację jako aktualizację.
+val buildEpochSeconds = System.currentTimeMillis() / 1000L
+val monotonicVersionCode = (buildEpochSeconds - 700_000_000L).toInt()
+
+// Stable upload signing is supplied only through environment variables / CI secrets.
+// The keystore itself is never stored in the repository.
+val signingStorePath = System.getenv("ANDROID_KEYSTORE_FILE")
+val signingStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+val signingKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+val signingKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+val hasStableSigning = listOf(
+    signingStorePath, signingStorePassword, signingKeyAlias, signingKeyPassword
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "pl.gov.obywatel.android"
     compileSdk = 35
@@ -14,9 +29,30 @@ android {
         applicationId = "pl.gov.obywatel.android.prototype"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = monotonicVersionCode
+        versionName = "0.3.$buildEpochSeconds"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (hasStableSigning) {
+            create("stableUpload") {
+                storeFile = file(signingStorePath!!)
+                storeType = "PKCS12"
+                storePassword = signingStorePassword
+                keyAlias = signingKeyAlias
+                keyPassword = signingKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("debug") {
+            if (hasStableSigning) signingConfig = signingConfigs.getByName("stableUpload")
+        }
+        getByName("release") {
+            if (hasStableSigning) signingConfig = signingConfigs.getByName("stableUpload")
+        }
     }
 
     compileOptions {

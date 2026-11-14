@@ -23,6 +23,13 @@ class DocumentCatalogTest {
     }
 
     @Test
+    fun stateServiceDocumentsAreAssignedToStateServiceGroup() {
+        val stateIds = setOf("mayor", "village_head", "county_starosta", "citizen_record", "ombudsman", "children_ombudsman", "patient_ombudsman", "pretrial_mediator", "milicja_officer", "foreign_service_member", "diplomat", "consul", "ambassador", "foreign_mission_head", "consular_employee", "inspector")
+        assertTrue(stateIds.all { id -> documentVisibilityGroup(id) == "Służba państwowa" })
+        assertTrue(stateIds.all { id -> documentDisplayOptions.any { it.first == id } })
+    }
+
+    @Test
     fun groupOrderDoesNotContainDuplicates() {
         assertEquals(documentVisibilityGroupOrder.size, documentVisibilityGroupOrder.toSet().size)
     }
