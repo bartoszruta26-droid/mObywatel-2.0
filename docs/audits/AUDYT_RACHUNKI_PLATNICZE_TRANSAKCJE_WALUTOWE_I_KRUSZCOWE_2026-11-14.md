@@ -2461,3 +2461,60 @@ Ten etap dostarcza trwałą warstwę danych i API repozytorium, ale nie kończy 
 5. testy UI i pełne wykonanie CI dla końcowego SHA.
 
 **Status etapu 2N.5:** warstwa SQLite, migracja i API repozytorium zapisane; testy dodane; weryfikacja automatyczna oczekuje na zakończenie CI. PR #68 pozostaje otwarty i niescalony.
+
+
+---
+
+## 42. Etap 2N.6 — ochrona niezmienności definicji aktywów użytych w historii (14 listopada 2026 r.)
+
+### 42.1. Ustalenie audytowe
+
+Po wdrożeniu tabeli `financial_assets` metoda `saveAsset()` pozwalała nadpisać wszystkie pola definicji pod tym samym kodem aktywa. Zmiana jednostki, precyzji dziesiętnej, rodzaju albo próby po zapisaniu transakcji mogłaby zmienić interpretację historycznej ilości aktywa. Sam kod aktywa nie wystarcza do ochrony semantyki danych.
+
+### 42.2. Wykonana korekta
+
+W `PaymentLedgerDatabase.saveAsset()`:
+- odczytywana jest poprzednia definicja aktywa w tej samej transakcji SQLite, w której następuje zapis;
+- sprawdzane są odwołania do kodu aktywa w kolumnach `from_asset_code` i `to_asset_code` tabeli transakcji oraz w tabeli prowizji;
+- jeśli aktywo jest użyte w historii, blokowana jest zmiana rodzaju, jednostki, liczby miejsc dziesiętnych i próby;
+- dozwolona pozostaje korekta nazwy opisowej, która nie zmienia ilości ani jednostki historycznej;
+- dla zmiany semantycznej komunikat wskazuje utworzenie osobnego kodu aktywa zamiast przepisywania historii;
+- nowa definicja i aktualizacja istniejącej definicji są wykonywane atomowo.
+
+Ochrona obejmuje zarówno aktywa stron transakcji, jak i aktywo prowizji. Nie dodano kluczy obcych do historycznych transakcji, ponieważ wcześniejsze rekordy i importy mogą zawierać kody spoza lokalnego słownika; wymuszenie takiej relacji wymagałoby osobnej migracji i strategii zgodności wstecznej.
+
+### 42.3. Testy dodane
+
+W `PaymentLedgerDatabaseTest.kt` dodano dwa testy instrumentacyjne:
+- `usedAssetKeepsHistoricalMeasurementDefinitionImmutableButAllowsRename`: po użyciu waluty USD w transakcji wpłaty dopuszcza zmianę nazwy, odrzuca zmianę jednostki i precyzji oraz sprawdza zachowanie transakcji;
+- `usedMetalCannotChangePurityOrUnit`: po użyciu złota próby 999 w transakcji kupna odrzuca zmianę próby i jednostki oraz potwierdza niezmienność zapisanej definicji.
+
+Testy są dodane do źródeł, ale ich wykonanie wymaga Android CI/emulatora. Nie oznacza się ich jako zaliczonych na podstawie samej obecności.
+
+### 42.4. Pliki i rewizje
+
+- `PaymentLedgerDatabase.kt` — commit `5f13a8aaeff7669eb315edddbeb7c375e917db75`, blob `6348baf67433c0a19ee1efe44e2961be0a418b44`;
+- `PaymentLedgerDatabaseTest.kt` — commit `0a6adee6cebf7daedb7bf17f54cfb0019bcc989a`, blob `a2d8c4511e71064c268b907b82aaa5d12785fd55`;
+- gałąź: `feature/payment-ledger-stage-1`;
+- PR: #68.
+
+### 42.5. Kontrola po zapisie i status weryfikacji
+
+Po zapisaniu zmian ponownie pobrano oba pliki z gałęzi. Kontrola treści potwierdziła obecność ochrony odwołań w transakcjach i prowizjach oraz obu testów regresyjnych. PR #68 pozostaje otwarty i niescalony.
+
+Poprzednie przebiegi Android GUI validation i Android prototype build zostały anulowane przed wykonaniem właściwych testów (w jednym przypadku na kroku konfiguracji Gradle, w drugim podczas testów JVM). Nie są to wyniki pozytywne ani negatywne testów kodu. Dla nowej rewizji etapu 2N.6 wymagane jest świeże uruchomienie:
+- testów JVM;
+- testów instrumentacyjnych SQLite;
+- testów Compose na emulatorze;
+- kompilacji debug APK.
+
+**Status etapu 2N.6:** korekta kodu i testy zapisane oraz ponownie odczytane; wykonanie testów automatycznych oczekuje na CI. Nie publikować APK przed potwierdzonym sukcesem budowania i testów.
+
+### 42.6. Następny etap
+
+Po potwierdzeniu CI należy kontynuować 2N.7:
+1. ekran przeglądania i zarządzania aktywami;
+2. wybór aktywów ze słownika w formularzu transakcji;
+3. walidacja liczby miejsc dziesiętnych względem definicji aktywa;
+4. testy Compose dla dodawania, edycji i wyboru aktywów;
+5. dopiero w następnej kolejności rozważyć pełny katalog walut ISO 4217 i wersjonowanie definicji.
