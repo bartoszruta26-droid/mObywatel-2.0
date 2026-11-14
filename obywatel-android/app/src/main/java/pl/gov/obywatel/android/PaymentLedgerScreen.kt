@@ -70,7 +70,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 try {
                     val json = context.contentResolver.openInputStream(uri)
                         ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-                        ?: error("Nie można odczytać wybranego pliku.")
+                        ?: throw IllegalStateException("Nie można odczytać wybranego pliku.")
                     val preview = repository.previewJson(json)
                     pendingJson = json
                     importPreview = preview
@@ -93,7 +93,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     val json = repository.exportJson()
                     context.contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use {
                         it.write(json)
-                    } ?: error("Nie można zapisać pliku.")
+                    } ?: throw IllegalStateException("Nie można zapisać pliku.")
                     message = "Eksport JSON został zapisany."
                     error = null
                 } catch (exception: Exception) {
@@ -175,7 +175,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             }
         }
         if (!loading && entries.isEmpty() && error == null) {
-            Text("Rejestr jest pusty. Import wyciągów zostanie udostępniony w kolejnym etapie.")
+            Text("Rejestr jest pusty. Możesz zaimportować archiwum JSON.")
         }
         LazyColumn(
             modifier = Modifier.fillMaxWidth().weight(1f),
