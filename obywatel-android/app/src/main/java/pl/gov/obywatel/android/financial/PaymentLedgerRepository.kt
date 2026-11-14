@@ -17,6 +17,14 @@ class PaymentLedgerRepository(
         database.readAll()
     }
 
+    suspend fun getAccountScopes(): List<PaymentAccountScope> = withContext(Dispatchers.IO) {
+        database.getAccountScopes()
+    }
+
+    suspend fun saveAccountScope(accountScopeId: String, displayName: String) = withContext(Dispatchers.IO) {
+        database.saveAccountScope(accountScopeId, displayName)
+    }
+
     suspend fun previewJson(json: String): BankImportPreview = withContext(Dispatchers.IO) {
         val incoming = PaymentLedgerJsonCodec.decode(json)
         BankImportDeduplicator.preview(incoming, database.readAll())
