@@ -103,6 +103,29 @@ class BankImportDeduplicatorTest {
     }
 
     @Test
+    fun previewKeepsOppositeExchangeLegsWithSameReferenceAndSameAccountScope() {
+        val debit = entry(
+            currency = "USD",
+            amount = "-8000.00",
+            reference = "FX-SAME-ACCOUNT",
+            type = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+        )
+        val credit = entry(
+            currency = "CHF",
+            amount = "6183.20",
+            reference = "FX-SAME-ACCOUNT",
+            type = "WYMIANA W KANTORZE - UZNANIE"
+        )
+        val preview = BankImportDeduplicator.preview(listOf(debit, credit), emptyList())
+        assertEquals(2, preview.newEntries.size)
+        assertEquals(0, preview.conflicts.size)
+
+        val secondImport = BankImportDeduplicator.preview(listOf(credit), listOf(debit))
+        assertEquals(1, secondImport.newEntries.size)
+        assertEquals(0, secondImport.conflicts.size)
+    }
+
+    @Test
     fun previewKeepsOppositeExchangeLegsWhenAccountScopesDiffer() {
         val debit = entry(currency = "USD", amount = "-8000", reference = "FX-1", account = "usd")
         val credit = entry(currency = "CHF", amount = "6183.20", reference = "FX-1", account = "chf")
