@@ -33,6 +33,7 @@ import org.json.JSONObject
 import java.io.File
 import java.io.ByteArrayOutputStream
 import java.util.UUID
+import java.util.Calendar
 
 private data class ReceiptRecord(val id:String,val name:String,val createdAt:Long)
 private object ReceiptStore {
@@ -89,12 +90,19 @@ internal fun ReceiptTemplateSettingsScreen(onBack:()->Unit) {
     var title by remember { mutableStateOf(receiptPref(c).getString("title","RACHUNEK") ?: "RACHUNEK") }
     var showPkwiu by remember { mutableStateOf(receiptPref(c).getBoolean("show_pkwiu",true)) }
     var status by remember { mutableStateOf("") }
+    val folderPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if(uri!=null) runCatching { c.contentResolver.takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION); receiptPref(c).edit().putString("folder_tree_uri",uri.toString()).apply(); status="Wybrano katalog zapisu rachunków." }.onFailure{status="Błąd katalogu: ${it.message}"}
+    }
+    val selectedFolder=receiptPref(c).getString("folder_tree_uri",null)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót do ustawień",Modifier.clickable(onClick=onBack),color=MaterialTheme.colorScheme.primary)
         Text("Ustawienia rachunków",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
         OutlinedTextField(title,{title=it},label={Text("Nagłówek rachunku")},modifier=Modifier.fillMaxWidth())
         Row(verticalAlignment=Alignment.CenterVertically) { Checkbox(showPkwiu,{showPkwiu=it}); Text("Pokazuj kolumnę PKWiU") }
         OutlinedTextField(notes,{notes=it},label={Text("Uwagi – treść drukowana na rachunku")},modifier=Modifier.fillMaxWidth(),minLines=7)
+        Text("Katalog zapisu PDF",fontWeight=FontWeight.Bold)
+        Text(if(selectedFolder.isNullOrBlank()) "Nie wybrano katalogu – pliki pozostają w pamięci aplikacji." else "Wybrany katalog: pliki będą porządkowane w podkatalogach rok/miesiąc.")
+        OutlinedButton(onClick={folderPicker.launch(null)},modifier=Modifier.fillMaxWidth()) { Text("Wybierz katalog zapisu rachunków") }
         Button(onClick={ receiptPref(c).edit().putString("title",title).putString("notes",notes).putBoolean("show_pkwiu",showPkwiu).apply(); status="Zapisano wzór rachunku." },modifier=Modifier.fillMaxWidth()) { Text("Zapisz wzór") }
         if(status.isNotBlank()) Text(status,color=MaterialTheme.colorScheme.primary)
     }
