@@ -167,6 +167,13 @@ internal fun familyEntityGraphicDocumentFields(documentId: String): List<Pair<St
     (rodDocs + entityDocs + serviceSubjectDocumentCatalog).firstOrNull { it.id == documentId }?.fields.orEmpty()
         .mapIndexed { index, label -> "field_$index" to label }
 
+internal fun familyEntityDocumentsForService(serviceKey: String): List<Pair<String, String>> {
+    require(entityServices.any { it.key == serviceKey }) { "Nieznana służba podmiotowa: $serviceKey" }
+    return serviceSubjectDocumentCatalog
+        .filter { it.id.startsWith("service_${serviceKey}_") }
+        .map { it.id to it.title }
+}
+
 internal object FamilyEntityDocumentStore {
     private const val ALIAS = "family_entity_docs_aes"
     private const val FILE = "family-entity-documents.enc"
@@ -224,17 +231,31 @@ internal object FamilyEntityDocumentStore {
 }
 
 @Composable
-internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false, readOnly: Boolean = false, initialDocumentId: String? = null, onEditGraphic: (String) -> Unit = {}) {
+internal fun FamilyEntityDocumentsScreen(entityMode: Boolean, onBack: () -> Unit, bankAccountsOnly: Boolean = false, readOnly: Boolean = false, initialDocumentId: String? = null, onEditGraphic: (String) -> Unit = {}, serviceKey: String? = null) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val bankDocuments = (rodDocs + entityDocs).filter { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
-    val catalog = if (bankAccountsOnly) bankDocuments else (if (entityMode) entityDocs else rodDocs).filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
+    val catalog = when {
+        bankAccountsOnly -> bankDocuments
+        serviceKey != null -> serviceSubjectDocumentCatalog.filter { it.id.startsWith("service_${serviceKey}_") }
+        else -> (if (entityMode) entityDocs else rodDocs).filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
+    }
     var records by remember { mutableStateOf(FamilyEntityDocumentStore.load(context)) }
     var selected by remember(initialDocumentId) { mutableStateOf(initialDocumentId) }
     var message by remember { mutableStateOf("") }
     val accountFields = listOf("Nazwa własna rachunku", "Bank / instytucja prowadząca", "Waluta (np. PLN, EUR, USD, CHF)", "Numer rachunku / IBAN", "Kod BIC / SWIFT", "Posiadacz / współposiadacze", "Rodzaj rachunku", "Kraj prowadzenia rachunku", "Status rachunku", "Data otwarcia", "Data zamknięcia", "Cel / przeznaczenie", "Uwagi")
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp).then(if (bankAccountsOnly) Modifier.testTag("bank-accounts-screen-title") else Modifier), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text(if (bankAccountsOnly) "Konta bankowe" else if (entityMode) "Dokumenty rejestru podmiotów" else "Dokumenty Rodowe", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(
+            when {
+                bankAccountsOnly -> "Konta bankowe"
+                serviceKey == "foundation" -> "Służba fundacyjna"
+                serviceKey == "business" -> "Służba gospodarcza"
+                serviceKey == "association" -> "Służba stowarzyszeniowa"
+                entityMode -> "Dokumenty rejestru podmiotów"
+                else -> "Dokumenty Rodowe"
+            },
+            style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold
+        )
         Text(if (bankAccountsOnly) "Osobna ewidencja rachunków prywatnych i podmiotowych. Dane są przechowywane lokalnie w postaci zaszyfrowanej." else "Katalog formularzy. Podgląd jest oddzielony od edycji, a dane są przechowywane lokalnie w postaci zaszyfrowanej.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (selected == null) {
             catalog.groupBy { it.section }.forEach { (section, docs) ->
