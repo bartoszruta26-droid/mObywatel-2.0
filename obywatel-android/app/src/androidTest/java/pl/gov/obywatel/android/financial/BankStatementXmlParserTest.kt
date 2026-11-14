@@ -87,6 +87,28 @@ class BankStatementXmlParserTest {
     }
 
     @Test
+    fun parsedEntriesRoundTripThroughLedgerJsonAndDeduplicationPreview() {
+        val parsed = BankStatementXmlParser.parse(fixture, "ipko-account-1")
+        val decoded = PaymentLedgerJsonCodec.decode(PaymentLedgerJsonCodec.encode(parsed))
+        val preview = BankImportDeduplicator.preview(decoded, emptyList())
+
+        assertEquals(parsed, decoded)
+        assertEquals(5, preview.newEntries.size)
+        assertEquals(0, preview.duplicates.size)
+        assertEquals(0, preview.conflicts.size)
+    }
+
+    @Test
+    fun rejectsInvalidAccountAliasAndUnexpectedXmlRoot() {
+        assertThrows(IllegalArgumentException::class.java) {
+            BankStatementXmlParser.parse(fixture, "account number 123")
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            BankStatementXmlParser.parse("<root><operations/></root>", "ipko-account-1")
+        }
+    }
+
+    @Test
     fun rejectsMissingLocalAccountScopeAndMalformedOperation() {
         assertThrows(IllegalArgumentException::class.java) {
             BankStatementXmlParser.parse(fixture, " ")
