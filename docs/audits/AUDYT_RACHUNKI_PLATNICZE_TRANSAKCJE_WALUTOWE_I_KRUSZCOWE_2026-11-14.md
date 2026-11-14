@@ -1986,15 +1986,15 @@ Artefakt poprzedniej rewizji nie jest używany jako dowód dla nowych zmian etap
 
 ### 35.2. Wykryte ryzyko identyfikacji operacji nadrzędnej
 
-Przegląd `BankStatementEntry.exchangeOperationId()` wykazał, że identyfikator operacji FX był wyliczany wyłącznie z referencji bankowej. Referencja nie jest gwarantowanie globalnie unikalna: może wystąpić ponownie na innym rachunku albo w innym dniu. Takie rekordy mogły zostać błędnie połączone przez projektor w jedną grupę.
+Przegląd `BankStatementEntry.exchangeOperationId()` wykazał, że identyfikator operacji FX był wyliczany wyłącznie z referencji bankowej. Referencja może zostać ponownie użyta w innym dniu, dlatego samo grupowanie po referencji groziło połączeniem niezależnych operacji. Jednocześnie nogi jednej wymiany mogą występować w różnych lokalnych zakresach rachunków, więc zakres rachunku nie może być warunkiem wspólnego identyfikatora operacji.
 
 ### 35.3. Wykonane zmiany
 
 1. **Zakres identyfikatora FX**
-   - identyfikator operacji jest teraz wyliczany z lokalnego pseudonimu rachunku, daty księgowania i znormalizowanej referencji;
+   - identyfikator operacji jest teraz wyliczany z daty księgowania i znormalizowanej referencji; celowo pomija pseudonim rachunku, aby zachować łączenie nóg wymiany z różnych zakresów;
    - identyfikator nadal jest skrótem SHA-256 i nie zawiera jawnej referencji;
    - dwie nogi tej samej operacji w tym samym rachunku i dniu zachowują wspólny identyfikator;
-   - ta sama referencja na innym rachunku lub w innym dniu otrzymuje odrębny identyfikator.
+   - ta sama referencja w innym dniu otrzymuje odrębny identyfikator, a nogi z różnych zakresów rachunków w tym samym dniu nadal mogą tworzyć jedną operację;
 
 2. **Widok grup FX w ekranie**
    - ekran wylicza projekcję `BankExchangeOperationProjector.project(entries)` z danych odczytanych z SQLite;
@@ -2011,10 +2011,10 @@ Przegląd `BankStatementEntry.exchangeOperationId()` wykazał, że identyfikator
 ### 35.4. Test regresyjny
 
 Rozszerzono `BankExchangeOperationTest.kt` o test tej samej referencji:
-- na dwóch różnych pseudonimach rachunków;
-- w dwóch różnych dniach tego samego rachunku.
+- dwie przeciwne nogi FX z różnych pseudonimów rachunków i tego samego dnia powinny utworzyć jedną grupę `COMPLETE`;
+- ponowne użycie referencji w kolejnym dniu powinno utworzyć odrębną grupę `SINGLE_LEG`.
 
-Test oczekuje trzech niezależnych grup jednoelementowych ze statusem `SINGLE_LEG`, a więc zabezpiecza przed fałszywym scaleniem. Istniejący test pary 8 000 USD / 6 183,20 CHF nadal sprawdza wspólną grupę `COMPLETE` i zachowanie dwóch odrębnych identyfikatorów księgowych.
+Test chroni jednocześnie przed błędnym rozdzieleniem nóg między zakresami i przed scaleniem ponownie użytej referencji z innego dnia. Istniejący test pary 8 000 USD / 6 183,20 CHF nadal sprawdza zachowanie dwóch odrębnych identyfikatorów księgowych.
 
 ### 35.5. Zapis i kontrola źródeł
 
@@ -2028,8 +2028,8 @@ Po zapisaniu ponownie pobrano wszystkie trzy pliki z GitHub. Kontrola treści po
 - rozwijanie źródłowych nóg operacji;
 - wykluczanie nóg z osobnej listy;
 - brak prezentacji surowego opisu w nowym widoku;
-- włączenie rachunku i daty do identyfikatora operacji;
-- obecność testu rozdzielenia tej samej referencji pomiędzy rachunkami i datami.
+- włączenie daty i referencji do identyfikatora operacji przy zachowaniu możliwości parowania nóg z różnych zakresów;
+- obecność testu parowania nóg z różnych zakresów oraz rozdzielenia ponownie użytej referencji między dniami.
 
 ### 35.6. Status weryfikacji i ograniczenia
 
@@ -2039,7 +2039,7 @@ Po zapisaniu ponownie pobrano wszystkie trzy pliki z GitHub. Kontrola treści po
 | Rozwijanie i zwijanie źródłowych nóg | Zaimplementowane |
 | Statusy COMPLETE / SINGLE_LEG / REVIEW_REQUIRED | Wyświetlane |
 | Brak podwójnego wyświetlania nóg FX | Zaimplementowano filtrowanie |
-| Ograniczenie identyfikatora FX do rachunku i daty | Zaimplementowane |
+| Ograniczenie identyfikatora FX do daty i referencji (bez zakresu rachunku) | Zaimplementowane |
 | Test regresyjny identycznej referencji w różnych zakresach | Dodany; oczekuje na CI |
 | Testy jednostkowe dla nowej rewizji | Oczekują na CI |
 | Testy Compose na emulatorze dla nowej rewizji | Oczekują na CI |
@@ -2047,7 +2047,7 @@ Po zapisaniu ponownie pobrano wszystkie trzy pliki z GitHub. Kontrola treści po
 | Ręczny test importu SAF na urządzeniu | Nadal do wykonania |
 | Trwała tabela nadrzędnych operacji FX | Nie dodano; grupy są projekcją odczytową |
 
-Zmiana identyfikatora wpływa na wyliczane grupowanie, nie na klucze księgowe ani zapisane rekordy. Nie wymaga migracji SQLite, ponieważ `exchangeOperationId` jest wyliczany z pól zapisu. Przed wprowadzeniem trwałej tabeli operacji FX należy nadal zweryfikować, czy w innych wariantach wyciągów nogi jednej wymiany zawsze mają tę samą datę księgowania i ten sam pseudonim rachunku.
+Zmiana identyfikatora wpływa na wyliczane grupowanie, nie na klucze księgowe ani zapisane rekordy. Nie wymaga migracji SQLite, ponieważ `exchangeOperationId` jest wyliczany z pól zapisu. Przed wprowadzeniem trwałej tabeli operacji FX należy nadal zweryfikować, czy w innych wariantach wyciągów nogi jednej wymiany zawsze mają tę samą datę księgowania; pseudonim rachunku może być różny i nie jest częścią identyfikatora nadrzędnego.
 
 ### 35.7. Następny etap
 
