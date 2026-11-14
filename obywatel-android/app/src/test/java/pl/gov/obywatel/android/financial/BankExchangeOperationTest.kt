@@ -94,4 +94,19 @@ class BankExchangeOperationTest {
         assertEquals(1, single.legs.size)
         assertEquals(LocalDate.parse("2026-03-05"), single.legs.single().bookingDate)
     }
+    @Test
+    fun ignoresNonExchangeEntriesEvenWhenTheyHaveBankReferences() {
+        val transfer = leg(
+            "PLN",
+            "100.00",
+            "PRZELEW ZEWNĘTRZNY",
+            reference = "TRANSFER-REF-1"
+        )
+        assertEquals(null, transfer.exchangeOperationId())
+        assertEquals(
+            emptyList<BankExchangeOperation>(),
+            BankExchangeOperationProjector.project(listOf(transfer))
+        )
+    }
+
 }
