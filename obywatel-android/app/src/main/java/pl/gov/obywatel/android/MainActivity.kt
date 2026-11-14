@@ -1067,7 +1067,11 @@ private fun documentGroupIconResource(group: String): Int = when (group) {
 private val armedServiceDocumentIds = setOf(
     "military_book", "martial_arts", "shooting_sport", "archery",
     "tactical_training", "survival_training", "security_guard", "defense_training",
-    "historical_reenactment", "reenactment_qualification", "reenactment_event"
+    "historical_reenactment", "reenactment_qualification", "reenactment_event",
+    "military_service_record", "military_personnel_order", "military_professional_contract",
+    "military_voluntary_basic_service", "military_territorial_service", "military_active_reserve",
+    "military_passive_reserve", "military_exercise_callup", "military_candidate_service",
+    "military_gendarmerie_service", "military_foreign_service"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
     id to if (id == "identity" || id == "receipts") "dashboard" else "hidden"
