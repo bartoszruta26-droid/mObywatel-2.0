@@ -85,6 +85,11 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     val groupedEntryIds = remember(exchangeOperations) {
         exchangeOperations.flatMap { it.legs }.map { it.accountingEntryId() }.toSet()
     }
+    val bankEntryOwners = remember(financialTransactions) {
+        financialTransactions.flatMap { stored ->
+            stored.accountingEntryIds.map { entryId -> entryId to stored.transaction.id }
+        }.toMap()
+    }
 
     fun reload() {
         scope.launch {
@@ -381,13 +386,21 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 OutlinedTextField(value = feeAssetText, onValueChange = { feeAssetText = it }, label = { Text("Aktywo prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = feeAmountText, onValueChange = { feeAmountText = it }, label = { Text("Kwota prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Text("Wybierz zapisy bankowe do powiązania")
-                entries.forEach { bankEntry ->
-                    val entryId = bankEntry.accountingEntryId()
-                    val selected = entryId in selectedBankEntryIds
-                    Button(onClick = {
-                        selectedBankEntryIds = if (selected) selectedBankEntryIds - entryId else selectedBankEntryIds + entryId
-                    }) {
-                        Text((if (selected) "✓ " else "") + "${bankEntry.bookingDate} • ${bankEntry.signedAmount.toPlainString()} ${bankEntry.currencyCode}")
+                val availableEntries = entries.filter { bankEntry ->
+                    val ownerId = bankEntryOwners[bankEntry.accountingEntryId()]
+                    ownerId == null || ownerId == editingTransactionId
+                }
+                if (availableEntries.isEmpty()) {
+                    Text("Brak wolnych zapisów bankowych zgodnych z zasadą jednego powiązania na zapis.")
+                } else {
+                    availableEntries.forEach { bankEntry ->
+                        val entryId = bankEntry.accountingEntryId()
+                        val selected = entryId in selectedBankEntryIds
+                        Button(onClick = {
+                            selectedBankEntryIds = if (selected) selectedBankEntryIds - entryId else selectedBankEntryIds + entryId
+                        }) {
+                            Text((if (selected) "✓ " else "") + "${bankEntry.bookingDate} • ${bankEntry.signedAmount.toPlainString()} ${bankEntry.currencyCode}")
+                        }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
