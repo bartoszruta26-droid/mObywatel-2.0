@@ -134,7 +134,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
                 Text(java.text.SimpleDateFormat("dd.MM.yyyy HH:mm",java.util.Locale("pl")).format(java.util.Date(rec.createdAt)),style=MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick={replaceId=rec.id;importPicker.launch(arrayOf("application/pdf"))}) { Text("Podmień PDF") }
-                    TextButton(onClick={runCatching { val bytes=ReceiptStore.bytes(c,rec.id); val f=File(c.cacheDir,rec.name); f.writeBytes(bytes); val intent=android.content.Intent(android.content.Intent.ACTION_VIEW).setDataAndType(androidx.core.content.FileProvider.getUriForFile(c,c.packageName+".fileprovider",f),"application/pdf").addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION); c.startActivity(intent) }.onFailure{status="Nie można otworzyć PDF: ${it.message}"}) { Text("Wyświetl") }
+                    TextButton(onClick={runCatching { val bytes=ReceiptStore.bytes(c,rec.id); val f=File(c.cacheDir,rec.name); f.writeBytes(bytes); val intent=android.content.Intent(android.content.Intent.ACTION_VIEW).setDataAndType(androidx.core.content.FileProvider.getUriForFile(c,c.packageName+".ocrfiles",f),"application/pdf").addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION); c.startActivity(intent) }.onFailure{status="Nie można otworzyć PDF: ${it.message}"}) { Text("Wyświetl") }
                     TextButton(onClick={ReceiptStore.delete(c,rec.id);records=ReceiptStore.list(c);status="Usunięto rachunek PDF.")}) { Icon(Icons.Filled.Delete,null); Text("Usuń") }
                 }
             } }
