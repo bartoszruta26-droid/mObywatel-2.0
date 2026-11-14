@@ -2374,3 +2374,33 @@ Po zielonym CI dla aktualnego SHA należy:
 2. sprawdzić na emulatorze wymianę, kupno/sprzedaż kruszcu, wpłatę i wypłatę;
 3. sprawdzić edycję transakcji importowanej bez utraty pochodzenia i powiązań;
 4. dopiero potem rozpocząć trwały rejestr aktywów i formularz darowizn.
+
+
+---
+
+## 40. Etap 2N.4 — ochrona przed ponownym przypisaniem zapisu bankowego (14 listopada 2026 r.)
+
+### Ustalenie audytowe
+
+Weryfikacja formularza ręcznej edycji ujawniła rozbieżność między interfejsem a ograniczeniem bazy danych. Tabela `financial_transaction_bank_entries` definiuje `accounting_entry_id` jako `UNIQUE`, czyli jeden zapis bankowy może należeć najwyżej do jednej transakcji finansowej. Formularz wcześniej wyświetlał wszystkie zapisy bankowe, także już przypisane do innej transakcji. Próba ich ponownego wybrania kończyła się błędem ograniczenia SQLite dopiero podczas zapisu.
+
+### Wykonana korekta
+
+- Dodano w ekranie mapę właścicieli powiązań na podstawie odczytanych transakcji.
+- Lista wyboru pokazuje wyłącznie zapisy nieprzypisane albo przypisane do transakcji aktualnie edytowanej.
+- Zachowano możliwość odznaczenia i ponownego wybrania powiązań tej samej transakcji.
+- Dodano stan pusty, gdy wszystkie zapisy są już przypisane do innych transakcji.
+- Nie zmieniano schematu SQLite ani reguły integralności; ograniczenie `UNIQUE` pozostaje zabezpieczeniem po stronie bazy danych.
+
+### Kontrola zakresu
+
+Korekta dotyczy wyłącznie prezentacji dostępnych powiązań. Walidacja zgodności waluty i kwoty oraz atomowy zapis transakcji i relacji pozostają po stronie `PaymentLedgerDatabase.saveFinancialTransaction`. Zmiana nie przenosi danych ani nie usuwa istniejących relacji.
+
+### Weryfikacja
+
+- Zmiana ekranu zapisana w commicie: `462bbe2ce1dae815ea8184388e5d119802d6b616`.
+- Ponowny odczyt pliku ekranu i audytu należy wykonać po zapisie.
+- GitHub Actions dla SHA `951c8eaad88713198efdf234b4fdeb4e0a6fbfba` pozostawały w toku w chwili rozpoczęcia tego etapu; ich wynik nie obejmuje nowego commita i nie stanowi potwierdzenia kompilacji tej korekty.
+- Testy jednostkowe, instrumentacyjne, Compose i kompilacja APK dla nowego SHA pozostają do potwierdzenia przez CI.
+
+**Status etapu 2N.4:** korekta zapisana; weryfikacja automatyczna oczekuje na uruchomienie/zakończenie CI. PR #68 pozostaje otwarty i niescalony.
