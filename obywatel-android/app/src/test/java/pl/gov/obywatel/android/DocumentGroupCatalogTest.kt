@@ -53,6 +53,47 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun otherUniformedAndProtectiveServicesHaveDedicatedDocumentSets() {
+        val expected = setOf(
+            "municipal_guard_legitimacy",
+            "municipal_guard_personnel_order",
+            "municipal_guard_service_certificate",
+            "municipal_guard_assignment",
+            "railway_guard_legitimacy",
+            "railway_guard_personnel_order",
+            "railway_guard_service_certificate",
+            "railway_guard_assignment",
+            "marshal_guard_legitimacy",
+            "marshal_guard_personnel_order",
+            "marshal_guard_service_certificate",
+            "marshal_guard_assignment",
+            "forest_guard_legitimacy",
+            "forest_guard_personnel_order",
+            "forest_guard_service_certificate",
+            "forest_guard_assignment",
+            "hunting_guard_legitimacy",
+            "hunting_guard_personnel_order",
+            "hunting_guard_service_certificate",
+            "hunting_guard_assignment",
+            "fisheries_guard_legitimacy",
+            "fisheries_guard_personnel_order",
+            "fisheries_guard_service_certificate",
+            "fisheries_guard_assignment",
+            "road_transport_inspection_legitimacy",
+            "road_transport_inspection_personnel_order",
+            "road_transport_inspection_service_certificate",
+            "road_transport_inspection_assignment"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing uniformed/protective service forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
     fun specialServicesHaveDedicatedCredentialPersonnelCertificateAndAssignmentDocuments() {
         val expected = setOf(
             "abw_legitimacy",
