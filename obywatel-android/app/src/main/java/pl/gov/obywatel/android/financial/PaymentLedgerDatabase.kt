@@ -173,23 +173,81 @@ class PaymentLedgerDatabase(
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_payment_assets_kind ON $TABLE_ASSETS(asset_kind)")
     }
 
-    /** Zapisuje lub aktualizuje definicję aktywa bez naruszania historii transakcji. */
+    /**
+     * Zapisuje definicję aktywa. Po użyciu aktywa w transakcji można zmienić jego nazwę,
+     * ale nie jednostkę, precyzję, rodzaj ani próbę — te pola zmieniałyby interpretację historii.
+     */
     fun saveAsset(asset: pl.gov.obywatel.android.Asset) {
         asset.validate()
-        val values = ContentValues().apply {
-            put("asset_code", asset.code)
-            put("asset_name", asset.name)
-            put("asset_kind", asset.kind.name)
-            put("unit", asset.unit)
-            put("decimal_places", asset.decimalPlaces)
-            if (asset.purity == null) putNull("purity") else put("purity", asset.purity)
-            put("updated_at", java.time.Instant.now().toString())
-        }
         val db = writableDatabase
-        val updated = db.update(TABLE_ASSETS, values, "asset_code = ?", arrayOf(asset.code))
-        if (updated == 0) {
-            db.insertOrThrow(TABLE_ASSETS, null, values)
+        db.beginTransaction()
+        try {
+            var existing: pl.gov.obywatel.android.Asset? = null
+            db.query(
+                TABLE_ASSETS,
+                arrayOf("asset_code", "asset_name", "asset_kind", "unit", "decimal_places", "purity"),
+                "asset_code = ?",
+                arrayOf(asset.code),
+                null, null, null
+            ).use { cursor ->
+                if (cursor.moveToFirst()) {
+                    existing = pl.gov.obywatel.android.Asset(
+                        code = cursor.getString(0),
+                        name = cursor.getString(1),
+                        kind = pl.gov.obywatel.android.AssetKind.valueOf(cursor.getString(2)),
+                        unit = cursor.getString(3),
+                        decimalPlaces = cursor.getInt(4),
+                        purity = if (cursor.isNull(5)) null else cursor.getInt(5)
+                    )
+                }
+            }
+            val previous = existing
+            if (previous != null && isAssetReferenced(db, asset.code)) {
+                require(
+                    previous.kind == asset.kind &&
+                        previous.unit == asset.unit &&
+                        previous.decimalPlaces == asset.decimalPlaces &&
+                        previous.purity == asset.purity
+                ) {
+                    "Nie można zmienić rodzaju, jednostki, precyzji ani próby aktywa użytego w historii. Utwórz osobny kod aktywa."
+                }
+            }
+            val values = ContentValues().apply {
+                put("asset_code", asset.code)
+                put("asset_name", asset.name)
+                put("asset_kind", asset.kind.name)
+                put("unit", asset.unit)
+                put("decimal_places", asset.decimalPlaces)
+                if (asset.purity == null) putNull("purity") else put("purity", asset.purity)
+                put("updated_at", java.time.Instant.now().toString())
+            }
+            if (previous == null) {
+                db.insertOrThrow(TABLE_ASSETS, null, values)
+            } else {
+                db.update(TABLE_ASSETS, values, "asset_code = ?", arrayOf(asset.code))
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
         }
+    }
+
+    private fun isAssetReferenced(db: SQLiteDatabase, assetCode: String): Boolean {
+        db.query(
+            TABLE_FINANCIAL_TRANSACTIONS,
+            arrayOf("transaction_id"),
+            "from_asset_code = ? OR to_asset_code = ?",
+            arrayOf(assetCode, assetCode),
+            null, null, null, "1"
+        ).use { if (it.moveToFirst()) return true }
+        db.query(
+            TABLE_FINANCIAL_TRANSACTION_FEES,
+            arrayOf("transaction_id"),
+            "asset_code = ?",
+            arrayOf(assetCode),
+            null, null, null, "1"
+        ).use { if (it.moveToFirst()) return true }
+        return false
     }
 
     /** Zwraca słownik aktywów w stabilnej kolejności, bez konwersji wartości liczbowych. */
