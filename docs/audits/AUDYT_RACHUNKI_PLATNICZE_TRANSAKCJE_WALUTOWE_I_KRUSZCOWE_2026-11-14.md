@@ -1909,3 +1909,9 @@ Dla bieżącej rewizji 6e746d8a4fedd502c155690af0d78ee9f3751da7 w chwili zapisu 
 | Ręczny test SAF na urządzeniu | Do wykonania |
 
 Następny etap po zielonym CI: powiązanie dwóch nóg FX w odrębny model transakcji nadrzędnej bez łączenia ani usuwania zapisów księgowych, a następnie import PDF na podstawie rzeczywistej próbki. CSV i XLS nadal wymagają plików wzorcowych.
+
+### 33.7. Dodatkowa kontrola bezpieczeństwa wątku UI/IO
+
+Podczas końcowego przeglądu przepływu importu XML wykryto, że identyfikator aliasu Compose był odczytywany wewnątrz bloku Dispatchers.IO. Poprawiono to w PaymentLedgerScreen.kt: wybrany pseudonim jest teraz przechwytywany na wątku UI przed uruchomieniem pracy asynchronicznej i dopiero jego niezmienna wartość jest przekazywana parserowi. Eliminuje to odczyt stanu Compose z wątku roboczego i gwarantuje, że plik zostanie przypisany do aliasu wybranego w chwili rozpoczęcia importu.
+
+Zmiana: commit d9388fdd5fa902ef204da74355cf4f99225f87a5. Po zapisie ponownie pobrano PaymentLedgerScreen.kt i potwierdzono przechwycenie selectedAccountScopeId przed Dispatchers.IO oraz przekazanie tej wartości do BankStatementXmlParser.parse. Ten commit jest najnowszą rewizją kodu etapu 2J. Testy JVM, instrumentacyjne, Compose UI i kompilacja APK dla SHA d9388fdd5fa902ef204da74355cf4f99225f87a5 pozostają do potwierdzenia w CI; wcześniejsze zadania dla SHA 6e746d8 zostały anulowane po kolejnej aktualizacji kodu i nie stanowią dowodu dla końcowej rewizji.
