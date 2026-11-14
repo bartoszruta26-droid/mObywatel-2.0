@@ -53,6 +53,23 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun policeServiceDocumentsHaveDedicatedFieldsRoutesAndPublicServiceGroup() {
+        val expected = setOf(
+            "police_service_legitimacy", "police_personnel_order", "police_service_certificate",
+            "police_preventive_service", "police_criminal_service", "police_investigative_service",
+            "police_counterterrorist_service", "police_supporting_service", "police_traffic_service",
+            "police_water_service", "police_riot_unit_service", "police_cybercrime_service"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing police document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
     fun militaryServiceDocumentFormsCoverEveryListedServiceTypeAndUseArmedServiceGroup() {
         val expected = setOf(
             "military_book", "military_service_record", "military_personnel_order",
