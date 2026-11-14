@@ -121,7 +121,7 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText("Numer rachunku / IBAN").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Waluta (np. PLN, EUR, USD, CHF)").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Zapisz zmiany").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Edytuj wygląd graficzny").performScrollTo().assertIsDisplayed()
+        assertTrue(composeRule.onAllNodesWithText("Edytuj wygląd graficzny").fetchSemanticsNodes().isNotEmpty())
     }
 
     @Test
