@@ -69,4 +69,31 @@ class BankExchangeOperationTest {
         val ordinary = leg("PLN", "100.00", "PRZELEW", reference = "")
         assertEquals(emptyList<BankExchangeOperation>(), BankExchangeOperationProjector.project(listOf(ordinary)))
     }
+    @Test
+    fun doesNotMergeSameReferenceAcrossAccountsOrBookingDates() {
+        val first = leg("USD", "-8000.00", "WYMIANA W KANTORZE - OBCIĄŻENIE")
+        val otherAccount = first.copy(accountScopeId = "ipko-account-2")
+        val otherDate = first.copy(bookingDate = LocalDate.parse("2026-03-05"))
+
+        val result = BankExchangeOperationProjector.project(listOf(first, otherAccount, otherDate))
+
+        assertEquals(3, result.size)
+        assertEquals(
+            setOf(
+                first.exchangeOperationId(),
+                otherAccount.exchangeOperationId(),
+                otherDate.exchangeOperationId()
+            ),
+            result.map { it.operationId }.toSet()
+        )
+        assertEquals(
+            setOf(
+                ExchangeOperationStatus.SINGLE_LEG,
+                ExchangeOperationStatus.SINGLE_LEG,
+                ExchangeOperationStatus.SINGLE_LEG
+            ),
+            result.map { it.status }.toSet()
+        )
+    }
+
 }
