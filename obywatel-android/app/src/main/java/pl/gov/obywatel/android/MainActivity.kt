@@ -1004,6 +1004,7 @@ internal val documentDisplayOptions = (listOf(
             id.startsWith("entity_") || id.startsWith("organization_") || id == "entity" || id == "business" -> R.drawable.lib_ic_building
             id.startsWith("professional_") || id == "professional" -> R.drawable.work
             id.startsWith("military_") -> R.drawable.tile_ic_armed_service_outline
+            id.startsWith("police_") -> R.drawable.tile_ic_civil_outline
             id.startsWith("insurance_") || id == "official" -> R.drawable.lib_ic_document
             else -> R.drawable.lib_ic_document
         }
@@ -1018,6 +1019,7 @@ internal val documentDisplayOptions = (listOf(
 
 internal fun documentVisibilityGroup(id: String): String = when {
     id in armedServiceDocumentIds -> "Służba zbrojna"
+    id.startsWith("police_") -> "Służba państwowa"
     id in setOf("profile", "identity", "passport") -> "Służba osobista"
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
