@@ -69,7 +69,7 @@ class BankImportDeduplicatorTest {
             usdDebit.exchangeOperationId(),
             BankStatementEntry(
                 accountScopeId = "usd-account",
-                bookingDate = LocalDate.parse("2026-03-04"),
+                bookingDate = LocalDate.parse("2026-11-12"),
                 currencyCode = "USD",
                 signedAmount = BigDecimal("-8000"),
                 operationType = "WYMIANA W KANTORZE - OBCIĄŻENIE",
