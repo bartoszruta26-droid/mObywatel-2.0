@@ -7,10 +7,10 @@ SPDX-License-Identifier: CC0-1.0
 
 - **Data:** 14 listopada 2026 r.
 - **Repozytorium:** `bartoszruta26-droid/mObywatel-2.0`
-- **Gałąź audytowana:** `main`
+- **Gałąź audytowana:** `feature/payment-ledger-stage-1`
 - **Commit bazowy:** `631aa68ed0e2bcbedd70201751214bd4c08fd5cc`
 - **Obszar:** `obywatel-android` (Android, Kotlin, Jetpack Compose)
-- **Status:** etap 1 wdrożony na gałęzi `feature/payment-ledger-stage-1`; zmiany oczekują na wynik CI i przegląd PR. Etapy trwałego magazynu, importu, JSON i NBP pozostają do wykonania.
+- **Status:** etapy 1–2H wdrożone; etap 2I obejmuje parser XML iPKO oraz integrację z ekranem importu, podglądem i atomowym zapisem. Parser CSV/XLS i adapter PDF oraz pełny model transakcji/aktywów pozostają do wykonania. Wyniki CI należy oceniać według konkretnego SHA, a PR #68 pozostaje otwarty i niescalony.
 - **Cel:** przygotowanie nowego, domyślnie widocznego kafelka **Rachunki płatnicze** dla lokalnej ewidencji transakcji wymiany walut i operacji na kruszcach, importu/eksportu danych w JSON oraz wyceny historycznej i bieżącej z wykorzystaniem publicznych danych NBP.
 
 > **Zasada nadrzędna:** rejestr ma wiernie przechowywać to, co faktycznie wydarzyło się w transakcji, i wyraźnie oddzielać dane źródłowe od obliczeń, wycen referencyjnych i hipotetycznych wyników. Kurs NBP nie jest kursem wykonania transakcji w banku ani ofertą, po której użytkownik może rzeczywiście kupić lub sprzedać walutę czy kruszec.
@@ -1695,3 +1695,87 @@ Jest to kontrola kodu źródłowego. Wynik kompilacji i testów instrumentacyjny
 ### 30.7. Następny krok
 
 Najpierw uzyskać zielone CI dla parsera XML. Następnie zintegrować wybór XML z podglądem i atomowym zatwierdzaniem importu. Kolejno przygotować adapter PDF na podstawie rzeczywistej próbki i testów ekstrakcji, a parser CSV/XLS wdrażać dopiero po dostarczeniu tych konkretnych plików.
+
+
+## 31. Etap 2I.1 — integracja importu XML iPKO z ekranem rejestru
+
+### 31.1. Ustalenie z przeglądu
+
+Kontrola po etapie 2I wykazała, że parser XML był dostępny jako klasa, ale ekran `PaymentLedgerScreen` nadal udostępniał wyłącznie import JSON. Użytkownik nie miał zatem możliwości uruchomienia parsera z poziomu aplikacji. Sam parser nie stanowił kompletnej funkcji importu.
+
+### 31.2. Wykonane zmiany
+
+W `PaymentLedgerScreen.kt`:
+- dodano osobny selektor pliku XML przez Android Storage Access Framework;
+- dodano przycisk „Importuj XML iPKO” obok importu JSON;
+- dodano pole lokalnego pseudonimu rachunku z domyślną wartością `ipko-account-1`;
+- UI wyraźnie instruuje, aby nie wpisywać numeru rachunku;
+- plik jest odczytywany poza głównym wątkiem z limitem 10 MiB;
+- parser XML iPKO przekształca operacje do modelu `BankStatementEntry`;
+- wynik parsera jest kodowany istniejącym `PaymentLedgerJsonCodec`, a następnie przekazywany do istniejącego `repository.previewJson`;
+- zatwierdzenie wykorzystuje dotychczasowy `repository.importJson`, a więc istniejącą atomową transakcję SQLite i kontrolę konfliktów referencji;
+- nie powstał odrębny magazyn ani drugi mechanizm deduplikacji.
+
+W `BankStatementXmlParser.kt`:
+- dodano walidację pseudonimu rachunku: 1–64 znaki ASCII, cyfry, kropka, myślnik lub podkreślenie;
+- dodano limit długości wejściowego dokumentu XML;
+- zachowano walidację korzenia `account-history`, wyłączenie przetwarzania DTD, użycie `BigDecimal` i ochronę danych kontrahentów.
+
+### 31.3. Rozszerzone testy
+
+W `BankStatementXmlParserTest.kt`:
+- dodano test przejścia od parsera XML przez kodowanie/dekodowanie JSON do podglądu deduplikacji;
+- dodano test odrzucania nieprawidłowego aliasu i nieoczekiwanego korzenia XML;
+- porównanie kwot w teście round-trip wykonuje się przez `BigDecimal.compareTo`, ponieważ format JSON celowo normalizuje zapis dziesiętny przez usuwanie zbędnych zer końcowych;
+- zachowano test pięciu operacji, referencji, znaków kwot i minimalizacji danych osobowych.
+
+### 31.4. Kontrola kodu po zmianach
+
+Ponownie pobrano z gałęzi:
+- `PaymentLedgerScreen.kt`;
+- `BankStatementXmlParser.kt`;
+- `BankStatementXmlParserTest.kt`;
+- `PaymentLedgerJsonCodec.kt`;
+- `PaymentLedgerRepository.kt`.
+
+Kontrola treści potwierdza obecność selektora XML, pola aliasu, przepływu parser → JSON codec → podgląd → atomowy import oraz walidacji aliasu i limitu XML. Kontrola źródłowa nie zastępuje testu na urządzeniu ani testu instrumentacyjnego.
+
+### 31.5. CI dla rewizji kodu
+
+Rewizja kodu po integracji i poprawkach testu: `957a1c334186bb2daef75b7ab8d6f21b8e72f48a`.
+
+- REUSE / Repository compliance: sukces.
+- Android prototype build: uruchomiony; wynik końcowy należy potwierdzić w Actions.
+- Android GUI validation: uruchomiony; wynik końcowy należy potwierdzić w Actions.
+- Wcześniejsze uruchomienia dla SHA `b93617e6f5652fcb178bd26e89fee764b80a85a2` zostały anulowane po kolejnej poprawce testu i nie są dowodem poprawności najnowszego kodu.
+
+Nie oznacza się kompilacji, testów instrumentacyjnych ani APK jako zaliczonych bez zakończonego wyniku dla właściwej rewizji.
+
+### 31.6. Ograniczenia
+
+- Import XML zakłada rozpoznany wariant eksportu `account-history`.
+- Pseudonim rachunku jest obecnie wpisywany ręcznie; nie ma jeszcze konfiguracji i zapamiętywania wielu aliasów rachunków.
+- Import obejmuje pojedyncze zapisy bankowe. Nie odtwarza jeszcze pełnej dwustronnej transakcji walutowej z pary obciążenie/uznanie; oba zapisy pozostają osobnymi nogami księgowymi.
+- Parser nie jest jeszcze adapterem CSV, XLS ani PDF.
+- Pełny model aktywów, opłat, darowizn i wyceny nie jest jeszcze trwale przechowywany w bazie SQLite.
+
+### 31.7. Status
+
+| Element | Status |
+|---|---|
+| Parser XML iPKO | Zaimplementowany |
+| Wybór XML z poziomu ekranu | Zaimplementowany |
+| Alias rachunku bez numeru rachunku | Zaimplementowany |
+| Limit wejściowego XML | Zaimplementowany |
+| Podgląd przez istniejący mechanizm | Zaimplementowany |
+| Atomowy zapis przez istniejący mechanizm SQLite | Zaimplementowany |
+| Test przepływu XML → JSON → podgląd | Dodany |
+| Test walidacji aliasu i korzenia XML | Dodany |
+| REUSE dla SHA 957a1c3 | Sukces |
+| Kompilacja i testy Android dla SHA 957a1c | Weryfikacja CI |
+| Ręczny test SAF na urządzeniu | Do wykonania |
+| Parser CSV/XLS i adapter PDF | Oczekują na dalsze etapy |
+
+### 31.8. Następny etap
+
+Po uzyskaniu zielonego CI i teście SAF należy dodać bezpieczną konfigurację wielu lokalnych aliasów rachunków, a następnie rozpocząć adapter PDF na podstawie rzeczywistej próbki. Parser CSV i adapter XLS wymagają osobnych plików wzorcowych.
