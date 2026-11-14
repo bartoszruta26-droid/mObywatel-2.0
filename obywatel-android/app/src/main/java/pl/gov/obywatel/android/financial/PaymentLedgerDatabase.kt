@@ -241,7 +241,7 @@ class PaymentLedgerDatabase(
             null, null, null, "1"
         ).use { if (it.moveToFirst()) return true }
         db.query(
-            TABLE_FINANCIAL_TRANSACTION_FEES,
+            TABLE_TRANSACTION_FEES,
             arrayOf("transaction_id"),
             "asset_code = ?",
             arrayOf(assetCode),
