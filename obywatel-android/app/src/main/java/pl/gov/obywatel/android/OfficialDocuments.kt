@@ -171,6 +171,118 @@ private val publicServiceDocumentTypes = listOf(
     publicServiceDoc("inspection_state_control", "Pracownik organu kontroli państwowej")
 )
 
+
+private fun serviceRecordDoc(id: String, title: String, fields: List<String>): OfficialDocType =
+    OfficialDocType(
+        id = id,
+        title = title,
+        fields = fields,
+        note = "Wzór ewidencyjny dokumentu służbowego. Treść, skutki prawne, status służby, stanowisko, stopień i uprawnienia wynikają wyłącznie z aktu lub dokumentu wystawionego przez właściwy organ albo pracodawcę. Formularz aplikacji nie zastępuje oryginału."
+    )
+
+private val generalServiceRecordDocumentTypes = listOf(
+    serviceRecordDoc("service_record_acceptance_decision", "Decyzja o przyjęciu do służby", listOf(
+        "Imię i nazwisko osoby przyjmowanej", "Rodzaj służby / formacja", "Organ wydający decyzję", "Numer i data decyzji",
+        "Podstawa prawna i tryb naboru", "Jednostka organizacyjna / miejsce pełnienia służby",
+        "Data przyjęcia / dzień rozpoczęcia służby", "Warunki lub zastrzeżenia decyzji", "Osoba podpisująca / stanowisko",
+        "Data doręczenia", "Status decyzji", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_acceptance_order", "Rozkaz o przyjęciu do służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Jednostka wydająca rozkaz", "Numer i data rozkazu",
+        "Podstawa prawna / decyzja poprzedzająca", "Data rozpoczęcia służby", "Stanowisko / przydział",
+        "Przełożony / dowódca", "Termin stawiennictwa", "Potwierdzenie wykonania rozkazu", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_personnel_appointment_order", "Rozkaz personalny o mianowaniu do służby", listOf(
+        "Imię i nazwisko", "Formacja / rodzaj służby", "Organ personalny wydający rozkaz", "Numer i data rozkazu",
+        "Podstawa prawna", "Rodzaj mianowania / status służby", "Data skuteczności mianowania",
+        "Stanowisko / jednostka", "Stopień służbowy — jeśli dotyczy", "Data doręczenia", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_position_appointment", "Akt mianowania na stanowisko", listOf(
+        "Imię i nazwisko", "Nazwa stanowiska", "Organ / osoba mianująca", "Jednostka organizacyjna",
+        "Numer i data aktu", "Podstawa prawna / regulaminowa", "Data objęcia stanowiska",
+        "Zakres odpowiedzialności", "Okres powierzenia / kadencja", "Warunki odwołania", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_rank_appointment", "Akt mianowania na stopień służbowy", listOf(
+        "Imię i nazwisko", "Formacja / rodzaj służby", "Dotychczasowy stopień", "Nadany stopień",
+        "Organ mianujący", "Numer i data aktu", "Podstawa prawna", "Data nadania stopnia",
+        "Data wejścia w życie", "Uzasadnienie / wyróżnienie — jeśli wskazano", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_contract", "Umowa lub kontrakt służbowy", listOf(
+        "Imię i nazwisko / dane strony", "Formacja / pracodawca / jednostka", "Rodzaj umowy lub kontraktu",
+        "Numer i data zawarcia", "Podstawa prawna", "Stanowisko / zakres służby", "Data rozpoczęcia",
+        "Czas trwania / okres obowiązywania", "Warunki rozwiązania / wygaśnięcia", "Strony i osoby podpisujące",
+        "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_public_appointment", "Akt powołania na stanowisko publiczne", listOf(
+        "Imię i nazwisko", "Stanowisko publiczne", "Organ powołujący", "Numer i data aktu",
+        "Podstawa prawna", "Data powołania / objęcia stanowiska", "Kadencja / okres pełnienia funkcji",
+        "Zakres kompetencji wynikający z aktu", "Warunki odwołania / wygaśnięcia", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_public_election", "Akt wyboru na stanowisko publiczne", listOf(
+        "Imię i nazwisko", "Stanowisko / mandat", "Organ wyborczy", "Numer i data uchwały / zaświadczenia",
+        "Rodzaj i data wyborów", "Okręg / obszar wyborczy", "Data objęcia funkcji / rozpoczęcia kadencji",
+        "Długość kadencji", "Wynik / podstawa stwierdzenia wyboru", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_oath", "Akt ślubowania albo protokół jego złożenia", listOf(
+        "Imię i nazwisko składającego ślubowanie", "Stanowisko / funkcja / służba", "Treść roty ślubowania",
+        "Data i miejsce złożenia", "Organ / osoba przyjmująca ślubowanie", "Podstawa prawna",
+        "Świadkowie / osoby obecne", "Numer i data protokołu", "Podpisy", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_official_id", "Legitymacja służbowa lub funkcjonariusza", listOf(
+        "Imię i nazwisko", "Formacja / urząd / pracodawca", "Numer legitymacji", "Stopień / stanowisko",
+        "Jednostka organizacyjna", "Data wydania", "Termin ważności", "Organ wydający",
+        "Zakres identyfikacji / uprawnień wskazany w dokumencie", "Status dokumentu", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_service_certificate", "Zaświadczenie o pełnieniu służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Jednostka / organ wystawiający",
+        "Numer i data zaświadczenia", "Okres potwierdzanego pełnienia służby", "Stanowisko / stopień",
+        "Cel wydania", "Podstawa danych ewidencyjnych", "Osoba upoważniona do podpisu",
+        "Data wystawienia", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_discharge_certificate", "Świadectwo służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Jednostka wystawiająca",
+        "Numer i data świadectwa", "Data rozpoczęcia służby", "Data zakończenia służby",
+        "Stanowiska / stopnie w okresie służby", "Sposób i podstawa zwolnienia",
+        "Informacje o przebiegu służby", "Data wydania", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_personnel_history", "Karta przebiegu służby albo wyciąg z ewidencji personalnej", listOf(
+        "Imię i nazwisko", "Numer ewidencyjny", "Formacja / jednostka prowadząca ewidencję",
+        "Numer i data karty / wyciągu", "Chronologia stanowisk i przydziałów", "Chronologia stopni i awansów",
+        "Okresy służby", "Przeniesienia / delegowania", "Wyróżnienia / odznaczenia — jeśli ujęto",
+        "Organ sporządzający", "Data sporządzenia", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_transfer_order", "Rozkaz o przeniesieniu, delegowaniu lub oddelegowaniu", listOf(
+        "Imię i nazwisko", "Formacja / jednostka dotychczasowa", "Jednostka docelowa / miejsce delegowania",
+        "Rodzaj czynności: przeniesienie / delegowanie / oddelegowanie", "Numer i data rozkazu",
+        "Organ wydający", "Podstawa prawna / służbowa", "Data rozpoczęcia i zakończenia",
+        "Stanowisko / zakres zadań", "Warunki powrotu / odwołania", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_promotion_order", "Rozkaz o awansie albo nadaniu stopnia", listOf(
+        "Imię i nazwisko", "Formacja / jednostka", "Dotychczasowy stopień / stanowisko",
+        "Nowy stopień / stanowisko", "Rodzaj awansu / wyróżnienia", "Numer i data rozkazu",
+        "Organ wydający", "Podstawa prawna", "Data skuteczności awansu", "Uzasadnienie — jeśli wskazano",
+        "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_discharge_order", "Decyzja lub rozkaz o zwolnieniu ze służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Organ wydający", "Rodzaj aktu: decyzja / rozkaz",
+        "Numer i data aktu", "Podstawa prawna", "Przyczyna / tryb zwolnienia — jeśli wskazano",
+        "Data ustania stosunku służbowego", "Sposób doręczenia", "Pouczenie / tryb odwoławczy",
+        "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_opinion", "Opinia o służbie", listOf(
+        "Imię i nazwisko", "Formacja / jednostka", "Okres objęty opinią", "Stanowisko / stopień",
+        "Organ / przełożony sporządzający opinię", "Numer i data opinii", "Ocena realizacji zadań",
+        "Kwalifikacje / szkolenia / osiągnięcia", "Uwagi / zastrzeżenia", "Data zapoznania się",
+        "Dokument źródłowy", "Uwagi dodatkowe"
+    )),
+    serviceRecordDoc("service_record_periods_certificate", "Zaświadczenie o okresach służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Jednostka / organ wystawiający",
+        "Numer i data zaświadczenia", "Wykaz okresów służby od–do", "Przerwy / okresy nieuwzględniane",
+        "Łączny staż służby według wystawcy", "Cel zaświadczenia", "Podstawa ewidencyjna",
+        "Data wystawienia", "Osoba upoważniona do podpisu", "Dokument źródłowy", "Uwagi"
+    ))
+)
+
 private val officialDocTypes = listOf(
     OfficialDocType("birth_extract","Akt urodzenia / odpis aktu urodzenia", listOf("Rodzaj aktu: akt stanu cywilnego USC / akt rodowy","Imiona i nazwisko osoby","Data i miejsce urodzenia","Imiona i nazwiska rodziców","Osoba sporządzająca / wystawca: kierownik USC / rodzic / przedstawiciel rodu","Nazwa rodu / oznaczenie ewidencji rodowej","Numer aktu / rok / numer wpisu rodowego","Rodzaj odpisu USC: skrócony / zupełny / wielojęzyczny","Data sporządzenia / wydania","Podstawa sporządzenia / źródła danych","Podpisy rodziców / osób potwierdzających","Pieczęć / znak rodowy lub oznaczenie USC","Osoba uprawniona do uzyskania odpisu USC","Cel uzyskania / uwagi"), "Można prowadzić akt stanu cywilnego USC albo odrębny akt rodowy sporządzony w ramach ewidencji rodzinnej, np. przez rodzica. Akt rodowy jest odrębnym wpisem ewidencji rodzinnej; nie jest wpisem w państwowym rejestrze stanu cywilnego ani urzędowym odpisem USC."),
     OfficialDocType("marriage_extract","Akt małżeństwa / odpis aktu małżeństwa", listOf("Rodzaj aktu: akt stanu cywilnego USC / akt rodowy","Imiona i nazwiska małżonków","Data i miejsce zawarcia małżeństwa","Osoba sporządzająca / wystawca: kierownik USC / rodzic / przedstawiciel rodu","Nazwa rodu / oznaczenie ewidencji rodowej","Numer aktu / rok / numer wpisu rodowego","Rodzaj odpisu USC: skrócony / zupełny / wielojęzyczny","Data sporządzenia / wydania","Podstawa sporządzenia / źródła danych","Podpisy małżonków / rodziców / osób potwierdzających","Świadkowie","Pieczęć / znak rodowy lub oznaczenie USC","Osoba uprawniona do uzyskania odpisu USC","Cel uzyskania / uwagi"), "Można prowadzić akt stanu cywilnego USC albo odrębny akt rodowy sporządzony w ramach ewidencji rodzinnej. Akt rodowy jest odrębnym wpisem ewidencji rodzinnej; nie jest wpisem w państwowym rejestrze stanu cywilnego ani urzędowym odpisem USC."),
@@ -228,7 +340,7 @@ private val officialDocTypes = listOf(
     OfficialDocType("org_foreign_representative","Dokument przedstawiciela zagranicznego", listOf("Imię i nazwisko","Nazwa organizacji","Państwo / obszar działania","Placówka / przedstawicielstwo","Podstawa ustanowienia","Numer i data aktu","Zakres reprezentacji","Okres pełnienia funkcji","Status"), "Cywilny przedstawiciel organizacji za granicą; nie jest członkiem służby zagranicznej ani urzędnikiem konsularnym z samego tytułu."),
     OfficialDocType("org_proxy","Dokument pełnomocnika organizacji", listOf("Imię i nazwisko pełnomocnika","Nazwa organizacji / mocodawcy","Rodzaj pełnomocnictwa","Zakres umocowania","Data udzielenia","Okres obowiązywania","Numer / identyfikator dokumentu","Osoba / organ udzielający","Sposób odwołania / status"), "Zakres działania wynika z treści pełnomocnictwa i przepisów Kodeksu cywilnego lub przepisów szczególnych. Legitymacja nie zastępuje pełnomocnictwa."),
     OfficialDocType("org_delegate","Dokument delegata organizacji", listOf("Imię i nazwisko","Nazwa organizacji delegującej","Organizacja / wydarzenie / organ, do którego delegowano","Podstawa delegowania","Numer i data uchwały / aktu","Zakres reprezentacji i głosowania","Okres delegowania","Status"), "Potwierdza delegowanie do reprezentowania organizacji w określonej sprawie lub na określonym forum; nie nadaje mandatu publicznego.")
-) + publicServiceDocumentTypes
+) + generalServiceRecordDocumentTypes + publicServiceDocumentTypes
 
 internal fun officialGraphicDocumentTargets(): List<Pair<String, String>> =
     officialDocTypes.map { it.id to it.title }
