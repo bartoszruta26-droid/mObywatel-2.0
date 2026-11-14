@@ -262,7 +262,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
             }
         }
         OutlinedTextField(signature,{signature=it},label={Text("Imię i nazwisko osoby wystawiającej")},modifier=Modifier.fillMaxWidth())
-        val totalCents=names.indices.sumOf { i -> val q=runCatching{java.math.BigDecimal(quantities[i].replace(',','.'))}.getOrDefault(java.math.BigDecimal.ZERO); q.multiply(java.math.BigDecimal(receiptMoneyCents(prices[i]))).setScale(0,java.math.RoundingMode.HALF_UP).longValue() }.coerceAtLeast(0L)
+        val totalCents=names.indices.fold(0L) { acc,i -> val q=runCatching{java.math.BigDecimal(quantities[i].replace(',', '.'))}.getOrDefault(java.math.BigDecimal.ZERO); acc+q.multiply(java.math.BigDecimal(receiptMoneyCents(prices[i]))).setScale(0,java.math.RoundingMode.HALF_UP).toLong() }.coerceAtLeast(0L)
         val total=totalCents/100.0
         val words=receiptAmountInWords(totalCents)
         OutlinedTextField(words,{ },label={Text("Wartość słownie – wyliczana automatycznie")},modifier=Modifier.fillMaxWidth(),readOnly=true)
