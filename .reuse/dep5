@@ -1,9 +1,0 @@
-Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-
-Files: security/android-signing/README.md
-Copyright: 2026 bartoszruta26-droid
-License: CC0-1.0
-
-Files: security/android-signing/mobywatel-android-signing-private.zip.enc.b64
-Copyright: 2026 bartoszruta26-droid
-License: LicenseRef-Proprietary
