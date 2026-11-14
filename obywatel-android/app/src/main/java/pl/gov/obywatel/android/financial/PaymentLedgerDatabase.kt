@@ -356,9 +356,12 @@ class PaymentLedgerDatabase(
                 put("raw_description", transaction.rawDescription)
                 put("parse_status", transaction.parseStatus.name)
             }
-            db.insertWithOnConflict(
+            val insertedTransaction = db.insertWithOnConflict(
                 TABLE_FINANCIAL_TRANSACTIONS, null, values, SQLiteDatabase.CONFLICT_REPLACE
             )
+            check(insertedTransaction != -1L) {
+                "Nie udało się zapisać transakcji finansowej."
+            }
             transaction.fee?.let { fee ->
                 val feeValues = ContentValues().apply {
                     put("transaction_id", transaction.id)
