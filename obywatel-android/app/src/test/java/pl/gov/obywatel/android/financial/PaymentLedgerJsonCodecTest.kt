@@ -69,7 +69,7 @@ class PaymentLedgerJsonCodecTest {
             PaymentLedgerJsonCodec.encode(listOf(sample), listOf(stored))
         )
         assertEquals(listOf(sample.accountingEntryId()), archive.transactions.single().accountingEntryIds)
-        assertEquals(0, BigDecimal("8000.00").compareTo(archive.transactions.single().transaction.fromAmount))
+        assertEquals(0, BigDecimal("8000.00").compareTo(archive.transactions.single().transaction.fromAmount!!))
         assertEquals(0, BigDecimal("5.25").compareTo(archive.transactions.single().transaction.fee!!.amount))
     }
 
