@@ -64,6 +64,7 @@ class BankImportDeduplicatorTest {
         assertNotEquals(usdDebit.accountingEntryId(), chfCredit.accountingEntryId())
         assertNotEquals(null, usdDebit.exchangeOperationId())
         assertNotEquals(null, chfCredit.exchangeOperationId())
+        assertEquals(usdDebit.exchangeOperationId(), chfCredit.exchangeOperationId())
         assertEquals(
             usdDebit.exchangeOperationId(),
             BankStatementEntry(
