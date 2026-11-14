@@ -1836,3 +1836,76 @@ Artefakt dla SHA 957a1c3 nie potwierdza poprawności ani nie zawiera korekty z r
 | Ręczny test SAF na urządzeniu | Do wykonania |
 
 Następny krok: uzyskać pełny wynik CI dla aktualnego SHA, a następnie wykonać etap konfiguracji wielu pseudonimów rachunków. Konfiguracja powinna być lokalna, nie przechowywać pełnych numerów rachunków i wymagać jawnego przypisania wybranego pliku do aliasu. Nie należy rozpoczynać parserów CSV/XLS bez rzeczywistych plików wzorcowych ani adaptera PDF bez próbki PDF i testów ekstrakcji.
+
+## 33. Etap 2J — trwała konfiguracja wielu pseudonimów rachunków (14 listopada 2026 r.)
+
+### 33.1. Stan wyjściowy i zakres
+
+Po etapie 2I.1 ekran importu XML przyjmował pojedynczy alias wpisywany ręcznie. Wartość była przechowywana wyłącznie w stanie ekranu Compose, więc lista rachunków nie była trwała i użytkownik musiał ponownie wpisywać pseudonim. Audyt wskazywał konfigurację wielu aliasów jako kolejny krok.
+
+Zakres etapu obejmuje lokalną rejestrację pseudonimów, ich wybór przed importem XML oraz migrację istniejącej bazy bez utraty zapisów. Nie przechowuje się numerów rachunków bankowych ani danych logowania.
+
+### 33.2. Zmiany w SQLite
+
+W PaymentLedgerDatabase.kt:
+- podniesiono DATABASE_VERSION z 1 do 2;
+- dodano tabelę payment_account_scopes z kluczem głównym account_scope_id i unikalną etykietą display_name;
+- przy tworzeniu nowej bazy dodawany jest domyślny alias ipko-account-1 / Rachunek iPKO 1;
+- migracja wersji 1 tworzy tabelę aliasów i odtwarza w niej wszystkie dotychczasowe account_scope_id na podstawie istniejących zapisów bank_statement_entries;
+- migracja zachowuje identyfikatory i dane istniejących wpisów, a następnie dodaje domyślny alias, jeśli nie koliduje z istniejącym wpisem;
+- dodano odczyt listy aliasów oraz zapis/aktualizację aliasu w transakcji SQLite;
+- identyfikator aliasu jest walidowany wzorcem 1–64 znaków ASCII: litery, cyfry, kropka, myślnik i podkreślenie; etykieta ma 1–64 znaki;
+- blokowana jest próba przypisania tej samej etykiety do dwóch różnych identyfikatorów.
+
+### 33.3. Repozytorium i ekran
+
+W PaymentLedgerRepository.kt dodano metody getAccountScopes i saveAccountScope; operacje bazodanowe wykonują się na Dispatchers.IO.
+
+W PaymentLedgerScreen.kt:
+- ekran pobiera listę zapisanych aliasów razem z historią rejestru;
+- alias można zapisać z poziomu ekranu;
+- zapisane aliasy są prezentowane jako wybieralne pozycje;
+- wybrany alias jest przekazywany do parsera XML iPKO, który nadal waliduje identyfikator przed przetworzeniem dokumentu;
+- JSON zachowuje dotychczasowy format i istniejący przepływ importu; wybór aliasu dotyczy importu XML, ponieważ JSON zawiera już accountScopeId w rekordach.
+
+Interfejs na tym etapie dodaje i wybiera aliasy. Nie dodano usuwania aliasów, aby uniknąć osierocenia historii bankowej; identyfikator aliasu jest elementem tożsamości księgowej wpisów i nie powinien być zmieniany po imporcie.
+
+### 33.4. Testy dodane
+
+W PaymentLedgerDatabaseTest.kt dodano test, który tworzy bazę w schemacie wersji 1, zapisuje istniejący wpis, otwiera ją przez wersję 2, sprawdza odtworzenie aliasu, zachowanie wpisu, dodanie kolejnego aliasu i trwałość po ponownym otwarciu bazy. Dodano także test odrzucania niebezpiecznego identyfikatora oraz powtórzonej etykiety.
+
+W PaymentLedgerRepositoryTest.kt dodano test metod repozytorium, dwóch aliasów i ich trwałości po zamknięciu oraz ponownym otwarciu repozytorium.
+
+### 33.5. Kontrola kodu i CI
+
+Zmiany kodu zapisano na feature/payment-ledger-stage-1 w commitach:
+- PaymentLedgerDatabase.kt — 36ad482d7c06b5d6241fa36fb0e07a87c0acb04f;
+- PaymentLedgerRepository.kt — 66cb4df83bc9c2e548152c78044ea89084a004a5;
+- PaymentLedgerScreen.kt — 414ff7ffcbb0f516e33efebcf8ab145d941968d2;
+- PaymentLedgerDatabaseTest.kt — 707b60ad0e94fe7746a2033b30b2ae991937d202;
+- PaymentLedgerRepositoryTest.kt — 6e746d8a4fedd502c155690af0d78ee9f3751da7.
+
+Po zapisaniu ponownie pobrano z GitHub wszystkie pięć plików. Kontrola treści potwierdziła wersję bazy 2, tabelę aliasów, migrację SELECT DISTINCT z dotychczasowych zapisów, metody repozytorium, selektor aliasów na ekranie i oba testy trwałości/migracji.
+
+Dla wcześniejszej rewizji 6763f2abaeecc57105163d3e9b6204038d467ef2 testy JVM i kompilacja Android debug APK zakończyły się sukcesem; artefakt obywatel-android-debug jest przypisany do dokładnie tego SHA. Testy Compose UI na emulatorze zostały anulowane podczas kolejnej aktualizacji gałęzi. Ten artefakt nie zawiera etapu 2J.
+
+Dla bieżącej rewizji 6e746d8a4fedd502c155690af0d78ee9f3751da7 w chwili zapisu rozdziału 33 nie było jeszcze opublikowanego wyniku CI ani artefaktu. Testy JVM, instrumentacyjne (w tym migracja bazy), testy Compose i kompilacja APK dla etapu 2J pozostają do potwierdzenia. Kontrola źródłowa nie zastępuje wykonania testów.
+
+### 33.6. Status i dalsze ograniczenia
+
+| Element | Status |
+|---|---|
+| Wiele pseudonimów rachunków | Zaimplementowano |
+| Trwałość aliasów w SQLite | Zaimplementowano |
+| Migracja schematu 1 → 2 | Zaimplementowano; test dodany |
+| Odtworzenie aliasów istniejących wpisów | Zaimplementowano w migracji |
+| Dodawanie i wybór aliasu w UI | Zaimplementowano |
+| Brak przechowywania pełnych numerów rachunków | Zachowano |
+| Testy JVM dla rewizji 2J | Oczekują na CI |
+| Test migracji i test repozytorium na emulatorze | Dodane; oczekują na CI |
+| APK zawierający etap 2J | Niepotwierdzony |
+| Zmiana/łączenie aliasów po imporcie | Celowo nieobsługiwane |
+| Usuwanie aliasów | Odłożone, aby nie osierocić historii |
+| Ręczny test SAF na urządzeniu | Do wykonania |
+
+Następny etap po zielonym CI: powiązanie dwóch nóg FX w odrębny model transakcji nadrzędnej bez łączenia ani usuwania zapisów księgowych, a następnie import PDF na podstawie rzeczywistej próbki. CSV i XLS nadal wymagają plików wzorcowych.
