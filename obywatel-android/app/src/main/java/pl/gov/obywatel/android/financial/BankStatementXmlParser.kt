@@ -6,6 +6,7 @@ import android.util.Xml
 import java.io.StringReader
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.Locale
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -34,18 +35,27 @@ object BankStatementXmlParser {
 
         val entries = mutableListOf<BankStatementEntry>()
         var current: Operation? = null
+        var rootValidated = false
         var event = parser.eventType
         while (event != XmlPullParser.END_DOCUMENT) {
             when (event) {
-                XmlPullParser.START_TAG -> when (parser.name) {
-                    "operation" -> current = Operation()
-                    "order-date" -> current?.orderDate = parser.nextText().trim()
-                    "exec-date" -> current?.executionDate = parser.nextText().trim()
-                    "type" -> current?.type = parser.nextText().trim()
-                    "description" -> current?.description = parser.nextText().trim()
-                    "amount" -> {
-                        current?.currency = parser.getAttributeValue(null, "curr")?.trim()
-                        current?.amount = parser.nextText().trim()
+                XmlPullParser.START_TAG -> {
+                    if (!rootValidated) {
+                        require(parser.name == "account-history") {
+                            "Nieobsługiwany dokument XML wyciągu bankowego."
+                        }
+                        rootValidated = true
+                    }
+                    when (parser.name) {
+                        "operation" -> current = Operation()
+                        "order-date" -> current?.orderDate = parser.nextText().trim()
+                        "exec-date" -> current?.executionDate = parser.nextText().trim()
+                        "type" -> current?.type = parser.nextText().trim()
+                        "description" -> current?.description = parser.nextText().trim()
+                        "amount" -> {
+                            current?.currency = parser.getAttributeValue(null, "curr")?.trim()
+                            current?.amount = parser.nextText().trim()
+                        }
                     }
                 }
                 XmlPullParser.END_TAG -> if (parser.name == "operation") {
@@ -57,6 +67,8 @@ object BankStatementXmlParser {
             }
             event = parser.next()
         }
+        require(rootValidated) { "Dokument XML nie zawiera elementu account-history." }
+        require(entries.isNotEmpty()) { "Dokument XML nie zawiera operacji do importu." }
         return entries
     }
 
@@ -82,7 +94,7 @@ object BankStatementXmlParser {
         return BankStatementEntry(
             accountScopeId = accountScopeId.trim(),
             bookingDate = date,
-            currencyCode = currencyCode.uppercase(),
+            currencyCode = currencyCode.uppercase(Locale.ROOT),
             signedAmount = decimal,
             operationType = type,
             bankOperationReference = reference,
