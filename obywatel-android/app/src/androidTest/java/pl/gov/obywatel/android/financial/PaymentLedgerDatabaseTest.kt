@@ -374,4 +374,28 @@ class PaymentLedgerDatabaseTest {
         }
     }
 
+    @Test
+    fun financialTransactionRejectsBankEntryWithMismatchedAmountOrCurrency() {
+        val db = openDatabase()
+        try {
+            val unrelatedEntry = entry("749.33")
+            db.importBatch(listOf(unrelatedEntry))
+            val transaction = FinancialTransaction(
+                id = "tx-mismatch",
+                executedAt = Instant.parse("2026-11-12T10:15:30Z"),
+                type = FinancialTransactionType.EXCHANGE,
+                fromAssetCode = "USD",
+                fromAmount = BigDecimal("8000.00"),
+                toAssetCode = "CHF",
+                toAmount = BigDecimal("6183.20")
+            )
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveFinancialTransaction(transaction, setOf(unrelatedEntry.accountingEntryId()))
+            }
+            assertEquals(emptyList<StoredFinancialTransaction>(), db.readFinancialTransactions())
+        } finally {
+            db.close()
+        }
+    }
+
 }
