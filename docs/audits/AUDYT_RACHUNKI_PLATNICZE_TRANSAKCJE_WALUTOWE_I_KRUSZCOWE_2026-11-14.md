@@ -2307,3 +2307,70 @@ Po zielonym CI dla 2N.2 należy wykonać formularz ręcznego dodawania i edycji 
 - wyboru istniejących zapisów bankowych do powiązania.
 
 Formularz powinien używać `FinancialTransaction.validate()` i `PaymentLedgerRepository.saveFinancialTransaction()`, a edycja musi zachować źródłowe zapisy bankowe. Rejestr aktywów, darowizny i kursy NBP pozostają odrębnymi etapami.
+
+
+## 39. Etap 2N.3 — formularz ręcznego dodawania i edycji transakcji (14 listopada 2026 r.)
+
+### 39.1. Zakres wykonany
+
+W pliku PaymentLedgerScreen.kt dodano formularz ręcznego tworzenia i edycji transakcji z następującymi polami:
+- typ operacji: wymiana, kupno/sprzedaż kruszcu, wpłata, wypłata i korekta;
+- data i czas w formacie ISO-8601;
+- aktywo i ilość strony oddanej;
+- aktywo i ilość strony otrzymanej;
+- aktywo i kwota prowizji;
+- wybór istniejących zapisów bankowych do powiązania.
+
+Zapis realizowany jest przez PaymentLedgerRepository.saveFinancialTransaction(). Przed zapisem uruchamiana jest walidacja FinancialTransaction.validate(). Kwoty są parsowane jako BigDecimal, a czas jako Instant; nie używa się typów zmiennoprzecinkowych do wartości pieniężnych.
+
+### 39.2. Edycja i pochodzenie danych
+
+- istniejące transakcje mają akcję „Edytuj”;
+- formularz odtwarza wartości transakcji oraz identyfikatory powiązanych zapisów bankowych;
+- aktualizacja używa dotychczasowego identyfikatora transakcji;
+- edycja zachowuje źródło, identyfikator zewnętrzny i opis źródłowy transakcji zaimportowanej;
+- anulowanie edycji czyści stan formularza;
+- zapisy bankowe są wybierane jawnie, a nie usuwane lub modyfikowane przez formularz.
+
+### 39.3. Plik i rewizja
+
+- obywatel-android/app/src/main/java/pl/gov/obywatel/android/PaymentLedgerScreen.kt;
+- commit formularza: 38adc8f6306ead6560ca9a14a4a8bbbd0e81b775;
+- commit korekty zachowania pochodzenia i wyświetlania pozycji: fdad4492e4e356151f9a31e6818285395e5f8f44;
+- blob końcowy ekranu po ponownym odczycie: f31f793dcad2ee0c819583b3d04f0d5ece2ade71;
+- gałąź: feature/payment-ledger-stage-1;
+- PR: #68.
+
+### 39.4. Kontrola po zapisie
+
+Plik ekranu ponownie pobrano z GitHub i potwierdzono:
+- obecność formularza dodawania i edycji;
+- wywołanie walidacji domenowej przed zapisem;
+- wywołanie repozytorium dla trwałego zapisu;
+- użycie BigDecimal i Instant;
+- wyświetlanie daty, kwoty i waluty wybranego wpisu bankowego;
+- zachowanie source, externalId i rawDescription przy edycji istniejącej transakcji;
+- odtworzenie powiązań bankowych podczas edycji.
+
+### 39.5. Status testów i ograniczenia
+
+| Kontrola | Status |
+|---|---|
+| Ponowny odczyt pliku ekranu | Sukces |
+| Kontrola statyczna kluczowych ścieżek | Sukces |
+| Testy jednostkowe dla końcowego SHA | Oczekują na CI |
+| Testy Compose dla końcowego SHA | Oczekują na CI |
+| Testy instrumentacyjne SQLite dla końcowego SHA | Oczekują na CI |
+| Budowa debug APK dla końcowego SHA | Oczekuje na CI |
+
+Poprzednia rewizja f7fe7557b0dc962ada0d1ab897306260a2e4a54f miała rozpoczęte testy Compose; testy jednostkowe oraz kontrola REUSE zakończyły się sukcesem, natomiast testy emulatorowe i budowa APK były w toku. Nie jest to wynik dla aktualnej rewizji fdad4492e4e356151f9a31e6818285395e5f8f44.
+
+Formularz nie został jeszcze potwierdzony testami UI na emulatorze. Nie oznacza się etapu 2N.3 jako w pełni przetestowanego. Wymagane są testy formularza dla każdego typu operacji, walidacji brakujących/niepoprawnych kwot, edycji transakcji importowanej oraz zachowania powiązań bankowych.
+
+### 39.6. Następny krok
+
+Po zielonym CI dla aktualnego SHA należy:
+1. dodać lub rozszerzyć testy Compose formularza;
+2. sprawdzić na emulatorze wymianę, kupno/sprzedaż kruszcu, wpłatę i wypłatę;
+3. sprawdzić edycję transakcji importowanej bez utraty pochodzenia i powiązań;
+4. dopiero potem rozpocząć trwały rejestr aktywów i formularz darowizn.
