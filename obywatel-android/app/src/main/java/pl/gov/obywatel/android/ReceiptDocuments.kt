@@ -3,6 +3,8 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.content.Intent
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
@@ -10,6 +12,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.documentfile.provider.DocumentFile
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -35,6 +38,19 @@ private data class ReceiptRecord(val id:String,val name:String,val createdAt:Lon
 private object ReceiptStore {
     private fun dir(c:Context)=File(c.noBackupFilesDir,"receipts").apply{mkdirs()}
     private fun index(c:Context)=File(dir(c),"index.json")
+    fun persistSelectedFolder(c:Context,name:String,bytes:ByteArray) {
+        val raw=receiptPref(c).getString("folder_tree_uri",null) ?: return
+        val root=DocumentFile.fromTreeUri(c,Uri.parse(raw)) ?: return
+        val now=Calendar.getInstance()
+        val year=now.get(Calendar.YEAR).toString()
+        val month="%02d".format(now.get(Calendar.MONTH)+1)
+        val yd=root.findFile(year)?.takeIf{it.isDirectory} ?: root.createDirectory(year) ?: return
+        val md=yd.findFile(month)?.takeIf{it.isDirectory} ?: yd.createDirectory(month) ?: return
+        val safe=name.replace(Regex("[^A-Za-z0-9._-]"),"_").take(100).ifBlank{"rachunek.pdf"}
+        md.findFile(safe)?.delete()
+        val target=md.createFile("application/pdf",safe) ?: return
+        c.contentResolver.openOutputStream(target.uri,"w")?.use{it.write(bytes)}
+    }
     fun list(c:Context):List<ReceiptRecord> = runCatching {
         val a=JSONArray(index(c).takeIf{it.exists()}?.readText() ?: "[]")
         (0 until a.length()).map { val o=a.getJSONObject(it); ReceiptRecord(o.getString("id"),o.getString("name"),o.getLong("createdAt")) }
@@ -43,6 +59,7 @@ private object ReceiptStore {
         require(bytes.size>5 && String(bytes,0,5,Charsets.US_ASCII)=="%PDF-") { "Nieprawidłowy plik PDF." }
         require(bytes.size<=50*1024*1024) { "Plik PDF przekracza 50 MB." }
         File(dir(c),"$id.pdf").writeBytes(bytes)
+        runCatching { persistSelectedFolder(c,name,bytes) }
         val record=ReceiptRecord(id,name.take(180),System.currentTimeMillis())
         save(c,(list(c).filterNot{it.id==id}+record))
         return record
