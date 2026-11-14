@@ -248,7 +248,9 @@ class PaymentLedgerDatabaseTest {
     fun financialTransactionFeeAndBankLinksPersistAtomically() {
         val db = openDatabase()
         try {
-            val sourceEntry = entry()
+            val sourceEntry = entry("-8000.00").copy(
+                operationType = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+            )
             db.importBatch(listOf(sourceEntry))
             val transaction = FinancialTransaction(
                 id = "tx-fx-001",
