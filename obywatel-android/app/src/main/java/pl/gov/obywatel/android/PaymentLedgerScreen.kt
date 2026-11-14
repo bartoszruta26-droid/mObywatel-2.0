@@ -44,6 +44,8 @@ import pl.gov.obywatel.android.financial.PaymentAccountScope
 import pl.gov.obywatel.android.financial.StoredFinancialTransaction
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
 import pl.gov.obywatel.android.financial.PaymentLedgerJsonCodec
+import pl.gov.obywatel.android.Asset
+import pl.gov.obywatel.android.AssetKind
 import pl.gov.obywatel.android.Fee
 import pl.gov.obywatel.android.FinancialRecordSource
 import pl.gov.obywatel.android.FinancialParseStatus
@@ -63,6 +65,13 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     var entries by remember { mutableStateOf<List<BankStatementEntry>>(emptyList()) }
     var financialTransactions by remember { mutableStateOf<List<StoredFinancialTransaction>>(emptyList()) }
+    var assets by remember { mutableStateOf<List<Asset>>(emptyList()) }
+    var assetCodeInput by remember { mutableStateOf("") }
+    var assetNameInput by remember { mutableStateOf("") }
+    var assetUnitInput by remember { mutableStateOf("") }
+    var assetPrecisionInput by remember { mutableStateOf("2") }
+    var assetPurityInput by remember { mutableStateOf("") }
+    var assetKindInput by remember { mutableStateOf(AssetKind.CURRENCY) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var pendingJson by remember { mutableStateOf<String?>(null) }
@@ -98,6 +107,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             try {
                 entries = repository.getEntries()
                 financialTransactions = repository.getFinancialTransactions()
+                assets = repository.getAssets()
                 accountScopes = repository.getAccountScopes()
                 if (accountScopes.none { it.accountScopeId == accountScopeId }) {
                     accountScopeId = accountScopes.firstOrNull()?.accountScopeId ?: "ipko-account-1"
@@ -147,6 +157,17 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     parseStatus = previous?.parseStatus ?: FinancialParseStatus.MANUAL
                 )
                 transaction.validate()
+                fun validatePrecision(code: String?, amount: BigDecimal?) {
+                    if (code == null || amount == null) return
+                    val definition = assets.firstOrNull { it.code == code }
+                        ?: throw IllegalArgumentException("Aktywo $code nie istnieje w słowniku. Dodaj je przed zapisaniem transakcji.")
+                    require(amount.stripTrailingZeros().scale().coerceAtLeast(0) <= definition.decimalPlaces) {
+                        "Ilość $code przekracza precyzję słownika (${definition.decimalPlaces} miejsc dziesiętnych)."
+                    }
+                }
+                validatePrecision(transaction.fromAssetCode, transaction.fromAmount)
+                validatePrecision(transaction.toAssetCode, transaction.toAmount)
+                transaction.fee?.let { validatePrecision(it.assetCode, it.amount) }
                 repository.saveFinancialTransaction(transaction, selectedBankEntryIds)
                 message = if (editingTransactionId == null) "Zapisano transakcję." else "Zaktualizowano transakcję."
                 error = null
@@ -154,6 +175,28 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 reload()
             } catch (exception: Exception) {
                 error = exception.message ?: "Nie udało się zapisać transakcji."
+            }
+        }
+    }
+
+    fun saveAssetForm() {
+        scope.launch {
+            try {
+                val asset = Asset(
+                    code = assetCodeInput.trim().uppercase(),
+                    name = assetNameInput.trim(),
+                    kind = assetKindInput,
+                    unit = assetUnitInput.trim(),
+                    decimalPlaces = assetPrecisionInput.trim().toInt(),
+                    purity = if (assetPurityInput.isBlank()) null else assetPurityInput.trim().toInt()
+                )
+                asset.validate()
+                repository.saveAsset(asset)
+                assets = repository.getAssets()
+                message = "Zapisano aktywo ${asset.code}."
+                error = null
+            } catch (exception: Exception) {
+                error = exception.message ?: "Nie udało się zapisać definicji aktywa."
             }
         }
     }
@@ -366,6 +409,28 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         }
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Słownik walut i kruszców", style = MaterialTheme.typography.titleMedium)
+                Text("Definicje używane w transakcjach. Parametry ilościowe aktywa są chronione po użyciu w historii.")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { assetKindInput = AssetKind.CURRENCY }) { Text(if (assetKindInput == AssetKind.CURRENCY) "✓ Waluta" else "Waluta") }
+                    Button(onClick = { assetKindInput = AssetKind.PRECIOUS_METAL }) { Text(if (assetKindInput == AssetKind.PRECIOUS_METAL) "✓ Kruszec" else "Kruszec") }
+                }
+                OutlinedTextField(value = assetCodeInput, onValueChange = { assetCodeInput = it }, label = { Text("Kod aktywa") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = assetNameInput, onValueChange = { assetNameInput = it }, label = { Text("Nazwa") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = assetUnitInput, onValueChange = { assetUnitInput = it }, label = { Text("Jednostka (np. PLN, g)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = assetPrecisionInput, onValueChange = { assetPrecisionInput = it }, label = { Text("Miejsca dziesiętne (0–12)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                if (assetKindInput == AssetKind.PRECIOUS_METAL) {
+                    OutlinedTextField(value = assetPurityInput, onValueChange = { assetPurityInput = it }, label = { Text("Próba (opcjonalnie, 1–1000)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                }
+                Button(onClick = { saveAssetForm() }, enabled = !loading && assetCodeInput.isNotBlank() && assetNameInput.isNotBlank()) { Text("Zapisz definicję aktywa") }
+                if (assets.isEmpty()) Text("Słownik jest pusty. Dodaj walutę lub kruszec przed rejestrowaniem transakcji.")
+                assets.forEach { asset ->
+                    Text("${asset.code} — ${asset.name} • ${asset.unit} • ${asset.decimalPlaces} miejsc${asset.purity?.let { " • próba $it" }.orEmpty()}")
+                }
+            }
+        }
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(if (editingTransactionId == null) "Ręczne dodawanie transakcji" else "Edycja transakcji", style = MaterialTheme.typography.titleMedium)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(FinancialTransactionType.values().toList(), key = { it.name }) { type ->
@@ -377,13 +442,28 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 OutlinedTextField(value = executedAtText, onValueChange = { executedAtText = it }, label = { Text("Data i czas ISO-8601") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 if (transactionType != FinancialTransactionType.DEPOSIT) {
                     OutlinedTextField(value = fromAssetText, onValueChange = { fromAssetText = it }, label = { Text("Aktywo oddane") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(assets, key = { it.code }) { asset ->
+                            Button(onClick = { fromAssetText = asset.code }) { Text(if (fromAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
+                        }
+                    }
                     OutlinedTextField(value = fromAmountText, onValueChange = { fromAmountText = it }, label = { Text("Ilość oddana") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 }
                 if (transactionType != FinancialTransactionType.WITHDRAWAL) {
                     OutlinedTextField(value = toAssetText, onValueChange = { toAssetText = it }, label = { Text("Aktywo otrzymane") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(assets, key = { it.code }) { asset ->
+                            Button(onClick = { toAssetText = asset.code }) { Text(if (toAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
+                        }
+                    }
                     OutlinedTextField(value = toAmountText, onValueChange = { toAmountText = it }, label = { Text("Ilość otrzymana") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 }
                 OutlinedTextField(value = feeAssetText, onValueChange = { feeAssetText = it }, label = { Text("Aktywo prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(assets, key = { it.code }) { asset ->
+                        Button(onClick = { feeAssetText = asset.code }) { Text(if (feeAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
+                    }
+                }
                 OutlinedTextField(value = feeAmountText, onValueChange = { feeAmountText = it }, label = { Text("Kwota prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Text("Wybierz zapisy bankowe do powiązania")
                 val availableEntries = entries.filter { bankEntry ->
