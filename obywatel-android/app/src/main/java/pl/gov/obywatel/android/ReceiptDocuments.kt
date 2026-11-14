@@ -178,11 +178,6 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
             records=ReceiptStore.list(c); status="Zdjęcie ręcznie wypisanego rachunku zapisano jako PDF: ${rec.name}"
         }.onFailure{status="Błąd zdjęcia: ${it.message}"}
     }
-    val savePicker=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")){uri-> if(uri!=null) runCatching {
-        c.contentResolver.openOutputStream(uri)?.use{it.write(pendingPdfBytes)} ?: error("Nie można zapisać PDF.")
-        val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pendingPdfBytes,createdAt=receiptFileDate(saleDate))
-        records=ReceiptStore.list(c); status="Wygenerowano i zapisano rachunek PDF: ${rec.name}"
-    }.onFailure{status="Błąd zapisu PDF: ${it.message}"} }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text("‹  Powrót",Modifier.clickable(onClick=onBack),color=MaterialTheme.colorScheme.primary)
         Text("Rachunki",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
@@ -208,7 +203,14 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
         OutlinedTextField(signature,{signature=it},label={Text("Imię i nazwisko osoby wystawiającej")},modifier=Modifier.fillMaxWidth())
         val total=names.indices.sumOf { i -> (quantities[i].replace(',','.').toDoubleOrNull() ?: 0.0)*(prices[i].replace(',','.').toDoubleOrNull() ?: 0.0) }
         Text("Razem: ${"%.2f".format(java.util.Locale("pl"),total)} zł",fontWeight=FontWeight.Bold)
-        Button(onClick={ runCatching { pendingPdfBytes=buildReceiptPdf(c,number,saleDate,seller,buyer,payment,due,names,pkwiu,units,quantities,prices,words,signature,total); savePicker.launch("Rachunek-${number.ifBlank{"nowy"}}.pdf") }.onFailure{status="Nie udało się przygotować PDF: ${it.message}"} },modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.PictureAsPdf,null); Spacer(Modifier.width(8.dp)); Text("Wystaw i zapisz rachunek PDF") }
+        Button(onClick={
+            runCatching {
+                val pdf=buildReceiptPdf(c,number,saleDate,seller,buyer,payment,due,names,pkwiu,units,quantities,prices,words,signature,total)
+                val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pdf,createdAt=receiptFileDate(saleDate))
+                records=ReceiptStore.list(c)
+                status="Wystawiono i zapisano rachunek PDF: ${rec.name}"
+            }.onFailure { status="Nie udało się zapisać rachunku PDF: ${it.message}" }
+        },modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.PictureAsPdf,null); Spacer(Modifier.width(8.dp)); Text("Wystaw i zapisz rachunek PDF") }
         Divider()
         Text("Zapisane rachunki PDF",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
         Text("Każdy zapisany rachunek ma własny kafelek podpisu. Podpis wymaga potwierdzenia przez użytkownika w usłudze rządowej.")
@@ -221,7 +223,15 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
                 Text(java.text.SimpleDateFormat("dd.MM.yyyy HH:mm",java.util.Locale("pl")).format(java.util.Date(rec.createdAt)),style=MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                     OutlinedButton(onClick={replaceId=rec.id;importPicker.launch(arrayOf("application/pdf"))}) { Text("Podmień PDF") }
-                    TextButton(onClick={runCatching { val bytes=ReceiptStore.bytes(c,rec.id); val f=File(c.cacheDir,rec.name); f.writeBytes(bytes); val intent=Intent(Intent.ACTION_VIEW).setDataAndType(androidx.core.content.FileProvider.getUriForFile(c,c.packageName+".ocrfiles",f),"application/pdf").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); c.startActivity(intent) }.onFailure{status="Nie można otworzyć PDF: ${it.message}"}) { Text("Wyświetl") }
+                    TextButton(onClick={
+                        runCatching {
+                            val bytes=ReceiptStore.bytes(c,rec.id)
+                            val f=File(c.cacheDir,rec.name).apply { writeBytes(bytes) }
+                            val uri=androidx.core.content.FileProvider.getUriForFile(c,c.packageName+".ocrfiles",f)
+                            val intent=Intent(Intent.ACTION_VIEW).setDataAndType(uri,"application/pdf").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            c.startActivity(intent)
+                        }.onFailure { status="Nie można otworzyć PDF: ${it.message}" }
+                    }) { Text("Wyświetl") }
                     TextButton(onClick={
                         runCatching {
                             val file=File(c.cacheDir,rec.name).apply { writeBytes(ReceiptStore.bytes(c,rec.id)) }
@@ -249,7 +259,6 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
     }
 }
 
-private var pendingPdfBytes:ByteArray = byteArrayOf()
 private fun buildReceiptPdf(c:Context,no:String,date:String,seller:String,buyer:String,payment:String,due:String,names:List<String>,pkwiu:List<String>,units:List<String>,qty:List<String>,prices:List<String>,words:String,signature:String,total:Double):ByteArray {
     val doc=PdfDocument(); val page=doc.startPage(PdfDocument.PageInfo.Builder(595,842,1).create()); val canvas=page.canvas
     val p=Paint(Paint.ANTI_ALIAS_FLAG).apply{color=android.graphics.Color.BLACK;textSize=10f}
@@ -266,7 +275,7 @@ private fun buildReceiptPdf(c:Context,no:String,date:String,seller:String,buyer:
     val xs=listOf(35f,60f,250f,310f,345f,390f,465f)
     headers.forEachIndexed{i,s->canvas.drawText(s,xs[i],top+22f,p)}
     var y=top+35f
-    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,p);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f);if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(prices[i],if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText("%.2f".format(java.util.Locale.US,v),if(showPkwiu) 465f else 480f,y+25f,p);y+=45f }
+    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,p);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(prices[i],if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText("%.2f".format(java.util.Locale.US,v),if(showPkwiu) 465f else 480f,y+25f,p);y+=45f }
     y+=20f; line(y); txt("Słownie złotych: $words",35f,y+18f); canvas.drawText("Razem: %.2f zł".format(java.util.Locale.US,total),420f,y+18f,bold)
     y+=65f; canvas.drawText("Do zapłaty: %.2f zł".format(java.util.Locale.US,total),80f,y,bold); y+=55f; txt("Imię i nazwisko oraz podpis osoby upoważnionej do wystawienia rachunku: $signature",35f,y)
     y+=35f; val notes=receiptNotes(c); var yy=y; notes.split("\n").forEach{row->txt(row,35f,yy,p);yy+=26f}
