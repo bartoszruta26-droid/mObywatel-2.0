@@ -2057,7 +2057,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         val id = item.optString("id").trim()
                                         val title = item.optString("title").trim()
                                         val group = item.optString("group").trim()
-                                        require(id.isNotBlank() && title.isNotBlank() && group in documentVisibilityGroupOrder) {
+                                        require(
+                                            id.isNotBlank() && title.isNotBlank() &&
+                                                migrateDocumentGroupName(group) in documentVisibilityGroupOrder
+                                        ) {
                                             "Archiwum zawiera nieprawidłowy opis dokumentu: $id."
                                         }
                                         require(add(id)) { "Archiwum zawiera powtórzony identyfikator dokumentu: $id." }
@@ -2069,13 +2072,21 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                     it.removePrefix("dp_") in knownDocumentIds &&
                                     it.removePrefix("dp_") in importedCatalogIds
                             }.mapKeys { it.key.removePrefix("dp_") }
-                                .mapValues { (_, value) -> value }
+                            require(importedPlacements.values.all { it in setOf("dashboard", "other", "hidden") }) {
+                                "Archiwum zawiera nieprawidłowe ustawienie widoczności dokumentu."
+                            }
                             if (importedPlacements.isNotEmpty()) {
+                                // Ustawienia z jawnie wskazanego archiwum mają pierwszeństwo
+                                // przed wartościami lokalnymi, również dla służby zbrojnej.
                                 val mergedPlacements = loadDocumentPlacements(context).toMutableMap().apply {
-                                    putAll(importedPlacements.filterValues { it in setOf("dashboard", "other", "hidden") })
+                                    putAll(importedPlacements)
                                 }
                                 saveDocumentPlacements(context, mergedPlacements)
-                                documentPlacements = mergedPlacements
+                                val verifiedPlacements = loadDocumentPlacements(context)
+                                require(importedPlacements.all { (id, placement) -> verifiedPlacements[id] == placement }) {
+                                    "Weryfikacja importu nie potwierdziła wszystkich ustawień widoczności dokumentów."
+                                }
+                                documentPlacements = verifiedPlacements
                             }
                             val persisted = DemoIdentityStore.loadStrict(context)
                             require(profileValues.all { (key, value) -> persisted[key] == value }) {
