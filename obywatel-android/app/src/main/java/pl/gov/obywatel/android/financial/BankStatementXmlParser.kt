@@ -5,6 +5,8 @@ package pl.gov.obywatel.android.financial
 import android.util.Xml
 import java.io.StringReader
 import java.math.BigDecimal
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.time.LocalDate
 import java.util.Locale
 import org.xmlpull.v1.XmlPullParser
@@ -13,16 +15,12 @@ import org.xmlpull.v1.XmlPullParser
  * Parser formatu XML iPKO account-history.
  *
  * accountScopeId jest pseudonimem nadanym lokalnie przez aplikację/użytkownika.
- * Parser celowo nie zapisuje numeru rachunku, nazw, adresów ani pełnego opisu kontrahenta.
+ * Parser nie zapisuje numerów rachunków, nazwisk, adresów ani surowego opisu kontrahenta.
  */
 object BankStatementXmlParser {
     private val referencePattern = Regex(
         """Referencje\s+własne\s+zleceniodawcy\s*:\s*([A-Za-z0-9_-]+)""",
         RegexOption.IGNORE_CASE
-    )
-    private val titlePattern = Regex(
-        """Tytuł\s*:\s*(.*?)(?=\s+Referencje\s+własne\s+zleceniodawcy\s*:|$)""",
-        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
     )
 
     fun parse(xml: String, accountScopeId: String): List<BankStatementEntry> {
@@ -90,7 +88,13 @@ object BankStatementXmlParser {
             throw IllegalArgumentException("Nieprawidłowa kwota operacji: $amountValue", error)
         }
         val reference = referencePattern.find(description)?.groupValues?.get(1)
-        val safeTitle = titlePattern.find(description)?.groupValues?.get(1)?.trim().orEmpty()
+        // Surowy opis może zawierać dane osobowe i numery rachunków. Dla wpisów bez
+        // referencji zachowujemy tylko lokalny odcisk SHA-256 do stabilnej deduplikacji.
+        val safeDescription = if (reference == null) {
+            "iPKO-OP-" + sha256("$accountScopeId|$description")
+        } else {
+            ""
+        }
         return BankStatementEntry(
             accountScopeId = accountScopeId.trim(),
             bookingDate = date,
@@ -98,8 +102,14 @@ object BankStatementXmlParser {
             signedAmount = decimal,
             operationType = type,
             bankOperationReference = reference,
-            description = safeTitle
+            description = safeDescription
         ).also { it.validate() }
+    }
+
+    private fun sha256(value: String): String {
+        val bytes = MessageDigest.getInstance("SHA-256")
+            .digest(value.toByteArray(StandardCharsets.UTF_8))
+        return bytes.joinToString("") { "%02x".format(it) }
     }
 
     private data class Operation(
