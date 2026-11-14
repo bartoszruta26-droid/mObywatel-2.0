@@ -931,6 +931,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("vaccines", "Książeczka szczepień WHO", R.drawable.lib_ic_medical_record),
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
     Triple("receipts", "Rachunki", R.drawable.lib_ic_document_signed),
+    Triple("payment_transactions", "Rachunki płatnicze", R.drawable.lib_ic_wallet),
     Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
     Triple("children", "Dokumentacja dzieci", R.drawable.family),
     Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.lib_ic_image),
@@ -1015,7 +1016,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
     id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
-    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
+    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts", "payment_transactions") || id.startsWith("insurance_") -> "Służba finansowa"
     id.startsWith("service_foundation_") -> "Służba fundacyjna"
     id.startsWith("service_business_") -> "Służba gospodarcza"
     id.startsWith("service_association_") -> "Służba stowarzyszeniowa"
@@ -1064,7 +1065,7 @@ private val armedServiceDocumentIds = setOf(
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to if (id == "identity" || id == "receipts") "dashboard" else "hidden"
+    id to if (id == "identity" || id == "receipts" || id == "payment_transactions") "dashboard" else "hidden"
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
@@ -1288,6 +1289,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showCredentialAppearanceEditor by remember { mutableStateOf(false) }
     var showImportedDocuments by remember { mutableStateOf(false) }
     var showReceipts by remember { mutableStateOf(false) }
+    var showPaymentLedger by remember { mutableStateOf(false) }
     var showBankAccounts by remember { mutableStateOf(false) }
     var showPublicServicesBrowser by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
@@ -1360,6 +1362,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> showImportedDocuments = false
+            showPaymentLedger -> showPaymentLedger = false
             showReceipts -> showReceipts = false
             showBankAccounts -> showBankAccounts = false
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
@@ -1381,7 +1384,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showPaymentLedger || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1432,6 +1435,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 "vaccines" -> openSettingsDocumentEditor("vaccines")
                 "signed_pdf" -> openSettingsDocumentEditor("signed_pdf")
                 "receipts" -> showReceipts = true
+                "payment_transactions" -> showPaymentLedger = true
                 "imported" -> openSettingsDocumentEditor("imported")
                 "branding" -> activeService = "Zasoby identyfikacji dokumentów"
                 else -> openSettingsDocumentEditor(route.documentId)
@@ -1470,6 +1474,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showIdentityDesigner -> IdentityDocumentsScreen(onBack = { showIdentityDesigner = false })
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
+                    showPaymentLedger -> PaymentLedgerScreen(onBack = { showPaymentLedger = false })
                     showReceipts -> ReceiptDocumentsScreen(onBack = { showReceipts = false })
                     settingsDocumentEditor == "receipts" -> ReceiptTemplateSettingsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })

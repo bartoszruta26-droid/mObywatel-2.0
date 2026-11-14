@@ -1,0 +1,61 @@
+// SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+// SPDX-License-Identifier: CC0-1.0
+package pl.gov.obywatel.android.financial
+
+import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+/** Warstwa dostępu do rejestru. Wszystkie operacje SQLite wykonuje na Dispatchers.IO. */
+class PaymentLedgerRepository(
+    context: Context,
+    databaseName: String = PaymentLedgerDatabase.DATABASE_NAME
+) : AutoCloseable {
+    private val database = PaymentLedgerDatabase(context.applicationContext, databaseName)
+
+    suspend fun getEntries(): List<BankStatementEntry> = withContext(Dispatchers.IO) {
+        database.readAll()
+    }
+
+    suspend fun getAccountScopes(): List<PaymentAccountScope> = withContext(Dispatchers.IO) {
+        database.getAccountScopes()
+    }
+
+    suspend fun saveAccountScope(accountScopeId: String, displayName: String) = withContext(Dispatchers.IO) {
+        database.saveAccountScope(accountScopeId, displayName)
+    }
+
+    suspend fun saveFinancialTransaction(
+        transaction: pl.gov.obywatel.android.FinancialTransaction,
+        accountingEntryIds: Set<String> = emptySet()
+    ) = withContext(Dispatchers.IO) {
+        database.saveFinancialTransaction(transaction, accountingEntryIds)
+    }
+
+    suspend fun getFinancialTransactions(): List<StoredFinancialTransaction> =
+        withContext(Dispatchers.IO) {
+            database.readFinancialTransactions()
+        }
+
+    suspend fun previewJson(json: String): BankImportPreview = withContext(Dispatchers.IO) {
+        val incoming = PaymentLedgerJsonCodec.decode(json)
+        BankImportDeduplicator.preview(incoming, database.readAll())
+    }
+
+    /**
+     * Zatwierdza import tylko wtedy, gdy podgląd nie zawiera konfliktów.
+     * Duplikaty są pomijane, a cała nowa paczka zapisywana transakcyjnie.
+     */
+    suspend fun importJson(json: String): BatchImportSummary = withContext(Dispatchers.IO) {
+        val incoming = PaymentLedgerJsonCodec.decode(json)
+        database.importBatchRejectingReferenceConflicts(incoming)
+    }
+
+    suspend fun exportJson(): String = withContext(Dispatchers.IO) {
+        PaymentLedgerJsonCodec.encode(database.readAll())
+    }
+
+    override fun close() {
+        database.close()
+    }
+}

@@ -1,11 +1,16 @@
+<!--
+SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # Audyt funkcjonalno-architektoniczny: „Rachunki płatnicze” — rejestr transakcji walutowych i kruszcowych
 
 - **Data:** 14 listopada 2026 r.
 - **Repozytorium:** `bartoszruta26-droid/mObywatel-2.0`
-- **Gałąź audytowana:** `main`
+- **Gałąź audytowana:** `feature/payment-ledger-stage-1`
 - **Commit bazowy:** `631aa68ed0e2bcbedd70201751214bd4c08fd5cc`
 - **Obszar:** `obywatel-android` (Android, Kotlin, Jetpack Compose)
-- **Status:** audyt wymagań i plan wdrożenia; bez zmian funkcjonalnych w kodzie aplikacji.
+- **Status:** etapy 1–2H wdrożone; etap 2I obejmuje parser XML iPKO oraz integrację z ekranem importu, podglądem i atomowym zapisem. Parser CSV/XLS i adapter PDF oraz pełny model transakcji/aktywów pozostają do wykonania. Wyniki CI należy oceniać według konkretnego SHA, a PR #68 pozostaje otwarty i niescalony.
 - **Cel:** przygotowanie nowego, domyślnie widocznego kafelka **Rachunki płatnicze** dla lokalnej ewidencji transakcji wymiany walut i operacji na kruszcach, importu/eksportu danych w JSON oraz wyceny historycznej i bieżącej z wykorzystaniem publicznych danych NBP.
 
 > **Zasada nadrzędna:** rejestr ma wiernie przechowywać to, co faktycznie wydarzyło się w transakcji, i wyraźnie oddzielać dane źródłowe od obliczeń, wycen referencyjnych i hipotetycznych wyników. Kurs NBP nie jest kursem wykonania transakcji w banku ani ofertą, po której użytkownik może rzeczywiście kupić lub sprzedać walutę czy kruszec.
@@ -1075,3 +1080,987 @@ Zakres darowizn należy włączyć do planu jako osobny podetap:
 - [ ] Dodać raporty według organizacji i celu.
 - [ ] Dodać kolekcję `cashDonations` do wersjonowanego JSON.
 - [ ] Dodać testy walidacji, importu/eksportu, raportowania i prywatności.
+
+
+## 19. Dziennik wykonania — etap 1 (14 listopada 2026 r.)
+
+### 19.1. Zakres wykonany w repozytorium
+
+Zmiany wykonano na gałęzi `feature/payment-ledger-stage-1`, bez bezpośredniego modyfikowania `main`.
+
+1. **Kafelek katalogu**
+   - dodano identyfikator `payment_transactions`;
+   - etykieta: „Rachunki płatnicze”;
+   - ikona wykorzystuje istniejący zasób portfela;
+   - kafelek jest domyślnie umieszczany na pulpicie;
+   - grupa katalogu: „Służba finansowa”.
+
+2. **Nawigacja**
+   - dodano trasę typu `SPECIALIZED` w `DocumentRouteRegistry`;
+   - dodano osobny stan ekranu, obsługę trasy i powrotu systemowego w `MainActivity.kt`;
+   - utworzono `PaymentLedgerScreen.kt` jako niezależny szkielet ekranu;
+   - dotychczasowa trasa `receipts` i ekran `ReceiptDocumentsScreen` pozostały odrębne.
+
+3. **Modele domenowe**
+   - dodano `financial/FinancialModels.kt`;
+   - modele obejmują `Asset`, `Fee`, `FinancialTransaction` i `CashDonation`;
+   - dodano klasyfikacje aktywów, typów transakcji, źródeł danych, statusów parsowania i statusów przechowywania darowizn;
+   - darowizna pozostaje odrębnym zdarzeniem, a nazwa organizacji-beneficjenta i cel są obowiązkowe;
+   - kwoty i obliczenia używają `BigDecimal`, bez `Float` i `Double`.
+
+4. **Walidacja i obliczenia**
+   - dodano kontrolę kodu waluty, próby kruszcu, dodatnich ilości, spójności par aktywo/kwota i nieujemnej prowizji;
+   - dodano walidację darowizny, w tym limitu kwoty przekazania względem kwoty przyjętej;
+   - dodano obliczanie jednostkowego kursu wymiany i procentowej zmiany wartości z jawnym kontekstem dziesiętnym.
+
+5. **Testy**
+   - rozszerzono `DocumentRouteRegistryTest` o trasę i domyślną widoczność nowego kafelka;
+   - dodano `FinancialModelsTest` obejmujący aktywa, transakcje, prowizje, darowizny i obliczenia dziesiętne.
+
+### 19.2. Pliki zmienione lub dodane
+
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/MainActivity.kt`
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/DocumentRouteRegistry.kt`
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/PaymentLedgerScreen.kt` — nowy
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/FinancialModels.kt` — nowy
+- `obywatel-android/app/src/test/java/pl/gov/obywatel/android/DocumentRouteRegistryTest.kt`
+- `obywatel-android/app/src/test/java/pl/gov/obywatel/android/FinancialModelsTest.kt` — nowy
+
+### 19.3. Weryfikacja i ograniczenia
+
+- Po zapisie ponownie pobrano z GitHub wszystkie sześć plików i potwierdzono obecność zmian.
+- Sprawdzono tekstowo: wpis katalogu, domyślne położenie kafelka, trasę specjalistyczną, stan ekranu, obsługę powrotu oraz osobny ekran modułu.
+- Sprawdzono, że istniejący identyfikator `receipts` i dotychczasowy ekran rachunków nie zostały zastąpione nową funkcją.
+- Testy jednostkowe zostały dodane, ale samo ich zapisanie nie oznacza, że zostały uruchomione. Wynik kompilacji i testów wymaga potwierdzenia w GitHub Actions dla PR tej gałęzi.
+- Na tym etapie nie ma jeszcze trwałej bazy danych, formularzy transakcji, importu iPKO, archiwum JSON ani integracji NBP. Ekran jest szkieletem nawigacyjnym, a nie ukończoną funkcją użytkową.
+- Parser iPKO nadal wymaga rzeczywistego, zanonimizowanego pliku wzorcowego.
+
+### 19.4. Status etapów po tej zmianie
+
+| Etap | Status |
+|---|---|
+| Etap 0 — doprecyzowanie wzorców | Częściowo; oczekuje na plik iPKO oraz decyzje dotyczące waluty bazowej i metod kosztu |
+| Etap 1 — domena i katalog nawigacji | Zaimplementowany w gałęzi PR; oczekuje na CI i przegląd |
+| Etap 2 — trwały magazyn i ręczne operacje | Nierozpoczęty |
+| Etap 2A — rejestr darowizn | Modele i walidacja przygotowane; magazyn i formularz nierozpoczęte |
+| Etap 3 — import iPKO | Oczekuje na wzorzec pliku |
+| Etap 4 — archiwum JSON | Nierozpoczęty |
+| Etap 4A — JSON darowizn | Nierozpoczęty |
+| Etap 5 — notowania NBP | Nierozpoczęty |
+| Etap 6 — wycena portfela | Tylko podstawowe funkcje matematyczne; silnik kosztu i wyceny nierozpoczęty |
+| Etap 7 — pełny interfejs i raporty | Szkielet ekranu; reszta nierozpoczęta |
+| Etap 7A — raporty darowizn | Nierozpoczęty |
+| Etap 8 — bezpieczeństwo i optymalizacja | Nierozpoczęty |
+| Etap 9 — integracja i wydanie | Nierozpoczęty |
+
+### 19.5. Następny krok
+
+Po pozytywnym CI należy przejść do etapu 2: trwałego lokalnego magazynu i ręcznego dodawania/edycji transakcji oraz darowizn. Przed wyborem Room trzeba ponownie sprawdzić aktualne zależności i uzgodnić migracje; nie dodawać biblioteki ani migracji schematu bez uzasadnienia. Import iPKO pozostaje osobnym etapem zależnym od wzorca.
+
+
+## 20. Kontrola regresyjna i korekta etapu 1
+
+### 20.1. Wynik pierwszego uruchomienia CI
+
+Pierwsze pełne uruchomienie dla rewizji etapu 1 potwierdziło kompilację kodu produkcyjnego i testowego Kotlin, ale zadanie `testDebugUnitTest` zakończyło się niepowodzeniem: 112 testów uruchomiono, 4 testy `DocumentGroupCatalogTest` zakończyły się błędem `IllegalArgumentException`. Dotyczyły one założeń katalogu dokumentów: każdy kafelek musi mieć jawny schemat pól albo być oznaczony jako obsługiwany przez dedykowany edytor.
+
+### 20.2. Przyczyna i korekta
+
+Nowy kafelek `payment_transactions` otwiera własny ekran `PaymentLedgerScreen`, a więc korzysta z dedykowanego ekranu, a nie ze standardowego edytora pól dokumentu. W pierwszej implementacji identyfikator nie został dopisany do dwóch list wyjątków w `DocumentEditorSchemas.kt`. Powodowało to traktowanie go jak nieznanego dokumentu przez testy katalogu.
+
+Korekta:
+- dodano `payment_transactions` do listy dokumentów bez standardowego schematu pól;
+- dodano ten sam identyfikator do listy dokumentów obsługiwanych przez dedykowany edytor;
+- zachowano istniejące definicje pól i zachowanie pozostałych dokumentów.
+
+### 20.3. Status ponownej weryfikacji
+
+- Korektę zapisano na tej samej gałęzi PR w commicie `ee625ce81f9e6b35df87cb9483f90880443b10f5`.
+- Ponownie pobrano `DocumentEditorSchemas.kt` i potwierdzono dwa wystąpienia identyfikatora w odpowiednich listach.
+- Oczekuje się na świeże uruchomienie GitHub Actions dla nowego SHA; do czasu jego zakończenia nie można uznać testów regresyjnych ani kompilacji APK za zaliczone.
+- Nie zmieniano istniejącego modułu `receipts`.
+
+### 20.4. Decyzja o kolejności etapów
+
+Etap 2 (trwały magazyn i formularze) rozpocznie się po zielonym wyniku testów i kompilacji etapu 1. Nie należy budować warstwy danych na bazie nawigacji, która nie przeszła regresji katalogu dokumentów.
+
+
+## 21. Wzorce danych iPKO — analiza czterech załączników (14 listopada 2026 r.)
+
+### 21.1. Zakres materiału źródłowego
+
+Przeanalizowano cztery dostarczone reprezentacje historii operacji:
+- CSV — 3 wiersze operacji;
+- XLS — 3 wiersze operacji;
+- XML — 5 elementów `operation`;
+- PDF — 5 zapisów tabeli historii rachunku.
+
+CSV i XLS zawierają te same trzy zapisy w walucie CHF. XML i PDF zawierają te same pięć zapisów w walucie USD. Nie wolno zakładać, że wszystkie cztery pliki są identycznymi eksportami: obejmują różne zestawy operacji/rachunków/walut.
+
+Łącznie wzorce reprezentują **8 odrębnych zapisów księgowych**:
+- CHF: uznania 617,42 (08.11.2026), 622,29 (03.11.2026) i 6 183,20 (04.03.2026);
+- USD: uznania 749,33 i 751,30 (12.11.2026), 825,85 (20.12.2025) i 829,03 (17.12.2025), a także obciążenie 8 000,00 (04.03.2026).
+
+CSV/XLS stanowią duplikujące się reprezentacje tych samych trzech zapisów. XML/PDF stanowią duplikujące się reprezentacje tych samych pięciu zapisów. Własna referencja zleceniodawcy `90124777` występuje po obu stronach wymiany: jako obciążenie 8 000,00 USD oraz uznanie 6 183,20 CHF. Są to dwa odrębne zapisy księgowe jednej operacji wymiany, a nie duplikat.
+
+### 21.2. Wnioski dla importu
+
+1. Import musi rozdzielać **identyfikator zapisu księgowego** od **identyfikatora operacji nadrzędnej**.
+2. Ten sam zapis z CSV i XLS albo XML i PDF musi otrzymać identyczny identyfikator niezależnie od formatu źródłowego.
+3. Przeciwne nogi wymiany z tym samym numerem FX muszą pozostać osobnymi zapisami (różne waluty, kwoty i kierunki), lecz być powiązane jednym identyfikatorem operacji.
+4. Identyfikacja zapisu uwzględnia zakres rachunku, datę operacji, walutę, kwotę ze znakiem, kierunek, typ operacji i referencję bankową. Kwoty są normalizowane dziesiętnie, bez konwersji do typów zmiennoprzecinkowych.
+5. Gdy referencja bankowa nie występuje, przewidziany jest klucz zastępczy oparty na znormalizowanym opisie. Takie dopasowanie należy traktować ostrożniej i umożliwić oznaczenie konfliktu do ręcznej kontroli.
+6. Pełne numery rachunków, nazwiska, adresy i treści prywatnych wyciągów nie są zapisywane w repozytorium ani w logach CI. Zakres rachunku w identyfikatorze powinien być lokalnym pseudonimem/skrótowym identyfikatorem, a nie pełnym numerem.
+
+### 21.3. Ograniczenia wzorca
+
+- Pliki nie dostarczają kompletnego schematu wszystkich możliwych wariantów eksportu iPKO.
+- XLS jest arkuszem binarnym; w środowisku analitycznym został odczytany przez konwersję do CSV. Aplikacyjny parser XLS nie został jeszcze zaimplementowany.
+- PDF jest dokumentem prezentacyjnym; ekstrakcja tekstu nie jest równoważna stabilnemu API. Parser PDF/OCR wymaga osobnego etapu i testów na kolejnych wzorcach.
+- Nie należy importować podsumowań z pierwszej strony PDF jako dodatkowych transakcji — są agregatami tych samych operacji.
+- Import nie obejmuje logowania do banku ani pobierania danych z konta.
+
+## 22. Etap 2B — identyfikacja i idempotencja importu
+
+### 22.1. Implementacja
+
+Dodano:
+- `financial/BankImportDeduplicator.kt` — model pojedynczego zapisu wyciągu, walidację, stabilny identyfikator zapisu oparty na SHA-256 oraz identyfikator operacji nadrzędnej oparty na referencji FX;
+- `financial/BankImportDeduplicatorTest.kt` — testy identyczności między formatami, deduplikacji wewnątrz jednej paczki i względem istniejącego rejestru, rozdzielenia nóg wymiany oraz klucza zastępczego bez referencji.
+
+Mechanizm `BankImportDeduplicator.classify` klasyfikuje każdy rekord jako nowy albo już istniejący. Jest czystą funkcją planującą import — nie zapisuje danych do magazynu i nie usuwa istniejących rekordów.
+
+### 22.2. Zasada identyfikacji
+
+- `accountingEntryId` identyfikuje pojedynczy zapis księgowy. Obejmuje rachunek w postaci lokalnego zakresu, datę, walutę, kwotę ze znakiem, kierunek, typ operacji i referencję.
+- `exchangeOperationId` wiąże różne zapisy tej samej wymiany na podstawie referencji bankowej. Nie jest kluczem deduplikacji.
+- Normalizacja kwoty usuwa wyłącznie nieistotne zera końcowe zapisu dziesiętnego; nie zmienia wartości liczbowej.
+- Algorytm nie używa `Float` ani `Double`.
+
+### 22.3. Testy i status
+
+Dodano testy jednostkowe, ale ich dodanie nie jest dowodem wykonania. Dla rewizji poprzedzającej etap 2B CI potwierdził sukces zadania testów jednostkowych oraz kompilacji prototypu; walidacja interfejsu Compose pozostawała w toku podczas kontroli. Nowe pliki i aktualizacja audytu wymagają świeżego CI dla najnowszego SHA.
+
+### 22.4. Zakres nadal otwarty
+
+Etap 2B dostarcza mechanizm identyfikacji i klasyfikacji duplikatów, ale nie jest jeszcze kompletnym importerem plików. Do wykonania pozostają: trwały magazyn, transakcyjne zatwierdzanie paczki, parsowanie CSV/XML, obsługa XLS i PDF, podgląd przed importem, raport duplikatów/konfliktów, kontrola sum kontrolnych i testy integracyjne. Import powinien być atomowy: błąd walidacji nie może pozostawić częściowo zaimportowanej paczki.
+
+
+## 23. Etap 2C — trwały magazyn zapisów wyciągów
+
+### 23.1. Implementacja
+
+Dodano `financial/PaymentLedgerDatabase.kt`, oparty na natywnym `SQLiteOpenHelper`, bez wprowadzania nowej zależności zewnętrznej. Magazyn:
+- zapisuje pojedyncze zapisy księgowe w tabeli `bank_statement_entries`;
+- używa `accounting_entry_id` jako klucza głównego i ograniczenia unikalności;
+- przechowuje kwoty jako tekst dziesiętny `BigDecimal.toPlainString()`, bez utraty precyzji;
+- przechowuje datę w formacie ISO-8601;
+- przechowuje identyfikator operacji nadrzędnej FX jako osobne pole i indeks;
+- udostępnia odczyt identyfikatorów oraz odtworzenie zapisów z lokalnej bazy;
+- wykonuje import paczki w transakcji SQLite. Błąd walidacji lub zapisu powoduje wycofanie całej paczki;
+- pomija ponowne rekordy na podstawie klucza głównego (SQLite CONFLICT_IGNORE).
+
+Dodano `androidTest/.../PaymentLedgerDatabaseTest.kt` z testami: ponownego importu tego samego zapisu, wycofania paczki po błędzie walidacji oraz odtworzenia danych po zamknięciu i ponownym otwarciu bazy.
+
+Testy używają oddzielnej nazwy pliku bazy `payment-ledger-test.db`, aby nie dotykać danych aplikacji. Konstruktor magazynu przyjmuje nazwę bazy z domyślną wartością produkcyjną.
+
+### 23.2. Kontrola architektoniczna
+
+- Nie dodano Room ani DataStore; zastosowano natywny SQLite, zgodnie z istniejącym zestawem zależności.
+- Nie zmieniano modułu `receipts`, modelu `ReceiptRecord` ani magazynu dokumentów rachunków.
+- Magazyn zapisuje wyłącznie znormalizowane zapisy wyciągów bankowych. Nie jest jeszcze połączony z ekranem `PaymentLedgerScreen` ani parserami plików.
+- Wersja schematu wynosi 1. Przed zmianą struktury należy dodać jawne migracje, bez destrukcyjnego usuwania danych.
+- Nie dodano pełnych numerów rachunków ani danych osobowych do logów.
+
+### 23.3. Status testów
+
+Przed etapem 2C, dla rewizji `515ac4718dbb4c50c9a19def8ef109cf2e6a0e5f`, CI potwierdził:
+- Android JVM unit tests — success;
+- Build Android debug APK — success;
+- Repository compliance (REUSE) — success;
+- Compose UI tests na emulatorze — success, w toku pozostawało archiwizowanie artefaktu APK.
+
+Etap 2C został zapisany po tej rewizji. Testy instrumentacyjne nowego magazynu, kompilacja i pełny CI dla najnowszej rewizji wymagają ponownego wykonania. Do czasu uzyskania tych wyników etap 2C ma status **zaimplementowany, lecz nieweryfikowany przez CI**.
+
+### 23.4. Ograniczenia i następne prace
+
+1. Wykonać CI dla najnowszej rewizji, w tym testy instrumentacyjne bazy na emulatorze.
+2. Dodać migracje schematu w chwili rozszerzenia magazynu o transakcje finansowe i darowizny.
+3. Podłączyć magazyn do warstwy repozytorium i ekranu, z kontrolą cyklu życia oraz bez wykonywania operacji SQLite na głównym wątku.
+4. Dodać parsery CSV/XML po utrwaleniu pełnych reguł mapowania pól ze wzorców źródłowych.
+5. Dodać podgląd importu, raport duplikatów i konfliktów oraz atomowe zatwierdzanie z UI.
+6. Rozszerzyć magazyn o odrębne tabele operacji FX i darowizn gotówkowych, zachowując rozdział zapisów księgowych od operacji nadrzędnych.
+
+
+## 24. Kontrola CI rewizji etapu 2C i wyników regresji
+
+### 24.1. Rewizja kontrolowana
+
+Kontrola dotyczyła rewizji `e73ce209148da9c1b9cfbed2ceda3654fe5de220`.
+
+- Android prototype build (`43624597335`) — **success**.
+- Repository compliance / REUSE (`43624597230`) — **success**.
+- Android GUI validation (`43624597221`) — w chwili kontroli zadanie jednostkowe zakończyło się sukcesem, a testy Compose na emulatorze nadal trwały.
+- Krok `Run Android unit tests` — **success**.
+- Krok `Run Compose UI tests on Android emulator` — **in_progress**; nie ma podstaw do oznaczenia całego zadania GUI jako zakończonego.
+
+Wniosek: kompilacja i testy jednostkowe rewizji 2C zostały potwierdzone. Pełna walidacja emulatorowa oraz testy instrumentacyjne magazynu nie zostały jeszcze potwierdzone wynikiem końcowym zadania.
+
+## 25. Etap 2D — wersjonowany format JSON wymiany danych
+
+### 25.1. Decyzja architektoniczna
+
+Przyjęto podział odpowiedzialności:
+- **SQLite** jest lokalnym źródłem prawdy i magazynem operacyjnym.
+- **JSON** jest formatem eksportu, importu, kopii zapasowej i przenoszenia danych.
+- JSON nie zastępuje bazy SQLite ani nie staje się równoległym, niezależnym magazynem bieżących zmian.
+
+Takie rozdzielenie pozwala zachować transakcyjność, indeksy i ograniczenia unikalności po stronie SQLite, a jednocześnie zapewnia przenośność danych.
+
+### 25.2. Implementacja
+
+Dodano:
+- `financial/PaymentLedgerJsonCodec.kt` — kodowanie i dekodowanie archiwum wyciągów;
+- `financial/PaymentLedgerJsonCodecTest.kt` — testy formatu i walidacji.
+
+Format zawiera identyfikator `mobywatel-payment-ledger`, pole `schemaVersion` (obecnie 1) i tablicę `entries`. Każdy wpis przechowuje pseudonim zakresu rachunku, datę, kod waluty, kwotę jako tekst dziesiętny, typ operacji, referencję i opis. Referencja może być jawnie pusta. Przed kodowaniem i po dekodowaniu wykonywana jest walidacja modelu.
+
+Kwoty są zapisywane przez `BigDecimal.toPlainString()`; dekoder odtwarza je przez `BigDecimal`, bez konwersji zmiennoprzecinkowej. Nieznana wersja schematu, błędny format, niepoprawny JSON i nieprawidłowe rekordy są odrzucane.
+
+### 25.3. Testy dodane
+
+- pełny cykl encode/decode z zachowaniem dokładnej wartości dziesiętnej i identyfikatora księgowego;
+- zapis i odtworzenie ujemnej kwoty oraz pustej referencji;
+- odrzucenie nieobsługiwanej wersji schematu;
+- odrzucenie nieprawidłowego kodu waluty i uszkodzonego JSON.
+
+Testy zostały dodane do repozytorium; ich wynik wymaga potwierdzenia w CI dla rewizji zawierającej etap 2D.
+
+### 25.4. Zakres i ograniczenia
+
+- Etap 2D dostarcza kodek JSON dla znormalizowanych zapisów wyciągu bankowego. Nie jest jeszcze kompletnym archiwum całej domeny: transakcje finansowe, aktywa, opłaty i darowizny wymagają osobnych sekcji i migracji formatu.
+- Nie dodano jeszcze przycisków eksportu/importu w ekranie ani zapisu zdekodowanej paczki do SQLite.
+- Nie dodano jeszcze parserów CSV/XML ani adapterów XLS/PDF.
+- Kodek nie powinien być traktowany jako bezpieczna kopia zapasowa bez dodatkowej polityki szyfrowania, kontroli integralności i procedury przechowywania pliku.
+- Nie zapisuje się pełnych numerów rachunków; `accountScopeId` ma być pseudonimem lokalnym.
+
+### 25.5. Status etapów
+
+| Obszar | Status po tej rewizji |
+|---|---|
+| Etap 1 — katalog, trasa i ekran bazowy | Zaimplementowany; CI wcześniejszych rewizji wykrył i skorygował regresję katalogu |
+| Etap 2B — identyfikacja i deduplikacja | Zaimplementowany; wymaga dalszego rozszerzenia o konflikty referencji |
+| Etap 2C — SQLite dla zapisów wyciągów | Zaimplementowany; kompilacja i testy jednostkowe potwierdzone dla SHA z sekcji 24; testy emulatorowe nadal w toku przy ostatnim odczycie |
+| Etap 2D — JSON dla zapisów wyciągów | Kodek i testy dodane; oczekuje na CI |
+| Repozytorium i połączenie UI–SQLite | Nierozpoczęte |
+| Ręczne formularze transakcji i darowizn | Nierozpoczęte |
+| Parsery CSV/XML, adaptery XLS/PDF | Nierozpoczęte |
+| Podgląd importu i obsługa konfliktów | Nierozpoczęte |
+| Kursy NBP i wycena | Nierozpoczęte |
+
+### 25.6. Następny etap
+
+Następny etap powinien obejmować warstwę repozytorium z operacjami na SQLite wykonywanymi poza głównym wątkiem, integrację ekranu z odczytem rejestru oraz zatwierdzanie importu JSON jako jednej transakcji. Następnie należy dodać parser CSV/XML na podstawie dokładnych schematów wzorców i dopiero potem osobne adaptery XLS/PDF. Przed importem trzeba rozróżniać duplikaty od konfliktów: zgodna referencja bankowa przy innej kwocie, dacie, walucie lub kierunku wymaga ręcznej weryfikacji, a nie cichego pominięcia.
+
+
+## 26. Etap 2E — repozytorium SQLite i odczyt rejestru w interfejsie
+
+### 26.1. Implementacja
+
+Dodano `financial/PaymentLedgerRepository.kt`:
+- udostępnia odczyt zapisów z SQLite;
+- udostępnia eksport zapisów do wersjonowanego JSON;
+- udostępnia import JSON: dekoduje i waliduje paczkę, klasyfikuje duplikaty względem lokalnej bazy, a następnie przekazuje wyłącznie nowe rekordy do transakcyjnego `importBatch`;
+- operacje odczytu, eksportu i importu wykonuje w `Dispatchers.IO`, poza głównym wątkiem;
+- zwraca podsumowanie liczby dodanych i pominiętych duplikatów.
+
+Zmieniono `PaymentLedgerScreen.kt`:
+- ekran tworzy repozytorium powiązane z kontekstem aplikacji;
+- pobiera historię z SQLite przy otwarciu;
+- wyświetla liczbę i listę zapisów;
+- umożliwia ponowne odczytanie danych;
+- prezentuje stan ładowania i komunikat błędu;
+- zamyka magazyn przy usunięciu ekranu z kompozycji.
+
+### 26.2. Kontrola zakresu
+
+To jest integracja odczytu rejestru, a nie kompletna obsługa importu/eksportu przez użytkownika. Metody repozytorium `importJson` i `exportJson` są gotowe do użycia przez kolejne elementy UI, ale selektor pliku, zapis pliku i ekran podglądu importu pozostają do wykonania.
+
+Mechanizm deduplikacji w repozytorium identyfikuje rekordy o tym samym identyfikatorze księgowym. Nie rozstrzyga jeszcze konfliktów, w których ta sama referencja bankowa ma zmienioną kwotę, datę, walutę lub kierunek. Takie przypadki muszą otrzymać osobną klasyfikację wymagającą weryfikacji przed zatwierdzeniem importu.
+
+### 26.3. Pliki
+
+- `financial/PaymentLedgerRepository.kt` — nowy plik;
+- `PaymentLedgerScreen.kt` — integracja odczytu i wyświetlania historii.
+
+### 26.4. Weryfikacja
+
+Po zapisaniu zmian należy potwierdzić:
+- poprawność importów i zgodność pakietów Kotlin;
+- kompilację wariantu debug;
+- testy jednostkowe, w tym kodeka JSON i deduplikacji;
+- testy instrumentacyjne SQLite;
+- testy Compose na emulatorze.
+
+Wyniki CI dla rewizji zawierającej etap 2E są oczekiwane. Do czasu ich zakończenia etap 2E ma status **zaimplementowany, oczekujący na pełną weryfikację CI**.
+
+### 26.5. Kolejny zakres prac
+
+1. Dodać testy repozytorium obejmujące import JSON, idempotencję i eksport po imporcie.
+2. Dodać klasyfikację konfliktów referencji bankowych i raport podglądu.
+3. Dodać selektor dokumentu i eksport pliku JSON w interfejsie.
+4. Dodać zatwierdzanie importu dopiero po akceptacji podglądu, w jednej transakcji.
+5. Rozszerzyć model i magazyn o transakcje finansowe oraz darowizny, zachowując odrębność od zapisów wyciągu.
+
+
+## 27. Etap 2F/2G — import i eksport JSON z interfejsu oraz podgląd konfliktów
+
+### 27.1. Zakres wdrożenia
+
+Dodano w ekranie `PaymentLedgerScreen.kt` obsługę androidowego selektora dokumentów:
+- wybór pliku JSON przez `ActivityResultContracts.OpenDocument`;
+- odczyt pliku przez `ContentResolver`;
+- przygotowanie podglądu bez modyfikowania bazy;
+- prezentację liczby nowych zapisów, duplikatów i konfliktów;
+- zatwierdzenie importu tylko wtedy, gdy podgląd nie zawiera nierozstrzygniętych konfliktów;
+- eksport aktualnego rejestru do pliku JSON przez `ActivityResultContracts.CreateDocument`.
+
+### 27.2. Klasyfikacja konfliktów
+
+Rozszerzono `BankImportDeduplicator.kt` o:
+- `BankImportPreview` — wynik podglądu z listami nowych zapisów, duplikatów i konfliktów;
+- `BankImportConflict` — parę zapisu przychodzącego i istniejącego;
+- `preview(incoming, existingEntries)` — klasyfikację według identyfikatora księgowego i referencji bankowej w obrębie tego samego pseudonimowego zakresu rachunku.
+
+Identyczny zapis jest duplikatem. Ta sama referencja w tym samym zakresie rachunku przy innej tożsamości księgowej jest konfliktem i blokuje zatwierdzenie paczki. Różne zakresy rachunków zachowują możliwość przedstawienia dwóch nóg jednej wymiany walutowej jako osobnych zapisów.
+
+### 27.3. Warstwa repozytorium
+
+Rozszerzono `PaymentLedgerRepository.kt`:
+- `previewJson` dekoduje i waliduje JSON, a następnie przygotowuje podgląd względem SQLite;
+- `importJson` ponownie oblicza podgląd, odrzuca import z konfliktami i zapisuje zaakceptowane nowe rekordy przez transakcyjne `importBatch`;
+- `exportJson` pozostaje eksportem aktualnego rejestru.
+
+Ponowne obliczenie podglądu przy zatwierdzaniu zabezpiecza przed wykorzystaniem nieaktualnego podglądu, jeśli baza zmieniła się od czasu wybrania pliku.
+
+### 27.4. Testy regresyjne dodane
+
+Rozszerzono `BankImportDeduplicatorTest.kt` o:
+- rozdzielenie identycznego duplikatu, konfliktu tej samej referencji i nowego wpisu;
+- zachowanie dwóch nóg wymiany przy różnych zakresach rachunków.
+
+Testy zostały zapisane w repozytorium. Wynik wykonania wymaga CI dla najnowszej rewizji.
+
+### 27.5. Kontrola poprzedniej rewizji 2E
+
+Uruchomienia CI dla rewizji `de26477e8564de53c4cab404e18593f398d647e1` zostały zakończone statusem **cancelled** po pojawieniu się kolejnych zmian w gałęzi. Nie stanowią potwierdzenia kompilacji ani testów etapu 2E. Kontrola REUSE dla tej rewizji zakończyła się sukcesem, ale nie zastępuje testów Androida.
+
+### 27.6. Ograniczenia i ryzyka
+
+- Import/eksport obejmuje obecnie wyłącznie zapisy wyciągów `BankStatementEntry`, nie pełny model aktywów, opłat, transakcji ręcznych i darowizn.
+- Konflikt jest wykrywany w ramach identycznego `accountScopeId` i referencji bankowej. Referencje powtarzalne w innych bankach lub rachunkach są odrębnymi przypadkami.
+- Użytkownik może odrzucić konfliktowy plik i skorygować dane źródłowe; interfejs nie oferuje jeszcze ręcznego mapowania/rozstrzygania konfliktu.
+- Odczyt pliku JSON odbywa się do pamięci; nie dodano jeszcze limitu wielkości pliku ani strumieniowego dekodowania.
+- Nie dodano jeszcze szyfrowania eksportu ani mechanizmu integralności archiwum.
+- Podgląd i zatwierdzenie wykonują osobne odczyty. Ponowne sprawdzenie przy zatwierdzaniu ogranicza ryzyko nieaktualności, a unikalny klucz SQLite pozostaje ostatnią ochroną przed duplikatem.
+- Ekran nie może być uznany za pełny rejestr wszystkich rodzajów operacji finansowych: tabele transakcji aktywów i darowizn pozostają do wdrożenia.
+
+### 27.7. Status i dalsze prace
+
+| Element | Status |
+|---|---|
+| Wybór pliku JSON | Zaimplementowany; oczekuje na testy urządzenia |
+| Podgląd nowych zapisów i duplikatów | Zaimplementowany |
+| Podgląd konfliktów referencji | Zaimplementowany |
+| Blokada importu z nierozstrzygniętymi konfliktami | Zaimplementowana |
+| Eksport JSON przez selektor dokumentów | Zaimplementowany; oczekuje na testy urządzenia |
+| Testy klasyfikacji konfliktów | Dodane; oczekują na CI |
+| Pełny test import–eksport na emulatorze | Do wykonania |
+| Ręczne rozstrzyganie konfliktów | Do wykonania |
+| Pełny JSON domeny: aktywa, opłaty, transakcje i darowizny | Do wykonania |
+| Parsery CSV/XML i adaptery XLS/PDF | Do wykonania |
+
+Następny etap powinien rozpocząć się od uzyskania zielonego CI dla rewizji 2F/2G, poprawy ewentualnych błędów, a następnie testu urządzeniowego: eksport → import do pustej bazy → porównanie wszystkich pól → ponowny import tego samego pliku i potwierdzenie, że wszystkie wpisy są rozpoznane jako duplikaty.
+
+
+## 28. Etap 2H — atomowość importu, izolowane testy repozytorium i bezpieczna obsługa plików
+
+### 28.1. Ustalenie z przeglądu poprzedniego etapu
+
+Kontrola implementacji 2F/2G wykazała, że odczyt i zapis strumieni SAF odbywał się w korutynach ekranu, ale bez jawnego przeniesienia operacji strumieniowych na `Dispatchers.IO`. Ponadto wstępne sprawdzenie konfliktów i zapis do SQLite były odrębnymi operacjami. Pozostawiało to teoretyczne okno wyścigu: dwa równoległe zatwierdzenia mogłyby sprawdzić ten sam stan przed zapisaniem danych.
+
+### 28.2. Zmiany implementacyjne
+
+**`PaymentLedgerScreen.kt`:**
+- przeniesiono odczyt i zapis pliku przez `ContentResolver` na `Dispatchers.IO`;
+- dodano limit wejściowego pliku JSON wynoszący 10 MiB;
+- dodano ograniczony odczyt strumieniowy, który przerywa operację po przekroczeniu limitu;
+- komunikat błędu informuje o przekroczeniu limitu.
+
+**`PaymentLedgerRepository.kt`:**
+- konstruktor przyjmuje opcjonalną nazwę bazy danych, domyślnie produkcyjną nazwę `PaymentLedgerDatabase.DATABASE_NAME`;
+- umożliwia to testowanie na odizolowanych bazach bez dotykania danych aplikacji;
+- zatwierdzanie importu przekazuje całą paczkę do metody transakcyjnej magazynu.
+
+**`PaymentLedgerDatabase.kt`:**
+- wydzielono wspólny zapis rekordów do `insertEntries`;
+- dodano `importBatchRejectingReferenceConflicts`;
+- metoda rozpoczyna transakcję SQLite, odczytuje istniejące zapisy, klasyfikuje duplikaty i konflikty, a następnie zapisuje nowe rekordy w tej samej transakcji;
+- konflikt referencji powoduje wyjątek i wycofanie transakcji;
+- zachowano unikalny klucz księgowy oraz dotychczasowe przechowywanie kwot jako tekstu dziesiętnego.
+
+### 28.3. Testy integracyjne
+
+Dodano `androidTest/.../PaymentLedgerRepositoryTest.kt` z dwoma scenariuszami:
+
+1. **Pełny cykl i idempotencja:** utworzenie archiwum w bazie źródłowej, eksport JSON, import do odrębnej pustej bazy, porównanie odczytanych wpisów, ponowny import i oczekiwanie na zero nowych wpisów oraz dwa duplikaty.
+2. **Konflikt bez zmiany danych:** zapis bazowego rekordu, przygotowanie archiwum z tą samą referencją i inną kwotą, potwierdzenie konfliktu w podglądzie, odrzucenie importu oraz porównanie bazy przed i po próbie.
+
+Testy korzystają z trzech osobnych nazw baz testowych, usuwanych w metodzie `@After`. Scenariusz konfliktu obejmuje teraz jednocześnie jeden poprawny nowy wpis i jeden wpis konfliktowy; oczekiwaniem jest odrzucenie całej paczki bez zapisania również poprawnego wpisu. Dodatkowe testy JVM sprawdzają zmianę daty, waluty, kierunku i typu operacji przy tej samej referencji oraz konflikt wewnątrz jednej paczki. Dodanie testów nie jest równoznaczne z ich wykonaniem; wymagają uruchomienia w CI.
+
+### 28.4. Kontrola poprawności kodu po zmianach
+
+Ponownie pobrano z gałęzi pliki:
+- `financial/PaymentLedgerDatabase.kt`;
+- `financial/PaymentLedgerRepository.kt`;
+- `PaymentLedgerScreen.kt`;
+- `androidTest/.../PaymentLedgerRepositoryTest.kt`.
+
+Kontrola tekstowa potwierdziła:
+- izolowaną nazwę bazy przekazywaną przez repozytorium;
+- obecność transakcyjnej metody importu z kontrolą konfliktów;
+- przeniesienie operacji SAF na `Dispatchers.IO`;
+- limit 10 MiB dla pliku importu;
+- obecność testów pełnego cyklu oraz testu odrzucenia konfliktu.
+
+Kontrola tekstowa nie zastępuje kompilacji Kotlin, testów Android Instrumented ani testu rzeczywistego selektora dokumentów.
+
+### 28.5. Ograniczenia pozostałe po etapie 2H
+
+- Limit 10 MiB dotyczy pliku wejściowego JSON; pełny eksport nadal jest budowany w pamięci jako łańcuch znaków.
+- Nie dodano jeszcze limitu liczby wpisów w pojedynczym archiwum ani strumieniowego dekodera JSON.
+- Testy integracyjne repozytorium oczekują na wynik emulatorowego CI.
+- Nie wykonano jeszcze ręcznego testu na urządzeniu z dostawcami dokumentów (lokalny magazyn, Dysk, menedżer plików).
+- JSON obejmuje nadal wyłącznie `BankStatementEntry`, a nie całe aktywa, opłaty, transakcje ręczne i darowizny.
+- Parsery CSV/XML oraz adaptery XLS/PDF pozostają do wykonania.
+- Nie zmieniano modułu `receipts`, jego schematu, plików ani tras.
+
+### 28.6. Status etapu
+
+| Element | Status |
+|---|---|
+| Odczyt i zapis plików SAF na IO | Zaimplementowane |
+| Limit wielkości importowanego JSON | Zaimplementowany: 10 MiB |
+| Izolowana baza testowa repozytorium | Zaimplementowana |
+| Test eksport → import → ponowny import | Dodany; oczekuje na wykonanie CI |
+| Test konfliktu i niezmienności bazy, również przy mieszanej paczce | Dodany; oczekuje na wykonanie CI |\n| Testy konfliktów po zmianie daty, waluty, kierunku i typu oraz wewnątrz paczki | Dodane; oczekują na wykonanie CI |
+| Kontrola konfliktu i zapis w jednej transakcji SQLite | Zaimplementowane |
+| Kompilacja Android po etapie 2H | Oczekuje na wynik CI |
+| Testy JVM i instrumentacyjne po etapie 2H | Oczekują na wynik CI |
+| Ręczny test SAF na urządzeniu | Do wykonania |
+
+### 28.7. Następny etap
+
+Po zielonym CI należy przeprowadzić test urządzeniowy plików SAF oraz rozpocząć etap 2I: parser CSV i XML iPKO. Parsery należy budować na podstawie rzeczywistych, zanonimizowanych próbek i testów wzorcowych. Przed implementacją należy ponownie sprawdzić dostępność próbek i ich dokładne nagłówki/tagi; nie wolno zakładać struktury plików na podstawie samych rozszerzeń.
+
+
+## 29. Etap 2H.1 — kontrola testu atomowego importu i korekty składniowe
+
+### 29.1. Wynik ponownego przeglądu
+
+Podczas ponownego odczytu pliku `PaymentLedgerRepositoryTest.kt` wykryto dwie niezgodności w scenariuszu testowym:
+- wyrażenie wielowierszowe kodowania archiwum zostało zapisane z dosłownymi sekwencjami `\\n`, zamiast jako prawidłowe linie kodu Kotlin;
+- po rozszerzeniu paczki o jeden poprawny wpis i jeden konflikt test nadal oczekiwał zera nowych wpisów w samym podglądzie. Prawidłowy podgląd powinien wykazać jeden wpis nowy i jeden konflikt, natomiast dopiero zatwierdzenie powinno odrzucić całą paczkę.
+
+### 29.2. Wykonane korekty
+
+W `androidTest/.../PaymentLedgerRepositoryTest.kt`:
+- poprawiono wyrażenie `PaymentLedgerJsonCodec.encode(...)` na prawidłowy zapis wielowierszowy;
+- poprawiono oczekiwanie podglądu: jeden konflikt i jeden potencjalnie nowy wpis;
+- pozostawiono asercję, że po odrzuceniu zatwierdzenia zawartość bazy jest identyczna z zawartością sprzed importu.
+
+Dzięki temu test rozdziela prawidłowo dwa różne wyniki: klasyfikację paczki i atomowy skutek zatwierdzania.
+
+### 29.3. Kontrola pliku po poprawkach
+
+Ponownie pobrano plik z gałęzi i potwierdzono:
+- brak dosłownych sekwencji `\\n` w wyrażeniu Kotlin;
+- poprawne trzy linie wywołania `encode`;
+- asercję `preview.conflicts.size == 1`;
+- asercję `preview.newEntries.size == 1`;
+- asercję niezmienności rejestru po odrzuconym imporcie.
+
+### 29.4. Status CI
+
+- Dla wcześniejszej rewizji `1ce4b1f6d390417c0c0ef50d49be8bf52065d979` kontrola REUSE i Android prototype build zakończyły się sukcesem. GUI validation zostało anulowane; nie potwierdzono kompletu testów instrumentacyjnych.
+- Uruchomienia dla rewizji pośredniej `f96ab775cebd4511d9f7ffd25c77eacb833b3002` zostały anulowane po kolejnych korektach testu.
+- Korekty testu zostały zapisane w rewizji `02d7a48992a23980cdbf0b9849ee12ce49f1fc47`. Dla tej rewizji nie ma jeszcze końcowego wyniku Android CI.
+
+W związku z tym nie oznacza się kompilacji ani testów instrumentacyjnych najnowszej rewizji jako zaliczonych. Kontrola tekstowa potwierdza poprawność wskazanych linii testu, ale nie zastępuje wykonania Gradle.
+
+### 29.5. Status etapu 2H po korekcie
+
+| Element | Status |
+|---|---|
+| Kod transakcyjnego importu i obsługi SAF | Zaimplementowany |
+| Test pełnego cyklu eksport/import/idempotencja | Dodany; oczekuje na CI |
+| Test atomowego odrzucenia mieszanej paczki | Poprawiony; oczekuje na CI |
+| Testy klasyfikacji zmienionej daty/waluty/kierunku/typu | Dodane; oczekują na CI |
+| Kompilacja Android najnowszej rewizji | Oczekuje na CI |
+| Testy JVM i instrumentacyjne najnowszej rewizji | Oczekują na CI |
+| Ręczny test dostawców SAF | Do wykonania |
+
+### 29.6. Następny krok
+
+Należy uzyskać zielone wyniki CI dla rewizji zawierającej sekcję 29. Dopiero po tym można przejść do parserów CSV/XML iPKO. W repozytorium nie znaleziono plików wzorcowych wyciągów bankowych, dlatego mapowanie nagłówków CSV, struktur XML, kodowania i formatów kwot pozostaje nieustalone. Parserów nie należy implementować na podstawie domysłów.
+
+
+## 30. Etap 2I — parser XML historii rachunku iPKO
+
+### 30.1. Źródło i rozpoznany schemat
+
+Odnaleziono w załącznikach tej rozmowy rzeczywisty plik XML „Zestawienie operacji za 14.11.2025 - 14.11.2026.xml”. Dokument ma strukturę:
+- korzeń `account-history`;
+- sekcję `search` z datami zakresu i elementem `account`;
+- sekcję `operations` zawierającą powtarzalne elementy `operation`;
+- pola operacji: `order-date`, `exec-date`, `type`, `description`, `amount`;
+- atrybut `curr` elementu `amount`.
+
+Próbka zawiera pięć operacji: cztery uznania USD i jedno obciążenie USD. Występują kwoty dziesiętne z kropką, znaki dodatnie/ujemne i referencje w tekście opisu pod etykietą „Referencje własne zleceniodawcy”. Wartości daty zlecenia i wykonania w próbce są zgodne.
+
+Nie znaleziono w dostępnych załącznikach pliku CSV ani XLS. Nie należy więc deklarować parserów tych formatów jako wykonanych ani wyprowadzać ich mapowania z XML/PDF.
+
+### 30.2. Implementacja
+
+Dodano `financial/BankStatementXmlParser.kt`:
+- parser wykorzystuje Android XmlPullParser;
+- wymaga korzenia `account-history`;
+- wyłącza przetwarzanie deklaracji dokumentu DTD;
+- odczytuje datę wykonania, a przy jej braku datę zlecenia;
+- odczytuje typ operacji, kwotę dziesiętną i kod waluty z atrybutu `curr`;
+- wyodrębnia referencję bankową z pola opisu;
+- wymaga przekazania lokalnego pseudonimu `accountScopeId` — nie pobiera i nie zapisuje pełnego numeru rachunku z nagłówka XML;
+- nie zapisuje surowego opisu, który w próbce zawiera numery rachunków kontrahentów, nazwiska i adresy;
+- gdy referencji brak, zapisuje jedynie odcisk SHA-256 opisu połączonego z lokalnym pseudonimem, aby zachować stabilną tożsamość do deduplikacji bez przechowywania jawnego opisu;
+- używa `BigDecimal` do zachowania dokładności kwot;
+- odrzuca brak daty, kwoty, waluty, typu operacji, nieprawidłową walutę/kwotę i dokument bez operacji.
+
+Parser nie jest jeszcze podłączony do przycisku importu w UI ani do automatycznego wyboru zakresu rachunku. Wymagany jest lokalny pseudonim rachunku przekazany przez warstwę wywołującą.
+
+### 30.3. Testy instrumentacyjne
+
+Dodano `androidTest/.../BankStatementXmlParserTest.kt`:
+1. test odczytu pięciu operacji i dokładnych kwot;
+2. test braku numerów rachunków kontrahentów, nazw i adresów w danych wynikowych;
+3. test wymagania pseudonimu rachunku i odrzucania niekompletnej operacji.
+
+Testy korzystają z anonimowej próbki wzorowanej na rzeczywistej strukturze XML. Oczekują czterech dodatnich zapisów i jednego ujemnego, zachowania referencji i dat oraz braku jawnych danych kontrahenta.
+
+### 30.4. Kontrola po implementacji
+
+Ponownie pobrano plik parsera i testu z gałęzi. Kontrola treści potwierdziła:
+- użycie prawidłowych wzorców wyrażeń regularnych dla polskiej etykiety referencji;
+- przekazywanie lokalnego `accountScopeId`;
+- normalizację waluty z użyciem `Locale.ROOT`;
+- walidację korzenia i niepustej listy operacji;
+- nieprzechowywanie surowego opisu;
+- testy dokładności kwot oraz minimalizacji danych.
+
+Jest to kontrola kodu źródłowego. Wynik kompilacji i testów instrumentacyjnych musi zostać potwierdzony w CI dla rewizji zawierającej parser i test.
+
+### 30.5. Ograniczenia i dalsze zadania
+
+- Parser obsługuje rozpoznany wariant XML iPKO `account-history`; inne warianty eksportu wymagają osobnych fixture'ów.
+- Parser nie rozstrzyga automatycznie, do którego lokalnego rachunku przypisać plik. Wywołujący musi przekazać pseudonim.
+- Nie dodano jeszcze interfejsu importu XML ani raportu podglądu XML przed zatwierdzeniem. Wynik parsera powinien przejść przez istniejący `BankImportDeduplicator.preview` i atomowy import SQLite.
+- Nie znaleziono próbek CSV i XLS w dostępnych załącznikach; parsery CSV i XLS są wstrzymane do czasu uzyskania wzorców.
+- PDF wymaga osobnego adaptera ekstrakcji tekstu i testów stron, tabel oraz nagłówków. Nie należy traktować podsumowania z pierwszej strony PDF jako wpisów transakcyjnych.
+- Nie zapisuje się pełnego numeru rachunku z XML ani surowego opisu kontrahenta.
+
+### 30.6. Status etapu
+
+| Element | Status |
+|---|---|
+| Rozpoznanie schematu XML na rzeczywistym załączniku | Wykonane |
+| Parser XML iPKO | Zaimplementowany |
+| Testy XML: pięć operacji, kwoty i referencje | Dodane; oczekują na CI |
+| Test minimalizacji danych osobowych | Dodany; oczekuje na CI |
+| Integracja parsera XML z selektorem plików i podglądem | Do wykonania |
+| Przekazanie lokalnego pseudonimu rachunku z UI | Do wykonania |
+| Parser CSV | Oczekuje na próbkę CSV |
+| Adapter XLS | Oczekuje na próbkę XLS |
+| Adapter PDF | Do wykonania po opracowaniu testów ekstrakcji |
+| Kompilacja i pełny CI po etapie 2I | Oczekuje na wynik |
+
+### 30.7. Następny krok
+
+Najpierw uzyskać zielone CI dla parsera XML. Następnie zintegrować wybór XML z podglądem i atomowym zatwierdzaniem importu. Kolejno przygotować adapter PDF na podstawie rzeczywistej próbki i testów ekstrakcji, a parser CSV/XLS wdrażać dopiero po dostarczeniu tych konkretnych plików.
+
+
+## 31. Etap 2I.1 — integracja importu XML iPKO z ekranem rejestru
+
+### 31.1. Ustalenie z przeglądu
+
+Kontrola po etapie 2I wykazała, że parser XML był dostępny jako klasa, ale ekran `PaymentLedgerScreen` nadal udostępniał wyłącznie import JSON. Użytkownik nie miał zatem możliwości uruchomienia parsera z poziomu aplikacji. Sam parser nie stanowił kompletnej funkcji importu.
+
+### 31.2. Wykonane zmiany
+
+W `PaymentLedgerScreen.kt`:
+- dodano osobny selektor pliku XML przez Android Storage Access Framework;
+- dodano przycisk „Importuj XML iPKO” obok importu JSON;
+- dodano pole lokalnego pseudonimu rachunku z domyślną wartością `ipko-account-1`;
+- UI wyraźnie instruuje, aby nie wpisywać numeru rachunku;
+- plik jest odczytywany poza głównym wątkiem z limitem 10 MiB;
+- parser XML iPKO przekształca operacje do modelu `BankStatementEntry`;
+- wynik parsera jest kodowany istniejącym `PaymentLedgerJsonCodec`, a następnie przekazywany do istniejącego `repository.previewJson`;
+- zatwierdzenie wykorzystuje dotychczasowy `repository.importJson`, a więc istniejącą atomową transakcję SQLite i kontrolę konfliktów referencji;
+- nie powstał odrębny magazyn ani drugi mechanizm deduplikacji.
+
+W `BankStatementXmlParser.kt`:
+- dodano walidację pseudonimu rachunku: 1–64 znaki ASCII, cyfry, kropka, myślnik lub podkreślenie;
+- dodano limit długości wejściowego dokumentu XML;
+- zachowano walidację korzenia `account-history`, wyłączenie przetwarzania DTD, użycie `BigDecimal` i ochronę danych kontrahentów.
+
+### 31.3. Rozszerzone testy
+
+W `BankStatementXmlParserTest.kt`:
+- dodano test przejścia od parsera XML przez kodowanie/dekodowanie JSON do podglądu deduplikacji;
+- dodano test odrzucania nieprawidłowego aliasu i nieoczekiwanego korzenia XML;
+- porównanie kwot w teście round-trip wykonuje się przez `BigDecimal.compareTo`, ponieważ format JSON celowo normalizuje zapis dziesiętny przez usuwanie zbędnych zer końcowych;
+- zachowano test pięciu operacji, referencji, znaków kwot i minimalizacji danych osobowych.
+
+### 31.4. Kontrola kodu po zmianach
+
+Ponownie pobrano z gałęzi:
+- `PaymentLedgerScreen.kt`;
+- `BankStatementXmlParser.kt`;
+- `BankStatementXmlParserTest.kt`;
+- `PaymentLedgerJsonCodec.kt`;
+- `PaymentLedgerRepository.kt`.
+
+Kontrola treści potwierdza obecność selektora XML, pola aliasu, przepływu parser → JSON codec → podgląd → atomowy import oraz walidacji aliasu i limitu XML. Kontrola źródłowa nie zastępuje testu na urządzeniu ani testu instrumentacyjnego.
+
+### 31.5. CI dla rewizji kodu
+
+Rewizja kodu po integracji i poprawkach testu: `957a1c334186bb2daef75b7ab8d6f21b8e72f48a`.
+
+- REUSE / Repository compliance: sukces.
+- Android prototype build: uruchomiony; wynik końcowy należy potwierdzić w Actions.
+- Android GUI validation: uruchomiony; wynik końcowy należy potwierdzić w Actions.
+- Wcześniejsze uruchomienia dla SHA `b93617e6f5652fcb178bd26e89fee764b80a85a2` zostały anulowane po kolejnej poprawce testu i nie są dowodem poprawności najnowszego kodu.
+
+Nie oznacza się kompilacji, testów instrumentacyjnych ani APK jako zaliczonych bez zakończonego wyniku dla właściwej rewizji.
+
+### 31.6. Ograniczenia
+
+- Import XML zakłada rozpoznany wariant eksportu `account-history`.
+- Pseudonim rachunku jest obecnie wpisywany ręcznie; nie ma jeszcze konfiguracji i zapamiętywania wielu aliasów rachunków.
+- Import obejmuje pojedyncze zapisy bankowe. Nie odtwarza jeszcze pełnej dwustronnej transakcji walutowej z pary obciążenie/uznanie; oba zapisy pozostają osobnymi nogami księgowymi.
+- Parser nie jest jeszcze adapterem CSV, XLS ani PDF.
+- Pełny model aktywów, opłat, darowizn i wyceny nie jest jeszcze trwale przechowywany w bazie SQLite.
+
+### 31.7. Status
+
+| Element | Status |
+|---|---|
+| Parser XML iPKO | Zaimplementowany |
+| Wybór XML z poziomu ekranu | Zaimplementowany |
+| Alias rachunku bez numeru rachunku | Zaimplementowany |
+| Limit wejściowego XML | Zaimplementowany |
+| Podgląd przez istniejący mechanizm | Zaimplementowany |
+| Atomowy zapis przez istniejący mechanizm SQLite | Zaimplementowany |
+| Test przepływu XML → JSON → podgląd | Dodany |
+| Test walidacji aliasu i korzenia XML | Dodany |
+| REUSE dla SHA 957a1c3 | Sukces |
+| Kompilacja i testy Android dla SHA 957a1c | Weryfikacja CI |
+| Ręczny test SAF na urządzeniu | Do wykonania |
+| Parser CSV/XLS i adapter PDF | Oczekują na dalsze etapy |
+
+### 31.8. Następny etap
+
+Po uzyskaniu zielonego CI i teście SAF należy dodać bezpieczną konfigurację wielu lokalnych aliasów rachunków, a następnie rozpocząć adapter PDF na podstawie rzeczywistej próbki. Parser CSV i adapter XLS wymagają osobnych plików wzorcowych.
+
+## 32. Etap 2I.2 — korekta deduplikacji dwóch nóg tej samej wymiany FX (14 listopada 2026 r.)
+
+### 32.1. Wykryta niezgodność
+
+Przegląd rzeczywistego przepływu importu ujawnił lukę pomiędzy założeniem audytu a implementacją BankImportDeduplicator.preview:
+- audyt i model rozróżniają pojedynczy zapis księgowy (accountingEntryId) od operacji nadrzędnej (exchangeOperationId);
+- próbka iPKO zawiera tę samą referencję własną zleceniodawcy dla obciążenia USD i uznania CHF;
+- poprzedni podgląd traktował każdą ponowną referencję w obrębie tego samego pseudonimu rachunku jako konflikt, niezależnie od tego, czy rekord stanowił drugą, przeciwną nogę wymiany.
+
+Wcześniejszy test previewKeepsOppositeExchangeLegsWhenAccountScopesDiffer sprawdzał jedynie przypadek dwóch różnych zakresów rachunku. Nie zabezpieczał przypadku, w którym obie nogi operacji znajdują się w jednym zakresie rachunku. W praktyce mogło to blokować prawidłowy import drugiej nogi FX.
+
+### 32.2. Wykonana korekta
+
+W financial/BankImportDeduplicator.kt:
+- zastąpiono mapę pojedynczego rekordu dla referencji grupowaniem rekordów według referencji;
+- dodano wąską regułę isOppositeFxLeg;
+- ta sama referencja może wskazywać dwie odrębne nogi wyłącznie wtedy, gdy oba typy opisują wymianę kantorową, jedna noga jest uznaniem, druga obciążeniem, waluty są różne, a znaki kwot przeciwne;
+- wszystkie pozostałe rozbieżności z tą samą referencją nadal są konfliktami wymagającymi ręcznej weryfikacji;
+- duplikacja nadal jest wykrywana wcześniej przez accountingEntryId, a exchangeOperationId pozostaje identyfikatorem wiążącym nogi, nie kluczem deduplikacji.
+
+W financial/BankImportDeduplicatorTest.kt dodano regresję obejmującą dwie przeciwne nogi tej samej wymiany, ten sam pseudonim rachunku i referencję, brak konfliktu w podglądzie oraz późniejszy import drugiej nogi przy obecności pierwszej w rejestrze. Dotychczasowe testy konfliktów zmiany daty, waluty, kierunku i typu pozostawiono bez zmiany.
+
+### 32.3. Kontrola zapisu
+
+Zmiany zapisano na feature/payment-ledger-stage-1:
+- BankImportDeduplicator.kt — commit aa667e37fa93b4d80f9340ff6d76131864773195;
+- BankImportDeduplicatorTest.kt — commit 3c4050797aa75f65d0614f87620fd538ea2ce992.
+
+Po zapisie ponownie pobrano oba pliki z GitHub i potwierdzono grupowanie rekordów o wspólnej referencji, wywołanie reguły isOppositeFxLeg, warunki rozróżnienia nóg FX oraz obecność testu dla tego samego pseudonimu rachunku. Zachowano testy konfliktów.
+
+### 32.4. CI i artefakty — rozdzielenie rewizji
+
+Dla wcześniejszej rewizji kodu 957a1c334186bb2daef75b7ab8d6f21b8e72f48a:
+- REUSE / Repository compliance — sukces;
+- Android JVM unit tests w zadaniu assemble-debug — sukces;
+- Android debug APK — kompilacja i przesłanie artefaktu zakończone sukcesem;
+- artefakt obywatel-android-debug istnieje, ale został zbudowany dla SHA 957a1c3, czyli przed korektą z rozdziału 32;
+- Android GUI validation — anulowana podczas kroku Compose UI tests; kompilacja APK w tym zadaniu została pominięta.
+
+Artefakt dla SHA 957a1c3 nie potwierdza poprawności ani nie zawiera korekty z rozdziału 32. Nie należy przedstawiać go jako wydania najnowszego kodu. Dla rewizji 3c4050797aa75f65d0614f87620fd538ea2ce992 w chwili aktualizacji audytu nie było jeszcze powiązanego wyniku workflow. Testy jednostkowe, emulatorowe i kompilacja APK po korekcie pozostają do potwierdzenia.
+
+### 32.5. Status etapu i pozostałe ograniczenia
+
+| Element | Status |
+|---|---|
+| Rozpoznanie dwóch nóg FX ze wspólną referencją | Skorygowana reguła |
+| Dwie nogi w tym samym zakresie rachunku | Test regresyjny dodany |
+| Zwykłe konflikty tej samej referencji | Zachowana blokada |
+| Ponowny import istniejącej nogi | Deduplikacja przez accountingEntryId |
+| Testy JVM po korekcie | Oczekują na CI dla SHA 3c40507 |
+| Testy Compose i instrumentacyjne po korekcie | Oczekują na CI |
+| APK zawierający korektę | Niepotwierdzony |
+| Konfiguracja wielu aliasów rachunków | Do wykonania |
+| Ręczny test SAF na urządzeniu | Do wykonania |
+
+Następny krok: uzyskać pełny wynik CI dla aktualnego SHA, a następnie wykonać etap konfiguracji wielu pseudonimów rachunków. Konfiguracja powinna być lokalna, nie przechowywać pełnych numerów rachunków i wymagać jawnego przypisania wybranego pliku do aliasu. Nie należy rozpoczynać parserów CSV/XLS bez rzeczywistych plików wzorcowych ani adaptera PDF bez próbki PDF i testów ekstrakcji.
+
+## 33. Etap 2J — trwała konfiguracja wielu pseudonimów rachunków (14 listopada 2026 r.)
+
+### 33.1. Stan wyjściowy i zakres
+
+Po etapie 2I.1 ekran importu XML przyjmował pojedynczy alias wpisywany ręcznie. Wartość była przechowywana wyłącznie w stanie ekranu Compose, więc lista rachunków nie była trwała i użytkownik musiał ponownie wpisywać pseudonim. Audyt wskazywał konfigurację wielu aliasów jako kolejny krok.
+
+Zakres etapu obejmuje lokalną rejestrację pseudonimów, ich wybór przed importem XML oraz migrację istniejącej bazy bez utraty zapisów. Nie przechowuje się numerów rachunków bankowych ani danych logowania.
+
+### 33.2. Zmiany w SQLite
+
+W PaymentLedgerDatabase.kt:
+- podniesiono DATABASE_VERSION z 1 do 2;
+- dodano tabelę payment_account_scopes z kluczem głównym account_scope_id i unikalną etykietą display_name;
+- przy tworzeniu nowej bazy dodawany jest domyślny alias ipko-account-1 / Rachunek iPKO 1;
+- migracja wersji 1 tworzy tabelę aliasów i odtwarza w niej wszystkie dotychczasowe account_scope_id na podstawie istniejących zapisów bank_statement_entries;
+- migracja zachowuje identyfikatory i dane istniejących wpisów, a następnie dodaje domyślny alias, jeśli nie koliduje z istniejącym wpisem;
+- dodano odczyt listy aliasów oraz zapis/aktualizację aliasu w transakcji SQLite;
+- identyfikator aliasu jest walidowany wzorcem 1–64 znaków ASCII: litery, cyfry, kropka, myślnik i podkreślenie; etykieta ma 1–64 znaki;
+- blokowana jest próba przypisania tej samej etykiety do dwóch różnych identyfikatorów.
+
+### 33.3. Repozytorium i ekran
+
+W PaymentLedgerRepository.kt dodano metody getAccountScopes i saveAccountScope; operacje bazodanowe wykonują się na Dispatchers.IO.
+
+W PaymentLedgerScreen.kt:
+- ekran pobiera listę zapisanych aliasów razem z historią rejestru;
+- alias można zapisać z poziomu ekranu;
+- zapisane aliasy są prezentowane jako wybieralne pozycje;
+- wybrany alias jest przekazywany do parsera XML iPKO, który nadal waliduje identyfikator przed przetworzeniem dokumentu;
+- JSON zachowuje dotychczasowy format i istniejący przepływ importu; wybór aliasu dotyczy importu XML, ponieważ JSON zawiera już accountScopeId w rekordach.
+
+Interfejs na tym etapie dodaje i wybiera aliasy. Nie dodano usuwania aliasów, aby uniknąć osierocenia historii bankowej; identyfikator aliasu jest elementem tożsamości księgowej wpisów i nie powinien być zmieniany po imporcie.
+
+### 33.4. Testy dodane
+
+W PaymentLedgerDatabaseTest.kt dodano test, który tworzy bazę w schemacie wersji 1, zapisuje istniejący wpis, otwiera ją przez wersję 2, sprawdza odtworzenie aliasu, zachowanie wpisu, dodanie kolejnego aliasu i trwałość po ponownym otwarciu bazy. Dodano także test odrzucania niebezpiecznego identyfikatora oraz powtórzonej etykiety.
+
+W PaymentLedgerRepositoryTest.kt dodano test metod repozytorium, dwóch aliasów i ich trwałości po zamknięciu oraz ponownym otwarciu repozytorium.
+
+### 33.5. Kontrola kodu i CI
+
+Zmiany kodu zapisano na feature/payment-ledger-stage-1 w commitach:
+- PaymentLedgerDatabase.kt — 36ad482d7c06b5d6241fa36fb0e07a87c0acb04f;
+- PaymentLedgerRepository.kt — 66cb4df83bc9c2e548152c78044ea89084a004a5;
+- PaymentLedgerScreen.kt — 414ff7ffcbb0f516e33efebcf8ab145d941968d2;
+- PaymentLedgerDatabaseTest.kt — 707b60ad0e94fe7746a2033b30b2ae991937d202;
+- PaymentLedgerRepositoryTest.kt — 6e746d8a4fedd502c155690af0d78ee9f3751da7.
+
+Po zapisaniu ponownie pobrano z GitHub wszystkie pięć plików. Kontrola treści potwierdziła wersję bazy 2, tabelę aliasów, migrację SELECT DISTINCT z dotychczasowych zapisów, metody repozytorium, selektor aliasów na ekranie i oba testy trwałości/migracji.
+
+Dla wcześniejszej rewizji 6763f2abaeecc57105163d3e9b6204038d467ef2 testy JVM i kompilacja Android debug APK zakończyły się sukcesem; artefakt obywatel-android-debug jest przypisany do dokładnie tego SHA. Testy Compose UI na emulatorze zostały anulowane podczas kolejnej aktualizacji gałęzi. Ten artefakt nie zawiera etapu 2J.
+
+Dla bieżącej rewizji 6e746d8a4fedd502c155690af0d78ee9f3751da7 w chwili zapisu rozdziału 33 nie było jeszcze opublikowanego wyniku CI ani artefaktu. Testy JVM, instrumentacyjne (w tym migracja bazy), testy Compose i kompilacja APK dla etapu 2J pozostają do potwierdzenia. Kontrola źródłowa nie zastępuje wykonania testów.
+
+### 33.6. Status i dalsze ograniczenia
+
+| Element | Status |
+|---|---|
+| Wiele pseudonimów rachunków | Zaimplementowano |
+| Trwałość aliasów w SQLite | Zaimplementowano |
+| Migracja schematu 1 → 2 | Zaimplementowano; test dodany |
+| Odtworzenie aliasów istniejących wpisów | Zaimplementowano w migracji |
+| Dodawanie i wybór aliasu w UI | Zaimplementowano |
+| Brak przechowywania pełnych numerów rachunków | Zachowano |
+| Testy JVM dla rewizji 2J | Oczekują na CI |
+| Test migracji i test repozytorium na emulatorze | Dodane; oczekują na CI |
+| APK zawierający etap 2J | Niepotwierdzony |
+| Zmiana/łączenie aliasów po imporcie | Celowo nieobsługiwane |
+| Usuwanie aliasów | Odłożone, aby nie osierocić historii |
+| Ręczny test SAF na urządzeniu | Do wykonania |
+
+Następny etap po zielonym CI: powiązanie dwóch nóg FX w odrębny model transakcji nadrzędnej bez łączenia ani usuwania zapisów księgowych, a następnie import PDF na podstawie rzeczywistej próbki. CSV i XLS nadal wymagają plików wzorcowych.
+
+### 33.7. Dodatkowa kontrola bezpieczeństwa wątku UI/IO
+
+Podczas końcowego przeglądu przepływu importu XML wykryto, że identyfikator aliasu Compose był odczytywany wewnątrz bloku Dispatchers.IO. Poprawiono to w PaymentLedgerScreen.kt: wybrany pseudonim jest teraz przechwytywany na wątku UI przed uruchomieniem pracy asynchronicznej i dopiero jego niezmienna wartość jest przekazywana parserowi. Eliminuje to odczyt stanu Compose z wątku roboczego i gwarantuje, że plik zostanie przypisany do aliasu wybranego w chwili rozpoczęcia importu.
+
+Zmiana: commit d9388fdd5fa902ef204da74355cf4f99225f87a5. Po zapisie ponownie pobrano PaymentLedgerScreen.kt i potwierdzono przechwycenie selectedAccountScopeId przed Dispatchers.IO oraz przekazanie tej wartości do BankStatementXmlParser.parse. Ten commit jest najnowszą rewizją kodu etapu 2J. Testy JVM, instrumentacyjne, Compose UI i kompilacja APK dla SHA d9388fdd5fa902ef204da74355cf4f99225f87a5 pozostają do potwierdzenia w CI; wcześniejsze zadania dla SHA 6e746d8 zostały anulowane po kolejnej aktualizacji kodu i nie stanowią dowodu dla końcowej rewizji.
+
+## 34. Etap 2K — projekcja nadrzędnych operacji FX i zabezpieczenie rejestracji aliasu (14 listopada 2026 r.)
+
+### 34.1. Korekta spójności aliasów rachunków
+
+Kontrola etapu 2J wykazała przypadek brzegowy: pole aliasu na ekranie pozwalało wpisać nowy identyfikator, a następnie rozpocząć import XML bez uprzedniego użycia przycisku „Zapisz alias”. Wpis bankowy mógł wtedy otrzymać account_scope_id, którego nie było w tabeli payment_account_scopes. Po ponownym uruchomieniu aplikacji taki zakres nie pojawiałby się na liście aliasów.
+
+Poprawiono PaymentLedgerScreen.kt. Po wyborze pliku XML ekran pobiera zapisane zakresy i przed parsowaniem rejestruje brakujący alias pod wpisanym identyfikatorem. Zapis wykorzystuje walidację i transakcję SQLite istniejącej metody saveAccountScope. Identyfikator wybrany przez użytkownika jest nadal przechwytywany przed pracą Dispatchers.IO i ta sama niezmienna wartość trafia do parsera XML. Zmiana: commit d3159ab61d1850c91250fdfae1664b1f9b833a0b.
+
+### 34.2. Projekcja operacji nadrzędnych FX
+
+Dotychczas model BankStatementEntry reprezentował pojedyncze zapisy księgowe i udostępniał exchangeOperationId(), ale brakowało odrębnej funkcji, która odczytowo grupowałaby nogi tej samej wymiany. Dodano:
+- financial/BankExchangeOperation.kt — model BankExchangeOperation, statusy COMPLETE, SINGLE_LEG i REVIEW_REQUIRED oraz BankExchangeOperationProjector;
+- test BankExchangeOperationTest.kt.
+
+Projektor grupuje rekordy według exchangeOperationId. Status COMPLETE nadaje wyłącznie grupie zawierającej dokładnie dwa zapisy kantorowe w różnych walutach i o przeciwnych znakach kwot. Pojedynczą nogę oznacza SINGLE_LEG, a grupy wieloelementowe lub niespełniające warunków pary oznacza REVIEW_REQUIRED. Zwraca oryginalne rekordy jako listę legs; nie łączy ich, nie usuwa, nie przelicza kwot i nie modyfikuje magazynu SQLite. W ten sposób zachowano rozdział zapisu księgowego i operacji nadrzędnej.
+
+Testy obejmują rzeczywisty przykład 8 000 USD obciążenia i 6 183,20 CHF uznania z referencją 90124777, zachowanie dwóch odrębnych identyfikatorów księgowych, pojedynczą nogę, niejednoznaczną grupę trzech wpisów oraz rekord bez referencji.
+
+### 34.3. Zapis i kontrola źródeł
+
+Zmiany zapisano na feature/payment-ledger-stage-1:
+- PaymentLedgerScreen.kt — d3159ab61d1850c91250fdfae1664b1f9b833a0b;
+- BankExchangeOperation.kt — d7f72e170b3cc2f2b7b1e8d27ed443ed840b9f94;
+- BankExchangeOperationTest.kt — e46df0a2e12db2806874301f154347b1709fbe29.
+
+Po zapisie ponownie pobrano te pliki z GitHub. Potwierdzono automatyczną rejestrację aliasu przed parsowaniem, przechwycenie identyfikatora poza blokiem IO, istnienie projektora, trzy statusy operacji oraz testy pary kompletnej, pojedynczej nogi i grupy wymagającej kontroli.
+
+### 34.4. CI i zakres potwierdzenia
+
+Dla SHA e46df0a2e12db2806874301f154347b1709fbe29 GitHub Actions uruchomił:
+- Repository compliance (alfa) — in_progress w chwili aktualizacji audytu;
+- Android prototype build — in_progress;
+- Android GUI validation — in_progress.
+
+Nie ma jeszcze potwierdzenia wykonania testów JVM, testów emulatorowych ani kompilacji APK dla tej rewizji. Wcześniejszy APK z rewizji 6763f2a nie zawiera etapów 2J i 2K; nie może być traktowany jako artefakt aktualnego kodu. PR #68 pozostaje otwarty i niescalony.
+
+### 34.5. Status i ograniczenia
+
+| Element | Status |
+|---|---|
+| Automatyczna rejestracja aliasu użytego w imporcie XML | Zaimplementowano |
+| Zachowanie aliasu po ponownym uruchomieniu | Oparte na tabeli SQLite; testy migracji i trwałości dodane w etapie 2J |
+| Grupowanie nóg FX według exchangeOperationId | Zaimplementowano jako projekcję odczytową |
+| Walidacja pary FX | COMPLETE tylko dla dwóch przeciwnych nóg kantorowych w różnych walutach |
+| Niepełne i niejednoznaczne operacje | Oznaczane SINGLE_LEG / REVIEW_REQUIRED |
+| Zachowanie odrębnych zapisów księgowych | Zachowano i objęto testem |
+| Trwała tabela operacji nadrzędnych FX | Nie dodano; projektor odtwarza grupy z zapisów źródłowych |
+| Prezentacja grup FX na ekranie | Do wykonania |
+| Testy JVM/Android dla SHA 2K | Oczekują na CI |
+| APK zawierający etapy 2J i 2K | Niepotwierdzony |
+| Ręczny test importu SAF na urządzeniu | Do wykonania |
+
+Następny etap: po pozytywnym CI wyświetlić operacje FX jako grupy z rozwijanymi nogami źródłowymi, a następnie dodać trwały model transakcji finansowej i prowizji, zachowując relację do zapisów wyciągu. Import PDF należy rozpocząć na podstawie istniejącej rzeczywistej próbki PDF, sprawdzając ekstrakcję tabeli i pomijanie podsumowań. CSV/XLS nie powinny być rozwijane bez dostępnych plików wzorcowych.
+
+## 35. Etap 2L — prezentacja operacji FX jako grup i izolacja identyfikatorów (14 listopada 2026 r.)
+
+### 35.1. Kontrola stanu wyjściowego
+
+Przed rozpoczęciem etapu ponownie sprawdzono PR #68, gałąź `feature/payment-ledger-stage-1`, audyt i workflow dla rewizji `32143b915c40ec70c985e9276c5a317fd1778c8c`.
+
+Dla tej rewizji:
+- Repository compliance / REUSE — zakończone sukcesem;
+- Android prototype build — zakończony sukcesem; testy JVM oraz budowa debug APK zakończyły się sukcesem;
+- artefakt `obywatel-android-debug` został przypisany dokładnie do SHA `32143b915c40ec70c985e9276c5a317fd1778c8c`;
+- Android GUI validation — testy Compose na emulatorze pozostawały w toku w chwili rozpoczęcia etapu 2L.
+
+Artefakt poprzedniej rewizji nie jest używany jako dowód dla nowych zmian etapu 2L.
+
+### 35.2. Wykryte ryzyko identyfikacji operacji nadrzędnej
+
+Przegląd `BankStatementEntry.exchangeOperationId()` wykazał, że identyfikator operacji FX był wyliczany wyłącznie z referencji bankowej. Referencja może zostać ponownie użyta w innym dniu, dlatego samo grupowanie po referencji groziło połączeniem niezależnych operacji. Jednocześnie nogi jednej wymiany mogą występować w różnych lokalnych zakresach rachunków, więc zakres rachunku nie może być warunkiem wspólnego identyfikatora operacji.
+
+### 35.3. Wykonane zmiany
+
+1. **Zakres identyfikatora FX**
+   - identyfikator operacji jest teraz wyliczany z daty księgowania i znormalizowanej referencji; celowo pomija pseudonim rachunku, aby zachować łączenie nóg wymiany z różnych zakresów;
+   - identyfikator nadal jest skrótem SHA-256 i nie zawiera jawnej referencji;
+   - dwie nogi tej samej operacji w tym samym rachunku i dniu zachowują wspólny identyfikator;
+   - ta sama referencja w innym dniu otrzymuje odrębny identyfikator, a nogi z różnych zakresów rachunków w tym samym dniu nadal mogą tworzyć jedną operację;
+
+2. **Widok grup FX w ekranie**
+   - ekran wylicza projekcję `BankExchangeOperationProjector.project(entries)` z danych odczytanych z SQLite;
+   - operacje FX są prezentowane jako grupy nadrzędne;
+   - każda grupa pokazuje status: kompletna, niepełna — jedna noga, albo wymagająca weryfikacji;
+   - przycisk rozwija lub zwija oryginalne zapisy źródłowe z datą, walutą, kwotą ze znakiem i typem operacji;
+   - nogi już pokazane w grupie są wyłączone z osobnej listy zapisów, aby nie wyświetlać ich podwójnie;
+   - zapisy źródłowe pozostają odrębnymi rekordami; UI nie sumuje ich, nie usuwa i nie przelicza.
+
+3. **Minimalizacja prezentacji danych**
+   - w nowej liście zapisów i rozwiniętych nogach nie wyświetla się pola opisu bankowego, które może zawierać dane kontrahenta;
+   - zachowano datę, walutę, kwotę, typ operacji i status grupy.
+
+### 35.4. Test regresyjny
+
+Rozszerzono `BankExchangeOperationTest.kt` o test tej samej referencji:
+- dwie przeciwne nogi FX z różnych pseudonimów rachunków i tego samego dnia powinny utworzyć jedną grupę `COMPLETE`;
+- ponowne użycie referencji w kolejnym dniu powinno utworzyć odrębną grupę `SINGLE_LEG`.
+
+Test chroni jednocześnie przed błędnym rozdzieleniem nóg między zakresami i przed scaleniem ponownie użytej referencji z innego dnia. Istniejący test pary 8 000 USD / 6 183,20 CHF nadal sprawdza zachowanie dwóch odrębnych identyfikatorów księgowych.
+
+### 35.5. Zapis i kontrola źródeł
+
+Zmiany zapisano na `feature/payment-ledger-stage-1`:
+- `PaymentLedgerScreen.kt` — commit `1d89b0ed5b2868aab856fca27d724b22a84cdd71`;
+- `BankImportDeduplicator.kt` — commit `7e3c1f0b95b2c3a28bb324ecbf874db9f043c554`;
+- `BankExchangeOperationTest.kt` — commit `f7f65d7f8e54819e2ae89f926fab3b2fe03847aa`;
+- `PaymentLedgerDatabase.kt` — commit `dce1d4194ec32fd5f091d264cd295a4a9df6fc21`;
+- `PaymentLedgerDatabaseTest.kt` — commit `d179bb6207e8d4e71ff7dc09efb5ed4c38ebd6b1`;
+
+Po zapisaniu ponownie pobrano wszystkie zmienione pliki z GitHub. Kontrola treści potwierdziła:
+- wyświetlanie grup FX i statusów;
+- rozwijanie źródłowych nóg operacji;
+- wykluczanie nóg z osobnej listy;
+- brak prezentacji surowego opisu w nowym widoku;
+- włączenie daty i referencji do identyfikatora operacji przy zachowaniu możliwości parowania nóg z różnych zakresów;
+- obecność testu parowania nóg z różnych zakresów oraz rozdzielenia ponownie użytej referencji między dniami.
+
+### 35.6. Dodatkowa korekta klasyfikacji i migracji
+
+Przegląd ekranu ujawnił, że `exchangeOperationId()` zwracał identyfikator dla każdego wpisu z referencją, również dla zwykłego przelewu. Projektor mógł zatem prezentować zwykłe operacje jako niepełne wymiany walut. Skorygowano regułę: identyfikator nadrzędny powstaje wyłącznie dla typu zawierającego oznaczenie `WYMIANA W KANTORZE` i niepustej referencji.
+
+Ponieważ SQLite przechowuje również wyliczony `exchange_operation_id`, sama zmiana funkcji nie wystarczała dla już zapisanych rekordów. Podniesiono wersję bazy z 2 do 3 i dodano migrację, która odtwarza identyfikatory z pól źródłowych oraz czyści identyfikatory dla zwykłych operacji. Nie zmienia ona `accounting_entry_id`, kwot ani zapisów źródłowych.
+
+Dodano test jednostkowy potwierdzający, że zwykły przelew z referencją nie jest projektowany jako FX, oraz test instrumentacyjny migracji wersji 2 → 3 sprawdzający aktualizację identyfikatora FX i wyczyszczenie pola dla przelewu. Testy wymagają potwierdzenia w CI.
+
+### 35.7. Status weryfikacji i ograniczenia
+
+| Element | Status |
+|---|---|
+| Projekcja grup FX na ekranie | Zaimplementowana |
+| Rozwijanie i zwijanie źródłowych nóg | Zaimplementowane |
+| Statusy COMPLETE / SINGLE_LEG / REVIEW_REQUIRED | Wyświetlane |
+| Brak podwójnego wyświetlania nóg FX | Zaimplementowano filtrowanie |
+| Ograniczenie identyfikatora FX do operacji kantorowych, daty i referencji (bez zakresu rachunku) | Zaimplementowane |
+| Test regresyjny nóg z różnych zakresów i ponownego użycia referencji w innym dniu | Dodany; oczekuje na CI |
+| Test zwykłego przelewu z referencją (wykluczenie z FX) | Dodany; oczekuje na CI |
+| Migracja bazy 2 → 3 dla identyfikatorów FX | Zaimplementowana; test instrumentacyjny oczekuje na CI |
+| Testy jednostkowe dla nowej rewizji | Oczekują na CI |
+| Testy Compose na emulatorze dla nowej rewizji | Oczekują na CI |
+| APK dla nowej rewizji etapu 2L | Niepotwierdzony |
+| Ręczny test importu SAF na urządzeniu | Nadal do wykonania |
+| Trwała tabela nadrzędnych operacji FX | Nie dodano; grupy są projekcją odczytową |
+
+Zmiana identyfikatora nie zmienia kluczy księgowych ani danych źródłowych; wymagała jednak migracji pola pomocniczego `exchange_operation_id`, ponieważ jest ono utrwalane w SQLite. Migracja wersji 2 → 3 została dodana. Przed wprowadzeniem trwałej tabeli operacji FX należy nadal zweryfikować, czy w innych wariantach wyciągów nogi jednej wymiany zawsze mają tę samą datę księgowania; pseudonim rachunku może być różny i nie jest częścią identyfikatora nadrzędnego.
+
+### 35.7. Następny etap
+
+Po zielonym CI dla etapu 2L należy przejść do trwałego modelu transakcji finansowych i prowizji, powiązanego z zapisami bankowymi bez ich scalania. Równolegle należy wykonać test urządzeniowy SAF. Adapter PDF powinien być oparty na rzeczywistym wzorcu i testach ekstrakcji; parserów CSV/XLS nie należy implementować bez plików wzorcowych.
