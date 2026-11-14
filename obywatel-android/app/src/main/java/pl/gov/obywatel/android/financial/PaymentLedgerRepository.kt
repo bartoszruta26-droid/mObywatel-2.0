@@ -47,12 +47,12 @@ class PaymentLedgerRepository(
      * Duplikaty są pomijane, a cała nowa paczka zapisywana transakcyjnie.
      */
     suspend fun importJson(json: String): BatchImportSummary = withContext(Dispatchers.IO) {
-        val incoming = PaymentLedgerJsonCodec.decode(json)
-        database.importBatchRejectingReferenceConflicts(incoming)
+        val archive = PaymentLedgerJsonCodec.decodeArchive(json)
+        database.importArchive(archive)
     }
 
     suspend fun exportJson(): String = withContext(Dispatchers.IO) {
-        PaymentLedgerJsonCodec.encode(database.readAll())
+        PaymentLedgerJsonCodec.encode(database.readAll(), database.readFinancialTransactions())
     }
 
     override fun close() {
