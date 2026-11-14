@@ -85,4 +85,30 @@ class BankImportDeduplicatorTest {
         assertEquals(a.accountingEntryId(), b.accountingEntryId())
         assertNull(a.exchangeOperationId())
     }
+
+    @Test
+    fun previewSeparatesDuplicatesFromConflictingReference() {
+        val existing = entry()
+        val exactDuplicate = entry(amount = "749.330")
+        val conflict = entry(amount = "750.00")
+        val newRecord = entry(reference = "NEW-REF", amount = "10.00")
+        val preview = BankImportDeduplicator.preview(
+            incoming = listOf(exactDuplicate, conflict, newRecord),
+            existingEntries = listOf(existing)
+        )
+        assertEquals(1, preview.duplicates.size)
+        assertEquals(1, preview.conflicts.size)
+        assertEquals(1, preview.newEntries.size)
+        assertEquals("750.00", preview.conflicts.single().incoming.signedAmount.toPlainString())
+    }
+
+    @Test
+    fun previewKeepsOppositeExchangeLegsWhenAccountScopesDiffer() {
+        val debit = entry(currency = "USD", amount = "-8000", reference = "FX-1", account = "usd")
+        val credit = entry(currency = "CHF", amount = "6183.20", reference = "FX-1", account = "chf")
+        val preview = BankImportDeduplicator.preview(listOf(debit, credit), emptyList())
+        assertEquals(2, preview.newEntries.size)
+        assertEquals(0, preview.conflicts.size)
+    }
+
 }
