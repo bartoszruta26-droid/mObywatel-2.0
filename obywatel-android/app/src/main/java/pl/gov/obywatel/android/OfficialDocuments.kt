@@ -34,6 +34,255 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 private data class OfficialDocType(val id:String, val title:String, val fields:List<String>, val note:String = "")
+// Dodatkowy katalog służb mundurowych, publicznych, ratowniczych i zawodów ustawowych.
+private fun publicServiceDoc(id: String, title: String): OfficialDocType {
+    val fields = when {
+        id.startsWith("military") -> listOf("Imię i nazwisko", "Stopień wojskowy", "Rodzaj służby wojskowej", "Jednostka / garnizon", "Stanowisko i specjalność wojskowa", "Numer ewidencyjny / legitymacji", "Podstawa powołania / rozkazu", "Data rozpoczęcia i zakończenia służby", "Przydział mobilizacyjny / rezerwa — jeśli dotyczy", "Misja / ćwiczenia / miejsce pełnienia służby", "Dowódca / organ właściwy", "Status służby", "Dokument źródłowy", "Uwagi")
+        id.startsWith("police_") || id.startsWith("fire_") || id.startsWith("border_") || id.startsWith("prison_") || id.startsWith("customs_") || id.startsWith("special_") || id.startsWith("protective_") -> listOf("Imię i nazwisko", "Formacja / służba", "Jednostka organizacyjna", "Stopień służbowy", "Stanowisko / komórka / specjalność", "Numer legitymacji służbowej", "Data przyjęcia do służby", "Podstawa mianowania / rozkazu", "Przebieg służby / przydziały", "Zakres zadań i uprawnień", "Przełożony / organ", "Status służbowy", "Dokument źródłowy", "Uwagi")
+        id.startsWith("justice_") -> listOf("Imię i nazwisko", "Rodzaj urzędu / funkcji", "Sąd / prokuratura / jednostka", "Wydział / obszar właściwości", "Podstawa powołania / mianowania", "Organ powołujący", "Numer i data aktu", "Data objęcia urzędu", "Kadencja / okres pełnienia funkcji", "Zakres właściwości", "Status urzędu", "Dokument źródłowy", "Uwagi")
+        id.startsWith("rescue_") -> listOf("Imię i nazwisko", "Rodzaj ratownictwa / służby", "Jednostka ratownicza", "Stopień / funkcja / poziom kwalifikacji", "Numer uprawnienia / legitymacji", "Podmiot szkolący / certyfikujący", "Data uzyskania kwalifikacji", "Termin ważności / doskonalenia", "Zakres działań ratowniczych", "Obszar / rejon działania", "Status gotowości / członkostwa", "Dokument źródłowy", "Uwagi")
+        id.startsWith("diplomatic_") -> listOf("Imię i nazwisko", "Członkostwo w służbie zagranicznej / status", "Stopień dyplomatyczny", "Stanowisko / funkcja", "Placówka zagraniczna", "Państwo przyjmujące", "Okręg konsularny / zakres akredytacji", "Akt mianowania / wyznaczenia", "Data rozpoczęcia misji", "Okres pełnienia funkcji", "Listy uwierzytelniające / exequatur — jeśli dotyczy", "Dokument źródłowy", "Uwagi")
+        id.startsWith("education_") -> listOf("Imię i nazwisko", "Rodzaj stanowiska / stopień awansu", "Placówka / uczelnia / instytut", "Przedmiot / dziedzina / dyscyplina", "Podstawa zatrudnienia / powołania", "Akt mianowania / uchwała", "Data uzyskania stopnia / objęcia funkcji", "Wymiar i okres zatrudnienia / kadencja", "Kwalifikacje i dorobek", "Zakres obowiązków / kompetencji", "Status zatrudnienia / funkcji", "Dokument źródłowy", "Uwagi")
+        id.startsWith("inspection_") -> listOf("Imię i nazwisko", "Rodzaj inspekcji / organu kontroli", "Właściwy organ / jednostka", "Stanowisko / specjalność", "Numer legitymacji służbowej", "Upoważnienie do kontroli — numer i data", "Podstawa prawna", "Zakres i terytorialna właściwość kontroli", "Data rozpoczęcia pełnienia funkcji", "Okres ważności upoważnienia", "Status", "Dokument źródłowy", "Uwagi")
+        id.startsWith("civil_service_") || id.startsWith("civil_tax_") || id.startsWith("civil_government_") || id.startsWith("civil_voivodeship_") -> listOf("Imię i nazwisko", "Status w korpusie służby cywilnej", "Urząd / organ administracji", "Stanowisko / komórka organizacyjna", "Stopień służbowy — jeśli dotyczy", "Podstawa zatrudnienia / mianowania", "Numer i data aktu", "Data rozpoczęcia pracy / służby", "Poziom stanowiska / zakres odpowiedzialności", "Przełożony / dyrektor generalny", "Status zatrudnienia", "Dokument źródłowy", "Uwagi")
+        else -> listOf("Imię i nazwisko", "Rodzaj mandatu / urzędu / funkcji publicznej", "Organ / jednostka / wspólnota samorządowa", "Okręg / obszar działania", "Podstawa wyboru / powołania / wyznaczenia", "Organ wyborczy / powołujący", "Numer i data uchwały / aktu / zaświadczenia", "Data objęcia funkcji", "Kadencja / okres pełnienia funkcji", "Zakres kompetencji i odpowiedzialności", "Status mandatu / urzędu", "Dokument źródłowy", "Uwagi")
+    }
+    return OfficialDocType(id, title, fields, "Wzór ewidencyjny dla funkcji: $title. Status prawny, mandat, urząd, uprawnienia i zakres kompetencji wynikają z właściwego aktu lub dokumentu źródłowego; formularz aplikacji ich samodzielnie nie nadaje ani nie potwierdza.")
+}
+
+private val publicServiceDocumentTypes = listOf(
+    publicServiceDoc("military", "Żołnierz zawodowy"),
+    publicServiceDoc("military_dzsw", "Żołnierz Dobrowolnej Zasadniczej Służby Wojskowej"),
+    publicServiceDoc("military_wot", "Żołnierz Terytorialnej Służby Wojskowej (WOT)"),
+    publicServiceDoc("military_active_reserve", "Żołnierz aktywnej rezerwy"),
+    publicServiceDoc("military_passive_reserve", "Żołnierz pasywnej rezerwy"),
+    publicServiceDoc("military_candidate", "Żołnierz służby kandydackiej"),
+    publicServiceDoc("military_exercises", "Żołnierz rezerwy podczas ćwiczeń wojskowych"),
+    publicServiceDoc("military_gendarmerie", "Żołnierz Żandarmerii Wojskowej"),
+    publicServiceDoc("military_foreign_service", "Żołnierz zawodowy w służbie poza granicami państwa"),
+    publicServiceDoc("police_preventive", "Policjant służby prewencyjnej"),
+    publicServiceDoc("police_criminal", "Policjant służby kryminalnej"),
+    publicServiceDoc("police_investigative", "Policjant służby śledczej"),
+    publicServiceDoc("police_counterterrorism", "Policjant służby kontrterrorystycznej"),
+    publicServiceDoc("police_support", "Policjant służby wspomagającej"),
+    publicServiceDoc("police_traffic", "Policjant ruchu drogowego"),
+    publicServiceDoc("police_water", "Policjant służby wodnej"),
+    publicServiceDoc("police_riot", "Policjant oddziału prewencji"),
+    publicServiceDoc("police_cybercrime", "Funkcjonariusz Centralnego Biura Zwalczania Cyberprzestępczości"),
+    publicServiceDoc("fire_preparatory", "Strażak PSP w służbie przygotowawczej"),
+    publicServiceDoc("fire_permanent", "Strażak PSP w służbie stałej"),
+    publicServiceDoc("fire_squad_leader", "Dowódca zastępu PSP"),
+    publicServiceDoc("fire_shift_commander", "Dowódca zmiany PSP"),
+    publicServiceDoc("fire_officer", "Oficer Państwowej Straży Pożarnej"),
+    publicServiceDoc("fire_rescue_unit", "Funkcjonariusz jednostki ratowniczo-gaśniczej PSP"),
+    publicServiceDoc("fire_headquarters", "Funkcjonariusz komendy PSP"),
+    publicServiceDoc("border_guard", "Funkcjonariusz Straży Granicznej"),
+    publicServiceDoc("border_service", "Funkcjonariusz służby granicznej"),
+    publicServiceDoc("border_traffic_control", "Funkcjonariusz kontroli ruchu granicznego"),
+    publicServiceDoc("border_operational", "Funkcjonariusz operacyjno-śledczy SG"),
+    publicServiceDoc("border_aviation", "Funkcjonariusz służby lotniczej SG"),
+    publicServiceDoc("border_unit", "Funkcjonariusz jednostki organizacyjnej SG"),
+    publicServiceDoc("prison_general", "Funkcjonariusz Służby Więziennej"),
+    publicServiceDoc("prison_security", "Funkcjonariusz działu ochrony SW"),
+    publicServiceDoc("prison_penitentiary", "Funkcjonariusz działu penitencjarnego SW"),
+    publicServiceDoc("prison_records", "Funkcjonariusz działu ewidencji SW"),
+    publicServiceDoc("prison_health", "Funkcjonariusz służby zdrowia więziennego"),
+    publicServiceDoc("prison_escort", "Funkcjonariusz konwoju SW"),
+    publicServiceDoc("customs_general", "Funkcjonariusz Służby Celno-Skarbowej"),
+    publicServiceDoc("customs_control", "Funkcjonariusz kontroli celno-skarbowej"),
+    publicServiceDoc("customs_economic_crime", "Funkcjonariusz zwalczania przestępczości ekonomicznej"),
+    publicServiceDoc("customs_operations", "Funkcjonariusz komórki realizacyjnej SCS"),
+    publicServiceDoc("customs_border", "Funkcjonariusz kontroli granicznej celnej"),
+    publicServiceDoc("special_abw", "Funkcjonariusz Agencji Bezpieczeństwa Wewnętrznego (ABW)"),
+    publicServiceDoc("special_aw", "Funkcjonariusz Agencji Wywiadu (AW)"),
+    publicServiceDoc("special_skw", "Funkcjonariusz Służby Kontrwywiadu Wojskowego (SKW)"),
+    publicServiceDoc("special_sww", "Funkcjonariusz Służby Wywiadu Wojskowego (SWW)"),
+    publicServiceDoc("special_cba", "Funkcjonariusz Centralnego Biura Antykorupcyjnego (CBA)"),
+    publicServiceDoc("special_sop", "Funkcjonariusz Służby Ochrony Państwa (SOP)"),
+    publicServiceDoc("protective_marshal", "Funkcjonariusz Straży Marszałkowskiej"),
+    publicServiceDoc("protective_rail", "Funkcjonariusz Straży Ochrony Kolei (SOK)"),
+    publicServiceDoc("protective_municipal", "Strażnik Straży Miejskiej / Gminnej"),
+    publicServiceDoc("protective_hunting", "Funkcjonariusz Państwowej Straży Łowieckiej"),
+    publicServiceDoc("protective_fisheries", "Funkcjonariusz Państwowej Straży Rybackiej"),
+    publicServiceDoc("protective_forest", "Strażnik leśny"),
+    publicServiceDoc("protective_road", "Funkcjonariusz Inspekcji Transportu Drogowego (ITD)"),
+    publicServiceDoc("civil_service_member", "Członek korpusu służby cywilnej"),
+    publicServiceDoc("civil_service_nominated", "Urzędnik służby cywilnej mianowany"),
+    publicServiceDoc("civil_service_employee", "Pracownik służby cywilnej"),
+    publicServiceDoc("civil_tax_nominated", "Urzędnik mianowany w administracji skarbowej"),
+    publicServiceDoc("civil_tax_inspector", "Inspektor kontroli skarbowej"),
+    publicServiceDoc("civil_government_employee", "Pracownik administracji rządowej"),
+    publicServiceDoc("civil_voivodeship_employee", "Pracownik administracji wojewódzkiej"),
+    publicServiceDoc("local_mayor", "Burmistrz"),
+    publicServiceDoc("local_city_president", "Prezydent miasta"),
+    publicServiceDoc("local_marshal", "Marszałek województwa"),
+    publicServiceDoc("local_councillor_municipal", "Radny gminy"),
+    publicServiceDoc("local_councillor_county", "Radny powiatu"),
+    publicServiceDoc("local_councillor_region", "Radny sejmiku województwa"),
+    publicServiceDoc("local_county_board", "Członek zarządu powiatu"),
+    publicServiceDoc("local_region_board", "Członek zarządu województwa"),
+    publicServiceDoc("local_council_chair", "Przewodniczący rady lub sejmiku"),
+    publicServiceDoc("constitutional_deputy", "Poseł na Sejm RP"),
+    publicServiceDoc("constitutional_senator", "Senator RP"),
+    publicServiceDoc("constitutional_meP", "Poseł do Parlamentu Europejskiego"),
+    publicServiceDoc("constitutional_president", "Prezydent RP"),
+    publicServiceDoc("constitutional_minister", "Członek Rady Ministrów"),
+    publicServiceDoc("constitutional_prime_minister", "Prezes Rady Ministrów"),
+    publicServiceDoc("constitutional_voivode", "Wojewoda"),
+    publicServiceDoc("constitutional_deputy_voivode", "Wicewojewoda"),
+    publicServiceDoc("constitutional_rpo", "Rzecznik Praw Obywatelskich"),
+    publicServiceDoc("constitutional_nik", "Prezes Najwyższej Izby Kontroli"),
+    publicServiceDoc("justice_common_judge", "Sędzia sądu powszechnego"),
+    publicServiceDoc("justice_admin_judge", "Sędzia sądu administracyjnego"),
+    publicServiceDoc("justice_supreme_judge", "Sędzia Sądu Najwyższego"),
+    publicServiceDoc("justice_military_judge", "Sędzia sądu wojskowego"),
+    publicServiceDoc("justice_assessor", "Asesor sądowy"),
+    publicServiceDoc("justice_prosecutor", "Prokurator"),
+    publicServiceDoc("justice_military_prosecutor", "Prokurator wojskowy"),
+    publicServiceDoc("justice_prosecutor_assessor", "Asesor prokuratorski"),
+    publicServiceDoc("justice_court_clerk", "Referendarz sądowy"),
+    publicServiceDoc("justice_probation_officer", "Kurator zawodowy"),
+    publicServiceDoc("justice_bailiff", "Komornik sądowy"),
+    publicServiceDoc("rescue_paramedic", "Ratownik medyczny systemu PRM"),
+    publicServiceDoc("rescue_dispatcher", "Dyspozytor medyczny"),
+    publicServiceDoc("rescue_gopr", "Ratownik górski GOPR"),
+    publicServiceDoc("rescue_topr", "Ratownik górski TOPR"),
+    publicServiceDoc("rescue_water", "Ratownik wodny"),
+    publicServiceDoc("rescue_professional", "Członek zawodowej służby ratownictwa"),
+    publicServiceDoc("rescue_volunteer_fire", "Członek ochotniczej straży pożarnej"),
+    publicServiceDoc("rescue_osp_firefighter", "Strażak ratownik OSP"),
+    publicServiceDoc("rescue_civil_defence", "Członek obrony cywilnej"),
+    publicServiceDoc("rescue_population_protection", "Osoba wyznaczona do funkcji w ochronie ludności"),
+    publicServiceDoc("education_nominated_teacher", "Nauczyciel mianowany"),
+    publicServiceDoc("education_diploma_teacher", "Nauczyciel dyplomowany"),
+    publicServiceDoc("education_appointed_teacher", "Nauczyciel zatrudniony na podstawie mianowania"),
+    publicServiceDoc("education_academic_teacher", "Nauczyciel akademicki"),
+    publicServiceDoc("education_university_professor", "Profesor uczelni"),
+    publicServiceDoc("education_rector", "Rektor uczelni"),
+    publicServiceDoc("education_prorector", "Prorektor"),
+    publicServiceDoc("education_science_director", "Dyrektor instytucji naukowej"),
+    publicServiceDoc("inspection_auditor", "Biegły rewident wykonujący funkcję publiczną"),
+    publicServiceDoc("inspection_labour", "Inspektor Państwowej Inspekcji Pracy"),
+    publicServiceDoc("inspection_building", "Inspektor nadzoru budowlanego"),
+    publicServiceDoc("inspection_sanitary", "Inspektor sanitarny"),
+    publicServiceDoc("inspection_environment", "Inspektor ochrony środowiska"),
+    publicServiceDoc("inspection_veterinary", "Inspektor weterynaryjny"),
+    publicServiceDoc("inspection_monuments", "Funkcjonariusz Służby Ochrony Zabytków"),
+    publicServiceDoc("inspection_state_control", "Pracownik organu kontroli państwowej")
+)
+
+
+private fun serviceRecordDoc(id: String, title: String, fields: List<String>): OfficialDocType =
+    OfficialDocType(
+        id = id,
+        title = title,
+        fields = fields,
+        note = "Wzór ewidencyjny dokumentu służbowego. Treść, skutki prawne, status służby, stanowisko, stopień i uprawnienia wynikają wyłącznie z aktu lub dokumentu wystawionego przez właściwy organ albo pracodawcę. Formularz aplikacji nie zastępuje oryginału."
+    )
+
+private val generalServiceRecordDocumentTypes = listOf(
+    serviceRecordDoc("service_record_acceptance_decision", "Decyzja o przyjęciu do służby", listOf(
+        "Imię i nazwisko osoby przyjmowanej", "Rodzaj służby / formacja", "Organ wydający decyzję", "Numer i data decyzji",
+        "Podstawa prawna i tryb naboru", "Jednostka organizacyjna / miejsce pełnienia służby",
+        "Data przyjęcia / dzień rozpoczęcia służby", "Warunki lub zastrzeżenia decyzji", "Osoba podpisująca / stanowisko",
+        "Data doręczenia", "Status decyzji", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_acceptance_order", "Rozkaz o przyjęciu do służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Jednostka wydająca rozkaz", "Numer i data rozkazu",
+        "Podstawa prawna / decyzja poprzedzająca", "Data rozpoczęcia służby", "Stanowisko / przydział",
+        "Przełożony / dowódca", "Termin stawiennictwa", "Potwierdzenie wykonania rozkazu", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_personnel_appointment_order", "Rozkaz personalny o mianowaniu do służby", listOf(
+        "Imię i nazwisko", "Formacja / rodzaj służby", "Organ personalny wydający rozkaz", "Numer i data rozkazu",
+        "Podstawa prawna", "Rodzaj mianowania / status służby", "Data skuteczności mianowania",
+        "Stanowisko / jednostka", "Stopień służbowy — jeśli dotyczy", "Data doręczenia", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_position_appointment", "Akt mianowania na stanowisko", listOf(
+        "Imię i nazwisko", "Nazwa stanowiska", "Organ / osoba mianująca", "Jednostka organizacyjna",
+        "Numer i data aktu", "Podstawa prawna / regulaminowa", "Data objęcia stanowiska",
+        "Zakres odpowiedzialności", "Okres powierzenia / kadencja", "Warunki odwołania", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_rank_appointment", "Akt mianowania na stopień służbowy", listOf(
+        "Imię i nazwisko", "Formacja / rodzaj służby", "Dotychczasowy stopień", "Nadany stopień",
+        "Organ mianujący", "Numer i data aktu", "Podstawa prawna", "Data nadania stopnia",
+        "Data wejścia w życie", "Uzasadnienie / wyróżnienie — jeśli wskazano", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_contract", "Umowa lub kontrakt służbowy", listOf(
+        "Imię i nazwisko / dane strony", "Formacja / pracodawca / jednostka", "Rodzaj umowy lub kontraktu",
+        "Numer i data zawarcia", "Podstawa prawna", "Stanowisko / zakres służby", "Data rozpoczęcia",
+        "Czas trwania / okres obowiązywania", "Warunki rozwiązania / wygaśnięcia", "Strony i osoby podpisujące",
+        "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_public_appointment", "Akt powołania na stanowisko publiczne", listOf(
+        "Imię i nazwisko", "Stanowisko publiczne", "Organ powołujący", "Numer i data aktu",
+        "Podstawa prawna", "Data powołania / objęcia stanowiska", "Kadencja / okres pełnienia funkcji",
+        "Zakres kompetencji wynikający z aktu", "Warunki odwołania / wygaśnięcia", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_public_election", "Akt wyboru na stanowisko publiczne", listOf(
+        "Imię i nazwisko", "Stanowisko / mandat", "Organ wyborczy", "Numer i data uchwały / zaświadczenia",
+        "Rodzaj i data wyborów", "Okręg / obszar wyborczy", "Data objęcia funkcji / rozpoczęcia kadencji",
+        "Długość kadencji", "Wynik / podstawa stwierdzenia wyboru", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_oath", "Akt ślubowania albo protokół jego złożenia", listOf(
+        "Imię i nazwisko składającego ślubowanie", "Stanowisko / funkcja / służba", "Treść roty ślubowania",
+        "Data i miejsce złożenia", "Organ / osoba przyjmująca ślubowanie", "Podstawa prawna",
+        "Świadkowie / osoby obecne", "Numer i data protokołu", "Podpisy", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_official_id", "Legitymacja służbowa lub funkcjonariusza", listOf(
+        "Imię i nazwisko", "Formacja / urząd / pracodawca", "Numer legitymacji", "Stopień / stanowisko",
+        "Jednostka organizacyjna", "Data wydania", "Termin ważności", "Organ wydający",
+        "Zakres identyfikacji / uprawnień wskazany w dokumencie", "Status dokumentu", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_service_certificate", "Zaświadczenie o pełnieniu służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Jednostka / organ wystawiający",
+        "Numer i data zaświadczenia", "Okres potwierdzanego pełnienia służby", "Stanowisko / stopień",
+        "Cel wydania", "Podstawa danych ewidencyjnych", "Osoba upoważniona do podpisu",
+        "Data wystawienia", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_discharge_certificate", "Świadectwo służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Jednostka wystawiająca",
+        "Numer i data świadectwa", "Data rozpoczęcia służby", "Data zakończenia służby",
+        "Stanowiska / stopnie w okresie służby", "Sposób i podstawa zwolnienia",
+        "Informacje o przebiegu służby", "Data wydania", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_personnel_history", "Karta przebiegu służby albo wyciąg z ewidencji personalnej", listOf(
+        "Imię i nazwisko", "Numer ewidencyjny", "Formacja / jednostka prowadząca ewidencję",
+        "Numer i data karty / wyciągu", "Chronologia stanowisk i przydziałów", "Chronologia stopni i awansów",
+        "Okresy służby", "Przeniesienia / delegowania", "Wyróżnienia / odznaczenia — jeśli ujęto",
+        "Organ sporządzający", "Data sporządzenia", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_transfer_order", "Rozkaz o przeniesieniu, delegowaniu lub oddelegowaniu", listOf(
+        "Imię i nazwisko", "Formacja / jednostka dotychczasowa", "Jednostka docelowa / miejsce delegowania",
+        "Rodzaj czynności: przeniesienie / delegowanie / oddelegowanie", "Numer i data rozkazu",
+        "Organ wydający", "Podstawa prawna / służbowa", "Data rozpoczęcia i zakończenia",
+        "Stanowisko / zakres zadań", "Warunki powrotu / odwołania", "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_promotion_order", "Rozkaz o awansie albo nadaniu stopnia", listOf(
+        "Imię i nazwisko", "Formacja / jednostka", "Dotychczasowy stopień / stanowisko",
+        "Nowy stopień / stanowisko", "Rodzaj awansu / wyróżnienia", "Numer i data rozkazu",
+        "Organ wydający", "Podstawa prawna", "Data skuteczności awansu", "Uzasadnienie — jeśli wskazano",
+        "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_discharge_order", "Decyzja lub rozkaz o zwolnieniu ze służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Organ wydający", "Rodzaj aktu: decyzja / rozkaz",
+        "Numer i data aktu", "Podstawa prawna", "Przyczyna / tryb zwolnienia — jeśli wskazano",
+        "Data ustania stosunku służbowego", "Sposób doręczenia", "Pouczenie / tryb odwoławczy",
+        "Dokument źródłowy", "Uwagi"
+    )),
+    serviceRecordDoc("service_record_opinion", "Opinia o służbie", listOf(
+        "Imię i nazwisko", "Formacja / jednostka", "Okres objęty opinią", "Stanowisko / stopień",
+        "Organ / przełożony sporządzający opinię", "Numer i data opinii", "Ocena realizacji zadań",
+        "Kwalifikacje / szkolenia / osiągnięcia", "Uwagi / zastrzeżenia", "Data zapoznania się",
+        "Dokument źródłowy", "Uwagi dodatkowe"
+    )),
+    serviceRecordDoc("service_record_periods_certificate", "Zaświadczenie o okresach służby", listOf(
+        "Imię i nazwisko", "Rodzaj służby / formacja", "Jednostka / organ wystawiający",
+        "Numer i data zaświadczenia", "Wykaz okresów służby od–do", "Przerwy / okresy nieuwzględniane",
+        "Łączny staż służby według wystawcy", "Cel zaświadczenia", "Podstawa ewidencyjna",
+        "Data wystawienia", "Osoba upoważniona do podpisu", "Dokument źródłowy", "Uwagi"
+    ))
+)
+
 private val officialDocTypes = listOf(
     OfficialDocType("birth_extract","Akt urodzenia / odpis aktu urodzenia", listOf("Rodzaj aktu: akt stanu cywilnego USC / akt rodowy","Imiona i nazwisko osoby","Data i miejsce urodzenia","Imiona i nazwiska rodziców","Osoba sporządzająca / wystawca: kierownik USC / rodzic / przedstawiciel rodu","Nazwa rodu / oznaczenie ewidencji rodowej","Numer aktu / rok / numer wpisu rodowego","Rodzaj odpisu USC: skrócony / zupełny / wielojęzyczny","Data sporządzenia / wydania","Podstawa sporządzenia / źródła danych","Podpisy rodziców / osób potwierdzających","Pieczęć / znak rodowy lub oznaczenie USC","Osoba uprawniona do uzyskania odpisu USC","Cel uzyskania / uwagi"), "Można prowadzić akt stanu cywilnego USC albo odrębny akt rodowy sporządzony w ramach ewidencji rodzinnej, np. przez rodzica. Akt rodowy jest odrębnym wpisem ewidencji rodzinnej; nie jest wpisem w państwowym rejestrze stanu cywilnego ani urzędowym odpisem USC."),
     OfficialDocType("marriage_extract","Akt małżeństwa / odpis aktu małżeństwa", listOf("Rodzaj aktu: akt stanu cywilnego USC / akt rodowy","Imiona i nazwiska małżonków","Data i miejsce zawarcia małżeństwa","Osoba sporządzająca / wystawca: kierownik USC / rodzic / przedstawiciel rodu","Nazwa rodu / oznaczenie ewidencji rodowej","Numer aktu / rok / numer wpisu rodowego","Rodzaj odpisu USC: skrócony / zupełny / wielojęzyczny","Data sporządzenia / wydania","Podstawa sporządzenia / źródła danych","Podpisy małżonków / rodziców / osób potwierdzających","Świadkowie","Pieczęć / znak rodowy lub oznaczenie USC","Osoba uprawniona do uzyskania odpisu USC","Cel uzyskania / uwagi"), "Można prowadzić akt stanu cywilnego USC albo odrębny akt rodowy sporządzony w ramach ewidencji rodzinnej. Akt rodowy jest odrębnym wpisem ewidencji rodzinnej; nie jest wpisem w państwowym rejestrze stanu cywilnego ani urzędowym odpisem USC."),
@@ -91,7 +340,7 @@ private val officialDocTypes = listOf(
     OfficialDocType("org_foreign_representative","Dokument przedstawiciela zagranicznego", listOf("Imię i nazwisko","Nazwa organizacji","Państwo / obszar działania","Placówka / przedstawicielstwo","Podstawa ustanowienia","Numer i data aktu","Zakres reprezentacji","Okres pełnienia funkcji","Status"), "Cywilny przedstawiciel organizacji za granicą; nie jest członkiem służby zagranicznej ani urzędnikiem konsularnym z samego tytułu."),
     OfficialDocType("org_proxy","Dokument pełnomocnika organizacji", listOf("Imię i nazwisko pełnomocnika","Nazwa organizacji / mocodawcy","Rodzaj pełnomocnictwa","Zakres umocowania","Data udzielenia","Okres obowiązywania","Numer / identyfikator dokumentu","Osoba / organ udzielający","Sposób odwołania / status"), "Zakres działania wynika z treści pełnomocnictwa i przepisów Kodeksu cywilnego lub przepisów szczególnych. Legitymacja nie zastępuje pełnomocnictwa."),
     OfficialDocType("org_delegate","Dokument delegata organizacji", listOf("Imię i nazwisko","Nazwa organizacji delegującej","Organizacja / wydarzenie / organ, do którego delegowano","Podstawa delegowania","Numer i data uchwały / aktu","Zakres reprezentacji i głosowania","Okres delegowania","Status"), "Potwierdza delegowanie do reprezentowania organizacji w określonej sprawie lub na określonym forum; nie nadaje mandatu publicznego.")
-)
+) + generalServiceRecordDocumentTypes + publicServiceDocumentTypes
 
 internal fun officialGraphicDocumentTargets(): List<Pair<String, String>> =
     officialDocTypes.map { it.id to it.title }

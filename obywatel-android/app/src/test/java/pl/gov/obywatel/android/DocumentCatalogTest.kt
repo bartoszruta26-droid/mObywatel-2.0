@@ -70,4 +70,79 @@ class DocumentCatalogTest {
         }
     }
 
+
+    @Test
+    fun commonServiceRecordDocumentsArePresentInExistingStateServiceGroup() {
+        val expected = setOf(
+            "service_record_acceptance_decision",
+            "service_record_acceptance_order",
+            "service_record_personnel_appointment_order",
+            "service_record_position_appointment",
+            "service_record_rank_appointment",
+            "service_record_contract",
+            "service_record_public_appointment",
+            "service_record_public_election",
+            "service_record_oath",
+            "service_record_official_id",
+            "service_record_service_certificate",
+            "service_record_discharge_certificate",
+            "service_record_personnel_history",
+            "service_record_transfer_order",
+            "service_record_promotion_order",
+            "service_record_discharge_order",
+            "service_record_opinion",
+            "service_record_periods_certificate"
+        )
+        val targets = officialGraphicDocumentTargets().filter { it.first in expected }
+        assertEquals("Katalog powinien zawierać wszystkie 18 wspólnych dokumentów służbowych.", expected, targets.map { it.first }.toSet())
+        targets.forEach { (id, title) ->
+            assertTrue("Pusty tytuł dokumentu $id.", title.isNotBlank())
+            assertEquals("Dokument $id powinien należeć do istniejącej grupy Służba państwowa.", "Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Brak pól formularza dla $id.", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Brak kafelka dla $id.", documentDisplayOptions.any { it.first == id })
+        }
+        assertTrue(officialGraphicDocumentFields("service_record_oath").any { it.second.contains("rot", ignoreCase = true) })
+        assertTrue(officialGraphicDocumentFields("service_record_personnel_history").any { it.second.contains("Chronologia", ignoreCase = true) })
+    }
+
+    @Test
+    fun publicAndUniformedServiceCatalogContainsEveryNewRoleInAnExistingGroup() {
+        val expectedPrefixes = mapOf(
+            "military_" to "Służba zbrojna", "police_" to "Służba państwowa",
+            "fire_" to "Służba państwowa", "border_" to "Służba państwowa",
+            "prison_" to "Służba państwowa", "customs_" to "Służba państwowa",
+            "special_" to "Służba państwowa", "protective_" to "Służba państwowa",
+            "civil_service_" to "Służba cywilna", "civil_tax_" to "Służba cywilna",
+            "civil_government_" to "Służba cywilna", "civil_voivodeship_" to "Służba cywilna",
+            "local_" to "Służba państwowa", "constitutional_" to "Służba państwowa",
+            "justice_" to "Służba cywilna", "rescue_" to "Służba zdrowotna",
+"education_" to "Służba zawodowa",
+            "inspection_" to "Służba cywilna"
+        )
+        val additions = officialGraphicDocumentTargets().filter { (id, _) ->
+            id == "military" || expectedPrefixes.keys.any(id::startsWith)
+        }
+        assertTrue("Nowy katalog służb jest pusty.", additions.isNotEmpty())
+        expectedPrefixes.forEach { (prefix, group) ->
+            val subset = additions.filter { it.first.startsWith(prefix) }
+            assertTrue("Brak dokumentów dla kategorii $prefix", subset.isNotEmpty())
+            subset.forEach { (id, title) ->
+                assertTrue("Pusty tytuł $id", title.isNotBlank())
+                assertEquals("Nieprawidłowa grupa dla $id", group, documentVisibilityGroup(id))
+                assertTrue("Brak formularza dla $id", officialGraphicDocumentFields(id).isNotEmpty())
+                assertTrue("Brak kafelka dla $id", documentDisplayOptions.any { it.first == id })
+            }
+        }
+        assertEquals("Żołnierz zawodowy powinien należeć do służby zbrojnej.", "Służba zbrojna", documentVisibilityGroup("military"))
+        assertEquals(additions.size, additions.map { it.first }.toSet().size)
+        assertTrue("Formularz wojskowy musi mieć pola właściwe dla służby wojskowej.",
+            officialGraphicDocumentFields("military").map { it.second }.contains("Stopień wojskowy"))
+        assertTrue("Formularz policyjny musi mieć pola właściwe dla formacji mundurowej.",
+            officialGraphicDocumentFields("police_traffic").map { it.second }.contains("Numer legitymacji służbowej"))
+        assertTrue("Formularz sądowy musi mieć pola właściwe dla wymiaru sprawiedliwości.",
+            officialGraphicDocumentFields("justice_common_judge").map { it.second }.contains("Sąd / prokuratura / jednostka"))
+        assertTrue("Formularz nauczycielski musi mieć pola właściwe dla oświaty.",
+            officialGraphicDocumentFields("education_nominated_teacher").map { it.second }.contains("Placówka / uczelnia / instytut"))
+    }
+
 }
