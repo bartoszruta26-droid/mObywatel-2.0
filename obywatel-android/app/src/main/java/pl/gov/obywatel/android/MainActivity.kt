@@ -2021,10 +2021,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         scope.launch {
                             exportBusy = true
                             importStatus = "Zapisywanie i weryfikowanie archiwum vCard…"
+                            val snapshot = exportSnapshot.toMap()
                             val result = withContext(Dispatchers.IO) {
                                 runCatching {
-                                    require(exportSnapshot.isNotEmpty()) { "Brak danych do eksportu." }
-                                    val snapshot = exportSnapshot.toMap()
+                                    require(snapshot.isNotEmpty()) { "Brak danych do eksportu." }
                                     val bytes = VCardCodec.encodeArchive(snapshot).toByteArray(Charsets.UTF_8)
                                     val output = context.contentResolver.openOutputStream(destinationUri, "wt")
                                         ?: error("Android nie udostępnił strumienia zapisu dla wybranego pliku.")
