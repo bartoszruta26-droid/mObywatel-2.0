@@ -59,7 +59,7 @@ data class BankStatementEntry(
     fun exchangeOperationId(): String? {
         val reference = normalize(bankOperationReference.orEmpty())
         if (reference.isEmpty()) return null
-        return "bank-operation-" + sha256(accountScopeId.trim() + "|" + reference)
+        return "bank-operation-" + sha256("PKO|" + reference)
     }
 
     private fun normalize(value: String): String =
