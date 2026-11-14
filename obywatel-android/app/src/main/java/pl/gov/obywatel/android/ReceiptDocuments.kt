@@ -257,7 +257,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
                 OutlinedTextField(pkwiu[i],{v->pkwiu=pkwiu.toMutableList().also{it[i]=v}},label={Text("PKWiU")},modifier=Modifier.weight(1f))
                 OutlinedTextField(units[i],{v->units=units.toMutableList().also{it[i]=v}},label={Text("Jm")},modifier=Modifier.weight(0.7f))
                 OutlinedTextField(quantities[i],{v->quantities=quantities.toMutableList().also{it[i]=v}},label={Text("Ilość")},modifier=Modifier.weight(0.8f))
-                OutlinedTextField(prices[i],{v->prices=prices.toMutableList().also{it[i]=v}},label={Text("Cena zł")},modifier=Modifier.weight(1f))
+                OutlinedTextField(prices[i],{v->prices=prices.toMutableList().also{it[i]=v}},label={Text("Cena (zł i gr)")},modifier=Modifier.weight(1f))
             }
         }
         OutlinedTextField(signature,{signature=it},label={Text("Imię i nazwisko osoby wystawiającej")},modifier=Modifier.fillMaxWidth())
@@ -274,6 +274,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
                 receiptPref(c).edit().putString("last_receipt",snapshot.toString()).apply()
                 val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pdf,createdAt=receiptFileDate(saleDate))
                 records=ReceiptStore.list(c)
+                prices=prices.map { receiptMoneyLabel(receiptMoneyCents(it)) }
                 status="Wystawiono i zapisano rachunek PDF: ${rec.name}"
             }.onFailure { status="Nie udało się zapisać rachunku PDF: ${it.message}" }
         },modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.PictureAsPdf,null); Spacer(Modifier.width(8.dp)); Text("Wystaw i zapisz rachunek PDF") }
@@ -370,14 +371,14 @@ private fun buildReceiptPdf(c:Context,no:String,date:String,seller:String,buyer:
     canvas.drawText(receiptPref(c).getString("title","RACHUNEK") ?: "RACHUNEK",250f,42f,bold); canvas.drawText("NR: $no",420f,42f,p)
     canvas.drawText("Data sprzedaży: $date",350f,65f,p)
     canvas.drawRect(30f,85f,285f,205f,border); canvas.drawRect(300f,85f,565f,205f,border)
-    txt("Sprzedawca",40f,102f,bold); txt(seller,40f,122f); txt("Nabywca",310f,102f,bold); txt(buyer,310f,122f)
+    txt("Sprzedawca",40f,102f,bold); txt(seller,40f,122f,maxWidth=235f); txt("Nabywca",310f,102f,bold); txt(buyer,310f,122f,maxWidth=245f)
     canvas.drawText("Sposób zapłaty: $payment",310f,225f,p); canvas.drawText("Termin zapłaty: $due",440f,245f,p)
     val top=270f; canvas.drawRect(30f,top,565f,top+35f,border)
     val headers=listOf("Lp","Nazwa towarów lub usług","PKWiU","Jm","Ilość","Cena jedn. zł","Wartość zł")
     val xs=listOf(35f,60f,250f,310f,345f,390f,465f)
     headers.forEachIndexed{i,s->canvas.drawText(s,xs[i],top+22f,p)}
     var y=top+35f
-    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,border);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f,maxWidth=180f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(receiptMoneyLabel(receiptMoneyCents(prices[i])),if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText(receiptMoneyLabel(kotlin.math.round(v*100).toLong()),if(showPkwiu) 465f else 480f,y+25f,p);y+=45f }
+    names.forEachIndexed{i,n-> val rowHeight=maxOf(45f,kotlin.math.ceil(p.measureText(n)/180f).toInt()*13f+22f); canvas.drawRect(30f,y,565f,y+rowHeight,border);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f,maxWidth=180f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(receiptMoneyLabel(receiptMoneyCents(prices[i])),if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(receiptMoneyCents(prices[i]).toDouble()/100.0);canvas.drawText(receiptMoneyLabel(kotlin.math.round(v*100).toLong()),if(showPkwiu) 465f else 480f,y+25f,p);y+=rowHeight }
     y+=20f; line(y); txt("Słownie: $words",35f,y+18f,maxWidth=350f); canvas.drawText("Razem: ${receiptMoneyLabel(kotlin.math.round(total*100).toLong())}",390f,y+18f,bold)
     y+=65f; canvas.drawText("Do zapłaty: ${receiptMoneyLabel(kotlin.math.round(total*100).toLong())}",80f,y,bold); y+=55f; txt("Imię i nazwisko oraz podpis osoby upoważnionej do wystawienia rachunku: $signature",35f,y)
     y+=35f; val notes=receiptNotes(c); var yy=y; notes.split("\n").forEach{row->txt(row,35f,yy,p);yy+=26f}
