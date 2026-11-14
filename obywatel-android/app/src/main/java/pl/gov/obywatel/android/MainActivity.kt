@@ -1607,48 +1607,63 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onEditReceipts = { showSettingsMenu = false; settingsDocumentEditor = "receipts" },
                         onEditOtherDocuments = { key -> settingsDocumentEditor = key; showSettingsMenu = false },
                         onExportAll = {
-                            val groupConfiguration = loadDocumentGroupConfiguration(context)
-                            val catalogManifest = org.json.JSONArray().apply {
-                                documentDisplayOptions.distinctBy { it.first }.forEach { (id, title, _) ->
-                                    put(org.json.JSONObject().apply {
-                                        put("id", id)
-                                        put("title", title)
-                                        put("group", groupConfiguration.assignments[id] ?: documentVisibilityGroup(id))
-                                    })
+                            scope.launch {
+                                exportBusy = true
+                                importStatus = "Przygotowywanie archiwum vCard…"
+                                val result = withContext(Dispatchers.IO) {
+                                    runCatching {
+                                        val groupConfiguration = loadDocumentGroupConfiguration(context)
+                                        val catalogManifest = org.json.JSONArray().apply {
+                                            documentDisplayOptions.distinctBy { it.first }.forEach { (id, title, _) ->
+                                                put(org.json.JSONObject().apply {
+                                                    put("id", id)
+                                                    put("title", title)
+                                                    put("group", groupConfiguration.assignments[id] ?: documentVisibilityGroup(id))
+                                                })
+                                            }
+                                        }.toString()
+                                        val placements = loadDocumentPlacements(context)
+                                        val allCatalogPlacements = documentDisplayOptions.distinctBy { it.first }.associate { (id, _, _) ->
+                                            id to (placements[id] ?: if (id == "identity") "dashboard" else "hidden")
+                                        }
+                                        val snapshot = DemoIdentityStore.load(context) +
+                                            LegitimacyPreviewSettingsStore.exportAll(context) +
+                                            allCatalogPlacements.mapKeys { "dp_${it.key}" } +
+                                            mapOf(
+                                                "documentCatalogManifest" to catalogManifest,
+                                                "documentCatalogGroupOrder" to org.json.JSONArray(groupConfiguration.groups).toString(),
+                                                "documentGroupConfiguration" to exportDocumentGroupConfiguration(context),
+                                                "documentEditorSchemaVersion" to DOCUMENT_EDITOR_SCHEMA_VERSION,
+                                                "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
+                                                "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
+                                                "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
+                                                "signedPdfArchive" to exportSignedPdfArchive(context),
+                                                "brandAssetArchive" to DocumentBrandStore.exportArchive(context),
+                                                "professionalQualificationArchive" to exportProfessionalQualificationArchive(context),
+                                                "familyHealthArchive" to exportFamilyHealthArchive(context),
+                                                "medicalHistoryArchive" to exportMedicalHistoryArchive(context),
+                                                "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context),
+                                                "originalAttachmentArchive" to exportOriginalAttachmentArchive(context),
+                                                "identityDocumentsArchive" to pl.gov.obywatel.android.ui.identity.exportIdentityDocumentsArchive(context),
+                                                "localRegistryArchive" to pl.gov.obywatel.android.ui.registry.exportLocalRegistryArchive(context),
+                                                "activityHistoryArchive" to exportActivityHistoryArchive(context)
+                                            )
+                                        require(snapshot.isNotEmpty()) {
+                                            "Brak danych do eksportu. Najpierw uzupełnij i zapisz dane w ustawieniach."
+                                        }
+                                        VCardCodec.encodeArchive(snapshot)
+                                        snapshot
+                                    }
                                 }
-                            }.toString()
-                            val allCatalogPlacements = documentDisplayOptions.distinctBy { it.first }.associate { (id, _, _) ->
-                                id to (loadDocumentPlacements(context)[id] ?: if (id == "identity") "dashboard" else "hidden")
+                                result.onSuccess {
+                                    exportSnapshot = it
+                                    importStatus = "Archiwum przygotowane. Wybierz miejsce zapisu."
+                                    exportVCardLauncher.launch("obywatel-archiwum.vcf")
+                                }.onFailure {
+                                    importStatus = "Nie można przygotować eksportu: ${it.message ?: "nieznany błąd"}"
+                                }
+                                exportBusy = false
                             }
-                            exportSnapshot = DemoIdentityStore.load(context) +
-                                LegitimacyPreviewSettingsStore.exportAll(context) +
-                                allCatalogPlacements.mapKeys { "dp_${it.key}" } +
-                                mapOf(
-                                    "documentCatalogManifest" to catalogManifest,
-                                    "documentCatalogGroupOrder" to org.json.JSONArray(groupConfiguration.groups).toString(),
-                                    "documentGroupConfiguration" to exportDocumentGroupConfiguration(context),
-                                    "documentEditorSchemaVersion" to DOCUMENT_EDITOR_SCHEMA_VERSION,
-                                    "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
-                                    "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
-                                    "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
-                                    "signedPdfArchive" to exportSignedPdfArchive(context),
-                                    "brandAssetArchive" to DocumentBrandStore.exportArchive(context),
-                                    "professionalQualificationArchive" to exportProfessionalQualificationArchive(context),
-                                    "familyHealthArchive" to exportFamilyHealthArchive(context),
-                                    "medicalHistoryArchive" to exportMedicalHistoryArchive(context),
-                                    "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context),
-                                    "originalAttachmentArchive" to exportOriginalAttachmentArchive(context),
-                                    "identityDocumentsArchive" to pl.gov.obywatel.android.ui.identity.exportIdentityDocumentsArchive(context),
-                                    "localRegistryArchive" to pl.gov.obywatel.android.ui.registry.exportLocalRegistryArchive(context),
-                                    "activityHistoryArchive" to exportActivityHistoryArchive(context)
-                                )
-                            runCatching {
-                                require(exportSnapshot.isNotEmpty()) {
-                                    "Brak zapisanych danych. Najpierw uzupełnij i zapisz dane w ustawieniach."
-                                }
-                                VCardCodec.encodeArchive(exportSnapshot)
-                            }.onSuccess { exportVCardLauncher.launch("obywatel-archiwum.vcf") }
-                                .onFailure { importStatus = "Nie można przygotować eksportu: ${it.message}" }
                         },
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
                         importStatus = importStatus
