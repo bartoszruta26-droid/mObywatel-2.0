@@ -132,6 +132,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -151,7 +152,10 @@ import pl.gov.obywatel.android.ui.theme.ObywatelTheme
 import pl.gov.obywatel.android.ui.identity.IdentityDocumentsScreen
 import pl.gov.obywatel.android.ui.documents.DocumentsScreen
 import pl.gov.obywatel.android.ui.services.PublicServicesScreen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 private fun OcrRoundAction(
@@ -1202,7 +1206,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var importStatus by remember { mutableStateOf("") }
     var exportSnapshot by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var pendingExportUri by remember { mutableStateOf<Uri?>(null) }
-    val exportVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/vcard")) { uri ->
+    var importBusy by remember { mutableStateOf(false) }
+    var exportBusy by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val exportVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/x-vcard")) { uri ->
         if (uri != null) {
             pendingExportUri = uri
             importStatus = "Wybrano miejsce zapisu. Potwierdź zapis archiwum; istniejący plik o tej nazwie może zostać zastąpiony."
@@ -1211,40 +1218,47 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
     }
     val importVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) runCatching {
-            val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
-                val output = java.io.ByteArrayOutputStream()
-                val buffer = ByteArray(8192)
-                var total = 0
-                while (true) {
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    total += count
-                    require(total <= 256 * 1024 * 1024) { "Plik przekracza limit 10 MB." }
-                    output.write(buffer, 0, count)
+        if (uri != null) {
+            scope.launch {
+                importBusy = true
+                importStatus = "Odczytywanie i sprawdzanie pliku vCard…"
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
+                            val output = java.io.ByteArrayOutputStream()
+                            val buffer = ByteArray(8192)
+                            var total = 0
+                            while (true) {
+                                val count = input.read(buffer)
+                                if (count < 0) break
+                                total += count
+                                require(total <= 50 * 1024 * 1024) { "Plik vCard przekracza limit 50 MB." }
+                                output.write(buffer, 0, count)
+                            }
+                            output.toByteArray()
+                        } ?: error("Nie można otworzyć wybranego pliku.")
+                        require(bytes.isNotEmpty()) { "Wybrany plik jest pusty." }
+                        val raw = runCatching {
+                            Charsets.UTF_8.newDecoder()
+                                .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+                                .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+                                .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+                        }.getOrElse { String(bytes, java.nio.charset.Charset.forName("windows-1250")) }
+                        VCardCodec.decodeForImport(raw).also {
+                            require(it.isNotEmpty()) { "Archiwum nie zawiera danych." }
+                        }
+                    }
                 }
-                output.toByteArray()
-            } ?: error("Nie można otworzyć wybranego pliku.")
-            require(bytes.isNotEmpty()) { "Wybrany plik jest pusty." }
-            val raw = runCatching {
-                Charsets.UTF_8.newDecoder()
-                    .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
-                    .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
-            }.getOrElse {
-                String(bytes, java.nio.charset.Charset.forName("windows-1250"))
+                result.onSuccess {
+                    pendingImport = it
+                    importStatus = "Plik odczytany i poprawny. Sprawdź zakres danych przed zatwierdzeniem."
+                }.onFailure {
+                    pendingImport = null
+                    importStatus = "Błąd importu: ${it.message ?: "nieprawidłowy plik"}"
+                }
+                importBusy = false
             }
-            val imported = VCardCodec.decodeForImport(raw)
-            require(imported.isNotEmpty()) { "Archiwum nie zawiera danych." }
-            imported
-        }.onSuccess {
-            pendingImport = it
-            importStatus = "Plik odczytany i poprawny. Sprawdź zakres danych przed zatwierdzeniem."
-        }.onFailure {
-            pendingImport = null
-            importStatus = "Błąd importu: ${it.message ?: "nieprawidłowy plik"}"
-        }
-        else {
+        } else {
             importStatus = "Import anulowany — dane lokalne pozostają bez zmian."
         }
     }
@@ -2003,24 +2017,34 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     Text("Zapiszesz ${exportSnapshot.size} pól oraz katalog dokumentów z ich grupami i ustawieniami widoczności. Jeżeli w wybranym miejscu istnieje plik o tej samej nazwie, jego zawartość zostanie zastąpiona. Czy kontynuować?")
                 },
                 confirmButton = {
-                    TextButton(onClick = {
-                        runCatching {
-                            require(exportSnapshot.isNotEmpty()) { "Brak danych do eksportu." }
-                            val bytes = VCardCodec.encodeArchive(exportSnapshot).toByteArray(Charsets.UTF_8)
-                            val output = context.contentResolver.openOutputStream(destinationUri, "wt")
-                                ?: error("Android nie udostępnił strumienia zapisu dla wybranego pliku.")
-                            output.use { it.write(bytes); it.flush() }
-                            val savedBytes = context.contentResolver.openInputStream(destinationUri)?.use { it.readBytes() }
-                                ?: error("Nie można ponownie odczytać zapisanego pliku vCard.")
-                            require(savedBytes.isNotEmpty()) { "Zapisany plik vCard jest pusty." }
-                            require(savedBytes.contentEquals(bytes)) {
-                                "Weryfikacja zapisu nie powiodła się: zawartość pliku różni się od eksportowanych danych."
+                    TextButton(enabled = !exportBusy, onClick = {
+                        scope.launch {
+                            exportBusy = true
+                            importStatus = "Zapisywanie i weryfikowanie archiwum vCard…"
+                            val result = withContext(Dispatchers.IO) {
+                                runCatching {
+                                    require(exportSnapshot.isNotEmpty()) { "Brak danych do eksportu." }
+                                    val snapshot = exportSnapshot.toMap()
+                                    val bytes = VCardCodec.encodeArchive(snapshot).toByteArray(Charsets.UTF_8)
+                                    val output = context.contentResolver.openOutputStream(destinationUri, "wt")
+                                        ?: error("Android nie udostępnił strumienia zapisu dla wybranego pliku.")
+                                    output.use { it.write(bytes); it.flush() }
+                                    val savedBytes = context.contentResolver.openInputStream(destinationUri)?.use { it.readBytes() }
+                                        ?: error("Nie można ponownie odczytać zapisanego pliku vCard.")
+                                    require(savedBytes.isNotEmpty()) { "Zapisany plik vCard jest pusty." }
+                                    val verified = VCardCodec.decodeArchive(String(savedBytes, Charsets.UTF_8))
+                                    require(verified == snapshot) {
+                                        "Weryfikacja zapisu nie powiodła się: odczytane dane różnią się od eksportowanych."
+                                    }
+                                    "Zapisano i zweryfikowano ${snapshot.size} pól oraz katalog dokumentów (${bytes.size} bajtów) w pliku vCard."
+                                }
                             }
-                            "Zapisano ${exportSnapshot.size} pól i katalog dokumentów (${bytes.size} bajtów) do pliku vCard."
-                        }.onSuccess { importStatus = it }
-                            .onFailure { importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}" }
-                        pendingExportUri = null
-                    }) { Text("Potwierdź zapis") }
+                            result.onSuccess { importStatus = it }
+                                .onFailure { importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}" }
+                            exportBusy = false
+                            pendingExportUri = null
+                        }
+                    }) { Text(if (exportBusy) "Zapisywanie…" else "Potwierdź zapis") }
                 },
                 dismissButton = {
                     TextButton(onClick = {
