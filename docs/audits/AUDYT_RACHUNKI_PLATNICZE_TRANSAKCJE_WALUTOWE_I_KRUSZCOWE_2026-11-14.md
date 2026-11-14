@@ -2021,11 +2021,11 @@ Test chroni jednocześnie przed błędnym rozdzieleniem nóg między zakresami i
 Zmiany zapisano na `feature/payment-ledger-stage-1`:
 - `PaymentLedgerScreen.kt` — commit `1d89b0ed5b2868aab856fca27d724b22a84cdd71`;
 - `BankImportDeduplicator.kt` — commit `7e3c1f0b95b2c3a28bb324ecbf874db9f043c554`;
-- `BankExchangeOperationTest.kt` — commit `f7f65d7f8e54819e2ae89f926fab3b2fe03847aa`.
+- `BankExchangeOperationTest.kt` — commit `f7f65d7f8e54819e2ae89f926fab3b2fe03847aa`;
 - `PaymentLedgerDatabase.kt` — commit `dce1d4194ec32fd5f091d264cd295a4a9df6fc21`;
 - `PaymentLedgerDatabaseTest.kt` — commit `d179bb6207e8d4e71ff7dc09efb5ed4c38ebd6b1`;
 
-Po zapisaniu ponownie pobrano wszystkie trzy pliki z GitHub. Kontrola treści potwierdziła:
+Po zapisaniu ponownie pobrano wszystkie zmienione pliki z GitHub. Kontrola treści potwierdziła:
 - wyświetlanie grup FX i statusów;
 - rozwijanie źródłowych nóg operacji;
 - wykluczanie nóg z osobnej listy;
