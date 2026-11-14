@@ -1014,7 +1014,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
     id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
     id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
-    id == "parliament" -> "Służba państwowa"
+    id == "parliament" || id in setOf("mayor", "village_head", "county_starosta", "citizen_record", "ombudsman", "children_ombudsman", "patient_ombudsman", "pretrial_mediator", "milicja_officer", "foreign_service_member", "diplomat", "consul", "ambassador", "foreign_mission_head", "consular_employee", "inspector") -> "Służba państwowa"
     id == "business" || id == "entity" || id == "registry" ||
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
     id == "professional" || id.startsWith("professional_") ||
