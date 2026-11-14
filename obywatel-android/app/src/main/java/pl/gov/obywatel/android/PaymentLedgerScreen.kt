@@ -123,6 +123,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             try {
                 val fromCode = if (transactionType == FinancialTransactionType.DEPOSIT) null else fromAssetText.trim().uppercase()
                 val toCode = if (transactionType == FinancialTransactionType.WITHDRAWAL) null else toAssetText.trim().uppercase()
+                val previous = financialTransactions.firstOrNull {
+                    it.transaction.id == editingTransactionId
+                }?.transaction
                 val transaction = FinancialTransaction(
                     id = editingTransactionId ?: UUID.randomUUID().toString(),
                     executedAt = Instant.parse(executedAtText.trim()),
@@ -133,8 +136,10 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     toAmount = toCode?.let { BigDecimal(toAmountText.trim()) },
                     fee = if (feeAmountText.isBlank() && feeAssetText.isBlank()) null else
                         Fee(feeAssetText.trim().uppercase(), BigDecimal(feeAmountText.trim())),
-                    source = FinancialRecordSource.MANUAL,
-                    parseStatus = FinancialParseStatus.MANUAL
+                    source = previous?.source ?: FinancialRecordSource.MANUAL,
+                    externalId = previous?.externalId,
+                    rawDescription = previous?.rawDescription,
+                    parseStatus = previous?.parseStatus ?: FinancialParseStatus.MANUAL
                 )
                 transaction.validate()
                 repository.saveFinancialTransaction(transaction, selectedBankEntryIds)
@@ -358,7 +363,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(if (editingTransactionId == null) "Ręczne dodawanie transakcji" else "Edycja transakcji", style = MaterialTheme.typography.titleMedium)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(FinancialTransactionType.entries.toList(), key = { it.name }) { type ->
+                    items(FinancialTransactionType.values().toList(), key = { it.name }) { type ->
                         Button(onClick = { transactionType = type }) {
                             Text(if (transactionType == type) "✓ $type" else type.name)
                         }
@@ -382,7 +387,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     Button(onClick = {
                         selectedBankEntryIds = if (selected) selectedBankEntryIds - entryId else selectedBankEntryIds + entryId
                     }) {
-                        Text((if (selected) "✓ " else "") + "\${bankEntry.bookingDate} • \${bankEntry.signedAmount.toPlainString()} \${bankEntry.currencyCode}")
+                        Text((if (selected) "✓ " else "") + "${bankEntry.bookingDate} • ${bankEntry.signedAmount.toPlainString()} ${bankEntry.currencyCode}")
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
