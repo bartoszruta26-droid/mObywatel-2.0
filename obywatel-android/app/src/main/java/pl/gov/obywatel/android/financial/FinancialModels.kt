@@ -94,12 +94,9 @@ data class FinancialTransaction(
             }
             FinancialTransactionType.ADJUSTMENT -> Unit
         }
-        fee?.let {
-            it.validate()
-            require(it.assetCode == fromAssetCode || it.assetCode == toAssetCode) {
-                "Prowizja musi być wyrażona w aktywie jednej ze stron transakcji."
-            }
-        }
+        // Prowizja może być pobrana także w trzecim aktywie (np. osobnej walucie
+        // lub kruszcu). Kod i nieujemną kwotę weryfikuje Fee.validate().
+        fee?.validate()
     }
 }
 
