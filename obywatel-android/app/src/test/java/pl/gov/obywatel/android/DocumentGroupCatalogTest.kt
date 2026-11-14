@@ -53,6 +53,43 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun specialServicesHaveDedicatedCredentialPersonnelCertificateAndAssignmentDocuments() {
+        val expected = setOf(
+            "abw_legitimacy",
+            "abw_personnel_order",
+            "abw_service_certificate",
+            "abw_assignment",
+            "aw_legitimacy",
+            "aw_personnel_order",
+            "aw_service_certificate",
+            "aw_assignment",
+            "skw_legitimacy",
+            "skw_personnel_order",
+            "skw_service_certificate",
+            "skw_assignment",
+            "sww_legitimacy",
+            "sww_personnel_order",
+            "sww_service_certificate",
+            "sww_assignment",
+            "cba_legitimacy",
+            "cba_personnel_order",
+            "cba_service_certificate",
+            "cba_assignment",
+            "sop_legitimacy",
+            "sop_personnel_order",
+            "sop_service_certificate",
+            "sop_assignment"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing special-service document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
     fun customsTaxServiceDocumentsHaveDedicatedFieldsRoutesAndStateServiceGroup() {
         val expected = setOf(
             "customs_tax_legitimacy", "customs_tax_personnel_order",
