@@ -70,4 +70,36 @@ class DocumentCatalogTest {
         }
     }
 
+    @Test
+    fun publicAndUniformedServiceCatalogContainsEveryNewRoleInAnExistingGroup() {
+        val expectedPrefixes = mapOf(
+            "military_" to "Służba zbrojna", "police_" to "Służba państwowa",
+            "fire_" to "Służba państwowa", "border_" to "Służba państwowa",
+            "prison_" to "Służba państwowa", "customs_" to "Służba państwowa",
+            "special_" to "Służba państwowa", "protective_" to "Służba państwowa",
+            "civil_service_" to "Służba cywilna", "civil_tax_" to "Służba cywilna",
+            "civil_government_" to "Służba cywilna", "civil_voivodeship_" to "Służba cywilna",
+            "local_" to "Służba państwowa", "constitutional_" to "Służba państwowa",
+            "justice_" to "Służba cywilna", "rescue_" to "Służba zdrowotna",
+            "diplomatic_" to "Służba państwowa", "education_" to "Służba zawodowa",
+            "inspection_" to "Służba cywilna"
+        )
+        val additions = officialGraphicDocumentTargets().filter { (id, _) ->
+            id == "military" || expectedPrefixes.keys.any(id::startsWith)
+        }
+        assertTrue("Nowy katalog służb jest pusty.", additions.isNotEmpty())
+        expectedPrefixes.forEach { (prefix, group) ->
+            val subset = additions.filter { it.first.startsWith(prefix) }
+            assertTrue("Brak dokumentów dla kategorii $prefix", subset.isNotEmpty())
+            subset.forEach { (id, title) ->
+                assertTrue("Pusty tytuł $id", title.isNotBlank())
+                assertEquals("Nieprawidłowa grupa dla $id", group, documentVisibilityGroup(id))
+                assertTrue("Brak formularza dla $id", officialGraphicDocumentFields(id).isNotEmpty())
+                assertTrue("Brak kafelka dla $id", documentDisplayOptions.any { it.first == id })
+            }
+        }
+        assertEquals("Żołnierz zawodowy powinien należeć do służby zbrojnej.", "Służba zbrojna", documentVisibilityGroup("military"))
+        assertEquals(additions.size, additions.map { it.first }.toSet().size)
+    }
+
 }
