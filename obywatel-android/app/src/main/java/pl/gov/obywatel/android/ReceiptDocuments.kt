@@ -212,6 +212,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
     val c=LocalContext.current
     var records by remember { mutableStateOf(ReceiptStore.list(c)) }
     var status by remember { mutableStateOf("") }
+    var pendingDelete by remember { mutableStateOf<ReceiptRecord?>(null) }
     var seller by remember { mutableStateOf(lastReceiptString(c,"seller")) }; var buyer by remember { mutableStateOf(lastReceiptString(c,"buyer")) }
     var parties by remember { mutableStateOf(receiptParties(c)) }
     var showPartyManager by remember { mutableStateOf(false) }
@@ -334,9 +335,30 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
                         c.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany")))
                     }.onFailure{status="Nie można otworzyć usługi gov.pl: ${it.message}"}}) { Text("Otwórz gov.pl") }
                     TextButton(onClick={replaceId=null;importPicker.launch(arrayOf("application/pdf"))}) { Text("Dodaj podpisany PDF") }
-                    TextButton(onClick={ReceiptStore.delete(c,rec.id);records=ReceiptStore.list(c);status="Usunięto rachunek PDF."}) { Icon(Icons.Filled.Delete,null); Text("Usuń") }
+                    TextButton(onClick={pendingDelete=rec}) { Icon(Icons.Filled.Delete,null); Text("Usuń") }
                 }
             } }
+        }
+        pendingDelete?.let { record ->
+            AlertDialog(
+                onDismissRequest = { pendingDelete = null },
+                title = { Text("Potwierdzenie usunięcia rachunku") },
+                text = { Text("Czy na pewno usunąć zapisany rachunek „${record.name}”? Tej operacji nie można cofnąć.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        runCatching { ReceiptStore.delete(c, record.id) }
+                            .onSuccess {
+                                records = ReceiptStore.list(c)
+                                status = "Usunięto rachunek PDF: ${record.name}"
+                            }
+                            .onFailure { status = "Nie udało się usunąć rachunku: ${it.message}" }
+                        pendingDelete = null
+                    }) { Text("Usuń rachunek") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingDelete = null }) { Text("Anuluj") }
+                }
+            )
         }
         if(status.isNotBlank()) Text(status,color=MaterialTheme.colorScheme.primary)
         if(showPartyManager) AlertDialog(
