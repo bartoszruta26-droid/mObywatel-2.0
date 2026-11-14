@@ -2072,7 +2072,12 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        runCatching {
+                        scope.launch {
+                            importBusy = true
+                            importStatus = "Zapisywanie i weryfikowanie zaimportowanych danych…"
+                            val result = withContext(Dispatchers.IO) {
+                                var placementUpdate: Map<String, String>? = null
+                                val outcome = runCatching {
                             val current = DemoIdentityStore.loadStrict(context)
                             val importedSchemaVersion = incoming["documentEditorSchemaVersion"]?.toIntOrNull() ?: 1
                             require(importedSchemaVersion in 1..DOCUMENT_EDITOR_SCHEMA_VERSION.toInt()) {
@@ -2142,7 +2147,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 require(importedPlacements.all { (id, placement) -> verifiedPlacements[id] == placement }) {
                                     "Weryfikacja importu nie potwierdziła wszystkich ustawień widoczności dokumentów."
                                 }
-                                documentPlacements = verifiedPlacements
+                                placementUpdate = verifiedPlacements
                             }
                             val persisted = DemoIdentityStore.loadStrict(context)
                             require(profileValues.all { (key, value) -> persisted[key] == value }) {
@@ -2164,10 +2169,17 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             }
                             val ignoredCount = incoming.size - recognizedCount
                             "Zaimportowano i zweryfikowano ${changed} rozpoznanych pól oraz ustawień. Pominięto ${ignoredCount.coerceAtLeast(0)} pól o nieaktualnych lub nieobsługiwanych nazwach. Łącznie zapisano ${persisted.size} pól profilu."
-                        }.onSuccess { importStatus = it }
-                            .onFailure { importStatus = "Błąd importu lub weryfikacji: ${it.message ?: "nieznany błąd"}" }
-                        pendingImport = null
-                    }) { Text("Importuj i zweryfikuj") }
+                                }
+                                outcome to placementUpdate
+                            }
+                            result.first.onSuccess { message ->
+                                result.second?.let { documentPlacements = it }
+                                importStatus = message
+                            }.onFailure { importStatus = "Błąd importu lub weryfikacji: ${it.message ?: "nieznany błąd"}" }
+                            pendingImport = null
+                            importBusy = false
+                        }
+                    }) { Text(if (importBusy) "Importowanie…" else "Importuj i zweryfikuj") }
                 },
                 dismissButton = { TextButton(onClick = { pendingImport = null }) { Text("Anuluj") } }
             )
