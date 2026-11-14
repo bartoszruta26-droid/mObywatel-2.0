@@ -111,4 +111,38 @@ class BankImportDeduplicatorTest {
         assertEquals(0, preview.conflicts.size)
     }
 
+
+    @Test
+    fun previewFlagsSameReferenceWithChangedDateCurrencyOrDirection() {
+        val existing = entry()
+        val changedEntries = listOf(
+            existing.copy(bookingDate = existing.bookingDate.plusDays(1)),
+            existing.copy(currencyCode = "EUR"),
+            existing.copy(signedAmount = BigDecimal("-749.33")),
+            existing.copy(operationType = "INNY TYP OPERACJI")
+        )
+        changedEntries.forEach { changed ->
+            val preview = BankImportDeduplicator.preview(
+                incoming = listOf(changed),
+                existingEntries = listOf(existing)
+            )
+            assertEquals(1, preview.conflicts.size)
+            assertEquals(0, preview.newEntries.size)
+            assertEquals(0, preview.duplicates.size)
+        }
+    }
+
+    @Test
+    fun previewDetectsConflictsInsideTheIncomingBatch() {
+        val first = entry()
+        val changed = first.copy(signedAmount = BigDecimal("750.00"))
+        val preview = BankImportDeduplicator.preview(
+            incoming = listOf(first, changed),
+            existingEntries = emptyList()
+        )
+        assertEquals(1, preview.newEntries.size)
+        assertEquals(1, preview.conflicts.size)
+        assertEquals(0, preview.duplicates.size)
+    }
+
 }
