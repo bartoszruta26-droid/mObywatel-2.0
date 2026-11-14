@@ -30,6 +30,9 @@ class DocumentGroupCatalogTest {
         assertEquals("Służba zbrojna", migrateDocumentGroupName("Służba zbrojna"))
         assertEquals("Służba rodowa", migrateDocumentGroupName("Dokumenty rodowe i rodzinne"))
         assertEquals("Moja własna grupa", migrateDocumentGroupName("Moja własna grupa"))
+        assertEquals("Służba fundacyjna", migrateDocumentGroupAssignment("organization_foundation", "Służba gospodarcza"))
+        assertEquals("Służba stowarzyszeniowa", migrateDocumentGroupAssignment("organization_association", "Służba gospodarcza"))
+        assertEquals("Moja własna grupa", migrateDocumentGroupAssignment("organization_foundation", "Moja własna grupa"))
     }
 
     @Test
