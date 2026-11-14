@@ -124,9 +124,8 @@ class FinancialModelsTest {
         assertThrows(IllegalArgumentException::class.java) {
             valid.copy(toAssetCode = "PLN").validate()
         }
-        assertThrows(IllegalArgumentException::class.java) {
-            valid.copy(fee = Fee("USD", BigDecimal("1"))).validate()
-        }
+        // Prowizja może być rozliczona w aktywie innym niż obie strony wymiany.
+        valid.copy(fee = Fee("USD", BigDecimal("1"))).validate()
     }
 
     @Test
