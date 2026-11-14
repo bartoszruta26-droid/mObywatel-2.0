@@ -157,17 +157,44 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     parseStatus = previous?.parseStatus ?: FinancialParseStatus.MANUAL
                 )
                 transaction.validate()
-                fun validatePrecision(code: String?, amount: BigDecimal?) {
+                fun validatePrecision(
+                    code: String?,
+                    amount: BigDecimal?,
+                    unchangedImportedValue: Boolean
+                ) {
                     if (code == null || amount == null) return
                     val definition = assets.firstOrNull { it.code == code }
-                        ?: throw IllegalArgumentException("Aktywo $code nie istnieje w słowniku. Dodaj je przed zapisaniem transakcji.")
+                    // Starsze/importowane rekordy mogą zawierać kody spoza lokalnego słownika.
+                    // Pozwalamy zachować wyłącznie niezmienioną parę kod+kwota; każda zmiana
+                    // wartości nadal wymaga definicji i walidacji jej precyzji.
+                    if (definition == null && unchangedImportedValue) return
+                    requireNotNull(definition) {
+                        "Aktywo $code nie istnieje w słowniku. Dodaj je przed zapisaniem transakcji."
+                    }
                     require(amount.stripTrailingZeros().scale().coerceAtLeast(0) <= definition.decimalPlaces) {
                         "Ilość $code przekracza precyzję słownika (${definition.decimalPlaces} miejsc dziesiętnych)."
                     }
                 }
-                validatePrecision(transaction.fromAssetCode, transaction.fromAmount)
-                validatePrecision(transaction.toAssetCode, transaction.toAmount)
-                transaction.fee?.let { validatePrecision(it.assetCode, it.amount) }
+                val importedRecord = previous != null && previous.source != FinancialRecordSource.MANUAL
+                validatePrecision(
+                    transaction.fromAssetCode,
+                    transaction.fromAmount,
+                    importedRecord && transaction.fromAssetCode == previous?.fromAssetCode &&
+                        transaction.fromAmount == previous?.fromAmount
+                )
+                validatePrecision(
+                    transaction.toAssetCode,
+                    transaction.toAmount,
+                    importedRecord && transaction.toAssetCode == previous?.toAssetCode &&
+                        transaction.toAmount == previous?.toAmount
+                )
+                transaction.fee?.let { fee ->
+                    validatePrecision(
+                        fee.assetCode,
+                        fee.amount,
+                        importedRecord && fee == previous?.fee
+                    )
+                }
                 repository.saveFinancialTransaction(transaction, selectedBankEntryIds)
                 message = if (editingTransactionId == null) "Zapisano transakcję." else "Zaktualizowano transakcję."
                 error = null
