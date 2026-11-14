@@ -16,11 +16,11 @@ import org.xmlpull.v1.XmlPullParser
  */
 object BankStatementXmlParser {
     private val referencePattern = Regex(
-        """Referencje\\s+własne\\s+zleceniodawcy\\s*:\\s*([A-Za-z0-9_-]+)""",
+        """Referencje\s+własne\s+zleceniodawcy\s*:\s*([A-Za-z0-9_-]+)""",
         RegexOption.IGNORE_CASE
     )
     private val titlePattern = Regex(
-        """Tytuł\\s*:\\s*(.*?)(?=\\s+Referencje\\s+własne\\s+zleceniodawcy\\s*:|$)""",
+        """Tytuł\s*:\s*(.*?)(?=\s+Referencje\s+własne\s+zleceniodawcy\s*:|$)""",
         setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
     )
 
