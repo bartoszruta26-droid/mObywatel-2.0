@@ -1232,7 +1232,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 val count = input.read(buffer)
                                 if (count < 0) break
                                 total += count
-                                require(total <= 50 * 1024 * 1024) { "Plik vCard przekracza limit 50 MB." }
+                                require(total <= 256 * 1024 * 1024) { "Plik vCard przekracza limit 256 MB." }
                                 output.write(buffer, 0, count)
                             }
                             output.toByteArray()
