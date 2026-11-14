@@ -1183,3 +1183,64 @@ Korekta:
 ### 20.4. Decyzja o kolejności etapów
 
 Etap 2 (trwały magazyn i formularze) rozpocznie się po zielonym wyniku testów i kompilacji etapu 1. Nie należy budować warstwy danych na bazie nawigacji, która nie przeszła regresji katalogu dokumentów.
+
+
+## 21. Wzorce danych iPKO — analiza czterech załączników (14 listopada 2026 r.)
+
+### 21.1. Zakres materiału źródłowego
+
+Przeanalizowano cztery dostarczone reprezentacje historii operacji:
+- CSV — 3 wiersze operacji;
+- XLS — 3 wiersze operacji;
+- XML — 5 elementów `operation`;
+- PDF — 5 zapisów tabeli historii rachunku.
+
+CSV i XLS zawierają te same trzy zapisy w walucie CHF. XML i PDF zawierają te same pięć zapisów w walucie USD. Nie wolno zakładać, że wszystkie cztery pliki są identycznymi eksportami: obejmują różne zestawy operacji/rachunków/walut.
+
+Łącznie wzorce reprezentują **8 odrębnych zapisów księgowych**:
+- CHF: uznania 617,42 (08.11.2026), 622,29 (03.11.2026) i 6 183,20 (04.03.2026);
+- USD: uznania 749,33 i 751,30 (12.11.2026), 825,85 (20.12.2025) i 829,03 (17.12.2025), a także obciążenie 8 000,00 (04.03.2026).
+
+CSV/XLS stanowią duplikujące się reprezentacje tych samych trzech zapisów. XML/PDF stanowią duplikujące się reprezentacje tych samych pięciu zapisów. Własna referencja zleceniodawcy `90124777` występuje po obu stronach wymiany: jako obciążenie 8 000,00 USD oraz uznanie 6 183,20 CHF. Są to dwa odrębne zapisy księgowe jednej operacji wymiany, a nie duplikat.
+
+### 21.2. Wnioski dla importu
+
+1. Import musi rozdzielać **identyfikator zapisu księgowego** od **identyfikatora operacji nadrzędnej**.
+2. Ten sam zapis z CSV i XLS albo XML i PDF musi otrzymać identyczny identyfikator niezależnie od formatu źródłowego.
+3. Przeciwne nogi wymiany z tym samym numerem FX muszą pozostać osobnymi zapisami (różne waluty, kwoty i kierunki), lecz być powiązane jednym identyfikatorem operacji.
+4. Identyfikacja zapisu uwzględnia zakres rachunku, datę operacji, walutę, kwotę ze znakiem, kierunek, typ operacji i referencję bankową. Kwoty są normalizowane dziesiętnie, bez konwersji do typów zmiennoprzecinkowych.
+5. Gdy referencja bankowa nie występuje, przewidziany jest klucz zastępczy oparty na znormalizowanym opisie. Takie dopasowanie należy traktować ostrożniej i umożliwić oznaczenie konfliktu do ręcznej kontroli.
+6. Pełne numery rachunków, nazwiska, adresy i treści prywatnych wyciągów nie są zapisywane w repozytorium ani w logach CI. Zakres rachunku w identyfikatorze powinien być lokalnym pseudonimem/skrótowym identyfikatorem, a nie pełnym numerem.
+
+### 21.3. Ograniczenia wzorca
+
+- Pliki nie dostarczają kompletnego schematu wszystkich możliwych wariantów eksportu iPKO.
+- XLS jest arkuszem binarnym; w środowisku analitycznym został odczytany przez konwersję do CSV. Aplikacyjny parser XLS nie został jeszcze zaimplementowany.
+- PDF jest dokumentem prezentacyjnym; ekstrakcja tekstu nie jest równoważna stabilnemu API. Parser PDF/OCR wymaga osobnego etapu i testów na kolejnych wzorcach.
+- Nie należy importować podsumowań z pierwszej strony PDF jako dodatkowych transakcji — są agregatami tych samych operacji.
+- Import nie obejmuje logowania do banku ani pobierania danych z konta.
+
+## 22. Etap 2B — identyfikacja i idempotencja importu
+
+### 22.1. Implementacja
+
+Dodano:
+- `financial/BankImportDeduplicator.kt` — model pojedynczego zapisu wyciągu, walidację, stabilny identyfikator zapisu oparty na SHA-256 oraz identyfikator operacji nadrzędnej oparty na referencji FX;
+- `financial/BankImportDeduplicatorTest.kt` — testy identyczności między formatami, deduplikacji wewnątrz jednej paczki i względem istniejącego rejestru, rozdzielenia nóg wymiany oraz klucza zastępczego bez referencji.
+
+Mechanizm `BankImportDeduplicator.classify` klasyfikuje każdy rekord jako nowy albo już istniejący. Jest czystą funkcją planującą import — nie zapisuje danych do magazynu i nie usuwa istniejących rekordów.
+
+### 22.2. Zasada identyfikacji
+
+- `accountingEntryId` identyfikuje pojedynczy zapis księgowy. Obejmuje rachunek w postaci lokalnego zakresu, datę, walutę, kwotę ze znakiem, kierunek, typ operacji i referencję.
+- `exchangeOperationId` wiąże różne zapisy tej samej wymiany na podstawie referencji bankowej. Nie jest kluczem deduplikacji.
+- Normalizacja kwoty usuwa wyłącznie nieistotne zera końcowe zapisu dziesiętnego; nie zmienia wartości liczbowej.
+- Algorytm nie używa `Float` ani `Double`.
+
+### 22.3. Testy i status
+
+Dodano testy jednostkowe, ale ich dodanie nie jest dowodem wykonania. Dla rewizji poprzedzającej etap 2B CI potwierdził sukces zadania testów jednostkowych oraz kompilacji prototypu; walidacja interfejsu Compose pozostawała w toku podczas kontroli. Nowe pliki i aktualizacja audytu wymagają świeżego CI dla najnowszego SHA.
+
+### 22.4. Zakres nadal otwarty
+
+Etap 2B dostarcza mechanizm identyfikacji i klasyfikacji duplikatów, ale nie jest jeszcze kompletnym importerem plików. Do wykonania pozostają: trwały magazyn, transakcyjne zatwierdzanie paczki, parsowanie CSV/XML, obsługa XLS i PDF, podgląd przed importem, raport duplikatów/konfliktów, kontrola sum kontrolnych i testy integracyjne. Import powinien być atomowy: błąd walidacji nie może pozostawić częściowo zaimportowanej paczki.
