@@ -542,6 +542,38 @@ class PaymentLedgerDatabaseTest {
     }
 
     @Test
+    fun assetUsedOnlyAsTransactionFeeKeepsItsHistoricalDefinitionImmutable() {
+        val db = openDatabase()
+        try {
+            val feeAsset = Asset("XAU_FEE_999", "Złoto prowizyjne próby 999", AssetKind.PRECIOUS_METAL, "g", 4, 999)
+            db.saveAsset(feeAsset)
+            val transaction = FinancialTransaction(
+                id = "asset-history-fee-only",
+                executedAt = Instant.parse("2026-11-12T10:15:30Z"),
+                type = FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null,
+                fromAmount = null,
+                toAssetCode = "PLN",
+                toAmount = BigDecimal("100.00"),
+                fee = Fee(feeAsset.code, BigDecimal("0.0010"))
+            )
+            db.saveFinancialTransaction(transaction)
+
+            db.saveAsset(feeAsset.copy(name = "Złoto prowizyjne"))
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveAsset(feeAsset.copy(purity = 750))
+            }
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveAsset(feeAsset.copy(unit = "ozt"))
+            }
+            assertEquals(999, db.readAssets().single().purity)
+            assertEquals(feeAsset.code, db.readFinancialTransactions().single().transaction.fee?.assetCode)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
     fun versionFourMigrationCreatesAssetRegistryWithoutDroppingLegacyTables() {
         val legacy = object : SQLiteOpenHelper(context, databaseName, null, 4) {
             override fun onCreate(db: SQLiteDatabase) {
