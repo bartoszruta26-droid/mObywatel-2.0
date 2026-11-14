@@ -77,13 +77,94 @@ private val entityDocs = listOf(
     RegistryDoc(if (title.contains("rachunków bankowych")) "entity_bank_accounts" else "entity_${section.hashCode().toUInt().toString(16)}_${index}", title, section, if (title.contains("rachunków bankowych")) emptyList() else fields.distinct(), "Ewidencja dokumentu podmiotu. Wpisane dane nie potwierdzają samodzielnie aktualnego stanu rejestru; dokument urzędowy należy dołączyć jako źródło.")
 } }
 
+// Każda służba podmiotowa ma trzy niezależne zestawy: osoby prawne,
+// jednostki organizacyjne osób prawnych oraz jednostki organizacyjne osób fizycznych.
+// Identyfikatory są trwałe i rozdzielają dane oraz wygląd dokumentów między zestawami.
+private data class EntityServiceDefinition(val key: String, val group: String, val label: String)
+private data class EntitySubjectDefinition(val key: String, val label: String)
+
+private val entityServices = listOf(
+    EntityServiceDefinition("foundation", "Służba fundacyjna", "Fundacja"),
+    EntityServiceDefinition("business", "Służba gospodarcza", "Podmiot gospodarczy"),
+    EntityServiceDefinition("association", "Służba stowarzyszeniowa", "Stowarzyszenie")
+)
+private val entitySubjects = listOf(
+    EntitySubjectDefinition("legal_person", "Osoby prawne"),
+    EntitySubjectDefinition("legal_person_unit", "Jednostki organizacyjne osób prawnych"),
+    EntitySubjectDefinition("natural_person_unit", "Jednostki organizacyjne osób fizycznych")
+)
+
+private val organizationalUnitTemplates = listOf(
+    "Utworzenie i status jednostki" to listOf(
+        "Akt utworzenia jednostki organizacyjnej", "Regulamin jednostki organizacyjnej",
+        "Statut jednostki organizacyjnej", "Zgłoszenie jednostki do ewidencji",
+        "Zaświadczenie o wpisie jednostki do rejestru", "Akt likwidacji jednostki organizacyjnej"
+    ),
+    "Kierownictwo i reprezentacja jednostki" to listOf(
+        "Akt powołania kierownika jednostki", "Akt odwołania kierownika jednostki",
+        "Pełnomocnictwo jednostki", "Upoważnienie do reprezentowania jednostki",
+        "Rejestr osób uprawnionych do reprezentacji", "Regulamin organizacyjny jednostki"
+    ),
+    "Działalność i majątek jednostki" to listOf(
+        "Rejestr działalności jednostki", "Ewidencja składników majątku jednostki",
+        "Rejestr umów i zobowiązań jednostki", "Protokół przekazania majątku jednostki",
+        "Rejestr rachunków bankowych jednostki", "Sprawozdanie z działalności jednostki"
+    )
+)
+
+private fun serviceSubjectDocuments(): List<RegistryDoc> = buildList {
+    entityServices.forEach { service ->
+        entitySubjects.forEach { subject ->
+            val sourceDocs = if (subject.key == "legal_person") {
+                entityDocs.filterNot { it.id == "entity_bank_accounts" }
+            } else {
+                organizationalUnitTemplates.flatMap { (section, titles) ->
+                    titles.mapIndexed { index, title ->
+                        val subjectName = if (subject.key == "legal_person_unit") "jednostki organizacyjnej osoby prawnej"
+                            else "jednostki organizacyjnej osoby fizycznej"
+                        val fields = when {
+                            title.contains("powołania") || title.contains("odwołania") ->
+                                listOf("Nazwa jednostki", "Osoba obejmująca / tracąca funkcję", "Organ lub osoba powołująca", "Data uchwały / decyzji", "Zakres kompetencji", "Okres pełnienia funkcji")
+                            title.contains("Pełnomocnictwo") || title.contains("Upoważnienie") ->
+                                listOf("Nazwa jednostki", "Mocodawca", "Pełnomocnik", "Zakres umocowania", "Data udzielenia", "Okres obowiązywania")
+                            title.contains("majątku") || title.contains("rachunków") || title.contains("umów") ->
+                                listOf("Nazwa jednostki", "Składnik / przedmiot ewidencji", "Identyfikator", "Właściciel / dysponent", "Wartość / waluta", "Data i podstawa wpisu")
+                            else -> listOf("Nazwa jednostki", "Rodzaj jednostki", "Podmiot nadrzędny / osoba prowadząca", "Adres jednostki", "Data utworzenia", "Podstawa organizacyjna", "Zakres działania", "Osoba odpowiedzialna", "Dokument źródłowy", "Status", "Uwagi")
+                        }
+                        RegistryDoc(
+                            id = "service_${service.key}_${subject.key}_unit_${section.hashCode().toUInt().toString(16)}_${index}",
+                            title = "${service.label} — ${title.lowercase()}",
+                            section = "${subject.label} · ${section}",
+                            fields = fields.distinct() + listOf("Data sporządzenia / aktualizacji", "Osoba wprowadzająca dane", "Załączniki / plik źródłowy", "Status dokumentu", "Uwagi"),
+                            note = "Ewidencja ${subjectName}. Wpis w aplikacji ma charakter pomocniczy i nie zastępuje wymaganego wpisu w rejestrze ani dokumentu źródłowego."
+                        )
+                    }
+                }
+            }
+            sourceDocs.forEach { source ->
+                val suffix = source.id.removePrefix("entity_")
+                add(
+                    source.copy(
+                        id = "service_${service.key}_${subject.key}_${suffix}",
+                        title = "${service.label} — ${source.title.lowercase()}",
+                        section = "${subject.label} · ${source.section}",
+                        note = "Zestaw ${subject.label.lowercase()} przypisany do kategorii: ${service.group}. ${source.note}"
+                    )
+                )
+            }
+        }
+    }
+}
+
+private val serviceSubjectDocumentCatalog by lazy { serviceSubjectDocuments() }
+
 internal fun familyEntityGraphicDocumentTargets(): List<Pair<String, String>> =
-    (rodDocs + entityDocs)
+    (rodDocs + entityDocs + serviceSubjectDocumentCatalog)
         .filterNot { it.id == "rod_bank_accounts" || it.id == "entity_bank_accounts" }
         .map { it.id to it.title }
 
 internal fun familyEntityGraphicDocumentFields(documentId: String): List<Pair<String, String>> =
-    (rodDocs + entityDocs).firstOrNull { it.id == documentId }?.fields.orEmpty()
+    (rodDocs + entityDocs + serviceSubjectDocumentCatalog).firstOrNull { it.id == documentId }?.fields.orEmpty()
         .mapIndexed { index, label -> "field_$index" to label }
 
 internal object FamilyEntityDocumentStore {
