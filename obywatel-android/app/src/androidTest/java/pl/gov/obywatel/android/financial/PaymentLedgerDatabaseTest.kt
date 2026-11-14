@@ -5,6 +5,9 @@ package pl.gov.obywatel.android.financial
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.content.Context
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
 import java.math.BigDecimal
 import java.time.LocalDate
 import org.junit.After
@@ -34,6 +37,88 @@ class PaymentLedgerDatabaseTest {
             operationType = "WYMIANA W KANTORZE - UZNANIE",
             bankOperationReference = reference
         )
+
+
+    @Test
+    fun accountAliasesPersistAndLegacyAliasesAreMigratedWithoutChangingEntries() {
+        val legacy = object : SQLiteOpenHelper(context, databaseName, null, 1) {
+            override fun onCreate(db: SQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE bank_statement_entries (
+                        accounting_entry_id TEXT PRIMARY KEY NOT NULL,
+                        exchange_operation_id TEXT,
+                        account_scope_id TEXT NOT NULL,
+                        booking_date TEXT NOT NULL,
+                        currency_code TEXT NOT NULL,
+                        signed_amount TEXT NOT NULL,
+                        operation_type TEXT NOT NULL,
+                        bank_operation_reference TEXT,
+                        description TEXT NOT NULL DEFAULT ''
+                    )
+                    """.trimIndent()
+                )
+                db.insert(
+                    "bank_statement_entries",
+                    null,
+                    ContentValues().apply {
+                        put("accounting_entry_id", "legacy-entry")
+                        put("account_scope_id", "legacy-ipko")
+                        put("booking_date", "2026-11-12")
+                        put("currency_code", "USD")
+                        put("signed_amount", "12.50")
+                        put("operation_type", "UZNANIE")
+                        put("description", "")
+                    }
+                )
+            }
+
+            override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+        }
+        legacy.writableDatabase
+        legacy.close()
+
+        val upgraded = openDatabase()
+        try {
+            val aliases = upgraded.getAccountScopes()
+            assertEquals(true, aliases.any { it.accountScopeId == "legacy-ipko" })
+            assertEquals(true, aliases.any { it.accountScopeId == "ipko-account-1" })
+            assertEquals("legacy-ipko", upgraded.readAll().single().accountScopeId)
+
+            upgraded.saveAccountScope("savings-account", "Oszczędności")
+            assertEquals(true, upgraded.getAccountScopes().any {
+                it.accountScopeId == "savings-account" && it.displayName == "Oszczędności"
+            })
+        } finally {
+            upgraded.close()
+        }
+
+        val reopened = openDatabase()
+        try {
+            assertEquals(true, reopened.getAccountScopes().any {
+                it.accountScopeId == "savings-account"
+            })
+            assertEquals("legacy-ipko", reopened.readAll().single().accountScopeId)
+        } finally {
+            reopened.close()
+        }
+    }
+
+    @Test
+    fun accountAliasesRejectUnsafeIdentifiersAndDuplicateDisplayNames() {
+        val db = openDatabase()
+        try {
+            db.saveAccountScope("primary", "Główny")
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveAccountScope("123 456 789", "Numer rachunku")
+            }
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveAccountScope("secondary", "Główny")
+            }
+        } finally {
+            db.close()
+        }
+    }
 
     @Test
     fun importingSameEntryTwicePersistsItOnlyOnce() {
