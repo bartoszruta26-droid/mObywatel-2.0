@@ -481,6 +481,67 @@ class PaymentLedgerDatabaseTest {
     }
 
     @Test
+    fun usedAssetKeepsHistoricalMeasurementDefinitionImmutableButAllowsRename() {
+        val db = openDatabase()
+        try {
+            val usd = Asset("USD", "Dolar amerykański", AssetKind.CURRENCY, "USD", 2)
+            db.saveAsset(usd)
+            val transaction = FinancialTransaction(
+                id = "asset-history-usd",
+                executedAt = Instant.parse("2026-11-12T10:15:30Z"),
+                type = FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null,
+                fromAmount = null,
+                toAssetCode = "USD",
+                toAmount = BigDecimal("100.00")
+            )
+            db.saveFinancialTransaction(transaction)
+
+            db.saveAsset(usd.copy(name = "Dolar USA"))
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveAsset(usd.copy(decimalPlaces = 3))
+            }
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveAsset(usd.copy(unit = "cent"))
+            }
+            assertEquals("Dolar USA", db.readAssets().single().name)
+            assertEquals(2, db.readAssets().single().decimalPlaces)
+            assertEquals(1, db.readFinancialTransactions().size)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun usedMetalCannotChangePurityOrUnit() {
+        val db = openDatabase()
+        try {
+            val gold = Asset("XAU_G_999", "Złoto próby 999", AssetKind.PRECIOUS_METAL, "g", 4, 999)
+            db.saveAsset(gold)
+            val transaction = FinancialTransaction(
+                id = "asset-history-gold",
+                executedAt = Instant.parse("2026-11-12T10:15:30Z"),
+                type = FinancialTransactionType.METAL_BUY,
+                fromAssetCode = "PLN",
+                fromAmount = BigDecimal("500.00"),
+                toAssetCode = gold.code,
+                toAmount = BigDecimal("1.0000")
+            )
+            db.saveFinancialTransaction(transaction)
+
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveAsset(gold.copy(purity = 750))
+            }
+            assertThrows(IllegalArgumentException::class.java) {
+                db.saveAsset(gold.copy(unit = "ozt"))
+            }
+            assertEquals(gold, db.readAssets().single())
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
     fun versionFourMigrationCreatesAssetRegistryWithoutDroppingLegacyTables() {
         val legacy = object : SQLiteOpenHelper(context, databaseName, null, 4) {
             override fun onCreate(db: SQLiteDatabase) {
