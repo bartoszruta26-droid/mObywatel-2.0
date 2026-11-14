@@ -11,6 +11,16 @@ plugins {
 val buildEpochSeconds = System.currentTimeMillis() / 1000L
 val monotonicVersionCode = (buildEpochSeconds - 700_000_000L).toInt()
 
+// Stable upload signing is supplied only through environment variables / CI secrets.
+// The keystore itself is never stored in the repository.
+val signingStorePath = System.getenv("ANDROID_KEYSTORE_FILE")
+val signingStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+val signingKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+val signingKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+val hasStableSigning = listOf(
+    signingStorePath, signingStorePassword, signingKeyAlias, signingKeyPassword
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "pl.gov.obywatel.android"
     compileSdk = 35
@@ -22,6 +32,27 @@ android {
         versionCode = monotonicVersionCode
         versionName = "0.3.$buildEpochSeconds"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (hasStableSigning) {
+            create("stableUpload") {
+                storeFile = file(signingStorePath!!)
+                storeType = "PKCS12"
+                storePassword = signingStorePassword
+                keyAlias = signingKeyAlias
+                keyPassword = signingKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("debug") {
+            if (hasStableSigning) signingConfig = signingConfigs.getByName("stableUpload")
+        }
+        getByName("release") {
+            if (hasStableSigning) signingConfig = signingConfigs.getByName("stableUpload")
+        }
     }
 
     compileOptions {
