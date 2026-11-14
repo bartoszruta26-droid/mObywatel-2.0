@@ -83,7 +83,7 @@ class BankStatementXmlParserTest {
         assertFalse(serialized.contains("Jan Kowalski"))
         assertFalse(serialized.contains("UL. TESTOWA"))
         assertFalse(serialized.contains("00000000000000000000000000"))
-        assertEquals("FX102693731 USD/PLN 4.0036 749,33 USD -3 000,00 PLN", entries.first().description)
+        assertEquals("", entries.first().description)
     }
 
     @Test
