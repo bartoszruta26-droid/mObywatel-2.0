@@ -55,4 +55,43 @@ class PaymentLedgerJsonCodecTest {
             PaymentLedgerJsonCodec.decode("{")
         }
     }
+    @Test fun schemaTwoRoundTripIncludesFinancialTransactionAndFee() {
+        val transaction = pl.gov.obywatel.android.FinancialTransaction(
+            id = "tx-json-1",
+            executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+            type = pl.gov.obywatel.android.FinancialTransactionType.EXCHANGE,
+            fromAssetCode = "USD", fromAmount = BigDecimal("8000.00"),
+            toAssetCode = "CHF", toAmount = BigDecimal("6183.20"),
+            fee = pl.gov.obywatel.android.Fee("CHF", BigDecimal("5.25"))
+        )
+        val stored = StoredFinancialTransaction(transaction, listOf(sample.accountingEntryId()))
+        val archive = PaymentLedgerJsonCodec.decodeArchive(
+            PaymentLedgerJsonCodec.encode(listOf(sample), listOf(stored))
+        )
+        assertEquals(listOf(sample.accountingEntryId()), archive.transactions.single().accountingEntryIds)
+        assertEquals(0, BigDecimal("8000.00").compareTo(archive.transactions.single().transaction.fromAmount))
+        assertEquals(0, BigDecimal("5.25").compareTo(archive.transactions.single().transaction.fee!!.amount))
+    }
+
+    @Test fun schemaOneArchiveRemainsReadable() {
+        val legacy = PaymentLedgerJsonCodec.encode(listOf(sample))
+            .replace("\\"schemaVersion\\":2", "\\"schemaVersion\\":1")
+            .replace(",\\"transactions\\":[]", "")
+        val archive = PaymentLedgerJsonCodec.decodeArchive(legacy)
+        assertEquals(1, archive.entries.size)
+        assertEquals(0, archive.transactions.size)
+    }
+
+    @Test fun rejectsInvalidTransactionInArchive() {
+        val transaction = pl.gov.obywatel.android.FinancialTransaction(
+            id = "tx-invalid",
+            executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+            type = pl.gov.obywatel.android.FinancialTransactionType.EXCHANGE,
+            fromAssetCode = "USD", fromAmount = BigDecimal("10"),
+            toAssetCode = "USD", toAmount = BigDecimal("10")
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            PaymentLedgerJsonCodec.encode(listOf(sample), listOf(StoredFinancialTransaction(transaction, emptyList())))
+        }
+    }
 }
