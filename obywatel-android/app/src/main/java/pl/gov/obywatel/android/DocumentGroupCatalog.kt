@@ -32,6 +32,12 @@ private val legacyDocumentGroupNames = mapOf(
 internal fun migrateDocumentGroupName(name: String): String =
     legacyDocumentGroupNames[name] ?: name
 
+internal fun migrateDocumentGroupAssignment(documentId: String, group: String): String = when {
+    documentId == "organization_foundation" && group == "Służba gospodarcza" -> "Służba fundacyjna"
+    documentId == "organization_association" && group == "Służba gospodarcza" -> "Służba stowarzyszeniowa"
+    else -> group
+}
+
 
 internal fun loadDocumentGroupConfiguration(context: Context): DocumentGroupConfiguration {
     val prefs = context.getSharedPreferences(DOCUMENT_GROUP_PREFS, Context.MODE_PRIVATE)
@@ -50,7 +56,8 @@ internal fun loadDocumentGroupConfiguration(context: Context): DocumentGroupConf
     }.getOrDefault(emptyMap())
     val assignments = documentDisplayOptions.distinctBy { it.first }.associate { (id, _, _) ->
         val defaultGroup = documentVisibilityGroup(id)
-        val selected = savedAssignments[id]?.takeIf { it in groups } ?: defaultGroup
+        val migratedAssignment = savedAssignments[id]?.let { migrateDocumentGroupAssignment(id, it) }
+        val selected = migratedAssignment?.takeIf { it in groups } ?: defaultGroup
         id to selected
     }
     return DocumentGroupConfiguration(groups, assignments)
