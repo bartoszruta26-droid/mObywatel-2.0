@@ -4467,12 +4467,6 @@ private fun DemoDocumentsScreen(
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        if (categoryId != "all") {
-            GeneralDocumentOcrEditor(credentialKey, fields, context) { message ->
-                saveMessage = message
-                DemoIdentityStore.save(context, fields.toMap())
-            }
-        }
         Text(
             text = "‹  Powrót do ustawień",
             color = MaterialTheme.colorScheme.primary,
@@ -4486,7 +4480,13 @@ private fun DemoDocumentsScreen(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        if (categoryId != "all") DocumentOriginalAttachments(credentialKey)
+        if (categoryId != "all") {
+            GeneralDocumentOcrEditor(credentialKey, fields, context) { message ->
+                saveMessage = message
+                DemoIdentityStore.save(context, fields.toMap())
+            }
+            DocumentOriginalAttachments(credentialKey)
+        }
         if (categoryId.startsWith("catalog:")) {
             val documentId = categoryId.removePrefix("catalog:")
             val definitions = documentEditorFieldDefinitions(documentId)
