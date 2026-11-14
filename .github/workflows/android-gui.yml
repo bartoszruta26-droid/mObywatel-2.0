@@ -95,7 +95,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
-            echo "::warning::Stable signing secrets are not configured; this run will not publish an APK release."
+            echo "::warning::Stable signing secrets are not configured; publishing a test-only debug APK signed with the runner debug key. It may not update an installation signed with another key."
             echo "configured=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -120,16 +120,53 @@ jobs:
           path: obywatel-android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
-      - name: Publish tested APK download
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.configure-stable-signing.outputs.configured == 'true'
+      - name: Prepare APK checksum
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: sha256sum obywatel-android/app/build/outputs/apk/debug/app-debug.apk > obywatel-android/app/build/outputs/apk/debug/app-debug.apk.sha256
+
+      - name: Move debug-latest tag to the tested commit
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = 'tags/debug-latest';
+            try {
+              await github.rest.git.getRef({ owner: context.repo.owner, repo: context.repo.repo, ref });
+              await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref,
+                sha: context.sha,
+                force: true
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'refs/tags/debug-latest',
+                sha: context.sha
+              });
+            }
+
+      - name: Publish latest tested APK download
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: debug-latest
-          name: Latest Android debug APK
-          target_commitish: main
+          name: Latest Android debug APK (testowa)
+          target_commitish: ${{ github.sha }}
           prerelease: true
           make_latest: false
-          files: obywatel-android/app/build/outputs/apk/debug/app-debug.apk
+          overwrite_files: true
+          body: |
+            APK z kompilacji commit ${{ github.sha }}.
+            Tryb podpisu: ${{ steps.configure-stable-signing.outputs.configured == 'true' && 'stabilny klucz wydania' || 'tymczasowy klucz debugowy GitHub Actions' }}.
+
+            ${{ steps.configure-stable-signing.outputs.configured != 'true' && 'Ważne: to wydanie testowe. Android może wymagać odinstalowania poprzedniej aplikacji przed instalacją; nie jest to aktualizacja podpisana dotychczasowym kluczem.' || 'Wydanie podpisane skonfigurowanym kluczem aplikacji.' }}
+          files: |
+            obywatel-android/app/build/outputs/apk/debug/app-debug.apk
+            obywatel-android/app/build/outputs/apk/debug/app-debug.apk.sha256
           fail_on_unmatched_files: true
 
 # Validation rerun: 2026-11-12 — run emulator UI tests on current integrated main.
