@@ -1019,7 +1019,9 @@ internal fun documentVisibilityGroup(id: String): String = when {
     id in setOf("civil_expert", "civil_appraiser", "civil_auditor", "civil_internal_inspector", "civil_controller", "civil_consultant") -> "Służba zawodowa"
     id == "civil_rescuer" -> "Służba zdrowotna"
     id == "parliament" || id in setOf("mayor", "village_head", "county_starosta", "citizen_record", "ombudsman", "children_ombudsman", "patient_ombudsman", "pretrial_mediator", "milicja_officer", "foreign_service_member", "diplomat", "consul", "ambassador", "foreign_mission_head", "consular_employee", "inspector") -> "Służba państwowa"
-    id == "business" || id == "entity" || id == "registry" ||
+    id == "organization_foundation" -> "Służba fundacyjna"
+    id == "organization_association" -> "Służba stowarzyszeniowa"
+    id == "organization_company" || id == "business" || id == "entity" || id == "registry" ||
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
     id == "professional" || id.startsWith("professional_") ||
         id in setOf("training", "student", "eu_education") -> "Służba zawodowa"
