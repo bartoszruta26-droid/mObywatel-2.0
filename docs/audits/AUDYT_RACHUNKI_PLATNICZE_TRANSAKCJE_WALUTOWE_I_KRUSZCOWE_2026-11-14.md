@@ -2031,7 +2031,15 @@ Po zapisaniu ponownie pobrano wszystkie trzy pliki z GitHub. Kontrola treści po
 - włączenie daty i referencji do identyfikatora operacji przy zachowaniu możliwości parowania nóg z różnych zakresów;
 - obecność testu parowania nóg z różnych zakresów oraz rozdzielenia ponownie użytej referencji między dniami.
 
-### 35.6. Status weryfikacji i ograniczenia
+### 35.6. Dodatkowa korekta klasyfikacji i migracji
+
+Przegląd ekranu ujawnił, że `exchangeOperationId()` zwracał identyfikator dla każdego wpisu z referencją, również dla zwykłego przelewu. Projektor mógł zatem prezentować zwykłe operacje jako niepełne wymiany walut. Skorygowano regułę: identyfikator nadrzędny powstaje wyłącznie dla typu zawierającego oznaczenie `WYMIANA W KANTORZE` i niepustej referencji.
+
+Ponieważ SQLite przechowuje również wyliczony `exchange_operation_id`, sama zmiana funkcji nie wystarczała dla już zapisanych rekordów. Podniesiono wersję bazy z 2 do 3 i dodano migrację, która odtwarza identyfikatory z pól źródłowych oraz czyści identyfikatory dla zwykłych operacji. Nie zmienia ona `accounting_entry_id`, kwot ani zapisów źródłowych.
+
+Dodano test jednostkowy potwierdzający, że zwykły przelew z referencją nie jest projektowany jako FX, oraz test instrumentacyjny migracji wersji 2 → 3 sprawdzający aktualizację identyfikatora FX i wyczyszczenie pola dla przelewu. Testy wymagają potwierdzenia w CI.
+
+### 35.7. Status weryfikacji i ograniczenia
 
 | Element | Status |
 |---|---|
@@ -2039,15 +2047,17 @@ Po zapisaniu ponownie pobrano wszystkie trzy pliki z GitHub. Kontrola treści po
 | Rozwijanie i zwijanie źródłowych nóg | Zaimplementowane |
 | Statusy COMPLETE / SINGLE_LEG / REVIEW_REQUIRED | Wyświetlane |
 | Brak podwójnego wyświetlania nóg FX | Zaimplementowano filtrowanie |
-| Ograniczenie identyfikatora FX do daty i referencji (bez zakresu rachunku) | Zaimplementowane |
-| Test regresyjny identycznej referencji w różnych zakresach | Dodany; oczekuje na CI |
+| Ograniczenie identyfikatora FX do operacji kantorowych, daty i referencji (bez zakresu rachunku) | Zaimplementowane |
+| Test regresyjny nóg z różnych zakresów i ponownego użycia referencji w innym dniu | Dodany; oczekuje na CI |
+| Test zwykłego przelewu z referencją (wykluczenie z FX) | Dodany; oczekuje na CI |
+| Migracja bazy 2 → 3 dla identyfikatorów FX | Zaimplementowana; test instrumentacyjny oczekuje na CI |
 | Testy jednostkowe dla nowej rewizji | Oczekują na CI |
 | Testy Compose na emulatorze dla nowej rewizji | Oczekują na CI |
 | APK dla nowej rewizji etapu 2L | Niepotwierdzony |
 | Ręczny test importu SAF na urządzeniu | Nadal do wykonania |
 | Trwała tabela nadrzędnych operacji FX | Nie dodano; grupy są projekcją odczytową |
 
-Zmiana identyfikatora wpływa na wyliczane grupowanie, nie na klucze księgowe ani zapisane rekordy. Nie wymaga migracji SQLite, ponieważ `exchangeOperationId` jest wyliczany z pól zapisu. Przed wprowadzeniem trwałej tabeli operacji FX należy nadal zweryfikować, czy w innych wariantach wyciągów nogi jednej wymiany zawsze mają tę samą datę księgowania; pseudonim rachunku może być różny i nie jest częścią identyfikatora nadrzędnego.
+Zmiana identyfikatora nie zmienia kluczy księgowych ani danych źródłowych; wymagała jednak migracji pola pomocniczego `exchange_operation_id`, ponieważ jest ono utrwalane w SQLite. Migracja wersji 2 → 3 została dodana. Przed wprowadzeniem trwałej tabeli operacji FX należy nadal zweryfikować, czy w innych wariantach wyciągów nogi jednej wymiany zawsze mają tę samą datę księgowania; pseudonim rachunku może być różny i nie jest częścią identyfikatora nadrzędnego.
 
 ### 35.7. Następny etap
 
