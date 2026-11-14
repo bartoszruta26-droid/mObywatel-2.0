@@ -87,7 +87,7 @@ class ImportedDocumentStoreTest {
         val preferences = context.getSharedPreferences("imported_documents", Context.MODE_PRIVATE)
         val originalUris = preferences.getStringSet("document_uris", emptySet())?.toSet() ?: emptySet()
         val directory = java.io.File(context.filesDir, "imported-documents")
-        val originalFiles = directory.list()?.toSet() ?: emptySet()
+        val originalFiles = directory.list()?.toSet() ?: emptySet<String>()
         val documents = JSONArray()
             .put(
                 JSONObject()
