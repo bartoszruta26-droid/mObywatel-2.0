@@ -14,20 +14,25 @@ class PaymentLedgerRepository(context: Context) : AutoCloseable {
         database.readAll()
     }
 
+    suspend fun previewJson(json: String): BankImportPreview = withContext(Dispatchers.IO) {
+        val incoming = PaymentLedgerJsonCodec.decode(json)
+        BankImportDeduplicator.preview(incoming, database.readAll())
+    }
+
     /**
-     * Importuje wersjonowany JSON atomowo. Duplikaty są pomijane, a liczba nowych
-     * zapisów i duplikatów jest zwracana do warstwy prezentacji.
+     * Zatwierdza import tylko wtedy, gdy podgląd nie zawiera konfliktów.
+     * Duplikaty są pomijane, a cała nowa paczka zapisywana transakcyjnie.
      */
     suspend fun importJson(json: String): BatchImportSummary = withContext(Dispatchers.IO) {
         val incoming = PaymentLedgerJsonCodec.decode(json)
-        val classified = BankImportDeduplicator.classify(
-            incoming = incoming,
-            existingAccountingEntryIds = database.accountingEntryIds()
-        )
-        val result = database.importBatch(classified.newEntries)
+        val preview = BankImportDeduplicator.preview(incoming, database.readAll())
+        require(preview.conflicts.isEmpty()) {
+            "Import zawiera ${preview.conflicts.size} konfliktów referencji. Wymagana weryfikacja."
+        }
+        val result = database.importBatch(preview.newEntries)
         BatchImportSummary(
             inserted = result.inserted,
-            duplicates = result.duplicates + classified.duplicates.size
+            duplicates = result.duplicates + preview.duplicates.size
         )
     }
 
