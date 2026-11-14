@@ -89,13 +89,13 @@ class DocumentRouteRegistryTest {
         val expectedGroups = mapOf(
             "church" to "Dokumenty Kościelne",
             "civil" to "Formularze dokumentów",
-            "business" to "Dokumenty rejestru podmiotów",
+            "business" to "Służba gospodarcza",
             "professional" to "Dokumenty kwalifikacji zawodowych",
-            "organization_foundation" to "Dokumenty rejestru podmiotów",
+            "organization_foundation" to "Służba fundacyjna",
             "organization_church" to "Dokumenty Kościelne",
-            "organization_company" to "Dokumenty rejestru podmiotów",
-            "organization_association" to "Dokumenty rejestru podmiotów",
-            "entity" to "Dokumenty rejestru podmiotów",
+            "organization_company" to "Służba gospodarcza",
+            "organization_association" to "Służba stowarzyszeniowa",
+            "entity" to "Służba gospodarcza",
             "official" to "Formularze dokumentów"
         )
 
