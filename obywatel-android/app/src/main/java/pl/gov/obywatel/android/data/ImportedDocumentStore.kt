@@ -25,6 +25,10 @@ data class ImportedDocument(
 object ImportedDocumentStore {
     private const val PREFS = "imported_documents"
     private const val KEY_URIS = "document_uris"
+    private const val MAX_DOCUMENT_BYTES = 25L * 1024 * 1024
+    private const val MAX_ARCHIVE_BYTES = 50L * 1024 * 1024
+    private const val MAX_ARCHIVE_DOCUMENTS = 100
+    private const val MAX_ARCHIVE_JSON_CHARS = 70 * 1024 * 1024
 
     fun list(context: Context): List<ImportedDocument> {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -90,17 +94,28 @@ object ImportedDocumentStore {
 
 
     fun exportArchive(context: Context): String {
+        val documents = list(context)
+        require(documents.size <= MAX_ARCHIVE_DOCUMENTS) {
+            "Archiwum może zawierać maksymalnie $MAX_ARCHIVE_DOCUMENTS dokumentów."
+        }
         val items = JSONArray()
-        list(context).forEach { document ->
+        var archiveBytes = 0L
+        documents.forEach { document ->
             val bytes = context.contentResolver.openInputStream(document.uri)?.use { input ->
                 val output = java.io.ByteArrayOutputStream()
                 val buffer = ByteArray(8192)
-                var total = 0
+                var documentBytes = 0L
                 while (true) {
                     val count = input.read(buffer)
                     if (count < 0) break
-                    total += count
-                    require(total <= 25 * 1024 * 1024) { "Załącznik przekracza limit 25 MB: ${document.title}" }
+                    documentBytes += count
+                    archiveBytes += count
+                    require(documentBytes <= MAX_DOCUMENT_BYTES) {
+                        "Załącznik przekracza limit 25 MB: ${document.title}"
+                    }
+                    require(archiveBytes <= MAX_ARCHIVE_BYTES) {
+                        "Łączny rozmiar archiwum przekracza limit 50 MB."
+                    }
                     output.write(buffer, 0, count)
                 }
                 output.toByteArray()
@@ -111,31 +126,74 @@ object ImportedDocumentStore {
         return JSONObject().put("version", 1).put("documents", items).toString()
     }
 
+    /**
+     * Importuje archiwum transakcyjnie: najpierw waliduje i zapisuje pliki w katalogu
+     * tymczasowym, a dopiero potem przenosi je do magazynu i zatwierdza indeks.
+     * W przypadku błędu usuwa wszystkie pliki utworzone przez tę operację.
+     */
     fun importArchive(context: Context, raw: String) {
+        require(raw.length <= MAX_ARCHIVE_JSON_CHARS) {
+            "Archiwum przekracza dopuszczalny rozmiar."
+        }
         val root = JSONObject(raw)
         require(root.optInt("version") == 1) { "Nieobsługiwana wersja załączników." }
-        val directory = File(context.filesDir, "imported-documents").apply { mkdirs() }
-        val uris = HashSet(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getStringSet(KEY_URIS, emptySet()) ?: emptySet())
         val items = root.optJSONArray("documents") ?: JSONArray()
-        for (index in 0 until items.length()) {
-            val item = items.getJSONObject(index)
-            val mime = item.getString("mimeType").lowercase()
-            require(isSupportedDocumentMimeType(mime)) { "Nieobsługiwany typ załącznika: $mime" }
-            val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
-            require(bytes.isNotEmpty() && bytes.size <= 25 * 1024 * 1024) { "Załącznik przekracza limit 25 MB." }
-            val extension = when (mime) {
-                "application/vnd.oasis.opendocument.text" -> "odt"
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "docx"
-                "application/pdf" -> "pdf"
-                else -> MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.take(12) ?: "bin"
-            }
-            val target = File(directory, "${java.util.UUID.randomUUID()}.$extension")
-            target.writeBytes(bytes)
-            uris.add(Uri.fromFile(target).toString())
+        require(items.length() <= MAX_ARCHIVE_DOCUMENTS) {
+            "Archiwum może zawierać maksymalnie $MAX_ARCHIVE_DOCUMENTS dokumentów."
         }
-        check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putStringSet(KEY_URIS, uris).commit()) { "Nie udało się zapisać listy załączników." }
+
+        val directory = File(context.filesDir, "imported-documents")
+        check(directory.exists() || directory.mkdirs()) {
+            "Nie można utworzyć magazynu załączników."
+        }
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val originalUris = HashSet(preferences.getStringSet(KEY_URIS, emptySet()) ?: emptySet())
+        val updatedUris = HashSet(originalUris)
+        val stagingDirectory = File(directory, ".import-${java.util.UUID.randomUUID()}")
+        check(stagingDirectory.mkdir()) { "Nie można utworzyć katalogu tymczasowego." }
+        val committedFiles = mutableListOf<File>()
+        var archiveBytes = 0L
+
+        try {
+            for (index in 0 until items.length()) {
+                val item = items.getJSONObject(index)
+                val mime = item.getString("mimeType").trim().lowercase()
+                require(isSupportedDocumentMimeType(mime)) {
+                    "Nieobsługiwany typ załącznika: $mime"
+                }
+                val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
+                require(bytes.isNotEmpty() && bytes.size <= MAX_DOCUMENT_BYTES) {
+                    "Załącznik musi mieć rozmiar od 1 do 25 MB."
+                }
+                archiveBytes += bytes.size
+                require(archiveBytes <= MAX_ARCHIVE_BYTES) {
+                    "Łączny rozmiar archiwum przekracza limit 50 MB."
+                }
+
+                val extension = when (mime) {
+                    "application/vnd.oasis.opendocument.text" -> "odt"
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "docx"
+                    "application/pdf" -> "pdf"
+                    else -> MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)?.take(12) ?: "bin"
+                }
+                val stagedFile = File(stagingDirectory, "${java.util.UUID.randomUUID()}.$extension")
+                stagedFile.writeBytes(bytes)
+                val target = File(directory, "${java.util.UUID.randomUUID()}.$extension")
+                check(stagedFile.renameTo(target)) { "Nie udało się przenieść załącznika do magazynu." }
+                committedFiles.add(target)
+                updatedUris.add(Uri.fromFile(target).toString())
+            }
+
+            check(preferences.edit().putStringSet(KEY_URIS, updatedUris).commit()) {
+                "Nie udało się zapisać listy załączników."
+            }
+        } catch (failure: Exception) {
+            preferences.edit().putStringSet(KEY_URIS, originalUris).commit()
+            committedFiles.forEach { it.delete() }
+            throw failure
+        } finally {
+            stagingDirectory.deleteRecursively()
+        }
     }
 
     private fun fromUri(context: Context, uri: Uri): ImportedDocument {
