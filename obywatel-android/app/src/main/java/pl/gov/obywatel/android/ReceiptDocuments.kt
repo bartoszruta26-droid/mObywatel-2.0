@@ -166,6 +166,8 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
         Button(onClick={ runCatching { pendingPdfBytes=buildReceiptPdf(c,number,saleDate,seller,buyer,payment,due,names,pkwiu,units,quantities,prices,words,signature,total); savePicker.launch("Rachunek-${number.ifBlank{"nowy"}}.pdf") }.onFailure{status="Nie udało się przygotować PDF: ${it.message}"} },modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.PictureAsPdf,null); Spacer(Modifier.width(8.dp)); Text("Wystaw i zapisz rachunek PDF") }
         Divider()
         Text("Zapisane rachunki PDF",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
+        OutlinedButton(onClick={runCatching { c.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany"))) }.onFailure{status="Nie można otworzyć usługi gov.pl: ${it.message}"}},modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.VerifiedUser,null); Spacer(Modifier.width(8.dp)); Text("Podpisz rachunek w usłudze gov.pl") }
+        Text("Usługa rządowa otwiera się osobno. Wybierz Dodaj plik i wskaż zapisany PDF. Po podpisaniu pobierz podpisany plik, a następnie dodaj go poniżej – zostanie zapisany w katalogu rachunków.")
         OutlinedButton(onClick={photoPicker.launch(arrayOf("image/*"))},modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.AddPhotoAlternate,null); Spacer(Modifier.width(8.dp)); Text("Dodaj zdjęcie ręcznie wypisanego rachunku") }
         OutlinedButton(onClick={replaceId=null;importPicker.launch(arrayOf("application/pdf"))},modifier=Modifier.fillMaxWidth()) { Text("Dodaj istniejący PDF") }
         if(records.isEmpty()) Text("Brak zapisanych rachunków PDF.")
