@@ -2137,7 +2137,7 @@ Są to testy dodane do repozytorium; ich wykonanie wymaga wyniku GitHub Actions 
 
 ### 36.7. Zmienione pliki i commity
 
-- `PaymentLedgerDatabase.kt` — `e2a2986e42fe52630719688797640e8a52b987d5`;
+- `PaymentLedgerDatabase.kt` — `6f3ec4bfa6ed21c74da77bad3c72416077bfef1b`;
 - `PaymentLedgerRepository.kt` — `457f28bba3e6ac8a824f7b87a5b6080cfa51d390`;
 - `FinancialModels.kt` — `7cbc9347c7fe710904417aa5a0cbaea4c84974c1`;
 - `PaymentLedgerScreen.kt` — `c07c1e771b2ec06399a120d81aa579ea1fd84462`;
@@ -2148,14 +2148,14 @@ Po zapisie ponownie pobrano wszystkie sześć plików z GitHub i sprawdzono obec
 
 ### 36.8. Status CI i ograniczenia
 
-Kontrolowana rewizja kodowa po korekcie testu migracji: `f088ef50a831b913926499d3d2831664147ca31b`.
+Kontrolowana rewizja kodowa po korekcie obsługi błędu zapisu: `6f3ec4bfa6ed21c74da77bad3c72416077bfef1b`.
 
 | Kontrola | Stan w chwili aktualizacji audytu |
 |---|---|
 | Repository compliance / REUSE | Sukces |
-| Android prototype build | Dla poprzedniego SHA zadanie anulowano przed testami; nowe uruchomienie dla SHA `f088ef5` oczekuje na start |
-| Android JVM unit tests | Oczekują na świeże uruchomienie dla SHA `f088ef5` |
-| Android GUI validation | Dla poprzedniego SHA zadanie anulowano; świeża walidacja oczekuje na start |
+| Android prototype build | Oczekuje na świeże uruchomienie dla SHA `6f3ec4b` |
+| Android JVM unit tests | Oczekują na świeże uruchomienie dla SHA `6f3ec4b` |
+| Android GUI validation | Oczekuje na świeże uruchomienie dla SHA `6f3ec4b` |
 | Testy Compose | Oczekują na wykonanie |
 | Test migracji SQLite 3 → 4 | Dodany; oczekuje na CI |
 | Debug APK | Brak artefaktu dla tej rewizji w chwili kontroli |
