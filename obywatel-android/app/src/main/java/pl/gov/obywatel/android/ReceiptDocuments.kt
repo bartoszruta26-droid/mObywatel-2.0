@@ -143,6 +143,49 @@ internal fun ReceiptTemplateSettingsScreen(onBack:()->Unit) {
     }
 }
 
+
+private data class ReceiptParty(val name:String,val address:String) {
+    fun display()=listOf(name,address).filter{it.isNotBlank()}.joinToString("\n")
+}
+private fun receiptParties(c:Context):List<ReceiptParty> = runCatching {
+    val a=JSONArray(receiptPref(c).getString("parties","[]") ?: "[]")
+    (0 until a.length()).map { val o=a.getJSONObject(it); ReceiptParty(o.optString("name"),o.optString("address")) }
+}.getOrDefault(emptyList())
+private fun saveReceiptParties(c:Context,items:List<ReceiptParty>) {
+    val a=JSONArray()
+    items.forEach { a.put(JSONObject().put("name",it.name).put("address",it.address)) }
+    receiptPref(c).edit().putString("parties",a.toString()).apply()
+}
+private fun receiptMoneyCents(raw:String):Long {
+    val s=raw.trim().lowercase(Locale.ROOT).replace("zł","").replace("zl","").replace("gr","").replace(" ","").replace(",",".")
+    if(s.isBlank()) return 0L
+    return runCatching { java.math.BigDecimal(s).multiply(java.math.BigDecimal(100)).setScale(0,java.math.RoundingMode.HALF_UP).longValueExact() }.getOrDefault(0L).coerceAtLeast(0)
+}
+private fun receiptMoneyLabel(cents:Long):String = "%d zł %02d gr".format(Locale("pl"),cents/100,cents%100)
+private fun receiptNumberWords(n:Long):String {
+    val ones=listOf("zero","jeden","dwa","trzy","cztery","pięć","sześć","siedem","osiem","dziewięć")
+    val teens=listOf("dziesięć","jedenaście","dwanaście","trzynaście","czternaście","piętnaście","szesnaście","siedemnaście","osiemnaście","dziewiętnaście")
+    val tens=listOf("","","dwadzieścia","trzydzieści","czterdzieści","pięćdziesiąt","sześćdziesiąt","siedemdziesiąt","osiemdziesiąt","dziewięćdziesiąt")
+    val hundreds=listOf("","sto","dwieście","trzysta","czterysta","pięćset","sześćset","siedemset","osiemset","dziewięćset")
+    fun group(v:Int):String {
+        val out=mutableListOf<String>(); val h=v/100; val r=v%100
+        if(h>0) out.add(hundreds[h])
+        if(r in 10..19) out.add(teens[r-10]) else { if(r/10>0) out.add(tens[r/10]); if(r%10>0) out.add(ones[r%10]) }
+        return out.joinToString(" ")
+    }
+    fun plural(v:Int,one:String,few:String,many:String):String = when { v%100 in 12..14 -> many; v%10==1 -> one; v%10 in 2..4 -> few; else -> many }
+    val value=n.coerceAtLeast(0).coerceAtMost(999999999L)
+    val thousands=(value/1000).toInt(); val rest=(value%1000).toInt()
+    val chunks=mutableListOf<String>()
+    if(thousands>0) chunks.add(group(thousands)+" "+plural(thousands,"tysiąc","tysiące","tysięcy"))
+    if(rest>0 || chunks.isEmpty()) chunks.add(group(rest))
+    return chunks.joinToString(" ").trim()
+}
+private fun receiptAmountInWords(totalCents:Long):String {
+    val zl=totalCents/100; val gr=totalCents%100
+    return receiptNumberWords(zl)+" "+(if(zl%10==1L && zl%100!=11L) "złoty" else if(zl%10 in 2L..4L && zl%100 !in 12L..14L) "złote" else "złotych")+" "+receiptNumberWords(gr)+" "+(if(gr==1L) "grosz" else if(gr%10 in 2L..4L && gr%100 !in 12L..14L) "grosze" else "groszy")
+}
+
 @Composable
 internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
     val c=LocalContext.current
