@@ -1969,3 +1969,86 @@ Nie ma jeszcze potwierdzenia wykonania testów JVM, testów emulatorowych ani ko
 | Ręczny test importu SAF na urządzeniu | Do wykonania |
 
 Następny etap: po pozytywnym CI wyświetlić operacje FX jako grupy z rozwijanymi nogami źródłowymi, a następnie dodać trwały model transakcji finansowej i prowizji, zachowując relację do zapisów wyciągu. Import PDF należy rozpocząć na podstawie istniejącej rzeczywistej próbki PDF, sprawdzając ekstrakcję tabeli i pomijanie podsumowań. CSV/XLS nie powinny być rozwijane bez dostępnych plików wzorcowych.
+
+## 35. Etap 2L — prezentacja operacji FX jako grup i izolacja identyfikatorów (14 listopada 2026 r.)
+
+### 35.1. Kontrola stanu wyjściowego
+
+Przed rozpoczęciem etapu ponownie sprawdzono PR #68, gałąź `feature/payment-ledger-stage-1`, audyt i workflow dla rewizji `32143b915c40ec70c985e9276c5a317fd1778c8c`.
+
+Dla tej rewizji:
+- Repository compliance / REUSE — zakończone sukcesem;
+- Android prototype build — zakończony sukcesem; testy JVM oraz budowa debug APK zakończyły się sukcesem;
+- artefakt `obywatel-android-debug` został przypisany dokładnie do SHA `32143b915c40ec70c985e9276c5a317fd1778c8c`;
+- Android GUI validation — testy Compose na emulatorze pozostawały w toku w chwili rozpoczęcia etapu 2L.
+
+Artefakt poprzedniej rewizji nie jest używany jako dowód dla nowych zmian etapu 2L.
+
+### 35.2. Wykryte ryzyko identyfikacji operacji nadrzędnej
+
+Przegląd `BankStatementEntry.exchangeOperationId()` wykazał, że identyfikator operacji FX był wyliczany wyłącznie z referencji bankowej. Referencja nie jest gwarantowanie globalnie unikalna: może wystąpić ponownie na innym rachunku albo w innym dniu. Takie rekordy mogły zostać błędnie połączone przez projektor w jedną grupę.
+
+### 35.3. Wykonane zmiany
+
+1. **Zakres identyfikatora FX**
+   - identyfikator operacji jest teraz wyliczany z lokalnego pseudonimu rachunku, daty księgowania i znormalizowanej referencji;
+   - identyfikator nadal jest skrótem SHA-256 i nie zawiera jawnej referencji;
+   - dwie nogi tej samej operacji w tym samym rachunku i dniu zachowują wspólny identyfikator;
+   - ta sama referencja na innym rachunku lub w innym dniu otrzymuje odrębny identyfikator.
+
+2. **Widok grup FX w ekranie**
+   - ekran wylicza projekcję `BankExchangeOperationProjector.project(entries)` z danych odczytanych z SQLite;
+   - operacje FX są prezentowane jako grupy nadrzędne;
+   - każda grupa pokazuje status: kompletna, niepełna — jedna noga, albo wymagająca weryfikacji;
+   - przycisk rozwija lub zwija oryginalne zapisy źródłowe z datą, walutą, kwotą ze znakiem i typem operacji;
+   - nogi już pokazane w grupie są wyłączone z osobnej listy zapisów, aby nie wyświetlać ich podwójnie;
+   - zapisy źródłowe pozostają odrębnymi rekordami; UI nie sumuje ich, nie usuwa i nie przelicza.
+
+3. **Minimalizacja prezentacji danych**
+   - w nowej liście zapisów i rozwiniętych nogach nie wyświetla się pola opisu bankowego, które może zawierać dane kontrahenta;
+   - zachowano datę, walutę, kwotę, typ operacji i status grupy.
+
+### 35.4. Test regresyjny
+
+Rozszerzono `BankExchangeOperationTest.kt` o test tej samej referencji:
+- na dwóch różnych pseudonimach rachunków;
+- w dwóch różnych dniach tego samego rachunku.
+
+Test oczekuje trzech niezależnych grup jednoelementowych ze statusem `SINGLE_LEG`, a więc zabezpiecza przed fałszywym scaleniem. Istniejący test pary 8 000 USD / 6 183,20 CHF nadal sprawdza wspólną grupę `COMPLETE` i zachowanie dwóch odrębnych identyfikatorów księgowych.
+
+### 35.5. Zapis i kontrola źródeł
+
+Zmiany zapisano na `feature/payment-ledger-stage-1`:
+- `PaymentLedgerScreen.kt` — commit `1d89b0ed5b2868aab856fca27d724b22a84cdd71`;
+- `BankImportDeduplicator.kt` — commit `1d849d32c5c19088e7b04be6fda84f635ccc7c8f`;
+- `BankExchangeOperationTest.kt` — commit `1b70043372705ffb200293eecb594549c107a019`.
+
+Po zapisaniu ponownie pobrano wszystkie trzy pliki z GitHub. Kontrola treści potwierdziła:
+- wyświetlanie grup FX i statusów;
+- rozwijanie źródłowych nóg operacji;
+- wykluczanie nóg z osobnej listy;
+- brak prezentacji surowego opisu w nowym widoku;
+- włączenie rachunku i daty do identyfikatora operacji;
+- obecność testu rozdzielenia tej samej referencji pomiędzy rachunkami i datami.
+
+### 35.6. Status weryfikacji i ograniczenia
+
+| Element | Status |
+|---|---|
+| Projekcja grup FX na ekranie | Zaimplementowana |
+| Rozwijanie i zwijanie źródłowych nóg | Zaimplementowane |
+| Statusy COMPLETE / SINGLE_LEG / REVIEW_REQUIRED | Wyświetlane |
+| Brak podwójnego wyświetlania nóg FX | Zaimplementowano filtrowanie |
+| Ograniczenie identyfikatora FX do rachunku i daty | Zaimplementowane |
+| Test regresyjny identycznej referencji w różnych zakresach | Dodany; oczekuje na CI |
+| Testy jednostkowe dla nowej rewizji | Oczekują na CI |
+| Testy Compose na emulatorze dla nowej rewizji | Oczekują na CI |
+| APK dla nowej rewizji etapu 2L | Niepotwierdzony |
+| Ręczny test importu SAF na urządzeniu | Nadal do wykonania |
+| Trwała tabela nadrzędnych operacji FX | Nie dodano; grupy są projekcją odczytową |
+
+Zmiana identyfikatora wpływa na wyliczane grupowanie, nie na klucze księgowe ani zapisane rekordy. Nie wymaga migracji SQLite, ponieważ `exchangeOperationId` jest wyliczany z pól zapisu. Przed wprowadzeniem trwałej tabeli operacji FX należy nadal zweryfikować, czy w innych wariantach wyciągów nogi jednej wymiany zawsze mają tę samą datę księgowania i ten sam pseudonim rachunku.
+
+### 35.7. Następny etap
+
+Po zielonym CI dla etapu 2L należy przejść do trwałego modelu transakcji finansowych i prowizji, powiązanego z zapisami bankowymi bez ich scalania. Równolegle należy wykonać test urządzeniowy SAF. Adapter PDF powinien być oparty na rzeczywistym wzorcu i testach ekstrakcji; parserów CSV/XLS nie należy implementować bez plików wzorcowych.
