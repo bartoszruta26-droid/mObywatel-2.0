@@ -160,7 +160,7 @@ private fun buildReceiptPdf(c:Context,no:String,date:String,seller:String,buyer:
     val xs=listOf(35f,60f,250f,310f,345f,390f,465f)
     headers.forEachIndexed{i,s->canvas.drawText(s,xs[i],top+22f,p)}
     var y=top+35f
-    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,p);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f);canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],310f,y+25f,p);canvas.drawText(qty[i],345f,y+25f,p);canvas.drawText(prices[i],390f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText("%.2f".format(java.util.Locale.US,v),465f,y+25f,p);y+=45f }
+    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,p);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f);if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(prices[i],if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText("%.2f".format(java.util.Locale.US,v),if(showPkwiu) 465f else 465f,y+25f,p);y+=45f }
     y+=20f; line(y); txt("Słownie złotych: $words",35f,y+18f); canvas.drawText("Razem: %.2f zł".format(java.util.Locale.US,total),420f,y+18f,bold)
     y+=65f; canvas.drawText("Do zapłaty: %.2f zł".format(java.util.Locale.US,total),80f,y,bold); y+=55f; txt("Imię i nazwisko oraz podpis osoby upoważnionej do wystawienia rachunku: $signature",35f,y)
     y+=35f; val notes=receiptNotes(c); var yy=y; notes.split("\n").forEach{row->txt(row,35f,yy,p);yy+=26f}
