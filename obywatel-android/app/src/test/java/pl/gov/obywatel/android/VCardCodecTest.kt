@@ -242,6 +242,34 @@ END:VCARD
         assertArrayEquals(photoBytes, java.util.Base64.getDecoder().decode(imported.getValue("photo")))
     }
 
+
+    @Test
+    fun vCardArchiveRoundTripsEveryNewStateServiceDocumentRecord() {
+        val documentIds = listOf(
+            "mayor", "village_head", "county_starosta", "citizen_record",
+            "ombudsman", "children_ombudsman", "patient_ombudsman",
+            "pretrial_mediator", "milicja_officer", "foreign_service_member",
+            "diplomat", "consul", "ambassador", "foreign_mission_head",
+            "consular_employee", "inspector"
+        )
+        val officialDocuments = documentIds.joinToString(
+            prefix = "{", postfix = "}", separator = ","
+        ) { id -> "\"$id\":{\"field_0\":\"Dane ${id}\"}" }
+        val source = linkedMapOf(
+            "firstNames" to "Jan",
+            "lastName" to "Kowalski",
+            "officialDocumentArchive" to officialDocuments
+        )
+
+        val exportedVCard = VCardCodec.encodeArchive(source)
+        val imported = VCardCodec.decodeForImport(exportedVCard)
+
+        assertEquals(source, imported)
+        documentIds.forEach { id ->
+            assertTrue(imported.getValue("officialDocumentArchive").contains("\"$id\""))
+        }
+    }
+
     @Test
     fun archiveRoundTripsChildrenVaccinationsAndOriginalDocumentAttachments() {
         val familyHealth = """{"version":1,"children":[{"id":"child-1","firstName":"Anna","lastName":"Kowalska","birthDate":"2018-04-05","pesel":"18040512345","allergies":"jaja","guardian":"Jan Kowalski","photoBase64":"YW5uYQ==","vaccines":[{"id":"dose-1","date":"2024-01-10","vaccine":"MMR","disease":"odra, świnka, różyczka","dose":"2/2","batch":"LOT-123","manufacturer":"Producent","provider":"Lekarz","facility":"Przychodnia","nextDate":"2030-01-10","notes":"reakcja miejscowa"}]}]}"""
