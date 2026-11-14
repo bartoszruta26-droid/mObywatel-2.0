@@ -1006,7 +1006,7 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
-    id in armedServiceDocumentIds || id.startsWith("military_") -> "Służba zbrojna"
+    id in armedServiceDocumentIds || id == "military" || id.startsWith("military_") -> "Służba zbrojna"
     id.startsWith("police_") || id.startsWith("fire_") || id.startsWith("border_") ||
         id.startsWith("prison_") || id.startsWith("customs_") || id.startsWith("special_") ||
         id.startsWith("protective_") || id.startsWith("local_") || id.startsWith("constitutional_") ||
