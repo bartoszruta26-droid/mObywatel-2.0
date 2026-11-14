@@ -1613,3 +1613,85 @@ W związku z tym nie oznacza się kompilacji ani testów instrumentacyjnych najn
 ### 29.6. Następny krok
 
 Należy uzyskać zielone wyniki CI dla rewizji zawierającej sekcję 29. Dopiero po tym można przejść do parserów CSV/XML iPKO. W repozytorium nie znaleziono plików wzorcowych wyciągów bankowych, dlatego mapowanie nagłówków CSV, struktur XML, kodowania i formatów kwot pozostaje nieustalone. Parserów nie należy implementować na podstawie domysłów.
+
+
+## 30. Etap 2I — parser XML historii rachunku iPKO
+
+### 30.1. Źródło i rozpoznany schemat
+
+Odnaleziono w załącznikach tej rozmowy rzeczywisty plik XML „Zestawienie operacji za 14.11.2025 - 14.11.2026.xml”. Dokument ma strukturę:
+- korzeń `account-history`;
+- sekcję `search` z datami zakresu i elementem `account`;
+- sekcję `operations` zawierającą powtarzalne elementy `operation`;
+- pola operacji: `order-date`, `exec-date`, `type`, `description`, `amount`;
+- atrybut `curr` elementu `amount`.
+
+Próbka zawiera pięć operacji: cztery uznania USD i jedno obciążenie USD. Występują kwoty dziesiętne z kropką, znaki dodatnie/ujemne i referencje w tekście opisu pod etykietą „Referencje własne zleceniodawcy”. Wartości daty zlecenia i wykonania w próbce są zgodne.
+
+Nie znaleziono w dostępnych załącznikach pliku CSV ani XLS. Nie należy więc deklarować parserów tych formatów jako wykonanych ani wyprowadzać ich mapowania z XML/PDF.
+
+### 30.2. Implementacja
+
+Dodano `financial/BankStatementXmlParser.kt`:
+- parser wykorzystuje Android XmlPullParser;
+- wymaga korzenia `account-history`;
+- wyłącza przetwarzanie deklaracji dokumentu DTD;
+- odczytuje datę wykonania, a przy jej braku datę zlecenia;
+- odczytuje typ operacji, kwotę dziesiętną i kod waluty z atrybutu `curr`;
+- wyodrębnia referencję bankową z pola opisu;
+- wymaga przekazania lokalnego pseudonimu `accountScopeId` — nie pobiera i nie zapisuje pełnego numeru rachunku z nagłówka XML;
+- nie zapisuje surowego opisu, który w próbce zawiera numery rachunków kontrahentów, nazwiska i adresy;
+- gdy referencji brak, zapisuje jedynie odcisk SHA-256 opisu połączonego z lokalnym pseudonimem, aby zachować stabilną tożsamość do deduplikacji bez przechowywania jawnego opisu;
+- używa `BigDecimal` do zachowania dokładności kwot;
+- odrzuca brak daty, kwoty, waluty, typu operacji, nieprawidłową walutę/kwotę i dokument bez operacji.
+
+Parser nie jest jeszcze podłączony do przycisku importu w UI ani do automatycznego wyboru zakresu rachunku. Wymagany jest lokalny pseudonim rachunku przekazany przez warstwę wywołującą.
+
+### 30.3. Testy instrumentacyjne
+
+Dodano `androidTest/.../BankStatementXmlParserTest.kt`:
+1. test odczytu pięciu operacji i dokładnych kwot;
+2. test braku numerów rachunków kontrahentów, nazw i adresów w danych wynikowych;
+3. test wymagania pseudonimu rachunku i odrzucania niekompletnej operacji.
+
+Testy korzystają z anonimowej próbki wzorowanej na rzeczywistej strukturze XML. Oczekują czterech dodatnich zapisów i jednego ujemnego, zachowania referencji i dat oraz braku jawnych danych kontrahenta.
+
+### 30.4. Kontrola po implementacji
+
+Ponownie pobrano plik parsera i testu z gałęzi. Kontrola treści potwierdziła:
+- użycie prawidłowych wzorców wyrażeń regularnych dla polskiej etykiety referencji;
+- przekazywanie lokalnego `accountScopeId`;
+- normalizację waluty z użyciem `Locale.ROOT`;
+- walidację korzenia i niepustej listy operacji;
+- nieprzechowywanie surowego opisu;
+- testy dokładności kwot oraz minimalizacji danych.
+
+Jest to kontrola kodu źródłowego. Wynik kompilacji i testów instrumentacyjnych musi zostać potwierdzony w CI dla rewizji zawierającej parser i test.
+
+### 30.5. Ograniczenia i dalsze zadania
+
+- Parser obsługuje rozpoznany wariant XML iPKO `account-history`; inne warianty eksportu wymagają osobnych fixture'ów.
+- Parser nie rozstrzyga automatycznie, do którego lokalnego rachunku przypisać plik. Wywołujący musi przekazać pseudonim.
+- Nie dodano jeszcze interfejsu importu XML ani raportu podglądu XML przed zatwierdzeniem. Wynik parsera powinien przejść przez istniejący `BankImportDeduplicator.preview` i atomowy import SQLite.
+- Nie znaleziono próbek CSV i XLS w dostępnych załącznikach; parsery CSV i XLS są wstrzymane do czasu uzyskania wzorców.
+- PDF wymaga osobnego adaptera ekstrakcji tekstu i testów stron, tabel oraz nagłówków. Nie należy traktować podsumowania z pierwszej strony PDF jako wpisów transakcyjnych.
+- Nie zapisuje się pełnego numeru rachunku z XML ani surowego opisu kontrahenta.
+
+### 30.6. Status etapu
+
+| Element | Status |
+|---|---|
+| Rozpoznanie schematu XML na rzeczywistym załączniku | Wykonane |
+| Parser XML iPKO | Zaimplementowany |
+| Testy XML: pięć operacji, kwoty i referencje | Dodane; oczekują na CI |
+| Test minimalizacji danych osobowych | Dodany; oczekuje na CI |
+| Integracja parsera XML z selektorem plików i podglądem | Do wykonania |
+| Przekazanie lokalnego pseudonimu rachunku z UI | Do wykonania |
+| Parser CSV | Oczekuje na próbkę CSV |
+| Adapter XLS | Oczekuje na próbkę XLS |
+| Adapter PDF | Do wykonania po opracowaniu testów ekstrakcji |
+| Kompilacja i pełny CI po etapie 2I | Oczekuje na wynik |
+
+### 30.7. Następny krok
+
+Najpierw uzyskać zielone CI dla parsera XML. Następnie zintegrować wybór XML z podglądem i atomowym zatwierdzaniem importu. Kolejno przygotować adapter PDF na podstawie rzeczywistej próbki i testów ekstrakcji, a parser CSV/XLS wdrażać dopiero po dostarczeniu tych konkretnych plików.
