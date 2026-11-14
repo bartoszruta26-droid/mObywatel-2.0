@@ -250,7 +250,15 @@ END:VCARD
             "ombudsman", "children_ombudsman", "patient_ombudsman",
             "pretrial_mediator", "milicja_officer", "foreign_service_member",
             "diplomat", "consul", "ambassador", "foreign_mission_head",
-            "consular_employee", "inspector"
+            "consular_employee", "inspector",
+            "org_president", "org_general_director", "org_regional_director",
+            "org_county_director", "org_local_representative", "org_general_secretary",
+            "org_treasurer", "org_members_rights_ombudsman", "org_patient_ombudsman",
+            "org_family_ombudsman", "civil_mediator", "civil_arbitrator",
+            "civil_expert", "civil_appraiser", "civil_auditor",
+            "civil_internal_inspector", "civil_controller", "civil_consultant",
+            "civil_social_caretaker", "civil_org_curator", "civil_rescuer",
+            "org_ambassador", "org_foreign_representative", "org_proxy", "org_delegate"
         )
         val officialDocuments = documentIds.joinToString(
             prefix = "{", postfix = "}", separator = ","
