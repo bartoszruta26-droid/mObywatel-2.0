@@ -124,6 +124,7 @@ internal fun ReceiptTemplateSettingsScreen(onBack:()->Unit) {
     var notes by remember { mutableStateOf(receiptNotes(c)) }
     var title by remember { mutableStateOf(receiptPref(c).getString("title","RACHUNEK") ?: "RACHUNEK") }
     var showPkwiu by remember { mutableStateOf(receiptPref(c).getBoolean("show_pkwiu",true)) }
+    var defaultSigner by remember { mutableStateOf(receiptPref(c).getString("default_signer","") ?: "") }
     var status by remember { mutableStateOf("") }
     val folderPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if(uri!=null) runCatching { c.contentResolver.takePersistableUriPermission(uri,Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION); receiptPref(c).edit().putString("folder_tree_uri",uri.toString()).apply(); status="Wybrano katalog zapisu rachunków." }.onFailure{status="Błąd katalogu: ${it.message}"}
@@ -133,12 +134,13 @@ internal fun ReceiptTemplateSettingsScreen(onBack:()->Unit) {
         Text("‹  Powrót do ustawień",Modifier.clickable(onClick=onBack),color=MaterialTheme.colorScheme.primary)
         Text("Ustawienia rachunków",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
         OutlinedTextField(title,{title=it},label={Text("Nagłówek rachunku")},modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(defaultSigner,{defaultSigner=it},label={Text("Domyślny podpisujący")},modifier=Modifier.fillMaxWidth())
         Row(verticalAlignment=Alignment.CenterVertically) { Checkbox(showPkwiu,{showPkwiu=it}); Text("Pokazuj kolumnę PKWiU") }
         OutlinedTextField(notes,{notes=it},label={Text("Uwagi – treść drukowana na rachunku")},modifier=Modifier.fillMaxWidth(),minLines=7)
         Text("Katalog zapisu PDF",fontWeight=FontWeight.Bold)
         Text(if(selectedFolder.isNullOrBlank()) "Nie wybrano katalogu – pliki pozostają w pamięci aplikacji." else "Wybrany katalog: pliki będą porządkowane w podkatalogach rok/miesiąc.")
         OutlinedButton(onClick={folderPicker.launch(null)},modifier=Modifier.fillMaxWidth()) { Text("Wybierz katalog zapisu rachunków") }
-        Button(onClick={ receiptPref(c).edit().putString("title",title).putString("notes",notes).putBoolean("show_pkwiu",showPkwiu).apply(); status="Zapisano wzór rachunku." },modifier=Modifier.fillMaxWidth()) { Text("Zapisz wzór") }
+        Button(onClick={ receiptPref(c).edit().putString("title",title).putString("notes",notes).putBoolean("show_pkwiu",showPkwiu).putString("default_signer",defaultSigner).apply(); status="Zapisano wzór rachunku." },modifier=Modifier.fillMaxWidth()) { Text("Zapisz wzór") }
         if(status.isNotBlank()) Text(status,color=MaterialTheme.colorScheme.primary)
     }
 }
@@ -192,9 +194,14 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
     var records by remember { mutableStateOf(ReceiptStore.list(c)) }
     var status by remember { mutableStateOf("") }
     var seller by remember { mutableStateOf("") }; var buyer by remember { mutableStateOf("") }
+    var parties by remember { mutableStateOf(receiptParties(c)) }
+    var showPartyManager by remember { mutableStateOf(false) }
+    var partyName by remember { mutableStateOf("") }; var partyAddress by remember { mutableStateOf("") }
+    var editingParty by remember { mutableStateOf<Int?>(null) }
+    var sellerMenu by remember { mutableStateOf(false) }; var buyerMenu by remember { mutableStateOf(false) }
     var number by remember { mutableStateOf("") }; var saleDate by remember { mutableStateOf(java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date())) }
     var payment by remember { mutableStateOf("Gotówka") }; var due by remember { mutableStateOf("") }
-    var words by remember { mutableStateOf("") }; var signature by remember { mutableStateOf("") }
+    var words by remember { mutableStateOf("") }; var signature by remember { mutableStateOf(receiptPref(c).getString("default_signer","") ?: "") }
     var names by remember { mutableStateOf(listOf("","","")) }; var pkwiu by remember { mutableStateOf(listOf("","","")) }
     var units by remember { mutableStateOf(listOf("szt.","","")) }; var quantities by remember { mutableStateOf(listOf("1","","")) }
     var prices by remember { mutableStateOf(listOf("0,00","","")) }
@@ -227,8 +234,9 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
         Text("Wystaw rachunek według układu papierowego, zapisz go jako PDF lub zarządzaj zapisanymi plikami.")
         OutlinedTextField(number,{number=it},label={Text("Rachunek nr")},modifier=Modifier.fillMaxWidth())
         OutlinedTextField(saleDate,{saleDate=it},label={Text("Data sprzedaży")},modifier=Modifier.fillMaxWidth())
-        OutlinedTextField(seller,{seller=it},label={Text("Sprzedawca")},modifier=Modifier.fillMaxWidth(),minLines=2)
-        OutlinedTextField(buyer,{buyer=it},label={Text("Nabywca")},modifier=Modifier.fillMaxWidth(),minLines=2)
+        Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) { OutlinedTextField(seller,{seller=it},label={Text("Sprzedawca")},modifier=Modifier.weight(1f),minLines=2); Box { TextButton(onClick={sellerMenu=true}) { Text("Wybierz") }; DropdownMenu(expanded=sellerMenu,onDismissRequest={sellerMenu=false}) { parties.forEach { party-> DropdownMenuItem(text={Text(party.name)},onClick={seller=party.display();sellerMenu=false}) } } } }
+        Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) { OutlinedTextField(buyer,{buyer=it},label={Text("Nabywca")},modifier=Modifier.weight(1f),minLines=2); Box { TextButton(onClick={buyerMenu=true}) { Text("Wybierz") }; DropdownMenu(expanded=buyerMenu,onDismissRequest={buyerMenu=false}) { parties.forEach { party-> DropdownMenuItem(text={Text(party.name)},onClick={buyer=party.display();buyerMenu=false}) } } } }
+        OutlinedButton(onClick={showPartyManager=true},modifier=Modifier.fillMaxWidth()) { Text("Zarządzaj podmiotami: dodaj / edytuj / usuń") }
         OutlinedTextField(payment,{payment=it},label={Text("Sposób zapłaty")},modifier=Modifier.fillMaxWidth())
         OutlinedTextField(due,{due=it},label={Text("Termin zapłaty")},modifier=Modifier.fillMaxWidth())
         Text("Pozycje rachunku",fontWeight=FontWeight.Bold)
@@ -242,10 +250,12 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
                 OutlinedTextField(prices[i],{v->prices=prices.toMutableList().also{it[i]=v}},label={Text("Cena zł")},modifier=Modifier.weight(1f))
             }
         }
-        OutlinedTextField(words,{words=it},label={Text("Słownie złotych")},modifier=Modifier.fillMaxWidth())
+        OutlinedTextField(words,{ },label={Text("Wartość słownie – wyliczana automatycznie")},modifier=Modifier.fillMaxWidth(),readOnly=true)
         OutlinedTextField(signature,{signature=it},label={Text("Imię i nazwisko osoby wystawiającej")},modifier=Modifier.fillMaxWidth())
-        val total=names.indices.sumOf { i -> (quantities[i].replace(',','.').toDoubleOrNull() ?: 0.0)*(prices[i].replace(',','.').toDoubleOrNull() ?: 0.0) }
-        Text("Razem: ${"%.2f".format(java.util.Locale("pl"),total)} zł",fontWeight=FontWeight.Bold)
+        val totalCents=names.indices.sumOf { i -> val q=runCatching{java.math.BigDecimal(quantities[i].replace(',','.'))}.getOrDefault(java.math.BigDecimal.ZERO); q.multiply(java.math.BigDecimal(receiptMoneyCents(prices[i]))).setScale(0,java.math.RoundingMode.HALF_UP).longValue() }.coerceAtLeast(0L)
+        val total=totalCents/100.0
+        words=receiptAmountInWords(totalCents)
+        Text("Razem: ${receiptMoneyLabel(totalCents)}",fontWeight=FontWeight.Bold)
         Button(onClick={
             runCatching {
                 val pdf=buildReceiptPdf(c,number,saleDate,seller,buyer,payment,due,names,pkwiu,units,quantities,prices,words,signature,total)
