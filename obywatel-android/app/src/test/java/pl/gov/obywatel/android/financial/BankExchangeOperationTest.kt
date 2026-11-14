@@ -70,30 +70,28 @@ class BankExchangeOperationTest {
         assertEquals(emptyList<BankExchangeOperation>(), BankExchangeOperationProjector.project(listOf(ordinary)))
     }
     @Test
-    fun doesNotMergeSameReferenceAcrossAccountsOrBookingDates() {
-        val first = leg("USD", "-8000.00", "WYMIANA W KANTORZE - OBCIĄŻENIE")
-        val otherAccount = first.copy(accountScopeId = "ipko-account-2")
-        val otherDate = first.copy(bookingDate = LocalDate.parse("2026-03-05"))
-
-        val result = BankExchangeOperationProjector.project(listOf(first, otherAccount, otherDate))
-
-        assertEquals(3, result.size)
-        assertEquals(
-            setOf(
-                first.exchangeOperationId(),
-                otherAccount.exchangeOperationId(),
-                otherDate.exchangeOperationId()
-            ),
-            result.map { it.operationId }.toSet()
+    fun groupsSameDayFxLegsAcrossScopesButSeparatesReusedReferenceOnAnotherDate() {
+        val debit = leg("USD", "-8000.00", "WYMIANA W KANTORZE - OBCIĄŻENIE")
+        val creditOtherScope = debit.copy(
+            accountScopeId = "ipko-account-2",
+            currencyCode = "CHF",
+            signedAmount = BigDecimal("6183.20"),
+            operationType = "WYMIANA W KANTORZE - UZNANIE"
         )
-        assertEquals(
-            setOf(
-                ExchangeOperationStatus.SINGLE_LEG,
-                ExchangeOperationStatus.SINGLE_LEG,
-                ExchangeOperationStatus.SINGLE_LEG
-            ),
-            result.map { it.status }.toSet()
+        val reusedReferenceNextDay = debit.copy(
+            bookingDate = LocalDate.parse("2026-03-05")
         )
+
+        val result = BankExchangeOperationProjector.project(
+            listOf(debit, creditOtherScope, reusedReferenceNextDay)
+        )
+
+        assertEquals(2, result.size)
+        val complete = result.single { it.status == ExchangeOperationStatus.COMPLETE }
+        val single = result.single { it.status == ExchangeOperationStatus.SINGLE_LEG }
+        assertEquals(2, complete.legs.size)
+        assertEquals(setOf("USD", "CHF"), complete.currencies)
+        assertEquals(1, single.legs.size)
+        assertEquals(LocalDate.parse("2026-03-05"), single.legs.single().bookingDate)
     }
-
 }
