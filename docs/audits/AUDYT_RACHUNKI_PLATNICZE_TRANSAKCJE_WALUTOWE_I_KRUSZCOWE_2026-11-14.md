@@ -1290,3 +1290,74 @@ Etap 2C został zapisany po tej rewizji. Testy instrumentacyjne nowego magazynu,
 4. Dodać parsery CSV/XML po utrwaleniu pełnych reguł mapowania pól ze wzorców źródłowych.
 5. Dodać podgląd importu, raport duplikatów i konfliktów oraz atomowe zatwierdzanie z UI.
 6. Rozszerzyć magazyn o odrębne tabele operacji FX i darowizn gotówkowych, zachowując rozdział zapisów księgowych od operacji nadrzędnych.
+
+
+## 24. Kontrola CI rewizji etapu 2C i wyników regresji
+
+### 24.1. Rewizja kontrolowana
+
+Kontrola dotyczyła rewizji `e73ce209148da9c1b9cfbed2ceda3654fe5de220`.
+
+- Android prototype build (`43624597335`) — **success**.
+- Repository compliance / REUSE (`43624597230`) — **success**.
+- Android GUI validation (`43624597221`) — w chwili kontroli zadanie jednostkowe zakończyło się sukcesem, a testy Compose na emulatorze nadal trwały.
+- Krok `Run Android unit tests` — **success**.
+- Krok `Run Compose UI tests on Android emulator` — **in_progress**; nie ma podstaw do oznaczenia całego zadania GUI jako zakończonego.
+
+Wniosek: kompilacja i testy jednostkowe rewizji 2C zostały potwierdzone. Pełna walidacja emulatorowa oraz testy instrumentacyjne magazynu nie zostały jeszcze potwierdzone wynikiem końcowym zadania.
+
+## 25. Etap 2D — wersjonowany format JSON wymiany danych
+
+### 25.1. Decyzja architektoniczna
+
+Przyjęto podział odpowiedzialności:
+- **SQLite** jest lokalnym źródłem prawdy i magazynem operacyjnym.
+- **JSON** jest formatem eksportu, importu, kopii zapasowej i przenoszenia danych.
+- JSON nie zastępuje bazy SQLite ani nie staje się równoległym, niezależnym magazynem bieżących zmian.
+
+Takie rozdzielenie pozwala zachować transakcyjność, indeksy i ograniczenia unikalności po stronie SQLite, a jednocześnie zapewnia przenośność danych.
+
+### 25.2. Implementacja
+
+Dodano:
+- `financial/PaymentLedgerJsonCodec.kt` — kodowanie i dekodowanie archiwum wyciągów;
+- `financial/PaymentLedgerJsonCodecTest.kt` — testy formatu i walidacji.
+
+Format zawiera identyfikator `mobywatel-payment-ledger`, pole `schemaVersion` (obecnie 1) i tablicę `entries`. Każdy wpis przechowuje pseudonim zakresu rachunku, datę, kod waluty, kwotę jako tekst dziesiętny, typ operacji, referencję i opis. Referencja może być jawnie pusta. Przed kodowaniem i po dekodowaniu wykonywana jest walidacja modelu.
+
+Kwoty są zapisywane przez `BigDecimal.toPlainString()`; dekoder odtwarza je przez `BigDecimal`, bez konwersji zmiennoprzecinkowej. Nieznana wersja schematu, błędny format, niepoprawny JSON i nieprawidłowe rekordy są odrzucane.
+
+### 25.3. Testy dodane
+
+- pełny cykl encode/decode z zachowaniem dokładnej wartości dziesiętnej i identyfikatora księgowego;
+- zapis i odtworzenie ujemnej kwoty oraz pustej referencji;
+- odrzucenie nieobsługiwanej wersji schematu;
+- odrzucenie nieprawidłowego kodu waluty i uszkodzonego JSON.
+
+Testy zostały dodane do repozytorium; ich wynik wymaga potwierdzenia w CI dla rewizji zawierającej etap 2D.
+
+### 25.4. Zakres i ograniczenia
+
+- Etap 2D dostarcza kodek JSON dla znormalizowanych zapisów wyciągu bankowego. Nie jest jeszcze kompletnym archiwum całej domeny: transakcje finansowe, aktywa, opłaty i darowizny wymagają osobnych sekcji i migracji formatu.
+- Nie dodano jeszcze przycisków eksportu/importu w ekranie ani zapisu zdekodowanej paczki do SQLite.
+- Nie dodano jeszcze parserów CSV/XML ani adapterów XLS/PDF.
+- Kodek nie powinien być traktowany jako bezpieczna kopia zapasowa bez dodatkowej polityki szyfrowania, kontroli integralności i procedury przechowywania pliku.
+- Nie zapisuje się pełnych numerów rachunków; `accountScopeId` ma być pseudonimem lokalnym.
+
+### 25.5. Status etapów
+
+| Obszar | Status po tej rewizji |
+|---|---|
+| Etap 1 — katalog, trasa i ekran bazowy | Zaimplementowany; CI wcześniejszych rewizji wykrył i skorygował regresję katalogu |
+| Etap 2B — identyfikacja i deduplikacja | Zaimplementowany; wymaga dalszego rozszerzenia o konflikty referencji |
+| Etap 2C — SQLite dla zapisów wyciągów | Zaimplementowany; kompilacja i testy jednostkowe potwierdzone dla SHA z sekcji 24; testy emulatorowe nadal w toku przy ostatnim odczycie |
+| Etap 2D — JSON dla zapisów wyciągów | Kodek i testy dodane; oczekuje na CI |
+| Repozytorium i połączenie UI–SQLite | Nierozpoczęte |
+| Ręczne formularze transakcji i darowizn | Nierozpoczęte |
+| Parsery CSV/XML, adaptery XLS/PDF | Nierozpoczęte |
+| Podgląd importu i obsługa konfliktów | Nierozpoczęte |
+| Kursy NBP i wycena | Nierozpoczęte |
+
+### 25.6. Następny etap
+
+Następny etap powinien obejmować warstwę repozytorium z operacjami na SQLite wykonywanymi poza głównym wątkiem, integrację ekranu z odczytem rejestru oraz zatwierdzanie importu JSON jako jednej transakcji. Następnie należy dodać parser CSV/XML na podstawie dokładnych schematów wzorców i dopiero potem osobne adaptery XLS/PDF. Przed importem trzeba rozróżniać duplikaty od konfliktów: zgodna referencja bankowa przy innej kwocie, dacie, walucie lub kierunku wymaga ręcznej weryfikacji, a nie cichego pominięcia.
