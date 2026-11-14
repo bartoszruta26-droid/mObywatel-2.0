@@ -178,7 +178,11 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
             records=ReceiptStore.list(c); status="Zdjęcie ręcznie wypisanego rachunku zapisano jako PDF: ${rec.name}"
         }.onFailure{status="Błąd zdjęcia: ${it.message}"}
     }
-    val savePicker=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")){uri-> if(uri!=null) runCatching { val temp=File(c.cacheDir,"receipt-export.pdf"); temp.writeBytes(pendingPdfBytes); c.contentResolver.openOutputStream(uri)?.use{it.write(pendingPdfBytes)} ?: error("Nie można zapisać PDF."); val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pendingPdfBytes,createdAt=receiptFileDate(saleDate)); records=ReceiptStore.list(c); status="Wygenerowano i zapisano rachunek PDF: ${rec.name}" }.onFailure{status="Błąd zapisu PDF: ${it.message}"} }
+    val savePicker=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")){uri-> if(uri!=null) runCatching {
+        c.contentResolver.openOutputStream(uri)?.use{it.write(pendingPdfBytes)} ?: error("Nie można zapisać PDF.")
+        val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pendingPdfBytes,createdAt=receiptFileDate(saleDate))
+        records=ReceiptStore.list(c); status="Wygenerowano i zapisano rachunek PDF: ${rec.name}"
+    }.onFailure{status="Błąd zapisu PDF: ${it.message}"} }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text("‹  Powrót",Modifier.clickable(onClick=onBack),color=MaterialTheme.colorScheme.primary)
         Text("Rachunki",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
