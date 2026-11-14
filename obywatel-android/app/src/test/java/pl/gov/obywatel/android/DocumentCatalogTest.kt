@@ -100,6 +100,14 @@ class DocumentCatalogTest {
         }
         assertEquals("Żołnierz zawodowy powinien należeć do służby zbrojnej.", "Służba zbrojna", documentVisibilityGroup("military"))
         assertEquals(additions.size, additions.map { it.first }.toSet().size)
+        assertTrue("Formularz wojskowy musi mieć pola właściwe dla służby wojskowej.",
+            officialGraphicDocumentFields("military").map { it.second }.contains("Stopień wojskowy"))
+        assertTrue("Formularz policyjny musi mieć pola właściwe dla formacji mundurowej.",
+            officialGraphicDocumentFields("police_traffic").map { it.second }.contains("Numer legitymacji służbowej"))
+        assertTrue("Formularz sądowy musi mieć pola właściwe dla wymiaru sprawiedliwości.",
+            officialGraphicDocumentFields("justice_common_judge").map { it.second }.contains("Sąd / prokuratura / jednostka"))
+        assertTrue("Formularz nauczycielski musi mieć pola właściwe dla oświaty.",
+            officialGraphicDocumentFields("education_nominated_teacher").map { it.second }.contains("Placówka / uczelnia / instytut"))
     }
 
 }
