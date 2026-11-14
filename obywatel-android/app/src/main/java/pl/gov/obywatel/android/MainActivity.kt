@@ -1046,7 +1046,7 @@ internal val documentVisibilityGroupOrder = listOf(
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
-    "Służba osobista" -> R.drawable.lib_ic_account
+    "Służba osobista", "Służba osobowa" -> R.drawable.lib_ic_account
     "Służba rodowa" -> R.drawable.lib_ic_group
     "Służba cywilna", "Służba państwowa" -> R.drawable.tile_ic_civil_outline
     "Służba kościelna" -> R.drawable.tile_ic_church_outline
@@ -3494,10 +3494,21 @@ private fun DocumentEditorCatalogScreen(
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                             .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
                             .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            val groupIcon = documentGroupIconResource(group)
+                            val needsThemeTint = groupIcon in setOf(
+                                R.drawable.lib_ic_account,
+                                R.drawable.lib_ic_group,
+                                R.drawable.lib_ic_wallet,
+                                R.drawable.lib_ic_folder,
+                                R.drawable.lib_ic_document
+                            )
                             Image(
-                                painter = painterResource(documentGroupIconResource(group)),
+                                painter = painterResource(groupIcon),
                                 contentDescription = "Ikona grupy: $group",
-                                modifier = Modifier.size(34.dp)
+                                modifier = Modifier.size(34.dp),
+                                colorFilter = if (needsThemeTint) {
+                                    androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.primary)
+                                } else null
                             )
                             Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                             Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
