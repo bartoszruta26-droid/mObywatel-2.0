@@ -21,6 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -122,6 +124,19 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
     var prices by remember { mutableStateOf(listOf("0,00","","")) }
     var replaceId by remember { mutableStateOf<String?>(null) }
     val importPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri-> if(uri!=null) runCatching { val old=replaceId; val b=c.contentResolver.openInputStream(uri)?.use{it.readBytes()} ?: error("Nie można odczytać PDF."); val record=if(old!=null) ReceiptStore.put(c,"Rachunek – plik podmieniony.pdf",b,old) else ReceiptStore.importPdf(c,uri); records=ReceiptStore.list(c); status="Zapisano: ${record.name}" }.onFailure{status="Błąd PDF: ${it.message}"}; replaceId=null }
+    val photoPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri ->
+        if(uri!=null) runCatching {
+            val bitmap=c.contentResolver.openInputStream(uri)?.use{BitmapFactory.decodeStream(it)} ?: error("Nie można odczytać zdjęcia.")
+            val doc=PdfDocument()
+            val page=doc.startPage(PdfDocument.PageInfo.Builder(595,842,1).create())
+            val scale=minOf(555f/bitmap.width,790f/bitmap.height)
+            val w=(bitmap.width*scale).toInt(); val h=(bitmap.height*scale).toInt()
+            page.canvas.drawBitmap(bitmap,null,android.graphics.RectF((595-w)/2f,(842-h)/2f,(595+w)/2f,(842+h)/2f),Paint(Paint.ANTI_ALIAS_FLAG))
+            doc.finishPage(page); val out=ByteArrayOutputStream(); doc.writeTo(out); doc.close(); bitmap.recycle()
+            val rec=ReceiptStore.put(c,"Rachunek_reczny_${System.currentTimeMillis()}.pdf",out.toByteArray())
+            records=ReceiptStore.list(c); status="Zdjęcie ręcznie wypisanego rachunku zapisano jako PDF: ${rec.name}"
+        }.onFailure{status="Błąd zdjęcia: ${it.message}"}
+    }
     val savePicker=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")){uri-> if(uri!=null) runCatching { val temp=File(c.cacheDir,"receipt-export.pdf"); temp.writeBytes(pendingPdfBytes); c.contentResolver.openOutputStream(uri)?.use{it.write(pendingPdfBytes)} ?: error("Nie można zapisać PDF."); val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pendingPdfBytes); records=ReceiptStore.list(c); status="Wygenerowano i zapisano rachunek PDF: ${rec.name}" }.onFailure{status="Błąd zapisu PDF: ${it.message}"} }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text("‹  Powrót",Modifier.clickable(onClick=onBack),color=MaterialTheme.colorScheme.primary)
@@ -151,6 +166,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
         Button(onClick={ runCatching { pendingPdfBytes=buildReceiptPdf(c,number,saleDate,seller,buyer,payment,due,names,pkwiu,units,quantities,prices,words,signature,total); savePicker.launch("Rachunek-${number.ifBlank{"nowy"}}.pdf") }.onFailure{status="Nie udało się przygotować PDF: ${it.message}"} },modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.PictureAsPdf,null); Spacer(Modifier.width(8.dp)); Text("Wystaw i zapisz rachunek PDF") }
         Divider()
         Text("Zapisane rachunki PDF",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
+        OutlinedButton(onClick={photoPicker.launch(arrayOf("image/*"))},modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.AddPhotoAlternate,null); Spacer(Modifier.width(8.dp)); Text("Dodaj zdjęcie ręcznie wypisanego rachunku") }
         OutlinedButton(onClick={replaceId=null;importPicker.launch(arrayOf("application/pdf"))},modifier=Modifier.fillMaxWidth()) { Text("Dodaj istniejący PDF") }
         if(records.isEmpty()) Text("Brak zapisanych rachunków PDF.")
         records.forEach { rec ->
