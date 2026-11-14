@@ -109,4 +109,63 @@ class PaymentLedgerRepositoryTest {
             repository.close()
         }
     }
+    @Test
+    fun completeArchiveRoundTripsFinancialTransactionsAndFeesAtomically() = runBlocking {
+        val source = PaymentLedgerRepository(context, sourceDatabase)
+        val target = PaymentLedgerRepository(context, targetDatabase)
+        try {
+            val bankEntry = entry("-8000.00").copy(
+                operationType = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+            )
+            source.importJson(PaymentLedgerJsonCodec.encode(listOf(bankEntry)))
+            val tx = pl.gov.obywatel.android.FinancialTransaction(
+                id = "archive-fx-1",
+                executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+                type = pl.gov.obywatel.android.FinancialTransactionType.EXCHANGE,
+                fromAssetCode = "USD", fromAmount = BigDecimal("8000.00"),
+                toAssetCode = "CHF", toAmount = BigDecimal("6183.20"),
+                fee = pl.gov.obywatel.android.Fee("CHF", BigDecimal("5.25"))
+            )
+            source.saveFinancialTransaction(tx, setOf(bankEntry.accountingEntryId()))
+            val archive = source.exportJson()
+            assertTrue(archive.contains("\\"schemaVersion\\":2"))
+            assertTrue(archive.contains("\\"transactions\\":["))
+            assertEquals(BatchImportSummary(1, 0), target.importJson(archive))
+            val imported = target.getFinancialTransactions().single()
+            assertEquals(tx.id, imported.transaction.id)
+            assertEquals(0, BigDecimal("5.25").compareTo(imported.transaction.fee!!.amount))
+            assertEquals(listOf(bankEntry.accountingEntryId()), imported.accountingEntryIds)
+            assertEquals(BatchImportSummary(0, 1), target.importJson(archive))
+            assertEquals(1, target.getFinancialTransactions().size)
+        } finally {
+            source.close()
+            target.close()
+        }
+    }
+
+    @Test
+    fun invalidFinancialLinkRollsBackEntireArchiveImport() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val bankEntry = entry()
+            val tx = pl.gov.obywatel.android.FinancialTransaction(
+                id = "archive-invalid-link",
+                executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+                type = pl.gov.obywatel.android.FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null, fromAmount = null,
+                toAssetCode = "USD", toAmount = BigDecimal("749.33")
+            )
+            val archive = PaymentLedgerJsonCodec.encode(
+                listOf(bankEntry),
+                listOf(StoredFinancialTransaction(tx, listOf("missing-entry-id")))
+            )
+            val result = runCatching { target.importJson(archive) }
+            assertTrue(result.isFailure)
+            assertEquals(emptyList<BankStatementEntry>(), target.getEntries())
+            assertEquals(emptyList<StoredFinancialTransaction>(), target.getFinancialTransactions())
+        } finally {
+            target.close()
+        }
+    }
+
 }
