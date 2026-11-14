@@ -116,7 +116,35 @@ private fun serviceSubjectDocuments(): List<RegistryDoc> = buildList {
     entityServices.forEach { service ->
         entitySubjects.forEach { subject ->
             val sourceDocs = if (subject.key == "legal_person") {
-                entityDocs.filterNot { it.id == "entity_bank_accounts" }
+                val base = entityDocs.filterNot { doc ->
+                    doc.id == "entity_bank_accounts" || doc.title.contains("CEIDG", ignoreCase = true) ||
+                        (service.key != "business" && listOf("spółki", "wspólnik", "akcjonarius", "udział", "akcyjna", "wkładu", "inwestycyjna")
+                            .any { token -> doc.title.contains(token, ignoreCase = true) })
+                }
+                val specificTitles = when (service.key) {
+                    "foundation" -> listOf(
+                        "Akt ustanowienia fundacji", "Oświadczenie fundatora",
+                        "Rejestr fundatorów", "Uchwała Zarządu Fundacji",
+                        "Sprawozdanie z działalności fundacji", "Sprawozdanie finansowe fundacji",
+                        "Rejestr dotacji i darowizn", "Rejestr realizacji celów statutowych"
+                    )
+                    "association" -> listOf(
+                        "Rejestr członków stowarzyszenia", "Deklaracja członkowska",
+                        "Uchwała o przyjęciu członka", "Uchwała o skreśleniu członka",
+                        "Rejestr składek członkowskich", "Protokół walnego zebrania członków",
+                        "Lista obecności walnego zebrania", "Uchwała walnego zebrania członków"
+                    )
+                    else -> emptyList()
+                }
+                base + specificTitles.mapIndexed { index, title ->
+                    RegistryDoc(
+                        id = "service_${service.key}_legal_person_specific_${index}",
+                        title = title,
+                        section = if (service.key == "foundation") "Fundatorzy, cele i sprawozdawczość" else "Członkostwo i walne zebranie",
+                        fields = listOf("Pełna nazwa podmiotu", "Numer KRS", "Numer dokumentu / uchwały", "Organ właściwy", "Osoby, których dotyczy wpis", "Data podjęcia / sporządzenia", "Treść / zakres", "Podstawa statutowa", "Osoba sporządzająca", "Podpisy / potwierdzenia", "Załączniki", "Status", "Uwagi"),
+                        note = "Dokument właściwy dla kategorii: ${service.group}. Wpis ewidencyjny nie zastępuje wymaganych uchwał, zgłoszeń ani dokumentów źródłowych."
+                    )
+                }
             } else {
                 organizationalUnitTemplates.flatMap { (section, titles) ->
                     titles.mapIndexed { index, title ->
