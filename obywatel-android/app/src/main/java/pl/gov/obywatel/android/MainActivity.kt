@@ -1035,7 +1035,7 @@ internal val documentVisibilityGroupOrder = listOf(
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
     "Służba osobista" -> R.drawable.lib_ic_account
-    "Służba rodowa" -> R.drawable.documents_family_record
+    "Służba rodowa" -> R.drawable.lib_ic_group
     "Służba cywilna", "Służba państwowa" -> R.drawable.tile_ic_civil_outline
     "Służba kościelna" -> R.drawable.tile_ic_church_outline
     "Służba zbrojna" -> R.drawable.tile_ic_armed_service_outline
