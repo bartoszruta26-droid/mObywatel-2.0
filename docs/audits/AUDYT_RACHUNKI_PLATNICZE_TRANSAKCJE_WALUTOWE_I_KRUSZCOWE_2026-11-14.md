@@ -2171,3 +2171,59 @@ Wcześniejsze zadania dla SHA `65911c8` zostały anulowane podczas aktualizacji 
 3. Rozszerzyć wersjonowany JSON o transakcje i prowizje z zachowaniem kompatybilności wstecznej.
 4. Dodać trwały rejestr aktywów i reguły precyzji dla walut oraz kruszców.
 5. Następnie przejść do parsera PDF opartego na rzeczywistym wzorcu iPKO oraz importu CSV/XLS wyłącznie na podstawie dostępnych plików wzorcowych.
+
+
+## 37. Etap 2N.1 — kompletne archiwum JSON dla transakcji finansowych (14 listopada 2026 r.)
+
+### 37.1. Uzasadnienie i wykryta luka
+
+Kontrola rewizji PR przed etapem wykazała, że SQLite przechowywał już transakcje finansowe, prowizje i relacje do zapisów bankowych, natomiast PaymentLedgerJsonCodec eksportował wyłącznie tablicę entries. Kopia JSON nie obejmowała więc całego rejestru. Rozszerzenie wykonano bez zmiany roli SQLite jako lokalnego źródła prawdy.
+
+### 37.2. Zmiany wykonane
+
+1. Podniesiono wersję formatu JSON z 1 do 2.
+2. Schemat 2 zawiera:
+   - entries — źródłowe zapisy wyciągów;
+   - transactions — transakcje finansowe;
+   - strony aktywów i kwoty oddane/otrzymane;
+   - prowizję wraz z kodem aktywa i kwotą;
+   - źródło, status parsowania, czas wykonania i identyfikator zewnętrzny;
+   - listę accountingEntryIds wiążącą transakcję z zapisami źródłowymi.
+3. Kwoty pozostają tekstami dziesiętnymi i są odtwarzane jako BigDecimal; nie wprowadzono Float ani Double.
+4. decodeArchive() waliduje wersję, strukturę, typ transakcji, prowizję i unikalność identyfikatorów powiązań.
+5. Zachowano decode() jako dotychczasowe API zwracające wpisy bankowe, aby nie zmieniać parserów i podglądu importu.
+6. Archiwum schematu 1 pozostaje czytelne; brak tablicy transactions w wersji 1 oznacza pustą listę transakcji.
+7. Dodano PaymentLedgerDatabase.importArchive(): wpisy bankowe, transakcje, prowizje i relacje są importowane w ramach jednej transakcji SQLite. Konflikt referencji, nieprawidłowa relacja albo niezgodność kwoty/waluty powoduje wycofanie całego archiwum.
+8. PaymentLedgerRepository.exportJson() eksportuje teraz wpisy bankowe i zapisane transakcje; importJson() dekoduje pełne archiwum i korzysta z atomowego importu.
+
+### 37.3. Testy dodane lub zmienione
+
+- test pełnego round-trip schematu 2, obejmujący transakcję wymiany, prowizję i relację do zapisu bankowego;
+- test odczytu archiwum schematu 1;
+- test odrzucenia nieprawidłowej transakcji;
+- test integracyjny eksportu/importu transakcji i prowizji przez repozytorium;
+- test idempotentnego ponownego importu archiwum;
+- test rollback całego archiwum, gdy transakcja wskazuje nieistniejący zapis bankowy;
+- dostosowano test nieznanej wersji schematu do nowej wersji 2.
+
+### 37.4. Pliki objęte etapem
+
+- financial/PaymentLedgerJsonCodec.kt;
+- financial/PaymentLedgerDatabase.kt;
+- financial/PaymentLedgerRepository.kt;
+- test/.../financial/PaymentLedgerJsonCodecTest.kt;
+- androidTest/.../financial/PaymentLedgerRepositoryTest.kt.
+
+### 37.5. Ograniczenia i zakres niewykonany
+
+Etap 2N.1 zamyka lukę kompletności kopii JSON dla istniejącego modelu transakcji. Nie dodaje jeszcze formularza ręcznego tworzenia/edycji transakcji i operacji kruszcowych, rejestru darowizn w SQLite/JSON, edycji aktywów ani interfejsu wyboru powiązanych zapisów bankowych. Nie należy oznaczać całego etapu 2N jako ukończonego.
+
+Import archiwum wykorzystuje transakcję zewnętrzną SQLite i istniejącą metodę zapisu transakcji. Należy potwierdzić zachowanie zagnieżdżonych transakcji na emulatorze w testach instrumentacyjnych.
+
+### 37.6. Status weryfikacji
+
+Zmiany zapisano na gałęzi PR #68. Testy jednostkowe i instrumentacyjne zostały dodane, ale ich wykonanie dla nowej rewizji wymaga świeżego CI. Do czasu uzyskania wyników nie oznacza się testów jako zaliczonych ani nie publikuje APK dla tej rewizji.
+
+### 37.7. Następny podetap
+
+Następnie należy wykonać formularze tworzenia i edycji transakcji walutowych oraz kupna/sprzedaży kruszców, z wyborem aktywów, datą, kwotami, prowizją i powiązaniami bankowymi. Formularze muszą używać walidacji domenowej i zapisu przez repozytorium; edycja nie może usuwać źródłowych zapisów bankowych.
