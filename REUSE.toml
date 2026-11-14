@@ -26,3 +26,15 @@ path = ["obywatel-android/app/src/main/res/drawable/mob_*.xml"]
 precedence = "closest"
 SPDX-FileCopyrightText = "2025 Centralny Ośrodek Informatyki"
 SPDX-License-Identifier = "LicenseRef-COI-MIT-PL"
+
+[[annotations]]
+path = ["security/android-signing/README.md"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 bartoszruta26-droid"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = ["security/android-signing/mobywatel-android-signing-private.zip.enc.b64"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 bartoszruta26-droid"
+SPDX-License-Identifier = "LicenseRef-Proprietary"
