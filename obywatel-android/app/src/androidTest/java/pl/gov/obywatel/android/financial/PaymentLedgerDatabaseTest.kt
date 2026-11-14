@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.database.sqlite.SQLiteConstraintException
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.Instant
@@ -395,6 +396,41 @@ class PaymentLedgerDatabaseTest {
                 db.saveFinancialTransaction(transaction, setOf(unrelatedEntry.accountingEntryId()))
             }
             assertEquals(emptyList<StoredFinancialTransaction>(), db.readFinancialTransactions())
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun oneBankEntryCannotBeLinkedToTwoFinancialTransactions() {
+        val db = openDatabase()
+        try {
+            val sourceEntry = entry("-8000.00").copy(
+                operationType = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+            )
+            db.importBatch(listOf(sourceEntry))
+            val first = FinancialTransaction(
+                id = "tx-first",
+                executedAt = Instant.parse("2026-11-12T10:15:30Z"),
+                type = FinancialTransactionType.EXCHANGE,
+                fromAssetCode = "USD",
+                fromAmount = BigDecimal("8000.00"),
+                toAssetCode = "CHF",
+                toAmount = BigDecimal("6183.20")
+            )
+            val second = first.copy(
+                id = "tx-second",
+                toAssetCode = "EUR",
+                toAmount = BigDecimal("7500.00")
+            )
+            db.saveFinancialTransaction(first, setOf(sourceEntry.accountingEntryId()))
+
+            assertThrows(SQLiteConstraintException::class.java) {
+                db.saveFinancialTransaction(second, setOf(sourceEntry.accountingEntryId()))
+            }
+            val stored = db.readFinancialTransactions()
+            assertEquals(1, stored.size)
+            assertEquals("tx-first", stored.single().transaction.id)
         } finally {
             db.close()
         }
