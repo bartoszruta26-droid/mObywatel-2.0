@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: CC0-1.0
 package pl.gov.obywatel.android
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pl.gov.obywatel.android.financial.BankStatementEntry
+import pl.gov.obywatel.android.financial.BankImportPreview
 import pl.gov.obywatel.android.financial.PaymentLedgerRepository
 
 /** Ekran rejestru odczytuje dane z SQLite przez repozytorium pracujące na IO. */
@@ -41,6 +44,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var entries by remember { mutableStateOf<List<BankStatementEntry>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var pendingJson by remember { mutableStateOf<String?>(null) }
+    var importPreview by remember { mutableStateOf<BankImportPreview?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
 
     fun reload() {
         scope.launch {
@@ -52,6 +58,47 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 error = exception.message ?: "Nie udało się odczytać rejestru."
             } finally {
                 loading = false
+            }
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    val json = context.contentResolver.openInputStream(uri)
+                        ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+                        ?: error("Nie można odczytać wybranego pliku.")
+                    val preview = repository.previewJson(json)
+                    pendingJson = json
+                    importPreview = preview
+                    message = "Wczytano plik do podglądu."
+                    error = null
+                } catch (exception: Exception) {
+                    pendingJson = null
+                    importPreview = null
+                    error = exception.message ?: "Nie udało się przygotować importu."
+                }
+            }
+        }
+    }
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    val json = repository.exportJson()
+                    context.contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use {
+                        it.write(json)
+                    } ?: error("Nie można zapisać pliku.")
+                    message = "Eksport JSON został zapisany."
+                    error = null
+                } catch (exception: Exception) {
+                    error = exception.message ?: "Nie udało się zapisać eksportu."
+                }
             }
         }
     }
@@ -73,6 +120,51 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             "Lokalny rejestr transakcji walutowych, kruszcowych i darowizn gotówkowych.",
             style = MaterialTheme.typography.bodyLarge
         )
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Import i eksport danych", style = MaterialTheme.typography.titleMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { importLauncher.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }) {
+                        Text("Importuj JSON")
+                    }
+                    Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
+                        Text("Eksportuj JSON")
+                    }
+                }
+                message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
+                importPreview?.let { preview ->
+                    Text("Podgląd: nowe ${preview.newEntries.size}, duplikaty ${preview.duplicates.size}, konflikty ${preview.conflicts.size}")
+                    preview.conflicts.forEach { conflict ->
+                        Text(
+                            "Konflikt: ${conflict.incoming.bankOperationReference} — ${conflict.existing.currencyCode} ${conflict.existing.signedAmount} / ${conflict.incoming.currencyCode} ${conflict.incoming.signedAmount}",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            val json = pendingJson
+                            if (json != null && preview.conflicts.isEmpty()) {
+                                scope.launch {
+                                    try {
+                                        val summary = repository.importJson(json)
+                                        message = "Dodano: ${summary.inserted}; duplikaty: ${summary.duplicates}."
+                                        pendingJson = null
+                                        importPreview = null
+                                        reload()
+                                    } catch (exception: Exception) {
+                                        error = exception.message ?: "Import nie powiódł się."
+                                    }
+                                }
+                            }
+                        },
+                        enabled = pendingJson != null && preview.conflicts.isEmpty() && !loading
+                    ) { Text("Zatwierdź import") }
+                    if (preview.conflicts.isNotEmpty()) {
+                        Text("Import zablokowany do czasu wyjaśnienia konfliktów.", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        }
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Historia zapisów bankowych", style = MaterialTheme.typography.titleMedium)
