@@ -30,10 +30,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import pl.gov.obywatel.android.financial.BankStatementEntry
 import pl.gov.obywatel.android.financial.BankImportPreview
 import pl.gov.obywatel.android.financial.PaymentLedgerRepository
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 /** Ekran rejestru odczytuje dane z SQLite przez repozytorium pracujące na IO. */
 @Composable
@@ -68,9 +72,11 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         if (uri != null) {
             scope.launch {
                 try {
-                    val json = context.contentResolver.openInputStream(uri)
-                        ?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-                        ?: throw IllegalStateException("Nie można odczytać wybranego pliku.")
+                    val json = withContext(Dispatchers.IO) {
+                        val input = context.contentResolver.openInputStream(uri)
+                            ?: throw IllegalStateException("Nie można odczytać wybranego pliku.")
+                        input.use { readUtf8Limited(it, MAX_IMPORT_BYTES) }
+                    }
                     val preview = repository.previewJson(json)
                     pendingJson = json
                     importPreview = preview
@@ -91,9 +97,11 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             scope.launch {
                 try {
                     val json = repository.exportJson()
-                    context.contentResolver.openOutputStream(uri)?.bufferedWriter(Charsets.UTF_8)?.use {
-                        it.write(json)
-                    } ?: throw IllegalStateException("Nie można zapisać pliku.")
+                    withContext(Dispatchers.IO) {
+                        val output = context.contentResolver.openOutputStream(uri)
+                            ?: throw IllegalStateException("Nie można zapisać pliku.")
+                        output.bufferedWriter(Charsets.UTF_8).use { it.write(json) }
+                    }
                     message = "Eksport JSON został zapisany."
                     error = null
                 } catch (exception: Exception) {
@@ -212,4 +220,22 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             }
         }
     }
+}
+
+
+private const val MAX_IMPORT_BYTES = 10 * 1024 * 1024
+
+/** Odczyt z limitem bajtów — chroni UI i pamięć przed nieograniczonym plikiem wejściowym. */
+private fun readUtf8Limited(input: InputStream, maxBytes: Int): String {
+    val output = ByteArrayOutputStream()
+    val buffer = ByteArray(8 * 1024)
+    var total = 0
+    while (true) {
+        val count = input.read(buffer)
+        if (count < 0) break
+        total += count
+        require(total <= maxBytes) { "Plik JSON przekracza limit 10 MB." }
+        output.write(buffer, 0, count)
+    }
+    return output.toString(Charsets.UTF_8.name())
 }
