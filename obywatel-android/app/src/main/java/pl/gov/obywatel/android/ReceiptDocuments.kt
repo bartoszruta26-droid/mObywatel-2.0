@@ -36,48 +36,81 @@ import java.io.File
 import java.io.ByteArrayOutputStream
 import java.util.UUID
 import java.util.Calendar
+import java.util.Locale
+import java.text.SimpleDateFormat
 
-private data class ReceiptRecord(val id:String,val name:String,val createdAt:Long)
+private data class ReceiptRecord(val id:String,val name:String,val createdAt:Long, val archiveUri:String? = null)
 private object ReceiptStore {
     private fun dir(c:Context)=File(c.noBackupFilesDir,"receipts").apply{mkdirs()}
     private fun index(c:Context)=File(dir(c),"index.json")
-    fun persistSelectedFolder(c:Context,name:String,bytes:ByteArray) {
-        val raw=receiptPref(c).getString("folder_tree_uri",null) ?: return
-        val root=DocumentFile.fromTreeUri(c,Uri.parse(raw)) ?: return
-        val now=Calendar.getInstance()
-        val year=now.get(Calendar.YEAR).toString()
-        val month="%02d".format(now.get(Calendar.MONTH)+1)
-        val yd=root.findFile(year)?.takeIf{it.isDirectory} ?: root.createDirectory(year) ?: return
-        val md=yd.findFile(month)?.takeIf{it.isDirectory} ?: yd.createDirectory(month) ?: return
+    fun persistSelectedFolder(c:Context,name:String,bytes:ByteArray,createdAt:Long):String? {
+        val raw=receiptPref(c).getString("folder_tree_uri",null) ?: return null
+        val root=DocumentFile.fromTreeUri(c,Uri.parse(raw))
+            ?: error("Wybrany katalog rachunków jest niedostępny.")
+        val calendar=Calendar.getInstance().apply { timeInMillis=createdAt }
+        val year=calendar.get(Calendar.YEAR).toString()
+        val month="%02d".format(Locale.ROOT,calendar.get(Calendar.MONTH)+1)
+        val yearDir=root.findFile(year)?.takeIf{it.isDirectory} ?: root.createDirectory(year)
+            ?: error("Nie można utworzyć katalogu roku $year.")
+        val monthDir=yearDir.findFile(month)?.takeIf{it.isDirectory} ?: yearDir.createDirectory(month)
+            ?: error("Nie można utworzyć katalogu miesiąca $month.")
         val safe=name.replace(Regex("[^A-Za-z0-9._-]"),"_").take(100).ifBlank{"rachunek.pdf"}
-        md.findFile(safe)?.delete()
-        val target=md.createFile("application/pdf",safe) ?: return
+        monthDir.findFile(safe)?.delete()
+        val target=monthDir.createFile("application/pdf",safe)
+            ?: error("Nie można utworzyć pliku PDF w wybranym katalogu.")
         c.contentResolver.openOutputStream(target.uri,"w")?.use{it.write(bytes)}
+            ?: error("Nie można zapisać PDF w wybranym katalogu.")
+        return target.uri.toString()
     }
     fun list(c:Context):List<ReceiptRecord> = runCatching {
         val a=JSONArray(index(c).takeIf{it.exists()}?.readText() ?: "[]")
-        (0 until a.length()).map { val o=a.getJSONObject(it); ReceiptRecord(o.getString("id"),o.getString("name"),o.getLong("createdAt")) }
+        (0 until a.length()).map { val o=a.getJSONObject(it); ReceiptRecord(o.getString("id"),o.getString("name"),o.getLong("createdAt"),o.optString("archiveUri").takeIf{it.isNotBlank()}) }
     }.getOrDefault(emptyList())
-    fun put(c:Context,name:String,bytes:ByteArray,id:String=UUID.randomUUID().toString()):ReceiptRecord {
+    fun put(c:Context,name:String,bytes:ByteArray,id:String=UUID.randomUUID().toString(),createdAt:Long=System.currentTimeMillis()):ReceiptRecord {
         require(bytes.size>5 && String(bytes,0,5,Charsets.US_ASCII)=="%PDF-") { "Nieprawidłowy plik PDF." }
         require(bytes.size<=50*1024*1024) { "Plik PDF przekracza 50 MB." }
-        File(dir(c),"$id.pdf").writeBytes(bytes)
-        runCatching { persistSelectedFolder(c,name,bytes) }
-        val record=ReceiptRecord(id,name.take(180),System.currentTimeMillis())
+        val temporary=File(dir(c),"$id.pdf.tmp")
+        val internal=File(dir(c),"$id.pdf")
+        temporary.writeBytes(bytes)
+        val archiveUri=try { persistSelectedFolder(c,name,bytes,createdAt) }
+            catch (failure:Throwable) { temporary.delete(); throw failure }
+        check(temporary.renameTo(internal)) { "Nie udało się zatwierdzić lokalnej kopii rachunku." }
+        val record=ReceiptRecord(id,name.take(180),createdAt,archiveUri)
         save(c,(list(c).filterNot{it.id==id}+record))
         return record
     }
     fun bytes(c:Context,id:String)=File(dir(c),"$id.pdf").takeIf{it.isFile}?.readBytes() ?: error("Nie znaleziono pliku PDF.")
     fun delete(c:Context,id:String) { File(dir(c),"$id.pdf").delete(); save(c,list(c).filterNot{it.id==id}) }
     private fun save(c:Context,items:List<ReceiptRecord>) {
-        val a=JSONArray(); items.forEach { a.put(JSONObject().put("id",it.id).put("name",it.name).put("createdAt",it.createdAt)) }
+        val a=JSONArray(); items.forEach { a.put(JSONObject().put("id",it.id).put("name",it.name).put("createdAt",it.createdAt).put("archiveUri",it.archiveUri ?: "")) }
         index(c).writeText(a.toString())
     }
     fun importPdf(c:Context,uri:Uri):ReceiptRecord {
-        val bytes=c.contentResolver.openInputStream(uri)?.use{it.readBytes()} ?: error("Nie można odczytać PDF.")
+        val bytes=c.contentResolver.openInputStream(uri)?.use { input ->
+            val output=ByteArrayOutputStream()
+            val buffer=ByteArray(8192)
+            var total=0
+            while(true) {
+                val count=input.read(buffer)
+                if(count<0) break
+                total+=count
+                require(total<=50*1024*1024) { "PDF przekracza limit 50 MB." }
+                output.write(buffer,0,count)
+            }
+            output.toByteArray()
+        } ?: error("Nie można odczytać PDF.")
+        require(bytes.size>5 && String(bytes,0,5,Charsets.US_ASCII)=="%PDF-") { "Wybrany plik nie jest poprawnym PDF." }
         val name=c.contentResolver.query(uri,null,null,null,null)?.use{cur-> if(cur.moveToFirst()) { val i=cur.getColumnIndex(OpenableColumns.DISPLAY_NAME); if(i>=0) cur.getString(i) else null } else null} ?: "rachunek.pdf"
         return put(c,name,bytes)
     }
+}
+
+private fun receiptFileDate(date:String):Long {
+    for(pattern in listOf("dd.MM.yyyy","yyyy-MM-dd","dd/MM/yyyy")) {
+        val parsed=runCatching { SimpleDateFormat(pattern,Locale("pl")).apply { isLenient=false }.parse(date)?.time }.getOrNull()
+        if(parsed!=null) return parsed
+    }
+    return System.currentTimeMillis()
 }
 
 private const val DEFAULT_RECEIPT_NOTES = "Uwagi: Zwolnienie od obowiązku wystawienia faktury - Art. 106b. [Obowiązek wystawienia faktury] [...] ust. 2. Podatnik nie jest obowiązany do wystawienia faktury w odniesieniu do sprzedaży zwolnionej od podatku na podstawie art. 43 ust. 1 [Zwolnienia przedmiotowe], art. 113 ust. 1 [Zwolnienie podmiotowe].\nZwolnienie podmiotowe VAT: art. 113 ust. 1 i 9.\nZwolnienie przedmiotowe VAT: art. 43 ust. 1 usługi medyczne pkt 18a-19a, opieki nad niepełnosprawnymi w miejscu zamieszkania pkt 23; kształcenia zawodowego pkt 29, usługi i towary organizacji filozoficznych i obywatelskich pkt 31, usługi wychowania fizycznego pkt 32, usługi kulturalne pkt 33."
@@ -126,7 +159,15 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
     val importPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri-> if(uri!=null) runCatching { val old=replaceId; val b=c.contentResolver.openInputStream(uri)?.use{it.readBytes()} ?: error("Nie można odczytać PDF."); val record=if(old!=null) ReceiptStore.put(c,"Rachunek – plik podmieniony.pdf",b,old) else ReceiptStore.importPdf(c,uri); records=ReceiptStore.list(c); status="Zapisano: ${record.name}" }.onFailure{status="Błąd PDF: ${it.message}"}; replaceId=null }
     val photoPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri ->
         if(uri!=null) runCatching {
-            val bitmap=c.contentResolver.openInputStream(uri)?.use{BitmapFactory.decodeStream(it)} ?: error("Nie można odczytać zdjęcia.")
+            val bounds=BitmapFactory.Options().apply { inJustDecodeBounds=true }
+            c.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it,null,bounds) }
+                ?: error("Nie można odczytać zdjęcia.")
+            require(bounds.outWidth>0 && bounds.outHeight>0) { "Wybrany plik nie jest poprawnym obrazem." }
+            var sample=1
+            while(bounds.outWidth/sample>2400 || bounds.outHeight/sample>2400) sample*=2
+            val bitmap=c.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it,null,BitmapFactory.Options().apply { inSampleSize=sample })
+            } ?: error("Nie można wczytać zdjęcia.")
             val doc=PdfDocument()
             val page=doc.startPage(PdfDocument.PageInfo.Builder(595,842,1).create())
             val scale=minOf(555f/bitmap.width,790f/bitmap.height)
@@ -137,7 +178,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
             records=ReceiptStore.list(c); status="Zdjęcie ręcznie wypisanego rachunku zapisano jako PDF: ${rec.name}"
         }.onFailure{status="Błąd zdjęcia: ${it.message}"}
     }
-    val savePicker=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")){uri-> if(uri!=null) runCatching { val temp=File(c.cacheDir,"receipt-export.pdf"); temp.writeBytes(pendingPdfBytes); c.contentResolver.openOutputStream(uri)?.use{it.write(pendingPdfBytes)} ?: error("Nie można zapisać PDF."); val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pendingPdfBytes); records=ReceiptStore.list(c); status="Wygenerowano i zapisano rachunek PDF: ${rec.name}" }.onFailure{status="Błąd zapisu PDF: ${it.message}"} }
+    val savePicker=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")){uri-> if(uri!=null) runCatching { val temp=File(c.cacheDir,"receipt-export.pdf"); temp.writeBytes(pendingPdfBytes); c.contentResolver.openOutputStream(uri)?.use{it.write(pendingPdfBytes)} ?: error("Nie można zapisać PDF."); val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pendingPdfBytes,createdAt=receiptFileDate(saleDate)); records=ReceiptStore.list(c); status="Wygenerowano i zapisano rachunek PDF: ${rec.name}" }.onFailure{status="Błąd zapisu PDF: ${it.message}"} }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         Text("‹  Powrót",Modifier.clickable(onClick=onBack),color=MaterialTheme.colorScheme.primary)
         Text("Rachunki",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
@@ -166,8 +207,7 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
         Button(onClick={ runCatching { pendingPdfBytes=buildReceiptPdf(c,number,saleDate,seller,buyer,payment,due,names,pkwiu,units,quantities,prices,words,signature,total); savePicker.launch("Rachunek-${number.ifBlank{"nowy"}}.pdf") }.onFailure{status="Nie udało się przygotować PDF: ${it.message}"} },modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.PictureAsPdf,null); Spacer(Modifier.width(8.dp)); Text("Wystaw i zapisz rachunek PDF") }
         Divider()
         Text("Zapisane rachunki PDF",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
-        OutlinedButton(onClick={runCatching { c.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany"))) }.onFailure{status="Nie można otworzyć usługi gov.pl: ${it.message}"}},modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.VerifiedUser,null); Spacer(Modifier.width(8.dp)); Text("Podpisz rachunek w usłudze gov.pl") }
-        Text("Usługa rządowa otwiera się osobno. Wybierz Dodaj plik i wskaż zapisany PDF. Po podpisaniu pobierz podpisany plik, a następnie dodaj go poniżej – zostanie zapisany w katalogu rachunków.")
+        Text("Każdy zapisany rachunek ma własny kafelek podpisu. Podpis wymaga potwierdzenia przez użytkownika w usłudze rządowej.")
         OutlinedButton(onClick={photoPicker.launch(arrayOf("image/*"))},modifier=Modifier.fillMaxWidth()) { Icon(Icons.Filled.AddPhotoAlternate,null); Spacer(Modifier.width(8.dp)); Text("Dodaj zdjęcie ręcznie wypisanego rachunku") }
         OutlinedButton(onClick={replaceId=null;importPicker.launch(arrayOf("application/pdf"))},modifier=Modifier.fillMaxWidth()) { Text("Dodaj istniejący PDF") }
         if(records.isEmpty()) Text("Brak zapisanych rachunków PDF.")
@@ -175,10 +215,29 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
             Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically) { Icon(Icons.Filled.Description,null); Spacer(Modifier.width(8.dp)); Text(rec.name,Modifier.weight(1f),fontWeight=FontWeight.SemiBold) }
                 Text(java.text.SimpleDateFormat("dd.MM.yyyy HH:mm",java.util.Locale("pl")).format(java.util.Date(rec.createdAt)),style=MaterialTheme.typography.bodySmall)
-                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                     OutlinedButton(onClick={replaceId=rec.id;importPicker.launch(arrayOf("application/pdf"))}) { Text("Podmień PDF") }
-                    TextButton(onClick={runCatching { val bytes=ReceiptStore.bytes(c,rec.id); val f=File(c.cacheDir,rec.name); f.writeBytes(bytes); val intent=android.content.Intent(android.content.Intent.ACTION_VIEW).setDataAndType(androidx.core.content.FileProvider.getUriForFile(c,c.packageName+".ocrfiles",f),"application/pdf").addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION); c.startActivity(intent) }.onFailure{status="Nie można otworzyć PDF: ${it.message}"}) { Text("Wyświetl") }
-                    TextButton(onClick={ReceiptStore.delete(c,rec.id);records=ReceiptStore.list(c);status="Usunięto rachunek PDF.")}) { Icon(Icons.Filled.Delete,null); Text("Usuń") }
+                    TextButton(onClick={runCatching { val bytes=ReceiptStore.bytes(c,rec.id); val f=File(c.cacheDir,rec.name); f.writeBytes(bytes); val intent=Intent(Intent.ACTION_VIEW).setDataAndType(androidx.core.content.FileProvider.getUriForFile(c,c.packageName+".ocrfiles",f),"application/pdf").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION); c.startActivity(intent) }.onFailure{status="Nie można otworzyć PDF: ${it.message}"}) { Text("Wyświetl") }
+                    TextButton(onClick={
+                        runCatching {
+                            val file=File(c.cacheDir,rec.name).apply { writeBytes(ReceiptStore.bytes(c,rec.id)) }
+                            val uri=androidx.core.content.FileProvider.getUriForFile(c,c.packageName+".ocrfiles",file)
+                            val send=Intent(Intent.ACTION_SEND).apply {
+                                type="application/pdf"
+                                putExtra(Intent.EXTRA_STREAM,uri)
+                                clipData=android.content.ClipData.newUri(c.contentResolver,rec.name,uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            c.startActivity(Intent.createChooser(send,"Przekaż rachunek PDF"))
+                        }.onFailure{status="Nie można przekazać PDF: ${it.message}"}
+                    }) { Icon(Icons.Filled.VerifiedUser,null); Text("Podpisz PDF") }
+                }
+                Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick={runCatching {
+                        c.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://www.gov.pl/web/gov/podpisz-dokument-elektronicznie-wykorzystaj-podpis-zaufany")))
+                    }.onFailure{status="Nie można otworzyć usługi gov.pl: ${it.message}"}}) { Text("Otwórz gov.pl") }
+                    TextButton(onClick={replaceId=null;importPicker.launch(arrayOf("application/pdf"))}) { Text("Dodaj podpisany PDF") }
+                    TextButton(onClick={ReceiptStore.delete(c,rec.id);records=ReceiptStore.list(c);status="Usunięto rachunek PDF."}) { Icon(Icons.Filled.Delete,null); Text("Usuń") }
                 }
             } }
         }
