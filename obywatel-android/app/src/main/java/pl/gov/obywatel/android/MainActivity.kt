@@ -965,6 +965,12 @@ internal val documentDisplayOptions = (listOf(
     Triple("organization_church", "Dokumenty Kościoła / wspólnoty", R.drawable.church_communities),
     Triple("organization_company", "Dokumenty przedsiębiorstwa", R.drawable.lib_ic_building),
     Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
+    Triple("service_social_union_membership", "Legitymacja członkowska związku zawodowego", R.drawable.lib_ic_account),
+    Triple("service_social_union_declaration", "Deklaracja przystąpienia do związku zawodowego", R.drawable.lib_ic_document),
+    Triple("service_social_union_certificate", "Zaświadczenie o członkostwie w związku zawodowym", R.drawable.lib_ic_document),
+    Triple("service_social_union_mandate", "Legitymacja delegata lub przedstawiciela związku zawodowego", R.drawable.lib_ic_account),
+    Triple("service_social_union_resolution", "Uchwała związku zawodowego", R.drawable.lib_ic_document),
+    Triple("service_social_union_statute", "Statut związku zawodowego", R.drawable.lib_ic_document),
     Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
     Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document),
     Triple("military_book", "Książeczka wojskowa", R.drawable.tile_ic_armed_service_outline),
@@ -1016,7 +1022,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
     id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
     id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
-    id.startsWith("service_foundation_") -> "Służba fundacyjna"
+    id.startsWith("service_foundation_") || id.startsWith("service_social_") -> "Służba społeczna"
     id.startsWith("service_business_") -> "Służba gospodarcza"
     id.startsWith("service_association_") -> "Służba stowarzyszeniowa"
     id in setOf("org_president", "org_general_director", "org_regional_director", "org_county_director", "org_local_representative", "org_general_secretary", "org_treasurer", "org_ambassador", "org_foreign_representative", "org_proxy", "org_delegate") -> "Służba gospodarcza"
@@ -1024,7 +1030,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
     id in setOf("civil_expert", "civil_appraiser", "civil_auditor", "civil_internal_inspector", "civil_controller", "civil_consultant") -> "Służba zawodowa"
     id == "civil_rescuer" -> "Służba zdrowotna"
     id == "parliament" || id in setOf("mayor", "village_head", "county_starosta", "citizen_record", "ombudsman", "children_ombudsman", "patient_ombudsman", "pretrial_mediator", "milicja_officer", "foreign_service_member", "diplomat", "consul", "ambassador", "foreign_mission_head", "consular_employee", "inspector") -> "Służba państwowa"
-    id == "organization_foundation" -> "Służba fundacyjna"
+    id == "organization_foundation" -> "Służba społeczna"
     id == "organization_association" -> "Służba stowarzyszeniowa"
     id == "organization_company" || id == "business" || id == "entity" || id == "registry" ||
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
@@ -1042,17 +1048,17 @@ internal fun documentVisibilityGroup(id: String): String = when {
 internal val documentVisibilityGroupOrder = listOf(
     "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
     "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
-    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa",
+    "Służba społeczna", "Służba gospodarcza", "Służba stowarzyszeniowa",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
-    "Służba osobista", "Służba osobowa" -> R.drawable.lib_ic_account
+    "Służba osobista" -> R.drawable.lib_ic_account
     "Służba rodowa" -> R.drawable.lib_ic_group
     "Służba cywilna", "Służba państwowa" -> R.drawable.tile_ic_civil_outline
     "Służba kościelna" -> R.drawable.tile_ic_church_outline
     "Służba zbrojna" -> R.drawable.tile_ic_armed_service_outline
     "Służba zawodowa" -> R.drawable.tile_ic_student_outline
-    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa" -> R.drawable.tile_ic_business_outline
+    "Służba społeczna", "Służba gospodarcza", "Służba stowarzyszeniowa" -> R.drawable.tile_ic_business_outline
     "Służba finansowa" -> R.drawable.lib_ic_wallet
     "Służba zdrowotna" -> R.drawable.tile_ic_disability_outline
     "Zasoby i dokumenty własne" -> R.drawable.lib_ic_folder
@@ -1706,7 +1712,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     activeService == "Dokumenty Kościelne" -> ChurchDocumentsScreen(onBack = { activeService = null }, readOnly = true)
                     activeService == "Dokumenty kwalifikacji zawodowych" -> ProfessionalQualificationsScreen(onBack = { activeService = null }, readOnly = true)
                     activeService == "Pozostałe dokumenty" -> ServiceDetailScreen(title = activeService!!, onBack = { activeService = null }, onOpenDocuments = { activeService = null; showDemoDocuments = true })
-                    activeService == "Służba fundacyjna" -> FamilyEntityDocumentsScreen(entityMode = true, serviceKey = "foundation", readOnly = true, onBack = { activeService = null })
+                    activeService == "Służba społeczna" -> FamilyEntityDocumentsScreen(entityMode = true, serviceKey = "foundation", readOnly = true, onBack = { activeService = null })
                     activeService == "Służba gospodarcza" -> FamilyEntityDocumentsScreen(entityMode = true, serviceKey = "business", readOnly = true, onBack = { activeService = null })
                     activeService == "Służba stowarzyszeniowa" -> FamilyEntityDocumentsScreen(entityMode = true, serviceKey = "association", readOnly = true, onBack = { activeService = null })
                     activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, readOnly = true, onBack = { activeService = null })
@@ -3495,20 +3501,23 @@ private fun DocumentEditorCatalogScreen(
                             .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
                             .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                             val groupIcon = documentGroupIconResource(group)
+                            val needsWhiteTint = group == "Służba finansowa" || group == "Zasoby i dokumenty własne"
                             val needsThemeTint = groupIcon in setOf(
                                 R.drawable.lib_ic_account,
                                 R.drawable.lib_ic_group,
                                 R.drawable.lib_ic_wallet,
                                 R.drawable.lib_ic_folder,
                                 R.drawable.lib_ic_document
-                            )
+                            ) && !needsWhiteTint
                             Image(
                                 painter = painterResource(groupIcon),
                                 contentDescription = "Ikona grupy: $group",
                                 modifier = Modifier.size(34.dp),
-                                colorFilter = if (needsThemeTint) {
-                                    androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.primary)
-                                } else null
+                                colorFilter = when {
+                                    needsWhiteTint -> androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
+                                    needsThemeTint -> androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.primary)
+                                    else -> null
+                                }
                             )
                             Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                             Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
@@ -3520,7 +3529,13 @@ private fun DocumentEditorCatalogScreen(
                                 .clickable { onOpenDocument(id) }
                                 .padding(horizontal = 8.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Image(painterResource(iconRes), contentDescription = null, modifier = Modifier.size(32.dp))
+                                val whiteDocumentIcon = group == "Służba finansowa" || group == "Zasoby i dokumenty własne"
+                                Image(
+                                    painter = painterResource(iconRes),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(32.dp),
+                                    colorFilter = if (whiteDocumentIcon) androidx.compose.ui.graphics.ColorFilter.tint(Color.White) else null
+                                )
                                 Text(title, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface,
                                     style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
                                 TextButton(onClick = { onOpenDocument(id) }) { Text("Edytuj") }
