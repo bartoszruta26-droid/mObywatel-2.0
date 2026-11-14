@@ -10,6 +10,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.json.JSONArray
+import org.json.JSONObject
 
 @RunWith(AndroidJUnit4::class)
 class ImportedDocumentStoreTest {
@@ -59,6 +61,54 @@ class ImportedDocumentStoreTest {
     fun rejectsUrisWithoutProviderAuthority() {
         assertThrows(IllegalArgumentException::class.java) {
             ImportedDocumentStore.add(context, Uri.parse("content:///document/1"))
+        }
+    }
+
+
+    @Test
+    fun importArchiveRejectsMoreThanOneHundredDocumentsBeforeWritingFiles() {
+        val documents = JSONArray()
+        repeat(101) {
+            documents.put(
+                JSONObject()
+                    .put("mimeType", "application/pdf")
+                    .put("bytes", "YQ==")
+            )
+        }
+        val archive = JSONObject().put("version", 1).put("documents", documents).toString()
+
+        assertThrows(IllegalArgumentException::class.java) {
+            ImportedDocumentStore.importArchive(context, archive)
+        }
+    }
+
+    @Test
+    fun importArchiveRollsBackStagedFilesWhenAnyEntryIsInvalid() {
+        val preferences = context.getSharedPreferences("imported_documents", Context.MODE_PRIVATE)
+        val originalUris = preferences.getStringSet("document_uris", emptySet())?.toSet() ?: emptySet()
+        val directory = java.io.File(context.filesDir, "imported-documents")
+        val originalFiles = directory.list()?.toSet() ?: emptySet()
+        val documents = JSONArray()
+            .put(
+                JSONObject()
+                    .put("mimeType", "application/pdf")
+                    .put("bytes", "cGRm")
+            )
+            .put(
+                JSONObject()
+                    .put("mimeType", "application/x-unsupported")
+                    .put("bytes", "YQ==")
+            )
+        val archive = JSONObject().put("version", 1).put("documents", documents).toString()
+
+        try {
+            assertThrows(IllegalArgumentException::class.java) {
+                ImportedDocumentStore.importArchive(context, archive)
+            }
+            assertEquals(originalUris, preferences.getStringSet("document_uris", emptySet()))
+            assertEquals(originalFiles, directory.list()?.toSet() ?: emptySet())
+        } finally {
+            preferences.edit().putStringSet("document_uris", originalUris).commit()
         }
     }
 
