@@ -1323,7 +1323,8 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 officialGraphicDocumentTargets().any { it.first == documentId } -> settingsDocumentEditor = "civil:$documentId"
             documentId == "business" || documentId == "entity" -> settingsDocumentEditor = "business"
             documentId.startsWith("organization_") -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
-            documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
+            documentId.startsWith("service_") -> settingsDocumentEditor = "service:$documentId"
+                        documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
             documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
             documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
@@ -1477,6 +1478,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         FamilyEntityDocumentsScreen(entityMode = true, initialDocumentId = settingsDocumentEditor?.substringAfter("business:", "")?.ifBlank { null },
                             onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
                             onEditGraphic = { key -> credentialAppearanceTarget = key })
+                    }
+                    settingsDocumentEditor?.startsWith("service:") == true -> {
+                        val serviceDocumentId = settingsDocumentEditor!!.substringAfter("service:")
+                        val serviceKey = serviceDocumentId.removePrefix("service_").substringBefore("_")
+                        CredentialAppearanceEditorEntry(serviceDocumentId, onOpenAppearance = { credentialAppearanceTarget = it },
+                            showAppearanceAction = true, showOcrStage = true, showOriginalAttachment = true) {
+                            FamilyEntityDocumentsScreen(entityMode = true, serviceKey = serviceKey, initialDocumentId = serviceDocumentId,
+                                onBack = { settingsDocumentEditor = null; showSettingsMenu = true },
+                                onEditGraphic = { key -> credentialAppearanceTarget = key })
+                        }
                     }
                     (settingsDocumentEditor == "bank_accounts" || settingsDocumentEditor?.startsWith("bank_accounts:") == true) ->
                         CredentialAppearanceEditorEntry(
