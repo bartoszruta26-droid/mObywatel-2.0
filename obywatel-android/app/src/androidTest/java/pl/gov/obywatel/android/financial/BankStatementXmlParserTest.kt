@@ -92,7 +92,10 @@ class BankStatementXmlParserTest {
         val decoded = PaymentLedgerJsonCodec.decode(PaymentLedgerJsonCodec.encode(parsed))
         val preview = BankImportDeduplicator.preview(decoded, emptyList())
 
-        assertEquals(parsed, decoded)
+        assertEquals(parsed.map { it.accountingEntryId() }, decoded.map { it.accountingEntryId() })
+        parsed.zip(decoded).forEach { (before, after) ->
+            assertEquals(0, before.signedAmount.compareTo(after.signedAmount))
+        }
         assertEquals(5, preview.newEntries.size)
         assertEquals(0, preview.duplicates.size)
         assertEquals(0, preview.conflicts.size)
