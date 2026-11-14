@@ -2631,3 +2631,62 @@ Nie dodano jeszcze testu Compose dedykowanego formularzowi słownika i scenarius
 3. Dodać test scenariusza edycji importowanej transakcji z kodem spoza słownika.
 4. Zweryfikować obsługę zera, wartości ujemnych i nadmiarowej skali zgodnie z regułami modelu.
 5. Po przejściu testów przeprowadzić końcowy przegląd migracji, eksportu/importu i zachowania historii.
+
+
+---
+
+## 45. Etap 2N.9 — naprawa błędów wykrytych w testach emulatora (14 listopada 2026 r.)
+
+### 45.1. Rzeczywisty wynik CI etapu 2N.8
+
+Dla SHA `217737b2f99f4d72c5bb229f141654b3938f4d0b`:
+- Repository compliance — sukces (run `43636359420`);
+- Android prototype build — sukces (run `43636359551`), w tym testy JVM i kompilacja debug APK;
+- Android GUI validation — niepowodzenie (run `43636359386`): 60 testów instrumentacyjnych, 3 niepowodzenia.
+
+Log emulatora wskazał trzy konkretne problemy:
+1. `updatingFinancialTransactionPreservesRecordAndReplacesOnlyItsExplicitLinks` — asercja porównywała obiekty `BigDecimal` przez `equals`, które rozróżnia skalę (np. `8000.00` i `8000`), mimo równej wartości liczbowej.
+2. `assetUsedOnlyAsTransactionFeeKeepsItsHistoricalDefinitionImmutable` — test ujawnił ograniczenie modelu: walidacja wymagała, aby prowizja była w aktywie jednej ze stron transakcji.
+3. `assetRegistryPersistsAndUpdatesCurrencyAndMetalDefinitions` — oczekiwana kolejność listy nie odpowiadała kontraktowi `readAssets()`, który sortuje według rodzaju aktywa, a następnie kodu.
+
+### 45.2. Poprawki modelu i testów
+
+W `FinancialModels.kt`:
+- usunięto nieuzasadnione ograniczenie, że prowizja musi być rozliczona w jednym z dwóch aktywów transakcji;
+- pozostawiono walidację niepustego kodu aktywa i nieujemnej kwoty w `Fee.validate()`;
+- dopuszczono jawnie prowizję pobraną w trzecim aktywie, np. osobnej walucie lub kruszcu.
+
+W `FinancialModelsTest.kt`:
+- zmieniono test modelu tak, aby potwierdzał dopuszczalność prowizji w trzecim aktywie.
+
+W `PaymentLedgerDatabaseTest.kt`:
+- porównanie transakcji rozbito na pola; kwoty `BigDecimal` porównywane są przez `compareTo`, bez fałszywego błędu wynikającego wyłącznie ze skali;
+- oczekiwana kolejność aktywów odpowiada rzeczywistemu kontraktowi `readAssets()` (rodzaj aktywa, kod);
+- test prowizji w trzecim aktywie może teraz przejść walidację modelu i sprawdzić ochronę historycznej definicji aktywa.
+
+### 45.3. Zapisane rewizje
+
+- `FinancialModels.kt` — commit `823db003f9714bb01d6b058db118548e6dfa6e10`, blob `eabc97f758dac15e31197bfeafbb9bfe72f73a31`;
+- `FinancialModelsTest.kt` — commit `f86d2fb77b9fca8885d88555d6276a77123035d4`, blob `1a8bae6a9bfb24639b54ee475725c81e79108311`;
+- `PaymentLedgerDatabaseTest.kt` — commit `96d645bf19e210225c42764a690b474d39cd4650`, blob `318785d1ee2ca68197129ce69afd7f1357358134`.
+
+### 45.4. Kontrola po zapisie i dalsza walidacja
+
+Po zapisaniu należy ponownie pobrać trzy pliki i potwierdzić obecność zmian. Świeże przebiegi CI muszą wykonać:
+- testy JVM modelu;
+- testy instrumentacyjne SQLite, w tym prowizję w trzecim aktywie;
+- testy Compose na emulatorze;
+- kompilację debug APK;
+- kontrolę REUSE.
+
+**Status etapu 2N.9:** poprawki zapisane; wyników CI dla nowego SHA jeszcze nie ma. Nie oznaczać testów jako zaliczonych przed zakończeniem przebiegów.
+
+PR #68 pozostaje otwarty i niescalony. APK nie jest publikowany jako zweryfikowane wydanie.
+
+### 45.5. Następne prace
+
+1. Potwierdzić CI dla nowego SHA i w razie potrzeby naprawić pozostałe błędy.
+2. Dodać test Compose dla słownika aktywów, wyboru aktywów i precyzji kwot.
+3. Dodać test edycji importowanej transakcji z kodem spoza słownika.
+4. Uzupełnić testy graniczne ilości i prowizji: zero, wartości ujemne oraz nadmiarowa skala.
+5. Przeprowadzić końcowy przegląd importu/eksportu i integralności historii.
