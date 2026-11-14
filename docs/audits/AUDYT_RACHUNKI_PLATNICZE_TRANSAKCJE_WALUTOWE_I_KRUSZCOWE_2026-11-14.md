@@ -1481,3 +1481,84 @@ Uruchomienia CI dla rewizji `de26477e8564de53c4cab404e18593f398d647e1` zostały 
 | Parsery CSV/XML i adaptery XLS/PDF | Do wykonania |
 
 Następny etap powinien rozpocząć się od uzyskania zielonego CI dla rewizji 2F/2G, poprawy ewentualnych błędów, a następnie testu urządzeniowego: eksport → import do pustej bazy → porównanie wszystkich pól → ponowny import tego samego pliku i potwierdzenie, że wszystkie wpisy są rozpoznane jako duplikaty.
+
+
+## 28. Etap 2H — atomowość importu, izolowane testy repozytorium i bezpieczna obsługa plików
+
+### 28.1. Ustalenie z przeglądu poprzedniego etapu
+
+Kontrola implementacji 2F/2G wykazała, że odczyt i zapis strumieni SAF odbywał się w korutynach ekranu, ale bez jawnego przeniesienia operacji strumieniowych na `Dispatchers.IO`. Ponadto wstępne sprawdzenie konfliktów i zapis do SQLite były odrębnymi operacjami. Pozostawiało to teoretyczne okno wyścigu: dwa równoległe zatwierdzenia mogłyby sprawdzić ten sam stan przed zapisaniem danych.
+
+### 28.2. Zmiany implementacyjne
+
+**`PaymentLedgerScreen.kt`:**
+- przeniesiono odczyt i zapis pliku przez `ContentResolver` na `Dispatchers.IO`;
+- dodano limit wejściowego pliku JSON wynoszący 10 MiB;
+- dodano ograniczony odczyt strumieniowy, który przerywa operację po przekroczeniu limitu;
+- komunikat błędu informuje o przekroczeniu limitu.
+
+**`PaymentLedgerRepository.kt`:**
+- konstruktor przyjmuje opcjonalną nazwę bazy danych, domyślnie produkcyjną nazwę `PaymentLedgerDatabase.DATABASE_NAME`;
+- umożliwia to testowanie na odizolowanych bazach bez dotykania danych aplikacji;
+- zatwierdzanie importu przekazuje całą paczkę do metody transakcyjnej magazynu.
+
+**`PaymentLedgerDatabase.kt`:**
+- wydzielono wspólny zapis rekordów do `insertEntries`;
+- dodano `importBatchRejectingReferenceConflicts`;
+- metoda rozpoczyna transakcję SQLite, odczytuje istniejące zapisy, klasyfikuje duplikaty i konflikty, a następnie zapisuje nowe rekordy w tej samej transakcji;
+- konflikt referencji powoduje wyjątek i wycofanie transakcji;
+- zachowano unikalny klucz księgowy oraz dotychczasowe przechowywanie kwot jako tekstu dziesiętnego.
+
+### 28.3. Testy integracyjne
+
+Dodano `androidTest/.../PaymentLedgerRepositoryTest.kt` z dwoma scenariuszami:
+
+1. **Pełny cykl i idempotencja:** utworzenie archiwum w bazie źródłowej, eksport JSON, import do odrębnej pustej bazy, porównanie odczytanych wpisów, ponowny import i oczekiwanie na zero nowych wpisów oraz dwa duplikaty.
+2. **Konflikt bez zmiany danych:** zapis bazowego rekordu, przygotowanie archiwum z tą samą referencją i inną kwotą, potwierdzenie konfliktu w podglądzie, odrzucenie importu oraz porównanie bazy przed i po próbie.
+
+Testy korzystają z trzech osobnych nazw baz testowych, usuwanych w metodzie `@After`. Ich dodanie nie jest równoznaczne z wykonaniem; wymagają uruchomienia na emulatorze/urządzeniu w CI.
+
+### 28.4. Kontrola poprawności kodu po zmianach
+
+Ponownie pobrano z gałęzi pliki:
+- `financial/PaymentLedgerDatabase.kt`;
+- `financial/PaymentLedgerRepository.kt`;
+- `PaymentLedgerScreen.kt`;
+- `androidTest/.../PaymentLedgerRepositoryTest.kt`.
+
+Kontrola tekstowa potwierdziła:
+- izolowaną nazwę bazy przekazywaną przez repozytorium;
+- obecność transakcyjnej metody importu z kontrolą konfliktów;
+- przeniesienie operacji SAF na `Dispatchers.IO`;
+- limit 10 MiB dla pliku importu;
+- obecność testów pełnego cyklu oraz testu odrzucenia konfliktu.
+
+Kontrola tekstowa nie zastępuje kompilacji Kotlin, testów Android Instrumented ani testu rzeczywistego selektora dokumentów.
+
+### 28.5. Ograniczenia pozostałe po etapie 2H
+
+- Limit 10 MiB dotyczy pliku wejściowego JSON; pełny eksport nadal jest budowany w pamięci jako łańcuch znaków.
+- Nie dodano jeszcze limitu liczby wpisów w pojedynczym archiwum ani strumieniowego dekodera JSON.
+- Testy integracyjne repozytorium oczekują na wynik emulatorowego CI.
+- Nie wykonano jeszcze ręcznego testu na urządzeniu z dostawcami dokumentów (lokalny magazyn, Dysk, menedżer plików).
+- JSON obejmuje nadal wyłącznie `BankStatementEntry`, a nie całe aktywa, opłaty, transakcje ręczne i darowizny.
+- Parsery CSV/XML oraz adaptery XLS/PDF pozostają do wykonania.
+- Nie zmieniano modułu `receipts`, jego schematu, plików ani tras.
+
+### 28.6. Status etapu
+
+| Element | Status |
+|---|---|
+| Odczyt i zapis plików SAF na IO | Zaimplementowane |
+| Limit wielkości importowanego JSON | Zaimplementowany: 10 MiB |
+| Izolowana baza testowa repozytorium | Zaimplementowana |
+| Test eksport → import → ponowny import | Dodany; oczekuje na wykonanie CI |
+| Test konfliktu i niezmienności bazy | Dodany; oczekuje na wykonanie CI |
+| Kontrola konfliktu i zapis w jednej transakcji SQLite | Zaimplementowane |
+| Kompilacja Android po etapie 2H | Oczekuje na wynik CI |
+| Testy JVM i instrumentacyjne po etapie 2H | Oczekują na wynik CI |
+| Ręczny test SAF na urządzeniu | Do wykonania |
+
+### 28.7. Następny etap
+
+Po zielonym CI należy przeprowadzić test urządzeniowy plików SAF oraz rozpocząć etap 2I: parser CSV i XML iPKO. Parsery należy budować na podstawie rzeczywistych, zanonimizowanych próbek i testów wzorcowych. Przed implementacją należy ponownie sprawdzić dostępność próbek i ich dokładne nagłówki/tagi; nie wolno zakładać struktury plików na podstawie samych rozszerzeń.
