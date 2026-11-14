@@ -40,7 +40,7 @@ class PaymentLedgerJsonCodecTest {
 
     @Test fun rejectsUnknownSchemaVersion() {
         val json = PaymentLedgerJsonCodec.encode(listOf(sample))
-            .replace("\"schemaVersion\":2", "\"schemaVersion\":1")
+            .replace("\"schemaVersion\":2", "\"schemaVersion\":99")
         assertThrows(IllegalArgumentException::class.java) {
             PaymentLedgerJsonCodec.decode(json)
         }
