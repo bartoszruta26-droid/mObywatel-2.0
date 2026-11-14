@@ -44,7 +44,7 @@ class ImportedDocumentStoreTest {
                 Uri.parse("content://missing.provider/document/other")
             )
 
-            assertEquals(setOf(storedUri), preferences.getStringSet("document_uris", emptySet()))
+            assertEquals(setOf(storedUri), preferences.getStringSet("document_uris", emptySet<String>()))
         } finally {
             preferences.edit().remove("document_uris").commit()
         }
@@ -85,7 +85,7 @@ class ImportedDocumentStoreTest {
     @Test
     fun importArchiveRollsBackStagedFilesWhenAnyEntryIsInvalid() {
         val preferences = context.getSharedPreferences("imported_documents", Context.MODE_PRIVATE)
-        val originalUris = preferences.getStringSet("document_uris", emptySet())?.toSet() ?: emptySet()
+        val originalUris = preferences.getStringSet("document_uris", emptySet<String>())?.toSet() ?: emptySet()
         val directory = java.io.File(context.filesDir, "imported-documents")
         val originalFiles = directory.list()?.toSet() ?: emptySet<String>()
         val documents = JSONArray()
@@ -105,8 +105,8 @@ class ImportedDocumentStoreTest {
             assertThrows(IllegalArgumentException::class.java) {
                 ImportedDocumentStore.importArchive(context, archive)
             }
-            assertEquals(originalUris, preferences.getStringSet("document_uris", emptySet()))
-            assertEquals(originalFiles, directory.list()?.toSet() ?: emptySet())
+            assertEquals(originalUris, preferences.getStringSet("document_uris", emptySet<String>()))
+            assertEquals(originalFiles, directory.list()?.toSet() ?: emptySet<String>())
         } finally {
             preferences.edit().putStringSet("document_uris", originalUris).commit()
         }
