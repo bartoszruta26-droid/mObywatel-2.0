@@ -25,6 +25,18 @@ class PaymentLedgerRepository(
         database.saveAccountScope(accountScopeId, displayName)
     }
 
+    suspend fun saveFinancialTransaction(
+        transaction: pl.gov.obywatel.android.FinancialTransaction,
+        accountingEntryIds: Set<String> = emptySet()
+    ) = withContext(Dispatchers.IO) {
+        database.saveFinancialTransaction(transaction, accountingEntryIds)
+    }
+
+    suspend fun getFinancialTransactions(): List<StoredFinancialTransaction> =
+        withContext(Dispatchers.IO) {
+            database.readFinancialTransactions()
+        }
+
     suspend fun previewJson(json: String): BankImportPreview = withContext(Dispatchers.IO) {
         val incoming = PaymentLedgerJsonCodec.decode(json)
         BankImportDeduplicator.preview(incoming, database.readAll())
