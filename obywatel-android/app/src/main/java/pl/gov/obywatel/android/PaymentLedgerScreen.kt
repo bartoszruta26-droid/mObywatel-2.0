@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -37,6 +38,7 @@ import kotlinx.coroutines.withContext
 import pl.gov.obywatel.android.financial.BankStatementEntry
 import pl.gov.obywatel.android.financial.BankImportPreview
 import pl.gov.obywatel.android.financial.PaymentLedgerRepository
+import pl.gov.obywatel.android.financial.PaymentAccountScope
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
 import pl.gov.obywatel.android.financial.PaymentLedgerJsonCodec
 import java.io.ByteArrayOutputStream
@@ -55,6 +57,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var importPreview by remember { mutableStateOf<BankImportPreview?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     var accountScopeId by remember { mutableStateOf("ipko-account-1") }
+    var accountScopes by remember { mutableStateOf<List<PaymentAccountScope>>(emptyList()) }
 
     fun reload() {
         scope.launch {
@@ -62,6 +65,10 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             error = null
             try {
                 entries = repository.getEntries()
+                accountScopes = repository.getAccountScopes()
+                if (accountScopes.none { it.accountScopeId == accountScopeId }) {
+                    accountScopeId = accountScopes.firstOrNull()?.accountScopeId ?: "ipko-account-1"
+                }
             } catch (exception: Exception) {
                 error = exception.message ?: "Nie udało się odczytać rejestru."
             } finally {
@@ -164,11 +171,53 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 OutlinedTextField(
                     value = accountScopeId,
                     onValueChange = { accountScopeId = it },
-                    label = { Text("Lokalny pseudonim rachunku") },
-                    supportingText = { Text("Wpisz alias, np. ipko-account-1. Nie podawaj numeru rachunku.") },
+                    label = { Text("Pseudonim wybranego rachunku") },
+                    supportingText = { Text("Alias lokalny, np. ipko-account-1. Nie wpisuj numeru rachunku.") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                try {
+                                    repository.saveAccountScope(accountScopeId, accountScopeId)
+                                    accountScopes = repository.getAccountScopes()
+                                    message = "Zapisano pseudonim rachunku."
+                                    error = null
+                                } catch (exception: Exception) {
+                                    error = exception.message ?: "Nie udało się zapisać aliasu."
+                                }
+                            }
+                        },
+                        enabled = accountScopeId.isNotBlank()
+                    ) { Text("Zapisz alias") }
+                }
+                if (accountScopes.isNotEmpty()) {
+                    Text("Zapisane pseudonimy — wybierz rachunek do importu XML:")
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(accountScopes, key = { it.accountScopeId }) { scopeItem ->
+                            Button(
+                                onClick = {
+                                    accountScopeId = scopeItem.accountScopeId
+                                    message = "Wybrano: ${scopeItem.displayName}"
+                                    error = null
+                                }
+                            ) {
+                                Text(
+                                    if (scopeItem.accountScopeId == accountScopeId) {
+                                        "✓ ${scopeItem.displayName}"
+                                    } else {
+                                        scopeItem.displayName
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { importLauncher.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }) {
                         Text("Importuj JSON")
