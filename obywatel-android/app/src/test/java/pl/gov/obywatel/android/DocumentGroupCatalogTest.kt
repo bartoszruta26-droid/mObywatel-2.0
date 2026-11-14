@@ -53,6 +53,22 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun stateFireServiceDocumentsHaveDedicatedFieldsRoutesAndGroup() {
+        val expected = setOf(
+            "fire_service_legitimacy", "fire_service_personnel_order", "fire_service_preparatory",
+            "fire_service_permanent", "fire_service_station_commander", "fire_service_shift_commander",
+            "fire_service_officer", "fire_service_rescue_unit", "fire_service_headquarters"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing PSP document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
     fun policeServiceDocumentsHaveDedicatedFieldsRoutesAndPublicServiceGroup() {
         val expected = setOf(
             "police_service_legitimacy", "police_personnel_order", "police_service_certificate",
