@@ -1014,6 +1014,10 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
     id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
     id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
+    id in setOf("org_president", "org_general_director", "org_regional_director", "org_county_director", "org_local_representative", "org_general_secretary", "org_treasurer", "org_ambassador", "org_foreign_representative", "org_proxy", "org_delegate") -> "Służba gospodarcza"
+    id in setOf("org_members_rights_ombudsman", "org_patient_ombudsman", "org_family_ombudsman", "civil_mediator", "civil_arbitrator", "civil_social_caretaker", "civil_org_curator") -> "Służba cywilna"
+    id in setOf("civil_expert", "civil_appraiser", "civil_auditor", "civil_internal_inspector", "civil_controller", "civil_consultant") -> "Służba zawodowa"
+    id == "civil_rescuer" -> "Służba zdrowotna"
     id == "parliament" || id in setOf("mayor", "village_head", "county_starosta", "citizen_record", "ombudsman", "children_ombudsman", "patient_ombudsman", "pretrial_mediator", "milicja_officer", "foreign_service_member", "diplomat", "consul", "ambassador", "foreign_mission_head", "consular_employee", "inspector") -> "Służba państwowa"
     id == "business" || id == "entity" || id == "registry" ||
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
