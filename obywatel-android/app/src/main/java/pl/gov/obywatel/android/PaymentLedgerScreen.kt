@@ -36,6 +36,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import pl.gov.obywatel.android.financial.BankStatementEntry
+import pl.gov.obywatel.android.financial.BankExchangeOperationProjector
+import pl.gov.obywatel.android.financial.ExchangeOperationStatus
 import pl.gov.obywatel.android.financial.BankImportPreview
 import pl.gov.obywatel.android.financial.PaymentLedgerRepository
 import pl.gov.obywatel.android.financial.PaymentAccountScope
@@ -58,6 +60,11 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var message by remember { mutableStateOf<String?>(null) }
     var accountScopeId by remember { mutableStateOf("ipko-account-1") }
     var accountScopes by remember { mutableStateOf<List<PaymentAccountScope>>(emptyList()) }
+    var expandedExchangeIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    val exchangeOperations = remember(entries) { BankExchangeOperationProjector.project(entries) }
+    val groupedEntryIds = remember(exchangeOperations) {
+        exchangeOperations.flatMap { it.legs }.map { it.accountingEntryId() }.toSet()
+    }
 
     fun reload() {
         scope.launch {
@@ -287,7 +294,67 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(entries, key = { it.accountingEntryId() }) { entry ->
+            if (exchangeOperations.isNotEmpty()) {
+                item {
+                    Text("Operacje wymiany walut", style = MaterialTheme.typography.titleMedium)
+                }
+                items(exchangeOperations, key = { it.operationId }) { operation ->
+                    val expanded = operation.operationId in expandedExchangeIds
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                when (operation.status) {
+                                    ExchangeOperationStatus.COMPLETE -> "Wymiana kompletna"
+                                    ExchangeOperationStatus.SINGLE_LEG -> "Wymiana niepełna — jedna noga"
+                                    ExchangeOperationStatus.REVIEW_REQUIRED -> "Wymiana wymaga weryfikacji"
+                                },
+                                style = MaterialTheme.typography.titleSmall,
+                                color = if (operation.status == ExchangeOperationStatus.REVIEW_REQUIRED) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                }
+                            )
+                            Text(
+                                "Zapisy: ${operation.legs.size} • Waluty: ${operation.currencies.sorted().joinToString(", ")}"
+                            )
+                            Button(
+                                onClick = {
+                                    expandedExchangeIds = if (expanded) {
+                                        expandedExchangeIds - operation.operationId
+                                    } else {
+                                        expandedExchangeIds + operation.operationId
+                                    }
+                                }
+                            ) {
+                                Text(if (expanded) "Ukryj zapisy źródłowe" else "Pokaż zapisy źródłowe")
+                            }
+                            if (expanded) {
+                                operation.legs.forEach { leg ->
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            "${leg.bookingDate} • ${leg.currencyCode}",
+                                            style = MaterialTheme.typography.titleSmall
+                                        )
+                                        Text(
+                                            "${if (leg.signedAmount.signum() > 0) "+" else ""}${leg.signedAmount.toPlainString()} ${leg.currencyCode}",
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                        Text(leg.operationType, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            item {
+                Text("Pozostałe zapisy księgowe", style = MaterialTheme.typography.titleMedium)
+            }
+            items(entries.filterNot { it.accountingEntryId() in groupedEntryIds }, key = { it.accountingEntryId() }) { entry ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("${entry.bookingDate} • ${entry.currencyCode}", style = MaterialTheme.typography.titleSmall)
@@ -296,9 +363,6 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(entry.operationType, style = MaterialTheme.typography.bodySmall)
-                        if (entry.description.isNotBlank()) {
-                            Text(entry.description, style = MaterialTheme.typography.bodySmall)
-                        }
                     }
                 }
             }
