@@ -53,6 +53,23 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun borderGuardServiceDocumentsHaveDedicatedFieldsRoutesAndStateServiceGroup() {
+        val expected = setOf(
+            "border_guard_legitimacy", "border_guard_personnel_order",
+            "border_guard_service_certificate", "border_guard_border_service",
+            "border_guard_operational_service", "border_guard_aviation_service",
+            "border_guard_unit_service"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing Border Guard document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
     fun stateFireServiceDocumentsHaveDedicatedFieldsRoutesAndGroup() {
         val expected = setOf(
             "fire_service_legitimacy", "fire_service_personnel_order", "fire_service_preparatory",
