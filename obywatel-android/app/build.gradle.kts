@@ -6,6 +6,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// Monotoniczny numer kompilacji wspólny dla lokalnych i CI buildów.
+ // Pozwala instalatorowi Androida rozpoznać każdą kolejną kompilację jako aktualizację.
+val buildEpochSeconds = System.currentTimeMillis() / 1000L
+val monotonicVersionCode = (buildEpochSeconds - 700_000_000L).toInt()
+
 android {
     namespace = "pl.gov.obywatel.android"
     compileSdk = 35
@@ -14,8 +19,8 @@ android {
         applicationId = "pl.gov.obywatel.android.prototype"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = monotonicVersionCode
+        versionName = "0.3.$buildEpochSeconds"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
