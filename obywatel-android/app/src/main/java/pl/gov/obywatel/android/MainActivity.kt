@@ -1015,6 +1015,13 @@ internal val documentDisplayOptions = (listOf(
             id.startsWith("sww_") -> R.drawable.tile_ic_civil_outline
             id.startsWith("cba_") -> R.drawable.tile_ic_civil_outline
             id.startsWith("sop_") -> R.drawable.tile_ic_civil_outline
+            id.startsWith("municipal_guard_") -> R.drawable.tile_ic_civil_outline
+            id.startsWith("railway_guard_") -> R.drawable.tile_ic_civil_outline
+            id.startsWith("marshal_guard_") -> R.drawable.tile_ic_civil_outline
+            id.startsWith("forest_guard_") -> R.drawable.tile_ic_civil_outline
+            id.startsWith("hunting_guard_") -> R.drawable.tile_ic_civil_outline
+            id.startsWith("fisheries_guard_") -> R.drawable.tile_ic_civil_outline
+            id.startsWith("road_transport_inspection_") -> R.drawable.tile_ic_civil_outline
             id.startsWith("insurance_") || id == "official" -> R.drawable.lib_ic_document
             else -> R.drawable.lib_ic_document
         }
@@ -1040,6 +1047,13 @@ internal fun documentVisibilityGroup(id: String): String = when {
     id.startsWith("sww_") -> "Służba państwowa"
     id.startsWith("cba_") -> "Służba państwowa"
     id.startsWith("sop_") -> "Służba państwowa"
+    id.startsWith("municipal_guard_") -> "Służba państwowa"
+    id.startsWith("railway_guard_") -> "Służba państwowa"
+    id.startsWith("marshal_guard_") -> "Służba państwowa"
+    id.startsWith("forest_guard_") -> "Służba państwowa"
+    id.startsWith("hunting_guard_") -> "Służba państwowa"
+    id.startsWith("fisheries_guard_") -> "Służba państwowa"
+    id.startsWith("road_transport_inspection_") -> "Służba państwowa"
     id in setOf("profile", "identity", "passport") -> "Służba osobista"
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
