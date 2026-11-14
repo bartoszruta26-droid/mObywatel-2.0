@@ -402,6 +402,54 @@ class PaymentLedgerDatabaseTest {
     }
 
     @Test
+    fun updatingFinancialTransactionPreservesRecordAndReplacesOnlyItsExplicitLinks() {
+        val db = openDatabase()
+        try {
+            val fromEntry = entry("-8000.00", "fx-out").copy(
+                operationType = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+            )
+            val toEntry = entry("6183.20", "fx-in").copy(
+                currencyCode = "CHF",
+                operationType = "WYMIANA W KANTORZE - UZNANIE"
+            )
+            db.importBatch(listOf(fromEntry, toEntry))
+            val original = FinancialTransaction(
+                id = "tx-update",
+                executedAt = Instant.parse("2026-11-12T10:15:30Z"),
+                type = FinancialTransactionType.EXCHANGE,
+                fromAssetCode = "USD",
+                fromAmount = BigDecimal("8000.00"),
+                toAssetCode = "CHF",
+                toAmount = BigDecimal("6183.20"),
+                fee = Fee("CHF", BigDecimal("5.25"))
+            )
+            db.saveFinancialTransaction(
+                original,
+                setOf(fromEntry.accountingEntryId(), toEntry.accountingEntryId())
+            )
+
+            val edited = original.copy(
+                fee = null,
+                parseStatus = FinancialParseStatus.VERIFIED
+            )
+            db.saveFinancialTransaction(
+                edited,
+                setOf(fromEntry.accountingEntryId(), toEntry.accountingEntryId())
+            )
+
+            val stored = db.readFinancialTransactions().single()
+            assertEquals(edited, stored.transaction)
+            assertEquals(
+                setOf(fromEntry.accountingEntryId(), toEntry.accountingEntryId()),
+                stored.accountingEntryIds.toSet()
+            )
+            assertEquals(2, db.readAll().size)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
     fun oneBankEntryCannotBeLinkedToTwoFinancialTransactions() {
         val db = openDatabase()
         try {
