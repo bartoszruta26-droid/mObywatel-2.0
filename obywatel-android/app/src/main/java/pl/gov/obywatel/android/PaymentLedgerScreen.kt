@@ -108,6 +108,13 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             val selectedAccountScopeId = accountScopeId.trim()
             scope.launch {
                 try {
+                    // Każdy zakres użyty do importu musi być zarejestrowany lokalnie,
+                    // aby po ponownym uruchomieniu nie powstał osierocony alias.
+                    val knownScopes = repository.getAccountScopes()
+                    if (knownScopes.none { it.accountScopeId == selectedAccountScopeId }) {
+                        repository.saveAccountScope(selectedAccountScopeId, selectedAccountScopeId)
+                        accountScopes = repository.getAccountScopes()
+                    }
                     val archiveJson = withContext(Dispatchers.IO) {
                         val input = context.contentResolver.openInputStream(uri)
                             ?: throw IllegalStateException("Nie można odczytać wybranego pliku XML.")
