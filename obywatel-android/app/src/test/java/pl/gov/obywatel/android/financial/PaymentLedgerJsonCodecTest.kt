@@ -40,7 +40,7 @@ class PaymentLedgerJsonCodecTest {
 
     @Test fun rejectsUnknownSchemaVersion() {
         val json = PaymentLedgerJsonCodec.encode(listOf(sample))
-            .replace(""" "schemaVersion":2 """.trim(), """ "schemaVersion":99 """.trim())
+            .replace("\\\"schemaVersion\\\":2", "\\\"schemaVersion\\\":1")
         assertThrows(IllegalArgumentException::class.java) {
             PaymentLedgerJsonCodec.decode(json)
         }
@@ -75,8 +75,8 @@ class PaymentLedgerJsonCodecTest {
 
     @Test fun schemaOneArchiveRemainsReadable() {
         val legacy = PaymentLedgerJsonCodec.encode(listOf(sample))
-            .replace("\\"schemaVersion\\":2", "\\"schemaVersion\\":1")
-            .replace(",\\"transactions\\":[]", "")
+            .replace("\\\"schemaVersion\\\":2", "\\\"schemaVersion\\\":1")
+            .replace(",\\\"transactions\\\":[]", "")
         val archive = PaymentLedgerJsonCodec.decodeArchive(legacy)
         assertEquals(1, archive.entries.size)
         assertEquals(0, archive.transactions.size)
