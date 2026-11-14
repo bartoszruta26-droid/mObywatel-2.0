@@ -81,7 +81,7 @@ class DocumentCatalogTest {
             "civil_government_" to "Służba cywilna", "civil_voivodeship_" to "Służba cywilna",
             "local_" to "Służba państwowa", "constitutional_" to "Służba państwowa",
             "justice_" to "Służba cywilna", "rescue_" to "Służba zdrowotna",
-            "diplomatic_" to "Służba państwowa", "education_" to "Służba zawodowa",
+"education_" to "Służba zawodowa",
             "inspection_" to "Służba cywilna"
         )
         val additions = officialGraphicDocumentTargets().filter { (id, _) ->
