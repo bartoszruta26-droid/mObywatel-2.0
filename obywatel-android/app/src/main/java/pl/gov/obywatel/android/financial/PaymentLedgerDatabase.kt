@@ -49,6 +49,7 @@ class PaymentLedgerDatabase(
         )
         createAccountScopesTable(db)
         createFinancialTransactionTables(db)
+        createAssetTable(db)
         seedDefaultAccountScope(db)
     }
 
@@ -105,6 +106,9 @@ class PaymentLedgerDatabase(
         if (oldVersion < 4) {
             createFinancialTransactionTables(db)
         }
+        if (oldVersion < 5) {
+            createAssetTable(db)
+        }
     }
 
     private fun createFinancialTransactionTables(db: SQLiteDatabase) {
@@ -150,6 +154,65 @@ class PaymentLedgerDatabase(
             "CREATE INDEX IF NOT EXISTS idx_financial_transactions_executed_at " +
                 "ON financial_transactions(executed_at)"
         )
+    }
+
+    private fun createAssetTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS $TABLE_ASSETS (
+                asset_code TEXT PRIMARY KEY NOT NULL,
+                asset_name TEXT NOT NULL,
+                asset_kind TEXT NOT NULL,
+                unit TEXT NOT NULL,
+                decimal_places INTEGER NOT NULL,
+                purity INTEGER,
+                updated_at TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_payment_assets_kind ON $TABLE_ASSETS(asset_kind)")
+    }
+
+    /** Zapisuje lub aktualizuje definicję aktywa bez naruszania historii transakcji. */
+    fun saveAsset(asset: pl.gov.obywatel.android.Asset) {
+        asset.validate()
+        val values = ContentValues().apply {
+            put("asset_code", asset.code)
+            put("asset_name", asset.name)
+            put("asset_kind", asset.kind.name)
+            put("unit", asset.unit)
+            put("decimal_places", asset.decimalPlaces)
+            if (asset.purity == null) putNull("purity") else put("purity", asset.purity)
+            put("updated_at", java.time.Instant.now().toString())
+        }
+        val db = writableDatabase
+        val updated = db.update(TABLE_ASSETS, values, "asset_code = ?", arrayOf(asset.code))
+        if (updated == 0) {
+            db.insertOrThrow(TABLE_ASSETS, null, values)
+        }
+    }
+
+    /** Zwraca słownik aktywów w stabilnej kolejności, bez konwersji wartości liczbowych. */
+    fun readAssets(): List<pl.gov.obywatel.android.Asset> {
+        val result = mutableListOf<pl.gov.obywatel.android.Asset>()
+        readableDatabase.query(
+            TABLE_ASSETS,
+            arrayOf("asset_code", "asset_name", "asset_kind", "unit", "decimal_places", "purity"),
+            null, null, null, null,
+            "asset_kind ASC, asset_code ASC"
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                result += pl.gov.obywatel.android.Asset(
+                    code = cursor.getString(0),
+                    name = cursor.getString(1),
+                    kind = pl.gov.obywatel.android.AssetKind.valueOf(cursor.getString(2)),
+                    unit = cursor.getString(3),
+                    decimalPlaces = cursor.getInt(4),
+                    purity = if (cursor.isNull(5)) null else cursor.getInt(5)
+                )
+            }
+        }
+        return result
     }
 
     private fun createAccountScopesTable(db: SQLiteDatabase) {
@@ -532,9 +595,10 @@ class PaymentLedgerDatabase(
 
     companion object {
         const val DATABASE_NAME = "payment_ledger.db"
-        const val DATABASE_VERSION = 4
+        const val DATABASE_VERSION = 5
         const val DEFAULT_ACCOUNT_SCOPE_ID = "ipko-account-1"
         const val DEFAULT_ACCOUNT_SCOPE_NAME = "Rachunek iPKO 1"
+        private const val TABLE_ASSETS = "financial_assets"
         private const val TABLE_ENTRIES = "bank_statement_entries"
         private const val TABLE_ACCOUNT_SCOPES = "payment_account_scopes"
         private const val TABLE_FINANCIAL_TRANSACTIONS = "financial_transactions"
