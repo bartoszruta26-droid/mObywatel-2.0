@@ -40,6 +40,34 @@ class PaymentLedgerRepositoryTest {
         )
 
     @Test
+    fun accountAliasesAreAvailableThroughRepositoryAndPersistAcrossReopen() = runBlocking {
+        val repository = PaymentLedgerRepository(context, sourceDatabase)
+        try {
+            repository.saveAccountScope("daily-account", "Rachunek bieżący")
+            repository.saveAccountScope("savings-account", "Rachunek oszczędnościowy")
+            val scopes = repository.getAccountScopes()
+            assertTrue(scopes.any {
+                it.accountScopeId == "daily-account" && it.displayName == "Rachunek bieżący"
+            })
+            assertTrue(scopes.any {
+                it.accountScopeId == "savings-account" && it.displayName == "Rachunek oszczędnościowy"
+            })
+        } finally {
+            repository.close()
+        }
+
+        val reopened = PaymentLedgerRepository(context, sourceDatabase)
+        try {
+            assertEquals(
+                true,
+                reopened.getAccountScopes().any { it.accountScopeId == "savings-account" }
+            )
+        } finally {
+            reopened.close()
+        }
+    }
+
+    @Test
     fun exportImportRoundTripIsIdempotent() = runBlocking {
         val source = PaymentLedgerRepository(context, sourceDatabase)
         val target = PaymentLedgerRepository(context, targetDatabase)
