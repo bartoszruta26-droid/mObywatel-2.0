@@ -159,6 +159,9 @@ private fun saveReceiptParties(c:Context,items:List<ReceiptParty>) {
     receiptPref(c).edit().putString("parties",a.toString()).apply()
 }
 private fun receiptMoneyCents(raw:String):Long {
+    val currency=Regex("(?i)^\\s*(\\d+)\\s*z[lł]\\s*(\\d{1,2})\\s*groszy?\\s*$").find(raw)
+        ?: Regex("(?i)^\\s*(\\d+)\\s*z[lł]\\s*(\\d{1,2})\\s*gr\\s*$").find(raw)
+    if(currency!=null) return (currency.groupValues[1].toLongOrNull()?:0L)*100+(currency.groupValues[2].toLongOrNull()?:0L).coerceIn(0,99)
     val s=raw.trim().lowercase(Locale.ROOT).replace("zł","").replace("zl","").replace("gr","").replace(" ","").replace(",",".")
     if(s.isBlank()) return 0L
     return runCatching { java.math.BigDecimal(s).multiply(java.math.BigDecimal(100)).setScale(0,java.math.RoundingMode.HALF_UP).longValueExact() }.getOrDefault(0L).coerceAtLeast(0)
@@ -176,7 +179,7 @@ private fun receiptNumberWords(n:Long):String {
         return out.joinToString(" ")
     }
     fun plural(v:Int,one:String,few:String,many:String):String = when { v%100 in 12..14 -> many; v%10==1 -> one; v%10 in 2..4 -> few; else -> many }
-    val value=n.coerceAtLeast(0).coerceAtMost(999999999L)
+    val value=n.coerceAtLeast(0).coerceAtMost(999999L)
     val thousands=(value/1000).toInt(); val rest=(value%1000).toInt()
     val chunks=mutableListOf<String>()
     if(thousands>0) chunks.add(group(thousands)+" "+plural(thousands,"tysiąc","tysiące","tysięcy"))
@@ -309,6 +312,41 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
             } }
         }
         if(status.isNotBlank()) Text(status,color=MaterialTheme.colorScheme.primary)
+        if(showPartyManager) AlertDialog(
+            onDismissRequest={showPartyManager=false},
+            title={Text("Podmioty rachunku")},
+            text={
+                Column(Modifier.heightIn(max=430.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(partyName,{partyName=it},label={Text("Nazwa podmiotu")},modifier=Modifier.fillMaxWidth())
+                    OutlinedTextField(partyAddress,{partyAddress=it},label={Text("Adres i dane identyfikacyjne")},modifier=Modifier.fillMaxWidth(),minLines=2)
+                    Button(onClick={
+                        val item=ReceiptParty(partyName.trim(),partyAddress.trim())
+                        if(item.name.isNotBlank()) {
+                            parties=if(editingParty==null) parties+item else parties.toMutableList().also{list-> if(editingParty!! in list.indices) list[editingParty!!]=item}
+                            saveReceiptParties(c,parties); partyName=""; partyAddress=""; editingParty=null
+                        }
+                    },modifier=Modifier.fillMaxWidth()) { Text(if(editingParty==null) "Dodaj podmiot" else "Zapisz zmiany") }
+                    parties.forEachIndexed { index,party ->
+                        Card(Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(8.dp)) {
+                                Text(party.name,fontWeight=FontWeight.SemiBold)
+                                if(party.address.isNotBlank()) Text(party.address)
+                                Row(horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+                                    TextButton(onClick={seller=party.display();showPartyManager=false}) { Text("Ustaw jako wystawiającego") }
+                                    TextButton(onClick={buyer=party.display();showPartyManager=false}) { Text("Ustaw jako nabywcę") }
+                                }
+                                Row {
+                                    TextButton(onClick={editingParty=index;partyName=party.name;partyAddress=party.address}) { Text("Edytuj") }
+                                    TextButton(onClick={parties=parties.filterIndexed{idx,_->idx!=index};saveReceiptParties(c,parties);if(editingParty==index){editingParty=null;partyName="";partyAddress=""}}) { Text("Usuń") }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton={TextButton(onClick={showPartyManager=false}) { Text("Zamknij") }},
+            dismissButton={TextButton(onClick={editingParty=null;partyName="";partyAddress=""}) { Text("Nowy") }}
+        )
     }
 }
 
