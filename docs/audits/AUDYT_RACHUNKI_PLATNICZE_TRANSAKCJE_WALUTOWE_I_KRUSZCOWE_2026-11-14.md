@@ -1562,3 +1562,54 @@ Kontrola tekstowa nie zastępuje kompilacji Kotlin, testów Android Instrumented
 ### 28.7. Następny etap
 
 Po zielonym CI należy przeprowadzić test urządzeniowy plików SAF oraz rozpocząć etap 2I: parser CSV i XML iPKO. Parsery należy budować na podstawie rzeczywistych, zanonimizowanych próbek i testów wzorcowych. Przed implementacją należy ponownie sprawdzić dostępność próbek i ich dokładne nagłówki/tagi; nie wolno zakładać struktury plików na podstawie samych rozszerzeń.
+
+
+## 29. Etap 2H.1 — kontrola testu atomowego importu i korekty składniowe
+
+### 29.1. Wynik ponownego przeglądu
+
+Podczas ponownego odczytu pliku `PaymentLedgerRepositoryTest.kt` wykryto dwie niezgodności w scenariuszu testowym:
+- wyrażenie wielowierszowe kodowania archiwum zostało zapisane z dosłownymi sekwencjami `\\n`, zamiast jako prawidłowe linie kodu Kotlin;
+- po rozszerzeniu paczki o jeden poprawny wpis i jeden konflikt test nadal oczekiwał zera nowych wpisów w samym podglądzie. Prawidłowy podgląd powinien wykazać jeden wpis nowy i jeden konflikt, natomiast dopiero zatwierdzenie powinno odrzucić całą paczkę.
+
+### 29.2. Wykonane korekty
+
+W `androidTest/.../PaymentLedgerRepositoryTest.kt`:
+- poprawiono wyrażenie `PaymentLedgerJsonCodec.encode(...)` na prawidłowy zapis wielowierszowy;
+- poprawiono oczekiwanie podglądu: jeden konflikt i jeden potencjalnie nowy wpis;
+- pozostawiono asercję, że po odrzuceniu zatwierdzenia zawartość bazy jest identyczna z zawartością sprzed importu.
+
+Dzięki temu test rozdziela prawidłowo dwa różne wyniki: klasyfikację paczki i atomowy skutek zatwierdzania.
+
+### 29.3. Kontrola pliku po poprawkach
+
+Ponownie pobrano plik z gałęzi i potwierdzono:
+- brak dosłownych sekwencji `\\n` w wyrażeniu Kotlin;
+- poprawne trzy linie wywołania `encode`;
+- asercję `preview.conflicts.size == 1`;
+- asercję `preview.newEntries.size == 1`;
+- asercję niezmienności rejestru po odrzuconym imporcie.
+
+### 29.4. Status CI
+
+- Dla wcześniejszej rewizji `1ce4b1f6d390417c0c0ef50d49be8bf52065d979` kontrola REUSE i Android prototype build zakończyły się sukcesem. GUI validation zostało anulowane; nie potwierdzono kompletu testów instrumentacyjnych.
+- Uruchomienia dla rewizji pośredniej `f96ab775cebd4511d9f7ffd25c77eacb833b3002` zostały anulowane po kolejnych korektach testu.
+- Korekty testu zostały zapisane w rewizji `02d7a48992a23980cdbf0b9849ee12ce49f1fc47`. Dla tej rewizji nie ma jeszcze końcowego wyniku Android CI.
+
+W związku z tym nie oznacza się kompilacji ani testów instrumentacyjnych najnowszej rewizji jako zaliczonych. Kontrola tekstowa potwierdza poprawność wskazanych linii testu, ale nie zastępuje wykonania Gradle.
+
+### 29.5. Status etapu 2H po korekcie
+
+| Element | Status |
+|---|---|
+| Kod transakcyjnego importu i obsługi SAF | Zaimplementowany |
+| Test pełnego cyklu eksport/import/idempotencja | Dodany; oczekuje na CI |
+| Test atomowego odrzucenia mieszanej paczki | Poprawiony; oczekuje na CI |
+| Testy klasyfikacji zmienionej daty/waluty/kierunku/typu | Dodane; oczekują na CI |
+| Kompilacja Android najnowszej rewizji | Oczekuje na CI |
+| Testy JVM i instrumentacyjne najnowszej rewizji | Oczekują na CI |
+| Ręczny test dostawców SAF | Do wykonania |
+
+### 29.6. Następny krok
+
+Należy uzyskać zielone wyniki CI dla rewizji zawierającej sekcję 29. Dopiero po tym można przejść do parserów CSV/XML iPKO. W repozytorium nie znaleziono plików wzorcowych wyciągów bankowych, dlatego mapowanie nagłówków CSV, struktur XML, kodowania i formatów kwot pozostaje nieustalone. Parserów nie należy implementować na podstawie domysłów.
