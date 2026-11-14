@@ -1011,6 +1011,9 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
     id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
     id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
+    id.startsWith("service_foundation_") -> "Służba fundacyjna"
+    id.startsWith("service_business_") -> "Służba gospodarcza"
+    id.startsWith("service_association_") -> "Służba stowarzyszeniowa"
     id in setOf("org_president", "org_general_director", "org_regional_director", "org_county_director", "org_local_representative", "org_general_secretary", "org_treasurer", "org_ambassador", "org_foreign_representative", "org_proxy", "org_delegate") -> "Służba gospodarcza"
     id in setOf("org_members_rights_ombudsman", "org_patient_ombudsman", "org_family_ombudsman", "civil_mediator", "civil_arbitrator", "civil_social_caretaker", "civil_org_curator") -> "Służba cywilna"
     id in setOf("civil_expert", "civil_appraiser", "civil_auditor", "civil_internal_inspector", "civil_controller", "civil_consultant") -> "Służba zawodowa"
@@ -1031,7 +1034,8 @@ internal fun documentVisibilityGroup(id: String): String = when {
 }
 internal val documentVisibilityGroupOrder = listOf(
     "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
-    "Służba kościelna", "Służba zbrojna", "Służba zawodowa", "Służba gospodarcza",
+    "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
+    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
@@ -1041,7 +1045,7 @@ private fun documentGroupIconResource(group: String): Int = when (group) {
     "Służba kościelna" -> R.drawable.tile_ic_church_outline
     "Służba zbrojna" -> R.drawable.tile_ic_armed_service_outline
     "Służba zawodowa" -> R.drawable.tile_ic_student_outline
-    "Służba gospodarcza" -> R.drawable.tile_ic_business_outline
+    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa" -> R.drawable.tile_ic_business_outline
     "Służba finansowa" -> R.drawable.lib_ic_wallet
     "Służba zdrowotna" -> R.drawable.tile_ic_disability_outline
     "Zasoby i dokumenty własne" -> R.drawable.lib_ic_folder
