@@ -70,6 +70,41 @@ class DocumentCatalogTest {
         }
     }
 
+
+    @Test
+    fun commonServiceRecordDocumentsArePresentInExistingStateServiceGroup() {
+        val expected = setOf(
+            "service_record_acceptance_decision",
+            "service_record_acceptance_order",
+            "service_record_personnel_appointment_order",
+            "service_record_position_appointment",
+            "service_record_rank_appointment",
+            "service_record_contract",
+            "service_record_public_appointment",
+            "service_record_public_election",
+            "service_record_oath",
+            "service_record_official_id",
+            "service_record_service_certificate",
+            "service_record_discharge_certificate",
+            "service_record_personnel_history",
+            "service_record_transfer_order",
+            "service_record_promotion_order",
+            "service_record_discharge_order",
+            "service_record_opinion",
+            "service_record_periods_certificate"
+        )
+        val targets = officialGraphicDocumentTargets().filter { it.first in expected }
+        assertEquals("Katalog powinien zawierać wszystkie 18 wspólnych dokumentów służbowych.", expected, targets.map { it.first }.toSet())
+        targets.forEach { (id, title) ->
+            assertTrue("Pusty tytuł dokumentu $id.", title.isNotBlank())
+            assertEquals("Dokument $id powinien należeć do istniejącej grupy Służba państwowa.", "Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Brak pól formularza dla $id.", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Brak kafelka dla $id.", documentDisplayOptions.any { it.first == id })
+        }
+        assertTrue(officialGraphicDocumentFields("service_record_oath").any { it.second.contains("rot", ignoreCase = true) })
+        assertTrue(officialGraphicDocumentFields("service_record_personnel_history").any { it.second.contains("Chronologia", ignoreCase = true) })
+    }
+
     @Test
     fun publicAndUniformedServiceCatalogContainsEveryNewRoleInAnExistingGroup() {
         val expectedPrefixes = mapOf(
