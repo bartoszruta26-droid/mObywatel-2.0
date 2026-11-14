@@ -72,6 +72,17 @@ internal object GraphicDocumentCatalog {
         GraphicDocumentDefinition("organization_company", "Dokumenty przedsiębiorstwa", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
         GraphicDocumentDefinition("organization_association", "Dokumenty stowarzyszenia", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
         GraphicDocumentDefinition("official", "Pozostałe dokumenty urzędowe", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
+        GraphicDocumentDefinition("military_book", "Książeczka wojskowa", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("martial_arts", "Legitymacja sztuk walki", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("shooting_sport", "Legitymacja strzelecka i sportowa", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("archery", "Legitymacja łucznicza", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("tactical_training", "Certyfikat szkolenia taktycznego", DocumentPreviewKind.RECORD, "Skan / fotografia certyfikatu"),
+        GraphicDocumentDefinition("survival_training", "Certyfikat surwiwalu i ratownictwa terenowego", DocumentPreviewKind.RECORD, "Skan / fotografia certyfikatu"),
+        GraphicDocumentDefinition("security_guard", "Legitymacja i kwalifikacje ochroniarskie", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("defense_training", "Dokument szkolenia obronnego", DocumentPreviewKind.RECORD, "Skan / fotografia dokumentu"),
+        GraphicDocumentDefinition("historical_reenactment", "Legitymacja członka grupy rekonstrukcji historycznej", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("reenactment_qualification", "Certyfikat kwalifikacji rekonstruktora", DocumentPreviewKind.RECORD, "Skan / fotografia certyfikatu"),
+        GraphicDocumentDefinition("reenactment_event", "Karta uczestnictwa w wydarzeniu historycznym", DocumentPreviewKind.CREDENTIAL),
         GraphicDocumentDefinition("loyalty_cards", "Karty lojalnościowe sklepów", DocumentPreviewKind.CREDENTIAL)
     )
 
@@ -384,15 +395,28 @@ private fun DocumentRecordGraphicPreview(
     settings: LegitimacyPreviewSettings
 ) {
     val context = LocalContext.current
-    val crest = remember(settings.crestAssetId) { settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
-    val flag = remember(settings.flagAssetId) { settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
-    val background = remember(settings.backgroundAssetId) {
+    val crest = remember(settings.crestAssetId, definition.id, definition.title) {
+        settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Herb")
+            ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Godło")
+            ?: defaultDocumentEmblem(context, definition.title)
+    }
+    val flag = remember(settings.flagAssetId, definition.id, definition.title) {
+        settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Flaga")
+            ?: defaultDocumentFlag(context, definition.title)
+    }
+    val background = remember(settings.backgroundAssetId, definition.id, definition.title) {
         settings.backgroundAssetId.takeIf { it.isNotBlank() }?.let { selected ->
             credentialBackgroundResourceId(context, selected)?.let { android.graphics.BitmapFactory.decodeResource(context.resources, it) }
                 ?: DocumentBrandStore.preview(context, selected)
-        }
+        } ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Tło dokumentu")
+            ?: defaultDocumentBackground(context, definition.title)
     }
-    val logo = remember(settings.logoAssetId) { settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } }
+    val logo = remember(settings.logoAssetId, definition.id, definition.title) {
+        settings.logoAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+            ?: DocumentBrandStore.imageForDocument(context, definition.id, definition.title, "Logo")
+    }
     val sourceImage = remember(values["photo"]) {
         runCatching {
             val bytes = Base64.decode(values["photo"].orEmpty(), Base64.DEFAULT)

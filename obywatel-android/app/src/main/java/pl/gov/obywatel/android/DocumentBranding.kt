@@ -106,9 +106,24 @@ internal val documentBrandTargets = (listOf(
     "bank_accounts" to "Konta bankowe",
     "children" to "Dokumentacja dzieci",
     "vaccines" to "Karta szczepień",
-    "civil" to "Dokumenty cywilne"
+    "civil" to "Dokumenty cywilne",
+    "military_book" to "Książeczka wojskowa",
+    "martial_arts" to "Legitymacja sztuk walki",
+    "shooting_sport" to "Legitymacja strzelecka i sportowa",
+    "archery" to "Legitymacja łucznicza",
+    "tactical_training" to "Certyfikat szkolenia taktycznego",
+    "survival_training" to "Certyfikat surwiwalu i ratownictwa terenowego",
+    "security_guard" to "Legitymacja i kwalifikacje ochroniarskie",
+    "defense_training" to "Dokument szkolenia obronnego",
+    "historical_reenactment" to "Legitymacja rekonstruktora historycznego",
+    "reenactment_qualification" to "Certyfikat kwalifikacji rekonstruktora",
+    "reenactment_event" to "Karta uczestnictwa w wydarzeniu historycznym"
 ) + churchGraphicDocumentTargets() + familyEntityGraphicDocumentTargets() +
     officialGraphicDocumentTargets()).distinctBy { it.first }
+
+internal fun isWhiteTintedIconAssetKind(kind: String): Boolean =
+    kind.trim().contains("ikona", ignoreCase = true) ||
+        kind.trim().contains("piktogram", ignoreCase = true)
 
 internal object DocumentBrandStore {
     private const val ALIAS = "document_brand_assets_aes"
@@ -692,9 +707,9 @@ internal fun defaultDocumentEmblem(context: Context, title: String): Bitmap? {
         ?: BitmapFactory.decodeResource(context.resources, R.drawable.a_clean_vector_style_emblem_on_a_transparent_backg)
 }
 
-internal fun defaultDocumentBackground(context: Context, title: String): Bitmap? {
+internal fun defaultDocumentBackgroundResourceId(title: String): Int {
     val normalized = title.lowercase(Locale.ROOT)
-    val resourceId = when {
+    return when {
         // Dokumenty rodowe i rodzinne.
         isFamilyDocument(title) && (normalized.contains("paszport") || normalized.contains("podróż") || normalized.contains("podroz")) ->
             R.drawable.doc_02_paszport_rodowy_jasny
@@ -708,6 +723,18 @@ internal fun defaultDocumentBackground(context: Context, title: String): Bitmap?
             normalized.contains("tożsamo") || normalized.contains("tozsamos") ||
             normalized.contains("profil") || normalized.contains("obywatel") ->
             R.drawable.doc_01_dowod_tozsamosci_obywatelski
+
+        // Dokumenty służby zbrojnej — legitymacje i certyfikaty otrzymują
+        // tła odpowiadające rodzajowi dokumentu zamiast ogólnego baneru.
+        normalized.contains("wojskow") || normalized.contains("sztuk walki") ||
+            normalized.contains("strzeleck") || normalized.contains("łucznicz") ||
+            normalized.contains("lucznicz") || normalized.contains("ochroniarsk") ->
+            R.drawable.doc_02_legitymacja_zawodowa
+        normalized.contains("rekonstrukc") || normalized.contains("historyczn") ->
+            R.drawable.doc_06_przynaleznosc_rodowa_organizacyjna
+        normalized.contains("taktycz") || normalized.contains("surwiwal") ||
+            normalized.contains("szkolenia obronnego") || normalized.contains("certyfikat") ->
+            R.drawable.doc_03_certyfikat_ukonczenia_kursu
 
         // Legitymacje i dokumenty zawodowe.
         normalized.contains("poselsk") || normalized.contains("senatorsk") || normalized.contains("parlament") ->
@@ -756,8 +783,10 @@ internal fun defaultDocumentBackground(context: Context, title: String): Bitmap?
             R.drawable.documents_document_wallet_banner
         else -> R.drawable.documents_document_wallet_banner
     }
-    return BitmapFactory.decodeResource(context.resources, resourceId)
 }
+
+internal fun defaultDocumentBackground(context: Context, title: String): Bitmap? =
+    BitmapFactory.decodeResource(context.resources, defaultDocumentBackgroundResourceId(title))
 
 private fun decodeCredentialPhoto(encoded: String?): Bitmap? = runCatching {
     val source = encoded?.trim().orEmpty()
@@ -1233,7 +1262,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                     contentDescription = asset.label,
                                     modifier = Modifier.size(64.dp),
                                     contentScale = ContentScale.Fit,
-                                    colorFilter = if (asset.kind == "Ikona wektorowa kafelka")
+                                    colorFilter = if (isWhiteTintedIconAssetKind(asset.kind))
                                         androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
                                     else null
                                 )

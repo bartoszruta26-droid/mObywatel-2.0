@@ -33,6 +33,9 @@ class DocumentRouteRegistryInstrumentedTest {
         "mission_travel",
         "ehic",
         "eu_education",
+        "military_book", "martial_arts", "shooting_sport", "archery", "tactical_training",
+        "survival_training", "security_guard", "defense_training", "historical_reenactment",
+        "reenactment_qualification", "reenactment_event",
         "large_family",
         "blood_donor",
         "disability_card",
@@ -49,7 +52,7 @@ class DocumentRouteRegistryInstrumentedTest {
     )
 
     @Test
-    fun allTwentyFiveIndividualTilesResolveToTheirOwnDocumentFormRoute() {
+    fun allIndividualTilesResolveToTheirOwnDocumentFormRoute() {
         individualDocumentIds.forEach { id ->
             val route = DocumentRouteRegistry.find(id)
             assertNotNull("Missing route for $id", route)
@@ -57,7 +60,7 @@ class DocumentRouteRegistryInstrumentedTest {
             assertEquals("Tile ID was not preserved for $id", id, route.documentId)
             assertNull("Individual document $id must not redirect to a group", route.destination)
         }
-        assertEquals(25, individualDocumentIds.size)
+        assertEquals(36, individualDocumentIds.size)
     }
 
     @Test

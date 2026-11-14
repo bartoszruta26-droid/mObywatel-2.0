@@ -41,4 +41,6 @@ class DocumentOcrParserTest {
   val official = DocumentOcrParser.extract(officialId,"${officialField.second}: AKT")
   assertTrue("official=$official", official.containsKey(officialField.first))
  }
+
+
 }

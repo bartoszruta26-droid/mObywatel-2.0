@@ -2143,10 +2143,11 @@ internal fun DocumentFieldEditor(
 
     @Composable
     fun SideSelector() {
-        Column(
+        Row(
             modifier = if (compactLayout) Modifier.fillMaxWidth()
-                else Modifier.widthIn(min = 176.dp, max = 216.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+                else Modifier.widthIn(min = 216.dp, max = 246.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             listOf(
                 CREDENTIAL_FIELD_HIDDEN to "Brak",
@@ -2154,20 +2155,24 @@ internal fun DocumentFieldEditor(
                 CREDENTIAL_FIELD_BACK to "Rewers"
             ).forEach { (target, caption) ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 36.dp)
+                    modifier = Modifier.weight(1f)
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { updateSide(target) }
-                        .padding(horizontal = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .clickable { updateSide(target) },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     androidx.compose.material3.RadioButton(
                         selected = selectedSide == target,
-                        onClick = { updateSide(target) }
+                        onClick = { updateSide(target) },
+                        modifier = Modifier.size(24.dp)
                     )
-                    Text(caption, style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        caption,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 }
             }
         }

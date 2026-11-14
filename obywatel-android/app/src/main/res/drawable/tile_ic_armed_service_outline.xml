@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Emblemat służby: tarcza, laur i róża kierunków. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,5 L81,17 L78,49 C76,67 64,81 48,91 C32,81 20,67 18,49 L15,17 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.2"
+        android:strokeLineJoin="round"
+        android:pathData="M48,11 L75,21 L72.5,48 C70.8,63 61.2,75.4 48,84 C34.8,75.4 25.2,63 23.5,48 L21,21 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M28,57 C23,49 24,38 30,31 M68,57 C73,49 72,38 66,31 M29,48 L24,44 M30,39 L25,35 M33,32 L30,27 M67,48 L72,44 M66,39 L71,35 M63,32 L66,27" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,25 L52,39 L66,43 L52,47 L48,62 L44,47 L30,43 L44,39 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,34 L50,41 L57,43 L50,45 L48,52 L46,45 L39,43 L46,41 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M36,66 L60,66 M40,71 L56,71" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,64 L51,68 L48,72 L45,68 Z" />
+</vector>

@@ -964,7 +964,18 @@ internal val documentDisplayOptions = (listOf(
     Triple("organization_company", "Dokumenty przedsiębiorstwa", R.drawable.lib_ic_building),
     Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
     Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
-    Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document)
+    Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document),
+    Triple("military_book", "Książeczka wojskowa", R.drawable.tile_ic_armed_service_outline),
+    Triple("martial_arts", "Legitymacja sztuk walki", R.drawable.tile_ic_armed_service_outline),
+    Triple("shooting_sport", "Legitymacja strzelecka i sportowa", R.drawable.tile_ic_armed_service_outline),
+    Triple("archery", "Legitymacja łucznicza", R.drawable.tile_ic_armed_service_outline),
+    Triple("tactical_training", "Certyfikaty szkolenia taktycznego", R.drawable.tile_ic_armed_service_outline),
+    Triple("survival_training", "Certyfikaty surwiwalu i ratownictwa terenowego", R.drawable.tile_ic_armed_service_outline),
+    Triple("security_guard", "Legitymacja i kwalifikacje ochroniarskie", R.drawable.tile_ic_armed_service_outline),
+    Triple("defense_training", "Dokumenty szkolenia obronnego", R.drawable.tile_ic_armed_service_outline),
+    Triple("historical_reenactment", "Legitymacja członka grupy rekonstrukcji historycznej", R.drawable.tile_ic_armed_service_outline),
+    Triple("reenactment_qualification", "Certyfikat kwalifikacji rekonstruktora", R.drawable.tile_ic_armed_service_outline),
+    Triple("reenactment_event", "Karta uczestnictwa w wydarzeniu historycznym", R.drawable.tile_ic_armed_service_outline)
 ) + documentBrandTargets
     .filterNot { (id, _) -> listOf(
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
@@ -997,53 +1008,41 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
-    // Keep the core identity documents in an explicit, stable bucket. These IDs
-    // must remain visible in the visibility catalog even as new groups evolve.
-    id in setOf("profile", "identity", "passport") ->
-        "Dokumenty osobiste i tożsamościowe"
+    id in armedServiceDocumentIds -> "Służba zbrojna"
+    id in setOf("profile", "identity", "passport") -> "Służba osobista"
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
-        id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } ->
-        "Dokumenty kościelne"
-    id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" ->
-        "Dokumenty rodowe i rodzinne"
-    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") ->
-        "Dokumenty finansowe"
-    id == "parliament" ->
-        "Dokumenty publiczne i obywatelskie"
+        id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
+    id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
+    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts") || id.startsWith("insurance_") -> "Służba finansowa"
+    id == "parliament" -> "Służba państwowa"
     id == "business" || id == "entity" || id == "registry" ||
-        id.startsWith("entity_") || id.startsWith("organization_") ->
-        "Dokumenty firmowe i podmiotowe"
+        id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
     id == "professional" || id.startsWith("professional_") ||
-        id in setOf("training", "student", "eu_education") ->
-        "Dokumenty zawodowe i edukacyjne"
+        id in setOf("training", "student", "eu_education") -> "Służba zawodowa"
+    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") -> "Służba zdrowotna"
     id == "civil" || id in setOf(
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
         "vehicle_registration", "official"
-    ) || officialGraphicDocumentTargets().any { it.first == id } ->
-        "Dokumenty cywilne i urzędowe"
-    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") ->
-        "Dokumenty zdrowotne i rodzinne"
+    ) || officialGraphicDocumentTargets().any { it.first == id } -> "Służba cywilna"
     id in setOf("imported", "signed_pdf", "branding", "loyalty", "loyalty_cards") ||
-        documentBrandTargets.any { it.first == id } ->
-        "Pliki i pozostałe dokumenty"
-    else -> "Dokumenty osobiste i tożsamościowe"
+        documentBrandTargets.any { it.first == id } -> "Zasoby i dokumenty własne"
+    else -> "Służba osobista"
 }
 internal val documentVisibilityGroupOrder = listOf(
-    "Dokumenty osobiste i tożsamościowe",
-    "Dokumenty publiczne i obywatelskie",
-    "Dokumenty cywilne i urzędowe",
-    "Dokumenty kościelne",
-    "Dokumenty rodowe i rodzinne",
-    "Dokumenty firmowe i podmiotowe",
-    "Dokumenty finansowe",
-    "Dokumenty zawodowe i edukacyjne",
-    "Dokumenty zdrowotne i rodzinne",
-    "Pliki i pozostałe dokumenty"
+    "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
+    "Służba kościelna", "Służba zbrojna", "Służba zawodowa", "Służba gospodarcza",
+    "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
-private val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to if (id == "identity") "dashboard" else "hidden"
+private val armedServiceDocumentIds = setOf(
+    "military_book", "martial_arts", "shooting_sport", "archery",
+    "tactical_training", "survival_training", "security_guard", "defense_training",
+    "historical_reenactment", "reenactment_qualification", "reenactment_event"
+)
+internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
+    id to if (id == "identity" || id in armedServiceDocumentIds) "dashboard" else "hidden"
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
+private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
 private const val DOCUMENT_CARD_STYLE_KEY = "document_card_style"
 private fun loadDocumentCardStyle(context: Context): String =
     context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
@@ -1077,7 +1076,8 @@ private val documentIconChoices = listOf(
     "tile_ic_disability_outline" to "Orzeczenia i zaświadczenia",
     "tile_ic_church_outline" to "Dokumenty kościelne",
     "tile_ic_civil_outline" to "Dokumenty cywilne",
-    "tile_ic_business_outline" to "Dokumenty firmowe i podmiotowe"
+    "tile_ic_business_outline" to "Dokumenty firmowe i podmiotowe",
+    "tile_ic_armed_service_outline" to "Służba zbrojna"
 )
 private fun loadDefaultDocumentIcon(context: Context): String =
     context.getSharedPreferences(DOCUMENT_DISPLAY_PREFS, Context.MODE_PRIVATE)
@@ -1140,6 +1140,16 @@ private fun loadDocumentPlacements(context: Context): Map<String, String> {
         }
         editor.putBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, true)
         check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności dokumentów." }
+    }
+    if (!prefs.getBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, false)) {
+        // Jednorazowo aktywuj nową grupę także u osób aktualizujących starszą
+        // instalację, w której ustawienia widoczności mogły już być zapisane.
+        val editor = prefs.edit()
+        armedServiceDocumentIds.forEach { id ->
+            editor.putString(DOCUMENT_DISPLAY_KEY_PREFIX + id, "dashboard")
+        }
+        editor.putBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, true)
+        check(editor.commit()) { "Nie udało się aktywować grupy Służba zbrojna." }
     }
     return documentDisplayOptions.associate { (id, _, _) ->
         val savedPlacement = prefs.getString(DOCUMENT_DISPLAY_KEY_PREFIX + id, null)
@@ -3226,6 +3236,10 @@ private fun DocumentVisibilitySettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        if (groupTitle == "Służba zbrojna") {
+                            Image(painterResource(R.drawable.tile_ic_armed_service_outline),
+                                contentDescription = null, modifier = Modifier.size(34.dp))
+                        }
                         Text(groupTitle, color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         Text("${groupDocuments.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -3341,6 +3355,10 @@ private fun DocumentEditorCatalogScreen(
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                             .clickable { expandedGroups = if (expanded) expandedGroups - group else expandedGroups + group }
                             .padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (group == "Służba zbrojna") {
+                                Image(painterResource(R.drawable.tile_ic_armed_service_outline),
+                                    contentDescription = null, modifier = Modifier.size(34.dp))
+                            }
                             Text(group, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                             Text("${entries.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
                             Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge)
@@ -3635,13 +3653,16 @@ private fun DocumentsWalletScreen(
             else -> "Pozostałe dokumenty"
         }
         val icon = when (group) {
-            "Dokumenty kościelne" -> Icons.Filled.AccountBalance
-            "Dokumenty rodowe i rodzinne" -> Icons.Filled.Fingerprint
-            "Dokumenty firmowe i podmiotowe" -> Icons.Filled.Business
-            "Dokumenty zawodowe i edukacyjne" -> Icons.Filled.Badge
-            "Dokumenty zdrowotne i rodzinne" -> Icons.Filled.HealthAndSafety
-            "Pliki i pozostałe dokumenty" -> Icons.Filled.Description
-            "Dokumenty cywilne i urzędowe" -> Icons.Filled.Description
+            "Służba kościelna" -> Icons.Filled.AccountBalance
+            "Służba rodowa" -> Icons.Filled.Fingerprint
+            "Służba gospodarcza" -> Icons.Filled.Business
+            "Służba zawodowa" -> Icons.Filled.Badge
+            "Służba zdrowotna" -> Icons.Filled.HealthAndSafety
+            "Zasoby i dokumenty własne" -> Icons.Filled.Description
+            "Służba cywilna" -> Icons.Filled.Description
+            "Służba zbrojna" -> Icons.Filled.Shield
+            "Służba finansowa" -> Icons.Filled.Payments
+            "Służba państwowa" -> Icons.Filled.Public
             else -> Icons.Filled.CreditCard
         }
         CatalogDocument(
@@ -3680,9 +3701,18 @@ private fun DocumentsWalletScreen(
                 visibleDocuments.filter { documentPlacements[it.id] == "dashboard" && category in it.categories }
             }
             if (entries.isNotEmpty()) {
-                Text(category, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 5.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (category == "Służba zbrojna") {
+                        Image(painterResource(R.drawable.tile_ic_armed_service_outline),
+                            contentDescription = null, modifier = Modifier.size(34.dp))
+                    }
+                    Text(category, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(top = 5.dp))
+                }
                 if (documentCardStyle == "list") {
                     entries.forEach { document ->
                         Card(
@@ -3861,6 +3891,7 @@ private fun documentTileIconResource(context: Context, documentKey: String, fall
     "civil", "birth_extract", "marriage_extract", "death_extract" -> R.drawable.tile_ic_civil_outline
     "business", "entity", "official", "organization_foundation", "organization_company",
     "organization_association" -> R.drawable.tile_ic_business_outline
+    in armedServiceDocumentIds -> R.drawable.tile_ic_armed_service_outline
     // Każdy typ dokumentu otrzymuje wektorową ikonę, także gdy nie ma
     // dedykowanego piktogramu dla konkretnej kategorii.
     else -> R.drawable.tile_ic_civil_outline
@@ -5014,20 +5045,23 @@ private fun CredentialAppearanceSettingsScreen(
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Miejsce wyświetlania każdego pola", fontWeight = FontWeight.Bold)
-                Text("Wybierz osobno dla każdej danej: ukryta, awers albo rewers. Rewers pozostaje ukryty, dopóki go nie włączysz.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Wybierz osobno dla każdej danej: brak, awers albo rewers. Rewers pozostaje pusty, dopóki go nie włączysz.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 options.forEach { (key, label) ->
                     val side = credentialFieldSide(key, state.value.visibleFieldsConfigured, state.value.visibleFields, state.value.fieldSides)
                     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                         Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
                             listOf(
-                                CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
+                                CREDENTIAL_FIELD_HIDDEN to "Brak",
                                 CREDENTIAL_FIELD_FRONT to "Awers",
                                 CREDENTIAL_FIELD_BACK to "Rewers"
                             ).forEach { (target, caption) ->
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)
-                                    .clickable {
+                                Row(
+                                    Modifier.weight(1f).clip(RoundedCornerShape(6.dp)).clickable {
                                         val updated = state.value.copy(
                                             fieldSides = state.value.fieldSides + (key to target),
                                             visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) state.value.visibleFields - key
@@ -5036,7 +5070,10 @@ private fun CredentialAppearanceSettingsScreen(
                                         )
                                         LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
                                         state.value = updated
-                                    }) {
+                                    },
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
                                     androidx.compose.material3.RadioButton(
                                         selected = side == target,
                                         onClick = {
@@ -5048,9 +5085,10 @@ private fun CredentialAppearanceSettingsScreen(
                                             )
                                             LegitimacyPreviewSettingsStore.save(context, documentKey, updated)
                                             state.value = updated
-                                        }
+                                        },
+                                        modifier = Modifier.size(24.dp)
                                     )
-                                    Text(caption, style = MaterialTheme.typography.labelSmall)
+                                    Text(caption, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                                 }
                             }
                         }
@@ -5496,25 +5534,28 @@ private fun DemoDataField(
         credentialFieldSide(key, it.visibleFieldsConfigured, it.visibleFields, it.fieldSides)
     } ?: CREDENTIAL_FIELD_FRONT
     val context = LocalContext.current
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
         OutlinedTextField(
             value = fields[storageKey] ?: "",
             onValueChange = { fields[storageKey] = it },
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth(),
             label = { Text(label) },
             placeholder = { Text(placeholder) },
             singleLine = true
         )
         if (binding != null && binding.documentKey.isNotBlank() && key in selectableKeys) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    listOf(
-                        CREDENTIAL_FIELD_HIDDEN to "Nie umieszczaj",
-                        CREDENTIAL_FIELD_FRONT to "Awers",
-                        CREDENTIAL_FIELD_BACK to "Rewers"
-                    ).forEach { (target, caption) ->
-                        Row(Modifier.weight(1f).clickable {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                listOf(
+                    CREDENTIAL_FIELD_HIDDEN to "Brak",
+                    CREDENTIAL_FIELD_FRONT to "Awers",
+                    CREDENTIAL_FIELD_BACK to "Rewers"
+                ).forEach { (target, caption) ->
+                    Row(
+                        Modifier.weight(1f).clip(RoundedCornerShape(6.dp)).clickable {
                             val currentSettings = binding.settings.value
                             val updated = currentSettings.copy(
                                 fieldSides = currentSettings.fieldSides + (key to target),
@@ -5524,23 +5565,26 @@ private fun DemoDataField(
                             )
                             LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
                             binding.settings.value = updated
-                        }, verticalAlignment = Alignment.CenterVertically) {
-                            androidx.compose.material3.RadioButton(
-                                selected = side == target,
-                                onClick = {
-                                    val currentSettings = binding.settings.value
-                                    val updated = currentSettings.copy(
-                                        fieldSides = currentSettings.fieldSides + (key to target),
-                                        visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) currentSettings.visibleFields - key
-                                            else currentSettings.visibleFields + key,
-                                        visibleFieldsConfigured = true
-                                    )
-                                    LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
-                                    binding.settings.value = updated
-                                }
-                            )
-                            Text(caption, style = MaterialTheme.typography.labelSmall)
-                        }
+                        },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        androidx.compose.material3.RadioButton(
+                            selected = side == target,
+                            onClick = {
+                                val currentSettings = binding.settings.value
+                                val updated = currentSettings.copy(
+                                    fieldSides = currentSettings.fieldSides + (key to target),
+                                    visibleFields = if (target == CREDENTIAL_FIELD_HIDDEN) currentSettings.visibleFields - key
+                                        else currentSettings.visibleFields + key,
+                                    visibleFieldsConfigured = true
+                                )
+                                LegitimacyPreviewSettingsStore.save(context, binding.documentKey, updated)
+                                binding.settings.value = updated
+                            },
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(caption, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                     }
                 }
             }

@@ -28,7 +28,7 @@ object DocumentRouteRegistry {
         id to DocumentRoute(id, DocumentRouteType.SPECIALIZED, destination)
 
     /** Every identifier exposed by the document visibility settings is registered. */
-    val routes: Map<String, DocumentRoute> = listOf(
+    val routes: Map<String, DocumentRoute> = (listOf(
         document("profile"),
         document("identity"),
         document("passport"),
@@ -42,6 +42,8 @@ object DocumentRouteRegistry {
         group("civil", "Formularze dokumentów"),
         group("business", "Dokumenty rejestru podmiotów"),
         specialized("bank_accounts", "bank_accounts"),
+        specialized("rod_bank_accounts", "rod_bank_accounts"),
+        specialized("entity_bank_accounts", "entity_bank_accounts"),
         specialized("vaccines", "vaccines"),
         specialized("signed_pdf", "signed_pdf"),
         specialized("imported", "imported"),
@@ -63,6 +65,17 @@ object DocumentRouteRegistry {
         document("mission_travel"),
         document("ehic"),
         document("eu_education"),
+        document("military_book"),
+        document("martial_arts"),
+        document("shooting_sport"),
+        document("archery"),
+        document("tactical_training"),
+        document("survival_training"),
+        document("security_guard"),
+        document("defense_training"),
+        document("historical_reenactment"),
+        document("reenactment_qualification"),
+        document("reenactment_event"),
         document("church_bishop"),
         document("church_archbishop"),
         document("church_cardinal"),
@@ -83,7 +96,14 @@ object DocumentRouteRegistry {
         // Compatibility aliases used by older callers.
         document("identity_card", "identity"),
         document("loyalty_cards", "loyalty")
-    ).associate { it }
+    ) +
+        // Keep the route registry synchronized with every schema-backed catalog entry.
+        // Explicit GROUP/SPECIALIZED routes above take precedence over generated document routes.
+        documentBrandTargets.map { (id, _) -> document(id) } +
+        churchGraphicDocumentTargets().map { (id, _) -> document(id) } +
+        familyEntityGraphicDocumentTargets().map { (id, _) -> document(id) } +
+        officialGraphicDocumentTargets().map { (id, _) -> document(id) }
+    ).distinctBy { it.first }.associate { it }
 
     fun find(documentId: String): DocumentRoute? = routes[documentId]
 }

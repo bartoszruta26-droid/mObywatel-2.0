@@ -29,7 +29,9 @@ class DocumentGraphicCatalogTest {
             "church_cardinal", "church_abbot", "church_minister", "church_missionary",
             "professional_medical", "professional_education", "professional_therapeutic",
             "professional_other", "organization_foundation", "organization_church",
-            "organization_company", "organization_association", "official", "loyalty_cards"
+            "organization_company", "organization_association", "official", "loyalty_cards", "military_book", "martial_arts", "shooting_sport", "archery",
+            "tactical_training", "survival_training", "security_guard", "defense_training",
+            "historical_reenactment", "reenactment_qualification", "reenactment_event"
         )
         val definitions = GraphicDocumentCatalog.definitions
         assertTrue(definitions.map { it.id }.toSet().containsAll(expected))
@@ -38,6 +40,34 @@ class DocumentGraphicCatalogTest {
         definitions.forEach { definition ->
             assertNotNull(definition.title.takeIf { it.isNotBlank() })
             assertNotNull(credentialFieldOptions(definition.id).takeIf { it.isNotEmpty() })
+        }
+    }
+
+    @Test
+    fun everyGraphicTargetHasAResolvedDefaultBackgroundAndEveryTileHasAnIconResource() {
+        documentBrandTargets.forEach { (id, title) ->
+            assertTrue("Missing default background for $id / $title",
+                defaultDocumentBackgroundResourceId(title) != 0)
+        }
+        documentDisplayOptions.forEach { (id, _, iconResource) ->
+            assertTrue("Missing tile icon resource for $id", iconResource != 0)
+        }
+    }
+
+    @Test
+    fun armedServiceDocumentsHaveIndependentGraphicAssignmentTargets() {
+        val armedIds = setOf(
+            "military_book", "martial_arts", "shooting_sport", "archery",
+            "tactical_training", "survival_training", "security_guard", "defense_training",
+            "historical_reenactment", "reenactment_qualification", "reenactment_event"
+        )
+        val targets = documentBrandTargets.map { it.first }.toSet()
+        assertTrue("Every armed-service document must have its own asset assignment target.",
+            targets.containsAll(armedIds))
+        assertTrue("Every armed-service document must be visible in the document catalog.",
+            documentDisplayOptions.map { it.first }.toSet().containsAll(armedIds))
+        armedIds.forEach { id ->
+            assertNotNull("Missing graphic editor for $id", GraphicDocumentCatalog.find(id))
         }
     }
 
@@ -82,10 +112,10 @@ class DocumentGraphicCatalogTest {
             nestedTargets.all { it.first in visibilityIds })
         assertTrue("Both family and entity bank registers must have independent visibility",
             setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts").all { it in visibilityIds })
-        assertEquals("Dokumenty kościelne", documentVisibilityGroup("church_minutes"))
-        assertEquals("Dokumenty rodowe i rodzinne", documentVisibilityGroup("rod_birth_record"))
-        assertEquals("Dokumenty firmowe i podmiotowe", documentVisibilityGroup("entity_foundation_statute"))
-        assertEquals("Dokumenty cywilne i urzędowe", documentVisibilityGroup("birth_extract"))
+        assertEquals("Służba kościelna", documentVisibilityGroup("church_minutes"))
+        assertEquals("Służba rodowa", documentVisibilityGroup("rod_birth_record"))
+        assertEquals("Służba gospodarcza", documentVisibilityGroup("entity_foundation_statute"))
+        assertEquals("Służba cywilna", documentVisibilityGroup("birth_extract"))
     }
 
     @Test
@@ -99,12 +129,32 @@ class DocumentGraphicCatalogTest {
     }
 
     @Test
+    fun armedServiceAndReenactmentDocumentsUseTheirIntendedPreviewTypes() {
+        val credentials = setOf(
+            "military_book", "martial_arts", "shooting_sport", "archery",
+            "security_guard", "historical_reenactment", "reenactment_event"
+        )
+        val records = setOf(
+            "tactical_training", "survival_training", "defense_training",
+            "reenactment_qualification"
+        )
+        credentials.forEach { id ->
+            assertEquals("$id must use a credential preview",
+                DocumentPreviewKind.CREDENTIAL, GraphicDocumentCatalog.find(id)?.kind)
+        }
+        records.forEach { id ->
+            assertEquals("$id must use a record preview",
+                DocumentPreviewKind.RECORD, GraphicDocumentCatalog.find(id)?.kind)
+        }
+    }
+
+    @Test
     fun sourceDocumentsKeepRecordPreviewInsteadOfCredentialMockup() {
         val recordIds = setOf(
             "registry", "birth_extract", "marriage_extract", "death_extract",
             "vehicle_registration", "insurance_vehicle", "insurance_professional",
             "insurance_private", "insurance_business", "criminal_record", "mission_travel",
-            "eu_education", "organization_foundation", "organization_church",
+            "eu_education", "organization_foundation", "organization_church", "tactical_training", "survival_training", "defense_training", "reenactment_qualification",
             "organization_company", "organization_association", "official"
         )
         recordIds.forEach { id ->
@@ -117,7 +167,7 @@ class DocumentGraphicCatalogTest {
         val credentialIds = setOf(
             "large_family", "blood_donor", "disability_card", "ehic", "church_bishop",
             "church_archbishop", "church_cardinal", "church_abbot", "church_minister",
-            "church_missionary", "professional_medical", "professional_education",
+            "church_missionary", "professional_medical", "professional_education", "military_book", "martial_arts", "shooting_sport", "archery", "security_guard", "historical_reenactment", "reenactment_event",
             "professional_therapeutic", "professional_other", "loyalty_cards"
         )
         credentialIds.forEach { id ->
