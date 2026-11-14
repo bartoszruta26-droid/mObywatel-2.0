@@ -57,34 +57,67 @@ class PaymentLedgerDatabase(
      */
     fun importBatch(entries: List<BankStatementEntry>): BatchImportSummary {
         val db = writableDatabase
-        var inserted = 0
-        var duplicates = 0
         db.beginTransaction()
         try {
-            entries.forEach { entry ->
-                entry.validate()
-                val values = ContentValues().apply {
-                    put("accounting_entry_id", entry.accountingEntryId())
-                    put("exchange_operation_id", entry.exchangeOperationId())
-                    put("account_scope_id", entry.accountScopeId.trim())
-                    put("booking_date", entry.bookingDate.toString())
-                    put("currency_code", entry.currencyCode)
-                    put("signed_amount", entry.signedAmount.stripTrailingZeros().toPlainString())
-                    put("operation_type", entry.operationType.trim())
-                    put("bank_operation_reference", entry.bankOperationReference?.trim())
-                    put("description", entry.description.trim())
-                }
-                val result = db.insertWithOnConflict(
-                    TABLE_ENTRIES,
-                    null,
-                    values,
-                    SQLiteDatabase.CONFLICT_IGNORE
-                )
-                if (result == -1L) duplicates++ else inserted++
-            }
+            val result = insertEntries(db, entries)
             db.setTransactionSuccessful()
+            return result
         } finally {
             db.endTransaction()
+        }
+    }
+
+    /**
+     * Weryfikuje referencje i zapisuje paczkę w tej samej transakcji SQLite.
+     * Zapobiega wyścigowi między podglądem a zatwierdzeniem importu.
+     */
+    fun importBatchRejectingReferenceConflicts(
+        entries: List<BankStatementEntry>
+    ): BatchImportSummary {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val preview = BankImportDeduplicator.preview(entries, readAll(db))
+            require(preview.conflicts.isEmpty()) {
+                "Import zawiera ${preview.conflicts.size} konfliktów referencji. Wymagana weryfikacja."
+            }
+            val inserted = insertEntries(db, preview.newEntries)
+            db.setTransactionSuccessful()
+            return BatchImportSummary(
+                inserted = inserted.inserted,
+                duplicates = inserted.duplicates + preview.duplicates.size
+            )
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    private fun insertEntries(
+        db: SQLiteDatabase,
+        entries: List<BankStatementEntry>
+    ): BatchImportSummary {
+        var inserted = 0
+        var duplicates = 0
+        entries.forEach { entry ->
+            entry.validate()
+            val values = ContentValues().apply {
+                put("accounting_entry_id", entry.accountingEntryId())
+                put("exchange_operation_id", entry.exchangeOperationId())
+                put("account_scope_id", entry.accountScopeId.trim())
+                put("booking_date", entry.bookingDate.toString())
+                put("currency_code", entry.currencyCode)
+                put("signed_amount", entry.signedAmount.stripTrailingZeros().toPlainString())
+                put("operation_type", entry.operationType.trim())
+                put("bank_operation_reference", entry.bankOperationReference?.trim())
+                put("description", entry.description.trim())
+            }
+            val result = db.insertWithOnConflict(
+                TABLE_ENTRIES,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_IGNORE
+            )
+            if (result == -1L) duplicates++ else inserted++
         }
         return BatchImportSummary(inserted, duplicates)
     }
@@ -105,9 +138,11 @@ class PaymentLedgerDatabase(
         return ids
     }
 
-    fun readAll(): List<BankStatementEntry> {
+    fun readAll(): List<BankStatementEntry> = readAll(readableDatabase)
+
+    private fun readAll(db: SQLiteDatabase): List<BankStatementEntry> {
         val result = mutableListOf<BankStatementEntry>()
-        readableDatabase.query(
+        db.query(
             TABLE_ENTRIES,
             arrayOf(
                 "account_scope_id", "booking_date", "currency_code", "signed_amount",
