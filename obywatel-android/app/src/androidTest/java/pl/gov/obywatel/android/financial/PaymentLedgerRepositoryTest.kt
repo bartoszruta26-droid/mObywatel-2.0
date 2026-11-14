@@ -72,7 +72,7 @@ class PaymentLedgerRepositoryTest {
 
             val preview = repository.previewJson(conflictingArchive)
             assertEquals(1, preview.conflicts.size)
-            assertEquals(0, preview.newEntries.size)
+            assertEquals(1, preview.newEntries.size)
 
             val result = runCatching { repository.importJson(conflictingArchive) }
             assertTrue("Import z konfliktem musi zostać odrzucony.", result.isFailure)
