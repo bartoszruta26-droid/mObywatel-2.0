@@ -75,7 +75,31 @@ data class FinancialTransaction(
         require(toAmount == null || toAmount > BigDecimal.ZERO) { "Ilość strony otrzymanej musi być dodatnia." }
         require(fromAssetCode == null || fromAssetCode.isNotBlank()) { "Kod aktywa oddanego jest pusty." }
         require(toAssetCode == null || toAssetCode.isNotBlank()) { "Kod aktywa otrzymanego jest pusty." }
-        fee?.validate()
+        when (type) {
+            FinancialTransactionType.EXCHANGE,
+            FinancialTransactionType.METAL_BUY,
+            FinancialTransactionType.METAL_SELL -> {
+                require(fromAssetCode != null && toAssetCode != null) {
+                    "Wymiana i kupno/sprzedaż kruszcu wymagają obu stron transakcji."
+                }
+                require(fromAssetCode != toAssetCode) {
+                    "Aktywo oddane i otrzymane muszą być różne."
+                }
+            }
+            FinancialTransactionType.DEPOSIT -> require(fromAssetCode == null && toAssetCode != null) {
+                "Wpłata musi wskazywać wyłącznie aktywo otrzymane."
+            }
+            FinancialTransactionType.WITHDRAWAL -> require(fromAssetCode != null && toAssetCode == null) {
+                "Wypłata musi wskazywać wyłącznie aktywo oddane."
+            }
+            FinancialTransactionType.ADJUSTMENT -> Unit
+        }
+        fee?.let {
+            it.validate()
+            require(it.assetCode == fromAssetCode || it.assetCode == toAssetCode) {
+                "Prowizja musi być wyrażona w aktywie jednej ze stron transakcji."
+            }
+        }
     }
 }
 
