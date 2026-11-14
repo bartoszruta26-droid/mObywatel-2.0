@@ -1003,6 +1003,7 @@ internal val documentDisplayOptions = (listOf(
             id.startsWith("rod_") || id == "family" -> R.drawable.documents_family_record
             id.startsWith("entity_") || id.startsWith("organization_") || id == "entity" || id == "business" -> R.drawable.lib_ic_building
             id.startsWith("professional_") || id == "professional" -> R.drawable.work
+            id.startsWith("military_") -> R.drawable.tile_ic_armed_service_outline
             id.startsWith("insurance_") || id == "official" -> R.drawable.lib_ic_document
             else -> R.drawable.lib_ic_document
         }
