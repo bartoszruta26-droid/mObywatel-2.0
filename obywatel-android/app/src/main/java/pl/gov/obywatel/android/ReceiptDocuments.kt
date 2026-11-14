@@ -263,20 +263,21 @@ private fun buildReceiptPdf(c:Context,no:String,date:String,seller:String,buyer:
     val doc=PdfDocument(); val page=doc.startPage(PdfDocument.PageInfo.Builder(595,842,1).create()); val canvas=page.canvas
     val p=Paint(Paint.ANTI_ALIAS_FLAG).apply{color=android.graphics.Color.BLACK;textSize=10f}
     val bold=Paint(p).apply{typeface=Typeface.create(Typeface.DEFAULT,Typeface.BOLD);textSize=12f}
+    val border=Paint(p).apply{style=Paint.Style.STROKE;strokeWidth=0.8f;color=android.graphics.Color.DKGRAY}
     fun line(y:Float,x1:Float=30f,x2:Float=565f){canvas.drawLine(x1,y,x2,y,p)}
-    fun txt(s:String,x:Float,y:Float,paint:Paint=p){ val words=s.split(" "); var row=""; var yy=y; words.forEach{w-> val next=if(row.isEmpty())w else "$row $w"; if(paint.measureText(next)>520){canvas.drawText(row,x,yy,paint);yy+=13;row=w}else row=next}; if(row.isNotEmpty())canvas.drawText(row,x,yy,paint) }
+    fun txt(s:String,x:Float,y:Float,paint:Paint=p,maxWidth:Float=520f):Float { val tokens=s.replace("\\r","").split(Regex("\\s+")); var row=""; var yy=y; tokens.forEach{w-> val next=if(row.isEmpty())w else "$row $w"; if(row.isNotEmpty() && paint.measureText(next)>maxWidth){canvas.drawText(row,x,yy,paint);yy+=13;row=w}else row=next}; if(row.isNotEmpty())canvas.drawText(row,x,yy,paint); return yy+13f }
     canvas.drawText(receiptPref(c).getString("title","RACHUNEK") ?: "RACHUNEK",250f,42f,bold); canvas.drawText("NR: $no",420f,42f,p)
     canvas.drawText("Data sprzedaży: $date",350f,65f,p)
-    canvas.drawRect(30f,85f,285f,205f,p); canvas.drawRect(300f,85f,565f,205f,p)
+    canvas.drawRect(30f,85f,285f,205f,border); canvas.drawRect(300f,85f,565f,205f,border)
     txt("Sprzedawca",40f,102f,bold); txt(seller,40f,122f); txt("Nabywca",310f,102f,bold); txt(buyer,310f,122f)
     canvas.drawText("Sposób zapłaty: $payment",310f,225f,p); canvas.drawText("Termin zapłaty: $due",440f,245f,p)
-    val top=270f; canvas.drawRect(30f,top,565f,top+35f,p)
+    val top=270f; canvas.drawRect(30f,top,565f,top+35f,border)
     val headers=listOf("Lp","Nazwa towarów lub usług","PKWiU","Jm","Ilość","Cena jedn. zł","Wartość zł")
     val xs=listOf(35f,60f,250f,310f,345f,390f,465f)
     headers.forEachIndexed{i,s->canvas.drawText(s,xs[i],top+22f,p)}
     var y=top+35f
-    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,p);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(prices[i],if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText("%.2f".format(java.util.Locale.US,v),if(showPkwiu) 465f else 480f,y+25f,p);y+=45f }
-    y+=20f; line(y); txt("Słownie złotych: $words",35f,y+18f); canvas.drawText("Razem: %.2f zł".format(java.util.Locale.US,total),420f,y+18f,bold)
+    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,border);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f,maxWidth=180f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(prices[i],if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText("%.2f".format(java.util.Locale.US,v),if(showPkwiu) 465f else 480f,y+25f,p);y+=45f }
+    y+=20f; line(y); txt("Słownie złotych: $words",35f,y+18f,maxWidth=350f); canvas.drawText("Razem: %.2f zł".format(java.util.Locale.US,total),420f,y+18f,bold)
     y+=65f; canvas.drawText("Do zapłaty: %.2f zł".format(java.util.Locale.US,total),80f,y,bold); y+=55f; txt("Imię i nazwisko oraz podpis osoby upoważnionej do wystawienia rachunku: $signature",35f,y)
     y+=35f; val notes=receiptNotes(c); var yy=y; notes.split("\n").forEach{row->txt(row,35f,yy,p);yy+=26f}
     doc.finishPage(page); val out=ByteArrayOutputStream();doc.writeTo(out);doc.close();return out.toByteArray()
