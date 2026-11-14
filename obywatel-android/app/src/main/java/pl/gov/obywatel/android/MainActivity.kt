@@ -1010,7 +1010,16 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
-    id in armedServiceDocumentIds -> "Służba zbrojna"
+    id in armedServiceDocumentIds || id == "military" || id.startsWith("military_") -> "Służba zbrojna"
+    id.startsWith("police_") || id.startsWith("fire_") || id.startsWith("border_") ||
+        id.startsWith("prison_") || id.startsWith("customs_") || id.startsWith("special_") ||
+        id.startsWith("protective_") || id.startsWith("local_") || id.startsWith("constitutional_") ||
+        id.startsWith("diplomatic_") -> "Służba państwowa"
+    id.startsWith("civil_service_") || id.startsWith("civil_tax_") ||
+        id.startsWith("civil_government_") || id.startsWith("civil_voivodeship_") ||
+        id.startsWith("justice_") || id.startsWith("inspection_") -> "Służba cywilna"
+    id.startsWith("rescue_") -> "Służba zdrowotna"
+    id.startsWith("education_") -> "Służba zawodowa"
     id in setOf("profile", "identity", "passport") -> "Służba osobista"
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
