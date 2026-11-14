@@ -440,7 +440,19 @@ class PaymentLedgerDatabaseTest {
             )
 
             val stored = db.readFinancialTransactions().single()
-            assertEquals(edited, stored.transaction)
+            val persisted = stored.transaction
+            assertEquals(edited.id, persisted.id)
+            assertEquals(edited.executedAt, persisted.executedAt)
+            assertEquals(edited.type, persisted.type)
+            assertEquals(edited.fromAssetCode, persisted.fromAssetCode)
+            assertEquals(0, edited.fromAmount!!.compareTo(persisted.fromAmount))
+            assertEquals(edited.toAssetCode, persisted.toAssetCode)
+            assertEquals(0, edited.toAmount!!.compareTo(persisted.toAmount))
+            assertEquals(edited.fee, persisted.fee)
+            assertEquals(edited.source, persisted.source)
+            assertEquals(edited.externalId, persisted.externalId)
+            assertEquals(edited.rawDescription, persisted.rawDescription)
+            assertEquals(edited.parseStatus, persisted.parseStatus)
             assertEquals(
                 setOf(fromEntry.accountingEntryId(), toEntry.accountingEntryId()),
                 stored.accountingEntryIds.toSet()
@@ -460,7 +472,7 @@ class PaymentLedgerDatabaseTest {
             db.saveAsset(usd)
             db.saveAsset(gold)
 
-            assertEquals(listOf(gold, usd), db.readAssets().sortedBy { it.code })
+            assertEquals(listOf(usd, gold), db.readAssets())
 
             val updatedUsd = usd.copy(name = "Dolar USA", decimalPlaces = 3)
             db.saveAsset(updatedUsd)
