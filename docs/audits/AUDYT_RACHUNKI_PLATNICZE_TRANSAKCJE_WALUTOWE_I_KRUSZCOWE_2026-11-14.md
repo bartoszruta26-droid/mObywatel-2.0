@@ -1411,3 +1411,73 @@ Wyniki CI dla rewizji zawierającej etap 2E są oczekiwane. Do czasu ich zakońc
 3. Dodać selektor dokumentu i eksport pliku JSON w interfejsie.
 4. Dodać zatwierdzanie importu dopiero po akceptacji podglądu, w jednej transakcji.
 5. Rozszerzyć model i magazyn o transakcje finansowe oraz darowizny, zachowując odrębność od zapisów wyciągu.
+
+
+## 27. Etap 2F/2G — import i eksport JSON z interfejsu oraz podgląd konfliktów
+
+### 27.1. Zakres wdrożenia
+
+Dodano w ekranie `PaymentLedgerScreen.kt` obsługę androidowego selektora dokumentów:
+- wybór pliku JSON przez `ActivityResultContracts.OpenDocument`;
+- odczyt pliku przez `ContentResolver`;
+- przygotowanie podglądu bez modyfikowania bazy;
+- prezentację liczby nowych zapisów, duplikatów i konfliktów;
+- zatwierdzenie importu tylko wtedy, gdy podgląd nie zawiera nierozstrzygniętych konfliktów;
+- eksport aktualnego rejestru do pliku JSON przez `ActivityResultContracts.CreateDocument`.
+
+### 27.2. Klasyfikacja konfliktów
+
+Rozszerzono `BankImportDeduplicator.kt` o:
+- `BankImportPreview` — wynik podglądu z listami nowych zapisów, duplikatów i konfliktów;
+- `BankImportConflict` — parę zapisu przychodzącego i istniejącego;
+- `preview(incoming, existingEntries)` — klasyfikację według identyfikatora księgowego i referencji bankowej w obrębie tego samego pseudonimowego zakresu rachunku.
+
+Identyczny zapis jest duplikatem. Ta sama referencja w tym samym zakresie rachunku przy innej tożsamości księgowej jest konfliktem i blokuje zatwierdzenie paczki. Różne zakresy rachunków zachowują możliwość przedstawienia dwóch nóg jednej wymiany walutowej jako osobnych zapisów.
+
+### 27.3. Warstwa repozytorium
+
+Rozszerzono `PaymentLedgerRepository.kt`:
+- `previewJson` dekoduje i waliduje JSON, a następnie przygotowuje podgląd względem SQLite;
+- `importJson` ponownie oblicza podgląd, odrzuca import z konfliktami i zapisuje zaakceptowane nowe rekordy przez transakcyjne `importBatch`;
+- `exportJson` pozostaje eksportem aktualnego rejestru.
+
+Ponowne obliczenie podglądu przy zatwierdzaniu zabezpiecza przed wykorzystaniem nieaktualnego podglądu, jeśli baza zmieniła się od czasu wybrania pliku.
+
+### 27.4. Testy regresyjne dodane
+
+Rozszerzono `BankImportDeduplicatorTest.kt` o:
+- rozdzielenie identycznego duplikatu, konfliktu tej samej referencji i nowego wpisu;
+- zachowanie dwóch nóg wymiany przy różnych zakresach rachunków.
+
+Testy zostały zapisane w repozytorium. Wynik wykonania wymaga CI dla najnowszej rewizji.
+
+### 27.5. Kontrola poprzedniej rewizji 2E
+
+Uruchomienia CI dla rewizji `de26477e8564de53c4cab404e18593f398d647e1` zostały zakończone statusem **cancelled** po pojawieniu się kolejnych zmian w gałęzi. Nie stanowią potwierdzenia kompilacji ani testów etapu 2E. Kontrola REUSE dla tej rewizji zakończyła się sukcesem, ale nie zastępuje testów Androida.
+
+### 27.6. Ograniczenia i ryzyka
+
+- Import/eksport obejmuje obecnie wyłącznie zapisy wyciągów `BankStatementEntry`, nie pełny model aktywów, opłat, transakcji ręcznych i darowizn.
+- Konflikt jest wykrywany w ramach identycznego `accountScopeId` i referencji bankowej. Referencje powtarzalne w innych bankach lub rachunkach są odrębnymi przypadkami.
+- Użytkownik może odrzucić konfliktowy plik i skorygować dane źródłowe; interfejs nie oferuje jeszcze ręcznego mapowania/rozstrzygania konfliktu.
+- Odczyt pliku JSON odbywa się do pamięci; nie dodano jeszcze limitu wielkości pliku ani strumieniowego dekodowania.
+- Nie dodano jeszcze szyfrowania eksportu ani mechanizmu integralności archiwum.
+- Podgląd i zatwierdzenie wykonują osobne odczyty. Ponowne sprawdzenie przy zatwierdzaniu ogranicza ryzyko nieaktualności, a unikalny klucz SQLite pozostaje ostatnią ochroną przed duplikatem.
+- Ekran nie może być uznany za pełny rejestr wszystkich rodzajów operacji finansowych: tabele transakcji aktywów i darowizn pozostają do wdrożenia.
+
+### 27.7. Status i dalsze prace
+
+| Element | Status |
+|---|---|
+| Wybór pliku JSON | Zaimplementowany; oczekuje na testy urządzenia |
+| Podgląd nowych zapisów i duplikatów | Zaimplementowany |
+| Podgląd konfliktów referencji | Zaimplementowany |
+| Blokada importu z nierozstrzygniętymi konfliktami | Zaimplementowana |
+| Eksport JSON przez selektor dokumentów | Zaimplementowany; oczekuje na testy urządzenia |
+| Testy klasyfikacji konfliktów | Dodane; oczekują na CI |
+| Pełny test import–eksport na emulatorze | Do wykonania |
+| Ręczne rozstrzyganie konfliktów | Do wykonania |
+| Pełny JSON domeny: aktywa, opłaty, transakcje i darowizny | Do wykonania |
+| Parsery CSV/XML i adaptery XLS/PDF | Do wykonania |
+
+Następny etap powinien rozpocząć się od uzyskania zielonego CI dla rewizji 2F/2G, poprawy ewentualnych błędów, a następnie testu urządzeniowego: eksport → import do pustej bazy → porównanie wszystkich pól → ponowny import tego samego pliku i potwierdzenie, że wszystkie wpisy są rozpoznane jako duplikaty.
