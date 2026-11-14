@@ -383,6 +383,35 @@ class PaymentLedgerDatabase(
         }
     }
 
+    /**
+     * Importuje pełne archiwum atomowo: wpisy bankowe oraz transakcje i ich powiązania.
+     * Każde powiązanie jest sprawdzane po zapisaniu (w tej samej transakcji) wpisów źródłowych.
+     */
+    fun importArchive(archive: PaymentLedgerJsonCodec.Archive): BatchImportSummary {
+        require(archive.transactions.map { it.transaction.id }.distinct().size == archive.transactions.size) {
+            "Archiwum zawiera powtórzone identyfikatory transakcji."
+        }
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val preview = BankImportDeduplicator.preview(archive.entries, readAll(db))
+            require(preview.conflicts.isEmpty()) {
+                "Import zawiera ${preview.conflicts.size} konfliktów referencji. Wymagana weryfikacja."
+            }
+            val inserted = insertEntries(db, preview.newEntries)
+            archive.transactions.forEach { stored ->
+                saveFinancialTransaction(stored.transaction, stored.accountingEntryIds.toSet())
+            }
+            db.setTransactionSuccessful()
+            return BatchImportSummary(
+                inserted = inserted.inserted,
+                duplicates = inserted.duplicates + preview.duplicates.size
+            )
+        } finally {
+            db.endTransaction()
+        }
+    }
+
     /** Odtwarza transakcje wraz z prowizjami i identyfikatorami źródłowych zapisów. */
     fun readFinancialTransactions(): List<StoredFinancialTransaction> {
         val db = readableDatabase
