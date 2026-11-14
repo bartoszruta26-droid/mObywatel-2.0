@@ -88,7 +88,7 @@ object DocumentRouteRegistry {
         document("professional_education"),
         document("professional_therapeutic"),
         document("professional_other"),
-        group("organization_foundation", "Służba fundacyjna"),
+        group("organization_foundation", "Służba społeczna"),
         group("organization_church", "Dokumenty Kościelne"),
         group("organization_company", "Służba gospodarcza"),
         group("organization_association", "Służba stowarzyszeniowa"),
