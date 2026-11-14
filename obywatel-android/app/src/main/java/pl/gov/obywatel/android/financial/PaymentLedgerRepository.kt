@@ -7,8 +7,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Warstwa dostępu do rejestru. Wszystkie operacje SQLite wykonuje na Dispatchers.IO. */
-class PaymentLedgerRepository(context: Context) : AutoCloseable {
-    private val database = PaymentLedgerDatabase(context.applicationContext)
+class PaymentLedgerRepository(
+    context: Context,
+    databaseName: String = PaymentLedgerDatabase.DATABASE_NAME
+) : AutoCloseable {
+    private val database = PaymentLedgerDatabase(context.applicationContext, databaseName)
 
     suspend fun getEntries(): List<BankStatementEntry> = withContext(Dispatchers.IO) {
         database.readAll()
