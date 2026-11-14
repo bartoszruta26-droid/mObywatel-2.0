@@ -1361,3 +1361,53 @@ Testy zostały dodane do repozytorium; ich wynik wymaga potwierdzenia w CI dla r
 ### 25.6. Następny etap
 
 Następny etap powinien obejmować warstwę repozytorium z operacjami na SQLite wykonywanymi poza głównym wątkiem, integrację ekranu z odczytem rejestru oraz zatwierdzanie importu JSON jako jednej transakcji. Następnie należy dodać parser CSV/XML na podstawie dokładnych schematów wzorców i dopiero potem osobne adaptery XLS/PDF. Przed importem trzeba rozróżniać duplikaty od konfliktów: zgodna referencja bankowa przy innej kwocie, dacie, walucie lub kierunku wymaga ręcznej weryfikacji, a nie cichego pominięcia.
+
+
+## 26. Etap 2E — repozytorium SQLite i odczyt rejestru w interfejsie
+
+### 26.1. Implementacja
+
+Dodano `financial/PaymentLedgerRepository.kt`:
+- udostępnia odczyt zapisów z SQLite;
+- udostępnia eksport zapisów do wersjonowanego JSON;
+- udostępnia import JSON: dekoduje i waliduje paczkę, klasyfikuje duplikaty względem lokalnej bazy, a następnie przekazuje wyłącznie nowe rekordy do transakcyjnego `importBatch`;
+- operacje odczytu, eksportu i importu wykonuje w `Dispatchers.IO`, poza głównym wątkiem;
+- zwraca podsumowanie liczby dodanych i pominiętych duplikatów.
+
+Zmieniono `PaymentLedgerScreen.kt`:
+- ekran tworzy repozytorium powiązane z kontekstem aplikacji;
+- pobiera historię z SQLite przy otwarciu;
+- wyświetla liczbę i listę zapisów;
+- umożliwia ponowne odczytanie danych;
+- prezentuje stan ładowania i komunikat błędu;
+- zamyka magazyn przy usunięciu ekranu z kompozycji.
+
+### 26.2. Kontrola zakresu
+
+To jest integracja odczytu rejestru, a nie kompletna obsługa importu/eksportu przez użytkownika. Metody repozytorium `importJson` i `exportJson` są gotowe do użycia przez kolejne elementy UI, ale selektor pliku, zapis pliku i ekran podglądu importu pozostają do wykonania.
+
+Mechanizm deduplikacji w repozytorium identyfikuje rekordy o tym samym identyfikatorze księgowym. Nie rozstrzyga jeszcze konfliktów, w których ta sama referencja bankowa ma zmienioną kwotę, datę, walutę lub kierunek. Takie przypadki muszą otrzymać osobną klasyfikację wymagającą weryfikacji przed zatwierdzeniem importu.
+
+### 26.3. Pliki
+
+- `financial/PaymentLedgerRepository.kt` — nowy plik;
+- `PaymentLedgerScreen.kt` — integracja odczytu i wyświetlania historii.
+
+### 26.4. Weryfikacja
+
+Po zapisaniu zmian należy potwierdzić:
+- poprawność importów i zgodność pakietów Kotlin;
+- kompilację wariantu debug;
+- testy jednostkowe, w tym kodeka JSON i deduplikacji;
+- testy instrumentacyjne SQLite;
+- testy Compose na emulatorze.
+
+Wyniki CI dla rewizji zawierającej etap 2E są oczekiwane. Do czasu ich zakończenia etap 2E ma status **zaimplementowany, oczekujący na pełną weryfikację CI**.
+
+### 26.5. Kolejny zakres prac
+
+1. Dodać testy repozytorium obejmujące import JSON, idempotencję i eksport po imporcie.
+2. Dodać klasyfikację konfliktów referencji bankowych i raport podglądu.
+3. Dodać selektor dokumentu i eksport pliku JSON w interfejsie.
+4. Dodać zatwierdzanie importu dopiero po akceptacji podglądu, w jednej transakcji.
+5. Rozszerzyć model i magazyn o transakcje finansowe oraz darowizny, zachowując odrębność od zapisów wyciągu.
