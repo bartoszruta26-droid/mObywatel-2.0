@@ -105,13 +105,14 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri != null) {
+            val selectedAccountScopeId = accountScopeId.trim()
             scope.launch {
                 try {
                     val archiveJson = withContext(Dispatchers.IO) {
                         val input = context.contentResolver.openInputStream(uri)
                             ?: throw IllegalStateException("Nie można odczytać wybranego pliku XML.")
                         val xml = input.use { readUtf8Limited(it, MAX_IMPORT_BYTES) }
-                        val parsedEntries = BankStatementXmlParser.parse(xml, accountScopeId.trim())
+                        val parsedEntries = BankStatementXmlParser.parse(xml, selectedAccountScopeId)
                         PaymentLedgerJsonCodec.encode(parsedEntries)
                     }
                     val preview = repository.previewJson(archiveJson)
