@@ -30,7 +30,7 @@ class DocumentGroupCatalogTest {
         assertEquals("Służba zbrojna", migrateDocumentGroupName("Służba zbrojna"))
         assertEquals("Służba rodowa", migrateDocumentGroupName("Dokumenty rodowe i rodzinne"))
         assertEquals("Moja własna grupa", migrateDocumentGroupName("Moja własna grupa"))
-        assertEquals("Służba fundacyjna", migrateDocumentGroupAssignment("organization_foundation", "Służba gospodarcza"))
+        assertEquals("Służba społeczna", migrateDocumentGroupAssignment("organization_foundation", "Służba gospodarcza"))
         assertEquals("Służba stowarzyszeniowa", migrateDocumentGroupAssignment("organization_association", "Służba gospodarcza"))
         assertEquals("Moja własna grupa", migrateDocumentGroupAssignment("organization_foundation", "Moja własna grupa"))
     }
@@ -40,7 +40,11 @@ class DocumentGroupCatalogTest {
         val armedIds = setOf(
             "military_book", "martial_arts", "shooting_sport", "archery",
             "tactical_training", "survival_training", "security_guard", "defense_training",
-            "historical_reenactment", "reenactment_qualification", "reenactment_event"
+            "historical_reenactment", "reenactment_qualification", "reenactment_event",
+            "military_service_record", "military_personnel_order", "military_professional_contract",
+            "military_voluntary_basic_service", "military_territorial_service", "military_active_reserve",
+            "military_passive_reserve", "military_exercise_callup", "military_candidate_service",
+            "military_gendarmerie_service", "military_foreign_service"
         )
         assertTrue(armedIds.all { defaultDocumentPlacements[it] == "hidden" })
         assertEquals("dashboard", defaultDocumentPlacements["identity"])
@@ -49,9 +53,27 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun militaryServiceDocumentFormsCoverEveryListedServiceTypeAndUseArmedServiceGroup() {
+        val expected = setOf(
+            "military_book", "military_service_record", "military_personnel_order",
+            "military_professional_contract", "military_voluntary_basic_service",
+            "military_territorial_service", "military_active_reserve", "military_passive_reserve",
+            "military_exercise_callup", "military_candidate_service",
+            "military_gendarmerie_service", "military_foreign_service"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing military document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba zbrojna", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty() || id == "military_book")
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
     fun foundationBusinessAndAssociationServicesEachHaveThreeIndependentCompleteDocumentSets() {
         val expected = mapOf(
-            "foundation" to "Służba fundacyjna",
+            "foundation" to "Służba społeczna",
             "business" to "Służba gospodarcza",
             "association" to "Służba stowarzyszeniowa"
         )
@@ -71,10 +93,10 @@ class DocumentGroupCatalogTest {
             assertEquals("Every service must expose exactly the three required subject sets", 3,
                 documents.mapNotNull { id -> subjectPrefixes.firstOrNull { id.first.startsWith("service_${service}_${it}_") } }.toSet().size)
         }
-        assertEquals("Służba fundacyjna", documentVisibilityGroup("organization_foundation"))
+        assertEquals("Służba społeczna", documentVisibilityGroup("organization_foundation"))
         assertEquals("Służba gospodarcza", documentVisibilityGroup("organization_company"))
         assertEquals("Służba stowarzyszeniowa", documentVisibilityGroup("organization_association"))
-        assertTrue("Służba fundacyjna" in documentVisibilityGroupOrder)
+        assertTrue("Służba społeczna" in documentVisibilityGroupOrder)
         assertTrue("Służba gospodarcza" in documentVisibilityGroupOrder)
         assertTrue("Służba stowarzyszeniowa" in documentVisibilityGroupOrder)
     }
