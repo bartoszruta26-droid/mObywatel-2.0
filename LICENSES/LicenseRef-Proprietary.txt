@@ -1,0 +1,9 @@
+Proprietary Android signing material
+
+Copyright (c) 2026 bartoszruta26-droid. All rights reserved.
+
+This file identifies the encrypted Android signing-key archive stored in
+security/android-signing. The archive contains private cryptographic signing
+material. No license to use, copy, redistribute, disclose, or sublicense the
+archive or its contents is granted by this repository. Access is limited to
+the repository owner and persons explicitly authorized by the owner.
