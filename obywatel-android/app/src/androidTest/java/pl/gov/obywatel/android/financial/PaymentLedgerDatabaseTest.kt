@@ -23,9 +23,7 @@ class PaymentLedgerDatabaseTest {
         context.deleteDatabase(databaseName)
     }
 
-    private fun openDatabase() = PaymentLedgerDatabase(context).apply {
-        // Test używa izolowanej bazy; nazwa pliku jest podmieniana przez helper testowy.
-    }
+    private fun openDatabase() = PaymentLedgerDatabase(context, databaseName)
 
     private fun entry(amount: String = "749.33", reference: String = "102693731") =
         BankStatementEntry(
@@ -39,7 +37,7 @@ class PaymentLedgerDatabaseTest {
 
     @Test
     fun importingSameEntryTwicePersistsItOnlyOnce() {
-        val db = PaymentLedgerDatabase(context)
+        val db = openDatabase()
         try {
             assertEquals(BatchImportSummary(1, 0), db.importBatch(listOf(entry())))
             assertEquals(BatchImportSummary(0, 1), db.importBatch(listOf(entry("749.330"))))
