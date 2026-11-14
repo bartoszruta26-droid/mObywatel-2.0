@@ -57,6 +57,45 @@ class PaymentLedgerDatabase(
             )
             seedDefaultAccountScope(db)
         }
+        if (oldVersion < 3) {
+            // Odświeżamy wyliczany identyfikator operacji: od teraz dotyczy wyłącznie
+            // operacji kantorowych i uwzględnia datę, lecz nie pseudonim rachunku.
+            val updates = mutableListOf<Pair<String, String?>>()
+            db.query(
+                TABLE_ENTRIES,
+                arrayOf(
+                    "accounting_entry_id", "account_scope_id", "booking_date",
+                    "currency_code", "signed_amount", "operation_type",
+                    "bank_operation_reference", "description"
+                ),
+                null, null, null, null, null
+            ).use { cursor ->
+                while (cursor.moveToNext()) {
+                    val entry = BankStatementEntry(
+                        accountScopeId = cursor.getString(1),
+                        bookingDate = java.time.LocalDate.parse(cursor.getString(2)),
+                        currencyCode = cursor.getString(3),
+                        signedAmount = java.math.BigDecimal(cursor.getString(4)),
+                        operationType = cursor.getString(5),
+                        bankOperationReference = cursor.getString(6),
+                        description = cursor.getString(7)
+                    )
+                    updates += cursor.getString(0) to entry.exchangeOperationId()
+                }
+            }
+            updates.forEach { (accountingEntryId, operationId) ->
+                val values = ContentValues().apply {
+                    if (operationId == null) putNull("exchange_operation_id")
+                    else put("exchange_operation_id", operationId)
+                }
+                db.update(
+                    TABLE_ENTRIES,
+                    values,
+                    "accounting_entry_id = ?",
+                    arrayOf(accountingEntryId)
+                )
+            }
+        }
     }
 
     private fun createAccountScopesTable(db: SQLiteDatabase) {
@@ -243,7 +282,7 @@ class PaymentLedgerDatabase(
 
     companion object {
         const val DATABASE_NAME = "payment_ledger.db"
-        const val DATABASE_VERSION = 2
+        const val DATABASE_VERSION = 3
         const val DEFAULT_ACCOUNT_SCOPE_ID = "ipko-account-1"
         const val DEFAULT_ACCOUNT_SCOPE_NAME = "Rachunek iPKO 1"
         private const val TABLE_ENTRIES = "bank_statement_entries"
