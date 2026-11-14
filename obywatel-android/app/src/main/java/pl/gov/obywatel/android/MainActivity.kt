@@ -620,6 +620,8 @@ private fun ApplicationEntryFlow(onAppearanceChange: (ApplicationAppearance) -> 
     }
 }
 
+private val ENTRY_BRAND_MARK_SIZE = 64.dp
+
 @Composable
 private fun BrandMark(size: androidx.compose.ui.unit.Dp) {
     val context = LocalContext.current
@@ -708,12 +710,7 @@ private fun EntryWelcomeScreen(onStart: () -> Unit, onSkip: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Image(
-                    painter = painterResource(R.drawable.file_00000000532082108d561dcd2385f8f9),
-                    contentDescription = "Godło Polski w zaokrąglonym kwadratowym znaku aplikacji",
-                    modifier = Modifier.size(64.dp),
-                    contentScale = ContentScale.Fit
-                )
+                BrandMark(size = ENTRY_BRAND_MARK_SIZE)
                 ApplicationBrandTitle(foreground)
             }
             Spacer(Modifier.height(34.dp))
@@ -763,7 +760,7 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                BrandMark(size = 72.dp)
+                BrandMark(size = ENTRY_BRAND_MARK_SIZE)
                 ApplicationBrandTitle(cream)
             }
             Spacer(Modifier.height(38.dp))
