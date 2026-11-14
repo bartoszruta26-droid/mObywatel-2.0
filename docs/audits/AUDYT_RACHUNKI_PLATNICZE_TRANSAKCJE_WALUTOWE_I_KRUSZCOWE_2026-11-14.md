@@ -1244,3 +1244,49 @@ Dodano testy jednostkowe, ale ich dodanie nie jest dowodem wykonania. Dla rewizj
 ### 22.4. Zakres nadal otwarty
 
 Etap 2B dostarcza mechanizm identyfikacji i klasyfikacji duplikatów, ale nie jest jeszcze kompletnym importerem plików. Do wykonania pozostają: trwały magazyn, transakcyjne zatwierdzanie paczki, parsowanie CSV/XML, obsługa XLS i PDF, podgląd przed importem, raport duplikatów/konfliktów, kontrola sum kontrolnych i testy integracyjne. Import powinien być atomowy: błąd walidacji nie może pozostawić częściowo zaimportowanej paczki.
+
+
+## 23. Etap 2C — trwały magazyn zapisów wyciągów
+
+### 23.1. Implementacja
+
+Dodano `financial/PaymentLedgerDatabase.kt`, oparty na natywnym `SQLiteOpenHelper`, bez wprowadzania nowej zależności zewnętrznej. Magazyn:
+- zapisuje pojedyncze zapisy księgowe w tabeli `bank_statement_entries`;
+- używa `accounting_entry_id` jako klucza głównego i ograniczenia unikalności;
+- przechowuje kwoty jako tekst dziesiętny `BigDecimal.toPlainString()`, bez utraty precyzji;
+- przechowuje datę w formacie ISO-8601;
+- przechowuje identyfikator operacji nadrzędnej FX jako osobne pole i indeks;
+- udostępnia odczyt identyfikatorów oraz odtworzenie zapisów z lokalnej bazy;
+- wykonuje import paczki w transakcji SQLite. Błąd walidacji lub zapisu powoduje wycofanie całej paczki;
+- pomija ponowne rekordy na podstawie klucza głównego (SQLite CONFLICT_IGNORE).
+
+Dodano `androidTest/.../PaymentLedgerDatabaseTest.kt` z testami: ponownego importu tego samego zapisu, wycofania paczki po błędzie walidacji oraz odtworzenia danych po zamknięciu i ponownym otwarciu bazy.
+
+Testy używają oddzielnej nazwy pliku bazy `payment-ledger-test.db`, aby nie dotykać danych aplikacji. Konstruktor magazynu przyjmuje nazwę bazy z domyślną wartością produkcyjną.
+
+### 23.2. Kontrola architektoniczna
+
+- Nie dodano Room ani DataStore; zastosowano natywny SQLite, zgodnie z istniejącym zestawem zależności.
+- Nie zmieniano modułu `receipts`, modelu `ReceiptRecord` ani magazynu dokumentów rachunków.
+- Magazyn zapisuje wyłącznie znormalizowane zapisy wyciągów bankowych. Nie jest jeszcze połączony z ekranem `PaymentLedgerScreen` ani parserami plików.
+- Wersja schematu wynosi 1. Przed zmianą struktury należy dodać jawne migracje, bez destrukcyjnego usuwania danych.
+- Nie dodano pełnych numerów rachunków ani danych osobowych do logów.
+
+### 23.3. Status testów
+
+Przed etapem 2C, dla rewizji `515ac4718dbb4c50c9a19def8ef109cf2e6a0e5f`, CI potwierdził:
+- Android JVM unit tests — success;
+- Build Android debug APK — success;
+- Repository compliance (REUSE) — success;
+- Compose UI tests na emulatorze — success, w toku pozostawało archiwizowanie artefaktu APK.
+
+Etap 2C został zapisany po tej rewizji. Testy instrumentacyjne nowego magazynu, kompilacja i pełny CI dla najnowszej rewizji wymagają ponownego wykonania. Do czasu uzyskania tych wyników etap 2C ma status **zaimplementowany, lecz nieweryfikowany przez CI**.
+
+### 23.4. Ograniczenia i następne prace
+
+1. Wykonać CI dla najnowszej rewizji, w tym testy instrumentacyjne bazy na emulatorze.
+2. Dodać migracje schematu w chwili rozszerzenia magazynu o transakcje finansowe i darowizny.
+3. Podłączyć magazyn do warstwy repozytorium i ekranu, z kontrolą cyklu życia oraz bez wykonywania operacji SQLite na głównym wątku.
+4. Dodać parsery CSV/XML po utrwaleniu pełnych reguł mapowania pól ze wzorców źródłowych.
+5. Dodać podgląd importu, raport duplikatów i konfliktów oraz atomowe zatwierdzanie z UI.
+6. Rozszerzyć magazyn o odrębne tabele operacji FX i darowizn gotówkowych, zachowując rozdział zapisów księgowych od operacji nadrzędnych.
