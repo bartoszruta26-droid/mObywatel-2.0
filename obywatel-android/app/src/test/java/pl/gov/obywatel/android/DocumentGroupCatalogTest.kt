@@ -52,7 +52,7 @@ class DocumentGroupCatalogTest {
             "business" to "Służba gospodarcza",
             "association" to "Służba stowarzyszeniowa"
         )
-        val subjectPrefixes = listOf("legal_person", "legal_person_unit", "natural_person_unit")
+        val subjectPrefixes = listOf("legal_person_unit", "natural_person_unit", "legal_person")
         expected.forEach { (service, group) ->
             val documents = familyEntityDocumentsForService(service)
             assertTrue("$group must contain documents", documents.isNotEmpty())
