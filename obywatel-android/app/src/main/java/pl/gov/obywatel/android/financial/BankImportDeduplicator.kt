@@ -91,11 +91,12 @@ object BankImportDeduplicator {
         incoming: List<BankStatementEntry>,
         existingEntries: List<BankStatementEntry>
     ): BankImportPreview {
-        val existingByReference = existingEntries
-            .filter { !it.bankOperationReference.isNullOrBlank() }
-            .associateBy { referenceKey(it) }
         val seenIds = existingEntries.map { it.accountingEntryId() }.toMutableSet()
-        val seenReferences = existingByReference.toMutableMap()
+        val seenReferences = existingEntries
+            .filter { !it.bankOperationReference.isNullOrBlank() }
+            .groupBy { referenceKey(it) }
+            .mapValues { it.value.toMutableList() }
+            .toMutableMap()
         val newEntries = mutableListOf<BankStatementEntry>()
         val duplicates = mutableListOf<BankStatementEntry>()
         val conflicts = mutableListOf<BankImportConflict>()
@@ -107,14 +108,14 @@ object BankImportDeduplicator {
                 return@forEach
             }
             val key = if (entry.bankOperationReference.isNullOrBlank()) null else referenceKey(entry)
-            val previous = key?.let { seenReferences[it] }
-            if (previous != null) {
-                conflicts += BankImportConflict(entry, previous)
+            val previousEntries = key?.let { seenReferences[it].orEmpty() }.orEmpty()
+            if (previousEntries.isNotEmpty() && !previousEntries.all { isOppositeFxLeg(it, entry) }) {
+                conflicts += BankImportConflict(entry, previousEntries.first())
                 return@forEach
             }
             newEntries += entry
             seenIds += id
-            if (key != null) seenReferences[key] = entry
+            if (key != null) seenReferences.getOrPut(key) { mutableListOf() }.add(entry)
         }
         return BankImportPreview(newEntries, duplicates, conflicts)
     }
@@ -122,6 +123,25 @@ object BankImportDeduplicator {
     private fun referenceKey(entry: BankStatementEntry): String =
         entry.accountScopeId.trim() + "|" +
             entry.bankOperationReference.orEmpty().trim().uppercase(Locale.ROOT)
+
+    /**
+     * Jedna referencja iPKO może opisywać dwie nogi tej samej wymiany w obrębie
+     * jednego rachunku. Dopuszczamy wyłącznie parę uznanie/obciążenie w różnych
+     * walutach; inne rozbieżności nadal wymagają ręcznej weryfikacji.
+     */
+    private fun isOppositeFxLeg(first: BankStatementEntry, second: BankStatementEntry): Boolean {
+        val firstType = first.operationType.uppercase(Locale.ROOT)
+        val secondType = second.operationType.uppercase(Locale.ROOT)
+        val isFx = firstType.contains("WYMIANA W KANTORZE") &&
+            secondType.contains("WYMIANA W KANTORZE")
+        val oppositeLabels =
+            (firstType.contains("UZNANIE") && secondType.contains("OBCIĄŻENIE")) ||
+            (firstType.contains("OBCIĄŻENIE") && secondType.contains("UZNANIE"))
+        return isFx &&
+            oppositeLabels &&
+            first.currencyCode != second.currencyCode &&
+            first.signedAmount.signum() == -second.signedAmount.signum()
+    }
 
     fun classify(
         incoming: List<BankStatementEntry>,
