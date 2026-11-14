@@ -1156,3 +1156,30 @@ Zmiany wykonano na gałęzi `feature/payment-ledger-stage-1`, bez bezpośrednieg
 ### 19.5. Następny krok
 
 Po pozytywnym CI należy przejść do etapu 2: trwałego lokalnego magazynu i ręcznego dodawania/edycji transakcji oraz darowizn. Przed wyborem Room trzeba ponownie sprawdzić aktualne zależności i uzgodnić migracje; nie dodawać biblioteki ani migracji schematu bez uzasadnienia. Import iPKO pozostaje osobnym etapem zależnym od wzorca.
+
+
+## 20. Kontrola regresyjna i korekta etapu 1
+
+### 20.1. Wynik pierwszego uruchomienia CI
+
+Pierwsze pełne uruchomienie dla rewizji etapu 1 potwierdziło kompilację kodu produkcyjnego i testowego Kotlin, ale zadanie `testDebugUnitTest` zakończyło się niepowodzeniem: 112 testów uruchomiono, 4 testy `DocumentGroupCatalogTest` zakończyły się błędem `IllegalArgumentException`. Dotyczyły one założeń katalogu dokumentów: każdy kafelek musi mieć jawny schemat pól albo być oznaczony jako obsługiwany przez dedykowany edytor.
+
+### 20.2. Przyczyna i korekta
+
+Nowy kafelek `payment_transactions` otwiera własny ekran `PaymentLedgerScreen`, a więc korzysta z dedykowanego ekranu, a nie ze standardowego edytora pól dokumentu. W pierwszej implementacji identyfikator nie został dopisany do dwóch list wyjątków w `DocumentEditorSchemas.kt`. Powodowało to traktowanie go jak nieznanego dokumentu przez testy katalogu.
+
+Korekta:
+- dodano `payment_transactions` do listy dokumentów bez standardowego schematu pól;
+- dodano ten sam identyfikator do listy dokumentów obsługiwanych przez dedykowany edytor;
+- zachowano istniejące definicje pól i zachowanie pozostałych dokumentów.
+
+### 20.3. Status ponownej weryfikacji
+
+- Korektę zapisano na tej samej gałęzi PR w commicie `ee625ce81f9e6b35df87cb9483f90880443b10f5`.
+- Ponownie pobrano `DocumentEditorSchemas.kt` i potwierdzono dwa wystąpienia identyfikatora w odpowiednich listach.
+- Oczekuje się na świeże uruchomienie GitHub Actions dla nowego SHA; do czasu jego zakończenia nie można uznać testów regresyjnych ani kompilacji APK za zaliczone.
+- Nie zmieniano istniejącego modułu `receipts`.
+
+### 20.4. Decyzja o kolejności etapów
+
+Etap 2 (trwały magazyn i formularze) rozpocznie się po zielonym wyniku testów i kompilacji etapu 1. Nie należy budować warstwy danych na bazie nawigacji, która nie przeszła regresji katalogu dokumentów.
