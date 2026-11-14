@@ -59,7 +59,14 @@ data class BankStatementEntry(
     fun exchangeOperationId(): String? {
         val reference = normalize(bankOperationReference.orEmpty())
         if (reference.isEmpty()) return null
-        return "bank-operation-" + sha256("PKO|" + reference)
+        // Referencja bankowa nie musi być globalnie unikalna. Zakres rachunku
+        // i data księgowania ograniczają ryzyko połączenia niezależnych operacji.
+        val identity = listOf(
+            accountScopeId.trim(),
+            bookingDate.toString(),
+            reference
+        ).joinToString("|")
+        return "bank-operation-" + sha256("PKO|" + identity)
     }
 
     private fun normalize(value: String): String =
