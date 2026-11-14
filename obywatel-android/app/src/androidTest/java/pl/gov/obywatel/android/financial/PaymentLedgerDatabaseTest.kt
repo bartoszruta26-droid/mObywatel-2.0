@@ -49,7 +49,7 @@ class PaymentLedgerDatabaseTest {
 
     @Test
     fun invalidEntryRollsBackWholeBatch() {
-        val db = PaymentLedgerDatabase(context)
+        val db = openDatabase()
         try {
             val invalid = entry().copy(currencyCode = "US")
             assertThrows(IllegalArgumentException::class.java) {
@@ -63,11 +63,11 @@ class PaymentLedgerDatabaseTest {
 
     @Test
     fun recordsSurviveDatabaseReopen() {
-        val first = PaymentLedgerDatabase(context)
+        val first = openDatabase()
         first.importBatch(listOf(entry()))
         first.close()
 
-        val second = PaymentLedgerDatabase(context)
+        val second = openDatabase()
         try {
             assertEquals(1, second.readAll().size)
             assertEquals(entry().accountingEntryId(), second.readAll().single().accountingEntryId())
