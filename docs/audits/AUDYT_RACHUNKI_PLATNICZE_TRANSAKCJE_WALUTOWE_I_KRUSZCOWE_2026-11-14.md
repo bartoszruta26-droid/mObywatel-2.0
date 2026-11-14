@@ -2240,3 +2240,70 @@ Po dodaniu testów ponownie pobrano pliki z gałęzi i sprawdzono:
 - poprawienie testu odrzucania nieznanej wersji schematu — oczekuje on wersji 99, a nie wersji 1.
 
 Nie przeprowadzono lokalnej kompilacji w środowisku roboczym tej sesji. GitHub Actions uruchomił walidację dla rewizji audytu, ale wyniki kompilacji, testów JVM i testów emulatorowych trzeba odczytać dla końcowego SHA po zakończeniu zadań. Wynik REUSE jest sukcesem dla rewizji audytu; nie zastępuje testów aplikacji.
+
+
+## 38. Etap 2N.2 — bezpieczna aktualizacja transakcji finansowej (14 listopada 2026 r.)
+
+### 38.1. Kontrola poprzedzająca
+
+Przegląd kodu etapu 2N.1 wykazał, że zapis istniejącej transakcji używał `SQLiteDatabase.CONFLICT_REPLACE`. SQLite realizuje strategię REPLACE jako usunięcie istniejącego wiersza i wstawienie nowego. Przy relacjach z kluczami obcymi może to uruchamiać akcje usuwania i nie jest równoważne aktualizacji rekordu.
+
+### 38.2. Wykonana korekta
+
+W `PaymentLedgerDatabase.saveFinancialTransaction()`:
+- usunięto zapis `CONFLICT_REPLACE` dla tabeli transakcji finansowych;
+- zastosowano najpierw `UPDATE` rekordu po `transaction_id`;
+- jeżeli rekord nie istnieje, wykonywany jest zwykły `INSERT`;
+- wymiana prowizji i relacji zapisów bankowych odbywa się jawnie wewnątrz tej samej transakcji SQLite;
+- zachowano walidację źródłowych kwot, walut, kierunków, istnienia wpisów i unikalności powiązań;
+- nie zmieniono tabeli ani identyfikatorów źródłowych zapisów bankowych.
+
+### 38.3. Test regresyjny
+
+Do `PaymentLedgerDatabaseTest.kt` dodano `updatingFinancialTransactionPreservesRecordAndReplacesOnlyItsExplicitLinks`:
+- zapisuje parę źródłowych wpisów USD/CHF;
+- tworzy transakcję z prowizją i relacjami do obu wpisów;
+- ponownie zapisuje tę samą transakcję po zmianie statusu i usunięciu prowizji;
+- sprawdza zachowanie jednego rekordu transakcji, obu jawnych relacji i dwóch niezmienionych wpisów źródłowych.
+
+Test jest testem instrumentacyjnym Android. Jego dodanie nie oznacza jeszcze wykonania.
+
+### 38.4. Pliki i rewizje
+
+- `PaymentLedgerDatabase.kt` — commit `659c573d63b3ebec9eac8652f6075ea4eb8c50c6`, blob `907b41878e0e9700c88a861848e1364a6bac595c`;
+- `PaymentLedgerDatabaseTest.kt` — commit `c14849e8369a1d7282d0505cefe21ae4bfb3c80b`, blob `74378613a49898ae67a0cbb8ba78a409e654fa86`;
+- gałąź: `feature/payment-ledger-stage-1`;
+- PR: #68.
+
+Pliki zostały ponownie pobrane z GitHub. Kontrola treści potwierdziła brak `CONFLICT_REPLACE` w metodzie `saveFinancialTransaction()`, obecność sekwencji `UPDATE`/`INSERT` oraz obecność testu regresyjnego.
+
+### 38.5. Status weryfikacji
+
+| Kontrola | Status |
+|---|---|
+| Kontrola źródła po zapisie | Sukces — oba pliki pobrane ponownie |
+| Test regresyjny aktualizacji transakcji | Dodany; oczekuje na CI nowego SHA |
+| Testy JVM | Oczekują na CI nowego SHA |
+| Testy instrumentacyjne SQLite | Oczekują na CI nowego SHA |
+| Testy Compose | Oczekują na CI nowego SHA |
+| Debug APK | Oczekuje na budowę z nowego SHA |
+
+Ostatni kompletny CI dla wcześniejszego SHA `4e76e02fa9dfe820331254c45ccc63ba31764c48` zakończył się sukcesem:
+- REUSE — sukces;
+- Android JVM unit tests — sukces;
+- Compose UI tests na emulatorze — sukces;
+- 54 testy instrumentacyjne — 0 pominiętych, 0 błędnych;
+- debug APK — zbudowany i zarchiwizowany.
+
+Wynik ten nie obejmuje korekty etapu 2N.2. Dla nowego SHA nie uzyskano jeszcze danych workflow. Nie wolno przenosić statusu zielonego CI ze starszej rewizji na nową.
+
+### 38.6. Aktualny następny etap
+
+Po zielonym CI dla 2N.2 należy wykonać formularz ręcznego dodawania i edycji transakcji:
+- wymiany walutowej;
+- kupna i sprzedaży kruszców;
+- wpłaty i wypłaty;
+- prowizji;
+- wyboru istniejących zapisów bankowych do powiązania.
+
+Formularz powinien używać `FinancialTransaction.validate()` i `PaymentLedgerRepository.saveFinancialTransaction()`, a edycja musi zachować źródłowe zapisy bankowe. Rejestr aktywów, darowizny i kursy NBP pozostają odrębnymi etapami.
