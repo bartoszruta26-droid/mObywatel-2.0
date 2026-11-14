@@ -28,15 +28,7 @@ class PaymentLedgerRepository(
      */
     suspend fun importJson(json: String): BatchImportSummary = withContext(Dispatchers.IO) {
         val incoming = PaymentLedgerJsonCodec.decode(json)
-        val preview = BankImportDeduplicator.preview(incoming, database.readAll())
-        require(preview.conflicts.isEmpty()) {
-            "Import zawiera ${preview.conflicts.size} konfliktów referencji. Wymagana weryfikacja."
-        }
-        val result = database.importBatch(preview.newEntries)
-        BatchImportSummary(
-            inserted = result.inserted,
-            duplicates = result.duplicates + preview.duplicates.size
-        )
+        database.importBatchRejectingReferenceConflicts(incoming)
     }
 
     suspend fun exportJson(): String = withContext(Dispatchers.IO) {
