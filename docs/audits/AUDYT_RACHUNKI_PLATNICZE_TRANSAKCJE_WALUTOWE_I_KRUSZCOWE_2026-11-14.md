@@ -1779,3 +1779,60 @@ Nie oznacza się kompilacji, testów instrumentacyjnych ani APK jako zaliczonych
 ### 31.8. Następny etap
 
 Po uzyskaniu zielonego CI i teście SAF należy dodać bezpieczną konfigurację wielu lokalnych aliasów rachunków, a następnie rozpocząć adapter PDF na podstawie rzeczywistej próbki. Parser CSV i adapter XLS wymagają osobnych plików wzorcowych.
+
+## 32. Etap 2I.2 — korekta deduplikacji dwóch nóg tej samej wymiany FX (14 listopada 2026 r.)
+
+### 32.1. Wykryta niezgodność
+
+Przegląd rzeczywistego przepływu importu ujawnił lukę pomiędzy założeniem audytu a implementacją BankImportDeduplicator.preview:
+- audyt i model rozróżniają pojedynczy zapis księgowy (accountingEntryId) od operacji nadrzędnej (exchangeOperationId);
+- próbka iPKO zawiera tę samą referencję własną zleceniodawcy dla obciążenia USD i uznania CHF;
+- poprzedni podgląd traktował każdą ponowną referencję w obrębie tego samego pseudonimu rachunku jako konflikt, niezależnie od tego, czy rekord stanowił drugą, przeciwną nogę wymiany.
+
+Wcześniejszy test previewKeepsOppositeExchangeLegsWhenAccountScopesDiffer sprawdzał jedynie przypadek dwóch różnych zakresów rachunku. Nie zabezpieczał przypadku, w którym obie nogi operacji znajdują się w jednym zakresie rachunku. W praktyce mogło to blokować prawidłowy import drugiej nogi FX.
+
+### 32.2. Wykonana korekta
+
+W financial/BankImportDeduplicator.kt:
+- zastąpiono mapę pojedynczego rekordu dla referencji grupowaniem rekordów według referencji;
+- dodano wąską regułę isOppositeFxLeg;
+- ta sama referencja może wskazywać dwie odrębne nogi wyłącznie wtedy, gdy oba typy opisują wymianę kantorową, jedna noga jest uznaniem, druga obciążeniem, waluty są różne, a znaki kwot przeciwne;
+- wszystkie pozostałe rozbieżności z tą samą referencją nadal są konfliktami wymagającymi ręcznej weryfikacji;
+- duplikacja nadal jest wykrywana wcześniej przez accountingEntryId, a exchangeOperationId pozostaje identyfikatorem wiążącym nogi, nie kluczem deduplikacji.
+
+W financial/BankImportDeduplicatorTest.kt dodano regresję obejmującą dwie przeciwne nogi tej samej wymiany, ten sam pseudonim rachunku i referencję, brak konfliktu w podglądzie oraz późniejszy import drugiej nogi przy obecności pierwszej w rejestrze. Dotychczasowe testy konfliktów zmiany daty, waluty, kierunku i typu pozostawiono bez zmiany.
+
+### 32.3. Kontrola zapisu
+
+Zmiany zapisano na feature/payment-ledger-stage-1:
+- BankImportDeduplicator.kt — commit aa667e37fa93b4d80f9340ff6d76131864773195;
+- BankImportDeduplicatorTest.kt — commit 3c4050797aa75f65d0614f87620fd538ea2ce992.
+
+Po zapisie ponownie pobrano oba pliki z GitHub i potwierdzono grupowanie rekordów o wspólnej referencji, wywołanie reguły isOppositeFxLeg, warunki rozróżnienia nóg FX oraz obecność testu dla tego samego pseudonimu rachunku. Zachowano testy konfliktów.
+
+### 32.4. CI i artefakty — rozdzielenie rewizji
+
+Dla wcześniejszej rewizji kodu 957a1c334186bb2daef75b7ab8d6f21b8e72f48a:
+- REUSE / Repository compliance — sukces;
+- Android JVM unit tests w zadaniu assemble-debug — sukces;
+- Android debug APK — kompilacja i przesłanie artefaktu zakończone sukcesem;
+- artefakt obywatel-android-debug istnieje, ale został zbudowany dla SHA 957a1c3, czyli przed korektą z rozdziału 32;
+- Android GUI validation — anulowana podczas kroku Compose UI tests; kompilacja APK w tym zadaniu została pominięta.
+
+Artefakt dla SHA 957a1c3 nie potwierdza poprawności ani nie zawiera korekty z rozdziału 32. Nie należy przedstawiać go jako wydania najnowszego kodu. Dla rewizji 3c4050797aa75f65d0614f87620fd538ea2ce992 w chwili aktualizacji audytu nie było jeszcze powiązanego wyniku workflow. Testy jednostkowe, emulatorowe i kompilacja APK po korekcie pozostają do potwierdzenia.
+
+### 32.5. Status etapu i pozostałe ograniczenia
+
+| Element | Status |
+|---|---|
+| Rozpoznanie dwóch nóg FX ze wspólną referencją | Skorygowana reguła |
+| Dwie nogi w tym samym zakresie rachunku | Test regresyjny dodany |
+| Zwykłe konflikty tej samej referencji | Zachowana blokada |
+| Ponowny import istniejącej nogi | Deduplikacja przez accountingEntryId |
+| Testy JVM po korekcie | Oczekują na CI dla SHA 3c40507 |
+| Testy Compose i instrumentacyjne po korekcie | Oczekują na CI |
+| APK zawierający korektę | Niepotwierdzony |
+| Konfiguracja wielu aliasów rachunków | Do wykonania |
+| Ręczny test SAF na urządzeniu | Do wykonania |
+
+Następny krok: uzyskać pełny wynik CI dla aktualnego SHA, a następnie wykonać etap konfiguracji wielu pseudonimów rachunków. Konfiguracja powinna być lokalna, nie przechowywać pełnych numerów rachunków i wymagać jawnego przypisania wybranego pliku do aliasu. Nie należy rozpoczynać parserów CSV/XLS bez rzeczywistych plików wzorcowych ani adaptera PDF bez próbki PDF i testów ekstrakcji.
