@@ -83,6 +83,46 @@ data class ImportDeduplicationResult(
  * Klucz obejmuje konto, datę, walutę, kwotę, kierunek, typ i referencję bankową.
  */
 object BankImportDeduplicator {
+    /**
+     * Podgląd importu rozróżnia identyczne zapisy od sprzecznych danych z tą samą
+     * referencją bankową w obrębie tego samego rachunku.
+     */
+    fun preview(
+        incoming: List<BankStatementEntry>,
+        existingEntries: List<BankStatementEntry>
+    ): BankImportPreview {
+        val existingByReference = existingEntries
+            .filter { !it.bankOperationReference.isNullOrBlank() }
+            .associateBy { referenceKey(it) }
+        val seenIds = existingEntries.map { it.accountingEntryId() }.toMutableSet()
+        val seenReferences = existingByReference.toMutableMap()
+        val newEntries = mutableListOf<BankStatementEntry>()
+        val duplicates = mutableListOf<BankStatementEntry>()
+        val conflicts = mutableListOf<BankImportConflict>()
+
+        incoming.forEach { entry ->
+            val id = entry.accountingEntryId()
+            if (id in seenIds) {
+                duplicates += entry
+                return@forEach
+            }
+            val key = if (entry.bankOperationReference.isNullOrBlank()) null else referenceKey(entry)
+            val previous = key?.let { seenReferences[it] }
+            if (previous != null) {
+                conflicts += BankImportConflict(entry, previous)
+                return@forEach
+            }
+            newEntries += entry
+            seenIds += id
+            if (key != null) seenReferences[key] = entry
+        }
+        return BankImportPreview(newEntries, duplicates, conflicts)
+    }
+
+    private fun referenceKey(entry: BankStatementEntry): String =
+        entry.accountScopeId.trim() + "|" +
+            entry.bankOperationReference.orEmpty().trim().uppercase(Locale.ROOT)
+
     fun classify(
         incoming: List<BankStatementEntry>,
         existingAccountingEntryIds: Set<String>
@@ -97,3 +137,17 @@ object BankImportDeduplicator {
         return ImportDeduplicationResult(newEntries, duplicates)
     }
 }
+
+/** Rekord wymagający ręcznej weryfikacji: ta sama referencja w tym samym zakresie rachunku,
+ * ale inna tożsamość księgowa (np. inna kwota, data, waluta lub kierunek). */
+data class BankImportConflict(
+    val incoming: BankStatementEntry,
+    val existing: BankStatementEntry
+)
+
+data class BankImportPreview(
+    val newEntries: List<BankStatementEntry>,
+    val duplicates: List<BankStatementEntry>,
+    val conflicts: List<BankImportConflict>
+)
+
