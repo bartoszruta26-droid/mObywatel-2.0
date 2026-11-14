@@ -17,6 +17,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
+import pl.gov.obywatel.android.Asset
+import pl.gov.obywatel.android.AssetKind
 import pl.gov.obywatel.android.Fee
 import pl.gov.obywatel.android.FinancialRecordSource
 import pl.gov.obywatel.android.FinancialParseStatus
@@ -446,6 +448,62 @@ class PaymentLedgerDatabaseTest {
             assertEquals(2, db.readAll().size)
         } finally {
             db.close()
+        }
+    }
+
+    @Test
+    fun assetRegistryPersistsAndUpdatesCurrencyAndMetalDefinitions() {
+        val db = openDatabase()
+        try {
+            val usd = Asset("USD", "Dolar amerykański", AssetKind.CURRENCY, "USD", 2)
+            val gold = Asset("XAU_G_999", "Złoto próby 999", AssetKind.PRECIOUS_METAL, "g", 4, 999)
+            db.saveAsset(usd)
+            db.saveAsset(gold)
+
+            assertEquals(listOf(gold, usd), db.readAssets().sortedBy { it.code })
+
+            val updatedUsd = usd.copy(name = "Dolar USA", decimalPlaces = 3)
+            db.saveAsset(updatedUsd)
+            val stored = db.readAssets().associateBy { it.code }
+            assertEquals(2, stored.size)
+            assertEquals(updatedUsd, stored.getValue("USD"))
+            assertEquals(gold, stored.getValue("XAU_G_999"))
+        } finally {
+            db.close()
+        }
+
+        val reopened = openDatabase()
+        try {
+            assertEquals(2, reopened.readAssets().size)
+        } finally {
+            reopened.close()
+        }
+    }
+
+    @Test
+    fun versionFourMigrationCreatesAssetRegistryWithoutDroppingLegacyTables() {
+        val legacy = object : SQLiteOpenHelper(context, databaseName, null, 4) {
+            override fun onCreate(db: SQLiteDatabase) {
+                db.execSQL("CREATE TABLE legacy_marker (marker TEXT PRIMARY KEY NOT NULL)")
+                db.execSQL("INSERT INTO legacy_marker(marker) VALUES ('preserved')")
+            }
+            override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+        }
+        legacy.writableDatabase
+        legacy.close()
+
+        val upgraded = openDatabase()
+        try {
+            upgraded.saveAsset(Asset("PLN", "Polski złoty", AssetKind.CURRENCY, "PLN", 2))
+            assertEquals("PLN", upgraded.readAssets().single().code)
+            upgraded.readableDatabase.rawQuery(
+                "SELECT marker FROM legacy_marker", null
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals("preserved", cursor.getString(0))
+            }
+        } finally {
+            upgraded.close()
         }
     }
 
