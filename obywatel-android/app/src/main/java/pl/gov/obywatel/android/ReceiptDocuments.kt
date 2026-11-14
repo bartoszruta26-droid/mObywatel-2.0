@@ -179,9 +179,10 @@ private fun receiptNumberWords(n:Long):String {
         return out.joinToString(" ")
     }
     fun plural(v:Int,one:String,few:String,many:String):String = when { v%100 in 12..14 -> many; v%10==1 -> one; v%10 in 2..4 -> few; else -> many }
-    val value=n.coerceAtLeast(0).coerceAtMost(999999L)
-    val thousands=(value/1000).toInt(); val rest=(value%1000).toInt()
+    val value=n.coerceAtLeast(0).coerceAtMost(999999999L)
+    val millions=(value/1000000).toInt(); val thousands=((value/1000)%1000).toInt(); val rest=(value%1000).toInt()
     val chunks=mutableListOf<String>()
+    if(millions>0) chunks.add(group(millions)+" "+plural(millions,"milion","miliony","milionów"))
     if(thousands>0) chunks.add(group(thousands)+" "+plural(thousands,"tysiąc","tysiące","tysięcy"))
     if(rest>0 || chunks.isEmpty()) chunks.add(group(rest))
     return chunks.joinToString(" ").trim()
