@@ -5,7 +5,7 @@
 - **Gałąź audytowana:** `main`
 - **Commit bazowy:** `631aa68ed0e2bcbedd70201751214bd4c08fd5cc`
 - **Obszar:** `obywatel-android` (Android, Kotlin, Jetpack Compose)
-- **Status:** audyt wymagań i plan wdrożenia; bez zmian funkcjonalnych w kodzie aplikacji.
+- **Status:** etap 1 wdrożony na gałęzi `feature/payment-ledger-stage-1`; zmiany oczekują na wynik CI i przegląd PR. Etapy trwałego magazynu, importu, JSON i NBP pozostają do wykonania.
 - **Cel:** przygotowanie nowego, domyślnie widocznego kafelka **Rachunki płatnicze** dla lokalnej ewidencji transakcji wymiany walut i operacji na kruszcach, importu/eksportu danych w JSON oraz wyceny historycznej i bieżącej z wykorzystaniem publicznych danych NBP.
 
 > **Zasada nadrzędna:** rejestr ma wiernie przechowywać to, co faktycznie wydarzyło się w transakcji, i wyraźnie oddzielać dane źródłowe od obliczeń, wycen referencyjnych i hipotetycznych wyników. Kurs NBP nie jest kursem wykonania transakcji w banku ani ofertą, po której użytkownik może rzeczywiście kupić lub sprzedać walutę czy kruszec.
@@ -1075,3 +1075,79 @@ Zakres darowizn należy włączyć do planu jako osobny podetap:
 - [ ] Dodać raporty według organizacji i celu.
 - [ ] Dodać kolekcję `cashDonations` do wersjonowanego JSON.
 - [ ] Dodać testy walidacji, importu/eksportu, raportowania i prywatności.
+
+
+## 19. Dziennik wykonania — etap 1 (14 listopada 2026 r.)
+
+### 19.1. Zakres wykonany w repozytorium
+
+Zmiany wykonano na gałęzi `feature/payment-ledger-stage-1`, bez bezpośredniego modyfikowania `main`.
+
+1. **Kafelek katalogu**
+   - dodano identyfikator `payment_transactions`;
+   - etykieta: „Rachunki płatnicze”;
+   - ikona wykorzystuje istniejący zasób portfela;
+   - kafelek jest domyślnie umieszczany na pulpicie;
+   - grupa katalogu: „Służba finansowa”.
+
+2. **Nawigacja**
+   - dodano trasę typu `SPECIALIZED` w `DocumentRouteRegistry`;
+   - dodano osobny stan ekranu, obsługę trasy i powrotu systemowego w `MainActivity.kt`;
+   - utworzono `PaymentLedgerScreen.kt` jako niezależny szkielet ekranu;
+   - dotychczasowa trasa `receipts` i ekran `ReceiptDocumentsScreen` pozostały odrębne.
+
+3. **Modele domenowe**
+   - dodano `financial/FinancialModels.kt`;
+   - modele obejmują `Asset`, `Fee`, `FinancialTransaction` i `CashDonation`;
+   - dodano klasyfikacje aktywów, typów transakcji, źródeł danych, statusów parsowania i statusów przechowywania darowizn;
+   - darowizna pozostaje odrębnym zdarzeniem, a nazwa organizacji-beneficjenta i cel są obowiązkowe;
+   - kwoty i obliczenia używają `BigDecimal`, bez `Float` i `Double`.
+
+4. **Walidacja i obliczenia**
+   - dodano kontrolę kodu waluty, próby kruszcu, dodatnich ilości, spójności par aktywo/kwota i nieujemnej prowizji;
+   - dodano walidację darowizny, w tym limitu kwoty przekazania względem kwoty przyjętej;
+   - dodano obliczanie jednostkowego kursu wymiany i procentowej zmiany wartości z jawnym kontekstem dziesiętnym.
+
+5. **Testy**
+   - rozszerzono `DocumentRouteRegistryTest` o trasę i domyślną widoczność nowego kafelka;
+   - dodano `FinancialModelsTest` obejmujący aktywa, transakcje, prowizje, darowizny i obliczenia dziesiętne.
+
+### 19.2. Pliki zmienione lub dodane
+
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/MainActivity.kt`
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/DocumentRouteRegistry.kt`
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/PaymentLedgerScreen.kt` — nowy
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/FinancialModels.kt` — nowy
+- `obywatel-android/app/src/test/java/pl/gov/obywatel/android/DocumentRouteRegistryTest.kt`
+- `obywatel-android/app/src/test/java/pl/gov/obywatel/android/FinancialModelsTest.kt` — nowy
+
+### 19.3. Weryfikacja i ograniczenia
+
+- Po zapisie ponownie pobrano z GitHub wszystkie sześć plików i potwierdzono obecność zmian.
+- Sprawdzono tekstowo: wpis katalogu, domyślne położenie kafelka, trasę specjalistyczną, stan ekranu, obsługę powrotu oraz osobny ekran modułu.
+- Sprawdzono, że istniejący identyfikator `receipts` i dotychczasowy ekran rachunków nie zostały zastąpione nową funkcją.
+- Testy jednostkowe zostały dodane, ale samo ich zapisanie nie oznacza, że zostały uruchomione. Wynik kompilacji i testów wymaga potwierdzenia w GitHub Actions dla PR tej gałęzi.
+- Na tym etapie nie ma jeszcze trwałej bazy danych, formularzy transakcji, importu iPKO, archiwum JSON ani integracji NBP. Ekran jest szkieletem nawigacyjnym, a nie ukończoną funkcją użytkową.
+- Parser iPKO nadal wymaga rzeczywistego, zanonimizowanego pliku wzorcowego.
+
+### 19.4. Status etapów po tej zmianie
+
+| Etap | Status |
+|---|---|
+| Etap 0 — doprecyzowanie wzorców | Częściowo; oczekuje na plik iPKO oraz decyzje dotyczące waluty bazowej i metod kosztu |
+| Etap 1 — domena i katalog nawigacji | Zaimplementowany w gałęzi PR; oczekuje na CI i przegląd |
+| Etap 2 — trwały magazyn i ręczne operacje | Nierozpoczęty |
+| Etap 2A — rejestr darowizn | Modele i walidacja przygotowane; magazyn i formularz nierozpoczęte |
+| Etap 3 — import iPKO | Oczekuje na wzorzec pliku |
+| Etap 4 — archiwum JSON | Nierozpoczęty |
+| Etap 4A — JSON darowizn | Nierozpoczęty |
+| Etap 5 — notowania NBP | Nierozpoczęty |
+| Etap 6 — wycena portfela | Tylko podstawowe funkcje matematyczne; silnik kosztu i wyceny nierozpoczęty |
+| Etap 7 — pełny interfejs i raporty | Szkielet ekranu; reszta nierozpoczęta |
+| Etap 7A — raporty darowizn | Nierozpoczęty |
+| Etap 8 — bezpieczeństwo i optymalizacja | Nierozpoczęty |
+| Etap 9 — integracja i wydanie | Nierozpoczęty |
+
+### 19.5. Następny krok
+
+Po pozytywnym CI należy przejść do etapu 2: trwałego lokalnego magazynu i ręcznego dodawania/edycji transakcji oraz darowizn. Przed wyborem Room trzeba ponownie sprawdzić aktualne zależności i uzgodnić migracje; nie dodawać biblioteki ani migracji schematu bez uzasadnienia. Import iPKO pozostaje osobnym etapem zależnym od wzorca.
