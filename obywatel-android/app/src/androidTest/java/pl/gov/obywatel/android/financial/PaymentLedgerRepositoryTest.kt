@@ -66,7 +66,7 @@ class PaymentLedgerRepositoryTest {
         try {
             repository.importJson(PaymentLedgerJsonCodec.encode(listOf(entry())))
             val before = repository.getEntries()
-            val conflictingArchive = PaymentLedgerJsonCodec.encode(listOf(entry("750.00")))
+            val conflictingArchive = PaymentLedgerJsonCodec.encode(\n                listOf(entry("10.00", "PKO-REF-NEW"), entry("750.00"))\n            )
 
             val preview = repository.previewJson(conflictingArchive)
             assertEquals(1, preview.conflicts.size)
