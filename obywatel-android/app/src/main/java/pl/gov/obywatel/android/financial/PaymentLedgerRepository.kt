@@ -17,6 +17,14 @@ class PaymentLedgerRepository(
         database.readAll()
     }
 
+    suspend fun getAssets(): List<pl.gov.obywatel.android.Asset> = withContext(Dispatchers.IO) {
+        database.readAssets()
+    }
+
+    suspend fun saveAsset(asset: pl.gov.obywatel.android.Asset) = withContext(Dispatchers.IO) {
+        database.saveAsset(asset)
+    }
+
     suspend fun getAccountScopes(): List<PaymentAccountScope> = withContext(Dispatchers.IO) {
         database.getAccountScopes()
     }
