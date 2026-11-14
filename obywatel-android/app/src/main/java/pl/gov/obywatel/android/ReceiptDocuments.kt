@@ -191,23 +191,30 @@ private fun receiptAmountInWords(totalCents:Long):String {
     return receiptNumberWords(zl)+" "+(if(zl%10==1L && zl%100!=11L) "złoty" else if(zl%10 in 2L..4L && zl%100 !in 12L..14L) "złote" else "złotych")+" "+receiptNumberWords(gr)+" "+(if(gr==1L) "grosz" else if(gr%10 in 2L..4L && gr%100 !in 12L..14L) "grosze" else "groszy")
 }
 
+private fun lastReceiptString(c:Context,key:String,default:String=""):String = runCatching {
+    JSONObject(receiptPref(c).getString("last_receipt","{}") ?: "{}").optString(key,default)
+}.getOrDefault(default)
+private fun lastReceiptList(c:Context,key:String,default:List<String>):List<String> = runCatching {
+    val a=JSONObject(receiptPref(c).getString("last_receipt","{}") ?: "{}").optJSONArray(key) ?: return@runCatching default
+    (0 until a.length()).map { a.optString(it) }.let { if(it.size==default.size) it else default }
+}.getOrDefault(default)
 @Composable
 internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
     val c=LocalContext.current
     var records by remember { mutableStateOf(ReceiptStore.list(c)) }
     var status by remember { mutableStateOf("") }
-    var seller by remember { mutableStateOf("") }; var buyer by remember { mutableStateOf("") }
+    var seller by remember { mutableStateOf(lastReceiptString(c,"seller")) }; var buyer by remember { mutableStateOf(lastReceiptString(c,"buyer")) }
     var parties by remember { mutableStateOf(receiptParties(c)) }
     var showPartyManager by remember { mutableStateOf(false) }
     var partyName by remember { mutableStateOf("") }; var partyAddress by remember { mutableStateOf("") }
     var editingParty by remember { mutableStateOf<Int?>(null) }
     var sellerMenu by remember { mutableStateOf(false) }; var buyerMenu by remember { mutableStateOf(false) }
-    var number by remember { mutableStateOf("") }; var saleDate by remember { mutableStateOf(java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date())) }
-    var payment by remember { mutableStateOf("Gotówka") }; var due by remember { mutableStateOf("") }
-    var words by remember { mutableStateOf("") }; var signature by remember { mutableStateOf(receiptPref(c).getString("default_signer","") ?: "") }
-    var names by remember { mutableStateOf(listOf("","","")) }; var pkwiu by remember { mutableStateOf(listOf("","","")) }
-    var units by remember { mutableStateOf(listOf("szt.","","")) }; var quantities by remember { mutableStateOf(listOf("1","","")) }
-    var prices by remember { mutableStateOf(listOf("0,00","","")) }
+    var number by remember { mutableStateOf(lastReceiptString(c,"number")) }; var saleDate by remember { mutableStateOf(java.text.SimpleDateFormat("dd.MM.yyyy",java.util.Locale("pl")).format(java.util.Date())) }
+    var payment by remember { mutableStateOf(lastReceiptString(c,"payment","Gotówka")) }; var due by remember { mutableStateOf(lastReceiptString(c,"due")) }
+    var signature by remember { mutableStateOf(receiptPref(c).getString("default_signer","") ?: "") }
+    var names by remember { mutableStateOf(lastReceiptList(c,"names",listOf("","",""))) }; var pkwiu by remember { mutableStateOf(lastReceiptList(c,"pkwiu",listOf("","",""))) }
+    var units by remember { mutableStateOf(lastReceiptList(c,"units",listOf("szt.","",""))) }; var quantities by remember { mutableStateOf(lastReceiptList(c,"quantities",listOf("1","",""))) }
+    var prices by remember { mutableStateOf(lastReceiptList(c,"prices",listOf("0,00","",""))) }
     var replaceId by remember { mutableStateOf<String?>(null) }
     val importPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri-> if(uri!=null) runCatching { val old=replaceId; val b=c.contentResolver.openInputStream(uri)?.use{it.readBytes()} ?: error("Nie można odczytać PDF."); val record=if(old!=null) ReceiptStore.put(c,"Rachunek – plik podmieniony.pdf",b,old) else ReceiptStore.importPdf(c,uri); records=ReceiptStore.list(c); status="Zapisano: ${record.name}" }.onFailure{status="Błąd PDF: ${it.message}"}; replaceId=null }
     val photoPicker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ uri ->
@@ -253,15 +260,18 @@ internal fun ReceiptDocumentsScreen(onBack:()->Unit) {
                 OutlinedTextField(prices[i],{v->prices=prices.toMutableList().also{it[i]=v}},label={Text("Cena zł")},modifier=Modifier.weight(1f))
             }
         }
-        OutlinedTextField(words,{ },label={Text("Wartość słownie – wyliczana automatycznie")},modifier=Modifier.fillMaxWidth(),readOnly=true)
         OutlinedTextField(signature,{signature=it},label={Text("Imię i nazwisko osoby wystawiającej")},modifier=Modifier.fillMaxWidth())
         val totalCents=names.indices.sumOf { i -> val q=runCatching{java.math.BigDecimal(quantities[i].replace(',','.'))}.getOrDefault(java.math.BigDecimal.ZERO); q.multiply(java.math.BigDecimal(receiptMoneyCents(prices[i]))).setScale(0,java.math.RoundingMode.HALF_UP).longValue() }.coerceAtLeast(0L)
         val total=totalCents/100.0
-        words=receiptAmountInWords(totalCents)
+        val words=receiptAmountInWords(totalCents)
+        OutlinedTextField(words,{ },label={Text("Wartość słownie – wyliczana automatycznie")},modifier=Modifier.fillMaxWidth(),readOnly=true)
         Text("Razem: ${receiptMoneyLabel(totalCents)}",fontWeight=FontWeight.Bold)
         Button(onClick={
             runCatching {
                 val pdf=buildReceiptPdf(c,number,saleDate,seller,buyer,payment,due,names,pkwiu,units,quantities,prices,words,signature,total)
+                val snapshot=JSONObject().put("number",number).put("seller",seller).put("buyer",buyer).put("payment",payment).put("due",due)
+                listOf("names" to names,"pkwiu" to pkwiu,"units" to units,"quantities" to quantities,"prices" to prices).forEach { (key,values)-> val a=JSONArray(); values.forEach{a.put(it)}; snapshot.put(key,a) }
+                receiptPref(c).edit().putString("last_receipt",snapshot.toString()).apply()
                 val rec=ReceiptStore.put(c,"Rachunek ${number.ifBlank{"bez numeru"}}.pdf",pdf,createdAt=receiptFileDate(saleDate))
                 records=ReceiptStore.list(c)
                 status="Wystawiono i zapisano rachunek PDF: ${rec.name}"
@@ -367,9 +377,9 @@ private fun buildReceiptPdf(c:Context,no:String,date:String,seller:String,buyer:
     val xs=listOf(35f,60f,250f,310f,345f,390f,465f)
     headers.forEachIndexed{i,s->canvas.drawText(s,xs[i],top+22f,p)}
     var y=top+35f
-    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,border);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f,maxWidth=180f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(prices[i],if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText("%.2f".format(java.util.Locale.US,v),if(showPkwiu) 465f else 480f,y+25f,p);y+=45f }
-    y+=20f; line(y); txt("Słownie złotych: $words",35f,y+18f,maxWidth=350f); canvas.drawText("Razem: %.2f zł".format(java.util.Locale.US,total),420f,y+18f,bold)
-    y+=65f; canvas.drawText("Do zapłaty: %.2f zł".format(java.util.Locale.US,total),80f,y,bold); y+=55f; txt("Imię i nazwisko oraz podpis osoby upoważnionej do wystawienia rachunku: $signature",35f,y)
+    names.forEachIndexed{i,n-> canvas.drawRect(30f,y,565f,y+45f,border);canvas.drawText((i+1).toString(),38f,y+25f,p);txt(n,60f,y+18f,maxWidth=180f);val showPkwiu=receiptPref(c).getBoolean("show_pkwiu",true); if(showPkwiu) canvas.drawText(pkwiu[i],250f,y+25f,p);canvas.drawText(units[i],if(showPkwiu) 310f else 285f,y+25f,p);canvas.drawText(qty[i],if(showPkwiu) 345f else 330f,y+25f,p);canvas.drawText(receiptMoneyLabel(receiptMoneyCents(prices[i])),if(showPkwiu) 390f else 380f,y+25f,p);val v=(qty[i].replace(',','.').toDoubleOrNull()?:0.0)*(prices[i].replace(',','.').toDoubleOrNull()?:0.0);canvas.drawText(receiptMoneyLabel(kotlin.math.round(v*100).toLong()),if(showPkwiu) 465f else 480f,y+25f,p);y+=45f }
+    y+=20f; line(y); txt("Słownie: $words",35f,y+18f,maxWidth=350f); canvas.drawText("Razem: ${receiptMoneyLabel(kotlin.math.round(total*100).toLong())}",390f,y+18f,bold)
+    y+=65f; canvas.drawText("Do zapłaty: ${receiptMoneyLabel(kotlin.math.round(total*100).toLong())}",80f,y,bold); y+=55f; txt("Imię i nazwisko oraz podpis osoby upoważnionej do wystawienia rachunku: $signature",35f,y)
     y+=35f; val notes=receiptNotes(c); var yy=y; notes.split("\n").forEach{row->txt(row,35f,yy,p);yy+=26f}
     doc.finishPage(page); val out=ByteArrayOutputStream();doc.writeTo(out);doc.close();return out.toByteArray()
 }
