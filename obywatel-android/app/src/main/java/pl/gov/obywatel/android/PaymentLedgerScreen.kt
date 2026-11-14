@@ -41,6 +41,7 @@ import pl.gov.obywatel.android.financial.ExchangeOperationStatus
 import pl.gov.obywatel.android.financial.BankImportPreview
 import pl.gov.obywatel.android.financial.PaymentLedgerRepository
 import pl.gov.obywatel.android.financial.PaymentAccountScope
+import pl.gov.obywatel.android.financial.StoredFinancialTransaction
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
 import pl.gov.obywatel.android.financial.PaymentLedgerJsonCodec
 import java.io.ByteArrayOutputStream
@@ -53,6 +54,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     val repository = remember(context) { PaymentLedgerRepository(context) }
     val scope = rememberCoroutineScope()
     var entries by remember { mutableStateOf<List<BankStatementEntry>>(emptyList()) }
+    var financialTransactions by remember { mutableStateOf<List<StoredFinancialTransaction>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var pendingJson by remember { mutableStateOf<String?>(null) }
@@ -72,6 +74,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             error = null
             try {
                 entries = repository.getEntries()
+                financialTransactions = repository.getFinancialTransactions()
                 accountScopes = repository.getAccountScopes()
                 if (accountScopes.none { it.accountScopeId == accountScopeId }) {
                     accountScopeId = accountScopes.firstOrNull()?.accountScopeId ?: "ipko-account-1"
@@ -294,6 +297,38 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (financialTransactions.isNotEmpty()) {
+                item {
+                    Text("Transakcje finansowe", style = MaterialTheme.typography.titleMedium)
+                }
+                items(financialTransactions, key = { "financial-${it.transaction.id}" }) { stored ->
+                    val transaction = stored.transaction
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                "${transaction.type} • ${transaction.executedAt}",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            transaction.fromAssetCode?.let { code ->
+                                Text("Oddano: ${transaction.fromAmount?.toPlainString()} $code")
+                            }
+                            transaction.toAssetCode?.let { code ->
+                                Text("Otrzymano: ${transaction.toAmount?.toPlainString()} $code")
+                            }
+                            transaction.fee?.let { fee ->
+                                Text("Prowizja: ${fee.amount.toPlainString()} ${fee.assetCode}")
+                            }
+                            Text(
+                                "Zapisy bankowe powiązane: ${stored.accountingEntryIds.size}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
             if (exchangeOperations.isNotEmpty()) {
                 item {
                     Text("Operacje wymiany walut", style = MaterialTheme.typography.titleMedium)
