@@ -1915,3 +1915,57 @@ Następny etap po zielonym CI: powiązanie dwóch nóg FX w odrębny model trans
 Podczas końcowego przeglądu przepływu importu XML wykryto, że identyfikator aliasu Compose był odczytywany wewnątrz bloku Dispatchers.IO. Poprawiono to w PaymentLedgerScreen.kt: wybrany pseudonim jest teraz przechwytywany na wątku UI przed uruchomieniem pracy asynchronicznej i dopiero jego niezmienna wartość jest przekazywana parserowi. Eliminuje to odczyt stanu Compose z wątku roboczego i gwarantuje, że plik zostanie przypisany do aliasu wybranego w chwili rozpoczęcia importu.
 
 Zmiana: commit d9388fdd5fa902ef204da74355cf4f99225f87a5. Po zapisie ponownie pobrano PaymentLedgerScreen.kt i potwierdzono przechwycenie selectedAccountScopeId przed Dispatchers.IO oraz przekazanie tej wartości do BankStatementXmlParser.parse. Ten commit jest najnowszą rewizją kodu etapu 2J. Testy JVM, instrumentacyjne, Compose UI i kompilacja APK dla SHA d9388fdd5fa902ef204da74355cf4f99225f87a5 pozostają do potwierdzenia w CI; wcześniejsze zadania dla SHA 6e746d8 zostały anulowane po kolejnej aktualizacji kodu i nie stanowią dowodu dla końcowej rewizji.
+
+## 34. Etap 2K — projekcja nadrzędnych operacji FX i zabezpieczenie rejestracji aliasu (14 listopada 2026 r.)
+
+### 34.1. Korekta spójności aliasów rachunków
+
+Kontrola etapu 2J wykazała przypadek brzegowy: pole aliasu na ekranie pozwalało wpisać nowy identyfikator, a następnie rozpocząć import XML bez uprzedniego użycia przycisku „Zapisz alias”. Wpis bankowy mógł wtedy otrzymać account_scope_id, którego nie było w tabeli payment_account_scopes. Po ponownym uruchomieniu aplikacji taki zakres nie pojawiałby się na liście aliasów.
+
+Poprawiono PaymentLedgerScreen.kt. Po wyborze pliku XML ekran pobiera zapisane zakresy i przed parsowaniem rejestruje brakujący alias pod wpisanym identyfikatorem. Zapis wykorzystuje walidację i transakcję SQLite istniejącej metody saveAccountScope. Identyfikator wybrany przez użytkownika jest nadal przechwytywany przed pracą Dispatchers.IO i ta sama niezmienna wartość trafia do parsera XML. Zmiana: commit d3159ab61d1850c91250fdfae1664b1f9b833a0b.
+
+### 34.2. Projekcja operacji nadrzędnych FX
+
+Dotychczas model BankStatementEntry reprezentował pojedyncze zapisy księgowe i udostępniał exchangeOperationId(), ale brakowało odrębnej funkcji, która odczytowo grupowałaby nogi tej samej wymiany. Dodano:
+- financial/BankExchangeOperation.kt — model BankExchangeOperation, statusy COMPLETE, SINGLE_LEG i REVIEW_REQUIRED oraz BankExchangeOperationProjector;
+- test BankExchangeOperationTest.kt.
+
+Projektor grupuje rekordy według exchangeOperationId. Status COMPLETE nadaje wyłącznie grupie zawierającej dokładnie dwa zapisy kantorowe w różnych walutach i o przeciwnych znakach kwot. Pojedynczą nogę oznacza SINGLE_LEG, a grupy wieloelementowe lub niespełniające warunków pary oznacza REVIEW_REQUIRED. Zwraca oryginalne rekordy jako listę legs; nie łączy ich, nie usuwa, nie przelicza kwot i nie modyfikuje magazynu SQLite. W ten sposób zachowano rozdział zapisu księgowego i operacji nadrzędnej.
+
+Testy obejmują rzeczywisty przykład 8 000 USD obciążenia i 6 183,20 CHF uznania z referencją 90124777, zachowanie dwóch odrębnych identyfikatorów księgowych, pojedynczą nogę, niejednoznaczną grupę trzech wpisów oraz rekord bez referencji.
+
+### 34.3. Zapis i kontrola źródeł
+
+Zmiany zapisano na feature/payment-ledger-stage-1:
+- PaymentLedgerScreen.kt — d3159ab61d1850c91250fdfae1664b1f9b833a0b;
+- BankExchangeOperation.kt — d7f72e170b3cc2f2b7b1e8d27ed443ed840b9f94;
+- BankExchangeOperationTest.kt — e46df0a2e12db2806874301f154347b1709fbe29.
+
+Po zapisie ponownie pobrano te pliki z GitHub. Potwierdzono automatyczną rejestrację aliasu przed parsowaniem, przechwycenie identyfikatora poza blokiem IO, istnienie projektora, trzy statusy operacji oraz testy pary kompletnej, pojedynczej nogi i grupy wymagającej kontroli.
+
+### 34.4. CI i zakres potwierdzenia
+
+Dla SHA e46df0a2e12db2806874301f154347b1709fbe29 GitHub Actions uruchomił:
+- Repository compliance (alfa) — in_progress w chwili aktualizacji audytu;
+- Android prototype build — in_progress;
+- Android GUI validation — in_progress.
+
+Nie ma jeszcze potwierdzenia wykonania testów JVM, testów emulatorowych ani kompilacji APK dla tej rewizji. Wcześniejszy APK z rewizji 6763f2a nie zawiera etapów 2J i 2K; nie może być traktowany jako artefakt aktualnego kodu. PR #68 pozostaje otwarty i niescalony.
+
+### 34.5. Status i ograniczenia
+
+| Element | Status |
+|---|---|
+| Automatyczna rejestracja aliasu użytego w imporcie XML | Zaimplementowano |
+| Zachowanie aliasu po ponownym uruchomieniu | Oparte na tabeli SQLite; testy migracji i trwałości dodane w etapie 2J |
+| Grupowanie nóg FX według exchangeOperationId | Zaimplementowano jako projekcję odczytową |
+| Walidacja pary FX | COMPLETE tylko dla dwóch przeciwnych nóg kantorowych w różnych walutach |
+| Niepełne i niejednoznaczne operacje | Oznaczane SINGLE_LEG / REVIEW_REQUIRED |
+| Zachowanie odrębnych zapisów księgowych | Zachowano i objęto testem |
+| Trwała tabela operacji nadrzędnych FX | Nie dodano; projektor odtwarza grupy z zapisów źródłowych |
+| Prezentacja grup FX na ekranie | Do wykonania |
+| Testy JVM/Android dla SHA 2K | Oczekują na CI |
+| APK zawierający etapy 2J i 2K | Niepotwierdzony |
+| Ręczny test importu SAF na urządzeniu | Do wykonania |
+
+Następny etap: po pozytywnym CI wyświetlić operacje FX jako grupy z rozwijanymi nogami źródłowymi, a następnie dodać trwały model transakcji finansowej i prowizji, zachowując relację do zapisów wyciągu. Import PDF należy rozpocząć na podstawie istniejącej rzeczywistej próbki PDF, sprawdzając ekstrakcję tabeli i pomijanie podsumowań. CSV/XLS nie powinny być rozwijane bez dostępnych plików wzorcowych.
