@@ -53,6 +53,23 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun customsTaxServiceDocumentsHaveDedicatedFieldsRoutesAndStateServiceGroup() {
+        val expected = setOf(
+            "customs_tax_legitimacy", "customs_tax_personnel_order",
+            "customs_tax_service_certificate", "customs_tax_control",
+            "customs_tax_economic_crime", "customs_tax_enforcement",
+            "customs_tax_border_control"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing Customs and Tax Service document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
     fun prisonServiceDocumentsHaveDedicatedFieldsRoutesAndStateServiceGroup() {
         val expected = setOf(
             "prison_service_legitimacy", "prison_service_personnel_order",
