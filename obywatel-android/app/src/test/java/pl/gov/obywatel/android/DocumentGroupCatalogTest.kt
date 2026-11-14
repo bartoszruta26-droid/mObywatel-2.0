@@ -30,7 +30,7 @@ class DocumentGroupCatalogTest {
         assertEquals("Służba zbrojna", migrateDocumentGroupName("Służba zbrojna"))
         assertEquals("Służba rodowa", migrateDocumentGroupName("Dokumenty rodowe i rodzinne"))
         assertEquals("Moja własna grupa", migrateDocumentGroupName("Moja własna grupa"))
-        assertEquals("Służba fundacyjna", migrateDocumentGroupAssignment("organization_foundation", "Służba gospodarcza"))
+        assertEquals("Służba społeczna", migrateDocumentGroupAssignment("organization_foundation", "Służba gospodarcza"))
         assertEquals("Służba stowarzyszeniowa", migrateDocumentGroupAssignment("organization_association", "Służba gospodarcza"))
         assertEquals("Moja własna grupa", migrateDocumentGroupAssignment("organization_foundation", "Moja własna grupa"))
     }
@@ -40,7 +40,11 @@ class DocumentGroupCatalogTest {
         val armedIds = setOf(
             "military_book", "martial_arts", "shooting_sport", "archery",
             "tactical_training", "survival_training", "security_guard", "defense_training",
-            "historical_reenactment", "reenactment_qualification", "reenactment_event"
+            "historical_reenactment", "reenactment_qualification", "reenactment_event",
+            "military_service_record", "military_personnel_order", "military_professional_contract",
+            "military_voluntary_basic_service", "military_territorial_service", "military_active_reserve",
+            "military_passive_reserve", "military_exercise_callup", "military_candidate_service",
+            "military_gendarmerie_service", "military_foreign_service"
         )
         assertTrue(armedIds.all { defaultDocumentPlacements[it] == "hidden" })
         assertEquals("dashboard", defaultDocumentPlacements["identity"])
@@ -49,9 +53,189 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun otherUniformedAndProtectiveServicesHaveDedicatedDocumentSets() {
+        val expected = setOf(
+            "municipal_guard_legitimacy",
+            "municipal_guard_personnel_order",
+            "municipal_guard_service_certificate",
+            "municipal_guard_assignment",
+            "railway_guard_legitimacy",
+            "railway_guard_personnel_order",
+            "railway_guard_service_certificate",
+            "railway_guard_assignment",
+            "marshal_guard_legitimacy",
+            "marshal_guard_personnel_order",
+            "marshal_guard_service_certificate",
+            "marshal_guard_assignment",
+            "forest_guard_legitimacy",
+            "forest_guard_personnel_order",
+            "forest_guard_service_certificate",
+            "forest_guard_assignment",
+            "hunting_guard_legitimacy",
+            "hunting_guard_personnel_order",
+            "hunting_guard_service_certificate",
+            "hunting_guard_assignment",
+            "fisheries_guard_legitimacy",
+            "fisheries_guard_personnel_order",
+            "fisheries_guard_service_certificate",
+            "fisheries_guard_assignment",
+            "road_transport_inspection_legitimacy",
+            "road_transport_inspection_personnel_order",
+            "road_transport_inspection_service_certificate",
+            "road_transport_inspection_assignment"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing uniformed/protective service forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
+    fun specialServicesHaveDedicatedCredentialPersonnelCertificateAndAssignmentDocuments() {
+        val expected = setOf(
+            "abw_legitimacy",
+            "abw_personnel_order",
+            "abw_service_certificate",
+            "abw_assignment",
+            "aw_legitimacy",
+            "aw_personnel_order",
+            "aw_service_certificate",
+            "aw_assignment",
+            "skw_legitimacy",
+            "skw_personnel_order",
+            "skw_service_certificate",
+            "skw_assignment",
+            "sww_legitimacy",
+            "sww_personnel_order",
+            "sww_service_certificate",
+            "sww_assignment",
+            "cba_legitimacy",
+            "cba_personnel_order",
+            "cba_service_certificate",
+            "cba_assignment",
+            "sop_legitimacy",
+            "sop_personnel_order",
+            "sop_service_certificate",
+            "sop_assignment"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing special-service document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
+    fun customsTaxServiceDocumentsHaveDedicatedFieldsRoutesAndStateServiceGroup() {
+        val expected = setOf(
+            "customs_tax_legitimacy", "customs_tax_personnel_order",
+            "customs_tax_service_certificate", "customs_tax_control",
+            "customs_tax_economic_crime", "customs_tax_enforcement",
+            "customs_tax_border_control"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing Customs and Tax Service document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
+    fun prisonServiceDocumentsHaveDedicatedFieldsRoutesAndStateServiceGroup() {
+        val expected = setOf(
+            "prison_service_legitimacy", "prison_service_personnel_order",
+            "prison_service_certificate", "prison_service_protection",
+            "prison_service_penitentiary", "prison_service_records",
+            "prison_service_healthcare", "prison_service_escort"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing Prison Service document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
+    fun borderGuardServiceDocumentsHaveDedicatedFieldsRoutesAndStateServiceGroup() {
+        val expected = setOf(
+            "border_guard_legitimacy", "border_guard_personnel_order",
+            "border_guard_service_certificate", "border_guard_border_service",
+            "border_guard_operational_service", "border_guard_aviation_service",
+            "border_guard_unit_service"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing Border Guard document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
+    fun stateFireServiceDocumentsHaveDedicatedFieldsRoutesAndGroup() {
+        val expected = setOf(
+            "fire_service_legitimacy", "fire_service_personnel_order", "fire_service_preparatory",
+            "fire_service_permanent", "fire_service_station_commander", "fire_service_shift_commander",
+            "fire_service_officer", "fire_service_rescue_unit", "fire_service_headquarters"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing PSP document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
+    fun policeServiceDocumentsHaveDedicatedFieldsRoutesAndPublicServiceGroup() {
+        val expected = setOf(
+            "police_service_legitimacy", "police_personnel_order", "police_service_certificate",
+            "police_preventive_service", "police_criminal_service", "police_investigative_service",
+            "police_counterterrorist_service", "police_supporting_service", "police_traffic_service",
+            "police_water_service", "police_riot_unit_service", "police_cybercrime_service"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing police document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba państwowa", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
+    fun militaryServiceDocumentFormsCoverEveryListedServiceTypeAndUseArmedServiceGroup() {
+        val expected = setOf(
+            "military_book", "military_service_record", "military_personnel_order",
+            "military_professional_contract", "military_voluntary_basic_service",
+            "military_territorial_service", "military_active_reserve", "military_passive_reserve",
+            "military_exercise_callup", "military_candidate_service",
+            "military_gendarmerie_service", "military_foreign_service"
+        )
+        val catalogIds = documentDisplayOptions.map { it.first }.toSet()
+        assertTrue("Missing military document forms: ${expected - catalogIds}", catalogIds.containsAll(expected))
+        expected.forEach { id ->
+            assertEquals("Służba zbrojna", documentVisibilityGroup(id))
+            assertTrue("Missing dedicated fields for $id", officialGraphicDocumentFields(id).isNotEmpty() || id == "military_book")
+            assertTrue("Missing route for $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
     fun foundationBusinessAndAssociationServicesEachHaveThreeIndependentCompleteDocumentSets() {
         val expected = mapOf(
-            "foundation" to "Służba fundacyjna",
+            "foundation" to "Służba społeczna",
             "business" to "Służba gospodarcza",
             "association" to "Służba stowarzyszeniowa"
         )
@@ -71,10 +255,10 @@ class DocumentGroupCatalogTest {
             assertEquals("Every service must expose exactly the three required subject sets", 3,
                 documents.mapNotNull { id -> subjectPrefixes.firstOrNull { id.first.startsWith("service_${service}_${it}_") } }.toSet().size)
         }
-        assertEquals("Służba fundacyjna", documentVisibilityGroup("organization_foundation"))
+        assertEquals("Służba społeczna", documentVisibilityGroup("organization_foundation"))
         assertEquals("Służba gospodarcza", documentVisibilityGroup("organization_company"))
         assertEquals("Służba stowarzyszeniowa", documentVisibilityGroup("organization_association"))
-        assertTrue("Służba fundacyjna" in documentVisibilityGroupOrder)
+        assertTrue("Służba społeczna" in documentVisibilityGroupOrder)
         assertTrue("Służba gospodarcza" in documentVisibilityGroupOrder)
         assertTrue("Służba stowarzyszeniowa" in documentVisibilityGroupOrder)
     }

@@ -84,7 +84,7 @@ private data class EntityServiceDefinition(val key: String, val group: String, v
 private data class EntitySubjectDefinition(val key: String, val label: String)
 
 private val entityServices = listOf(
-    EntityServiceDefinition("foundation", "Służba fundacyjna", "Fundacja"),
+    EntityServiceDefinition("foundation", "Służba społeczna", "Fundacja"),
     EntityServiceDefinition("business", "Służba gospodarcza", "Podmiot gospodarczy"),
     EntityServiceDefinition("association", "Służba stowarzyszeniowa", "Stowarzyszenie")
 )

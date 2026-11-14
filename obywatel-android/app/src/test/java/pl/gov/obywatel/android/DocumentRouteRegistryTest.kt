@@ -91,7 +91,7 @@ class DocumentRouteRegistryTest {
             "civil" to "Formularze dokumentów",
             "business" to "Służba gospodarcza",
             "professional" to "Dokumenty kwalifikacji zawodowych",
-            "organization_foundation" to "Służba fundacyjna",
+            "organization_foundation" to "Służba społeczna",
             "organization_church" to "Dokumenty Kościelne",
             "organization_company" to "Służba gospodarcza",
             "organization_association" to "Służba stowarzyszeniowa",
