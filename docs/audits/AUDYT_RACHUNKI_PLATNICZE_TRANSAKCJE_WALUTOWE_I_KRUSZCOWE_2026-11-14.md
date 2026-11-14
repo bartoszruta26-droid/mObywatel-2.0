@@ -2227,3 +2227,16 @@ Zmiany zapisano na gałęzi PR #68. Testy jednostkowe i instrumentacyjne został
 ### 37.7. Następny podetap
 
 Następnie należy wykonać formularze tworzenia i edycji transakcji walutowych oraz kupna/sprzedaży kruszców, z wyborem aktywów, datą, kwotami, prowizją i powiązaniami bankowymi. Formularze muszą używać walidacji domenowej i zapisu przez repozytorium; edycja nie może usuwać źródłowych zapisów bankowych.
+
+
+### 37.8. Kontrola końcowa plików i testów
+
+Po dodaniu testów ponownie pobrano pliki z gałęzi i sprawdzono:
+- wersję schematu 2 oraz obsługę wersji 1 w dekoderze;
+- zachowanie dotychczasowego API decode() używanego przez importer bankowy;
+- obecność pełnego eksportu w repozytorium;
+- obecność importArchive() w bazie oraz użycie transakcji SQLite dla całego archiwum;
+- testy JSON v2, zgodności wstecznej, walidacji transakcji, idempotencji i rollback;
+- poprawienie testu odrzucania nieznanej wersji schematu — oczekuje on wersji 99, a nie wersji 1.
+
+Nie przeprowadzono lokalnej kompilacji w środowisku roboczym tej sesji. GitHub Actions uruchomił walidację dla rewizji audytu, ale wyniki kompilacji, testów JVM i testów emulatorowych trzeba odczytać dla końcowego SHA po zakończeniu zadań. Wynik REUSE jest sukcesem dla rewizji audytu; nie zastępuje testów aplikacji.
