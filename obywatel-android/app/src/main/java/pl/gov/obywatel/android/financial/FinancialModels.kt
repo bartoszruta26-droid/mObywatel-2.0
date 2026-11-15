@@ -160,7 +160,7 @@ data class DonationAttachment(
 ) {
     fun validate() {
         require(id.isNotBlank() && donationId.isNotBlank()) { "Identyfikatory załącznika i darowizny są wymagane." }
-        require(fileName.isNotBlank() && fileName.length <= 180 && fileName.none { it == '/' || it == '\\\\' }) {
+        require(fileName.isNotBlank() && fileName.length <= 180 && fileName.none { it == '/' || it == '\\' }) {
             "Nieprawidłowa nazwa pliku załącznika."
         }
         require(mimeType in ALLOWED_MIME_TYPES) { "Dozwolone są wyłącznie pliki PDF, JPEG i PNG." }

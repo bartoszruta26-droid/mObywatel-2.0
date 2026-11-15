@@ -2944,4 +2944,4 @@ Zmiany zapisano w jednej rewizji, aby uniknąć niepotrzebnego uruchamiania wiel
 4. Rozważyć jawny eksport/backup załączników jako osobne archiwum, z walidacją sum kontrolnych i limitów.
 
 
-**Uzupełnienie kontroli implementacji:** po ponownym odczycie plików skorygowano zapis separatora ścieżki w literałach znakowych Kotlin. Dodano także jawny test migracji z wersji 6 do 7 oraz jednostkowy test walidacji metadanych. Te uzupełnienia wchodzą do tej samej rewizji przed oceną CI.
+**Uzupełnienie kontroli implementacji:** po ponownym odczycie plików skorygowano zapis separatora ścieżki w literałach znakowych Kotlin w modelu i magazynie plików. Dodano także jawny test migracji z wersji 6 do 7 oraz jednostkowy test walidacji metadanych. Te uzupełnienia wchodzą do tej samej rewizji przed oceną CI.
