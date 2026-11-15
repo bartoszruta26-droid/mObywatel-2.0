@@ -136,14 +136,18 @@ object BankImportDeduplicator {
         val secondType = second.operationType.uppercase(Locale.ROOT)
         val isFx = firstType.contains("WYMIANA W KANTORZE") &&
             secondType.contains("WYMIANA W KANTORZE")
-        val oppositeLabels =
-            (firstType.contains("UZNANIE") && secondType.contains("OBCIĄŻENIE")) ||
-            (firstType.contains("OBCIĄŻENIE") && secondType.contains("UZNANIE"))
+        // Etykieta operacji musi być zgodna ze znakiem kwoty. Sama para
+        // przeciwnych etykiet i znaków nie wystarcza: błędnie opisany zapis
+        // nie może zostać zaakceptowany jako druga noga wymiany.
+        val firstCredit = firstType.contains("UZNANIE") && first.signedAmount.signum() > 0
+        val firstDebit = firstType.contains("OBCIĄŻENIE") && first.signedAmount.signum() < 0
+        val secondCredit = secondType.contains("UZNANIE") && second.signedAmount.signum() > 0
+        val secondDebit = secondType.contains("OBCIĄŻENIE") && second.signedAmount.signum() < 0
+        val validOppositeDirections = (firstCredit && secondDebit) || (firstDebit && secondCredit)
         return isFx &&
             first.bookingDate == second.bookingDate &&
-            oppositeLabels &&
-            first.currencyCode != second.currencyCode &&
-            first.signedAmount.signum() == -second.signedAmount.signum()
+            validOppositeDirections &&
+            first.currencyCode != second.currencyCode
     }
 
     fun classify(
