@@ -1087,3 +1087,25 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Należy dodać scenariusz odtworzenia po restarcie procesu oraz test naprawy brakujących/osieroconych plików w magazynie.
 
 **Status:** dodano kontrolę zgodności identyfikatorów badania z metadanymi zakresu załączników i blokadę zapisu przy rozbieżności. Zmiany są zapisane i ponownie odczytane z gałęzi. Nie deklaruje się jeszcze zaliczenia testów CI dla końcowego SHA.
+
+
+---
+
+## 42. Integracyjne testy szyfrowanego magazynu załączników — 2026-11-15
+
+### Wykonane prace
+- [x] Dodano zestaw Android instrumented tests korzystający z rzeczywistego `OriginalAttachmentStore`, Android Keystore, SharedPreferences i katalogu `noBackupFilesDir`.
+- [x] Dodano scenariusz importu załącznika, uzgadniania magazynu, eksportu i porównania odzyskanych bajtów z oryginałem.
+- [x] Dodano kontrolę idempotentnego ponownego importu tego samego załącznika.
+- [x] Dodano test potwierdzający usuwanie osieroconego pliku `.enc` przy zachowaniu pliku wskazywanego przez metadane.
+- [x] Dodano test brakującego pliku źródłowego: uzgadnianie ma zgłosić błąd integralności i zachować metadane odwołujące się do brakującego pliku, aby nie ukrywać utraty danych.
+- [x] Dodano test usuwania całego zakresu badania: po zatwierdzeniu usunięcia metadanych usuwany jest odpowiadający plik zaszyfrowany.
+- [x] Zestaw zapisano w `obywatel-android/app/src/androidTest/java/pl/gov/obywatel/android/OriginalAttachmentStoreIntegrityTest.kt` w commicie `27e8505ffa1620c2bde48de3c47fc5cd25851398`.
+
+### Weryfikacja i ograniczenia
+- [x] Testy korzystają z unikalnych identyfikatorów dokumentów i załączników oraz sprzątają utworzone dane w blokach `finally`.
+- [ ] Wynik wykonania testów instrumentacyjnych, kompilacji APK, testów JVM, GUI/emulator i REUSE dla końcowego SHA wymaga potwierdzenia w GitHub Actions.
+- [ ] Nie wykonano jeszcze testu rzeczywistego restartu procesu Androida; obecny test odtwarza stan przez ponowne odczytanie trwałego magazynu w ramach procesu testowego.
+- [ ] Należy dodać test awarii `SharedPreferences.commit()` w trakcie importu/usuwania oraz test zachowania plików po restarcie urządzenia/procesu.
+
+**Status:** dodano integracyjne scenariusze rzeczywistego magazynu dla eksportu/importu, idempotencji, osieroconych plików, brakujących plików i usuwania zakresu. Testy są zapisane; ich wykonanie przez emulator/CI pozostaje do potwierdzenia.
