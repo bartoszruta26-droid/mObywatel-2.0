@@ -80,6 +80,7 @@ class FinancialModelsTest {
             currencyCode = "PLN",
             beneficiaryOrganizationName = "Fundacja Przykładowa",
             purpose = "Cel",
+            custodyStatus = DonationCustodyStatus.PARTIALLY_TRANSFERRED,
             transferredAt = Instant.parse("2026-11-15T10:00:00Z"),
             transferredAmount = BigDecimal("200.00")
         )
