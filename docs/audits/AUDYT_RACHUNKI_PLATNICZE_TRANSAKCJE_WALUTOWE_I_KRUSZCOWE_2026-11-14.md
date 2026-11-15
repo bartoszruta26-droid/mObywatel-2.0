@@ -3812,3 +3812,50 @@ Dla końcowego HEAD `516966bb693e7f5fc13ce0c2b02088f1248eb2ee`:
 - nie stwierdzono jeszcze potwierdzonego pełnego przebiegu Android GUI dla tego SHA.
 
 Etap 67 jest **zapisany i sprawdzony w źródłach, ale oczekuje na pełną walidację CI**. Nie uznaje się jeszcze testów instrumentacyjnych ani APK za zaliczone dla końcowego HEAD. PR `#68` pozostaje otwarty i niescalony.
+
+## 68. Pełna kontrola konfliktów danych darowizn przy imporcie archiwum (15 listopada 2026 r.)
+
+### 68.1. Ustalenie
+
+Kontrola identyfikatora darowizny w imporcie archiwum porównywała wcześniej tylko pięć pól: datę przyjęcia, kwotę, walutę, beneficjenta i cel. Pozostałe dane — w szczególności darczyńca, anonimowość, kampania, osoba przyjmująca, numer pokwitowania, status przechowywania, data i kwota przekazania, notatka oraz źródło — mogły różnić się przy tym samym identyfikatorze, a import nie zgłaszał konfliktu. Podgląd archiwum używał tego samego niepełnego kryterium.
+
+### 68.2. Wykonane zmiany
+
+W `PaymentLedgerDatabase.importArchive()` rozszerzono odczyt istniejącej darowizny i porównanie na wszystkie pola modelu `CashDonation`. Weryfikacja obejmuje:
+- datę przyjęcia, kwotę i walutę;
+- beneficjenta oraz cel;
+- nazwę darczyńcy i znacznik anonimowości;
+- kampanię, osobę przyjmującą i numer pokwitowania;
+- status przechowywania;
+- datę i kwotę przekazania;
+- notatkę oraz źródło rekordu.
+
+Kwoty są porównywane numerycznie przez `BigDecimal.compareTo`, więc sama różnica skali zapisu dziesiętnego nie tworzy fałszywego konfliktu. Zmiana dowolnego z pozostałych pól przy tym samym ID powoduje odrzucenie importu w transakcji SQLite.
+
+W `PaymentLedgerRepository.previewArchive()` zastosowano zgodne kryterium pełnej tożsamości darowizny. Podgląd i zatwierdzenie importu wykrywają więc ten sam rodzaj konfliktu.
+
+### 68.3. Test regresyjny
+
+Dodano test instrumentacyjny:
+- `sameDonationIdWithChangedDonorMetadataIsReportedAsConflictAndPreservesRecord` — zmiana danych darczyńcy przy zachowaniu identyfikatora powoduje wskazanie konfliktu w podglądzie, odrzucenie importu i zachowanie pierwotnego rekordu.
+
+### 68.4. Zmienione pliki i commity
+
+- `PaymentLedgerDatabase.kt` — pełne porównanie danych darowizny; commit `aaf5ee534b7d51b198c5b8d6b0f49e587194a794`.
+- `PaymentLedgerRepository.kt` — zgodna kontrola w podglądzie; commit `07cb282621a543628c58363666d6d374fa4ac5a1`.
+- `PaymentLedgerRepositoryTest.kt` — test konfliktu danych darczyńcy i zachowania rekordu; commit `55ecc820cb5b0f0ee2482a23f0f5041378385d32`.
+
+### 68.5. Kontrola zapisu i walidacja
+
+Po zapisaniu zmian ponownie pobrano wszystkie trzy pliki z gałęzi i potwierdzono:
+- porównanie wszystkich pól modelu darowizny w bazie;
+- zgodność kryterium w podglądzie archiwum;
+- obecność testu regresyjnego.
+
+Dla HEAD `55ecc820cb5b0f0ee2482a23f0f5041378385d32`:
+- Repository compliance, run `43716604238` — **success**;
+- Android prototype build, run `43716604196` — **in_progress`;
+- Android GUI validation, run `43716604187` — **in_progress`.
+
+W trakcie testowania nie zgłoszono jeszcze błędu kodu, ale testy JVM, testy emulatorowe i budowa APK nie zostały zakończone. Etap 68 jest **zapisany i sprawdzony w źródłach; walidacja CI oczekuje na zakończenie**. PR `#68` pozostaje otwarty i niescalony z `main`.
+
