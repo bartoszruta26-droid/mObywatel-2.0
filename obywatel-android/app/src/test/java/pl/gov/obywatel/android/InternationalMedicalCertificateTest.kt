@@ -340,4 +340,27 @@ class InternationalMedicalCertificateTest {
         assertTrue(document.validate().isEmpty())
     }
 
+
+    @Test
+    fun imagingStudyDecoderRejectsDuplicateIdsAndInvalidDates() {
+        val duplicateIds = """[
+            {"id":"same","modality":"MRI"},
+            {"id":"same","modality":"CT"}
+        ]"""
+        assertTrue(runCatching { decodeMedicalImagingStudies(duplicateIds) }.isFailure)
+
+        val invalidDate = """[
+            {"id":"study-1","modality":"MRI","studyDate":"2026-02-30"}
+        ]"""
+        assertTrue(runCatching { decodeMedicalImagingStudies(invalidDate) }.isFailure)
+    }
+
+    @Test
+    fun imagingStudyDecoderRejectsUnsafeAttachmentIdentifiers() {
+        val invalidAttachments = """[
+            {"id":"study-1","modality":"MRI","attachmentIds":["../outside"]}
+        ]"""
+        assertTrue(runCatching { decodeMedicalImagingStudies(invalidAttachments) }.isFailure)
+    }
+
 }
