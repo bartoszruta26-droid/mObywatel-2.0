@@ -449,9 +449,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                         ?: throw IllegalStateException("Najpierw wybierz poprawny zakres dat raportu.")
                     val pdf = repository.exportFinancialReportPdf(period)
                     withContext(Dispatchers.IO) {
-                        val output = context.contentResolver.openOutputStream(uri)
-                            ?: throw IllegalStateException("Nie można zapisać pliku PDF.")
-                        output.use { it.write(pdf) }
+                        FinancialReportSafWriter.write(context.contentResolver, uri, pdf)
                     }
                     message = "Raport PDF został zapisany."
                     error = null
@@ -472,9 +470,11 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                         ?: throw IllegalStateException("Najpierw wybierz poprawny zakres dat raportu.")
                     val csv = repository.exportFinancialReportCsv(period)
                     withContext(Dispatchers.IO) {
-                        val output = context.contentResolver.openOutputStream(uri)
-                            ?: throw IllegalStateException("Nie można zapisać pliku CSV.")
-                        output.use { it.write(csv.toByteArray(Charsets.UTF_8)) }
+                        FinancialReportSafWriter.write(
+                            context.contentResolver,
+                            uri,
+                            csv.toByteArray(Charsets.UTF_8)
+                        )
                     }
                     message = "Raport CSV został zapisany."
                     error = null
