@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -106,9 +105,7 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                     }.getOrNull()
                     val allTables = listOfNotNull(tableA, tableB)
                     val rateMap = allTables.flatMap { table ->
-                        table.rates.mapNotNull { rate ->
-                            rate.mid?.let { rate.code to it }
-                        }
+                        table.rates.mapNotNull { rate -> rate.mid?.let { rate.code to it } }
                     }.toMap()
                     Triple(rateMap, allTables.joinToString(" • ") {
                         "Tabela ${it.table.apiCode}: ${it.effectiveDate}"
@@ -207,9 +204,9 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
             }
             Text("Waluta docelowa")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(rates.keys.sorted(), key = { it }) { code ->
-                    Button(onClick = { toCode = code; result = null }) {
-                        Text(if (toCode == code) "✓ $code" else code)
+                items(rates.keys.sorted(), key = { it }) {
+                    Button(onClick = { toCode = it; result = null }) {
+                        Text(if (toCode == it) "✓ $it" else it)
                     }
                 }
             }
