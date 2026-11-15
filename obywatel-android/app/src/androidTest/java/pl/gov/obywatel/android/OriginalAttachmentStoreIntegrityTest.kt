@@ -16,6 +16,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 
 @RunWith(AndroidJUnit4::class)
 class OriginalAttachmentStoreIntegrityTest {
@@ -213,6 +215,30 @@ class OriginalAttachmentStoreIntegrityTest {
             directory.listFiles().orEmpty().filter {
                 it.name.startsWith(".$stagedId.") && it.name.endsWith(".import")
             }.forEach { it.delete() }
+        }
+    }
+
+    @Test
+    fun concurrentImportsForSameDocumentPreserveBothCommittedAttachments() {
+        val document = documentId()
+        val firstId = "parallel-a-${UUID.randomUUID().toString().take(8)}"
+        val secondId = "parallel-b-${UUID.randomUUID().toString().take(8)}"
+        val start = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+        val firstArchive = archive(document, firstId, "first".toByteArray(Charsets.UTF_8))
+        val secondArchive = archive(document, secondId, "second".toByteArray(Charsets.UTF_8))
+        try {
+            val first = executor.submit { start.await(); importOriginalAttachmentArchive(context, firstArchive) }
+            val second = executor.submit { start.await(); importOriginalAttachmentArchive(context, secondArchive) }
+            start.countDown()
+            first.get()
+            second.get()
+
+            assertEquals(listOf(firstId, secondId).sorted(), listOriginalAttachmentIds(context, document).sorted())
+            reconcileOriginalAttachments(context)
+        } finally {
+            executor.shutdownNow()
+            runCatching { removeOriginalAttachmentDocumentScope(context, document) }
         }
     }
 }
