@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -78,7 +79,7 @@ class FinancialReportDateRangePickerTest {
         }
 
         composeRule.onNodeWithText("Data początkowa: 2026-11-01").performClick()
-        composeRule.onNodeWithText("10").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("10").performScrollTo().assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Zastosuj datę").performClick()
 
         assertEquals("2026-11-10" to "2026-11-20", dates.value)
@@ -96,7 +97,7 @@ class FinancialReportDateRangePickerTest {
         }
 
         composeRule.onNodeWithText("Data końcowa: 2026-11-15").performClick()
-        composeRule.onNodeWithText("25").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("25").performScrollTo().assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Zastosuj datę").performClick()
 
         assertEquals("2026-11-01" to "2026-11-25", dates.value)
