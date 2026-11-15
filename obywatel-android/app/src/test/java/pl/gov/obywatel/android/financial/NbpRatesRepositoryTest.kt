@@ -160,6 +160,50 @@ class NbpRatesRepositoryTest {
     }
 
     @Test
+    fun interruptedNetworkRequestDoesNotPoisonCacheAndCanBeRetried() {
+        val directory = Files.createTempDirectory("nbp-interrupted").toFile()
+        var calls = 0
+        val json = """[{"table":"A","no":"220/A/NBP/2026","effectiveDate":"2026-11-13","rates":[{"currency":"euro","code":"EUR","mid":4.31}]}]"""
+        val repository = NbpRatesRepository(
+            transport = object : NbpHttpTransport {
+                override fun get(url: String): String {
+                    calls++
+                    if (calls == 1) throw java.io.IOException("connection interrupted")
+                    return json
+                }
+            },
+            cacheDirectory = directory
+        )
+        assertThrows(java.io.IOException::class.java) {
+            repository.tableForDate(NbpTable.A, LocalDate.parse("2026-11-13"))
+        }
+        assertEquals("4.31", repository.tableForDate(NbpTable.A, LocalDate.parse("2026-11-13")).rate("EUR")?.mid.toString())
+        assertEquals(2, calls)
+        directory.deleteRecursively()
+    }
+
+    @Test
+    fun cacheWriteFailureDoesNotBreakSuccessfulNetworkResponse() {
+        val parent = Files.createTempFile("nbp-cache-parent", ".tmp").toFile()
+        var calls = 0
+        val repository = NbpRatesRepository(
+            transport = object : NbpHttpTransport {
+                override fun get(url: String): String {
+                    calls++
+                    return """[{"table":"A","no":"220/A/NBP/2026","effectiveDate":"2026-11-13","rates":[{"currency":"euro","code":"EUR","mid":4.31}]}]"""
+                }
+            },
+            cacheDirectory = parent
+        )
+        try {
+            assertEquals("4.31", repository.tableForDate(NbpTable.A, LocalDate.parse("2026-11-13")).rate("EUR")?.mid.toString())
+            assertEquals(1, calls)
+        } finally {
+            parent.delete()
+        }
+    }
+
+    @Test
     fun latestRatesRefreshAfterTtlWhileHistoricalArchiveRemainsSeparate() {
         val directory = Files.createTempDirectory("nbp-current").toFile()
         var clock = 1_000_000L
