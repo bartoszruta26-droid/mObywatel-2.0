@@ -1466,3 +1466,30 @@ Data: 2026-11-15. Gałąź: `feature/medical-certificate-management-translation`
 6. Ukrycie kafelka nie usuwa zapisanych zaświadczeń.
 7. Tłumaczenie tworzy osobną treść docelową; zmiana przekładu ręcznego nie nadpisuje oryginału.
 8. Błąd pobierania modelu lub tłumaczenia nie może usunąć danych źródłowych.
+
+
+## 55. Eksport dwujęzyczny PDF i odwracanie kierunku tłumaczenia — 2026-11-15
+
+### Wykonane zmiany
+- [x] Dodano generator PDF oparty na Android PdfDocument. Plik zawiera oryginalne wartości oraz odpowiadające im wartości docelowe; przy wielu językach docelowych każda wartość jest zestawiona z nazwą języka.
+- [x] Eksport obejmuje również etykiety pól. Etykiety docelowe są tłumaczone tym samym lokalnym modelem ML Kit i można je ręcznie poprawić.
+- [x] Dla pól chronionych przed automatycznym tłumaczeniem (np. identyfikatory, daty, numery, dane kontaktowe) PDF zachowuje oryginalną wartość także w kolumnie języka docelowego zamiast wstawiać pusty tekst lub pozorny przekład.
+- [x] Dodano systemowy wybór lokalizacji zapisu PDF przez Android CreateDocument.
+- [x] Dodano przycisk „Swap original and translation”. Zamienia on język źródłowy z wybranym docelowym oraz treści pól; dotychczasowy oryginał jest zachowywany jako treść w poprzednim języku.
+- [x] Dodano test instrumentalny sprawdzający wygenerowanie poprawnego pliku PDF i nagłówek formatu.
+- [x] Tłumaczenie pozostaje lokalne (Google ML Kit Translation), bez przekazywania treści klinicznych do Google Translate lub innego zdalnego punktu końcowego.
+
+### Uwagi bezpieczeństwa i ograniczenia
+- Google ML Kit Translation jest biblioteką Google do tłumaczenia na urządzeniu; nie jest to serwis Google Translate ani otwartoźródłowy silnik. Modele są pobierane z infrastruktury Google, natomiast treść pacjenta jest przekazywana do lokalnego modelu.
+- Tłumaczenie maszynowe nie stanowi tłumaczenia przysięgłego ani zatwierdzonego przekładu medycznego. Wymaga weryfikacji przez kompetentnego człowieka.
+- PDF pokazuje brakujący przekład wartości jako oryginał (np. dla pól celowo wyłączonych z tłumaczenia), a nie jako pustą treść. Etykiety pól docelowych używają tłumaczenia, jeśli zostało wygenerowane i zapisane; w przeciwnym razie stosują etykietę źródłową.
+- Test PDF jest dodany do zestawu instrumentacyjnego; wynik kompilacji i testu emulatora musi zostać potwierdzony przez GitHub Actions dla końcowego SHA.
+
+### Kryteria odbioru
+1. PDF zawiera źródłowy i docelowy język, nazwy pól oraz wartości.
+2. Przy wielu językach docelowych PDF zawiera osobny zestaw docelowy dla każdego wybranego języka.
+3. Ręczna korekta etykiety lub wartości przekładu jest widoczna w następnym eksporcie.
+4. Zamiana języków miejscami nie usuwa pierwotnej treści i po zapisaniu jest odtwarzalna.
+5. Błąd generowania lub zapisu PDF nie zmienia zaszyfrowanych danych zaświadczenia.
+
+**Status:** kod i test dodane; oczekują na kompilację, testy JVM, testy emulatora i przegląd zmian.
