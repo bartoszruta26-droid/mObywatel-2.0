@@ -60,9 +60,18 @@ object BankStatementXmlParser {
                         }
                     }
                 }
+                XmlPullParser.DOCDECL -> throw IllegalArgumentException(
+                    "Deklaracje DTD i encje zewnętrzne są niedozwolone w pliku wyciągu."
+                )
+                XmlPullParser.ENTITY_REF -> throw IllegalArgumentException(
+                    "Odwołania do encji XML są niedozwolone w pliku wyciągu."
+                )
                 XmlPullParser.END_TAG -> if (parser.name == "operation") {
                     val operation = current
                         ?: throw IllegalArgumentException("Nieprawidłowy element operation.")
+                    require(entries.size < MAX_OPERATIONS) {
+                        "Dokument XML zawiera zbyt wiele operacji (limit: $MAX_OPERATIONS)."
+                    }
                     entries += operation.toEntry(normalizedAccountScopeId)
                     current = null
                 }
@@ -117,6 +126,7 @@ object BankStatementXmlParser {
     }
 
     private const val MAX_XML_CHARACTERS = 10 * 1024 * 1024
+    private const val MAX_OPERATIONS = 50_000
 
     private data class Operation(
         var orderDate: String = "",
