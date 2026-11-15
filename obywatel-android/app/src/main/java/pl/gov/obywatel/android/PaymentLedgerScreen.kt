@@ -955,7 +955,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Notowania i wycena", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(6.dp))
-                Text("Kursy NBP i referencyjna wycena aktywów zostaną dodane w kolejnych etapach.")
+                pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
