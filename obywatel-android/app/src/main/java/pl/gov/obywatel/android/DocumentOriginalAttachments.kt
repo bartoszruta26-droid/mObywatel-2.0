@@ -128,6 +128,9 @@ internal fun findOrphanedOriginalAttachmentIds(referencedIds: Set<String>, store
 internal fun shouldDeleteInstalledAttachmentsAfterImportFailure(metadataCommitAttempted: Boolean): Boolean =
     !metadataCommitAttempted
 
+internal fun shouldDeleteAddedAttachmentAfterFailure(metadataCommitAttempted: Boolean): Boolean =
+    !metadataCommitAttempted
+
 private data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
 private object OriginalAttachmentStore {
@@ -243,17 +246,23 @@ private object OriginalAttachmentStore {
         val target = File(directory, "$attachmentId.enc")
         require(!target.exists()) { "Plik załącznika o tym identyfikatorze już istnieje." }
         target.writeBytes(crypt(bytes, true))
+        var metadataCommitAttempted = false
         try {
             updated.add(OriginalAttachment(attachmentId, name.take(180).ifBlank { "Oryginał dokumentu" }, safeMime))
             val json = JSONArray()
             updated.forEach { item ->
                 json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime))
             }
+            metadataCommitAttempted = true
             check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .putString(documentId, json.toString()).commit()) { "Nie udało się zapisać załącznika." }
         } catch (failure: Throwable) {
-            // Do not leave an encrypted orphan when metadata persistence fails.
-            if (target.exists()) target.delete()
+            // A failed commit may have updated SharedPreferences' in-memory map.
+            // Keep the encrypted file after the commit attempt; reconciliation
+            // removes it only if durable metadata does not reference it.
+            if (shouldDeleteAddedAttachmentAfterFailure(metadataCommitAttempted) && target.exists()) {
+                target.delete()
+            }
             throw failure
         }
     }
