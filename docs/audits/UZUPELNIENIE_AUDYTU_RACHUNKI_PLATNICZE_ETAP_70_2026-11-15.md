@@ -278,3 +278,12 @@ Podłączono kartę `NbpCurrencyConverterCard` w panelu „Notowania i wycena”
 Commity: `1c283e6cc3f08c84283769fc9eb55a1608365284`, `79fc28f4b22b1a3075d3bd9a14e451cfbafb16bb`, `6e6875776616e5644db90558d745f4a015da2df8`, `f341121b6e8b8ee0428b638ac530c501421d07fc`, `c31458233be669f3d9efeab14aeba614fc36d619`, `820940857524f4ece2717bebd49e31e5b1012068`, `7a06fbde78873ecb95ab62212906b3f375398c15`, `6689f3dfac64e546b42ec2469278ca6836f24db3`, `f38fc56742db09048c7266df2a29f051a51e4e73`.
 
 Do zamknięcia etapu wymagane jest zielone CI. Otwarta pozostaje obsługa dat historycznych, pełnego słownika ISO, testów UI, trwałego cache i historii przeliczeń.
+
+
+## 84. Data historyczna i cena złota — 15 listopada 2026 r.
+
+Dodano pole daty historycznej i akcję pobierania notowań NBP dla wybranego dnia. Dla dni bez publikacji pobierana jest ostatnia dostępna tabela A/B i cena złota do 7 dni wstecz. Cena złota jest wyświetlana w PLN za gram wraz z datą notowania. Błąd źródła złota nie blokuje pobierania kursów walut.
+
+Commity: `f7d1aeda662057dcbdf213f0d73f5c09b581905d`, `bbaa5c6e00b41dc61966194599b12ac00948ee63`.
+
+Otwarte: trwała historia przeliczeń, kalendarz dat, trwały cache, pełny słownik ISO i testy UI. Zamknięcie etapu wymaga zielonego CI dla końcowego SHA.
