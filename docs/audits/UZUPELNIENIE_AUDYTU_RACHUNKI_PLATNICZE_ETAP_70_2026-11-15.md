@@ -495,3 +495,23 @@ Zmiany zapisano na gałęzi feature/payment-ledger-stage-1. Test przekracza doty
 1. Potwierdzić testy JVM, kompilację Android i test instrumentacyjny 1005 rekordów.
 2. Dodać wersjonowany katalog ISO 4217 z kontrolowanym źródłem, statusem aktywności i datami obowiązywania.
 3. Rozszerzyć testy interfejsu historii oraz obsługi błędu zapisu przeliczenia.
+
+
+## Etap 76 — wersjonowany katalog ISO 4217 (15 listopada 2026 r.)
+
+### Zakres wdrożenia
+
+1. Dodano migawkę bieżącej List One SIX opublikowaną 2026-09-17: 178 kodów (waluty, fundusze i kody specjalne), wraz z kodem numerycznym, wykładnikiem jednostki mniejszej, flagą funduszu i nazwą źródłową.
+2. Dodano migawkę List Three opublikowaną 2026-01-01: 137 pozycji historycznych wraz z datą/zakresem wycofania.
+3. Katalog walut płatniczych filtruje fundusze oraz kody bez wykładnika jednostki mniejszej. Zachowuje numeryczne kody ISO jako tekst, aby nie utracić zer wiodących.
+4. Udostępniono wersje i adresy źródeł oraz oddzielne wyszukiwanie kodów historycznych.
+5. Nazwy lokalne i symbole są warstwą prezentacji Androida, a nie polami normatywnymi ISO. Gdy platforma nie zna nowego kodu, używana jest nazwa źródłowa i kod jako symbol zastępczy.
+6. Dodano testy kodów numerycznych, precyzji, wykluczania funduszy i kodów specjalnych, dat wycofania oraz braku kolizji kodów bieżących z historycznymi.
+
+### Źródła i ograniczenia
+
+SIX Group jest oficjalną agencją utrzymania kodów ISO 4217. Migawki są oparte na jej List One i List Three; repozytorium upstream unitsml/iso4217 wskazuje te same listy, daty publikacji i pola. ISO 4217 nie publikuje symboli walut ani polskich nazw lokalnych. Aktualizacja katalogu wymaga kontrolowanej aktualizacji migawek i testów porównujących zestawy kodów. Migawki mają jawne daty, a nie deklarację automatycznej aktualności.
+
+### Status
+
+Kod i testy dodano na gałęzi feature/payment-ledger-stage-1. Wyniki kompilacji i testów dla końcowego SHA wymagają potwierdzenia w GitHub Actions. PR #68 pozostaje otwarty i niescalony.
