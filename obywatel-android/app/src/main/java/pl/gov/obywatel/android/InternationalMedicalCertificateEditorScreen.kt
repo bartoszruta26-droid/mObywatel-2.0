@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: CC0-1.0
 package pl.gov.obywatel.android
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -88,7 +90,18 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 .filter { it.isNotBlank() }.forEach { put(it, true) }
         }
     }
-    var saveMessage by remember { mutableStateOf("") }\n    var sourceLanguageExpanded by remember { mutableStateOf(false) }\n    var targetLanguagesExpanded by remember { mutableStateOf(false) }
+    var saveMessage by remember { mutableStateOf("") }
+    var pendingPdfBytes by remember { mutableStateOf<ByteArray?>(null) }
+    val pdfLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        val bytes = pendingPdfBytes
+        if (uri != null && bytes != null) {
+            runCatching { context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: error("Could not open PDF destination.") }
+                .onSuccess { saveMessage = "Bilingual PDF exported successfully." }
+                .onFailure { saveMessage = "PDF export failed: " + (it.message ?: "unknown error") }
+        }
+        pendingPdfBytes = null
+    }
+    var sourceLanguageExpanded by remember { mutableStateOf(false) }\n    var targetLanguagesExpanded by remember { mutableStateOf(false) }
     var translating by remember { mutableStateOf(false) }
     val translationValues = remember { mutableStateMapOf<String, String>().apply {
         runCatching { JSONObject(values["imc_translations"].orEmpty()) }.getOrNull()?.let { root ->
@@ -317,7 +330,8 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                             eligible.forEach { definition ->
                                 val key = definition.key
                                 val result = runCatching { provider.translate(values[fieldKey(key)].orEmpty(), sourceLanguage, target) }
-                                result.onSuccess { translationValues["$target|$key"] = it; completed++ }.onFailure { failed++ }
+                                result.onSuccess { translationValues["$target|$key"] = it; completed++ }.onFailure { failed++ }                                val labelResult = runCatching { provider.translate(definition.label, sourceLanguage, target) }
+                                labelResult.onSuccess { translationValues["$target|label:$key"] = it }.onFailure { failed++ }
                             }
                         }
                         translating = false
@@ -334,11 +348,30 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Translation — ${languages.firstOrNull { it.code == target }?.englishName ?: target}", fontWeight = FontWeight.SemiBold)
-                        Text("Edit any field below to manually correct the machine translation. Source text remains unchanged.", style = MaterialTheme.typography.bodySmall)
+                        Text("Edit translated field names and values. Source text remains separately preserved.", style = MaterialTheme.typography.bodySmall)
+                        Button(onClick = {
+                            val previousSource = sourceLanguage
+                            definitions.filter { isMedicalCertificateTranslatableField(it.key) }.forEach { definition ->
+                                val key = definition.key
+                                val translatedValue = translationValues["$target|$key"]
+                                if (translatedValue != null) {
+                                    translationValues["$previousSource|$key"] = values[fieldKey(key)].orEmpty()
+                                    values[fieldKey(key)] = translatedValue
+                                }
+                                translationValues["$previousSource|label:$key"] = definition.label
+                            }
+                            sourceLanguage = target
+                            selectedTargets.clear()
+                            selectedTargets[previousSource] = true
+                            saveMessage = "Language direction switched. Save the certificate to persist the new source language."
+                        }, modifier = Modifier.fillMaxWidth()) { Text("Swap original and translation") }
                         translatedFields.forEach { definition ->
-                            val translationKey = "$target|${definition.key}"
+                            val translationKey = "$target|" + definition.key
+                            OutlinedTextField(value = translationValues["$target|label:" + definition.key] ?: definition.label,
+                                onValueChange = { translationValues["$target|label:" + definition.key] = it },
+                                label = { Text("Translated field name") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                             OutlinedTextField(value = translationValues[translationKey].orEmpty(), onValueChange = { translationValues[translationKey] = it },
-                                label = { Text(definition.label + " — corrected translation") }, modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Translated value") }, modifier = Modifier.fillMaxWidth(),
                                 minLines = if (definition.key in setOf("chiefComplaint", "medicalHistory", "diagnosis", "physicalExamination", "systemsReview", "functionalLimitations", "prognosis", "recommendations")) 3 else 1)
                         }
                     }
@@ -355,6 +388,30 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
         validationErrors.forEach { error ->
             Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
         }
+        Button(
+            enabled = loadError.isBlank() && selectedTargets.any { it.value },
+            onClick = {
+                val targets = selectedTargets.filterValues { it }.keys.toList()
+                val fields = definitions.filter { definition -> isMedicalCertificateTranslatableField(definition.key) && values[fieldKey(definition.key)].orEmpty().isNotBlank() }
+                    .flatMap { definition ->
+                        val sourceValue = values[fieldKey(definition.key)].orEmpty()
+                        targets.map { target ->
+                            val languageName = languages.firstOrNull { it.code == target }?.englishName ?: target
+                            MedicalCertificatePdfField(
+                                sourceLabel = definition.label,
+                                sourceValue = sourceValue,
+                                targetLabel = languageName + " — " + (translationValues["$target|label:" + definition.key] ?: definition.label),
+                                targetValue = translationValues["$target|" + definition.key].orEmpty().ifBlank { "[Translation not available]" }
+                            )
+                        }
+                    }
+                pendingPdfBytes = runCatching {
+                    createBilingualMedicalCertificatePdf(sourceLanguage, targets.joinToString(", ") { it }, fields)
+                }.getOrElse { saveMessage = "PDF generation failed: " + (it.message ?: "unknown error"); null }
+                if (pendingPdfBytes != null) pdfLauncher.launch("international-medical-certificate-bilingual.pdf")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Export bilingual PDF") }
         Button(
             onClick = {
                 val integrity = runCatching {
