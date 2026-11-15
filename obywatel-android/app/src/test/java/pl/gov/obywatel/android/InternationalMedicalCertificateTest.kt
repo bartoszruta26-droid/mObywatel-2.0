@@ -342,6 +342,19 @@ class InternationalMedicalCertificateTest {
 
 
     @Test
+    fun missingOrBlankImagingStudyPayloadLoadsAsAnEmptyList() {
+        assertTrue(loadMedicalImagingStudies(null).isEmpty())
+        assertTrue(loadMedicalImagingStudies("").isEmpty())
+        assertTrue(loadMedicalImagingStudies("   ").isEmpty())
+    }
+
+    @Test
+    fun malformedNonBlankImagingStudyPayloadIsRejected() {
+        assertTrue(runCatching { loadMedicalImagingStudies("[") }.isFailure)
+        assertTrue(runCatching { loadMedicalImagingStudies("not-json") }.isFailure)
+    }
+
+    @Test
     fun imagingStudyDecoderRejectsDuplicateIdsAndInvalidDates() {
         val duplicateIds = """[
             {"id":"same","modality":"MRI"},
