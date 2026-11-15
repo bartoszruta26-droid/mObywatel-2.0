@@ -2964,3 +2964,6 @@ W przeglądzie bezpieczeństwa wykryto, że początkowa implementacja ufała typ
 Kontrola działa podczas importu, po ograniczonym kopiowaniu strumienia; niezgodność MIME i sygnatury powoduje usunięcie częściowego pliku i odrzucenie załącznika. Dodano testy jednostkowe poprawnych i niezgodnych sygnatur. Ta poprawka wymaga osobnego zielonego CI dla nowej rewizji, zanim będzie uznana za zweryfikowaną.
 
 Status etapu 2P: implementacja metadanych, magazynu prywatnego, interfejsu i migracji 6 → 7 jest zbudowana i przeszła CI na rewizji `5d518a4...`; walidacja sygnatur jest dodatkowym zabezpieczeniem oczekującym na CI. Ręczny test importu plików z rzeczywistych dostawców SAF oraz test na urządzeniu pozostają do wykonania.
+
+
+**Doprecyzowanie rewizji kontroli sygnatur:** po pierwszym zapisie sprawdzono zgodność typów Kotlin w porównaniach bajtów sygnatur PNG i poprawiono jawne konwersje do `Byte`. Rewizja końcowa kodu kontroli sygnatur: `908537392875831fbd04fba6d74211103179d103`. Poprzedni przebieg CI dla `187d57ff...` został anulowany wskutek kolejnej aktualizacji gałęzi; nie stanowi wyniku walidacji rewizji końcowej. Należy uruchomić i ocenić CI na aktualnym HEAD.
