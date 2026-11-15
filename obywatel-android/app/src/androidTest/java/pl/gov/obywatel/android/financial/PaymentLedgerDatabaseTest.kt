@@ -647,4 +647,91 @@ class PaymentLedgerDatabaseTest {
         }
     }
 
+    @Test
+    fun cashDonationPersistsAcrossReopenWithOrganizationAndPurpose() {
+        val db = openDatabase()
+        try {
+            val donation = pl.gov.obywatel.android.CashDonation(
+                id = "donation-persist-1",
+                receivedAt = Instant.parse("2026-11-14T12:00:00Z"),
+                amount = BigDecimal("250.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Zakup materiałów edukacyjnych",
+                isAnonymous = true
+            )
+            db.saveCashDonation(donation)
+            val stored = db.readCashDonations().single()
+            assertEquals(donation.id, stored.id)
+            assertEquals(donation.beneficiaryOrganizationName, stored.beneficiaryOrganizationName)
+            assertEquals(donation.purpose, stored.purpose)
+            assertEquals(true, stored.isAnonymous)
+            assertEquals(0, donation.amount.compareTo(stored.amount))
+        } finally {
+            db.close()
+        }
+        val reopened = openDatabase()
+        try {
+            assertEquals("Fundacja Aria", reopened.readCashDonations().single().beneficiaryOrganizationName)
+        } finally {
+            reopened.close()
+        }
+    }
+
+    @Test
+    fun cashDonationRejectsDuplicateIdAndCanBeUpdatedOrDeleted() {
+        val db = openDatabase()
+        try {
+            val donation = pl.gov.obywatel.android.CashDonation(
+                id = "donation-crud-1",
+                receivedAt = Instant.parse("2026-11-14T12:00:00Z"),
+                amount = BigDecimal("100.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Cel testowy"
+            )
+            db.saveCashDonation(donation)
+            assertThrows(SQLiteConstraintException::class.java) { db.saveCashDonation(donation) }
+            db.updateCashDonation(donation.copy(purpose = "Nowy cel"))
+            assertEquals("Nowy cel", db.readCashDonations().single().purpose)
+            db.deleteCashDonation(donation.id)
+            assertEquals(emptyList<pl.gov.obywatel.android.CashDonation>(), db.readCashDonations())
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun cashDonationSchemaMigratesFromVersionFiveWithoutDroppingLegacyData() {
+        val legacy = object : SQLiteOpenHelper(context, databaseName, null, 5) {
+            override fun onCreate(db: SQLiteDatabase) {
+                db.execSQL("CREATE TABLE legacy_donation_marker (value TEXT NOT NULL)")
+                db.execSQL("INSERT INTO legacy_donation_marker(value) VALUES ('preserve-me')")
+            }
+            override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+        }
+        legacy.writableDatabase
+        legacy.close()
+        val upgraded = openDatabase()
+        try {
+            upgraded.saveCashDonation(
+                pl.gov.obywatel.android.CashDonation(
+                    id = "donation-after-migration",
+                    receivedAt = Instant.parse("2026-11-14T12:00:00Z"),
+                    amount = BigDecimal("10.00"),
+                    currencyCode = "PLN",
+                    beneficiaryOrganizationName = "Fundacja Aria",
+                    purpose = "Cel po migracji"
+                )
+            )
+            upgraded.readableDatabase.rawQuery("SELECT value FROM legacy_donation_marker", null).use {
+                assertEquals(true, it.moveToFirst())
+                assertEquals("preserve-me", it.getString(0))
+            }
+            assertEquals(1, upgraded.readCashDonations().size)
+        } finally {
+            upgraded.close()
+        }
+    }
+
 }
