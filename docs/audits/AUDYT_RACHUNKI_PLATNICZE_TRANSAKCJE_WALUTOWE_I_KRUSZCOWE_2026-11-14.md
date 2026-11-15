@@ -4335,3 +4335,38 @@ PR #68 pozostaje otwarty i niescalony.
 2. Zintegrować adapter z kalkulatorem i ekranem Compose: wybór waluty, kwota, odwrócenie pary, kurs, źródło, tabela i data efektywna.
 3. Dodać listę walut z NBP, obsługę braku kursu dla waluty źródłowej/docelowej i czytelne komunikaty offline.
 4. Dopiero potem rozszerzyć trwały cache i historię wycen.
+
+
+## 21. Etap 83 — integracja kalkulatora NBP z interfejsem (15 listopada 2026 r.)
+
+### Zakres wykonany
+- Dodano `NbpCurrencyConverterCard.kt` i podłączono go w istniejącym panelu „Notowania i wycena” ekranu rejestru płatniczego.
+- Interfejs pozwala wpisać kwotę, kody ISO waluty źródłowej i docelowej, zamienić kierunek oraz wybrać waluty z listy pobranej z NBP.
+- Pobieranie tabel A i B odbywa się w `Dispatchers.IO`; tabela B jest opcjonalna, aby awaria jednego źródła nie blokowała kursów z drugiego.
+- Przeliczenie walut obcych odbywa się przez PLN na podstawie kursów średnich NBP wyrażonych jako PLN za 1 jednostkę waluty. Wynik jest zaokrąglany do precyzji waluty docelowej z użyciem `BigDecimal` i `HALF_EVEN`.
+- Dodano obsługę typowych walut o 0, 2, 3 i 4 miejscach dziesiętnych (w tym JPY, KWD, CLF/UYW); pozostałe kody używają 2 miejsc. Weryfikacja pełnego słownika ISO 4217 i wyjątków wymaga dalszego uzupełnienia.
+- Interfejs pokazuje źródło NBP, osobną datę efektywną każdej pobranej tabeli i ostrzeżenie, że kurs średni ma charakter referencyjny, a nie transakcyjny.
+- Po błędzie odświeżania usuwa poprzednie kursy z aktywnego stanu, aby nie prezentować nieaktualnej wyceny jako bieżącej.
+- Wyodrębniono `NbpCurrencyConverter.convert` i dodano testy przeliczeń bezpośrednich, odwrotnych, krzyżowych, precyzji i błędnych danych.
+
+### Ograniczenia i ryzyka
+- Nie dodano jeszcze wyboru daty historycznej w interfejsie, automatycznego odświeżania, trwałego cache ani zapisu historii przeliczeń.
+- Kody walut są wpisywane lub wybierane z listy; brakuje wyszukiwania po nazwie i pełnej lokalizacji nazw walut.
+- Adapter i kalkulator wymagają zielonego CI oraz testów na urządzeniu. Sam zapis plików w GitHub nie jest dowodem poprawności kompilacji.
+
+### Commity etapu 83
+- `1c283e6cc3f08c84283769fc9eb55a1608365284` — karta przelicznika.
+- `79fc28f4b22b1a3075d3bd9a14e451cfbafb16bb` — poprawa stanu i importów.
+- `6e6875776616e5644db90558d745f4a015da2df8` — integracja z ekranem rejestru.
+- `f341121b6e8b8ee0428b638ac530c501421d07fc` — wyodrębnienie obliczeń do testowalnego modelu.
+- `c31458233be669f3d9efeab14aeba614fc36d619`, `820940857524f4ece2717bebd49e31e5b1012068` — testy i korekta oczekiwanych wyników.
+- `7a06fbde78873ecb95ab62212906b3f375398c15` — osobne daty tabel i wybór waluty docelowej.
+- `6689f3dfac64e546b42ec2469278ca6836f24db3` — odporne parsowanie numerycznej ceny złota.
+- `f38fc56742db09048c7266df2a29f051a51e4e73` — czyszczenie kursów po nieudanym odświeżeniu.
+
+### Następny etap
+1. Potwierdzić kompilację, testy jednostkowe i emulatorowe na końcowym SHA.
+2. Dodać testy UI kalkulatora oraz testy sieciowe z atrapą transportu, w tym timeout, HTTP 404/500, pustą odpowiedź i niedostępną tabelę B.
+3. Dodać wybór daty historycznej z użyciem `tableOnOrBefore` i `goldPriceOnOrBefore` oraz jawne pokazanie faktycznej daty publikacji.
+4. Uzupełnić słownik precyzji ISO 4217 i dodać lokalizowane nazwy walut.
+5. Dodać trwały cache z oznaczeniem czasu pobrania i historii przeliczeń.
