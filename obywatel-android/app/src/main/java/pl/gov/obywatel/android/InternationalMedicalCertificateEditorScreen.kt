@@ -248,6 +248,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 otherLanguage = ""
                 selectedTargets.clear()
                 selectedTargets["pl"] = true
+                // Keep every demonstration field as a comma-separated key/value pair.
                 val sample = mapOf(
                     "documentNumber" to "SAMPLE-IMC-2026-001",
                     "issueDate" to "2026-11-15",
