@@ -1557,3 +1557,17 @@ Dokumentacja Google opisuje tłumaczenie ML Kit jako funkcję z modelami pobiera
 
 ### Status etapu
 **Audyt zaktualizowany.** Kod panelu istnieje, ale nie jest jeszcze odbierany jako kompletny: potrzebne są testy ustawień i operacji modelu, jawny stan błędu odczytu oraz zakończony CI. Katalog lekarzy pozostaje specyfikacją — nie dodano żadnych rzeczywistych osób ani podpisów.
+
+
+---
+
+## 58. Kwerenda lekarzy polskojęzycznych — Ameryka Południowa — 2026-11-15
+
+- [x] Sprawdzono publiczne źródła dla Buenos Aires i São Paulo oraz tropy z innych miast regionu.
+- [x] Zapisano wyniki i źródła w `docs/research/polish-speaking-doctors-south-america.md`.
+- [x] Zidentyfikowano trzy publiczne profile lekarzy/praktyk jako tropy do dalszej weryfikacji.
+- [ ] Nie potwierdzono jawnej deklaracji znajomości języka polskiego dla tych osób; nie wolno opisywać ich jako polskojęzycznych.
+- [ ] Nie dodano tych osób do produkcyjnego katalogu wystawców ani podpisujących.
+- [ ] Przed wpisem produkcyjnym uzyskać potwierdzenie języka polskiego, aktualnej licencji, praktyki oraz zgody lekarza na publikację danych.
+
+**Status:** kwerenda zapisana; brak wystarczających dowodów do dodania kilku rzeczywistych lekarzy polskojęzycznych. Nie zastępować brakujących dowodów domysłami na podstawie nazwiska lub polonijnego miasta.
