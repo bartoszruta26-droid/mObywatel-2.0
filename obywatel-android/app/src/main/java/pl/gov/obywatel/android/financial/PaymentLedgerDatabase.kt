@@ -582,11 +582,23 @@ class PaymentLedgerDatabase(
      */
     /** Importuje wszystkie typy danych archiwum w jednej transakcji SQLite. */
     fun importArchive(archive: PaymentLedgerJsonCodec.Archive): BatchImportSummary {
-        require(archive.transactions.map { it.transaction.id }.distinct().size == archive.transactions.size) {
-            "Archiwum zawiera powtórzone identyfikatory transakcji."
+        // Identyczne rekordy w jednej paczce są deduplikowane; ten sam identyfikator
+        // z odmienną treścią pozostaje konfliktem i wycofuje całą transakcję.
+        val uniqueTransactions = linkedMapOf<String, StoredFinancialTransaction>()
+        archive.transactions.forEach { incoming ->
+            val previous = uniqueTransactions[incoming.transaction.id]
+            if (previous == null) uniqueTransactions[incoming.transaction.id] = incoming
+            else require(sameStoredTransaction(previous, incoming)) {
+                "Archiwum zawiera sprzeczne dane transakcji " + incoming.transaction.id + "."
+            }
         }
-        require(archive.donations.map { it.id }.distinct().size == archive.donations.size) {
-            "Archiwum zawiera powtórzone identyfikatory darowizn."
+        val uniqueDonations = linkedMapOf<String, pl.gov.obywatel.android.CashDonation>()
+        archive.donations.forEach { incoming ->
+            val previous = uniqueDonations[incoming.id]
+            if (previous == null) uniqueDonations[incoming.id] = incoming
+            else require(sameDonationIdentity(previous, incoming)) {
+                "Archiwum zawiera sprzeczne dane darowizny " + incoming.id + "."
+            }
         }
         val db = writableDatabase
         db.beginTransaction()
@@ -597,7 +609,7 @@ class PaymentLedgerDatabase(
             }
             val inserted = insertEntries(db, preview.newEntries)
             val existingTransactions = readFinancialTransactions().associateBy { it.transaction.id }
-            archive.transactions.forEach { stored ->
+            uniqueTransactions.values.forEach { stored ->
                 val existing = existingTransactions[stored.transaction.id]
                 if (existing != null) {
                     require(sameStoredTransaction(existing, stored)) {
@@ -608,7 +620,7 @@ class PaymentLedgerDatabase(
                 }
             }
             var importedDonations = 0
-            archive.donations.forEach { donation ->
+            uniqueDonations.values.forEach { donation ->
                 val exists = db.query(
                     TABLE_CASH_DONATIONS,
                     arrayOf("donation_id"),
