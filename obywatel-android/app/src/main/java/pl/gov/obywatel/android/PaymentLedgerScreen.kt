@@ -45,6 +45,8 @@ import pl.gov.obywatel.android.financial.StoredFinancialTransaction
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
 import pl.gov.obywatel.android.financial.PaymentLedgerJsonCodec
 import pl.gov.obywatel.android.Asset
+import pl.gov.obywatel.android.CashDonation
+import pl.gov.obywatel.android.DonationCustodyStatus
 import pl.gov.obywatel.android.AssetKind
 import pl.gov.obywatel.android.Fee
 import pl.gov.obywatel.android.FinancialRecordSource
@@ -88,6 +90,20 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var feeAssetText by remember { mutableStateOf("") }
     var feeAmountText by remember { mutableStateOf("") }
     var selectedBankEntryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var donations by remember { mutableStateOf<List<CashDonation>>(emptyList()) }
+    var donationAmountText by remember { mutableStateOf("") }
+    var donationCurrencyText by remember { mutableStateOf("PLN") }
+    var donationOrganizationText by remember { mutableStateOf("") }
+    var donationPurposeText by remember { mutableStateOf("") }
+    var donationDonorText by remember { mutableStateOf("") }
+    var donationAnonymous by remember { mutableStateOf(false) }
+    var donationCampaignText by remember { mutableStateOf("") }
+    var donationCollectedByText by remember { mutableStateOf("") }
+    var donationReceiptText by remember { mutableStateOf("") }
+    var donationStatus by remember { mutableStateOf(DonationCustodyStatus.HELD) }
+    var donationTransferredAmountText by remember { mutableStateOf("") }
+    var donationNoteText by remember { mutableStateOf("") }
+    var editingDonationId by remember { mutableStateOf<String?>(null) }
     var editingTransactionId by remember { mutableStateOf<String?>(null) }
     var expandedExchangeIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     val exchangeOperations = remember(entries) { BankExchangeOperationProjector.project(entries) }
@@ -108,6 +124,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 entries = repository.getEntries()
                 financialTransactions = repository.getFinancialTransactions()
                 assets = repository.getAssets()
+                donations = repository.getCashDonations()
                 accountScopes = repository.getAccountScopes()
                 if (accountScopes.none { it.accountScopeId == accountScopeId }) {
                     accountScopeId = accountScopes.firstOrNull()?.accountScopeId ?: "ipko-account-1"
@@ -204,6 +221,73 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 error = exception.message ?: "Nie udało się zapisać transakcji."
             }
         }
+    }
+
+    fun resetDonationForm() {
+        editingDonationId = null
+        donationAmountText = ""
+        donationCurrencyText = "PLN"
+        donationOrganizationText = ""
+        donationPurposeText = ""
+        donationDonorText = ""
+        donationAnonymous = false
+        donationCampaignText = ""
+        donationCollectedByText = ""
+        donationReceiptText = ""
+        donationStatus = DonationCustodyStatus.HELD
+        donationTransferredAmountText = ""
+        donationNoteText = ""
+    }
+
+    fun saveDonationForm() {
+        scope.launch {
+            try {
+                val previous = donations.firstOrNull { it.id == editingDonationId }
+                val donation = CashDonation(
+                    id = editingDonationId ?: UUID.randomUUID().toString(),
+                    receivedAt = previous?.receivedAt ?: Instant.now(),
+                    amount = BigDecimal(donationAmountText.trim()),
+                    currencyCode = donationCurrencyText.trim().uppercase(),
+                    beneficiaryOrganizationName = donationOrganizationText.trim(),
+                    purpose = donationPurposeText.trim(),
+                    donorName = if (donationAnonymous) null else donationDonorText.trim().ifBlank { null },
+                    isAnonymous = donationAnonymous,
+                    campaignName = donationCampaignText.trim().ifBlank { null },
+                    collectedBy = donationCollectedByText.trim().ifBlank { null },
+                    receiptNumber = donationReceiptText.trim().ifBlank { null },
+                    custodyStatus = donationStatus,
+                    transferredAt = if (donationTransferredAmountText.isBlank()) null else previous?.transferredAt ?: Instant.now(),
+                    transferredAmount = donationTransferredAmountText.trim().takeIf { it.isNotBlank() }?.let(::BigDecimal),
+                    note = donationNoteText.trim().ifBlank { null },
+                    source = previous?.source ?: FinancialRecordSource.MANUAL
+                )
+                donation.validate()
+                if (editingDonationId == null) repository.saveCashDonation(donation)
+                else repository.updateCashDonation(donation)
+                donations = repository.getCashDonations()
+                message = if (editingDonationId == null) "Zapisano darowiznę." else "Zaktualizowano darowiznę."
+                error = null
+                resetDonationForm()
+            } catch (exception: Exception) {
+                error = exception.message ?: "Nie udało się zapisać darowizny."
+            }
+        }
+    }
+
+    fun editDonation(donation: CashDonation) {
+        editingDonationId = donation.id
+        donationAmountText = donation.amount.toPlainString()
+        donationCurrencyText = donation.currencyCode
+        donationOrganizationText = donation.beneficiaryOrganizationName
+        donationPurposeText = donation.purpose
+        donationDonorText = donation.donorName.orEmpty()
+        donationAnonymous = donation.isAnonymous
+        donationCampaignText = donation.campaignName.orEmpty()
+        donationCollectedByText = donation.collectedBy.orEmpty()
+        donationReceiptText = donation.receiptNumber.orEmpty()
+        donationStatus = donation.custodyStatus
+        donationTransferredAmountText = donation.transferredAmount?.toPlainString().orEmpty()
+        donationNoteText = donation.note.orEmpty()
     }
 
     fun saveAssetForm() {
@@ -640,10 +724,67 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             }
         }
         Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Darowizny gotówkowe", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(6.dp))
-                Text("Oddzielna ewidencja z obowiązkową nazwą organizacji-beneficjenta i celem darowizny.")
+                Text("Rejestr przyjętych środków z nazwą organizacji-beneficjenta, celem i rozliczeniem przekazania.")
+                OutlinedTextField(value = donationAmountText, onValueChange = { donationAmountText = it }, label = { Text("Kwota przyjęta") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = donationCurrencyText, onValueChange = { donationCurrencyText = it }, label = { Text("Waluta (kod ISO)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = donationOrganizationText, onValueChange = { donationOrganizationText = it }, label = { Text("Nazwa organizacji-beneficjenta *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = donationPurposeText, onValueChange = { donationPurposeText = it }, label = { Text("Cel darowizny *") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = donationDonorText, onValueChange = { donationDonorText = it }, label = { Text("Darczyńca (opcjonalnie)") }, singleLine = true, enabled = !donationAnonymous, modifier = Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { donationAnonymous = !donationAnonymous; if (donationAnonymous) donationDonorText = "" }) {
+                        Text(if (donationAnonymous) "✓ Darczyńca anonimowy" else "Darczyńca anonimowy")
+                    }
+                }
+                OutlinedTextField(value = donationCampaignText, onValueChange = { donationCampaignText = it }, label = { Text("Nazwa zbiórki / kampanii (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = donationCollectedByText, onValueChange = { donationCollectedByText = it }, label = { Text("Osoba przyjmująca (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = donationReceiptText, onValueChange = { donationReceiptText = it }, label = { Text("Numer pokwitowania (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(DonationCustodyStatus.values().toList(), key = { it.name }) { status ->
+                        Button(onClick = { donationStatus = status }) {
+                            Text(if (donationStatus == status) "✓ $status" else status.name)
+                        }
+                    }
+                }
+                OutlinedTextField(value = donationTransferredAmountText, onValueChange = { donationTransferredAmountText = it }, label = { Text("Kwota przekazana organizacji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = donationNoteText, onValueChange = { donationNoteText = it }, label = { Text("Uwagi (opcjonalnie)") }, modifier = Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = { saveDonationForm() },
+                        enabled = !loading && donationAmountText.isNotBlank() &&
+                            donationCurrencyText.isNotBlank() && donationOrganizationText.isNotBlank() &&
+                            donationPurposeText.isNotBlank()
+                    ) { Text(if (editingDonationId == null) "Zapisz darowiznę" else "Zapisz zmiany") }
+                    if (editingDonationId != null) Button(onClick = { resetDonationForm() }) { Text("Anuluj") }
+                }
+                donations.forEach { donation ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("${donation.amount.toPlainString()} ${donation.currencyCode} • ${donation.beneficiaryOrganizationName}", style = MaterialTheme.typography.titleSmall)
+                            Text("Cel: ${donation.purpose}")
+                            Text("Przyjęto: ${donation.receivedAt} • ${donation.custodyStatus}")
+                            donation.transferredAmount?.let { amount ->
+                                Text("Przekazano: ${amount.toPlainString()} ${donation.currencyCode}")
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = { editDonation(donation) }) { Text("Edytuj") }
+                                Button(onClick = {
+                                    scope.launch {
+                                        try {
+                                            repository.deleteCashDonation(donation.id)
+                                            donations = repository.getCashDonations()
+                                            message = "Usunięto darowiznę."
+                                            error = null
+                                        } catch (exception: Exception) {
+                                            error = exception.message ?: "Nie udało się usunąć darowizny."
+                                        }
+                                    }
+                                }) { Text("Usuń") }
+                            }
+                        }
+                    }
+                }
             }
         }
         Card(modifier = Modifier.fillMaxWidth()) {
