@@ -3039,7 +3039,7 @@ Testy wymagają emulatora/urządzenia Android i nie są uznawane za wykonane na 
 
 ### 50.5. Status weryfikacji
 
-Zmiany źródłowe i testy zostały przygotowane do zapisania na `feature/payment-ledger-stage-1`. Po zapisie należy ponownie pobrać wszystkie zmienione pliki i uruchomić pełne CI dla końcowego SHA: kompilację Kotlin, testy JVM, testy instrumentacyjne/Compose, kontrolę REUSE i budowę debug APK. Do czasu uzyskania wyników nie oznaczać etapu 2Q.1 jako zweryfikowanego.
+Zmiany źródłowe i testy zapisano na `feature/payment-ledger-stage-1`. Wszystkie sześć plików (magazyn, repozytorium, ekran, konfiguracja ścieżek FileProvider, nowy test instrumentacyjny i audyt) ponownie pobrano z GitHub; kontrola potwierdziła obecność akcji „Otwórz”, generowania `content://`, ponownej walidacji SHA-256, ograniczonej ścieżki `files-path` i trzech testów regresyjnych. Korekta inicjalizacji `applicationContext`/authority repozytorium również została ponownie odczytana. Dla końcowego SHA uruchomiono pełne CI: kompilację Kotlin, testy JVM, testy instrumentacyjne/Compose, kontrolę REUSE i budowę debug APK. REUSE zakończył się sukcesem; oba przepływy Android pozostają w toku w chwili aktualizacji audytu. Do czasu zakończenia testów i budowania APK nie oznaczać etapu 2Q.1 jako zweryfikowanego.
 
 ### 50.6. Ograniczenia i następne prace
 
@@ -3050,3 +3050,15 @@ Zmiany źródłowe i testy zostały przygotowane do zapisania na `feature/paymen
 
 
 **Kontrola przed CI — korekta dostępu do kontekstu repozytorium:** w przeglądzie przygotowanej zmiany wykryto, że identyfikator pakietu FileProvider odwoływał się bezpośrednio do parametru konstruktora wewnątrz metody instancyjnej. Przeniesiono aplikacyjny Context i wyliczony authority do właściwości klasy, a bazę i magazyn załączników podłączono do tego samego `applicationContext`. Korekta została zapisana przed końcową walidacją; wynik CI musi dotyczyć rewizji po tej korekcie.
+
+
+### 50.7. Rewizje GitHub
+
+- `DonationAttachmentStorage.kt` — commit `450ea96b5eaad86de6d108fc8bfc4798c5d47365`;
+- `PaymentLedgerRepository.kt` — commit `922efcddfade90c376703a5243ac31ff47f30e7a`, korekta kontekstu/authority `8261857e29c1112662bbfbfd4433238f901d3967`;
+- `ocr_file_paths.xml` — commit `411d1315b561ac68184c0a2a901b10d02272bc0b`;
+- `PaymentLedgerScreen.kt` — commit `d69d46b7c180c8cdca608e02645cf971ae5c32b6`;
+- `DonationAttachmentStorageTest.kt` — commit `b1bff5cc613a53ce9d191ff358027116882e9198`;
+- końcowa aktualizacja audytu i korekta statusu CI — bieżący commit aktualizujący ten rozdział.
+
+Wyniki REUSE/Android CI należy przypisać wyłącznie do końcowego SHA po tej aktualizacji, a nie do wcześniejszej rewizji.
