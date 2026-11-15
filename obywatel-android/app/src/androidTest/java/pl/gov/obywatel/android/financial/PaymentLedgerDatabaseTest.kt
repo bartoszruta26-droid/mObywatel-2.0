@@ -828,6 +828,37 @@ class PaymentLedgerDatabaseTest {
     }
 
     @Test
+    fun fullCurrencyConversionHistoryIsNotLimitedToUiPageSize() {
+        val database = openDatabase()
+        try {
+            val base = CurrencyConversionRecord(
+                id = "conversion-large-history-0",
+                convertedAt = Instant.parse("2026-11-14T10:00:00Z"),
+                sourceAmount = BigDecimal("1.00"),
+                sourceCurrencyCode = "EUR",
+                targetAmount = BigDecimal("4.30"),
+                targetCurrencyCode = "PLN",
+                appliedRate = BigDecimal("4.30"),
+                rateDate = LocalDate.parse("2026-11-13"),
+                rateSource = "NBP_TABLE_A"
+            )
+            (0 until 1005).forEach { index ->
+                database.saveCurrencyConversion(
+                    base.copy(
+                        id = "conversion-large-history-$index",
+                        convertedAt = Instant.parse("2026-11-14T10:00:00Z").plusSeconds(index.toLong())
+                    )
+                )
+            }
+
+            assertEquals(1000, database.readCurrencyConversions(1000).size)
+            assertEquals(1005, database.readAllCurrencyConversions().size)
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
     fun currencyConversionHistoryRejectsInvalidRatesAndDuplicateIds() {
         val database = openDatabase()
         try {
