@@ -2830,3 +2830,19 @@ Po tej poprawce trzeba ponownie wykonać kompilację, testy JVM i testy instrume
 | Eksport raportu darowizn do PDF/CSV | Do wykonania |
 
 Następny etap po zielonym CI: dodać załączniki/pokwitowania do darowizn z ochroną prywatności i sumami kontrolnymi, a następnie raport okresowy przyjętych oraz przekazanych środków. Nie scalać PR i nie publikować APK jako zweryfikowanego wydania przed uzyskaniem wyników dla aktualnego SHA.
+
+
+### 46.11. Wynik testów po usunięciu duplikatów i korekta testu modelu
+
+Po commicie `0ed532d8a474d57c3ebdb4a6d8ba0b2c5b2f32f8` kompilacja Kotlin zakończyła się powodzeniem. Następnie uruchomiono 138 testów jednostkowych; 137 zakończyło się powodzeniem, a jeden wykrył niespójność w danych testowych:
+
+- test: `FinancialModelsTest > donationTransferCannotExceedReceivedAmountOrHavePartialTimestamp`;
+- błąd: test tworzył darowiznę ze statusem domyślnym `HELD`, jednocześnie ustawiając przekazaną kwotę 200,00 PLN i datę przekazania;
+- reguła modelu: dla kwoty przekazanej większej od zera wymagany jest status `PARTIALLY_TRANSFERRED`, a status `HELD` dopuszcza wyłącznie brak przekazania albo kwotę zerową.
+
+Wniosek: błąd dotyczył konfiguracji testu, nie reguły modelu. Poprawiono dane testowe przez jawne ustawienie `DonationCustodyStatus.PARTIALLY_TRANSFERRED`. Test nadal sprawdza przekroczenie kwoty darowizny oraz brak daty przy istniejącej kwocie przekazania.
+
+- plik: `obywatel-android/app/src/test/java/pl/gov/obywatel/android/FinancialModelsTest.kt`;
+- commit poprawki testu: `1f6f2c422b92bbead8d9822739aea8358daa1741`.
+
+Ponowne wykonanie pełnego zestawu testów JVM, testów emulatorowych i budowy APK dla tego commita pozostaje wymagane. Nie należy uznawać testu za zaliczony wyłącznie na podstawie poprawienia danych testowych.
