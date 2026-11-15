@@ -119,3 +119,12 @@ Dla SHA `14559d186cc96c6ec20daf8585b2ab7fcc12b2cb`:
 - Android GUI validation run `43722027901` — w toku.
 
 **Status etapu 73:** kod i testy zapisane oraz ponownie odczytane z gałęzi; CI jeszcze nie zakończył się, więc brak potwierdzenia kompilacji i zaliczenia testów. Etap pozostaje otwarty do wyników CI.
+
+
+## Aktualizacja audytu — kontrola GUI i korekta importu testowego (15 listopada 2026 r.)
+
+Dla SHA `8eae56297af6ddaf2bd58cb0481513e6b97072c0` uzyskano: Android prototype build `43728461800` — **success**; Repository compliance `43728461822` — **success**; Android GUI validation `43728461908` — **failure**. Log zadania `132855434143` wykazał błąd kompilacji testów instrumentacyjnych: `Unresolved reference: onNode` w `FinancialReportDateRangePickerTest.kt`. Emulator nie wykonał zestawu testów Compose UI, więc nie można uznać testów wyboru daty za zaliczone. Kroki budowy, archiwizacji i publikacji APK zostały pominięte.
+
+Usunięto nieprawidłowy import `androidx.compose.ui.test.onNode`; wywołania `composeRule.onNode(...)` oraz matcher opisu dostępności pozostawiono. Commit: `42d466b48619f9d798e12f285664cfbb6a2faa7a`.
+
+**Status:** poprawka zapisana, oczekuje na pełny CI dla nowego SHA. Nie uznawać etapu 73 za zamknięty ani nie rozpoczynać etapu XLS/XLSX przed zielonym GUI validation, buildem i compliance dla tego samego końcowego SHA.
