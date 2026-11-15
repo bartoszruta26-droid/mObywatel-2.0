@@ -41,7 +41,7 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 internal fun validateOriginalAttachmentPayload(mime: String, bytes: ByteArray) {
-    require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) {
+    require(bytes.isNotEmpty() && bytes.size <= 25 * 1024 * 1024) {
         "Plik musi mieć od 1 bajta do 25 MB."
     }
     when (mime) {
