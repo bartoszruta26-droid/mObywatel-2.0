@@ -36,8 +36,9 @@ internal fun InternationalMedicalCertificateManagerScreen(
     val context = LocalContext.current
     var refresh by remember { mutableStateOf(0) }
     var deleteId by remember { mutableStateOf<String?>(null) }
-    var error by remember { mutableStateOf("") }
+    var actionError by remember { mutableStateOf("") }
     val records = remember(refresh) { runCatching { InternationalMedicalCertificateRecords.list(context) } }
+    val loadError = records.exceptionOrNull()?.message.orEmpty()
     Column(
         modifier = Modifier.fillMaxSize().padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -51,7 +52,7 @@ internal fun InternationalMedicalCertificateManagerScreen(
         Button(onClick = { onEdit(UUID.randomUUID().toString().replace("-", "")) },
             modifier = Modifier.fillMaxWidth()) { Text("New certificate") }
         if (records.isFailure) {
-            error = records.exceptionOrNull()?.message ?: "Nie udało się odczytać zapisanych zaświadczeń."
+            Text(loadError.ifBlank { "Nie udało się odczytać zapisanych zaświadczeń." }, color = MaterialTheme.colorScheme.error)
         } else if (records.getOrThrow().isEmpty()) {
             Text("Brak zapisanych zaświadczeń.")
         } else {
@@ -75,7 +76,7 @@ internal fun InternationalMedicalCertificateManagerScreen(
                 }
             }
         }
-        if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
+        if (actionError.isNotBlank()) Text(actionError, color = MaterialTheme.colorScheme.error)
     }
     deleteId?.let { id ->
         AlertDialog(
@@ -85,7 +86,7 @@ internal fun InternationalMedicalCertificateManagerScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val result = runCatching { InternationalMedicalCertificateRecords.delete(context, id) }
-                    if (result.isSuccess) refresh++ else error = result.exceptionOrNull()?.message ?: "Delete failed."
+                    if (result.isSuccess) refresh++ else actionError = result.exceptionOrNull()?.message ?: "Delete failed."
                     deleteId = null
                 }) { Text("Delete") }
             },
