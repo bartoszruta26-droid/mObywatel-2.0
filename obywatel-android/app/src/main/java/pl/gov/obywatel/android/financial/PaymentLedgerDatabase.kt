@@ -52,6 +52,7 @@ class PaymentLedgerDatabase(
         createAssetTable(db)
         createCashDonationTable(db)
         createDonationAttachmentTable(db)
+        createCurrencyConversionHistoryTable(db)
         seedDefaultAccountScope(db)
     }
 
@@ -116,6 +117,9 @@ class PaymentLedgerDatabase(
         }
         if (oldVersion < 7) {
             createDonationAttachmentTable(db)
+        }
+        if (oldVersion < 8) {
+            createCurrencyConversionHistoryTable(db)
         }
     }
 
@@ -325,6 +329,28 @@ class PaymentLedgerDatabase(
             }
         }
         return result
+    }
+
+    private fun createCurrencyConversionHistoryTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS currency_conversion_history (
+                conversion_id TEXT PRIMARY KEY NOT NULL,
+                converted_at TEXT NOT NULL,
+                source_amount TEXT NOT NULL,
+                source_currency_code TEXT NOT NULL,
+                target_amount TEXT NOT NULL,
+                target_currency_code TEXT NOT NULL,
+                applied_rate TEXT NOT NULL,
+                rate_date TEXT NOT NULL,
+                rate_source TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS idx_currency_conversion_date " +
+                "ON currency_conversion_history(converted_at DESC)"
+        )
     }
 
     private fun createAccountScopesTable(db: SQLiteDatabase) {
@@ -915,6 +941,51 @@ class PaymentLedgerDatabase(
         return result
     }
 
+    /** Zapisuje niezmienny ślad przeliczenia wraz z kursem i datą notowania. */
+    fun saveCurrencyConversion(record: CurrencyConversionRecord) {
+        record.validate()
+        val values = ContentValues().apply {
+            put("conversion_id", record.id)
+            put("converted_at", record.convertedAt.toString())
+            put("source_amount", record.sourceAmount.stripTrailingZeros().toPlainString())
+            put("source_currency_code", record.sourceCurrencyCode)
+            put("target_amount", record.targetAmount.stripTrailingZeros().toPlainString())
+            put("target_currency_code", record.targetCurrencyCode)
+            put("applied_rate", record.appliedRate.stripTrailingZeros().toPlainString())
+            put("rate_date", record.rateDate.toString())
+            put("rate_source", record.rateSource)
+        }
+        writableDatabase.insertOrThrow("currency_conversion_history", null, values)
+    }
+
+    fun readCurrencyConversions(limit: Int = 100): List<CurrencyConversionRecord> {
+        require(limit in 1..1000) { "Limit historii musi mieścić się w zakresie 1–1000." }
+        val result = mutableListOf<CurrencyConversionRecord>()
+        readableDatabase.query(
+            "currency_conversion_history",
+            arrayOf(
+                "conversion_id", "converted_at", "source_amount", "source_currency_code",
+                "target_amount", "target_currency_code", "applied_rate", "rate_date", "rate_source"
+            ),
+            null, null, null, null, "converted_at DESC, conversion_id DESC", limit.toString()
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                result += CurrencyConversionRecord(
+                    id = cursor.getString(0),
+                    convertedAt = java.time.Instant.parse(cursor.getString(1)),
+                    sourceAmount = java.math.BigDecimal(cursor.getString(2)),
+                    sourceCurrencyCode = cursor.getString(3),
+                    targetAmount = java.math.BigDecimal(cursor.getString(4)),
+                    targetCurrencyCode = cursor.getString(5),
+                    appliedRate = java.math.BigDecimal(cursor.getString(6)),
+                    rateDate = java.time.LocalDate.parse(cursor.getString(7)),
+                    rateSource = cursor.getString(8)
+                ).also { it.validate() }
+            }
+        }
+        return result
+    }
+
     fun accountingEntryIds(): Set<String> {
         val ids = linkedSetOf<String>()
         readableDatabase.query(
@@ -960,7 +1031,7 @@ class PaymentLedgerDatabase(
 
     companion object {
         const val DATABASE_NAME = "payment_ledger.db"
-        const val DATABASE_VERSION = 7
+        const val DATABASE_VERSION = 8
         const val DEFAULT_ACCOUNT_SCOPE_ID = "ipko-account-1"
         const val DEFAULT_ACCOUNT_SCOPE_NAME = "Rachunek iPKO 1"
         private const val TABLE_ASSETS = "financial_assets"
@@ -971,6 +1042,32 @@ class PaymentLedgerDatabase(
         private const val TABLE_TRANSACTION_BANK_ENTRIES = "financial_transaction_bank_entries"
         private const val TABLE_CASH_DONATIONS = "cash_donations"
         private const val TABLE_DONATION_ATTACHMENTS = "donation_attachments"
+    }
+}
+
+data class CurrencyConversionRecord(
+    val id: String,
+    val convertedAt: java.time.Instant,
+    val sourceAmount: java.math.BigDecimal,
+    val sourceCurrencyCode: String,
+    val targetAmount: java.math.BigDecimal,
+    val targetCurrencyCode: String,
+    val appliedRate: java.math.BigDecimal,
+    val rateDate: java.time.LocalDate,
+    val rateSource: String
+) {
+    fun validate() {
+        require(id.isNotBlank() && id.length <= 128) { "Identyfikator przeliczenia jest wymagany." }
+        require(sourceAmount >= java.math.BigDecimal.ZERO && targetAmount >= java.math.BigDecimal.ZERO) {
+            "Kwoty przeliczenia muszą być nieujemne."
+        }
+        require(sourceCurrencyCode.matches(Regex("[A-Z]{3}")) &&
+            targetCurrencyCode.matches(Regex("[A-Z]{3}")) &&
+            sourceCurrencyCode != targetCurrencyCode) {
+            "Przeliczenie wymaga dwóch różnych kodów walut ISO 4217."
+        }
+        require(appliedRate > java.math.BigDecimal.ZERO) { "Zastosowany kurs musi być większy od zera." }
+        require(rateSource.isNotBlank() && rateSource.length <= 128) { "Źródło kursu jest wymagane." }
     }
 }
 
