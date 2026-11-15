@@ -324,13 +324,16 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         val provider = MlKitMedicalTranslationProvider()
                         var completed = 0
                         var failed = 0
-                        val eligible = definitions.filter { definition -> isMedicalCertificateTranslatableField(definition.key) && values[fieldKey(definition.key)].orEmpty().isNotBlank() }
+                        val eligible = definitions.filter { definition -> values[fieldKey(definition.key)].orEmpty().isNotBlank() }
                         selectedTargets.filterValues { it }.keys.toList().forEach { target ->
                             if (target.substringBefore('-') == sourceLanguage.substringBefore('-')) return@forEach
                             eligible.forEach { definition ->
                                 val key = definition.key
-                                val result = runCatching { provider.translate(values[fieldKey(key)].orEmpty(), sourceLanguage, target) }
-                                result.onSuccess { translationValues["$target|$key"] = it; completed++ }.onFailure { failed++ }                                val labelResult = runCatching { provider.translate(definition.label, sourceLanguage, target) }
+                                if (isMedicalCertificateTranslatableField(key)) {
+                                    val result = runCatching { provider.translate(values[fieldKey(key)].orEmpty(), sourceLanguage, target) }
+                                    result.onSuccess { translationValues["$target|$key"] = it; completed++ }.onFailure { failed++ }
+                                }
+                                val labelResult = runCatching { provider.translate(definition.label, sourceLanguage, target) }
                                 labelResult.onSuccess { translationValues["$target|label:$key"] = it }.onFailure { failed++ }
                             }
                         }
@@ -343,7 +346,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
         }
 
         selectedTargets.filterValues { it }.keys.forEach { target ->
-            val translatedFields = definitions.filter { definition -> isMedicalCertificateTranslatableField(definition.key) && translationValues.containsKey("$target|${definition.key}") }
+            val translatedFields = definitions.filter { definition -> translationValues.containsKey("$target|" + definition.key) || translationValues.containsKey("$target|label:" + definition.key) }
             if (translatedFields.isNotEmpty()) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -351,13 +354,11 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         Text("Edit translated field names and values. Source text remains separately preserved.", style = MaterialTheme.typography.bodySmall)
                         Button(onClick = {
                             val previousSource = sourceLanguage
-                            definitions.filter { isMedicalCertificateTranslatableField(it.key) }.forEach { definition ->
+                            definitions.forEach { definition ->
                                 val key = definition.key
-                                val translatedValue = translationValues["$target|$key"]
-                                if (translatedValue != null) {
-                                    translationValues["$previousSource|$key"] = values[fieldKey(key)].orEmpty()
-                                    values[fieldKey(key)] = translatedValue
-                                }
+                                val translatedValue = translationValues["$target|$key"] ?: values[fieldKey(key)].orEmpty()
+                                translationValues["$previousSource|$key"] = values[fieldKey(key)].orEmpty()
+                                values[fieldKey(key)] = translatedValue
                                 translationValues["$previousSource|label:$key"] = definition.label
                             }
                             sourceLanguage = target
@@ -392,13 +393,13 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
             enabled = loadError.isBlank() && selectedTargets.any { it.value },
             onClick = {
                 val targets = selectedTargets.filterValues { it }.keys.toList()
-                val fields = definitions.filter { definition -> isMedicalCertificateTranslatableField(definition.key) && values[fieldKey(definition.key)].orEmpty().isNotBlank() }
+                val fields = definitions.filter { definition -> values[fieldKey(definition.key)].orEmpty().isNotBlank() }
                     .flatMap { definition ->
                         val sourceValue = values[fieldKey(definition.key)].orEmpty()
                         targets.map { target ->
                             val languageName = languages.firstOrNull { it.code == target }?.englishName ?: target
                             MedicalCertificatePdfField(
-                                sourceLabel = definition.label,
+                                sourceLabel = translationValues["$sourceLanguage|label:" + definition.key] ?: definition.label,
                                 sourceValue = sourceValue,
                                 targetLabel = languageName + " — " + (translationValues["$target|label:" + definition.key] ?: definition.label),
                                 targetValue = translationValues["$target|" + definition.key].orEmpty().ifBlank { "[Translation not available]" }
@@ -406,7 +407,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         }
                     }
                 pendingPdfBytes = runCatching {
-                    createBilingualMedicalCertificatePdf(sourceLanguage, targets.joinToString(", ") { it }, fields)
+                    createBilingualMedicalCertificatePdf(sourceLanguage, targets.joinToString(", ") { target -> languages.firstOrNull { it.code == target }?.englishName ?: target }, fields)
                 }.getOrElse { saveMessage = "PDF generation failed: " + (it.message ?: "unknown error"); null }
                 if (pendingPdfBytes != null) pdfLauncher.launch("international-medical-certificate-bilingual.pdf")
             },
