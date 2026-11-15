@@ -2846,3 +2846,29 @@ Wniosek: błąd dotyczył konfiguracji testu, nie reguły modelu. Poprawiono dan
 - commit poprawki testu: `1f6f2c422b92bbead8d9822739aea8358daa1741`.
 
 Ponowne wykonanie pełnego zestawu testów JVM, testów emulatorowych i budowy APK dla tego commita pozostaje wymagane. Nie należy uznawać testu za zaliczony wyłącznie na podstawie poprawienia danych testowych.
+
+### 46.12. Wynik emulatora dla rewizji `f4ebb0889053678b8e86a920f830533216318e82` i poprawka inicjalizacji nowej bazy
+
+Pełny przebieg Android GUI validation (run `43683607045`) potwierdził:
+- testy jednostkowe JVM — sukces;
+- testy Compose/instrumentacyjne — niepowodzenie: 6 z 65 testów;
+- Repository compliance — sukces (run `43683607022`);
+- Android prototype build — sukces (run `43683606985`), obejmujący kompilację i etap budowania debug APK w odrębnym przepływie.
+
+Wszystkie sześć niepowodzeń instrumentacyjnych miało wspólną przyczynę: `SQLiteException: no such table: cash_donations`. Inspekcja `PaymentLedgerDatabase.onCreate()` wykazała, że metoda tworzyła tabele zapisów bankowych, transakcji i aktywów, ale pomijała `createCashDonationTable(db)`. Migracja `onUpgrade()` dla baz o wersji poniżej 6 tworzyła tabelę prawidłowo, dlatego problem dotyczył wyłącznie świeżej instalacji / nowej bazy, a nie ścieżki migracyjnej.
+
+**Wykonana poprawka:** dodano wywołanie `createCashDonationTable(db)` w `onCreate()`, obok pozostałych metod tworzących schemat. Metoda tabeli używa `CREATE TABLE IF NOT EXISTS` i indeksów `IF NOT EXISTS`, więc wspólne użycie w ścieżce nowej bazy i migracji pozostaje idempotentne.
+
+- plik: `obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/PaymentLedgerDatabase.kt`;
+- commit: `2a63d88c5986f727a4ee0e1eb5626f10a5d53f44`;
+- blob po poprawce: `2fdb84c36574ee075ce6984470e4e426e9a7f107`.
+
+**Status po poprawce:** przyczyna została usunięta w kodzie, ale nie jest jeszcze potwierdzona testami. Wymagane jest świeże CI dla nowego SHA: JVM, wszystkie 65 testów instrumentacyjnych/Compose, REUSE compliance oraz debug APK. Do czasu zakończenia przebiegów nie uznaje się etapu 2O za zweryfikowany i nie publikuje APK jako sprawdzonego wydania.
+
+### 46.13. Kolejność następnych prac
+
+1. Potwierdzić, że sześć testów dotyczących darowizn i archiwum przechodzi po utworzeniu tabeli w `onCreate()`.
+2. Sprawdzić migrację SQLite 5 → 6 oraz świeżą inicjalizację bazy w odrębnych testach, aby obie ścieżki były chronione regresyjnie.
+3. Po zielonym CI przejść do pokwitowań/załączników darowizn: lokalny zapis przez SAF, ograniczenia typu i rozmiaru, brak przesyłania dokumentów poza urządzenie, powiązanie z identyfikatorem darowizny oraz integralność przez sumę kontrolną.
+4. Następnie dodać raporty okresowe PDF/CSV przyjętych, przechowywanych i przekazanych darowizn z wyraźnym rozdzieleniem kwot przyjętych i faktycznie przekazanych.
+5. Nie scalać PR #68 bez osobnego polecenia.
