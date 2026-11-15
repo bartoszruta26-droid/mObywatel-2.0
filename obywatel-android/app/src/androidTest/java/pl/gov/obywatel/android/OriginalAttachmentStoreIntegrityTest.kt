@@ -263,4 +263,109 @@ class OriginalAttachmentStoreIntegrityTest {
             runCatching { removeOriginalAttachmentDocumentScope(context, document) }
         }
     }
+
+
+    private class FailingMetadataBackend(
+        initial: Map<String, String> = emptyMap(),
+        var commitResult: Boolean = true,
+        var applyChangesWhenReturningFalse: Boolean = false
+    ) : OriginalAttachmentMetadataBackend {
+        private val values = initial.toMutableMap()
+        override val all: Map<String, *> get() = values.toMap()
+        override fun getString(key: String, defaultValue: String?): String? = values[key] ?: defaultValue
+        override fun commit(changes: Map<String, String?>): Boolean {
+            if (commitResult || applyChangesWhenReturningFalse) {
+                changes.forEach { (key, value) -> if (value == null) values.remove(key) else values[key] = value }
+            }
+            return commitResult
+        }
+    }
+
+    @Test
+    fun addCommitFalsePreservesInstalledFileAndPartialMetadataUpdateRemainsConsistent() {
+        val document = documentId()
+        val attachmentId = "add-false-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val backend = FailingMetadataBackend(commitResult = false, applyChangesWhenReturningFalse = true)
+        try {
+            assertTrue(runCatching {
+                OriginalAttachmentStore.add(
+                    context, document, "report.txt", "text/plain",
+                    "add transaction".toByteArray(Charsets.UTF_8), attachmentId, backend
+                )
+            }.isFailure)
+            assertTrue(File(directory, attachmentId + ".enc").isFile)
+            assertEquals(listOf(attachmentId), OriginalAttachmentStore.list(context, document, backend).map { it.id })
+        } finally {
+            File(directory, attachmentId + ".enc").delete()
+        }
+    }
+
+    @Test
+    fun removeCommitFalsePreservesMetadataAndEncryptedFile() {
+        val document = documentId()
+        val attachmentId = "remove-false-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val backend = FailingMetadataBackend()
+        try {
+            OriginalAttachmentStore.add(
+                context, document, "report.txt", "text/plain",
+                "remove transaction".toByteArray(Charsets.UTF_8), attachmentId, backend
+            )
+            backend.commitResult = false
+            assertTrue(runCatching { OriginalAttachmentStore.remove(context, document, attachmentId, backend) }.isFailure)
+            assertEquals(listOf(attachmentId), OriginalAttachmentStore.list(context, document, backend).map { it.id })
+            assertTrue(File(directory, attachmentId + ".enc").isFile)
+        } finally {
+            File(directory, attachmentId + ".enc").delete()
+        }
+    }
+
+    @Test
+    fun removeDocumentCommitFalsePreservesEveryEncryptedFile() {
+        val document = documentId()
+        val firstId = "scope-a-" + UUID.randomUUID().toString().take(8)
+        val secondId = "scope-b-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val backend = FailingMetadataBackend()
+        try {
+            OriginalAttachmentStore.add(context, document, "a.txt", "text/plain", "first".toByteArray(), firstId, backend)
+            OriginalAttachmentStore.add(context, document, "b.txt", "text/plain", "second".toByteArray(), secondId, backend)
+            backend.commitResult = false
+            assertTrue(runCatching { OriginalAttachmentStore.removeDocument(context, document, backend) }.isFailure)
+            assertEquals(setOf(firstId, secondId), OriginalAttachmentStore.list(context, document, backend).map { it.id }.toSet())
+            assertTrue(File(directory, firstId + ".enc").isFile)
+            assertTrue(File(directory, secondId + ".enc").isFile)
+        } finally {
+            File(directory, firstId + ".enc").delete()
+            File(directory, secondId + ".enc").delete()
+        }
+    }
+
+    @Test
+    fun multiEntryImportCommitFalsePreservesAllInstalledFiles() {
+        val document = documentId()
+        val firstId = "import-a-" + UUID.randomUUID().toString().take(8)
+        val secondId = "import-b-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val entries = JSONArray()
+            .put(JSONObject().put("documentId", document).put("id", firstId).put("name", "a.txt")
+                .put("mime", "text/plain").put("dataBase64", Base64.encodeToString("first".toByteArray(), Base64.NO_WRAP)))
+            .put(JSONObject().put("documentId", document).put("id", secondId).put("name", "b.txt")
+                .put("mime", "text/plain").put("dataBase64", Base64.encodeToString("second".toByteArray(), Base64.NO_WRAP)))
+        val raw = JSONObject().put("version", 1).put("attachments", entries).toString()
+        val backend = FailingMetadataBackend(commitResult = false)
+        try {
+            assertTrue(runCatching { OriginalAttachmentStore.importArchive(context, raw, backend) }.isFailure)
+            assertTrue(File(directory, firstId + ".enc").isFile)
+            assertTrue(File(directory, secondId + ".enc").isFile)
+            assertTrue(OriginalAttachmentStore.list(context, document, backend).isEmpty())
+            assertTrue(directory.listFiles().orEmpty().none {
+                (it.name.startsWith("." + firstId + ".") || it.name.startsWith("." + secondId + ".")) && it.name.endsWith(".import")
+            })
+        } finally {
+            File(directory, firstId + ".enc").delete()
+            File(directory, secondId + ".enc").delete()
+        }
+    }
 }
