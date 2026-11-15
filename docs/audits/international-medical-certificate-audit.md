@@ -521,3 +521,29 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [x] Test round-trip jest obecny w aktualnym pliku testowym.
 - [x] Audyt zawiera rozróżnienie między wynikiem wcześniejszego CI (SHA `14c9ab7`) a oczekującą walidacją nowego testu.
 - [ ] Nie uznaje się jeszcze najnowszego testu za zweryfikowany przez CI.
+
+---
+
+## 22. Integracja szyfrowanych załączników z badaniami obrazowymi — 2026-11-15
+
+### Zakres wykonanych prac
+- [x] Rozszerzono komponent `DocumentOriginalAttachments` o opcjonalne powiadomienie `onAttachmentIdsChanged`; dotychczasowe wywołania pozostają zgodne dzięki wartości domyślnej.
+- [x] Komponent przekazuje aktualną listę identyfikatorów po wczytaniu istniejących załączników, dodaniu pliku, dodaniu zdjęcia i usunięciu załącznika.
+- [x] Każde badanie obrazowe otrzymało deterministyczny zakres załączników `imaging_study_<studyId>`, odrębny od innych badań i od dokumentu nadrzędnego.
+- [x] W karcie badania osadzono komponent załączników. Zmiana listy ID aktualizuje pole `MedicalImagingStudy.attachmentIds`; istniejący zapis JSON przechowuje to pole.
+- [x] Dodano test stabilności identyfikatora zakresu, izolacji dwóch badań oraz odrzucania nieprawidłowego identyfikatora.
+- [x] Ponownie odczytano wszystkie trzy zmienione pliki z gałęzi GitHub i potwierdzono obecność zmian.
+
+### Kontrola CI
+- [x] Dla poprzedniego SHA `363ddae1cb794a5395c3605e470ebd263231121e` testy JVM, testy Compose na emulatorze, budowa APK oraz REUSE zakończyły się powodzeniem.
+- [x] REUSE dla zmian integracji na SHA `e19622264e39b805b4e49fe5d5a8a56e4bdaf846` zakończyło się powodzeniem.
+- [ ] Android JVM, Compose i APK dla zmian integracji wymagają zakończenia uruchomienia CI dla najnowszego SHA. Uruchomienia dla pośredniego SHA `029f78ddab542979b9e354e04baaa944aeb31740` zostały anulowane przez kolejną aktualizację gałęzi; nie są zaliczeniem ani błędem testów.
+- [ ] Nie uznaje się jeszcze nowej integracji za zweryfikowaną kompilacyjnie ani emulatorowo.
+
+### Uwagi i ryzyka pozostałe
+- [ ] Należy zweryfikować zachowanie po restarcie aplikacji i pełnym eksporcie/ imporcie archiwum.
+- [ ] Należy obsłużyć sprzątanie załączników po usunięciu całego badania, aby nie pozostawiać osieroconych plików.
+- [ ] Należy przetestować uszkodzony lub brakujący plik, błędny MIME, limit 25 MB oraz odtworzenie danych na innej instalacji.
+- [ ] Nie dodano automatycznego przesyłania danych medycznych; załączniki nadal korzystają z lokalnego magazynu szyfrowanego kluczem Android Keystore.
+
+**Status:** integracja interfejsu i modelu załączników wykonana i zweryfikowana przez ponowny odczyt źródeł. Walidacja CI dla najnowszego kodu oczekuje na wynik. PR #69 pozostaje otwarty jako Draft i nie został scalony.
