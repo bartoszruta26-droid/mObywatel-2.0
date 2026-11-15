@@ -101,7 +101,8 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
         }
         pendingPdfBytes = null
     }
-    var sourceLanguageExpanded by remember { mutableStateOf(false) }\n    var targetLanguagesExpanded by remember { mutableStateOf(false) }
+    var sourceLanguageExpanded by remember { mutableStateOf(false) }
+    var targetLanguagesExpanded by remember { mutableStateOf(false) }
     var translating by remember { mutableStateOf(false) }
     val translationValues = remember { mutableStateMapOf<String, String>().apply {
         runCatching { JSONObject(values["imc_translations"].orEmpty()) }.getOrNull()?.let { root ->
