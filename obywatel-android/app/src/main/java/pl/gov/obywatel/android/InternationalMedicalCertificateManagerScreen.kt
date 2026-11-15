@@ -36,11 +36,11 @@ internal fun InternationalMedicalCertificateManagerScreen(
     val context = LocalContext.current
     var refresh by remember { mutableStateOf(0) }
     var showDoctorDirectory by remember { mutableStateOf(false) }
-    if (showDoctorDirectory) { MedicalDoctorDirectoryScreen(onBack = { showDoctorDirectory = false }); return }
     var deleteId by remember { mutableStateOf<String?>(null) }
     var actionError by remember { mutableStateOf("") }
     val records = remember(refresh) { runCatching { InternationalMedicalCertificateRecords.list(context) } }
     val loadError = records.exceptionOrNull()?.message.orEmpty()
+    if (showDoctorDirectory) { MedicalDoctorDirectoryScreen(onBack = { showDoctorDirectory = false }); return }
     Column(
         modifier = Modifier.fillMaxSize().padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
