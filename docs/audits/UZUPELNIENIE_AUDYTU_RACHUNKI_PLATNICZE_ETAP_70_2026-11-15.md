@@ -311,3 +311,7 @@ Commity:
 - testy cache: `9f7606d89b8358da6012ec650989d74009192c61`, `6039d9d2dc6fcb0b89e4fc5074d0a5a4e7209824`.
 
 Ograniczenie: archiwum jest lokalne dla instalacji i znika po wyczyszczeniu danych lub odinstalowaniu aplikacji. Świeże CI na końcowym SHA jest wymagane przed uznaniem kompilacji i testów za zaliczone.
+
+
+### Uzupełnienie testów
+Po ponownym odczycie pliku testowego wykryto, że pierwsza próba dodania testów nie zapisała ich treści. Dodano je ponownie i potwierdzono odczytem z GitHub w commicie `3442726541015b648307ad44009e712318720953`. Testy obejmują odczyt historycznej tabeli z dysku w trybie offline oraz odświeżenie danych bieżących po przekroczeniu TTL. Wyników testów nie uznaje się za PASS przed zakończeniem CI.
