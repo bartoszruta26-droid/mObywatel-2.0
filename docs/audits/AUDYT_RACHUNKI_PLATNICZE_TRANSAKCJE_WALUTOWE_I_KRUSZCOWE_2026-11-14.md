@@ -4430,3 +4430,34 @@ Poprawkę zapisano na gałęzi. Wymagane jest ponowne uruchomienie pełnego CI d
 5. Dodać testy UI i sieciowe dla tabel A/B, błędów HTTP, timeoutów, pustych odpowiedzi i trybu offline.
 
 PR #68 pozostaje otwarty i niescalony.
+
+
+## 24. Etap 86 — trwały cache notowań NBP na dysku urządzenia (15 listopada 2026 r.)
+
+### Założenie użytkowe
+Dane historyczne NBP są publikacjami archiwalnymi: po zapisaniu na urządzeniu nie są ponownie pobierane ani nadpisywane. Dane bieżące mają osobny klucz cache i są odświeżane po upływie 15 minut. Dzięki temu odświeżanie kursów bieżących nie zmienia zapisanych notowań historycznych.
+
+### Wykonane zmiany
+- Rozszerzono `NbpRatesRepository` o trwały cache plikowy, oparty na katalogu prywatnym aplikacji przekazanym jako `cacheDirectory`.
+- Karta przelicznika przekazuje katalog `filesDir/nbp-rates-cache`; dane pozostają w prywatnej przestrzeni aplikacji i nie wymagają dodatkowych uprawnień do pamięci.
+- Odpowiedzi API NBP są zapisywane jako oryginalny JSON wraz ze znacznikiem czasu. Nazwy plików są skrótami SHA-256 kluczy zapytań, więc daty i kody tabel nie tworzą ścieżek plików.
+- Cache tabel historycznych A/B/C i zakresów historycznych oraz cen złota jest trwały i działa także po ponownym utworzeniu repozytorium oraz bez połączenia sieciowego.
+- Osobne wpisy `latest-table-A`, `latest-table-B` i `latest-gold` są odświeżane po TTL 15 minut. Aktualizacja wpisu bieżącego nie nadpisuje plików historycznych.
+- Zapis pliku odbywa się przez plik tymczasowy i zmianę nazwy, z bezpiecznym zapisem zastępczym. Uszkodzony wpis cache jest traktowany jako nieczytelny i pobierany ponownie.
+- Dodano testy: odczyt archiwalnego kursu z dysku po utworzeniu nowego repozytorium bez sieci oraz odświeżenie bieżącego kursu po przekroczeniu TTL.
+
+### Pliki i commity
+- `NbpRatesRepository.kt` — `a952f8c8a2b6c4b15142c7217ff87872d60b7d06`.
+- `NbpCurrencyConverterCard.kt` — `eff36b1989dc5a6239fd40a4a600e715ebf1115c`.
+- `NbpRatesRepositoryTest.kt` — `9f7606d89b8358da6012ec650989d74009192c61` oraz `6039d9d2dc6fcb0b89e4fc5074d0a5a4e7209824`.
+
+### Ograniczenia i kontrola
+- Cache jest lokalny dla instalacji aplikacji; odinstalowanie aplikacji lub wyczyszczenie jej danych usuwa również archiwum.
+- Wpisy historyczne są zachowywane bezterminowo. W przyszłości warto dodać limit rozmiaru i narzędzie do kontroli/eksportu archiwum, jeśli wolumen danych będzie rósł.
+- Testy źródłowe zostały dodane, ale zaliczenie kompilacji i testów wymaga świeżego przebiegu GitHub Actions na końcowym SHA. Nie deklaruje się jeszcze gotowego APK.
+
+### Następne etapy
+1. Uzupełnić pełny katalog walut ISO 4217: kod, nazwa, symbol, liczba miejsc dziesiętnych i status aktywności; dodać wyszukiwanie po nazwie i kodzie.
+2. Dodać testy odporności cache: uszkodzony plik, brak praw do zapisu, przerwane pobieranie, brak sieci, wygasły wpis bieżący i zachowanie wpisów historycznych.
+3. Dodać testy UI wyboru daty oraz jawnie oznaczyć źródło jako bieżące albo historyczne.
+4. Po zielonym CI rozszerzyć testy integracyjne i przeprowadzić kontrolę końcową PR.
