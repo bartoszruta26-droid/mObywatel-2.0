@@ -109,6 +109,36 @@ class PaymentLedgerDatabase(
         if (oldVersion < 5) {
             createAssetTable(db)
         }
+        if (oldVersion < 6) {
+            createCashDonationTable(db)
+        }
+    }
+
+    private fun createCashDonationTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS cash_donations (
+                donation_id TEXT PRIMARY KEY NOT NULL,
+                received_at TEXT NOT NULL,
+                amount TEXT NOT NULL,
+                currency_code TEXT NOT NULL,
+                beneficiary_organization_name TEXT NOT NULL,
+                purpose TEXT NOT NULL,
+                donor_name TEXT,
+                is_anonymous INTEGER NOT NULL,
+                campaign_name TEXT,
+                collected_by TEXT,
+                receipt_number TEXT,
+                custody_status TEXT NOT NULL,
+                transferred_at TEXT,
+                transferred_amount TEXT,
+                note TEXT,
+                source TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_cash_donations_received_at ON cash_donations(received_at)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_cash_donations_beneficiary ON cash_donations(beneficiary_organization_name)")
     }
 
     private fun createFinancialTransactionTables(db: SQLiteDatabase) {
@@ -551,6 +581,98 @@ class PaymentLedgerDatabase(
         }
     }
 
+    /** Atomowo zapisuje darowiznę; ten sam identyfikator nie może zostać powielony. */
+    fun saveCashDonation(donation: pl.gov.obywatel.android.CashDonation) {
+        donation.validate()
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("donation_id", donation.id)
+            put("received_at", donation.receivedAt.toString())
+            put("amount", donation.amount.stripTrailingZeros().toPlainString())
+            put("currency_code", donation.currencyCode)
+            put("beneficiary_organization_name", donation.beneficiaryOrganizationName.trim())
+            put("purpose", donation.purpose.trim())
+            put("donor_name", donation.donorName)
+            put("is_anonymous", if (donation.isAnonymous) 1 else 0)
+            put("campaign_name", donation.campaignName)
+            put("collected_by", donation.collectedBy)
+            put("receipt_number", donation.receiptNumber)
+            put("custody_status", donation.custodyStatus.name)
+            put("transferred_at", donation.transferredAt?.toString())
+            put("transferred_amount", donation.transferredAmount?.stripTrailingZeros()?.toPlainString())
+            put("note", donation.note)
+            put("source", donation.source.name)
+        }
+        db.insertOrThrow(TABLE_CASH_DONATIONS, null, values)
+    }
+
+    /** Aktualizuje darowiznę z zachowaniem jej identyfikatora. */
+    fun updateCashDonation(donation: pl.gov.obywatel.android.CashDonation) {
+        donation.validate()
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("received_at", donation.receivedAt.toString())
+            put("amount", donation.amount.stripTrailingZeros().toPlainString())
+            put("currency_code", donation.currencyCode)
+            put("beneficiary_organization_name", donation.beneficiaryOrganizationName.trim())
+            put("purpose", donation.purpose.trim())
+            put("donor_name", donation.donorName)
+            put("is_anonymous", if (donation.isAnonymous) 1 else 0)
+            put("campaign_name", donation.campaignName)
+            put("collected_by", donation.collectedBy)
+            put("receipt_number", donation.receiptNumber)
+            put("custody_status", donation.custodyStatus.name)
+            put("transferred_at", donation.transferredAt?.toString())
+            put("transferred_amount", donation.transferredAmount?.stripTrailingZeros()?.toPlainString())
+            put("note", donation.note)
+            put("source", donation.source.name)
+        }
+        val changed = db.update(TABLE_CASH_DONATIONS, values, "donation_id = ?", arrayOf(donation.id))
+        check(changed == 1) { "Nie znaleziono darowizny do aktualizacji." }
+    }
+
+    fun readCashDonations(): List<pl.gov.obywatel.android.CashDonation> {
+        val result = mutableListOf<pl.gov.obywatel.android.CashDonation>()
+        readableDatabase.query(
+            TABLE_CASH_DONATIONS,
+            arrayOf(
+                "donation_id", "received_at", "amount", "currency_code",
+                "beneficiary_organization_name", "purpose", "donor_name",
+                "is_anonymous", "campaign_name", "collected_by", "receipt_number",
+                "custody_status", "transferred_at", "transferred_amount", "note", "source"
+            ),
+            null, null, null, null, "received_at ASC, donation_id ASC"
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                result += pl.gov.obywatel.android.CashDonation(
+                    id = cursor.getString(0),
+                    receivedAt = java.time.Instant.parse(cursor.getString(1)),
+                    amount = java.math.BigDecimal(cursor.getString(2)),
+                    currencyCode = cursor.getString(3),
+                    beneficiaryOrganizationName = cursor.getString(4),
+                    purpose = cursor.getString(5),
+                    donorName = cursor.getString(6),
+                    isAnonymous = cursor.getInt(7) == 1,
+                    campaignName = cursor.getString(8),
+                    collectedBy = cursor.getString(9),
+                    receiptNumber = cursor.getString(10),
+                    custodyStatus = pl.gov.obywatel.android.DonationCustodyStatus.valueOf(cursor.getString(11)),
+                    transferredAt = cursor.getString(12)?.let { java.time.Instant.parse(it) },
+                    transferredAmount = cursor.getString(13)?.let { java.math.BigDecimal(it) },
+                    note = cursor.getString(14),
+                    source = pl.gov.obywatel.android.FinancialRecordSource.valueOf(cursor.getString(15))
+                ).also { it.validate() }
+            }
+        }
+        return result
+    }
+
+    fun deleteCashDonation(id: String) {
+        require(id.isNotBlank()) { "Identyfikator darowizny jest wymagany." }
+        val deleted = writableDatabase.delete(TABLE_CASH_DONATIONS, "donation_id = ?", arrayOf(id))
+        check(deleted == 1) { "Nie znaleziono darowizny do usunięcia." }
+    }
+
     /** Odtwarza transakcje wraz z prowizjami i identyfikatorami źródłowych zapisów. */
     fun readFinancialTransactions(): List<StoredFinancialTransaction> {
         val db = readableDatabase
@@ -653,7 +775,7 @@ class PaymentLedgerDatabase(
 
     companion object {
         const val DATABASE_NAME = "payment_ledger.db"
-        const val DATABASE_VERSION = 5
+        const val DATABASE_VERSION = 6
         const val DEFAULT_ACCOUNT_SCOPE_ID = "ipko-account-1"
         const val DEFAULT_ACCOUNT_SCOPE_NAME = "Rachunek iPKO 1"
         private const val TABLE_ASSETS = "financial_assets"
@@ -662,6 +784,7 @@ class PaymentLedgerDatabase(
         private const val TABLE_FINANCIAL_TRANSACTIONS = "financial_transactions"
         private const val TABLE_TRANSACTION_FEES = "financial_transaction_fees"
         private const val TABLE_TRANSACTION_BANK_ENTRIES = "financial_transaction_bank_entries"
+        private const val TABLE_CASH_DONATIONS = "cash_donations"
     }
 }
 
