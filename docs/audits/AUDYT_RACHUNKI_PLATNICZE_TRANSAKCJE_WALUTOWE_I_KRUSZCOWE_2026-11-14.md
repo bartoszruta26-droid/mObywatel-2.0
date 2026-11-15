@@ -3601,6 +3601,7 @@ W `FinancialReportSafExportTest.kt` zastąpiono zapis bezpośredni wywołaniem p
 - `FinancialReportSafWriter.kt` — nowy wspólny zapis; commit `1c6096f13030cafe2f0dd3f8d985b949d75da300`.
 - `PaymentLedgerScreen.kt` — użycie wspólnej metody w eksporcie CSV/PDF; commit `6ac3b6a96465cb33798d7381f5f91fa3ac78011b`.
 - `FinancialReportSafExportTest.kt` — test rzeczywistych koderów i wspólnego zapisu; commit `421734da7e4f8cec5618c2dda8acfe0eaac234f8`.
+- `FinancialReportSafExportTest.kt` — test zastępowania wcześniejszej zawartości; commit `bcf5085dca711d9ba23c2e52dcca1ddac4fad1b2`.
 - `PaymentLedgerScreen.kt` — import klasy zapisującej; commit `c17d6d6f5e64b727310e79ed6ec42c15ee6427f1`.
 
 ### 62.4. Status walidacji
