@@ -927,3 +927,30 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Pozostają testy integracyjne rzeczywistego importu/eksportu, rollbacku, awarii procesu i limitów archiwum.
 
 **Status:** rozszerzono kontrolę sygnatur o odczyt wymiarów i rzeczywiste dekodowanie próbkowane. Nie oznacza to jeszcze pełnej walidacji semantycznej plików PDF ani testów awarii całego magazynu.
+
+
+---
+
+## 36. Atomowy zapis zaszyfrowanego magazynu zaświadczenia — 2026-11-15
+
+### Wykryta luka
+- [x] `InternationalMedicalCertificateStore.save()` zapisywał plik tymczasowy, ale przy niepowodzeniu `renameTo()` wykonywał kopiowanie z nadpisaniem pliku docelowego.
+- [x] Kopiowanie do istniejącego pliku docelowego mogło go najpierw skrócić, a następnie pozostawić częściową zawartość po przerwaniu procesu lub błędzie wejścia/wyjścia.
+- [x] Odczyt nie ograniczał rozmiaru zaszyfrowanego pliku przed wczytaniem go do pamięci.
+
+### Wykonane poprawki
+- [x] Dodano `writeMedicalCertificateAtomically()`: zapis do pliku tymczasowego, `FileDescriptor.sync()`, a następnie atomowe przeniesienie w obrębie tego samego katalogu z `ATOMIC_MOVE` i `REPLACE_EXISTING`.
+- [x] Usunięto nieatomowe kopiowanie awaryjne. Gdy system plików nie obsługuje atomowej zamiany, operacja kończy się błędem zamiast ryzykować uszkodzenie poprzedniego pliku.
+- [x] Plik tymczasowy jest sprzątany po błędzie; istniejący plik docelowy pozostaje nienaruszony, jeśli operacja zamiany się nie powiedzie.
+- [x] Dodano limit 9 MiB dla danych jawnych oraz 10 MiB dla pliku zaszyfrowanego; limit pliku jest sprawdzany przed odczytem.
+- [x] Dodano testy instrumentacyjne: atomowa zamiana istniejącego pliku, zachowanie celu po nieudanej zamianie, brak pozostałego pliku tymczasowego oraz szyfrowany zapis/odczyt i ponowny zapis wartości.
+- [x] Implementację zapisano w commicie `e41686b4254124ae0d29f72f441690ea18faef48`; testy instrumentacyjne w commicie `8b736d2dc27578c1ffd1093742d53b6f4d39b3a0`.
+
+### Weryfikacja i ograniczenia
+- [x] Ponownie odczytano implementację i testy z gałęzi `zaswaidczenie`; potwierdzono użycie `ATOMIC_MOVE`, `REPLACE_EXISTING`, synchronizację pliku i testy scenariusza błędu.
+- [ ] Testy instrumentacyjne, JVM, Compose UI, build APK i REUSE dla końcowego SHA wymagają potwierdzenia w GitHub Actions.
+- [ ] Testy instrumentacyjne nie symulują twardego zaniku zasilania ani awarii systemu plików po zmianie wpisu katalogowego. Nie potwierdzają też trwałości wpisu katalogowego po utracie zasilania; synchronizacja katalogu wymaga osobnej oceny kompatybilności Androida.
+- [ ] Należy sprawdzić zachowanie `ATOMIC_MOVE` na docelowych wersjach Androida i systemach plików urządzeń wspieranych przez aplikację.
+- [ ] Funkcja pomocnicza `load()` nadal opakowuje `loadStrict()` i zwraca pustą mapę po błędzie; ekran edytora korzysta z `loadStrict()` i blokuje zapis po błędzie odczytu. Należy rozważyć usunięcie niebezpiecznego, maskującego błędy wariantu po sprawdzeniu wszystkich wywołań.
+
+**Status:** usunięto nieatomowy mechanizm kopiowania na plik docelowy i dodano atomową zamianę z synchronizacją oraz limitami rozmiaru. Dodano testy instrumentacyjne. Ostateczne CI dla nowego SHA pozostaje wymagane; PR #69 nadal otwarty, Draft i niescalony.
