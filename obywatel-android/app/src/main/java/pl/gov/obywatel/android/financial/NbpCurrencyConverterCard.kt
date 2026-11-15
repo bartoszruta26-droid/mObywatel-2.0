@@ -100,8 +100,10 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                         if (requestedDate == null) repository.latestTable(NbpTable.B)
                         else repository.tableOnOrBefore(NbpTable.B, requestedDate)
                     }.getOrNull()
-                    val gold = if (requestedDate == null) repository.latestGoldPrice()
+                    val gold = runCatching {
+                        if (requestedDate == null) repository.latestGoldPrice()
                         else repository.goldPriceOnOrBefore(requestedDate)
+                    }.getOrNull()
                     val allTables = listOfNotNull(tableA, tableB)
                     val rateMap = allTables.flatMap { table ->
                         table.rates.mapNotNull { rate ->
@@ -110,7 +112,7 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                     }.toMap()
                     Triple(rateMap, allTables.joinToString(" • ") {
                         "Tabela ${it.table.apiCode}: ${it.effectiveDate}"
-                    }, "${gold.pricePerGramPln.toPlainString()} PLN/g • ${gold.date}")
+                    }, gold?.let { "${it.pricePerGramPln.toPlainString()} PLN/g • ${it.date}" })
                 }
                 rates = loaded.first
                 rateTableLabel = loaded.second
@@ -119,6 +121,7 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                 result = null
             } catch (exception: Exception) {
                 rates = emptyMap()
+                goldPriceLabel = null
                 result = null
                 error = exception.message ?: "Nie udało się pobrać kursów NBP."
             } finally {
