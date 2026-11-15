@@ -3200,3 +3200,27 @@ Jedyny nieudany test to nowy `importDeletesPartialFileWhenProviderFailsAfterWrit
 Poprawiono test: magazyn i katalog kontrolny korzystają teraz z istniejącego `ApplicationProvider.getApplicationContext()` (wspólnego kontekstu testów klasy), natomiast URI nadal wskazuje testowego dostawcę zarejestrowanego w manifeście androidTest. Nie zmieniono produkcyjnej logiki importu ani nie osłabiono asercji. Korekta zapisana w commicie `77c101a8f2fa2684392145e184fa424fb0b162a6`.
 
 Po tej korekcie wymagane jest ponowne pełne CI. Do czasu zakończenia ponownego Android GUI validation etap 2Q.4 pozostaje niezweryfikowany. Nie należy interpretować sukcesu kompilacji APK i REUSE jako potwierdzenia poprawności testu instrumentacyjnego.
+
+## 54.7. Ponowna walidacja etapu 2Q.4 — brak środowiska Kotlin w APK testowym
+
+Ponowna kontrola CI dla commitu audytu `8a7787f0c36197f8e7bbbad210845bc273db48ab` wykazała:
+- REUSE Compliance Check — sukces;
+- Android prototype build — sukces;
+- Android GUI validation — porażka w teście `DonationAttachmentStorageTest.importDeletesPartialFileWhenProviderFailsAfterWritingBytes`.
+
+Log emulatora wykazał awarię procesu testowego:
+`NoClassDefFoundError: kotlin/jvm/internal/Intrinsics` podczas wywołania `FailingStreamContentProvider.getType()`. Przyczyną było uruchomienie testowego providera Kotlin w APK instrumentacyjnym, w którym nie była jawnie dostępna biblioteka standardowa Kotlin. W efekcie test nie doszedł do właściwej asercji zachowania przerwanego strumienia; nie wolno uznać go za zaliczony ani traktować tego wyniku jako błędu produkcyjnego magazynu załączników.
+
+### Korekta
+
+W pliku `obywatel-android/app/build.gradle.kts` dodano jawne:
+`androidTestImplementation(kotlin("stdlib"))`
+
+Zależność dotyczy wyłącznie wariantu instrumentacyjnego, ponieważ `FailingStreamContentProvider` jest zadeklarowany wyłącznie w manifeście `src/androidTest`. Nie rozszerza zależności produkcyjnego APK.
+
+- Commit korekty konfiguracji: `12da3d845a3b5706230b8cb1394a89566a9e9456`.
+- Status: poprawka zapisana; oczekuje na ponowne Android GUI validation i build.
+- Etap 2Q.4: nadal **niezweryfikowany** do czasu przejścia testu kontrolowanego błędu i pełnego zestawu GUI.
+- Etap raportów PDF/CSV: wstrzymany do czasu zamknięcia tej walidacji.
+
+Ograniczenie: log potwierdza brak klasy Kotlin runtime w APK testowym. Po dodaniu zależności trzeba potwierdzić w kolejnym przebiegu, że provider uruchamia się, rzeczywiście zapisuje część danych do potoku, zgłasza kontrolowany błąd odczytu, a produkcyjny import usuwa częściowy plik.
