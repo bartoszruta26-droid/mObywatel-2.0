@@ -10,7 +10,7 @@ SPDX-License-Identifier: CC0-1.0
 - **Gałąź audytowana:** `feature/payment-ledger-stage-1`
 - **Commit bazowy:** `631aa68ed0e2bcbedd70201751214bd4c08fd5cc`
 - **Obszar:** `obywatel-android` (Android, Kotlin, Jetpack Compose)
-- **Status (aktualizacja 15 listopada 2026 r.):** etapy 1–2L oraz obsługa trwałych transakcji, prowizji, darowizn i archiwum JSON są wdrożone w gałęzi PR. Etap 68 naprawił umieszczenie testów repozytorium w niewłaściwej klasie, ale walidacja emulatorowa dla SHA `1f260607` wykazała 3 błędy (2 testy wyboru daty i 1 asercja skali `BigDecimal`); testy JVM i budowa APK przechodziły. W gałęzi wykonano poprawki testów oraz etap 69: zgodność podglądu archiwum z zatwierdzaniem, duplikaty identyfikatorów w paczce i konflikty powiązań transakcji z zapisami bankowymi. Nowa walidacja CI oczekuje na wynik dla końcowego SHA. Parser CSV/XLS, adapter PDF, formularze ręczne i notowania NBP pozostają do wykonania. PR #68 pozostaje otwarty i niescalony.
+- **Status (aktualizacja 15 listopada 2026 r.):** etapy 1–69 są zapisane w gałęzi PR. Etap 70 zaostrza kontrolę kierunku nóg FX; w jego teście regresyjnym CI wykryło błędny scenariusz testowy (test oczekiwał konfliktu dla prawidłowej pary), który poprawiono. Etap 71 utwardza parser XML przeciw DTD/encji zewnętrznych i ogranicza liczbę operacji. Dla końcowego SHA `2fe27c19523502c768c5e1d2347eca68ed47a73b` CI jest w toku/kolejce; nie ma jeszcze potwierdzenia testów JVM, emulatorowych ani APK. CSV/XLS, adapter PDF, formularze ręczne i notowania NBP pozostają do wykonania. PR #68 pozostaje otwarty i niescalony.
 - **Cel:** przygotowanie nowego, domyślnie widocznego kafelka **Rachunki płatnicze** dla lokalnej ewidencji transakcji wymiany walut i operacji na kruszcach, importu/eksportu danych w JSON oraz wyceny historycznej i bieżącej z wykorzystaniem publicznych danych NBP.
 
 > **Zasada nadrzędna:** rejestr ma wiernie przechowywać to, co faktycznie wydarzyło się w transakcji, i wyraźnie oddzielać dane źródłowe od obliczeń, wycen referencyjnych i hipotetycznych wyników. Kurs NBP nie jest kursem wykonania transakcji w banku ani ofertą, po której użytkownik może rzeczywiście kupić lub sprzedać walutę czy kruszec.
@@ -3918,3 +3918,71 @@ Dodano testy instrumentacyjne obejmujące:
 3. powiązanie jednego zapisu bankowego z dwiema różnymi transakcjami — podgląd wykrywa konflikt, a zatwierdzenie pozostawia bazę bez częściowych zapisów.
 
 **Kryterium odbioru:** testy JVM, wszystkie testy instrumentacyjne, budowa APK oraz REUSE muszą zakończyć się sukcesem dla tego samego końcowego SHA. Samo zapisanie zmian nie oznacza zaliczenia etapu.
+
+## 70. Walidacja kierunku nóg wymiany FX — korekta testu (15 listopada 2026 r.)
+
+### 70.1. Poprawka logiki
+
+W `BankImportDeduplicator.isOppositeFxLeg` dopuszczenie pary wymiany wymaga zgodności znaku kwoty z etykietą każdej nogi: UZNANIE dodatnie, OBCIĄŻENIE ujemne. Zachowano wymagania tej samej daty, różnych walut i rodzaju „WYMIANA W KANTORZE”.
+
+### 70.2. Usterka wykryta w CI i jej usunięcie
+
+Workflow Android GUI validation dla SHA `f47c86ebd657a6922b75dd85bd52097556fb1eb1`, run `43720078786`, zakończył testy JVM niepowodzeniem: 152 testy, 1 błąd. Log wskazał `BankImportDeduplicatorTest.oppositeFxLegsWithSignsContradictingOperationLabelsAreConflicts`, asercję w linii 244. Analiza wykazała, że jeden scenariusz testu zawierał prawidłową parę (+ UZNANIE, − OBCIĄŻENIE), a mimo to oczekiwał konfliktu. Błąd dotyczył testu, nie reguły produkcyjnej.
+
+Poprawiono test tak, aby oddzielnie sprawdzał:
+- nieprawidłowe dodatnie OBCIĄŻENIE zestawione z prawidłowym dodatnim UZNANIEM;
+- nieprawidłowe ujemne UZNANIE zestawione z prawidłowym ujemnym OBCIĄŻENIEM.
+
+Każdy scenariusz powinien klasyfikować pierwszy wpis jako nowy, a drugi jako konflikt. Commit korekty testu: `889db06c24e1fadedcfe7d21269c1130a2ebb5b2`.
+
+### 70.3. Status walidacji
+
+Ponowny odczyt pliku testowego potwierdził dwa poprawne scenariusze błędnych etykiet i znaków. Wyniki wcześniejszego CI nie są zaliczeniem poprawionej wersji. Oczekuje się na pełne CI dla końcowego SHA etapu 71.
+
+## 71. Utwardzenie parsera XML wyciągu bankowego (15 listopada 2026 r.)
+
+### 71.1. Ustalenie
+
+Parser `BankStatementXmlParser` ograniczał rozmiar dokumentu do 10 MiB i wyłączał przetwarzanie DTD, ale główna pętla korzystała z `next()`, które pomija część tokenów XML, przez co nie zapewniało jawnej kontroli zdarzenia DTD. Nie było też limitu liczby operacji w jednym dokumencie.
+
+### 71.2. Wdrożone zabezpieczenia
+
+- Pętla parsowania korzysta z `nextToken()`, aby kontrolować tokeny deklaracji dokumentu.
+- Zdarzenia `DOCDECL` i `ENTITY_REF` są jawnie odrzucane; parser nie akceptuje deklaracji DTD ani odwołań do encji XML.
+- Zachowano wyłączenie przetwarzania deklaracji dokumentu przez `FEATURE_PROCESS_DOCDECL=false`.
+- Dodano limit 50 000 operacji w jednym pliku, obok dotychczasowego limitu 10 MiB.
+- Parser nadal zapisuje wyłącznie pseudonim rachunku, datę, walutę, kwotę, typ i bezpieczną referencję/odcisk opisu; nie zachowuje numeru rachunku, nazwiska ani adresu kontrahenta.
+
+### 71.3. Testy
+
+W testach instrumentacyjnych parsera dodano przypadki:
+- odrzucenia dokumentu z DTD i zewnętrzną encją wskazującą lokalny plik;
+- odrzucenia kwoty zerowej;
+- odrzucenia nieprawidłowego kodu waluty.
+
+Istniejące testy poprawnego importu, ochrony danych kontrahenta, konwersji JSON i podglądu deduplikacji pozostają zachowane.
+
+### 71.4. Zmienione pliki i commity
+
+- `BankStatementXmlParser.kt` — odrzucanie DTD/encji i limit operacji; commit `1bca7987a81fd5bcc3559eaa71edadc1c608b5d6`.
+- `BankStatementXmlParser.kt` — użycie `nextToken()` do kontroli DTD; commit `2fe27c19523502c768c5e1d2347eca68ed47a73b`.
+- `BankStatementXmlParserTest.kt` — testy DTD, kwoty zerowej i kodu waluty; commit `1030e3490e36ac546594b4125e82f2eebdcdefc3`.
+- `BankImportDeduplicatorTest.kt` — korekta scenariuszy testu kierunku FX; commit `889db06c24e1fadedcfe7d21269c1130a2ebb5b2`.
+
+### 71.5. Kontrola źródeł i CI
+
+Ponowny odczyt z gałęzi potwierdził obecność:
+- `DOCDECL` i `ENTITY_REF` w ścieżce odrzucania;
+- `nextToken()`;
+- limitu `MAX_OPERATIONS = 50_000`;
+- testu DTD oraz testów nieprawidłowych danych;
+- poprawionych scenariuszy testu FX.
+
+Końcowy SHA po zmianach: `2fe27c19523502c768c5e1d2347eca68ed47a73b`.
+
+Dla tego SHA:
+- Android prototype build, run `43720318876` — **in_progress** przy ostatnim odczycie;
+- Android GUI validation, run `43720318853` — **pending**;
+- Repository compliance, run `43720318861` — **queued**.
+
+Etap 71 jest **zapisany i sprawdzony w źródłach; walidacja CI pozostaje otwarta**. Nie deklaruje się jeszcze sukcesu testów JVM, instrumentacyjnych, budowy APK ani publikacji artefaktu.
