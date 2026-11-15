@@ -51,8 +51,11 @@ class PaymentLedgerRepository(
     suspend fun getCashDonations(): List<pl.gov.obywatel.android.CashDonation> =
         withContext(Dispatchers.IO) { database.readCashDonations() }
 
-    suspend fun deleteCashDonation(id: String) =
-        withContext(Dispatchers.IO) { database.deleteCashDonation(id) }
+    /**
+     * Jedyna publiczna ścieżka usuwania darowizny. Usuwa także prywatne pliki
+     * załączników; bezpośrednie usunięcie rekordu z SQLite pozostawiałoby pliki osierocone.
+     */
+    suspend fun deleteCashDonation(id: String) = deleteCashDonationWithAttachments(id)
 
 
     suspend fun getDonationAttachments(): List<pl.gov.obywatel.android.DonationAttachment> =

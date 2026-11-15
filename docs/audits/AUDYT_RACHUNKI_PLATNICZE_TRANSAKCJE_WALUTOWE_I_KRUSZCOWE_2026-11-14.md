@@ -2970,3 +2970,33 @@ Status etapu 2P: implementacja metadanych, magazynu prywatnego, interfejsu i mig
 
 
 **Kontrola testu jednostkowego:** podczas przeglądu importów testu sygnatur wykryto brak jawnych importów `assertTrue` i `assertFalse`; dodano je przed końcową walidacją. Rewizja zawierająca tę korektę: `91f71405d1189e194f1bdd96c544f6b6a211a3f6`. Przebiegi uruchomione dla poprzedniej rewizji mogą zostać anulowane; o wyniku końcowym decyduje CI dla aktualnego HEAD.
+
+
+### 49. Korekta wspólnej ścieżki usuwania darowizny i jej załączników (15 listopada 2026 r.)
+
+#### 49.1. Ustalenie z przeglądu
+
+W PaymentLedgerRepository istniały dwie publiczne metody usuwania darowizny:
+- deleteCashDonation(id) usuwała rekord bezpośrednio z SQLite;
+- deleteCashDonationWithAttachments(id) najpierw pobierała metadane załączników, usuwała rekord darowizny (z kaskadą metadanych), a następnie usuwała pliki z prywatnego katalogu.
+
+Ekran rejestru korzystał z drugiej metody, ale pierwsza pozostawała możliwą ścieżką pozostawienia osieroconych plików. Była to niespójność warstwy repozytorium, a nie problem samego ograniczenia klucza obcego SQLite.
+
+#### 49.2. Wykonana poprawka
+
+Ujednolicono publiczną ścieżkę: deleteCashDonation(id) deleguje teraz do deleteCashDonationWithAttachments(id). Dzięki temu wywołujący podstawową metodę repozytorium nie może ominąć usuwania plików prywatnych. Istniejąca metoda rozszerzona pozostaje implementacją operacji w Dispatchers.IO.
+
+#### 49.3. Test regresyjny
+
+Dodano test instrumentalny deletingDonationThroughPrimaryRepositoryMethodAlsoRemovesAttachmentMetadataAndPrivateFile, który:
+1. zapisuje darowiznę i metadane załącznika w testowej bazie;
+2. tworzy odpowiadający plik w prywatnym katalogu aplikacji;
+3. usuwa darowiznę przez podstawową metodę deleteCashDonation;
+4. sprawdza brak darowizny, brak metadanych załącznika i fizyczny brak pliku.
+
+Test zabezpiecza jednocześnie spójność SQLite i czyszczenie magazynu prywatnego. Nie zastępuje testów importu z rzeczywistego dostawcy SAF.
+
+#### 49.4. Status weryfikacji
+
+Zmiana kodu i testu została przygotowana w jednym commicie wraz z niniejszą aktualizacją audytu. Wcześniejszy przebieg GUI validation dla poprzedniego SHA jest odrębny od nowej rewizji; ostateczna ocena poprawki wymaga świeżego CI dla nowego HEAD: testów JVM, testów emulatorowych, budowy debug APK i kontroli REUSE. Nie oznacza się poprawki jako przetestowanej przed zakończeniem tych przebiegów.
+

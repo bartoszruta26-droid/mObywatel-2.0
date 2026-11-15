@@ -218,4 +218,49 @@ class PaymentLedgerRepositoryTest {
         }
     }
 
+    @Test
+    fun deletingDonationThroughPrimaryRepositoryMethodAlsoRemovesAttachmentMetadataAndPrivateFile() = runBlocking {
+        val donation = pl.gov.obywatel.android.CashDonation(
+            id = "donation-delete-with-attachment",
+            receivedAt = java.time.Instant.parse("2026-11-14T12:00:00Z"),
+            amount = BigDecimal("250.00"),
+            currencyCode = "PLN",
+            beneficiaryOrganizationName = "Fundacja Aria",
+            purpose = "Test usuwania załącznika"
+        )
+        val storedName = "11111111-1111-4111-8111-111111111111.pdf"
+        val attachment = pl.gov.obywatel.android.DonationAttachment(
+            id = "attachment-delete-test",
+            donationId = donation.id,
+            fileName = "pokwitowanie.pdf",
+            mimeType = "application/pdf",
+            sizeBytes = 5L,
+            sha256 = "a".repeat(64),
+            storedFileName = storedName,
+            addedAt = java.time.Instant.parse("2026-11-14T12:01:00Z")
+        )
+        val database = PaymentLedgerDatabase(context, conflictDatabase)
+        database.saveCashDonation(donation)
+        database.saveDonationAttachment(attachment)
+        database.close()
+
+        val attachmentDirectory = java.io.File(context.filesDir, "donation-attachments")
+        assertTrue(attachmentDirectory.exists() || attachmentDirectory.mkdirs())
+        val attachmentFile = java.io.File(attachmentDirectory, storedName)
+        attachmentFile.writeBytes("%PDF-".toByteArray())
+
+        val repository = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            repository.deleteCashDonation(donation.id)
+
+            assertTrue(repository.getCashDonations().isEmpty())
+            assertTrue(repository.getDonationAttachments().isEmpty())
+            assertTrue("Plik prywatny powinien zostać usunięty.", !attachmentFile.exists())
+        } finally {
+            repository.close()
+            attachmentFile.delete()
+            attachmentDirectory.delete()
+        }
+    }
+
 }
