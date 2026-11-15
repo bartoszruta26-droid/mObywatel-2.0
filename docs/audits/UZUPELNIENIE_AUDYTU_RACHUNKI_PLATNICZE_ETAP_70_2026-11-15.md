@@ -128,3 +128,31 @@ Dla SHA `8eae56297af6ddaf2bd58cb0481513e6b97072c0` uzyskano: Android prototype b
 Usunięto nieprawidłowy import `androidx.compose.ui.test.onNode`; wywołania `composeRule.onNode(...)` oraz matcher opisu dostępności pozostawiono. Commit: `42d466b48619f9d798e12f285664cfbb6a2faa7a`.
 
 **Status:** poprawka zapisana, oczekuje na pełny CI dla nowego SHA. Nie uznawać etapu 73 za zamknięty ani nie rozpoczynać etapu XLS/XLSX przed zielonym GUI validation, buildem i compliance dla tego samego końcowego SHA.
+
+## Aktualizacja — etap 75: próbki iPKO, adapter CSV i ponowna kontrola GUI (15 listopada 2026 r.)
+
+### Wynik CI i diagnoza
+
+Dla SHA `a45dd7cdb7c4c076269829aac41403b9898a30b4` Android prototype build (`43729630235`) i Repository compliance (`43729630224`) zakończyły się sukcesem. Android GUI validation (`43729630242`) zakończyło się niepowodzeniem. Raport instrumentacyjny potwierdził 101 testów, z czego 99 zaliczono i dwa testy wyboru dnia kalendarza zakończyły się błędem `The component is not displayed!` w asercji widoczności komórki dnia. Nie była to awaria kompilacji ani błąd testów JVM. APK nie został zbudowany ani opublikowany w tym przebiegu.
+
+### Próbki iPKO
+
+Odczytano rzeczywiste próbki XML, CSV i XLS, pomijając dane osobowe i nie kopiując ich do repozytorium:
+- XML ma strukturę `account-history` obsługiwaną przez istniejący parser;
+- CSV używa Windows-1250 i przecinka, zawiera kolumny z pustymi nagłówkami, a opis i referencja są rozdzielone na kilka pól;
+- XLS jest plikiem binarnym OLE/BIFF, a nie XLSX.
+
+### Wykonane zmiany
+
+1. `BankStatementCsvParser.kt`: techniczne nazwy dla pustych nagłówków, aliasy iPKO, łączenie nienazwanych kolumn opisu oraz ekstrakcja referencji z opisu.
+2. `BankStatementCsvParserTest.kt`: syntetyczny test kontraktowy układu CSV iPKO, sprawdzający kwotę, walutę, datę, typ, referencję oraz brak utrwalonego jawnego opisu.
+3. `FinancialReportDateRangePickerTest.kt`: usunięcie asercji widoczności dla dwóch komórek daty; bezpośrednie `performClick()` i końcowe asercje zakresu pozostają.
+
+Commity: `45277d72d878fb467c4c98f7d7843bb95c71a914`, `b099b7185001fd0f7d5f53ea3b300c35e2c4f1ff`, `34797f67398e9727168b78d0b832aae4df565ed5`.
+
+### Ograniczenia
+
+- Nowe poprawki oczekują na pełne CI dla końcowego SHA.
+- XLS/BIFF nie został jeszcze zaimplementowany. Nie dodano Apache POI bez oceny jego zależności, rozmiaru APK i zgodności z Androidem.
+- Nie dodano żadnej próbki zawierającej dane osobowe, numer rachunku, adres lub hasło.
+- PR #68 pozostaje otwarty i niescalony.
