@@ -763,3 +763,37 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Wymagane jest potwierdzenie testów JVM, Compose UI na emulatorze, budowania APK i kontroli REUSE dla dokładnego końcowego SHA.
 
 **Status:** dodano wstępne odzyskiwanie osieroconych plików i kontrolę spójności metadanych przy uruchomieniu komponentu magazynu; import sprawdza istniejące metadane przed scaleniem. To istotne ograniczenie skutków awarii, ale nie pełna transakcyjność. CI dla nowych commitów wymaga potwierdzenia.
+
+
+---
+
+## 30. Bezpieczne postępowanie po niejednoznacznym wyniku zapisu metadanych importu — 2026-11-15
+
+### Walidacja poprzedniego etapu
+- [x] Dla SHA `27173a02e95fc5e84c11156b7f7e30842ba6b8d4` zakończyły się powodzeniem: Repository compliance, Android prototype build oraz Android GUI validation.
+- [x] Job Android GUI validation wykonał z powodzeniem testy jednostkowe, testy Compose UI na emulatorze, budowanie debug APK i archiwizację APK oraz raportów.
+- [x] Konfiguracja pominęła podpisywanie kluczem stabilnym i publikację APK; nie deklaruje się zatem opublikowanego ani podpisanego wydania.
+- [x] PR #69 pozostaje otwarty, Draft i niescalony.
+
+### Wykryte ryzyko
+- [x] Import instalował pliki szyfrowane, a następnie wykonywał `SharedPreferences.Editor.commit()`. W przypadku wyniku `false` stan mapy w pamięci procesu może już różnić się od trwałego stanu na dysku.
+- [x] Dotychczasowy blok `catch` usuwał wszystkie nowo zainstalowane pliki. Przy niejednoznacznym wyniku commit mogło to pozostawić metadane wskazujące na usunięte pliki.
+
+### Wykonane poprawki
+- [x] Dodano rozróżnienie błędów przed próbą zatwierdzenia metadanych i błędów po rozpoczęciu tej próby.
+- [x] Jeżeli błąd wystąpi przed próbą `commit()`, nowo zainstalowane pliki są usuwane jak dotychczas.
+- [x] Jeżeli `commit()` został już wywołany, pliki pozostają na miejscu. Przy kolejnym uzgadnianiu magazynu pliki bez trwałych referencji w metadanych zostaną rozpoznane jako osierocone i usunięte; jeśli referencje przetrwały, źródła pozostają dostępne.
+- [x] Dodano test jednostkowy reguły decyzji o usuwaniu plików po błędzie importu.
+- [x] Zmiany zapisano w commitach `48da42cc728c16011ec87706cfb8e2915b64fa4f` oraz `81194783e1348f93761bd21fc03972a849fd59a8`.
+- [x] Zmiany źródłowe i testowe ponownie odczytano z GitHub; potwierdzono obecność flagi próby commit, warunkowego sprzątania i testu.
+
+### Ograniczenia
+- [ ] Nadal brak pełnego dziennika transakcji i testów awarii procesu na urządzeniu. Obecna poprawka ogranicza ryzyko niespójności po niejednoznacznym `commit()`, ale nie dowodzi atomowości całej operacji.
+- [ ] Należy wykonać test integracyjny z wymuszonym wynikiem `commit() == false` oraz odczytem metadanych po ponownym otwarciu magazynu.
+- [ ] Pozostają testy wadliwego Base64, limitów archiwum, konfliktów między dokumentami, rollbacku, pełnego dekodowania obrazów i ograniczeń wymiarów.
+
+### CI dla poprzedniego SHA
+- [x] Dla SHA `27173a02e95fc5e84c11156b7f7e30842ba6b8d4` wszystkie trzy workflow zakończyły się powodzeniem.
+- [ ] Wyniki CI dla commitów sekcji 30 należy potwierdzić osobno; nie przenosić statusu poprzedniego SHA na nowe zmiany.
+
+**Status:** poprawiono sprzątanie importu w przypadku błędu po rozpoczęciu zapisu metadanych. Zmiana ogranicza ryzyko usunięcia plików, do których metadane mogły zostać już zapisane. Testy CI dla nowego końcowego SHA pozostają do potwierdzenia.
