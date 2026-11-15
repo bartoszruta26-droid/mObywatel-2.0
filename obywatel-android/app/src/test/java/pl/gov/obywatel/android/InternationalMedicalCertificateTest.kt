@@ -91,8 +91,6 @@ class InternationalMedicalCertificateTest {
         assertTrue(document.validate().any { it.contains("absent from the source") })
         assertEquals("Example Patient", document.sourceFields["patientName"])
     }
-}
-
     @Test
     fun imagingStudyDateAcceptsValidIsoDatesAndRejectsInvalidDates() {
         assertTrue(isValidMedicalStudyDate("2024-02-29"))
@@ -104,3 +102,4 @@ class InternationalMedicalCertificateTest {
         assertFalse(isValidMedicalStudyDate("15-11-2026"))
         assertFalse(isValidMedicalStudyDate("2026-11-15extra"))
     }
+}
