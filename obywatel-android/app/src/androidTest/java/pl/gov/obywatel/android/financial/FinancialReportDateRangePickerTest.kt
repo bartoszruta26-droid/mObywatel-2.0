@@ -65,7 +65,6 @@ class FinancialReportDateRangePickerTest {
             "Data końcowa musi przypadać tego samego dnia lub po dacie początkowej."
         ).assertIsDisplayed()
     }
-}
 
     @Test
     fun selectingDifferentStartDateUpdatesOnlyStartBoundary() {
