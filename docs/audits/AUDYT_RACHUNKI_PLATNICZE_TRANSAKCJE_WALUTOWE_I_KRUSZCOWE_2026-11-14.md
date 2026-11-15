@@ -3841,19 +3841,39 @@ Dodano rozszerzony test instrumentacyjny:
 - `donationImportTreatsEquivalentBigDecimalScaleAsDuplicate` — potwierdza, że równoważne kwoty darowizny zapisane z inną skalą dziesiętną są traktowane jako duplikat, a nie konflikt; sprawdzany jest także brak nadpisania istniejącego rekordu.
 - Asercja odczytu normalizuje skalę `BigDecimal`, ponieważ SQLite zapisuje wartości po `stripTrailingZeros()`.
 
+### 68.3a. Korekta po nieudanej kompilacji testów (15 listopada 2026 r.)
+
+Przebieg Android GUI validation dla SHA `10f2f0f9677c3584a8887d1c2fe46fd22af6dd8f` zakończył się niepowodzeniem na etapie `compileDebugAndroidTestKotlin`, przed uruchomieniem testów na emulatorze. Log kompilatora wskazał, że dwa testy importu transakcji zostały umieszczone w `PaymentLedgerDatabaseTest`, mimo że używały `PaymentLedgerRepository`, `runBlocking` i pola `conflictDatabase` z klasy `PaymentLedgerRepositoryTest`. Dodatkowo klasa bazy nie miała importu `assertTrue`.
+
+Naprawa:
+- usunięto dwa testy repozytorium z `PaymentLedgerDatabaseTest.kt`;
+- przeniesiono je bez zmian merytorycznych do `PaymentLedgerRepositoryTest.kt`, który ma właściwe importy i konfigurację bazy;
+- zachowano oba przypadki: odrzucenie zmienionej transakcji pod tym samym ID oraz idempotentny ponowny import identycznego archiwum.
+
+Zmiany:
+- `PaymentLedgerDatabaseTest.kt` — commit `d9e90db57750b52e54a4d8381aad8f4674f34705`;
+- `PaymentLedgerRepositoryTest.kt` — commit `de7de2de13c3e4ee9b769c5183f3931cd3f27c3f`.
+
+Po poprawce ponownie pobrano oba pliki z gałęzi i sprawdzono, że testy repozytorium nie występują już w klasie testowej bazy, a oba znajdują się w klasie repozytorium. Pełna walidacja CI dla nowego HEAD jest w toku.
+
 ### 68.4. Zmienione pliki i commity
 
 - `PaymentLedgerDatabase.kt` — pełne porównanie danych darowizny; commit `aaf5ee534b7d51b198c5b8d6b0f49e587194a794`.
 - `PaymentLedgerRepository.kt` — zgodna kontrola w podglądzie; commit `07cb282621a543628c58363666d6d374fa4ac5a1`.
-- `PaymentLedgerRepositoryTest.kt` — rozszerzony test dziewięciu pól metadanych; commit `53251f0c35cc15a6a66d0216c762ae53334c7206`; korekta asercji skali dziesiętnej; commit `1d5ff946550013414ebccd78734abca035ae76c0`; dodatkowy test idempotencji równoważnych kwot darowizn; commit `e92db4aae375687207170ddb9ea6e436fa55c274`.
+- `PaymentLedgerRepositoryTest.kt` — rozszerzony test dziewięciu pól metadanych i test idempotencji równoważnych kwot; commit `53251f0c35cc15a6a66d0216c762ae53334c7206`; korekta asercji skali dziesiętnej; commit `1d5ff946550013414ebccd78734abca035ae76c0`; dodatkowy test idempotencji równoważnych kwot darowizn; commit `e92db4aae375687207170ddb9ea6e436fa55c274`.
 
 ### 68.5. Kontrola zapisu i walidacja
 
 Po zapisaniu zmian ponownie pobrano z GitHuba pliki bazy, repozytorium i testu. Potwierdzono pełne porównanie pól modelu darowizny, zgodność kryterium podglądu oraz obecność testu obejmującego dziewięć wariantów konfliktu.
 
-Dla końcowego SHA kodu `e92db4aae375687207170ddb9ea6e436fa55c274` uruchomiono:
-- Repository compliance, run `43717033688` — **success**;
-- Android prototype build, run `43717033689` — **in_progress**;
-- Android GUI validation, run `43717033707` — **in_progress**.
+Wynik poprzedniego przebiegu dla SHA `10f2f0f9677c3584a8887d1c2fe46fd22af6dd8f`:
+- Repository compliance, run `43717150909` — **success**;
+- Android prototype build, run `43717151111` — **success**;
+- Android GUI validation, run `43717150912` — **failure** na kompilacji testów instrumentacyjnych. Przyczynę i poprawkę opisano w sekcji 68.3a; nie był to błąd wykonania testu na emulatorze.
 
-W chwili aktualizacji audytu oba przebiegi Android nadal wykonywały testy jednostkowe; testy emulatorowe i budowa APK nie zostały jeszcze zakończone. Przebiegi dla wcześniejszych SHA zostały anulowane po kolejnych pushach. Etap 68 jest **zapisany, odczytany ponownie i objęty walidacją CI; pozostaje niezamknięty do czasu wyników**. PR `#68` pozostaje otwarty i niescalony z `main`.
+Dla nowego HEAD `de7de2de13c3e4ee9b769c5183f3931cd3f27c3f`:
+- Android GUI validation, run `43717744443` — **pending**;
+- Repository compliance, run `43717744461` — **queued**;
+- Android prototype build dla poprzedniego commitu `d9e90db57750b52e54a4d8381aad8f4674f34705`, run `43717735740` — **in_progress**; nie jest to jeszcze przebieg dla końcowego HEAD.
+
+Położenie testów poprawiono i zweryfikowano ponownym odczytem plików, ale etap 68 pozostaje **otwarty walidacyjnie** do zakończenia testów JVM, emulatorowych i budowy APK dla aktualnego HEAD. PR `#68` pozostaje otwarty i niescalony z `main`.
