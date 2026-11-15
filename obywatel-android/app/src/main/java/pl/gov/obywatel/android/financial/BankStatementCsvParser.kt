@@ -3,7 +3,10 @@
 package pl.gov.obywatel.android.financial
 
 import java.math.BigDecimal
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
+import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.text.Normalizer
 import java.time.LocalDate
@@ -16,6 +19,24 @@ import java.util.Locale
  * Surowy opis nie jest zapisywany; bez referencji zachowujemy wyłącznie jego SHA-256.
  */
 object BankStatementCsvParser {
+    /** Dekoduje UTF-8 (z BOM lub bez); przy niepoprawnym UTF-8 stosuje Windows-1250. */
+    fun parse(bytes: ByteArray, accountScopeId: String): List<BankStatementEntry> {
+        require(bytes.isNotEmpty()) { "Plik CSV jest pusty." }
+        require(bytes.size <= MAX_CSV_BYTES) { "Plik CSV przekracza limit 10 MB." }
+        val payload = if (
+            bytes.size >= 3 &&
+            bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte()
+        ) bytes.copyOfRange(3, bytes.size) else bytes
+        val utf8 = runCatching {
+            StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(payload)).toString()
+        }.getOrNull()
+        val decoded = utf8 ?: Charset.forName("windows-1250").decode(ByteBuffer.wrap(payload)).toString()
+        return parse(decoded, accountScopeId)
+    }
+
     fun parse(csv: String, accountScopeId: String): List<BankStatementEntry> {
         val scope = accountScopeId.trim()
         require(scope.matches(Regex("[A-Za-z0-9._-]{1,64}"))) {
@@ -187,5 +208,6 @@ object BankStatementCsvParser {
     }
 
     private const val MAX_CSV_CHARACTERS = 10 * 1024 * 1024
+    private const val MAX_CSV_BYTES = 10 * 1024 * 1024
     private const val MAX_OPERATIONS = 50_000
 }
