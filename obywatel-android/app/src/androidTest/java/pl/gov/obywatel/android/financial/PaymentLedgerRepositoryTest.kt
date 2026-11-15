@@ -734,4 +734,38 @@ class PaymentLedgerRepositoryTest {
         }
     }
 
+
+    @Test
+    fun currencyConversionArchiveTreatsDifferentDecimalScaleAsConflict() = runBlocking {
+        val original = CurrencyConversionRecord(
+            id = "archive-conversion-scale-conflict",
+            convertedAt = java.time.Instant.parse("2026-11-15T12:30:00Z"),
+            sourceAmount = BigDecimal("100.000"),
+            sourceCurrencyCode = "USD",
+            targetAmount = BigDecimal("91.00"),
+            targetCurrencyCode = "EUR",
+            appliedRate = BigDecimal("0.9100"),
+            rateDate = LocalDate.parse("2026-11-14"),
+            rateSource = "NBP:A:2026-11-14"
+        )
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            target.saveCurrencyConversion(original)
+            val differentScale = original.copy(
+                sourceAmount = BigDecimal("100"),
+                targetAmount = BigDecimal("91"),
+                appliedRate = BigDecimal("0.91")
+            )
+            val archive = PaymentLedgerJsonCodec.encode(
+                emptyList(), emptyList(), emptyList(), listOf(differentScale)
+            )
+            val preview = target.previewArchive(archive)
+            assertEquals(1, preview.currencyConversionConflicts)
+            assertTrue(runCatching { target.importJson(archive) }.isFailure)
+            assertEquals(original, target.getCurrencyConversionHistory().single())
+        } finally {
+            target.close()
+        }
+    }
+
 }
