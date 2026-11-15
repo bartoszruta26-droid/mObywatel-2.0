@@ -140,6 +140,7 @@ object BankImportDeduplicator {
             (firstType.contains("UZNANIE") && secondType.contains("OBCIĄŻENIE")) ||
             (firstType.contains("OBCIĄŻENIE") && secondType.contains("UZNANIE"))
         return isFx &&
+            first.bookingDate == second.bookingDate &&
             oppositeLabels &&
             first.currencyCode != second.currencyCode &&
             first.signedAmount.signum() == -second.signedAmount.signum()
