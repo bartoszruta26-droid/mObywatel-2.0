@@ -838,4 +838,70 @@ class PaymentLedgerDatabaseTest {
     }
 
 
+    @Test
+    fun sameTransactionIdWithChangedDataIsRejectedAndPreservesExistingRecord() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val original = pl.gov.obywatel.android.FinancialTransaction(
+                id = "stable-transaction-id",
+                executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+                type = pl.gov.obywatel.android.FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null,
+                fromAmount = null,
+                toAssetCode = "USD",
+                toAmount = BigDecimal("100.00"),
+                parseStatus = pl.gov.obywatel.android.FinancialParseStatus.VERIFIED
+            )
+            val originalArchive = PaymentLedgerJsonCodec.encode(
+                emptyList(),
+                listOf(StoredFinancialTransaction(original, emptyList()))
+            )
+            target.importJson(originalArchive)
+            assertEquals(original, target.getFinancialTransactions().single().transaction)
+
+            val changed = original.copy(toAmount = BigDecimal("999.00"))
+            val changedArchive = PaymentLedgerJsonCodec.encode(
+                emptyList(),
+                listOf(StoredFinancialTransaction(changed, emptyList()))
+            )
+            val result = runCatching { target.importJson(changedArchive) }
+
+            assertTrue("Zmiana danych pod istniejącym identyfikatorem musi być konfliktem.", result.isFailure)
+            assertEquals(original, target.getFinancialTransactions().single().transaction)
+        } finally {
+            target.close()
+        }
+    }
+
+    @Test
+    fun identicalTransactionArchiveCanBeImportedRepeatedlyWithoutChangingRecord() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val transaction = pl.gov.obywatel.android.FinancialTransaction(
+                id = "idempotent-transaction-id",
+                executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+                type = pl.gov.obywatel.android.FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null,
+                fromAmount = null,
+                toAssetCode = "USD",
+                toAmount = BigDecimal("100.000"),
+                parseStatus = pl.gov.obywatel.android.FinancialParseStatus.VERIFIED
+            )
+            val archive = PaymentLedgerJsonCodec.encode(
+                emptyList(),
+                listOf(StoredFinancialTransaction(transaction, emptyList()))
+            )
+
+            target.importJson(archive)
+            target.importJson(archive)
+
+            assertEquals(1, target.getFinancialTransactions().size)
+            assertEquals(0, BigDecimal("100").compareTo(
+                target.getFinancialTransactions().single().transaction.toAmount
+            ))
+        } finally {
+            target.close()
+        }
+    }
+
 }
