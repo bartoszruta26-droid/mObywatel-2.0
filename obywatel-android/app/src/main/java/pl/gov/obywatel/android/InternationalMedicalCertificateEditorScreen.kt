@@ -291,7 +291,7 @@ private fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): Str
 
 private fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagingStudy> {
     val array = JSONArray(serialized)
-    (0 until array.length()).map { index ->
+    return (0 until array.length()).map { index ->
         val item = array.getJSONObject(index)
         MedicalImagingStudy(
             id = item.getString("id"),
