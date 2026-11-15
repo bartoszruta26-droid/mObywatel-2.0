@@ -3511,3 +3511,40 @@ Etap 59 jest wdrożony w kodzie, lecz pozostaje **niezweryfikowany testami Andro
 - Potwierdzić, że selektor Material 3 udostępnia jednoznaczny węzeł dnia w semantyce Compose na obrazie emulatora CI.
 - Jeżeli testy nie przejdą z powodu selektora węzła, poprawić asercje na podstawie rzeczywistego drzewa semantyki, bez osłabiania sprawdzenia zmiany daty.
 - Po pomyślnym CI zachować PR `#68` otwarty do dalszego przeglądu.
+
+## 60. Naprawa struktury testów kalendarza i kontrola granic okresu przy zmianie czasu (15 listopada 2026 r.)
+
+### 60.1. Ustalenia przeglądu
+
+Ponowny przegląd gałęzi wykazał, że dwa testy dodane w etapie 59 znajdowały się poza zamykającym nawiasem klasy `FinancialReportDateRangePickerTest`. Plik Kotlin zawierał przez to nieprawidłową strukturę deklaracji. Kontrola zgodności REUSE nie wykrywa tego rodzaju błędu kompilacji.
+
+### 60.2. Wykonane poprawki
+
+- Przeniesiono testy `selectingDifferentStartDateUpdatesOnlyStartBoundary` i `selectingDifferentEndDateUpdatesOnlyEndBoundary` do wnętrza klasy testowej.
+- Zachowano asercje sprawdzające, że wybór dnia aktualizuje tylko wskazaną granicę zakresu, pozostawiając drugą datę bez zmian.
+- Commit: `58c723174d831c6cadfe92fa314be5306ef1aac1`.
+- Ponownie pobrano plik z gałęzi i sprawdzono jego końcową strukturę: oba testy są wewnątrz klasy, a plik ma pojedyncze zamknięcie klasy.
+
+### 60.3. Dodatkowy test granic raportu w strefie Europe/Warsaw
+
+W pliku `obywatel-android/app/src/test/java/pl/gov/obywatel/android/financial/FinancialReportTest.kt` dodano test `reportIncludesBothLocalCalendarDaysAcrossDstAndExcludesFollowingMidnight`.
+
+Test buduje okres obejmujący 28 i 29 marca 2026 r. w strefie `Europe/Warsaw`, czyli weekend zmiany czasu na letni. Sprawdza trzy punkty:
+- początek pierwszego dnia lokalnego — uwzględniony;
+- ostatnia nanosekunda drugiego dnia lokalnego — uwzględniona;
+- dokładna chwila początku kolejnego dnia lokalnego — wykluczona.
+
+Kontrolowana jest również suma wartości dwóch uwzględnionych transakcji. Test obejmuje logikę `FinancialReportBuilder`, a nie tylko metodę `contains`.
+
+- Commit: `d0733f4dfed662c6df5a8a8a097ff8eb281263d0`.
+
+### 60.4. Status walidacji
+
+- Potwierdzono zapis obu zmian na gałęzi `feature/payment-ledger-stage-1`.
+- Wcześniejszy przebieg `Android prototype build` dla commitu `c87d29b` zakończył się sukcesem, ale nie obejmował naprawy struktury testu z commitu `58c7231) ani testu DST z commitu `d0733f4`.
+- Wcześniejszy przebieg `Android GUI validation` dla `c87d29b` pozostawał w toku w chwili odczytu; nie stanowi potwierdzenia testów dla nowych commitów.
+- Pełne CI dla aktualnego HEAD jest wymagane przed uznaniem etapu 60 za zweryfikowany. Należy sprawdzić kompilację testów JVM, testy instrumentacyjne DatePicker, testy Compose, budowę APK i kontrolę REUSE.
+
+### 60.5. Kryteria zamknięcia
+
+Etap można uznać za zweryfikowany dopiero po pomyślnym zakończeniu wszystkich wymaganych zadań CI dla dokładnego HEAD. W razie błędu testu DatePicker należy poprawić selektor semantyczny na podstawie rzeczywistego drzewa Compose, bez usuwania asercji potwierdzających zmianę wybranej daty. PR `#68` pozostaje otwarty.
