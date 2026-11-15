@@ -4497,3 +4497,8 @@ Wyniki testów instrumentacyjnych i kompilacji muszą zostać potwierdzone przez
 Format eksportu/importu rejestru podniesiono do wersji 3. Dodano tablicę `currencyConversions`; dekoder zachowuje zgodność z wersjami 1 i 2. Historia jest eksportowana z SQLite, a import obejmuje ją w jednej transakcji wraz z wpisami bankowymi, transakcjami i darowiznami. Powtórny import identycznych zapisów jest idempotentny. Konflikt treści pod istniejącym identyfikatorem jest raportowany w podglądzie i blokuje import bez częściowego zapisu.
 
 Dodano testy kodeka oraz testy instrumentacyjne round-trip, ponownego importu i konfliktu. Wyniki CI dla końcowego SHA pozostają warunkiem uznania etapu za zweryfikowany. PR #68 pozostaje otwarty.
+
+
+## Etap 89 — archiwizacja pełnej historii przeliczeń (15 listopada 2026 r.)
+
+Usunięto niejawne ograniczenie do 1000 rekordów z operacji archiwalnych. Metoda readAllCurrencyConversions() udostępnia pełną historię do eksportu JSON, podglądu importu i deduplikacji w transakcyjnym imporcie. Limit 1–1000 pozostaje wyłącznie dla odczytu prezentacyjnego. Dodano test instrumentacyjny obejmujący 1005 zapisów. Weryfikacja CI dla końcowego SHA pozostaje wymagana; PR #68 pozostaje otwarty i niescalony.
