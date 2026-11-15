@@ -1173,3 +1173,24 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Wykonanie testu oczekuje na workflow emulatora dla nowego SHA.
 
 **Status:** potwierdzono scenariusz ponownego dostępu do danych przez świeży kontekst pakietu na poziomie testu; pełny test restartu procesu pozostaje otwarty.
+
+
+## 46. Globalna unikalność identyfikatorów przy dodawaniu załącznika — 2026-11-15
+
+### Wykryta luka
+- [x] Import archiwum sprawdzał, czy identyfikator załącznika nie należy do innego dokumentu, ale ścieżka dodawania pojedynczego pliku sprawdzała duplikat tylko w obrębie bieżącego dokumentu.
+- [x] Przy ręcznie przekazanym lub ponownie użytym identyfikatorze możliwe było więc utworzenie konfliktu między zakresami. Konflikt byłby wykrywany dopiero przez późniejsze uzgadnianie magazynu.
+
+### Wykonana poprawka
+- [x] Przed zapisaniem nowego pliku metoda dodawania odczytuje i waliduje istniejące rejestry metadanych.
+- [x] Buduje mapę właścicieli identyfikatorów i odrzuca już istniejące konflikty globalne.
+- [x] Ponownie wykorzystuje wspólną regułę `validateOriginalAttachmentIdOwner`, blokując przypisanie identyfikatora należącego do innego dokumentu.
+- [x] Zachowuje dotychczasową kontrolę duplikatu w obrębie bieżącego dokumentu oraz format metadanych i publiczne wrappery magazynu.
+
+### Weryfikacja
+- [x] Zmianę zapisano na gałęzi `zaswaidczenie`.
+- [x] Ponownie pobrano plik źródłowy z GitHub i potwierdzono obecność walidacji właściciela przed utworzeniem pliku zaszyfrowanego.
+- [ ] Testy JVM, instrumentacyjne i kompilacja APK dla tego SHA wymagają wyniku GitHub Actions.
+- [ ] Test nie symuluje awarii `SharedPreferences.commit() == false`; kontrolowany backend metadanych pozostaje osobnym zadaniem.
+
+**Status:** ścieżka dodawania pojedynczego załącznika sprawdza teraz globalną unikalność ID przed zapisem. Nie oznacza to jeszcze zakończenia testów CI ani rozwiązania problemu kontrolowanego testowania błędów zatwierdzania preferencji.
