@@ -40,6 +40,39 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
+internal fun validateOriginalAttachmentPayload(mime: String, bytes: ByteArray) {
+    require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) {
+        "Plik musi mieć od 1 bajta do 25 MB."
+    }
+    when (mime) {
+        "application/pdf" -> require(bytes.size >= 5 &&
+            String(bytes, 0, 5, Charsets.US_ASCII) == "%PDF-") {
+            "Nieprawidłowy nagłówek PDF."
+        }
+        "image/jpeg" -> require(bytes.size >= 3 &&
+            bytes[0] == 0xff.toByte() && bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte()) {
+            "Nieprawidłowa sygnatura JPEG."
+        }
+        "image/png" -> require(bytes.size >= 8 &&
+            bytes.copyOfRange(0, 8).contentEquals(byteArrayOf(
+                0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
+            ))) { "Nieprawidłowa sygnatura PNG." }
+        "image/webp" -> require(bytes.size >= 12 &&
+            String(bytes, 0, 4, Charsets.US_ASCII) == "RIFF" &&
+            String(bytes, 8, 4, Charsets.US_ASCII) == "WEBP") {
+            "Nieprawidłowa sygnatura WebP."
+        }
+        "text/plain", "text/csv", "application/xml" -> {
+            val sample = String(bytes, 0, minOf(bytes.size, 4096), Charsets.UTF_8)
+            require(!sample.contains("<!DOCTYPE", true) && !sample.contains("<!ENTITY", true)) {
+                "Plik zawiera niedozwoloną deklarację DTD/ENTITY."
+            }
+        }
+        else -> throw IllegalArgumentException("Nieobsługiwany typ MIME załącznika: $mime")
+    }
+}
+
+
 private data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
 private object OriginalAttachmentStore {
@@ -49,37 +82,6 @@ private object OriginalAttachmentStore {
     private const val MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
     private const val MAX_ARCHIVE_ENTRIES = 200
 
-    private fun validatePayload(mime: String, bytes: ByteArray) {
-        require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) {
-            "Plik musi mieć od 1 bajta do 25 MB."
-        }
-        when (mime) {
-            "application/pdf" -> require(bytes.size >= 5 &&
-                String(bytes, 0, 5, Charsets.US_ASCII) == "%PDF-") {
-                "Nieprawidłowy nagłówek PDF."
-            }
-            "image/jpeg" -> require(bytes.size >= 3 &&
-                bytes[0] == 0xff.toByte() && bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte()) {
-                "Nieprawidłowa sygnatura JPEG."
-            }
-            "image/png" -> require(bytes.size >= 8 &&
-                bytes.copyOfRange(0, 8).contentEquals(byteArrayOf(
-                    0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
-                ))) { "Nieprawidłowa sygnatura PNG." }
-            "image/webp" -> require(bytes.size >= 12 &&
-                String(bytes, 0, 4, Charsets.US_ASCII) == "RIFF" &&
-                String(bytes, 8, 4, Charsets.US_ASCII) == "WEBP") {
-                "Nieprawidłowa sygnatura WebP."
-            }
-            "text/plain", "text/csv", "application/xml" -> {
-                val sample = String(bytes, 0, minOf(bytes.size, 4096), Charsets.UTF_8)
-                require(!sample.contains("<!DOCTYPE", true) && !sample.contains("<!ENTITY", true)) {
-                    "Plik zawiera niedozwoloną deklarację DTD/ENTITY."
-                }
-            }
-            else -> throw IllegalArgumentException("Nieobsługiwany typ MIME załącznika: $mime")
-        }
-    }
 
     private fun key(): SecretKey {
         val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
@@ -123,7 +125,7 @@ private object OriginalAttachmentStore {
         require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu." }
         require(attachmentId.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
         val safeMime = mime.substringBefore(';').trim().lowercase()
-        validatePayload(safeMime, bytes)
+        validateOriginalAttachmentPayload(safeMime, bytes)
         val updated = list(context, documentId).toMutableList()
         require(updated.none { it.id == attachmentId }) { "Załącznik o tym identyfikatorze już istnieje." }
         val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
@@ -235,7 +237,7 @@ private object OriginalAttachmentStore {
                 val encryptedFile = File(directory, "$id.enc")
                 require(encryptedFile.isFile) { "Brakuje pliku źródłowego załącznika: ${item.optString("name")}" }
                 val bytes = crypt(encryptedFile.readBytes(), false)
-                validatePayload(item.getString("mime").lowercase(), bytes)
+                validateOriginalAttachmentPayload(item.getString("mime").lowercase(), bytes)
                 totalBytes += bytes.size
                 require(totalBytes <= MAX_ARCHIVE_BYTES && entries.length() < MAX_ARCHIVE_ENTRIES) {
                     "Archiwum przekracza limit 50 MB lub 200 załączników."
@@ -284,7 +286,7 @@ private object OriginalAttachmentStore {
                 "Załącznik przekracza limit 25 MB."
             }
             val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
-            validatePayload(mime, bytes)
+            validateOriginalAttachmentPayload(mime, bytes)
             totalBytes += bytes.size
             require(totalBytes <= MAX_ARCHIVE_BYTES) { "Archiwum przekracza łączny limit 50 MB." }
             Pending(documentId, id, name, mime, bytes)
