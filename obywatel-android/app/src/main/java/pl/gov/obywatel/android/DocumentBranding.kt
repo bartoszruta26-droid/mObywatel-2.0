@@ -91,6 +91,7 @@ internal val documentBrandTargets = (listOf(
     "large_family" to "Karta Dużej Rodziny",
     "blood_donor" to "Legitymacja Honorowego Dawcy Krwi",
     "disability_card" to "Legitymacja osoby z niepełnosprawnością",
+    "international_medical_certificate" to "International Medical Certificate",
     "vehicle_registration" to "Dowód rejestracyjny pojazdu",
     "insurance_vehicle" to "Ubezpieczenie OC pojazdu",
     "insurance_professional" to "Ubezpieczenie OC zawodowe",
