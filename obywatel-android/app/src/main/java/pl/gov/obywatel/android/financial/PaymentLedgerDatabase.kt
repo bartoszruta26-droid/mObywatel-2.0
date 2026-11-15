@@ -51,6 +51,7 @@ class PaymentLedgerDatabase(
         createFinancialTransactionTables(db)
         createAssetTable(db)
         createCashDonationTable(db)
+        createDonationAttachmentTable(db)
         seedDefaultAccountScope(db)
     }
 
@@ -113,6 +114,9 @@ class PaymentLedgerDatabase(
         if (oldVersion < 6) {
             createCashDonationTable(db)
         }
+        if (oldVersion < 7) {
+            createDonationAttachmentTable(db)
+        }
     }
 
     private fun createCashDonationTable(db: SQLiteDatabase) {
@@ -140,6 +144,25 @@ class PaymentLedgerDatabase(
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_cash_donations_received_at ON cash_donations(received_at)")
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_cash_donations_beneficiary ON cash_donations(beneficiary_organization_name)")
+    }
+
+
+    private fun createDonationAttachmentTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS donation_attachments (
+                attachment_id TEXT PRIMARY KEY NOT NULL,
+                donation_id TEXT NOT NULL REFERENCES $TABLE_CASH_DONATIONS(donation_id) ON DELETE CASCADE,
+                file_name TEXT NOT NULL,
+                mime_type TEXT NOT NULL,
+                size_bytes INTEGER NOT NULL,
+                sha256 TEXT NOT NULL,
+                stored_file_name TEXT NOT NULL UNIQUE,
+                added_at TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_donation_attachments_donation ON donation_attachments(donation_id)")
     }
 
     private fun createFinancialTransactionTables(db: SQLiteDatabase) {
@@ -698,6 +721,55 @@ class PaymentLedgerDatabase(
         check(count == 1) { "Nie znaleziono darowizny do usunięcia." }
     }
 
+
+    fun saveDonationAttachment(attachment: pl.gov.obywatel.android.DonationAttachment) {
+        attachment.validate()
+        val values = ContentValues().apply {
+            put("attachment_id", attachment.id)
+            put("donation_id", attachment.donationId)
+            put("file_name", attachment.fileName)
+            put("mime_type", attachment.mimeType)
+            put("size_bytes", attachment.sizeBytes)
+            put("sha256", attachment.sha256)
+            put("stored_file_name", attachment.storedFileName)
+            put("added_at", attachment.addedAt.toString())
+        }
+        writableDatabase.insertOrThrow(TABLE_DONATION_ATTACHMENTS, null, values)
+    }
+
+    fun readDonationAttachments(): List<pl.gov.obywatel.android.DonationAttachment> {
+        val result = mutableListOf<pl.gov.obywatel.android.DonationAttachment>()
+        readableDatabase.query(
+            TABLE_DONATION_ATTACHMENTS,
+            arrayOf("attachment_id", "donation_id", "file_name", "mime_type", "size_bytes", "sha256", "stored_file_name", "added_at"),
+            null, null, null, null, "added_at ASC, attachment_id ASC"
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                result += pl.gov.obywatel.android.DonationAttachment(
+                    id = cursor.getString(0),
+                    donationId = cursor.getString(1),
+                    fileName = cursor.getString(2),
+                    mimeType = cursor.getString(3),
+                    sizeBytes = cursor.getLong(4),
+                    sha256 = cursor.getString(5),
+                    storedFileName = cursor.getString(6),
+                    addedAt = java.time.Instant.parse(cursor.getString(7))
+                ).also { it.validate() }
+            }
+        }
+        return result
+    }
+
+    fun deleteDonationAttachment(id: String): pl.gov.obywatel.android.DonationAttachment {
+        require(id.isNotBlank()) { "Identyfikator załącznika jest wymagany." }
+        val db = writableDatabase
+        val attachment = readDonationAttachments().firstOrNull { it.id == id }
+            ?: throw IllegalStateException("Nie znaleziono załącznika.")
+        val count = db.delete(TABLE_DONATION_ATTACHMENTS, "attachment_id = ?", arrayOf(id))
+        check(count == 1) { "Nie udało się usunąć załącznika." }
+        return attachment
+    }
+
     fun readFinancialTransactions(): List<StoredFinancialTransaction> {
         val db = readableDatabase
         val result = mutableListOf<StoredFinancialTransaction>()
@@ -799,7 +871,7 @@ class PaymentLedgerDatabase(
 
     companion object {
         const val DATABASE_NAME = "payment_ledger.db"
-        const val DATABASE_VERSION = 6
+        const val DATABASE_VERSION = 7
         const val DEFAULT_ACCOUNT_SCOPE_ID = "ipko-account-1"
         const val DEFAULT_ACCOUNT_SCOPE_NAME = "Rachunek iPKO 1"
         private const val TABLE_ASSETS = "financial_assets"
@@ -809,6 +881,7 @@ class PaymentLedgerDatabase(
         private const val TABLE_TRANSACTION_FEES = "financial_transaction_fees"
         private const val TABLE_TRANSACTION_BANK_ENTRIES = "financial_transaction_bank_entries"
         private const val TABLE_CASH_DONATIONS = "cash_donations"
+        private const val TABLE_DONATION_ATTACHMENTS = "donation_attachments"
     }
 }
 

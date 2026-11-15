@@ -2872,3 +2872,72 @@ Wszystkie sześć niepowodzeń instrumentacyjnych miało wspólną przyczynę: `
 3. Po zielonym CI przejść do pokwitowań/załączników darowizn: lokalny zapis przez SAF, ograniczenia typu i rozmiaru, brak przesyłania dokumentów poza urządzenie, powiązanie z identyfikatorem darowizny oraz integralność przez sumę kontrolną.
 4. Następnie dodać raporty okresowe PDF/CSV przyjętych, przechowywanych i przekazanych darowizn z wyraźnym rozdzieleniem kwot przyjętych i faktycznie przekazanych.
 5. Nie scalać PR #68 bez osobnego polecenia.
+
+### 47. Etap 2P — prywatne załączniki i pokwitowania darowizn (15 listopada 2026 r.)
+
+#### 47.1. Warunki wejściowe
+
+Dla rewizji `ca4621f904766672cd925f71393d391159772e77` wszystkie trzy kontrole CI zakończyły się sukcesem:
+- Android GUI validation — run `43684198897`: sukces;
+- Android prototype build — run `43684198890`: sukces;
+- Repository compliance — run `43684198960`: sukces.
+
+W ten sposób potwierdzono poprawkę inicjalizacji tabeli darowizn i można było przejść do załączników.
+
+#### 47.2. Zakres wykonanej implementacji
+
+Dodano model metadanych `DonationAttachment` z identyfikatorem, identyfikatorem darowizny, nazwą pliku, typem MIME, rozmiarem, sumą SHA-256, nazwą pliku w prywatnym magazynie i datą dodania.
+
+Dozwolone typy: PDF, JPEG i PNG. Limit jednego pliku: 10 MiB. Model odrzuca pustą nazwę, niedozwolony MIME, nieprawidłową sumę, rozmiar poza zakresem oraz nazwę pliku magazynowego niespełniającą wzorca UUID z rozszerzeniem.
+
+#### 47.3. Magazyn prywatny
+
+Nowa klasa `DonationAttachmentStorage`:
+- przyjmuje dokument przez URI z systemowego selektora SAF;
+- kopiuje bajty do prywatnego katalogu `files/donation-attachments`;
+- nie zachowuje zależności od pierwotnego URI dostawcy pliku;
+- ogranicza rozmiar strumienia w trakcie kopiowania, a nie dopiero po jego odczytaniu;
+- oblicza SHA-256 podczas kopiowania;
+- usuwa plik tymczasowy w razie błędu;
+- usuwa wyłącznie nazwy plików zgodne ze ścisłym wzorcem UUID i dozwolonym rozszerzeniem.
+
+Pliki nie są dodawane do zwykłego archiwum JSON. Eksport JSON przenosi nadal dane ewidencyjne, ale nie kopiuje lokalnych dokumentów ani ich ścieżek urządzenia.
+
+#### 47.4. SQLite i interfejs
+
+Wersję bazy podniesiono z 6 do 7. Tabela `donation_attachments` przechowuje metadane, ma klucz obcy do `cash_donations` z `ON DELETE CASCADE` oraz indeks po identyfikatorze darowizny. Migracja 6 → 7 tworzy tabelę bez usuwania danych.
+
+W ekranie rejestru darowizn dodano:
+- wybór PDF/JPEG/PNG przez SAF;
+- wyświetlanie nazwy, rozmiaru, MIME i pełnej sumy SHA-256;
+- usuwanie pojedynczego załącznika;
+- usuwanie metadanych załączników razem z rekordem darowizny oraz czyszczenie odpowiadających plików z magazynu prywatnego.
+
+#### 47.5. Testy dodane
+
+- walidacja metadanych załącznika, typu MIME i limitu rozmiaru;
+- test trwałości metadanych w SQLite;
+- test kaskadowego usunięcia metadanych przy usunięciu darowizny.
+
+Testy automatyczne nie zastępują jeszcze ręcznego sprawdzenia selektora SAF i fizycznego kopiowania PDF/JPEG/PNG na urządzeniu. Nie dodano podglądu/otwierania załącznika ani importu załączników w archiwum JSON.
+
+#### 47.6. Pliki i rewizje
+
+- `FinancialModels.kt` — model i walidacja metadanych;
+- `DonationAttachmentStorage.kt` — nowy prywatny magazyn plików;
+- `PaymentLedgerDatabase.kt` — schemat 7 i CRUD metadanych;
+- `PaymentLedgerRepository.kt` — import pliku, zapis metadanych i usuwanie;
+- `PaymentLedgerScreen.kt` — selektor SAF, lista i usuwanie;
+- `PaymentLedgerDatabaseTest.kt` — testy metadanych i kaskady;
+- `FinancialModelsTest.kt` — uzupełnienie testów modelu.
+
+#### 47.7. Weryfikacja
+
+Zmiany zapisano w jednej rewizji, aby uniknąć niepotrzebnego uruchamiania wielu równoległych przebiegów CI. Wymagane są: kompilacja Kotlin, testy JVM, wszystkie testy emulatorowe, migracja 6 → 7, kontrola REUSE oraz budowa debug APK. Dopiero po zielonym CI można uznać etap za zweryfikowany. APK nie jest oznaczany jako wydanie sprawdzone przed zakończeniem tych kontroli.
+
+### 48. Następne prace
+
+1. Dodać testy instrumentalne rzeczywistego kopiowania strumienia SAF do magazynu prywatnego, limitu 10 MiB, pustego pliku i czyszczenia po błędzie.
+2. Dodać bezpieczne otwieranie/podgląd plików przez kontrolowany `FileProvider`, bez ujawniania bezpośrednich ścieżek prywatnych.
+3. Dodać eksport raportu darowizn PDF/CSV z oddzieleniem sum przyjętych, przechowywanych i przekazanych.
+4. Rozważyć jawny eksport/backup załączników jako osobne archiwum, z walidacją sum kontrolnych i limitów.

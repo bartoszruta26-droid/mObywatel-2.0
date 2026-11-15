@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android.financial
 
 import android.content.Context
+import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -12,6 +13,7 @@ class PaymentLedgerRepository(
     databaseName: String = PaymentLedgerDatabase.DATABASE_NAME
 ) : AutoCloseable {
     private val database = PaymentLedgerDatabase(context.applicationContext, databaseName)
+    private val attachmentStorage = DonationAttachmentStorage(context.applicationContext)
 
     suspend fun getEntries(): List<BankStatementEntry> = withContext(Dispatchers.IO) {
         database.readAll()
@@ -51,6 +53,35 @@ class PaymentLedgerRepository(
 
     suspend fun deleteCashDonation(id: String) =
         withContext(Dispatchers.IO) { database.deleteCashDonation(id) }
+
+
+    suspend fun getDonationAttachments(): List<pl.gov.obywatel.android.DonationAttachment> =
+        withContext(Dispatchers.IO) { database.readDonationAttachments() }
+
+    suspend fun attachDonationDocument(
+        donationId: String,
+        uri: Uri
+    ): pl.gov.obywatel.android.DonationAttachment = withContext(Dispatchers.IO) {
+        val attachment = attachmentStorage.import(donationId, uri)
+        try {
+            database.saveDonationAttachment(attachment)
+            attachment
+        } catch (error: Exception) {
+            attachmentStorage.delete(attachment.storedFileName)
+            throw error
+        }
+    }
+
+    suspend fun deleteDonationAttachment(id: String) = withContext(Dispatchers.IO) {
+        val attachment = database.deleteDonationAttachment(id)
+        attachmentStorage.delete(attachment.storedFileName)
+    }
+
+    suspend fun deleteCashDonationWithAttachments(id: String) = withContext(Dispatchers.IO) {
+        val attachments = database.readDonationAttachments().filter { it.donationId == id }
+        database.deleteCashDonation(id)
+        attachments.forEach { attachmentStorage.delete(it.storedFileName) }
+    }
 
     suspend fun getFinancialTransactions(): List<StoredFinancialTransaction> =
         withContext(Dispatchers.IO) {

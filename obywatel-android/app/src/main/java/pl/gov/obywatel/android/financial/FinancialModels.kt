@@ -146,6 +146,37 @@ data class CashDonation(
     }
 }
 
+
+/** Metadane załącznika darowizny; plik właściwy pozostaje w prywatnym katalogu aplikacji. */
+data class DonationAttachment(
+    val id: String,
+    val donationId: String,
+    val fileName: String,
+    val mimeType: String,
+    val sizeBytes: Long,
+    val sha256: String,
+    val storedFileName: String,
+    val addedAt: Instant
+) {
+    fun validate() {
+        require(id.isNotBlank() && donationId.isNotBlank()) { "Identyfikatory załącznika i darowizny są wymagane." }
+        require(fileName.isNotBlank() && fileName.length <= 180 && fileName.none { it == '/' || it == '\\\\' }) {
+            "Nieprawidłowa nazwa pliku załącznika."
+        }
+        require(mimeType in ALLOWED_MIME_TYPES) { "Dozwolone są wyłącznie pliki PDF, JPEG i PNG." }
+        require(sizeBytes in 1..MAX_BYTES) { "Załącznik musi mieć od 1 bajta do 10 MB." }
+        require(sha256.matches(Regex("[a-f0-9]{64}"))) { "Nieprawidłowa suma SHA-256 załącznika." }
+        require(storedFileName.matches(Regex("[a-f0-9-]{36}\\.(pdf|jpg|png)"))) {
+            "Nieprawidłowa nazwa pliku w magazynie prywatnym."
+        }
+    }
+
+    companion object {
+        const val MAX_BYTES = 10L * 1024L * 1024L
+        val ALLOWED_MIME_TYPES = setOf("application/pdf", "image/jpeg", "image/png")
+    }
+}
+
 enum class DonationCustodyStatus { HELD, DEPOSITED, PARTIALLY_TRANSFERRED, TRANSFERRED, REQUIRES_REVIEW }
 
 /** Obliczenia finansowe bez użycia Float/Double. */

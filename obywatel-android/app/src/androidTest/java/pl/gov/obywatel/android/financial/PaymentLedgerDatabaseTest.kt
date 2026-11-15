@@ -734,4 +734,59 @@ class PaymentLedgerDatabaseTest {
         }
     }
 
+
+    @Test
+    fun donationAttachmentsPersistAndCascadeWhenDonationIsDeleted() {
+        val db = openDatabase()
+        try {
+            val donation = pl.gov.obywatel.android.CashDonation(
+                id = "donation-attachment-owner",
+                receivedAt = Instant.parse("2026-11-15T10:00:00Z"),
+                amount = BigDecimal("75.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Test załącznika"
+            )
+            db.saveCashDonation(donation)
+            val attachment = pl.gov.obywatel.android.DonationAttachment(
+                id = "00000000-0000-0000-0000-000000000001",
+                donationId = donation.id,
+                fileName = "pokwitowanie.pdf",
+                mimeType = "application/pdf",
+                sizeBytes = 1024,
+                sha256 = "a".repeat(64),
+                storedFileName = "00000000-0000-0000-0000-000000000002.pdf",
+                addedAt = Instant.parse("2026-11-15T10:01:00Z")
+            )
+            db.saveDonationAttachment(attachment)
+            assertEquals(attachment, db.readDonationAttachments().single())
+            db.deleteCashDonation(donation.id)
+            assertEquals(emptyList<pl.gov.obywatel.android.DonationAttachment>(), db.readDonationAttachments())
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun donationAttachmentRejectsUnsupportedMimeAndOversizedMetadata() {
+        val base = pl.gov.obywatel.android.DonationAttachment(
+            id = "00000000-0000-0000-0000-000000000001",
+            donationId = "donation-x",
+            fileName = "pokwitowanie.pdf",
+            mimeType = "application/pdf",
+            sizeBytes = 1024,
+            sha256 = "b".repeat(64),
+            storedFileName = "00000000-0000-0000-0000-000000000002.pdf",
+            addedAt = Instant.parse("2026-11-15T10:01:00Z")
+        )
+        base.validate()
+        assertThrows(IllegalArgumentException::class.java) {
+            base.copy(mimeType = "application/octet-stream").validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            base.copy(sizeBytes = pl.gov.obywatel.android.DonationAttachment.MAX_BYTES + 1).validate()
+        }
+    }
+
+
 }

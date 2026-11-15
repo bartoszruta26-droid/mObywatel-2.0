@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import android.net.Uri
+import pl.gov.obywatel.android.DonationAttachment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -91,6 +93,8 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var feeAmountText by remember { mutableStateOf("") }
     var selectedBankEntryIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var donations by remember { mutableStateOf<List<CashDonation>>(emptyList()) }
+    var donationAttachments by remember { mutableStateOf<List<DonationAttachment>>(emptyList()) }
+    var pendingDonationAttachmentId by remember { mutableStateOf<String?>(null) }
     var donationAmountText by remember { mutableStateOf("") }
     var donationCurrencyText by remember { mutableStateOf("PLN") }
     var donationOrganizationText by remember { mutableStateOf("") }
@@ -126,6 +130,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 financialTransactions = repository.getFinancialTransactions()
                 assets = repository.getAssets()
                 donations = repository.getCashDonations()
+                donationAttachments = repository.getDonationAttachments()
                 accountScopes = repository.getAccountScopes()
                 if (accountScopes.none { it.accountScopeId == accountScopeId }) {
                     accountScopeId = accountScopes.firstOrNull()?.accountScopeId ?: "ipko-account-1"
@@ -373,6 +378,26 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             }
         }
     }
+
+    val donationAttachmentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        val donationId = pendingDonationAttachmentId
+        pendingDonationAttachmentId = null
+        if (uri != null && donationId != null) {
+            scope.launch {
+                try {
+                    val attachment = repository.attachDonationDocument(donationId, uri)
+                    donationAttachments = repository.getDonationAttachments()
+                    message = "Dodano załącznik ${attachment.fileName}; SHA-256: ${attachment.sha256}."
+                    error = null
+                } catch (exception: Exception) {
+                    error = exception.message ?: "Nie udało się dodać załącznika."
+                }
+            }
+        }
+    }
+
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
@@ -771,14 +796,39 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                             donation.transferredAmount?.let { amount ->
                                 Text("Przekazano: ${amount.toPlainString()} ${donation.currencyCode}")
                             }
+                            val attached = donationAttachments.filter { it.donationId == donation.id }
+                            Text("Pokwitowania i załączniki: ${attached.size}")
+                            attached.forEach { attachment ->
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text("${attachment.fileName} • ${attachment.sizeBytes} B • ${attachment.mimeType}", style = MaterialTheme.typography.bodySmall)
+                                    Text("SHA-256: ${attachment.sha256}", style = MaterialTheme.typography.labelSmall)
+                                    Button(onClick = {
+                                        scope.launch {
+                                            try {
+                                                repository.deleteDonationAttachment(attachment.id)
+                                                donationAttachments = repository.getDonationAttachments()
+                                                message = "Usunięto załącznik."
+                                                error = null
+                                            } catch (exception: Exception) {
+                                                error = exception.message ?: "Nie udało się usunąć załącznika."
+                                            }
+                                        }
+                                    }) { Text("Usuń załącznik") }
+                                }
+                            }
+                            Button(onClick = {
+                                pendingDonationAttachmentId = donation.id
+                                donationAttachmentLauncher.launch(arrayOf("application/pdf", "image/jpeg", "image/png"))
+                            }) { Text("Dodaj pokwitowanie / załącznik") }
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(onClick = { editDonation(donation) }) { Text("Edytuj") }
                                 Button(onClick = {
                                     scope.launch {
                                         try {
-                                            repository.deleteCashDonation(donation.id)
+                                            repository.deleteCashDonationWithAttachments(donation.id)
                                             donations = repository.getCashDonations()
-                                            message = "Usunięto darowiznę."
+                                            donationAttachments = repository.getDonationAttachments()
+                                            message = "Usunięto darowiznę i jej załączniki."
                                             error = null
                                         } catch (exception: Exception) {
                                             error = exception.message ?: "Nie udało się usunąć darowizny."
