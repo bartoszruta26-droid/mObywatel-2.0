@@ -80,7 +80,6 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
     var toCode by remember { mutableStateOf("PLN") }
     var rates by remember { mutableStateOf<Map<String, BigDecimal>>(emptyMap()) }
     var rateTableLabel by remember { mutableStateOf("") }
-    var effectiveDate by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var result by remember { mutableStateOf<String?>(null) }
@@ -99,12 +98,12 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                             rate.mid?.let { rate.code to it }
                         }
                     }.toMap()
-                    Pair(rateMap, allTables.joinToString(" / ") { "Tabela ${it.table.apiCode}" } to
-                        allTables.maxOf { it.effectiveDate }.toString())
+                    Pair(rateMap, allTables.joinToString(" • ") {
+                        "Tabela ${it.table.apiCode}: ${it.effectiveDate}"
+                    })
                 }
                 rates = loaded.first
-                rateTableLabel = loaded.second.first
-                effectiveDate = loaded.second.second
+                rateTableLabel = loaded.second
                 if (rates.isEmpty()) error = "NBP nie zwrócił dostępnych kursów średnich."
                 result = null
             } catch (exception: Exception) {
@@ -170,7 +169,8 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
         }
         if (loading) CircularProgressIndicator()
         if (rates.isNotEmpty()) {
-            Text("Źródło: NBP • $rateTableLabel • data publikacji: $effectiveDate")
+            Text("Źródło: NBP • $rateTableLabel")
+            Text("Waluta źródłowa")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(rates.keys.sorted(), key = { it }) { code ->
                     Button(onClick = { fromCode = code; result = null }) {
@@ -178,7 +178,14 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                     }
                 }
             }
-            Text("Waluta docelowa: wybierz kod w polu „Na walutę” lub z listy po wybraniu źródła.")
+            Text("Waluta docelowa")
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(rates.keys.sorted(), key = { it }) { code ->
+                    Button(onClick = { toCode = code; result = null }) {
+                        Text(if (toCode == code) "✓ $code" else code)
+                    }
+                }
+            }
         }
         result?.let { Text(it, style = MaterialTheme.typography.titleLarge) }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
