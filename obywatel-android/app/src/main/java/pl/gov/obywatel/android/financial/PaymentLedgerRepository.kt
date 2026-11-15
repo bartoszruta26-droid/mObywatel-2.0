@@ -69,27 +69,24 @@ class PaymentLedgerRepository(
     /** Podgląd pełnego archiwum; liczy nowe wpisy, duplikaty i konflikty księgowe. */
     suspend fun previewArchive(json: String): ArchiveImportPreview = withContext(Dispatchers.IO) {
         val archive = PaymentLedgerJsonCodec.decodeArchive(json)
+        val existingTransactions = database.readFinancialTransactions().associateBy { it.transaction.id }
+        val existingDonations = database.readCashDonations().associateBy { it.id }
         val bankPreview = database.previewArchiveEntries(archive.entries)
-        val donationConflicts = archive.donations.count { incoming ->
-            val existing = database.readCashDonations().firstOrNull { it.id == incoming.id }
-            existing != null && !sameDonationIdentity(existing, incoming)
+        val transactionConflicts = archive.transactions.count { incoming ->
+            val existing = existingTransactions[incoming.transaction.id]
+            existing != null && existing != incoming
         }
-        val txConflicts = archive.transactions.count { incoming ->
-            val existing = database.readFinancialTransactions()
-                .firstOrNull { it.transaction.id == incoming.transaction.id }
-            existing != null && existing.transaction != incoming.transaction
+        val donationConflicts = archive.donations.count { incoming ->
+            val existing = existingDonations[incoming.id]
+            existing != null && !sameDonationIdentity(existing, incoming)
         }
         ArchiveImportPreview(
             newBankEntries = bankPreview.newEntries.size,
             duplicateBankEntries = bankPreview.duplicates.size,
             bankConflicts = bankPreview.conflicts.size,
-            newTransactions = archive.transactions.count { incoming ->
-                database.readFinancialTransactions().none { it.transaction.id == incoming.transaction.id }
-            },
-            transactionConflicts = txConflicts,
-            newDonations = archive.donations.count { incoming ->
-                database.readCashDonations().none { it.id == incoming.id }
-            },
+            newTransactions = archive.transactions.count { existingTransactions[it.transaction.id] == null },
+            transactionConflicts = transactionConflicts,
+            newDonations = archive.donations.count { existingDonations[it.id] == null },
             donationConflicts = donationConflicts
         )
     }
