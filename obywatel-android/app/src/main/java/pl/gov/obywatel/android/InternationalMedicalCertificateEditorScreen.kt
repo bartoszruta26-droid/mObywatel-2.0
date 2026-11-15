@@ -36,6 +36,7 @@ import org.json.JSONObject
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.UUID
 
 private const val IMC_SOURCE_LANGUAGE_KEY = "imc_source_language"
 private const val IMC_OTHER_LANGUAGE_KEY = "imc_other_source_language"
@@ -220,7 +221,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 OutlinedTextField(value = imagingReportNumber, onValueChange = { imagingReportNumber = it }, label = { Text("Report Number") }, modifier = Modifier.fillMaxWidth())
                 Button(enabled = imagingDate.isBlank() || isValidMedicalStudyDate(imagingDate), onClick = {
                     imagingStudies.add(MedicalImagingStudy(
-                        id = "imaging-" + System.currentTimeMillis().toString(),
+                        id = UUID.randomUUID().toString(),
                         modality = imagingModality,
                         bodyRegion = imagingBodyRegion,
                         studyDate = imagingDate,
@@ -365,7 +366,7 @@ internal fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): St
 
 internal fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagingStudy> {
     val array = JSONArray(serialized)
-    return (0 until array.length()).map { index ->
+    val studies = (0 until array.length()).map { index ->
         val item = array.getJSONObject(index)
         MedicalImagingStudy(
             id = item.getString("id"),
@@ -385,6 +386,20 @@ internal fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagin
             }.orEmpty()
         )
     }
+    val ids = studies.map { it.id }
+    require(ids.all { it.matches(Regex("[A-Za-z0-9_.:-]{1,96}")) } && ids.size == ids.toSet().size) {
+        "Saved imaging studies contain invalid or duplicate identifiers."
+    }
+    require(studies.all { isValidMedicalStudyDate(it.studyDate) }) {
+        "Saved imaging studies contain an invalid examination date."
+    }
+    require(studies.all { study ->
+        study.attachmentIds.all { it.matches(Regex("[A-Za-z0-9-]{1,64}")) } &&
+            study.attachmentIds.size == study.attachmentIds.toSet().size
+    }) {
+        "Saved imaging studies contain invalid or duplicate attachment identifiers."
+    }
+    return studies
 }
 
 
