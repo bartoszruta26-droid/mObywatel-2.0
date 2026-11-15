@@ -160,6 +160,14 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun attachmentRecoveryPlanFindsOnlyUnreferencedEncryptedFiles() {
+        val referenced = setOf("keep-1", "keep-2")
+        val stored = setOf("keep-1", "keep-2", "orphan-1", "orphan-2")
+        assertEquals(setOf("orphan-1", "orphan-2"), findOrphanedOriginalAttachmentIds(referenced, stored))
+        assertTrue(findOrphanedOriginalAttachmentIds(referenced, referenced).isEmpty())
+    }
+
+    @Test
     fun attachmentMetadataValidatorRejectsDuplicateOrInvalidRecords() {
         val valid = """[{"id":"attachment-1","name":"report.pdf","mime":"application/pdf"}]"""
         validateOriginalAttachmentMetadata(valid)
