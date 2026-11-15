@@ -79,6 +79,8 @@ class FinancialReportPdfTest {
                     id = "pdf-tx-$index",
                     executedAt = Instant.parse("2026-06-01T12:00:00Z").plusSeconds(index.toLong()),
                     type = FinancialTransactionType.ADJUSTMENT,
+                    fromAssetCode = null,
+                    fromAmount = null,
                     toAssetCode = "PLN",
                     toAmount = BigDecimal("123.45"),
                     rawDescription = "Opis zdarzenia testowego numer $index — pozycja raportu wielostronicowego"
