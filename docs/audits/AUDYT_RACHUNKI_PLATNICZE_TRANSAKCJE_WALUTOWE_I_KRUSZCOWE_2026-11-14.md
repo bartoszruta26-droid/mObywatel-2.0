@@ -3000,3 +3000,50 @@ Test zabezpiecza jednocześnie spójność SQLite i czyszczenie magazynu prywatn
 
 Zmiana kodu i testu została przygotowana w jednym commicie wraz z niniejszą aktualizacją audytu. Wcześniejszy przebieg GUI validation dla poprzedniego SHA jest odrębny od nowej rewizji; ostateczna ocena poprawki wymaga świeżego CI dla nowego HEAD: testów JVM, testów emulatorowych, budowy debug APK i kontroli REUSE. Nie oznacza się poprawki jako przetestowanej przed zakończeniem tych przebiegów.
 
+
+
+---
+
+## 50. Etap 2Q.1 — bezpieczne otwieranie prywatnych załączników darowizn (15 listopada 2026 r.)
+
+### 50.1. Ustalenie z przeglądu
+
+Etap 2P zapewniał import, przechowywanie, sumę SHA-256 i usuwanie załączników, ale ekran nie udostępniał akcji otwarcia/podglądu. Istniejący AndroidX FileProvider obsługiwał wyłącznie katalog pamięci podręcznej OCR; prywatny katalog `files/donation-attachments` nie był objęty konfiguracją ścieżek.
+
+### 50.2. Wykonane zmiany
+
+- Rozszerzono `ocr_file_paths.xml` wyłącznie o katalog `donation-attachments/` przez `files-path`; nie udostępniono całego katalogu `files/`.
+- Dodano w `DonationAttachmentStorage.contentUri()` kontrolę metadanych, istnienia pliku, dokładnego rozmiaru i ponowne obliczenie SHA-256 przed udostępnieniem.
+- URI jest generowane przez AndroidX FileProvider jako `content://`; kod nie przekazuje zewnętrznej aplikacji ścieżki systemowej ani URI `file://`.
+- Repozytorium udostępnia `getDonationAttachmentUri(id)`, odczytując metadane i wykonując kontrolę pliku na `Dispatchers.IO`.
+- Ekran darowizn otrzymał akcję „Otwórz”, która uruchamia wybór aplikacji obsługującej MIME PDF/JPEG/PNG z flagą `FLAG_GRANT_READ_URI_PERMISSION`.
+- Pozostawiono dotychczasowe ograniczenia typów plików i limit 10 MiB. Załączniki nadal nie są dołączane do archiwum JSON.
+
+### 50.3. Testy regresyjne
+
+Dodano `DonationAttachmentStorageTest.kt` z testami:
+- generowanie URI `content://` i odczyt bajtów przez ContentResolver;
+- odrzucenie pliku zmienionego po imporcie (niezgodna suma SHA-256);
+- odrzucenie brakującego pliku.
+
+Testy wymagają emulatora/urządzenia Android i nie są uznawane za wykonane na podstawie samego dodania źródła.
+
+### 50.4. Pliki zmienione
+
+- `DonationAttachmentStorage.kt`;
+- `PaymentLedgerRepository.kt`;
+- `PaymentLedgerScreen.kt`;
+- `res/xml/ocr_file_paths.xml`;
+- nowy `DonationAttachmentStorageTest.kt);
+- niniejszy audyt.
+
+### 50.5. Status weryfikacji
+
+Zmiany źródłowe i testy zostały przygotowane do zapisania na `feature/payment-ledger-stage-1`. Po zapisie należy ponownie pobrać wszystkie zmienione pliki i uruchomić pełne CI dla końcowego SHA: kompilację Kotlin, testy JVM, testy instrumentacyjne/Compose, kontrolę REUSE i budowę debug APK. Do czasu uzyskania wyników nie oznaczać etapu 2Q.1 jako zweryfikowanego.
+
+### 50.6. Ograniczenia i następne prace
+
+- Rzeczywisty import z dostawców SAF, zachowanie przy pustym strumieniu, przekroczeniu 10 MiB i błędzie odczytu nadal wymaga testów instrumentalnych z dostawcą dokumentów.
+- Otwieranie zależy od zainstalowanej aplikacji obsługującej dany MIME; brak takiej aplikacji ma zostać przedstawiony użytkownikowi jako błąd otwarcia, bez ujawniania pliku.
+- Należy wykonać ręczny test PDF/JPEG/PNG na emulatorze i urządzeniu.
+- Następny etap: raport darowizn PDF/CSV z osobnymi sumami przyjętymi, pozostającymi w przechowaniu i faktycznie przekazanymi; nie łączyć tych kategorii w jedną wartość.
