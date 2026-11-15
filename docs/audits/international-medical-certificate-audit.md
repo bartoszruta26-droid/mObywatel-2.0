@@ -729,3 +729,37 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Wykonać testy eksportu/importu między dwiema instalacjami Androida oraz po restarcie urządzenia.
 
 **Status:** poprawiono zachowanie magazynu w przypadku uszkodzonych metadanych: błędy nie są już maskowane jako pusty rejestr, a nieprawidłowe rekordy są odrzucane. Kod i testy potwierdzono ponownym odczytem z GitHub. CI dla końcowego SHA oczekuje na uruchomienie. PR #69 pozostaje otwarty, Draft i niescalony.
+
+
+---
+
+## 29. Uzgadnianie magazynu załączników po uruchomieniu i kontrola importu — 2026-11-15
+
+### Kontrola stanu wejściowego
+- [x] Potwierdzono, że PR #69 pozostaje otwarty, Draft i niescalony.
+- [x] Dla SHA `e7e6a8e23cda22032c0c35829f5b1189dda3a923` REUSE compliance zakończył się powodzeniem; Android prototype build i Android GUI validation nadal były w toku. Nie przeniesiono tych wyników na późniejsze commity.
+
+### Wykonane poprawki
+- [x] Dodano funkcję `OriginalAttachmentStore.reconcile()`, uruchamianą z efektu Compose przy uruchomieniu komponentu magazynu.
+- [x] Procedura sprawdza format identyfikatorów dokumentów, poprawność metadanych oraz globalną unikalność identyfikatorów załączników.
+- [x] Procedura wykrywa metadane wskazujące na brakujący plik szyfrowany i zgłasza błąd integralności zamiast usuwać wpis lub udawać pusty magazyn.
+- [x] Procedura usuwa pliki `.enc` bez odpowiadających im metadanych oraz porzucone pliki tymczasowe `.import`. Ogranicza to skutki awarii po instalacji pliku, ale przed zatwierdzeniem metadanych.
+- [x] Dodano test jednostkowy funkcji wyznaczającej osierocone identyfikatory plików.
+- [x] Import archiwum waliduje teraz istniejące metadane przed ich wykorzystaniem oraz odrzuca identyfikator załącznika przypisany do więcej niż jednego dokumentu.
+- [x] Zmiany źródłowe zapisano w commitach `bc8712381858e6261effdcc865754ec0c8afce4a` i `d3fca6e85a9d2f7c0bd9499259a546e3f699b093`.
+- [x] Test odzyskiwania zapisano w commicie `d17473479e9626b2c50c07899f35affff010d5ad`.
+- [x] Zmiany źródłowe i testowe ponownie odczytano z GitHub i potwierdzono obecność nowych funkcji.
+
+### Ograniczenia i ryzyka
+- [ ] Uzgadnianie jest uruchamiane z komponentu Compose, a nie z centralnego punktu inicjalizacji aplikacji. Należy zweryfikować, czy komponent ten jest uruchamiany we wszystkich ścieżkach dostępu do magazynu.
+- [ ] Procedura usuwa osierocone pliki, ale nie stanowi pełnego dziennika transakcji. Nadal możliwa jest awaria w trakcie importu, zanim wszystkie pliki i metadane zostaną zatwierdzone.
+- [ ] Brakujące pliki zgłaszają błąd; nie ma jeszcze interfejsu naprawy/odtworzenia z archiwum.
+- [ ] Należy dodać testy integracyjne na rzeczywistym `Context`/systemie plików: osierocone pliki, brakujące pliki, powtórzone ID między dokumentami, porzucone pliki tymczasowe oraz odtwarzanie po restarcie.
+- [ ] Należy dodać testy archiwum dla wadliwego Base64, limitów 50 MiB/200 wpisów, konfliktów zawartości i wycofania importu.
+- [ ] Pełne dekodowanie obrazów, ograniczenia wymiarów i testy dwóch instalacji Androida pozostają do wykonania.
+
+### CI po zmianach
+- [ ] Nie oznaczać wcześniejszych przebiegów CI jako walidacji nowych commitów. Wyniki dla końcowego SHA tego etapu należy odczytać po uruchomieniu workflow.
+- [ ] Wymagane jest potwierdzenie testów JVM, Compose UI na emulatorze, budowania APK i kontroli REUSE dla dokładnego końcowego SHA.
+
+**Status:** dodano wstępne odzyskiwanie osieroconych plików i kontrolę spójności metadanych przy uruchomieniu komponentu magazynu; import sprawdza istniejące metadane przed scaleniem. To istotne ograniczenie skutków awarii, ale nie pełna transakcyjność. CI dla nowych commitów wymaga potwierdzenia.
