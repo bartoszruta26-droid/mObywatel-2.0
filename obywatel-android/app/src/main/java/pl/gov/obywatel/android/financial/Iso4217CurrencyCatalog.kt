@@ -40,7 +40,7 @@ object Iso4217CurrencyCatalog {
     val all: List<Iso4217Currency> by lazy(LazyThreadSafetyMode.PUBLICATION) {
         Iso4217CurrencySnapshot.current
             .asSequence()
-            .filter { !it.fund && it.minorUnits != null }
+            .filter { it.minorUnits != null }
             .map { entry ->
                 val currency = runCatching { Currency.getInstance(entry.code) }.getOrNull()
                 Iso4217Currency(
@@ -79,8 +79,14 @@ object Iso4217CurrencyCatalog {
             .toList()
     }
 
+    /** Wszystkie bieżące pozycje z określoną precyzją, także fundusze ISO. */
     fun find(code: String): Iso4217Currency? =
         all.firstOrNull { it.code.equals(code.trim(), ignoreCase = true) }
+
+    /** Waluty przeznaczone do typowych płatności; bez funduszy i kodów specjalnych. */
+    val paymentCurrencies: List<Iso4217Currency> by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        all.filter { !it.isFund }
+    }
 
     fun findHistorical(code: String): Iso4217HistoricalCurrency? =
         historical.firstOrNull { it.code.equals(code.trim(), ignoreCase = true) }
@@ -89,8 +95,8 @@ object Iso4217CurrencyCatalog {
     fun search(query: String, limit: Int = 12): List<Iso4217Currency> {
         require(limit in 1..100) { "Limit wyników musi mieścić się w zakresie 1–100." }
         val normalized = query.trim().lowercase(polish)
-        if (normalized.isEmpty()) return all.take(limit)
-        return all.asSequence()
+        if (normalized.isEmpty()) return paymentCurrencies.take(limit)
+        return paymentCurrencies.asSequence()
             .filter {
                 it.code.lowercase(polish).contains(normalized) ||
                     it.name.lowercase(polish).contains(normalized) ||
