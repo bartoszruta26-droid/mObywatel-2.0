@@ -208,13 +208,51 @@ object FinancialReportCsv {
         append(BOM)
         append(HEADER.joinToString(";") { quote(it, false) })
         append("\r\n")
-        report.rows.forEach { row ->
-            val fields = listOf(
-                row.recordType, row.recordId, row.occurredAt.toString(), row.event,
-                row.assetCode, row.amount.toPlainString(), row.unit, row.status, row.description
-            )
-            append(fields.mapIndexed { index, value -> quote(value, index != 5) }.joinToString(";"))
+
+        fun appendRow(fields: List<String>, numericAmountIndex: Int = 5) {
+            append(fields.mapIndexed { index, value -> quote(value, index != numericAmountIndex) }.joinToString(";"))
             append("\r\n")
+        }
+
+        // Podsumowania aktywów: oddzielne wiersze dla każdej jednostki, bez przeliczania walut.
+        report.assetTotals.forEach { total ->
+            val common = listOf("PODSUMOWANIE_AKTYWA", "", report.period.fromInclusive.toString())
+            listOf(
+                "PRZYCHODY" to total.incoming,
+                "ROZCHODY" to total.outgoing,
+                "PROWIZJE" to total.fees,
+                "ZMIANA_NETTO" to total.balanceChange
+            ).forEach { (event, amount) ->
+                appendRow(common + listOf(event, total.assetCode, amount.toPlainString(), total.unit, "OKRES", ""))
+            }
+        }
+
+        // Kwoty przyjęte/przekazane są przepływami okresu; przechowywanie i kontrola
+        // nierozliczonych darowizn opisują ich bieżący stan w chwili wygenerowania raportu.
+        report.donationTotals.forEach { total ->
+            listOf(
+                "PRZYJĘTE" to total.accepted,
+                "PRZEKAZANE" to total.transferred,
+                "PRZECHOWYWANE" to total.stored,
+                "PRZECHOWYWANE_GOTÓWKA" to total.held,
+                "WPŁACONE_NA_RACHUNEK" to total.deposited,
+                "NIEROZLICZONE_WERYFIKACJA" to total.unsettledReview
+            ).forEach { (event, amount) ->
+                appendRow(
+                    listOf("PODSUMOWANIE_DAROWIZN", "", report.period.fromInclusive.toString(),
+                        event, total.currencyCode, amount.toPlainString(), total.currencyCode,
+                        if (event == "PRZYJĘTE" || event == "PRZEKAZANE") "OKRES" else "STAN_BIEŻĄCY", "")
+                )
+            }
+        }
+
+        report.rows.forEach { row ->
+            appendRow(
+                listOf(
+                    row.recordType, row.recordId, row.occurredAt.toString(), row.event,
+                    row.assetCode, row.amount.toPlainString(), row.unit, row.status, row.description
+                )
+            )
         }
     }
 
