@@ -21,7 +21,7 @@ class DocumentRouteRegistryTest {
             "shooting_sport", "archery", "tactical_training", "survival_training", "security_guard", "defense_training", "historical_reenactment", "reenactment_qualification", "reenactment_event",
             "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister",
             "church_missionary", "professional", "professional_medical", "professional_education",
-            "professional_therapeutic", "professional_other", "organization_foundation",
+            "professional_therapeutic", "professional_other", "international_medical_certificate", "organization_foundation",
             "organization_church", "organization_company", "organization_association", "entity", "official"
         )
 
