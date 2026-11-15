@@ -656,7 +656,7 @@ class PaymentLedgerDatabase(
     ): Boolean {
         val first = existing.transaction
         val second = incoming.transaction
-        fun sameAmount(a: BigDecimal?, b: BigDecimal?): Boolean =
+        fun sameAmount(a: java.math.BigDecimal?, b: java.math.BigDecimal?): Boolean =
             if (a == null || b == null) a == b else a.compareTo(b) == 0
 
         val sameFee = when {
