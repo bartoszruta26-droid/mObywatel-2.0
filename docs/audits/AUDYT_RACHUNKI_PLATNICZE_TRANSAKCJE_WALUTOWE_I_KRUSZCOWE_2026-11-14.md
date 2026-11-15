@@ -4502,3 +4502,8 @@ Dodano testy kodeka oraz testy instrumentacyjne round-trip, ponownego importu i 
 ## Etap 89 — archiwizacja pełnej historii przeliczeń (15 listopada 2026 r.)
 
 Usunięto niejawne ograniczenie do 1000 rekordów z operacji archiwalnych. Metoda readAllCurrencyConversions() udostępnia pełną historię do eksportu JSON, podglądu importu i deduplikacji w transakcyjnym imporcie. Limit 1–1000 pozostaje wyłącznie dla odczytu prezentacyjnego. Dodano test instrumentacyjny obejmujący 1005 zapisów. Weryfikacja CI dla końcowego SHA pozostaje wymagana; PR #68 pozostaje otwarty i niescalony.
+
+
+## Etap 90 — wersjonowany katalog ISO 4217
+
+Dodano migawkę List One SIX (2026-09-17, 178 wpisów) i List Three (2026-01-01, 137 wpisów), kod numeryczny, jednostki mniejsze, rozróżnienie funduszy i daty wycofania. Katalog walut płatniczych odrzuca fundusze i kody specjalne bez jednostki mniejszej; kody historyczne są dostępne osobno i nie nadpisują aktywnych kodów o tym samym identyfikatorze. Nazwy lokalne i symbole pochodzą z Androida, z kontrolowanym zapasowym użyciem nazwy źródłowej/kodu. Testy dodane; CI dla końcowego SHA oczekuje na zakończenie.
