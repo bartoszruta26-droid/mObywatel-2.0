@@ -94,4 +94,27 @@ class PaymentLedgerJsonCodecTest {
             PaymentLedgerJsonCodec.encode(listOf(sample), listOf(StoredFinancialTransaction(transaction, emptyList())))
         }
     }
+    @Test
+    fun donationsRoundTripIncludingBeneficiaryPurposeAndTransferState() {
+        val donation = pl.gov.obywatel.android.CashDonation(
+            id = "donation-codec-1",
+            receivedAt = java.time.Instant.parse("2026-11-14T12:00:00Z"),
+            amount = BigDecimal("500.00"),
+            currencyCode = "PLN",
+            beneficiaryOrganizationName = "Fundacja Aria",
+            purpose = "Wsparcie rodzin",
+            isAnonymous = true,
+            custodyStatus = pl.gov.obywatel.android.DonationCustodyStatus.PARTIALLY_TRANSFERRED,
+            transferredAt = java.time.Instant.parse("2026-11-15T12:00:00Z"),
+            transferredAmount = BigDecimal("200.00")
+        )
+        val archive = PaymentLedgerJsonCodec.decodeArchive(
+            PaymentLedgerJsonCodec.encode(emptyList(), emptyList(), listOf(donation))
+        )
+        assertEquals(1, archive.donations.size)
+        assertEquals("Fundacja Aria", archive.donations.single().beneficiaryOrganizationName)
+        assertEquals("Wsparcie rodzin", archive.donations.single().purpose)
+        assertEquals(0, BigDecimal("200.00").compareTo(archive.donations.single().transferredAmount))
+    }
+
 }
