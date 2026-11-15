@@ -639,3 +639,29 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Weryfikacja sygnatur obrazów potwierdza format kontenera, ale nie zastępuje pełnego dekodowania obrazu ani kontroli jego wymiarów/dekompresji.
 
 **Status:** ścisłe mapowanie MIME, kontrola sygnatur i limity archiwum zostały zaimplementowane oraz potwierdzone ponownym odczytem pliku. Nie są jeszcze zaliczone przez CI. PR #69 pozostaje otwarty, Draft/WIP i niescalony.
+---
+
+## 26. Testy walidacji załączników — 2026-11-15
+
+### Wykonane prace
+- [x] Wydzielono walidator ładunku załącznika do funkcji o widoczności modułowej, aby można było testować go bez Android Keystore i bez operacji na plikach.
+- [x] Funkcja jest używana w ścieżce dodawania, eksporcie i imporcie; wszystkie trzy ścieżki korzystają z tej samej kontroli MIME, rozmiaru, sygnatur i deklaracji XML.
+- [x] Dodano testy jednostkowe prawidłowych sygnatur PDF/JPEG/PNG/WebP oraz akceptowanych typów tekstowych.
+- [x] Dodano testy odrzucania MIME niezgodnego z zawartością, nieobsługiwanych typów, pustych danych, danych ponad 25 MiB i deklaracji DTD/ENTITY.
+- [x] W trakcie kontroli źródła wykryto i poprawiono odwołanie do stałej MAX_BYTES, która po wydzieleniu walidatora nie była dostępna poza obiektem magazynu. Poprawka zapisana w commicie 5cdf1fd927f65fa1917c76e2da7026e64f06c3d9.
+- [x] Ponownie odczytano plik produkcyjny i testowy z GitHub; potwierdzono użycie walidatora w trzech operacjach oraz obecność trzech nowych testów.
+
+### CI i weryfikacja
+- [x] Dla poprzedniego SHA 32552bbf7fc0b74ee3a980a605270691dcc58d4e Android prototype build zakończył się PASS: testy JVM, budowanie APK i przesłanie artefaktu.
+- [x] Dla tego SHA REUSE compliance zakończyło się PASS.
+- [ ] Android GUI validation dla SHA 32552bbf7fc0b74ee3a980a605270691dcc58d4e: testy JVM PASS, ale Compose UI na emulatorze anulowano; etapy budowania APK pominięto. Nie jest to pełny PASS.
+- [ ] Dla aktualnego SHA 5cdf1fd927f65fa1917c76e2da7026e64f06c3d9 nie zwrócono jeszcze uruchomień CI. Nowe testy walidatora nie są zatem potwierdzone wykonaniem.
+- [ ] Nie przeprowadzono jeszcze testów instrumentalnych magazynu z Android Keystore i SharedPreferences ani testów odzyskiwania po przerwaniu procesu.
+
+### Ograniczenia i następny etap
+- [ ] Funkcja sprawdza sygnatury kontenerów, ale nie dekoduje obrazów w celu sprawdzenia wymiarów, struktury i odporności na dekompresję.
+- [ ] Dodać testy archiwum dla duplikatów ID, konfliktów, wadliwego Base64, limitów 50 MiB/200 wpisów oraz rollbacku.
+- [ ] Dodać dziennik transakcji i procedurę odzyskiwania po awarii między instalacją plików a zatwierdzeniem metadanych.
+- [ ] Po zakończeniu CI wykonać testy eksportu/importu na dwóch instalacjach i po restarcie urządzenia.
+
+**Status:** dodano testowalny walidator i testy jednostkowe. Zidentyfikowaną usterkę kompilacyjną wydzielonej funkcji poprawiono przed końcowym zapisem. Wynik CI dla aktualnego SHA pozostaje niepotwierdzony. PR #69 nadal jest otwarty, Draft i niescalony.
