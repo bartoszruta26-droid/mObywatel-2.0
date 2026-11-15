@@ -3678,3 +3678,43 @@ Asercje końcowe pozostały bez zmian: test początku wymaga pary `2026-11-10 / 
 To jest korekta testu, nie dowód jego poprawności. Należy uruchomić pełne Android GUI validation i potwierdzić, że oba selektory trafiają w pojedynczy węzeł dnia na emulatorze oraz że callback przekazuje oczekiwane daty. Jeśli selektor tekstu nadal nie zostanie znaleziony, następnym krokiem jest zebranie drzewa semantyki DatePicker w raporcie testowym i dopasowanie selektora do rzeczywistego drzewa, bez usuwania asercji końcowych.
 
 Etap 64 pozostaje **oczekujący na walidację emulatorową**. PR `#68` pozostaje otwarty i niescalony.
+
+
+## 65. Uszczelnienie parowania nóg wymiany FX przy ponownym użyciu referencji (15 listopada 2026 r.)
+
+### 65.1. Ustalenie przeglądu
+
+Przegląd `BankImportDeduplicator.preview` wykazał, że wyjątek dopuszczający dwie przeciwne nogi tej samej wymiany w obrębie jednego zakresu rachunku sprawdzał typ operacji, różne waluty i przeciwne znaki kwot, ale nie sprawdzał zgodności dat księgowania. W konsekwencji dwie operacje z ponownie użytym numerem referencyjnym, zaksięgowane w różnych dniach, mogły zostać potraktowane jak dozwolona para FX zamiast konfliktu wymagającego kontroli.
+
+### 65.2. Wykonane zmiany
+
+W `BankImportDeduplicator.kt` dodano warunek równości `bookingDate` do `isOppositeFxLeg`. Dwie nogi mogą skorzystać z wyjątku wyłącznie wtedy, gdy:
+- obie są oznaczone jako wymiana w kantorze;
+- mają tę samą datę księgowania;
+- mają przeciwne etykiety uznania i obciążenia;
+- dotyczą różnych walut;
+- mają przeciwne znaki kwot.
+
+Dodano testy regresyjne w `BankImportDeduplicatorTest.kt`:
+- `oppositeFxLegWithSameReferenceButDifferentBookingDateIsAConflict` — ponownie użyta referencja z datą kolejnego dnia jest klasyfikowana jako konflikt;
+- `oppositeFxLegWithSameReferenceAndDateButSameDirectionIsAConflict` — dwa obciążenia nie są uznawane za prawidłową parę.
+
+### 65.3. Rewizje i kontrola zapisu
+
+- `BankImportDeduplicator.kt` — commit `c1b95fca08cc54615d4f4eb5cb21931ca59f9baf`.
+- `BankImportDeduplicatorTest.kt` — commit `6dce33c8fb8bd004d4e130dbe0745a83f753dea7`.
+- Końcowy HEAD sekcji: `6dce33c8fb8bd004d4e130dbe0745a83f753dea7`.
+- Po ponownym pobraniu z GitHuba potwierdzono obecność warunku zgodności daty oraz obu testów regresyjnych.
+
+### 65.4. Walidacja CI
+
+Dla końcowego HEAD `6dce33c8fb8bd004d4e130dbe0745a83f753dea7` uruchomiono:
+- Repository compliance (alfa), run `43714576528` — **queued**;
+- Android prototype build, run `43714576588` — **queued**;
+- Android GUI validation, run `43714576480` — **queued**.
+
+Poprzedni przebieg dla HEAD `734e9c99f91fba2e7645d5483e7ea3b723563be0` miał zakończone powodzeniem testy jednostkowe oraz build prototypu, ale walidacja emulatorowa została anulowana wskutek późniejszego pushu. Przebiegi dla pośredniego commitu `c1b95fca08cc54615d4f4eb5cb21931ca59f9baf` również zostały anulowane po kolejnym pushu. Żaden z tych wyników nie potwierdza pełnej poprawności końcowego HEAD sekcji 65.
+
+### 65.5. Status i dalsze kryteria
+
+Zmiana kodu i testy regresyjne są zapisane oraz ponownie odczytane z gałęzi. Etap 65 pozostaje **wdrożony, lecz niezweryfikowany CI**. Do jego zamknięcia wymagane są: powodzenie testów JVM, testów instrumentacyjnych/Compose, budowy debug APK i kontroli zgodności dla dokładnego HEAD `6dce33c8fb8bd004d4e130dbe0745a83f753dea7`. PR `#68` pozostaje otwarty i niescalony.
