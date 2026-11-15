@@ -421,6 +421,28 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         }
     }
     
+    val pdfExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    val period = FinancialReportPeriod(Instant.MIN, Instant.MAX)
+                    val pdf = repository.exportFinancialReportPdf(period)
+                    withContext(Dispatchers.IO) {
+                        val output = context.contentResolver.openOutputStream(uri)
+                            ?: throw IllegalStateException("Nie można zapisać pliku PDF.")
+                        output.use { it.write(pdf) }
+                    }
+                    message = "Raport PDF został zapisany."
+                    error = null
+                } catch (exception: Exception) {
+                    error = exception.message ?: "Nie udało się zapisać raportu PDF."
+                }
+            }
+        }
+    }
+
     val csvExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
@@ -526,6 +548,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 }
                 Button(onClick = { csvExportLauncher.launch("raport-rachunki-platnicze.csv") }) {
                     Text("Eksportuj raport CSV — cała historia")
+                }
+                Button(onClick = { pdfExportLauncher.launch("raport-rachunki-platnicze.pdf") }) {
+                    Text("Eksportuj raport PDF — cała historia")
                 }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
                 importPreview?.let { preview ->
