@@ -230,26 +230,31 @@ class BankImportDeduplicatorTest {
         )
         val mislabeledDebit = entry(
             currency = "CHF",
+            amount = "80.00",
+            reference = "FX-LABEL-SIGN",
+            type = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+        )
+        val mislabeledCredit = validCredit.copy(signedAmount = BigDecimal("-100.00"))
+        val validDebit = entry(
+            currency = "CHF",
             amount = "-80.00",
             reference = "FX-LABEL-SIGN",
             type = "WYMIANA W KANTORZE - OBCIĄŻENIE"
         )
-        val reversedCredit = validCredit.copy(signedAmount = BigDecimal("-100.00"))
-        val reversedDebit = mislabeledDebit.copy(signedAmount = BigDecimal("80.00"))
 
-        val invalidPair = BankImportDeduplicator.preview(
+        val invalidDebitLabel = BankImportDeduplicator.preview(
             incoming = listOf(validCredit, mislabeledDebit),
             existingEntries = emptyList()
         )
-        assertEquals(1, invalidPair.newEntries.size)
-        assertEquals(1, invalidPair.conflicts.size)
+        assertEquals(1, invalidDebitLabel.newEntries.size)
+        assertEquals(1, invalidDebitLabel.conflicts.size)
 
-        val reversedPair = BankImportDeduplicator.preview(
-            incoming = listOf(reversedCredit, reversedDebit),
+        val invalidCreditLabel = BankImportDeduplicator.preview(
+            incoming = listOf(mislabeledCredit, validDebit),
             existingEntries = emptyList()
         )
-        assertEquals(1, reversedPair.newEntries.size)
-        assertEquals(1, reversedPair.conflicts.size)
+        assertEquals(1, invalidCreditLabel.newEntries.size)
+        assertEquals(1, invalidCreditLabel.conflicts.size)
     }
 
 }
