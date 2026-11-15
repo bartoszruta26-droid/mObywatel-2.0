@@ -7,6 +7,7 @@ import java.math.BigDecimal
 import java.net.HttpURLConnection
 import java.net.URL
 import java.time.Duration
+import java.time.temporal.ChronoUnit
 import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
 import org.json.JSONArray
@@ -89,9 +90,16 @@ class NbpRatesRepository(
             parseTable(transport.get("$BASE_URL/exchangerates/tables/${table.apiCode}/$date?format=json"))
         }
 
+    /** Zwraca ostatnią opublikowaną tabelę nie późniejszą niż wskazany dzień. */
+    fun tableOnOrBefore(table: NbpTable, requestedDate: LocalDate, lookbackDays: Long = 7): NbpRateTable {
+        require(lookbackDays in 1..92) { "Zakres wyszukiwania musi wynosić od 1 do 92 dni." }
+        return tableRange(table, requestedDate.minusDays(lookbackDays), requestedDate).lastOrNull()
+            ?: throw IOException("NBP nie opublikował tabeli w podanym przedziale dat.")
+    }
+
     fun tableRange(table: NbpTable, start: LocalDate, end: LocalDate): List<NbpRateTable> {
         require(!end.isBefore(start)) { "Data końcowa musi przypadać po dacie początkowej." }
-        require(Duration.between(start.atStartOfDay(), end.plusDays(1).atStartOfDay()).toDays() <= 93) {
+        require(ChronoUnit.DAYS.between(start, end) + 1 <= 93) {
             "Jedno zapytanie NBP może obejmować maksymalnie 93 dni."
         }
         return cached("range-${table.apiCode}-$start-$end", historicalTtl) {
@@ -104,6 +112,13 @@ class NbpRatesRepository(
             parseGold(JSONArray(transport.get("$BASE_URL/cenyzlota?format=json"))).lastOrNull()
                 ?: throw IOException("NBP nie zwróciło ceny złota.")
         }
+
+    /** Cena z ostatniego dnia publikacji, gdy wskazany dzień przypada np. w weekend. */
+    fun goldPriceOnOrBefore(requestedDate: LocalDate, lookbackDays: Long = 7): NbpGoldPrice {
+        require(lookbackDays in 1..92) { "Zakres wyszukiwania musi wynosić od 1 do 92 dni." }
+        return goldPriceRange(requestedDate.minusDays(lookbackDays), requestedDate).lastOrNull()
+            ?: throw IOException("NBP nie opublikował ceny złota w podanym przedziale dat.")
+    }
 
     fun goldPriceRange(start: LocalDate, end: LocalDate): List<NbpGoldPrice> {
         require(!end.isBefore(start)) { "Data końcowa musi przypadać po dacie początkowej." }
