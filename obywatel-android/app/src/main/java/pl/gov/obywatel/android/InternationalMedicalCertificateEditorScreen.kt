@@ -364,7 +364,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                                 val translatedValue = translationValues["$target|$key"] ?: values[fieldKey(key)].orEmpty()
                                 translationValues["$previousSource|$key"] = values[fieldKey(key)].orEmpty()
                                 values[fieldKey(key)] = translatedValue
-                                translationValues["$previousSource|label:$key"] = definition.label
+                                if (!translationValues.containsKey("$previousSource|label:$key")) translationValues["$previousSource|label:$key"] = definition.label
                             }
                             sourceLanguage = target
                             selectedTargets.clear()
