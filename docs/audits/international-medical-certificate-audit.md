@@ -866,3 +866,39 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Testy integracyjne rzeczywistego importu, rollbacku i awarii procesu nadal pozostają wymagane.
 
 **Status:** dodano kontrolę właściciela identyfikatora oraz odrzucanie niekompletnych archiwów. Nie oznacza to jeszcze pełnej transakcyjności importu ani walidacji obrazu przez dekoder.
+
+
+---
+
+## 34. Ochrona integralności przy dodawaniu pojedynczego załącznika — 2026-11-15
+
+### Kontrola stanu wejściowego
+- [x] Kontynuowano prace na gałęzi `zaswaidczenie`, w PR #69; gałąź `main` pozostała bez zmian.
+- [x] Przejrzano implementację `OriginalAttachmentStore.add()`, import archiwum, procedurę `reconcile()` oraz testy regresyjne magazynu.
+- [x] Potwierdzono wcześniejszą regułę dla importu: po rozpoczęciu `SharedPreferences.commit()` pliki pozostają na miejscu, ponieważ wynik błędu może być niejednoznaczny.
+
+### Wykryta luka
+- [x] Metoda `add()` usuwała nowo zapisany plik szyfrowany po każdym wyjątku, również gdy `SharedPreferences.commit()` został już wywołany.
+- [x] Wynik `commit() == false` nie daje bezpiecznej podstawy do założenia, że stan mapy preferencji w pamięci procesu i stan trwały są identyczne. Usunięcie pliku po próbie zatwierdzenia mogło więc pozostawić metadane wskazujące na nieistniejący plik.
+
+### Wykonane poprawki
+- [x] Dodano osobną, testowalną regułę `shouldDeleteAddedAttachmentAfterFailure(metadataCommitAttempted)`.
+- [x] Metoda `add()` oznacza moment rozpoczęcia próby `commit()`.
+- [x] Błędy przed próbą zatwierdzenia nadal powodują usunięcie nowo utworzonego pliku.
+- [x] Po rozpoczęciu próby zatwierdzenia plik pozostaje na miejscu; procedura `reconcile()` usuwa go później wyłącznie wtedy, gdy nie ma trwałego odwołania w metadanych.
+- [x] Zmianę źródłową zapisano w commicie `f9fca22268317987451a29037f2729d3e791ea43`.
+- [x] Dodano test regresyjny sprawdzający obie gałęzie decyzji; test zapisano w commicie `602cf19e61f7127aa82ba54872c2f117f4ab31a1`.
+
+### Zakres weryfikacji
+- [x] Ponownie odczytano zmieniony plik źródłowy i test z gałęzi `zaswaidczenie`; potwierdzono obecność flagi próby commit, warunkowego sprzątania i testu.
+- [ ] Testy JVM, testy Compose na emulatorze, build APK oraz REUSE dla końcowego SHA po tej zmianie wymagają potwierdzenia w GitHub Actions.
+- [ ] Test sprawdza czystą funkcję decyzyjną; nie symuluje rzeczywistego `SharedPreferences.commit() == false` ani awarii procesu. Nie należy traktować go jako pełnego testu integracyjnego magazynu.
+
+### Pozostałe ryzyka i następne prace
+- [ ] Dodać test integracyjny magazynu z wymuszonym błędem `commit()`, ponownym otwarciem preferencji i kontrolą zgodności pliku z metadanymi.
+- [ ] Przenieść uzgadnianie magazynu z efektu pojedynczego komponentu Compose do centralnego punktu inicjalizacji lub zapewnić jego wykonanie przed każdą ścieżką zapisu/odczytu.
+- [ ] Dodać testy integracyjne importu/eksportu, awarii procesu, rollbacku, konfliktów identyfikatorów i limitów archiwum.
+- [ ] Dodać dekodowanie obrazów z kontrolą rzeczywistego formatu, wymiarów i ryzyka dekompresji; sygnatura pliku nie potwierdza, że obraz jest poprawny ani bezpieczny do renderowania.
+- [ ] Zweryfikować bezpieczny, atomowy zapis głównego magazynu `InternationalMedicalCertificateStore.save()`; obecny mechanizm awaryjnego kopiowania do pliku docelowego wymaga osobnego testu przerwania zapisu.
+
+**Status:** poprawiono ryzyko usunięcia pliku po niejednoznacznym wyniku zatwierdzania metadanych w pojedynczym `add()`. Kod i test regresyjny zapisano i ponownie odczytano. Końcowa walidacja CI dla nowego SHA pozostaje wymagana; PR #69 pozostaje otwarty, Draft i niescalony.
