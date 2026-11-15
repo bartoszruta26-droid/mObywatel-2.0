@@ -4162,3 +4162,47 @@ Commit: `2762cf82543334797475fc15de6f03244f6d77e5`.
 **Status etapu 76:** poprawka selektorów zapisana; oczekuje na pełny CI dla końcowego SHA po aktualizacji niniejszego audytu. Nie oznaczać kalendarza ani APK jako zaliczonych do czasu przejścia wszystkich 101 testów emulatorowych i końcowych kroków workflow.
 
 Etap XLS/BIFF pozostaje wstrzymany do czasu zielonego GUI validation, build i compliance na tym samym SHA. PR #68 pozostaje otwarty i niescalony.
+
+
+## 77. Ponowna diagnoza emulatora i ocena ochrony danych CSV — 15 listopada 2026 r.
+
+### 77.1. Wynik CI dla SHA 5603e2f
+
+Zweryfikowano zakończone przebiegi dla tego samego SHA `5603e2f40fe0645fc4daac07d1f61119f15da4a2`:
+- Android prototype build, run `43732131848` — **success**; zadania JVM i budowa APK debug zakończone powodzeniem; artefakt `obywatel-android-debug` (ID `14169042276`, digest SHA-256 `e41723c1ccc9ab49e65b58ec34c2eea32ef53d9727195751e22f3d87c4a77ba2`) został opublikowany;
+- Repository compliance, run `43732131873` — **success**;
+- Android GUI validation, run `43732131926` — **failure**.
+
+Raport instrumentacyjny (artefakt `android-instrumentation-reports`, ID `14169097632`) potwierdził 101 testów, 99 zaliczonych i 2 niezaliczone. Oba błędy dotyczą:
+- `selectingDifferentStartDateUpdatesOnlyStartBoundary` — selektor tekstu dnia `10` nie znajduje węzła;
+- `selectingDifferentEndDateUpdatesOnlyEndBoundary` — selektor tekstu dnia `25` nie znajduje węzła.
+
+Błąd występuje w `performClick()`: `Failed to inject touch input`, ponieważ matcher nie znajduje dokładnie jednego węzła. Zmiana na `useUnmergedTree = true` nie rozwiązała problemu. Wcześniejszy wniosek, że selektor liczbowy naprawia testy, jest obalony przez raport z tego przebiegu. To nadal nie dowodzi błędu logiki produkcyjnego kalendarza; dowodzi, że test nie umie wskazać komórki daty w semantyce Material3 DatePicker.
+
+Kroki budowy i publikacji APK w GUI workflow zostały pominięte po awarii testów. Niezależny workflow zbudował debug APK, ale nie jest to równoważne pełnej walidacji GUI ani podpisanemu wydaniu. PR #68 pozostaje otwarty i niescalony.
+
+### 77.2. Wniosek techniczny dla testów kalendarza
+
+Nie należy dalej zmieniać selektora na kolejne warianty tekstu bez zbadania drzewa semantyki. Następna poprawka powinna:
+1. ustalić semantykę Material3 DatePicker w używanej wersji biblioteki i konfiguracji emulatora;
+2. zastosować stabilny identyfikator testowy/semantykę lub kontrolowany mechanizm testowy stanu wyboru daty, zamiast zależności od lokalizowanego opisu albo samego tekstu dnia;
+3. zachować testy zachowania: anulowanie nie zmienia dat, zatwierdzenie zmienia wyłącznie właściwą granicę, zakres odwrócony wyświetla walidację;
+4. uruchomić testy instrumentacyjne i odczytać XML/HTML, wymagając 101/101 zaliczonych testów (albo jawnie zaktualizować oczekiwaną liczbę po zmianach zestawu).
+
+### 77.3. Ustalenie bezpieczeństwa CSV — skrót SHA-256 opisu
+
+Ponowny przegląd `BankStatementCsvParser.kt` potwierdził, że przy braku referencji parser zapisuje `CSV-OP-` + SHA-256 z wartości `scope|combinedDescription`. Surowy opis nie trafia do pola `description`, ale deterministyczny skrót danych przewidywalnych lub częściowo znanych nie stanowi anonimizacji. Możliwy jest atak słownikowy, korelacja tych samych opisów i ujawnienie informacji przez porównanie skrótów. Identyfikator zakresu rachunku nie jest tajnym kluczem kryptograficznym.
+
+W konsekwencji obecny zapis należy traktować jako pseudonimizację, a nie anonimizację. Nie wolno opisywać go jako pełnej ochrony danych osobowych. Następny etap musi sprawdzić `BankStatementEntry.accountingEntryId()`, klucze deduplikacji, migracje i archiwum JSON. Docelowo identyfikator techniczny powinien opierać się na danych strukturalnych niebędących opisem osobowym (np. rachunek-scope, data, waluta, kwota, typ i stabilna referencja bankowa, jeśli istnieje), z jawną obsługą kolizji i konfliktów; bez referencji nie należy tworzyć trwałego identyfikatora z treści opisu. Nie można wdrożyć takiej zmiany bez sprawdzenia kompatybilności istniejących archiwów i deduplikacji.
+
+### 77.4. Zakres wykonany i status
+
+- pobrano i przeanalizowano raport XML/HTML z runu `43732131926`;
+- potwierdzono dokładnie dwa niezaliczone testy i przyczynę braku dopasowania;
+- potwierdzono osobny sukces budowy debug APK i artefakt;
+- potwierdzono sukces compliance dla tego SHA;
+- przeprowadzono przegląd kodu parsera CSV i udokumentowano ryzyko deterministycznego skrótu opisu.
+
+**Status etapu 76:** niezaliczony — poprawka selektorów nie zadziałała.  
+**Status etapu 77:** diagnoza i aktualizacja audytu wykonane; poprawka testu kalendarza i bezpieczna zmiana identyfikacji CSV pozostają otwarte.  
+**Etapy 78–81 oraz XLS/BIFF:** wstrzymane do czasu usunięcia błędów testów GUI i przeglądu wpływu zmiany identyfikatora na dane już zapisane.
