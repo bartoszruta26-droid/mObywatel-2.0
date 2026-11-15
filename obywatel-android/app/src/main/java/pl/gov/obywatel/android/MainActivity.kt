@@ -941,6 +941,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("large_family", "Karta Dużej Rodziny", R.drawable.family),
     Triple("blood_donor", "Legitymacja Honorowego Dawcy Krwi", R.drawable.lib_ic_medical_record),
     Triple("disability_card", "Legitymacja osoby z niepełnosprawnością", R.drawable.documents_medical_certificates),
+    Triple("international_medical_certificate", "International Medical Certificate", R.drawable.documents_medical_certificates),
     Triple("vehicle_registration", "Dowód rejestracyjny pojazdu", R.drawable.mob_transport),
     Triple("insurance_vehicle", "Ubezpieczenie OC pojazdu", R.drawable.lib_ic_document),
     Triple("insurance_professional", "Ubezpieczenie OC zawodowe", R.drawable.lib_ic_document),
