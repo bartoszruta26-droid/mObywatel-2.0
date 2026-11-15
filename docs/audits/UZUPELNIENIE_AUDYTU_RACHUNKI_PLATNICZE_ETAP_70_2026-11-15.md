@@ -315,3 +315,55 @@ Ograniczenie: archiwum jest lokalne dla instalacji i znika po wyczyszczeniu dany
 
 ### Uzupełnienie testów
 Po ponownym odczycie pliku testowego wykryto, że pierwsza próba dodania testów nie zapisała ich treści. Dodano je ponownie i potwierdzono odczytem z GitHub w commicie `3442726541015b648307ad44009e712318720953`. Testy obejmują odczyt historycznej tabeli z dysku w trybie offline oraz odświeżenie danych bieżących po przekroczeniu TTL. Wyników testów nie uznaje się za PASS przed zakończeniem CI.
+
+
+---
+
+## Etap 71 — katalog walut ISO 4217 i odporność archiwum NBP
+
+**Data:** 2026-11-15  
+**Gałąź:** `feature/payment-ledger-stage-1`
+
+### Wykonane zmiany
+
+1. Dodano `Iso4217CurrencyCatalog`, niezależny od listy walut obecnych w tabelach NBP:
+   - kody walut i liczbę miejsc dziesiętnych pobiera z `java.util.Currency` dostępnego na platformie Android;
+   - nazwy i symbole lokalizuje w języku polskim;
+   - zapewnia wyszukiwanie po kodzie, nazwie i symbolu;
+   - odrzuca wpisy bez określonej liczby miejsc dziesiętnych i kody niezgodne ze wzorcem trzech liter;
+   - kolejność wyników jest stabilna alfabetycznie według kodu.
+2. Przelicznik prezentuje podpowiedzi z katalogu ISO 4217, a nie wyłącznie z walut opublikowanych w tabelach NBP.
+3. Precyzja wyniku jest pobierana z metadanych waluty; zachowano dotychczasowe zaokrąglanie `HALF_EVEN`.
+4. Etykieta danych jawnie rozróżnia notowania bieżące i historyczne oraz pokazuje daty publikacji tabel.
+5. Dodano testy katalogu: obecność walut spoza typowej listy NBP, liczba miejsc dziesiętnych, wyszukiwanie i unikalność kodów.
+6. Dodano test odrzucenia uszkodzonej koperty cache na dysku i ponownego pobrania danych z transportu.
+
+### Pliki
+
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/Iso4217CurrencyCatalog.kt`
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/NbpCurrencyConverterCard.kt`
+- `obywatel-android/app/src/test/java/pl/gov/obywatel/android/financial/Iso4217CurrencyCatalogTest.kt`
+- `obywatel-android/app/src/test/java/pl/gov/obywatel/android/financial/NbpRatesRepositoryTest.kt`
+
+### Ważne ograniczenie źródła katalogu
+
+Katalog jest oparty na bazie `java.util.Currency` dostarczanej przez daną wersję Android/Java. Oznacza to, że jego kompletność i aktualność zależą od wersji danych walutowych platformy. Pole `active` oznacza pozycję udostępnioną przez bieżącą bazę platformy, a nie niezależną, urzędową walidację statusu w najnowszym biuletynie ISO 4217. Przed uznaniem katalogu za urzędowo kompletny należy dodać wersjonowany, kontrolowany zestaw danych ISO 4217 wraz z datą obowiązywania i statusem aktywności. Nie wolno utożsamiać dostępności kodu w katalogu z dostępnością kursu NBP.
+
+### Weryfikacja
+
+- Testy JVM dla wcześniejszego SHA `a6e92c73bd268cfe5dd1a875aba475aa26e0a1a6` zakończyły się powodzeniem.
+- Kontrola REUSE dla tego SHA zakończyła się powodzeniem.
+- Na wcześniejszym SHA testy emulatorowe i budowanie APK były w toku.
+- Dla aktualnego SHA `0530874593d784e415b192cf2a3834eeeb62357a` GitHub Actions utworzył nowe uruchomienia:
+  - Android prototype build: `43747367088`;
+  - Android GUI validation: `43747367126`;
+  - Repository compliance (alfa): `43747367250`.
+- Wyniki nowych uruchomień nie zostały jeszcze potwierdzone. Dodanie testów nie jest równoznaczne z ich wykonaniem.
+
+### Następne prace
+
+1. Poczekać na wyniki wszystkich trzech workflow i usunąć ewentualne błędy.
+2. Uzupełnić katalog o kontrolowany, wersjonowany zestaw danych ISO 4217 z datami obowiązywania i statusem, zamiast polegać wyłącznie na bazie platformy.
+3. Dodać testy uszkodzonego JSON, błędów zapisu, przerwanego pobierania i odczytu offline.
+4. Zintegrować trwałą historię przeliczeń z istniejącym magazynem SQLite po analizie migracji i zgodności wstecznej.
+5. Nie scalać PR #68 przed zakończeniem testów i przeglądu zmian.
