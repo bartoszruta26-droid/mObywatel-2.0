@@ -217,4 +217,25 @@ class FinancialModelsTest {
     }
 
 
+
+    @Test
+    fun donationAttachmentChecksBinarySignatureAgainstDeclaredMimeType() {
+        assertTrue(pl.gov.obywatel.android.financial.isDonationAttachmentSignatureValid(
+            "application/pdf", "%PDF-1.7".toByteArray()
+        ))
+        assertTrue(pl.gov.obywatel.android.financial.isDonationAttachmentSignatureValid(
+            "image/jpeg", byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0x00)
+        ))
+        assertTrue(pl.gov.obywatel.android.financial.isDonationAttachmentSignatureValid(
+            "image/png", byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+        ))
+        assertFalse(pl.gov.obywatel.android.financial.isDonationAttachmentSignatureValid(
+            "application/pdf", "not a pdf".toByteArray()
+        ))
+        assertFalse(pl.gov.obywatel.android.financial.isDonationAttachmentSignatureValid(
+            "image/png", "%PDF-1.7".toByteArray()
+        ))
+    }
+
+
 }

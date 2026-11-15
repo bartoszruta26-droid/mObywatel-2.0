@@ -2945,3 +2945,22 @@ Zmiany zapisano w jednej rewizji, aby uniknąć niepotrzebnego uruchamiania wiel
 
 
 **Uzupełnienie kontroli implementacji:** po ponownym odczycie plików skorygowano zapis separatora ścieżki w literałach znakowych Kotlin w modelu i magazynie plików. Dodano także jawny test migracji z wersji 6 do 7 oraz jednostkowy test walidacji metadanych. Te uzupełnienia wchodzą do tej samej rewizji przed oceną CI.
+
+
+#### 47.8. Potwierdzenie CI i dodatkowa kontrola typu pliku
+
+Dla rewizji `5d518a4dae999cce700672391e773ce1de963d19` potwierdzono pełny sukces trzech przepływów:
+- Android GUI validation — run `43685358529`: sukces kroków testów jednostkowych JVM, testów Compose na emulatorze, archiwizacji raportów oraz budowy debug APK;
+- Android prototype build — run `43685358503`: sukces testów JVM i budowy debug APK;
+- Repository compliance — run `43685358543`: sukces kontroli REUSE.
+
+W Android GUI validation kroki publikacji APK i sumy kontrolnej były pominięte przez konfigurację przepływu (brak stabilnego klucza podpisującego); sukces budowy debug APK nie oznacza opublikowania ani podpisania wydania produkcyjnego.
+
+W przeglądzie bezpieczeństwa wykryto, że początkowa implementacja ufała typowi MIME zwróconemu przez dostawcę SAF. Typ MIME nie potwierdza rzeczywistej zawartości pliku. Dodano więc kontrolę sygnatur binarnych:
+- PDF: `%PDF-`;
+- JPEG: `FF D8 FF`;
+- PNG: `89 50 4E 47 0D 0A 1A 0A`.
+
+Kontrola działa podczas importu, po ograniczonym kopiowaniu strumienia; niezgodność MIME i sygnatury powoduje usunięcie częściowego pliku i odrzucenie załącznika. Dodano testy jednostkowe poprawnych i niezgodnych sygnatur. Ta poprawka wymaga osobnego zielonego CI dla nowej rewizji, zanim będzie uznana za zweryfikowaną.
+
+Status etapu 2P: implementacja metadanych, magazynu prywatnego, interfejsu i migracji 6 → 7 jest zbudowana i przeszła CI na rewizji `5d518a4...`; walidacja sygnatur jest dodatkowym zabezpieczeniem oczekującym na CI. Ręczny test importu plików z rzeczywistych dostawców SAF oraz test na urządzeniu pozostają do wykonania.

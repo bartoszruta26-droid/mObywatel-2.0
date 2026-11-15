@@ -8,6 +8,7 @@ import android.provider.OpenableColumns
 import pl.gov.obywatel.android.DonationAttachment
 import java.io.File
 import java.io.FileOutputStream
+import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.time.Instant
 import java.util.UUID
@@ -42,6 +43,7 @@ class DonationAttachmentStorage(context: Context) {
         val target = File(root, storedName)
         val digest = MessageDigest.getInstance("SHA-256")
         var total = 0L
+        val signature = ByteArrayOutputStream(8)
         try {
             val input = resolver.openInputStream(uri) ?: throw IllegalStateException("Nie można odczytać wybranego pliku.")
             input.use { source ->
@@ -53,12 +55,18 @@ class DonationAttachmentStorage(context: Context) {
                         total += count
                         require(total <= DonationAttachment.MAX_BYTES) { "Załącznik przekracza limit 10 MB." }
                         digest.update(buffer, 0, count)
+                        if (signature.size() < 8) {
+                            signature.write(buffer, 0, minOf(count, 8 - signature.size()))
+                        }
                         output.write(buffer, 0, count)
                     }
                     output.fd.sync()
                 }
             }
             require(total > 0) { "Wybrany plik jest pusty." }
+            require(isDonationAttachmentSignatureValid(mimeType, signature.toByteArray())) {
+                "Zawartość pliku nie odpowiada zadeklarowanemu typowi PDF/JPEG/PNG."
+            }
             return DonationAttachment(
                 id = id,
                 donationId = donationId,
@@ -85,3 +93,23 @@ class DonationAttachmentStorage(context: Context) {
         }
     }
 }
+
+
+/** Weryfikuje sygnaturę binarną, aby MIME dostawcy SAF nie był jedynym kryterium typu. */
+internal fun isDonationAttachmentSignatureValid(mimeType: String, header: ByteArray): Boolean =
+    when (mimeType) {
+        "application/pdf" -> header.size >= 5 &&
+            header[0] == '%'.code.toByte() &&
+            header[1] == 'P'.code.toByte() &&
+            header[2] == 'D'.code.toByte() &&
+            header[3] == 'F'.code.toByte() &&
+            header[4] == '-'.code.toByte()
+        "image/jpeg" -> header.size >= 3 &&
+            header[0] == 0xFF.toByte() && header[1] == 0xD8.toByte() && header[2] == 0xFF.toByte()
+        "image/png" -> header.size >= 8 &&
+            header[0] == 0x89.toByte() && header[1] == 0x50.toByte() &&
+            header[2] == 0x4E.toByte() && header[3] == 0x47.toByte() &&
+            header[4] == 0x0D.toByte() && header[5] == 0x0A.toByte() &&
+            header[6] == 0x1A.toByte() && header[7] == 0x0A.toByte()
+        else -> false
+    }
