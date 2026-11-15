@@ -78,7 +78,7 @@ class FinancialReportDateRangePickerTest {
         }
 
         composeRule.onNodeWithText("Data początkowa: 2026-11-01").performClick()
-        composeRule.onNodeWithText("10").performClick()
+        composeRule.onNodeWithText("10").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Zastosuj datę").performClick()
 
         assertEquals("2026-11-10" to "2026-11-20", dates.value)
@@ -96,7 +96,7 @@ class FinancialReportDateRangePickerTest {
         }
 
         composeRule.onNodeWithText("Data końcowa: 2026-11-15").performClick()
-        composeRule.onNodeWithText("25").performClick()
+        composeRule.onNodeWithText("25").assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Zastosuj datę").performClick()
 
         assertEquals("2026-11-01" to "2026-11-25", dates.value)
