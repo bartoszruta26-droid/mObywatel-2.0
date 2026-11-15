@@ -1188,7 +1188,8 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [x] Zachowuje dotychczasową kontrolę duplikatu w obrębie bieżącego dokumentu oraz format metadanych i publiczne wrappery magazynu.
 
 ### Weryfikacja
-- [x] Zmianę zapisano na gałęzi `zaswaidczenie`.
+- [x] Zmianę źródłową zapisano w commicie `df27fc5340258072c785cb59a795d88a89488d75`.
+- [x] Zmieniono nazwę istniejącego testu JVM tak, aby odzwierciedlała wspólną regułę własności używaną przez import i dodawanie; commit testu: `78f6b697b5c90b8f1243354f41208ff1cfe1f7f7`.
 - [x] Ponownie pobrano plik źródłowy z GitHub i potwierdzono obecność walidacji właściciela przed utworzeniem pliku zaszyfrowanego.
 - [ ] Testy JVM, instrumentacyjne i kompilacja APK dla tego SHA wymagają wyniku GitHub Actions.
 - [ ] Test nie symuluje awarii `SharedPreferences.commit() == false`; kontrolowany backend metadanych pozostaje osobnym zadaniem.
