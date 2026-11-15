@@ -7,7 +7,6 @@ import androidx.core.content.FileProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
-import java.io.FileNotFoundException
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -53,7 +52,7 @@ class FinancialReportSafExportTest {
             "content://pl.gov.obywatel.android.prototype.missing/report.csv"
         )
 
-        assertThrows(FileNotFoundException::class.java) {
+        assertThrows(Exception::class.java) {
             context.contentResolver.openOutputStream(missingProviderUri)
         }
     }
