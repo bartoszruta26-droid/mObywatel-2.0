@@ -135,6 +135,7 @@ object BankStatementCsvParser {
                 }
                 ch == '"' && quoted -> { quoted = false; afterQuote = true }
                 ch == '"' && field.isEmpty() && !afterQuote -> quoted = true
+                ch == '"' && !quoted -> throw IllegalArgumentException("Cudzysłów w niecytowanym polu CSV.")
                 quoted -> field.append(ch)
                 ch == delimiter -> {
                     row += field.toString(); field.setLength(0); afterQuote = false
@@ -144,7 +145,8 @@ object BankStatementCsvParser {
                     records += row; row = mutableListOf()
                     if (ch == '\r' && index + 1 < csv.length && csv[index + 1] == '\n') index++
                 }
-                afterQuote && !ch.isWhitespace() -> throw IllegalArgumentException("Nieprawidłowy znak po cudzysłowie w CSV.")
+                afterQuote && ch.isWhitespace() -> Unit
+                afterQuote -> throw IllegalArgumentException("Nieprawidłowy znak po cudzysłowie w CSV.")
                 else -> { field.append(ch); afterQuote = false }
             }
             index++
