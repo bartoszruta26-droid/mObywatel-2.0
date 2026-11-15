@@ -421,3 +421,22 @@ W repozytorium istniał już magazyn SQLite `PaymentLedgerDatabase` (wersja 7) o
 3. Włączyć historię przeliczeń do wersjonowanego eksportu JSON i testów round-trip.
 4. Dodać testy UI historii i obsługi błędów zapisu.
 5. Zachować PR #68 otwarty do końcowego przeglądu.
+
+
+## Etap 73 — naprawa regresji testu wyszukiwania katalogu walut (2026-11-15)
+
+### Wynik kontroli CI
+
+- Dla SHA `de0b8a73ce930051ffda8301e1f9e6594d9c8ea8` kontrola zgodności repozytorium zakończyła się powodzeniem.
+- Kompilacja prototypu Android i walidacja GUI zakończyły się niepowodzeniem na tym samym teście JVM: `Iso4217CurrencyCatalogTest.searchMatchesCodePolishNameAndSymbol` (187 testów, 1 nieudany).
+- Przyczyną była asercja sprawdzająca obecność USD w domyślnych pierwszych 12 wynikach ogólnego zapytania „dolar”. Katalog jest sortowany kodem ISO, więc test wymagał od wyników ograniczonych limitem domyślnym obecności konkretnego kodu, choć zapytanie jest wieloznaczne.
+
+### Wykonana korekta
+
+- Zmieniono test tak, aby przy sprawdzaniu pokrycia nazwy „dolar” pobierał do 100 wyników. Test nadal sprawdza wyszukiwanie po kodzie, polskiej nazwie i niepusty wynik dla EUR, ale nie uzależnia poprawności wyszukiwania od pozycji USD w ograniczonej liście.
+- Nie zmieniano zachowania produkcyjnego katalogu walut.
+
+### Weryfikacja
+
+- Korekta została zapisana w gałęzi `feature/payment-ledger-stage-1`.
+- Oczekuje na ponowne wykonanie testów JVM, kompilacji debug i walidacji GUI dla nowego SHA. Do czasu ich zakończenia nie deklaruje się PASS ani gotowego APK.
