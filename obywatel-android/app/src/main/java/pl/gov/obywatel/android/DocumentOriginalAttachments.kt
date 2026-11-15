@@ -95,6 +95,9 @@ internal fun validateOriginalAttachmentMetadata(raw: String) {
 internal fun findOrphanedOriginalAttachmentIds(referencedIds: Set<String>, storedIds: Set<String>): Set<String> =
     storedIds - referencedIds
 
+internal fun shouldDeleteInstalledAttachmentsAfterImportFailure(metadataCommitAttempted: Boolean): Boolean =
+    !metadataCommitAttempted
+
 private data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
 private object OriginalAttachmentStore {
@@ -405,6 +408,7 @@ private object OriginalAttachmentStore {
         val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
         val staged = mutableListOf<Pair<File, File>>()
         val newlyInstalled = mutableListOf<File>()
+        var metadataCommitAttempted = false
         try {
             decoded.forEach { item ->
                 val metadata = existingByDocument.getOrPut(item.documentId) { mutableListOf() }
@@ -435,9 +439,15 @@ private object OriginalAttachmentStore {
                 }
                 editor.putString(documentId, json.toString())
             }
+            metadataCommitAttempted = true
             check(editor.commit()) { "Nie udało się zatwierdzić rejestru importowanych załączników." }
         } catch (failure: Throwable) {
-            newlyInstalled.forEach { it.delete() }
+            // A failed commit may still have changed SharedPreferences' in-memory map.
+            // Keep installed files after commit was attempted; startup reconciliation
+            // removes them only when durable metadata does not reference them.
+            if (shouldDeleteInstalledAttachmentsAfterImportFailure(metadataCommitAttempted)) {
+                newlyInstalled.forEach { it.delete() }
+            }
             throw failure
         } finally {
             staged.forEach { (temporary, _) -> temporary.delete() }
