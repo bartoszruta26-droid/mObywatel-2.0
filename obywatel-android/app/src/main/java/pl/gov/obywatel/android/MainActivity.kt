@@ -1032,7 +1032,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
     id == "professional" || id.startsWith("professional_") ||
         id in setOf("training", "student", "eu_education") -> "Służba zawodowa"
-    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children") -> "Służba zdrowotna"
+    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children", "international_medical_certificate") -> "Służba zdrowotna"
     id == "civil" || id in setOf(
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
         "vehicle_registration", "official"
