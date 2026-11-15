@@ -245,3 +245,14 @@ Korekta usuwa przyczynę bieżącego błędu diagnostycznego, ale nie jest jeszc
 **Status:** diagnostyka z etapu 78 skorygowana; testy wyboru dat nadal otwarte; brak podstaw do zamknięcia etapu kalendarza. Nie zmieniono modelu identyfikacji CSV — ryzyko skrótu SHA-256 opisu, migracja i obsługa kolizji pozostają otwarte. Etapy NBP, wyceny, raportowania i XLS/BIFF nie zostały rozpoczęte.
 
 PR #68 pozostaje otwarty i niescalony.
+
+
+## 80. Kalkulator walut i walidacja projekcji wymiany — 15 listopada 2026 r.
+
+Wykonano etap 80 opisany w sekcji 19 głównego audytu. Dodano obliczenia kursu bezpośredniego i odwrotnego na `BigDecimal`, jawną konwencję pary walutowej, precyzję i zaokrąglanie waluty docelowej oraz testy błędnych danych. Dodatkowo naprawiono walidację projekcji nóg FX, aby etykiety uznania/obciążenia były zgodne ze znakiem kwoty; dodano test obu odwróconych przypadków.
+
+Commity: `3108a87db2421d64b372f6b4e44e5b6ef0047419`, `12f8dffa38785cfdd66f0d8f8d3b6cb2834f3fbf`, `3a48c401987cf5aa4495257d7596486eeb382bed`, `670636e2d29123a05007e365b56eb3a6efe5b44e`.
+
+Weryfikacja źródeł potwierdziła zapis implementacji i testów. Pełne CI dla nowych commitów pozostaje wymagane. Ostatni znany GUI workflow dla wcześniejszego SHA zakończył się dwoma błędami dotyku w testach wyboru dni DatePicker; testy JVM przeszły, ale emulator zatrzymał workflow przed budową APK. Nie traktować tego wyniku jako walidacji etapu 80.
+
+Kolejny krok: naprawić interakcje testów DatePicker i uzyskać zielony CI, następnie wdrożyć adapter NBP i integrację kalkulatora z UI. Nie deklarować jeszcze pobierania kursów NBP ani gotowego kalkulatora ekranowego.
