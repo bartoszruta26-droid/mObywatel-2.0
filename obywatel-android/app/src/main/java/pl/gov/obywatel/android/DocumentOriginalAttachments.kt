@@ -276,6 +276,25 @@ private object OriginalAttachmentStore {
         require(attachmentId.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
         val safeMime = mime.substringBefore(';').trim().lowercase()
         validateOriginalAttachmentPayload(safeMime, bytes)
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val existingOwners = mutableMapOf<String, String>()
+        preferences.all.forEach { (ownerDocumentId, value) ->
+            require(ownerDocumentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
+                "Nieprawidłowy identyfikator dokumentu w magazynie."
+            }
+            val rawMetadata = value as? String
+                ?: error("Nieprawidłowy rejestr załączników: $ownerDocumentId")
+            validateOriginalAttachmentMetadata(rawMetadata)
+            val metadata = JSONArray(rawMetadata)
+            for (index in 0 until metadata.length()) {
+                val existingId = metadata.getJSONObject(index).getString("id")
+                val previousOwner = existingOwners.put(existingId, ownerDocumentId)
+                require(previousOwner == null) {
+                    "Identyfikator załącznika jest przypisany do więcej niż jednego dokumentu: $existingId"
+                }
+            }
+        }
+        validateOriginalAttachmentIdOwner(attachmentId, documentId, existingOwners)
         val updated = list(context, documentId).toMutableList()
         require(updated.none { it.id == attachmentId }) { "Załącznik o tym identyfikatorze już istnieje." }
         val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
