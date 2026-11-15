@@ -791,6 +791,101 @@ class PaymentLedgerDatabaseTest {
 
 
     @Test
+    fun currencyConversionHistoryPersistsExactDecimalsAndNewestFirst() {
+        val first = CurrencyConversionRecord(
+            id = "conversion-history-1",
+            convertedAt = Instant.parse("2026-11-14T10:00:00Z"),
+            sourceAmount = BigDecimal("100.000"),
+            sourceCurrencyCode = "EUR",
+            targetAmount = BigDecimal("430.25"),
+            targetCurrencyCode = "PLN",
+            appliedRate = BigDecimal("4.3025"),
+            rateDate = LocalDate.parse("2026-11-13"),
+            rateSource = "NBP_TABLE_A"
+        )
+        val second = first.copy(
+            id = "conversion-history-2",
+            convertedAt = Instant.parse("2026-11-15T10:00:00Z"),
+            sourceAmount = BigDecimal("50"),
+            targetAmount = BigDecimal("215.125"),
+            appliedRate = BigDecimal("4.3025")
+        )
+        val database = openDatabase()
+        try {
+            database.saveCurrencyConversion(first)
+            database.saveCurrencyConversion(second)
+            assertEquals(listOf(second, first), database.readCurrencyConversions())
+            assertEquals(0, BigDecimal("100").compareTo(database.readCurrencyConversions().last().sourceAmount))
+        } finally {
+            database.close()
+        }
+        val reopened = openDatabase()
+        try {
+            assertEquals(listOf(second, first), reopened.readCurrencyConversions())
+        } finally {
+            reopened.close()
+        }
+    }
+
+    @Test
+    fun currencyConversionHistoryRejectsInvalidRatesAndDuplicateIds() {
+        val database = openDatabase()
+        try {
+            val valid = CurrencyConversionRecord(
+                id = "conversion-unique",
+                convertedAt = Instant.parse("2026-11-14T10:00:00Z"),
+                sourceAmount = BigDecimal("10"),
+                sourceCurrencyCode = "USD",
+                targetAmount = BigDecimal("40"),
+                targetCurrencyCode = "PLN",
+                appliedRate = BigDecimal("4"),
+                rateDate = LocalDate.parse("2026-11-13"),
+                rateSource = "NBP_TABLE_A"
+            )
+            database.saveCurrencyConversion(valid)
+            assertThrows(IllegalArgumentException::class.java) {
+                database.saveCurrencyConversion(valid.copy(id = "bad-rate", appliedRate = BigDecimal.ZERO))
+            }
+            assertThrows(android.database.sqlite.SQLiteConstraintException::class.java) {
+                database.saveCurrencyConversion(valid)
+            }
+            assertEquals(1, database.readCurrencyConversions().size)
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun versionSevenMigrationAddsCurrencyConversionHistoryWithoutDroppingLegacyTable() {
+        val legacy = object : SQLiteOpenHelper(context, databaseName, null, 7) {
+            override fun onCreate(db: SQLiteDatabase) {
+                db.execSQL("CREATE TABLE legacy_marker (id TEXT PRIMARY KEY NOT NULL)")
+                db.execSQL("INSERT INTO legacy_marker(id) VALUES ('preserve-me')")
+            }
+            override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+        }
+        legacy.writableDatabase
+        legacy.close()
+
+        val upgraded = openDatabase()
+        try {
+            upgraded.readableDatabase.rawQuery(
+                "SELECT id FROM legacy_marker", null
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals("preserve-me", cursor.getString(0))
+            }
+            upgraded.readableDatabase.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='currency_conversion_history'",
+                null
+            ).use { assertEquals(true, it.moveToFirst()) }
+            assertEquals(8, PaymentLedgerDatabase.DATABASE_VERSION)
+        } finally {
+            upgraded.close()
+        }
+    }
+
+    @Test
     fun versionSixMigrationCreatesDonationAttachmentTableAndPreservesDonation() {
         val legacy = object : SQLiteOpenHelper(context, databaseName, null, 6) {
             override fun onCreate(db: SQLiteDatabase) {
