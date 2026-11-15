@@ -3092,8 +3092,37 @@ Dodane scenariusze:
 
 ### 51.4. Status weryfikacji
 
-Zmiana źródła testowego została zapisana na `feature/payment-ledger-stage-1` razem z aktualizacją audytu. Należy sprawdzić ponownie pobrane pliki oraz uruchomić CI dla najnowszego SHA: JVM, testy instrumentacyjne/Compose, budowę debug APK i REUSE. Do czasu zielonego wyniku testu emulatorowego etap 2Q.2 pozostaje oczekujący na weryfikację.
+Zmiana źródła testowego została zapisana na `feature/payment-ledger-stage-1`. Dla commitu `2e95cd8f0bf1f4ef47cf4648b3c5af2ed7e13748` wszystkie trzy przepływy CI zakończyły się powodzeniem: Android GUI validation (testy JVM i Compose/instrumentacyjne, następnie budowa debug APK), Android prototype build oraz REUSE. Kroki testów JVM i Compose UI zakończyły się sukcesem; archiwum raportów instrumentacyjnych zostało utworzone. Publikacja APK i przesunięcie tagu pominięto z powodu braku stabilnych danych podpisujących. Etap 2Q.2 jest zweryfikowany przez CI dla tego SHA; nie oznacza to ręcznej walidacji na fizycznym urządzeniu ani zewnętrznym dostawcy SAF.
 
 ### 51.5. Następny etap
 
 Po zielonym CI rozszerzyć testy poprawnego importu JPEG/PNG i kontrolowanego błędu odczytu. Następnie rozpocząć raport darowizn PDF/CSV, rozdzielając kwoty przyjęte, pozostające w przechowaniu, przekazane oraz saldo nierozliczone.
+
+
+---
+
+## 52. Etap 2Q.3 — testy poprawnego importu JPEG/PNG i błędu odczytu (15 listopada 2026 r.)
+
+### 52.1. Cel
+
+Uzupełnić pokrycie importu załączników darowizn o dozwolone formaty graficzne oraz kontrolowany błąd występujący podczas otwierania strumienia. Testy korzystają z produkcyjnej metody `DonationAttachmentStorage.import()`.
+
+### 52.2. Wykonane zmiany
+
+Do `DonationAttachmentStorageTest.kt` dodano trzy scenariusze: (1) import JPEG z MIME `image/jpeg` i zgodną sygnaturą SOI, z kontrolą MIME, rozmiaru i bajtowej zgodności kopii; (2) analogiczny import PNG z MIME `image/png` i ośmiobajtową sygnaturą; (3) błąd odczytu: utworzenie URI FileProvider, usunięcie pliku źródłowego przed importem, oczekiwany wyjątek i brak pozostałości w katalogu.
+
+Tablice bajtów JPEG/PNG są atrapami sygnatur, a nie kompletnymi obrazami. Testy nie potwierdzają dekodowania ani poprawności wizualnej plików.
+
+### 52.3. Zakres i ograniczenia
+
+- Źródłem nadal jest AndroidX FileProvider, nie niezależny zewnętrzny dostawca SAF.
+- Błąd jest symulowany przy otwieraniu strumienia; nie obejmuje awarii w połowie odczytu już otwartego strumienia.
+- Nie zmieniano produkcyjnego kodu magazynu ani formatu danych.
+
+### 52.4. Weryfikacja i status
+
+Testy zapisano w commicie `affabb3ece285e0d028f1e109e938e3905433253`. Audyt uzupełniono po tym commicie. Etap 2Q.3 pozostaje oczekujący do czasu zielonego CI dla końcowego commitu audytu. Należy potwierdzić przejście scenariusza usuniętego pliku oraz testów JPEG/PNG na emulatorze.
+
+### 52.5. Następny etap
+
+Po zielonym CI dodać kontrolowany błąd strumienia w trakcie odczytu (testowy dostawca treści), a następnie rozpocząć raport darowizn PDF/CSV z odrębnymi sumami: przyjęte, pozostające w przechowaniu, przekazane oraz saldo nierozliczone.
