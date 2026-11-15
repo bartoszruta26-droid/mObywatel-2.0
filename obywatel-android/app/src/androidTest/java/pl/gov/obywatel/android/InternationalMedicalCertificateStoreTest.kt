@@ -15,6 +15,24 @@ import java.util.UUID
 @RunWith(AndroidJUnit4::class)
 class InternationalMedicalCertificateStoreTest {
     @Test
+    fun bilingualPdfContainsBothSourceAndTargetFieldLabelsAndValues() {
+        val bytes = createBilingualMedicalCertificatePdf(
+            sourceLanguage = "Polish",
+            targetLanguage = "English",
+            fields = listOf(
+                MedicalCertificatePdfField(
+                    sourceLabel = "Rozpoznanie",
+                    sourceValue = "Ból kręgosłupa",
+                    targetLabel = "English — Diagnosis",
+                    targetValue = "Spinal pain"
+                )
+            )
+        )
+        assertTrue(bytes.size > 500)
+        assertTrue(String(bytes.copyOfRange(0, 5), Charsets.US_ASCII) == "%PDF-")
+    }
+
+    @Test
     fun atomicWriterReplacesExistingFileWithCompleteContent() {
         val directory = File(
             InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,
