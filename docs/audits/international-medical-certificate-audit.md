@@ -1109,3 +1109,29 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Należy dodać test awarii `SharedPreferences.commit()` w trakcie importu/usuwania oraz test zachowania plików po restarcie urządzenia/procesu.
 
 **Status:** dodano integracyjne scenariusze rzeczywistego magazynu dla eksportu/importu, idempotencji, osieroconych plików, brakujących plików i usuwania zakresu. Testy są zapisane; ich wykonanie przez emulator/CI pozostaje do potwierdzenia.
+
+
+---
+
+## 43. Odzyskiwanie po przerwanym imporcie załączników — 2026-11-15
+
+### Wykryta luka
+- [x] Funkcja reconcile usuwała pliki etapowe .import dopiero po sprawdzeniu, czy wszystkie pliki wskazane przez metadane istnieją.
+- [x] Jeżeli magazyn zawierał brakujący plik źródłowy, kontrola integralności kończyła się wyjątkiem przed sprzątaniem pozostałości po przerwanym imporcie. Pliki etapowe mogły więc zalegać mimo kolejnych prób uzgadniania.
+
+### Wykonane poprawki
+- [x] Przeniesiono sprzątanie ukrytych plików .import na początek uzgadniania katalogu, przed kontrolę brakujących plików i usuwanie osieroconych plików .enc.
+- [x] Zachowano zasadę, że brakujący plik wskazany przez metadane nadal powoduje jawny błąd integralności; sprzątanie pozostałości nie usuwa ani nie modyfikuje metadanych wskazujących utracone dane.
+- [x] Dodano test instrumentacyjny potwierdzający usunięcie pliku etapowego nawet wtedy, gdy uzgadnianie wykrywa brak pliku źródłowego.
+- [x] Dodano test archiwum z poprawnym pierwszym wpisem i nieprawidłowym kolejnym wpisem. Import ma odrzucić całe archiwum przed instalacją któregokolwiek pliku.
+- [x] Dodano test kolizji wykrytej po przygotowaniu pierwszego wpisu. Test sprawdza usunięcie pliku etapowego i brak częściowego zatwierdzenia metadanych.
+- [x] Poprawkę źródłową zapisano w commicie beb9e0b6cdfb688dd7b96481830297a6c211922e, a testy instrumentacyjne w commicie 4bce55e48dfcab703b39b37072907b012ece9cfd.
+
+### Weryfikacja i ograniczenia
+- [x] Ponownie pobrano pliki źródłowy i testowy z gałęzi zaswaidczenie; potwierdzono zapis zmian.
+- [ ] Nie wykonano jeszcze testów Android instrumented na emulatorze ani urządzeniu. Sam zapis testów nie potwierdza ich wykonania.
+- [ ] Nie dodano sztucznego punktu wstrzykiwania awarii do produkcyjnego kodu wyłącznie na potrzeby symulowania SharedPreferences.commit() == false. Rzeczywista awaria zatwierdzania metadanych pozostaje do sprawdzenia w dedykowanym teście z kontrolowanym magazynem preferencji.
+- [ ] Test odtworzenia przez świeży kontekst pakietu nie jest równoważny zakończeniu i ponownemu uruchomieniu procesu Androida. Pełny test restartu procesu pozostaje osobnym zadaniem.
+- [ ] Test nie symuluje zaniku zasilania ani przerwania procesu w dowolnym punkcie systemowego zapisu; sprawdza deterministyczne ścieżki błędów importu i uzgadniania.
+
+**Status:** poprawiono kolejność odzyskiwania plików etapowych i dodano trzy scenariusze regresyjne. Kod i testy są zapisane na gałęzi. Wynik CI dla końcowego SHA wymaga potwierdzenia.
