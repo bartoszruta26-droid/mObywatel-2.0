@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -41,7 +42,7 @@ fun FinancialReportDateRangePicker(
         LocalDate.parse(endDate).isBefore(LocalDate.parse(startDate))
     }.getOrDefault(true)
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(androidx.compose.ui.unit.dp(8))) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(androidx.compose.ui.unit.dp(8))) {
             Button(onClick = { showStartPicker = true }) {
                 Text("Data początkowa: $startDate")
