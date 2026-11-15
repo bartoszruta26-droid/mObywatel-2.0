@@ -106,9 +106,22 @@ internal fun MedicalDoctorDirectoryScreen(onBack:()->Unit){
   }}.onFailure{Text("Błąd katalogu: "+(it.message?:"nieznany"),color=MaterialTheme.colorScheme.error)}
  }
  editing?.let{d->DoctorDirectoryRecordDialog(d,{editing=null}){updated->runCatching{MedicalDoctorDirectory.save(c,updated)}.onSuccess{editing=null;revision++}.onFailure{editing=null}} }
- deleting?.let{d->AlertDialog(onDismissRequest={deleting=null},title={Text("Usunąć wpis?")},text={Text("Usunąć "+d.name+"?")},
-  confirmButton={TextButton(onClick={runCatching{MedicalDoctorDirectory.delete(c,d.id)}.onSuccess{deleting=null;revision++}.onFailure{deleting=null}){Text("Usuń")}},
-  dismissButton={TextButton(onClick={deleting=null}){Text("Anuluj")}})}
+ deleting?.let { doctor ->
+  AlertDialog(
+   onDismissRequest = { deleting = null },
+   title = { Text("Usunąć wpis?") },
+   text = { Text("Usunąć " + doctor.name + "?") },
+   confirmButton = {
+    TextButton(onClick = {
+     runCatching { MedicalDoctorDirectory.delete(c, doctor.id) }
+     deleting = null
+     revision++
+    }) { Text("Usuń") }
+   },
+   dismissButton = { TextButton(onClick = { deleting = null }) { Text("Anuluj") } }
+  )
+ }
+
 }
 
 }
