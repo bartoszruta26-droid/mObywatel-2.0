@@ -161,6 +161,17 @@ class PaymentLedgerRepository(
         FinancialReportCsv.encode(report)
     }
 
+    /** Generuje wielostronicowy PDF poza głównym wątkiem. */
+    suspend fun exportFinancialReportPdf(period: FinancialReportPeriod): ByteArray = withContext(Dispatchers.IO) {
+        val report = FinancialReportBuilder.build(
+            period = period,
+            transactions = database.readFinancialTransactions(),
+            donations = database.readCashDonations(),
+            assets = database.readAssets()
+        )
+        FinancialReportPdf.encode(report)
+    }
+
     suspend fun exportJson(): String = withContext(Dispatchers.IO) {
         PaymentLedgerJsonCodec.encode(
             database.readAll(),
