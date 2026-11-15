@@ -104,6 +104,15 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun imagingAttachmentReferencesMustExactlyMatchEncryptedScopeMetadata() {
+        assertTrue(medicalImagingAttachmentReferencesMatch(listOf("report-1", "scan-2"), listOf("scan-2", "report-1")))
+        assertTrue(medicalImagingAttachmentReferencesMatch(emptyList(), emptyList()))
+        assertFalse(medicalImagingAttachmentReferencesMatch(listOf("report-1"), emptyList()))
+        assertFalse(medicalImagingAttachmentReferencesMatch(emptyList(), listOf("orphan-1")))
+        assertFalse(medicalImagingAttachmentReferencesMatch(listOf("same", "same"), listOf("same")))
+    }
+
+    @Test
     fun imagingStudyAttachmentsUseStableIsolatedDocumentScopes() {
         assertEquals("imaging_study_study-001", medicalImagingAttachmentDocumentId("study-001"))
         assertTrue(runCatching { medicalImagingAttachmentDocumentId("../outside") }.isFailure)
