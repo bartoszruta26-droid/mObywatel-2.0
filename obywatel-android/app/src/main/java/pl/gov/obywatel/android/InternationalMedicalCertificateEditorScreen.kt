@@ -52,7 +52,9 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
     val values = remember(context) {
         mutableStateMapOf<String, String>().apply { putAll(initialLoad.getOrDefault(emptyMap())) }
     }
-    val imagingLoad = remember { runCatching { decodeMedicalImagingStudies(values[IMC_IMAGING_STUDIES_KEY].orEmpty()) } }
+    val imagingLoad = remember {
+        runCatching { loadMedicalImagingStudies(values[IMC_IMAGING_STUDIES_KEY]) }
+    }
     val loadError = initialLoad.exceptionOrNull()?.message
         ?: imagingLoad.exceptionOrNull()?.message.orEmpty()
     val definitions = remember {
@@ -363,6 +365,9 @@ internal fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): St
     }
     return array.toString()
 }
+
+internal fun loadMedicalImagingStudies(serialized: String?): List<MedicalImagingStudy> =
+    serialized?.takeIf { it.isNotBlank() }?.let(::decodeMedicalImagingStudies).orEmpty()
 
 internal fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagingStudy> {
     val array = JSONArray(serialized)
