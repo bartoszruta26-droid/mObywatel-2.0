@@ -3224,3 +3224,37 @@ Zależność dotyczy wyłącznie wariantu instrumentacyjnego, ponieważ `Failing
 - Etap raportów PDF/CSV: wstrzymany do czasu zamknięcia tej walidacji.
 
 Ograniczenie: log potwierdza brak klasy Kotlin runtime w APK testowym. Po dodaniu zależności trzeba potwierdzić w kolejnym przebiegu, że provider uruchamia się, rzeczywiście zapisuje część danych do potoku, zgłasza kontrolowany błąd odczytu, a produkcyjny import usuwa częściowy plik.
+
+
+## 54.8. Korekta providera testowego po ponownym CI — izolacja APK instrumentacyjnego (15 listopada 2026 r.)
+
+### Wynik przebiegu dla rewizji c4d9383e
+
+Dla commitu audytu `c4d9383e594b7ff73fdbba6c4f6fb73862106249` uzyskano:
+- Repository compliance — sukces (run `43698572201`);
+- Android prototype build — sukces (run `43698572275`), w tym testy JVM i budowa debug APK;
+- Android GUI validation — porażka (run `43698572203`), mimo sukcesu testów JVM.
+
+Analiza logu zadania `132764436318` potwierdziła awarię procesu providera testowego podczas uruchomienia `FailingStreamContentProvider.getType()`: `NoClassDefFoundError: kotlin/jvm/internal/Intrinsics`. W efekcie instrumentacja przerwała się po rozpoczęciu testu `importDeletesPartialFileWhenProviderFailsAfterWritingBytes`; nie uzyskano wiarygodnego wyniku testu błędu odczytu w połowie strumienia. Log potwierdza, że wcześniejsza zależność `androidTestImplementation(kotlin("stdlib"))` nie rozwiązała problemu izolowanego procesu providera.
+
+### Wykonana korekta
+
+Zamiast dalej rozszerzać zależności APK testowego, przeniesiono sam testowy `ContentProvider` z Kotlin do Java:
+- dodano `FailingStreamContentProvider.java` z równoważnymi metodami MIME, metadanych, otwierania potoku i kontrolowanego błędu po zapisaniu części bajtów;
+- usunięto `FailingStreamContentProvider.kt`;
+- usunięto nieskuteczną i zbędną zależność `androidTestImplementation(kotlin("stdlib"))` z `app/build.gradle.kts`;
+- pozostawiono providera wyłącznie w manifeście `src/androidTest`; manifest produkcyjny nie został zmieniony;
+- nie zmieniono produkcyjnego kodu `DonationAttachmentStorage.import()` ani oczekiwań testu sprzątania częściowego pliku.
+
+Zmiany zapisano w commitach:
+- Java provider: `d257ae10b1da94f541b9d6ed832fee5ffba85493`;
+- usunięcie providera Kotlin: `c154ffb74059f7538b859d689f20ee9ef64db76c`;
+- usunięcie zbędnej zależności: `8c74cbe1b3cabc72d114034cd36689862b003d77`.
+
+### Status
+
+To jest korekta przyczyny awarii klasy w procesie providera, ale nie jest jeszcze dowodem poprawności testu. Etap 2Q.4 pozostaje **niezweryfikowany** do czasu ponownego zielonego Android GUI validation obejmującego kontrolowany błąd strumienia i pozostałe testy Compose. Sukces kompilacji i testów JVM nie zastępuje testów instrumentacyjnych. Raporty PDF/CSV pozostają wstrzymane do zamknięcia tej walidacji.
+
+### Następny krok
+
+Uruchomić pełne CI dla rewizji z Java providerem. W razie kolejnego niepowodzenia pobrać raporty instrumentacyjne i poprawić konkretną przyczynę; dopiero po zielonym przebiegu przejść do implementacji raportów finansowych z rozdzieleniem walut, kruszców, kwot przyjętych, przechowywanych, przekazanych i nierozliczonych.
