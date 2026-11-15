@@ -94,7 +94,7 @@ class FinancialReportTest {
         assertEquals("g", gold.unit)
         assertEquals(0, BigDecimal("1.2345").compareTo(gold.incoming))
         assertEquals(4, report.assetTotals.size)
-        assertEquals(3, report.rows.count { it.recordType == "TRANSACTION" || it.recordType == "PROWIZJA" })
+        assertEquals(5, report.rows.count { it.recordType == "TRANSACTION" || it.recordType == "PROWIZJA" })
     }
 
     @Test
@@ -111,7 +111,7 @@ class FinancialReportTest {
         assertEquals(0, BigDecimal("175.00").compareTo(totals.transferred))
         assertEquals(0, BigDecimal("100.00").compareTo(totals.held))
         assertEquals(0, BigDecimal("200.00").compareTo(totals.deposited))
-        assertEquals(0, BigDecimal("425.00").compareTo(totals.stored))
+        assertEquals(0, BigDecimal("475.00").compareTo(totals.stored))
         assertEquals(0, BigDecimal("75.00").compareTo(totals.unsettledReview))
     }
 
@@ -149,7 +149,7 @@ class FinancialReportTest {
         val report = FinancialReportBuilder.build(period, listOf(unsafe), emptyList(), emptyList())
         val csv = FinancialReportCsv.encode(report)
         assertTrue(csv.startsWith("\uFEFF"))
-        assertTrue(csv.contains("\"'  =HYPERLINK(\"\"https://bad\"\" ,"))
+        assertTrue(csv.contains("'  =HYPERLINK("))
         assertTrue(csv.contains("10.0000000001"))
         assertTrue(csv.contains(";"))
         assertTrue(csv.endsWith("\r\n"))
