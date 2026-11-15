@@ -50,7 +50,7 @@ internal class MlKitMedicalTranslationProvider(private val context: Context) : M
     }
 }
 
-private fun mlKitLanguageCode(code: String): String {
+internal fun mlKitLanguageCode(code: String): String {
     val normalized = code.substringBefore('-').lowercase()
     return when (normalized) {
         "en" -> TranslateLanguage.ENGLISH
