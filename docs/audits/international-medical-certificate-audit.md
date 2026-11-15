@@ -1195,3 +1195,27 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Test nie symuluje awarii `SharedPreferences.commit() == false`; kontrolowany backend metadanych pozostaje osobnym zadaniem.
 
 **Status:** ścieżka dodawania pojedynczego załącznika sprawdza teraz globalną unikalność ID przed zapisem. Nie oznacza to jeszcze zakończenia testów CI ani rozwiązania problemu kontrolowanego testowania błędów zatwierdzania preferencji.
+
+
+## 47. Ochrona przed usunięciem załączników współdzielonych przez błędne metadane — 2026-11-15
+
+### Wykryte ryzyko
+- [x] Ścieżki usuwania pojedynczego załącznika i całego zakresu usuwały pliki po zatwierdzeniu zmian metadanych, ale przed usunięciem pliku nie weryfikowały globalnie, czy identyfikator nadal jest wyłącznie własnością usuwanego dokumentu.
+- [x] Przy ręcznie uszkodzonych lub historycznie niespójnych metadanych ten sam identyfikator mógł wystąpić w dwóch dokumentach. Usunięcie jednego zakresu mogło wtedy skasować plik nadal wskazywany przez drugi zakres.
+
+### Wykonane poprawki
+- [x] Dodano wspólną regułę `validateOriginalAttachmentIdsOwnedByDocument`, która wymaga, aby każdy usuwany identyfikator był przypisany dokładnie do wskazanego dokumentu.
+- [x] Przed usunięciem pojedynczego załącznika i przed usunięciem całego zakresu aplikacja waliduje rejestry metadanych, buduje globalną mapę właścicieli i odrzuca powtórzone identyfikatory.
+- [x] Kontrola odbywa się przed zatwierdzeniem zmian metadanych i przed usunięciem plików. Wykrycie konfliktu kończy operację bez usuwania danych.
+- [x] Dodano test JVM poprawnego właściciela, obcego właściciela, brakującego identyfikatora oraz mieszanego zestawu własności.
+
+### Commity
+- [x] Poprawka źródłowa: `6ec53ac6371f15df73137dd26ade9f12fe0ae58d`.
+- [x] Test JVM: `98e6cc1da081dbaa301dcf46078cb4548050132c`.
+
+### Weryfikacja i ograniczenia
+- [ ] Wykonanie testów JVM, instrumentacyjnych, GUI/emulator i kompilacji APK dla końcowego SHA wymaga wyników GitHub Actions.
+- [ ] Nie wprowadzono jeszcze kontrolowanego backendu SharedPreferences do testowania rzeczywistego wyniku `commit() == false`. Aktualna kolejność operacji zachowuje pliki przy nieudanym zatwierdzeniu, ale awaria zatwierdzania nie została tu zasymulowana.
+- [ ] Synchronizacja pozostaje blokadą wewnątrz jednego procesu; nie jest blokadą międzyprocesową.
+
+**Status:** usuwanie nie skasuje już pliku, jeśli metadane wskazują, że należy on również do innego dokumentu. Etap zapisany; potwierdzenie CI pozostaje otwarte.
