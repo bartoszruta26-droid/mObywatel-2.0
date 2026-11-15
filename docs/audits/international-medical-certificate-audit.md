@@ -1412,3 +1412,23 @@ Wcześniejszy test równoległego importu dwóch różnych załączników do teg
 - `17a0124de4969477e336a89d51aac72f18cc0ec1` — test kolizji równoległego właściciela.
 
 **Status:** implementacja i testy etapu 53 zapisane. Weryfikacja końcowa zależy od CI dla aktualnego SHA.
+
+---
+
+## 53a. Naprawa kompilacji testu kolizji równoległej — 2026-11-15
+
+### Ustalenie z CI
+- [x] Dla SHA e858b5b5b947e11dcf379e460afd4f2fd550062a testy JVM zakończyły się powodzeniem, kompilacja debug APK zakończyła się powodzeniem, a REUSE compliance zakończyło się powodzeniem.
+- [x] Workflow Android GUI nie przeszedł kompilacji testów instrumentacyjnych: w OriginalAttachmentStoreIntegrityTest.kt:515 Kotlin wywnioskował Any! dla wyników ExecutorService.submit, przez co predykat count { it } nie miał typu Boolean.
+- [x] Kompilator przerwał budowanie testów przed ich uruchomieniem; nie był to błąd logiki magazynu.
+
+### Poprawka
+- [x] Oba zadania równoległego testu kolizji przekazują teraz jawne java.util.concurrent.Callable<Boolean> do submit.
+- [x] Wyniki Future.get() mają jednoznaczny typ Boolean, więc zliczanie zwycięskiej operacji jest poprawnie typowane.
+- [x] Zmiana nie wpływa na kod produkcyjny ani API magazynu.
+
+### Commit i weryfikacja
+- [x] Poprawka testu: 24b47862611c2381053c0dea804029a35218158b.
+- [ ] Ponowna kompilacja testów instrumentacyjnych, wykonanie testów emulatora, budowa APK i REUSE dla nowego SHA — oczekują na GitHub Actions.
+
+**Status:** poprawiono konkretny błąd kompilacji wykryty w CI. PR pozostaje otwarty; scalanie nastąpi dopiero po zielonej weryfikacji nowego SHA.
