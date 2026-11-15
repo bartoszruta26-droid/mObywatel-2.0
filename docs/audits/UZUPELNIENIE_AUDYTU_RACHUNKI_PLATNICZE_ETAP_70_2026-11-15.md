@@ -52,3 +52,17 @@ Kompilacja, testy JVM, testy instrumentacyjne/emulatorowe i APK nie mogą być u
 **Etap 70:** poprawka zapisana, test regresyjny zapisany, ponowny odczyt źródeł poprawny, kontrola REUSE zaliczona; pełna walidacja Android nadal oczekuje na zakończenie CI.
 
 Następny zakres po zielonym CI: parser CSV/XLS oparty na rzeczywistych, zanonimizowanych próbkach eksportu bankowego, z testami kontraktowymi, walidacją dat/walut/kwot, zachowaniem surowych opisów i podglądem konfliktów. Nie należy deklarować zgodności z formatem iPKO bez rzeczywistych próbek.
+
+
+## Aktualizacja po kontroli CI i etap 71 (15 listopada 2026 r.)
+
+Kontrola run `43720078786` ujawniła jeden nieprawidłowy scenariusz w nowym teście FX: oczekiwał konfliktu dla prawidłowej pary znaków. Test poprawiono w commicie `889db06c24e1fadedcfe7d21269c1130a2ebb5b2`. Nie była to usterka reguły produkcyjnej.
+
+Wykonano następnie etap 71: parser XML korzysta z `nextToken()`, jawnie odrzuca `DOCDECL` i `ENTITY_REF`, ogranicza liczbę operacji do 50 000 i ma testy DTD/XXE, zera i nieprawidłowej waluty. Końcowy commit etapu: `2fe27c19523502c768c5e1d2347eca68ed47a73b`.
+
+Dla końcowego SHA:
+- Android prototype build run `43720318876` — in_progress;
+- Android GUI validation run `43720318853` — pending;
+- Repository compliance run `43720318861` — queued.
+
+**Status:** pliki źródłowe i audyt ponownie odczytane; pełne CI nadal wymagane. Nie oznaczać testów Android ani APK jako zaliczonych przed zakończeniem tych przebiegów.
