@@ -520,3 +520,8 @@ Kod i testy dodano na gałęzi feature/payment-ledger-stage-1. Wyniki kompilacji
 ### Uzupełnienie testów etapu 76
 
 Dodano kontrolę integralności migawki: dokładnie 178 wpisów bieżącej List One i 137 wpisów List Three, format kodów alfabetycznych i numerycznych, dopuszczalny zakres wykładnika jednostki mniejszej oraz obecność daty wycofania dla każdego wpisu historycznego. Testy te weryfikują kompletność i podstawowe invariants danych włączonych do aplikacji.
+
+
+### Korekta zgodności precyzji dla kodów funduszy
+
+Przegląd testu konwertera wykazał, że niektóre pozycje List One oznaczone jako fundusze (np. CLF) mają określony wykładnik jednostki mniejszej, wykorzystywany przez dotychczasową logikę precyzji. Katalog zachowuje więc te pozycje w `all` i w `find()` dla poprawnej precyzji, natomiast `paymentCurrencies` oraz podpowiedzi wyszukiwania wykluczają fundusze z typowego wyboru walut płatniczych. Dodano regresję dla CLF i filtrowania BOV.
