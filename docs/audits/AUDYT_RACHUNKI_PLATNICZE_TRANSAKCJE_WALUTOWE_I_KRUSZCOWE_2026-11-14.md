@@ -3548,3 +3548,68 @@ Kontrolowana jest również suma wartości dwóch uwzględnionych transakcji. Te
 ### 60.5. Kryteria zamknięcia
 
 Etap można uznać za zweryfikowany dopiero po pomyślnym zakończeniu wszystkich wymaganych zadań CI dla dokładnego HEAD. W razie błędu testu DatePicker należy poprawić selektor semantyczny na podstawie rzeczywistego drzewa Compose, bez usuwania asercji potwierdzających zmianę wybranej daty. PR `#68` pozostaje otwarty.
+
+
+## 61. Naprawa testów wyboru dnia w kalendarzu raportu (15 listopada 2026 r.)
+
+### 61.1. Przyczyna wykryta w CI
+
+Przebieg Android GUI dla commitu `83026e8111d575621d703ace3fbac6060ffa290e` zakończył się niepowodzeniem w zadaniu `:app:connectedDebugAndroidTest`. Testy JVM przeszły. Nie przeszły wyłącznie dwa testy Compose:
+
+- `selectingDifferentStartDateUpdatesOnlyStartBoundary`;
+- `selectingDifferentEndDateUpdatesOnlyEndBoundary`.
+
+Raport testów wskazał błąd `Failed to inject touch input`: selektory tekstowe `"10"` i `"25"` nie znajdowały w drzewie semantyki kalendarza węzłów tekstowych. Nie był to błąd logiki wyznaczania dat w komponencie, lecz niezgodność testu z semantyką dostępności Material 3 DatePicker.
+
+### 61.2. Wykonana poprawka
+
+Zastąpiono selektory tekstu liczbowego selektorami dostępnościowego opisu pełnej daty:
+
+- `Tuesday, November 10, 2026`;
+- `Wednesday, November 25, 2026`.
+
+Testy nadal wybierają inne dni niż wartości początkowe i nadal sprawdzają, że zmienia się wyłącznie wskazana granica okresu.
+
+- Plik: `FinancialReportDateRangePickerTest.kt`.
+- Commit: `54159060eac0bdd7f55cd62e51435d06803d2f94`.
+
+### 61.3. Status
+
+Poprawka została zapisana na gałęzi. Weryfikacja emulatorowa musi potwierdzić, że opisy dostępnościowe są zgodne z lokalizacją i wersją Material 3 używaną przez obraz CI. Sam zapis poprawionego selektora nie zamyka etapu; wymagany jest sukces `connectedDebugAndroidTest` dla dokładnego aktualnego HEAD.
+
+## 62. Wspólny, testowalny zapis raportów CSV i PDF przez SAF (15 listopada 2026 r.)
+
+### 62.1. Ustalenie przeglądu
+
+Ekran raportów uruchamiał systemowy wybór lokalizacji przez `ActivityResultContracts.CreateDocument`, ale zapisywanie bajtów CSV i PDF było zduplikowane w dwóch callbackach. Dotychczasowe testy SAF sprawdzały zapis przykładowych bajtów bezpośrednio przez `ContentResolver`; nie wywoływały wspólnej implementacji używanej przez ekran ani rzeczywistych koderów raportów.
+
+### 62.2. Wdrożone zmiany
+
+Dodano `financial/FinancialReportSafWriter.kt`:
+
+- wspólna metoda zapisuje przekazane bajty przez `ContentResolver` do URI zwróconego przez systemowy selektor dokumentów;
+- używa trybu `wt`, jawnie zastępującego wcześniejszą zawartość dokumentu;
+- zgłasza błąd, jeżeli dostawca nie udostępnia strumienia zapisu;
+- zamyka strumień także w przypadku wyjątku podczas zapisu.
+
+W `PaymentLedgerScreen.kt` callbacki eksportu CSV i PDF korzystają teraz z tej samej metody. Kodowanie raportów pozostaje odpowiednio UTF-8 (w tym BOM dla CSV) i bajtami PDF generowanymi przez `FinancialReportPdf`.
+
+W `FinancialReportSafExportTest.kt` zastąpiono zapis bezpośredni wywołaniem produkcyjnego `FinancialReportSafWriter`. Testy przekazują do niego rzeczywiste wyniki `FinancialReportCsv.encode` i `FinancialReportPdf.encode`, sprawdzają zachowanie pełnych bajtów, BOM CSV i sygnaturę PDF. Test niedostępnego dostawcy sprawdza teraz błąd wspólnej metody.
+
+### 62.3. Zmienione pliki i commity
+
+- `FinancialReportSafWriter.kt` — nowy wspólny zapis; commit `1c6096f13030cafe2f0dd3f8d985b949d75da300`.
+- `PaymentLedgerScreen.kt` — użycie wspólnej metody w eksporcie CSV/PDF; commit `6ac3b6a96465cb33798d7381f5f91fa3ac78011b`.
+- `FinancialReportSafExportTest.kt` — test rzeczywistych koderów i wspólnego zapisu; commit `421734da7e4f8cec5618c2dda8acfe0eaac234f8`.
+- `PaymentLedgerScreen.kt` — import klasy zapisującej; commit `c17d6d6f5e64b727310e79ed6ec42c15ee6427f1`.
+
+### 62.4. Status walidacji
+
+Zmiany są zapisane na gałęzi `feature/payment-ledger-stage-1`. Przebiegi CI uruchomione dla wcześniejszych rewizji w trakcie tych zmian nie potwierdzają poprawności końcowego HEAD. Do zamknięcia etapu wymagane są dla dokładnego końcowego SHA:
+
+- testy JVM;
+- testy instrumentacyjne, w tym oba testy wyboru dat i testy rzeczywistego zapisu CSV/PDF;
+- budowa debug APK;
+- kontrola zgodności REUSE.
+
+Do czasu zakończenia tych kontroli etapy 61–62 pozostają wdrożone w kodzie, ale niezweryfikowane w pełnym CI. PR `#68` pozostaje otwarty i niescalony.
