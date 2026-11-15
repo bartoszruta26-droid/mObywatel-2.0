@@ -68,7 +68,7 @@ internal object MedicalDoctorDirectory {
   return decode(raw)
  }
  fun save(c:Context,d:MedicalDoctorRecord){
-  require(d.name.isNotBlank()&&d.practice.isNotBlank()&&d.address.isNotBlank()&&d.source.isNotBlank()&&d.verifiedAt.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))){
+  require(d.name.isNotBlank()&&d.practice.isNotBlank()&&d.address.isNotBlank()&&d.source.contains("https://")&&d.verifiedAt.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))){
    "Wymagane: nazwisko, praktyka, adres, źródło i data weryfikacji."
   }
   require(!d.signerEnabled){"Katalog informacyjny nie aktywuje podpisywania."}
@@ -88,7 +88,7 @@ internal fun MedicalDoctorDirectoryScreen(onBack:()->Unit){
   Text("‹ Powrót",color=MaterialTheme.colorScheme.primary,modifier=Modifier.clickable(onClick=onBack))
   Text("Katalog lekarzy",style=MaterialTheme.typography.headlineSmall)
   Text("Katalog informacyjny. Kryterium: deklarowany język polski albo polsko brzmiące nazwisko / potwierdzone pochodzenie oraz publicznie potwierdzona praktyka. Nazwisko nie potwierdza znajomości języka. Podpisywanie jest wyłączone.",style=MaterialTheme.typography.bodySmall)
-  Button(onClick={editing=MedicalDoctorRecord(UUID.randomUUID().toString(),"","","","","","","","","","",DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.PENDING,DoctorConsentStatus.USER_REPORTED_ORAL,"","",false)}){Text("Dodaj rekord lekarza")}
+  Button(onClick={editing=MedicalDoctorRecord(UUID.randomUUID().toString(),"","","","","","","","","","",DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.PENDING,DoctorConsentStatus.PENDING,"","",false)}){Text("Dodaj rekord lekarza")}
   records.onSuccess{list->list.forEach{d->
    Card(Modifier.fillMaxWidth()){Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
     Text(d.name,style=MaterialTheme.typography.titleMedium);Text(d.specialty+" · "+d.city+", "+d.country)
@@ -128,6 +128,7 @@ private fun DoctorDirectoryRecordDialog(initial:MedicalDoctorRecord,onDismiss:()
  var date by remember(initial.id){mutableStateOf(if(initial.verifiedAt.isBlank()) "2026-11-15" else initial.verifiedAt)}
  var polish by remember(initial.id){mutableStateOf(initial.polishDeclared)}
  var evidence by remember(initial.id){mutableStateOf(initial.evidence)}
+ var consent by remember(initial.id){mutableStateOf(initial.consent)}
  AlertDialog(onDismissRequest=onDismiss,title={Text("Dane lekarza")},text={
   Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(5.dp)){
    @Composable fun field(v:String,label:String,change:(String)->Unit){OutlinedTextField(v,change,label={Text(label)},modifier=Modifier.fillMaxWidth())}
@@ -140,7 +141,11 @@ private fun DoctorDirectoryRecordDialog(initial:MedicalDoctorRecord,onDismiss:()
    Text("Podstawa polskiego kryterium")
    Row{RadioButton(evidence==DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,{evidence=DoctorPolishEvidence.POLISH_ORIGIN_SURNAME});Text("Polsko brzmiące nazwisko")}
    Row{RadioButton(evidence==DoctorPolishEvidence.POLISH_ORIGIN_CONFIRMED,{evidence=DoctorPolishEvidence.POLISH_ORIGIN_CONFIRMED});Text("Potwierdzone polskie pochodzenie")}
-   Text("Zgoda na publikację: ustna — zgłoszona przez administratora. Podpisywanie pozostaje wyłączone.",style=MaterialTheme.typography.bodySmall)
+   Text("Zgoda na publikację")
+   Row{RadioButton(consent==DoctorConsentStatus.USER_REPORTED_ORAL,{consent=DoctorConsentStatus.USER_REPORTED_ORAL});Text("Ustna — zgłoszona przez administratora")}
+   Row{RadioButton(consent==DoctorConsentStatus.DIRECTLY_CONFIRMED,{consent=DoctorConsentStatus.DIRECTLY_CONFIRMED});Text("Potwierdzona bezpośrednio")}
+   Row{RadioButton(consent==DoctorConsentStatus.PENDING,{consent=DoctorConsentStatus.PENDING});Text("Oczekuje")}
+   Text("Podpisywanie pozostaje wyłączone.",style=MaterialTheme.typography.bodySmall)
   }
  },confirmButton={TextButton(onClick={onSave(initial.copy(name=name.trim(),specialty=specialty.trim(),country=country.trim(),city=city.trim(),
   practice=practice.trim(),address=address.trim(),phone=phone.trim(),website=website.trim(),register=register.trim(),license=license.trim(),
