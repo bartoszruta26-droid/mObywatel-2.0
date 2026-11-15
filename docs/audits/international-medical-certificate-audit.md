@@ -421,3 +421,31 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Wielostronicowy PDF, Hebrew/RTL, podpisy i Android Print Framework.
 
 **Status:** błąd kompilacji z poprzedniego commitu został poprawiony. Zgodność REUSE przeszła. Wyniki testów Androida dla commitu naprawczego oczekują na zakończenie CI; nie deklaruje się jeszcze gotowości APK ani pełnej funkcjonalności dokumentu.
+
+---
+
+## 18. Rozszerzenie danych raportu obrazowego — 2026-11-15
+
+### Wykonane zmiany
+- [x] Dodano do formularza badania obrazowego pola `Technique`, `Contrast`, `Radiologist Name` i `Report Number`.
+- [x] Pola są przekazywane do modelu `MedicalImagingStudy`, który już zawierał odpowiednie właściwości.
+- [x] Rozszerzono kartę podsumowania badania o prezentację tych danych, jeśli zostały podane.
+- [x] Po dodaniu badania pola formularza są czyszczone, a wartości pozostają w dodanym rekordzie.
+- [x] Rozszerzono test jednostkowy modelu o sprawdzenie zachowania czterech pól raportu.
+- [x] Zmiany kodu i testu zapisano na gałęzi `zaswaidczenie` w commitach `8f5df54d8fce5eb5beca1a8aeed3d0353d298166` i `bcd78729ba78941e6965f32618fd162d3df3a937`.
+
+### Kontrola CI i status
+- [x] Dla poprzedniego kodu `f58f3b3531e60bcfd0e76a66739032e6fb61e587`: `assemble-debug` PASS, `Repository compliance` PASS.
+- [x] Dla `f58f3b3`: testy JVM zakończone powodzeniem w workflow Android GUI; dalszy etap emulatora został anulowany przy aktualizacji gałęzi.
+- [ ] Dla aktualnego commitu `bcd78729ba78941e6965f32618fd162d3df3a937`: wymagane ponowne potwierdzenie testów jednostkowych, kompilacji APK, testów Compose/emulatora i REUSE.
+- [ ] Testy interfejsu formularza dla czterech nowych pól nie są uznawane za wykonane wyłącznie na podstawie testu modelu; wymagają testu UI lub kontroli emulatorowej.
+
+### Pozostałe prace
+- [ ] Walidacja dat badania i wymaganych pól klinicznych.
+- [ ] Import załączników obrazowych i raportów oraz powiązanie plików z rekordami badań.
+- [ ] Import skanów podpisu pacjenta, lekarza i pieczęci.
+- [ ] Dostawca tłumaczeń z jawną zgodą, bez automatycznego wysyłania danych medycznych.
+- [ ] Wielostronicowy PDF, poprawna obsługa Hebrew/RTL, podpisy i Android Print Framework.
+- [ ] Testy odtwarzania danych po ponownym uruchomieniu oraz testy odporności magazynu szyfrowanego.
+
+**Status:** rozszerzono formularz i test modelu o brakujące metadane raportu obrazowego. Nie potwierdzono jeszcze testami UI poprawnego działania nowych pól ani końcowego działania na urządzeniu. PR #69 pozostaje otwarty i niescalony.
