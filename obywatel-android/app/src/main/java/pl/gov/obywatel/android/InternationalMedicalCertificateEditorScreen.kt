@@ -48,7 +48,9 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
     val values = remember(context) {
         mutableStateMapOf<String, String>().apply { putAll(initialLoad.getOrDefault(emptyMap())) }
     }
-    val loadError = initialLoad.exceptionOrNull()?.message.orEmpty()
+    val imagingLoad = remember { runCatching { decodeMedicalImagingStudies(values[IMC_IMAGING_STUDIES_KEY].orEmpty()) } }
+    val loadError = initialLoad.exceptionOrNull()?.message
+        ?: imagingLoad.exceptionOrNull()?.message.orEmpty()
     val definitions = remember {
         documentEditorFieldDefinitions(INTERNATIONAL_MEDICAL_CERTIFICATE_ID)
     }
@@ -67,7 +69,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
     var saveMessage by remember { mutableStateOf("") }
     val imagingStudies = remember {
         mutableStateListOf<MedicalImagingStudy>().apply {
-            addAll(decodeMedicalImagingStudies(values[IMC_IMAGING_STUDIES_KEY].orEmpty()))
+            addAll(imagingLoad.getOrDefault(emptyList()))
         }
     }
     var imagingModality by remember { mutableStateOf(MedicalImagingModality.X_RAY) }
@@ -287,7 +289,7 @@ private fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): Str
     return array.toString()
 }
 
-private fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagingStudy> = runCatching {
+private fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagingStudy> {
     val array = JSONArray(serialized)
     (0 until array.length()).map { index ->
         val item = array.getJSONObject(index)
@@ -309,4 +311,4 @@ private fun decodeMedicalImagingStudies(serialized: String): List<MedicalImaging
             }.orEmpty()
         )
     }
-}.getOrDefault(emptyList())
+}
