@@ -18,7 +18,10 @@ internal data class MedicalCertificatePdfField(
 internal fun createBilingualMedicalCertificatePdf(
     sourceLanguage: String,
     targetLanguage: String,
-    fields: List<MedicalCertificatePdfField>
+    fields: List<MedicalCertificatePdfField>,
+    doctorName: String = "",
+    doctorPractice: String = "",
+    doctorAddress: String = ""
 ): ByteArray {
     val document = PdfDocument()
     val output = ByteArrayOutputStream()
@@ -95,6 +98,24 @@ internal fun createBilingualMedicalCertificatePdf(
             y += 10f
         }
         if (fields.isEmpty()) drawWrapped("No certificate fields have been completed.", bodyPaint)
+        if (y > pageHeight - margin - 170f) {
+            finishPage()
+            startPage()
+        }
+        y += 14f
+        drawWrapped("ATTENDING PHYSICIAN", headingPaint)
+        if (doctorName.isNotBlank()) drawWrapped(doctorName, bodyPaint)
+        if (doctorPractice.isNotBlank()) drawWrapped(doctorPractice, bodyPaint)
+        if (doctorAddress.isNotBlank()) drawWrapped(doctorAddress, bodyPaint)
+        y += 34f
+        canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
+        canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
+        y += 13f
+        canvas!!.drawText("Physician's handwritten signature", margin, y, mutedPaint)
+        canvas!!.drawText("Stamp", margin + 250f, y, mutedPaint)
+        y += 26f
+        canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
+        canvas!!.drawText("Date and place", margin, y + 13f, mutedPaint)
         finishPage()
         document.writeTo(output)
         return output.toByteArray()
