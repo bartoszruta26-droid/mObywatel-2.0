@@ -646,9 +646,10 @@ class PaymentLedgerRepositoryTest {
             assertEquals(BatchImportSummary(0, 1), target.importJson(archive))
             val restored = target.getCurrencyConversionHistory().single()
             assertEquals(record.id, restored.id)
-            assertEquals(0, record.sourceAmount.compareTo(restored.sourceAmount))
-            assertEquals(0, record.targetAmount.compareTo(restored.targetAmount))
-            assertEquals(0, record.appliedRate.compareTo(restored.appliedRate))
+            assertEquals(record.sourceAmount, restored.sourceAmount)
+            assertEquals(record.targetAmount, restored.targetAmount)
+            assertEquals(record.appliedRate, restored.appliedRate)
+            assertTrue(archive.contains("\"sourceAmount\":\"100.000\""))
         } finally {
             source.close()
             target.close()
@@ -682,6 +683,53 @@ class PaymentLedgerRepositoryTest {
             val preserved = target.getCurrencyConversionHistory().single()
             assertEquals(0, original.targetAmount.compareTo(preserved.targetAmount))
         } finally {
+            target.close()
+        }
+    }
+
+
+    @Test
+    fun currencyConversionArchiveRoundTripsMoreThanOneThousandRecordsAndPreservesScale() = runBlocking {
+        val source = PaymentLedgerRepository(context, sourceDatabase)
+        val target = PaymentLedgerRepository(context, targetDatabase)
+        try {
+            repeat(1005) { index ->
+                source.saveCurrencyConversion(
+                    CurrencyConversionRecord(
+                        id = "archive-large-conversion-$index",
+                        convertedAt = java.time.Instant.parse("2026-11-15T12:30:00Z").plusSeconds(index.toLong()),
+                        sourceAmount = BigDecimal("1.000"),
+                        sourceCurrencyCode = "USD",
+                        targetAmount = BigDecimal("0.9000"),
+                        targetCurrencyCode = "EUR",
+                        appliedRate = BigDecimal("0.900000"),
+                        rateDate = LocalDate.parse("2026-11-14"),
+                        rateSource = "NBP:A:2026-11-14"
+                    )
+                )
+            }
+
+            val archive = source.exportJson()
+            val decoded = PaymentLedgerJsonCodec.decodeArchive(archive)
+            assertEquals(1005, decoded.currencyConversions.size)
+            assertTrue(archive.contains("\"sourceAmount\":\"1.000\""))
+            assertTrue(archive.contains("\"targetAmount\":\"0.9000\""))
+            assertTrue(archive.contains("\"appliedRate\":\"0.900000\""))
+
+            val preview = target.previewArchive(archive)
+            assertEquals(1005, preview.newCurrencyConversions)
+            assertEquals(0, preview.currencyConversionConflicts)
+            assertEquals(BatchImportSummary(1005, 0), target.importJson(archive))
+            assertEquals(BatchImportSummary(0, 1005), target.importJson(archive))
+
+            val restoredArchive = PaymentLedgerJsonCodec.decodeArchive(target.exportJson())
+            assertEquals(1005, restoredArchive.currencyConversions.size)
+            val restored = restoredArchive.currencyConversions.first()
+            assertEquals(BigDecimal("1.000"), restored.sourceAmount)
+            assertEquals(BigDecimal("0.9000"), restored.targetAmount)
+            assertEquals(BigDecimal("0.900000"), restored.appliedRate)
+        } finally {
+            source.close()
             target.close()
         }
     }
