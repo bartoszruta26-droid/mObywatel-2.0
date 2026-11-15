@@ -256,3 +256,16 @@ Commity: `3108a87db2421d64b372f6b4e44e5b6ef0047419`, `12f8dffa38785cfdd66f0d8f8d
 Weryfikacja źródeł potwierdziła zapis implementacji i testów. Pełne CI dla nowych commitów pozostaje wymagane. Ostatni znany GUI workflow dla wcześniejszego SHA zakończył się dwoma błędami dotyku w testach wyboru dni DatePicker; testy JVM przeszły, ale emulator zatrzymał workflow przed budową APK. Nie traktować tego wyniku jako walidacji etapu 80.
 
 Kolejny krok: naprawić interakcje testów DatePicker i uzyskać zielony CI, następnie wdrożyć adapter NBP i integrację kalkulatora z UI. Nie deklarować jeszcze pobierania kursów NBP ani gotowego kalkulatora ekranowego.
+
+
+## 81–82. Stabilizacja DatePicker i adapter NBP — 15 listopada 2026 r.
+
+Zmieniono testy dwóch przypadków wyboru dnia w DatePicker: zamiast emulacji dotyku wykorzystują akcję semantyczną Compose, zachowując asercje aktualizacji właściwej granicy daty. Zmiana oczekuje na potwierdzenie w emulatorowym CI.
+
+Dodano `NbpRatesRepository.kt`: transport HTTP, tabele A/B/C, kursy historyczne, ceny złota, cache 15 min dla najnowszych danych i 30 dni dla historycznych, limity zapytań 93 dni oraz wyszukiwanie ostatniej publikacji dla dni wolnych. Tabela C zachowuje bid/ask i nie udaje kursu średniego. Kurs średni tabel A/B może zostać przekształcony w `ExchangeRate` do kalkulatora.
+
+Dodano testy parsera, konwersji, cache, zakresów i dat weekendowych. Adapter pozostaje warstwą danych — ekran kalkulatora, selektory walut i prezentacja kursu nie są jeszcze zintegrowane.
+
+Commity: `1187ebe17034dd974879cf91292e26d853ba5a48`, `16869a351b2de2fe8005e8e1d68fbd6b18d91e2c`, `48a344f9a907cb0c30b4725f902e7d6873e1b8fb`, `b7f3286d58c3ee288d84c351f853d8a0254bb2e2`, `47a4ba1c15a985b2832381b201ff93b6adbaa961`, `56100c390f0abe40ca3f2e0a696634a7aa7be346`, `a7ae350f7963bfc6e07bf8d5a3c76c2a49e39aac`.
+
+Następny etap: potwierdzenie zielonego CI, integracja adaptera NBP z kalkulatorem Compose i prezentacja źródła oraz daty kursu.
