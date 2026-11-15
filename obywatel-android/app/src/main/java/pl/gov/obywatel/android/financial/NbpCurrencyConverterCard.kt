@@ -177,7 +177,7 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                 runCatching {
                     withContext(Dispatchers.IO) {
                         PaymentLedgerRepository(context).use { ledger ->
-                            kotlinx.coroutines.runBlocking { ledger.saveCurrencyConversion(record) }
+                            ledger.saveCurrencyConversion(record)
                         }
                     }
                 }.onFailure { saveError ->
