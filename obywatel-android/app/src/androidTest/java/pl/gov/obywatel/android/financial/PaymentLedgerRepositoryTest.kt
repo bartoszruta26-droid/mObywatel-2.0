@@ -358,4 +358,40 @@ class PaymentLedgerRepositoryTest {
         }
     }
 
+    @Test
+    fun donationImportTreatsEquivalentBigDecimalScaleAsDuplicate() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val original = pl.gov.obywatel.android.CashDonation(
+                id = "donation-scale-idempotent",
+                receivedAt = java.time.Instant.parse("2026-11-14T12:00:00Z"),
+                amount = BigDecimal("250.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Zakup książek",
+                transferredAt = java.time.Instant.parse("2026-11-15T12:00:00Z"),
+                transferredAmount = BigDecimal("50.00"),
+                custodyStatus = pl.gov.obywatel.android.DonationCustodyStatus.PARTIALLY_TRANSFERRED
+            )
+            target.saveCashDonation(original)
+            val equivalent = original.copy(
+                amount = BigDecimal("250.000"),
+                transferredAmount = BigDecimal("50.000")
+            )
+            val archive = PaymentLedgerJsonCodec.encode(emptyList(), emptyList(), listOf(equivalent))
+
+            val preview = target.previewArchive(archive)
+            assertEquals(0, preview.donationConflicts)
+            assertEquals(0, preview.newDonations)
+            assertEquals(1, target.importJson(archive).duplicates)
+
+            val preserved = target.getCashDonations().single()
+            assertEquals(original.id, preserved.id)
+            assertEquals(0, original.amount.compareTo(preserved.amount))
+            assertEquals(0, original.transferredAmount!!.compareTo(preserved.transferredAmount))
+        } finally {
+            target.close()
+        }
+    }
+
 }
