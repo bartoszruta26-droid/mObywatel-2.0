@@ -168,4 +168,54 @@ class PaymentLedgerRepositoryTest {
         }
     }
 
+    @Test
+    fun donationsAreExportedImportedAndDeduplicatedIdempotently() = runBlocking {
+        val source = PaymentLedgerRepository(context, sourceDatabase)
+        val target = PaymentLedgerRepository(context, targetDatabase)
+        try {
+            val donation = pl.gov.obywatel.android.CashDonation(
+                id = "donation-json-1",
+                receivedAt = java.time.Instant.parse("2026-11-14T12:00:00Z"),
+                amount = BigDecimal("250.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Zakup książek",
+                isAnonymous = true
+            )
+            source.saveCashDonation(donation)
+            val archive = source.exportJson()
+            assertTrue(archive.contains("donations"))
+            assertEquals(BatchImportSummary(1, 0), target.importJson(archive))
+            assertEquals(donation.id, target.getCashDonations().single().id)
+            assertEquals(BatchImportSummary(0, 1), target.importJson(archive))
+            assertEquals(1, target.getCashDonations().size)
+        } finally {
+            source.close()
+            target.close()
+        }
+    }
+
+    @Test
+    fun sameDonationIdWithDifferentPurposeIsRejectedAndPreservesExistingRecord() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val original = pl.gov.obywatel.android.CashDonation(
+                id = "donation-conflict",
+                receivedAt = java.time.Instant.parse("2026-11-14T12:00:00Z"),
+                amount = BigDecimal("250.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Cel pierwotny"
+            )
+            target.saveCashDonation(original)
+            val changed = original.copy(purpose = "Inny cel")
+            val archive = PaymentLedgerJsonCodec.encode(emptyList(), emptyList(), listOf(changed))
+            val result = runCatching { target.importJson(archive) }
+            assertTrue(result.isFailure)
+            assertEquals("Cel pierwotny", target.getCashDonations().single().purpose)
+        } finally {
+            target.close()
+        }
+    }
+
 }
