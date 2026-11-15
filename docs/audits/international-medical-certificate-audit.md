@@ -1327,3 +1327,10 @@ Dodano testy:
 
 **Warstwa testowalności została wydzielona, a cztery scenariusze awarii mają testy instrumentacyjne.** Oczekuje się na kompilację i wykonanie testów w CI. Do czasu ich zakończenia etap jest implementacyjnie gotowy, ale nie ma potwierdzonego wyniku wykonania.
 
+### Kontrola po refaktoryzacji
+
+- [x] Ponownie sprawdzono wszystkie odczyty rejestru i wszystkie miejsca zatwierdzania w czterech ścieżkach operacyjnych. Odczyty przechodzą przez `backend.all` / `backend.getString`, a zapisy przez `backend.commit`.
+- [x] Usunięto pozostały bezpośredni odczyt SharedPreferences z importu archiwum, który został wykryty podczas kontroli po pierwszej refaktoryzacji.
+- [x] Upubliczniono wyłącznie wewnętrzny model `OriginalAttachment` w zakresie wymaganym przez wewnętrzny punkt testowy; nie zmieniono publicznego API aplikacji.
+- [ ] Wyniki kompilacji i testów dla końcowego SHA po tych poprawkach pozostają do potwierdzenia w CI.
+
