@@ -79,6 +79,10 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
     var imagingIndication by remember { mutableStateOf("") }
     var imagingFindings by remember { mutableStateOf("") }
     var imagingImpression by remember { mutableStateOf("") }
+    var imagingTechnique by remember { mutableStateOf("") }
+    var imagingContrast by remember { mutableStateOf("") }
+    var imagingRadiologist by remember { mutableStateOf("") }
+    var imagingReportNumber by remember { mutableStateOf("") }
     val fieldKey: (String) -> String = { key ->
         "doc_${INTERNATIONAL_MEDICAL_CERTIFICATE_ID}_${key}"
     }
@@ -198,6 +202,10 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 OutlinedTextField(value = imagingIndication, onValueChange = { imagingIndication = it }, label = { Text("Clinical Indication") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
                 OutlinedTextField(value = imagingFindings, onValueChange = { imagingFindings = it }, label = { Text("Findings") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
                 OutlinedTextField(value = imagingImpression, onValueChange = { imagingImpression = it }, label = { Text("Impression") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
+                OutlinedTextField(value = imagingTechnique, onValueChange = { imagingTechnique = it }, label = { Text("Technique") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                OutlinedTextField(value = imagingContrast, onValueChange = { imagingContrast = it }, label = { Text("Contrast") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = imagingRadiologist, onValueChange = { imagingRadiologist = it }, label = { Text("Radiologist Name") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = imagingReportNumber, onValueChange = { imagingReportNumber = it }, label = { Text("Report Number") }, modifier = Modifier.fillMaxWidth())
                 Button(onClick = {
                     imagingStudies.add(MedicalImagingStudy(
                         id = "imaging-" + System.currentTimeMillis().toString(),
@@ -207,7 +215,11 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                         facility = imagingFacility,
                         indication = imagingIndication,
                         findings = imagingFindings,
-                        impression = imagingImpression
+                        impression = imagingImpression,
+                        technique = imagingTechnique,
+                        contrast = imagingContrast,
+                        radiologistName = imagingRadiologist,
+                        reportNumber = imagingReportNumber
                     ))
                     imagingBodyRegion = ""
                     imagingDate = ""
@@ -215,6 +227,10 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                     imagingIndication = ""
                     imagingFindings = ""
                     imagingImpression = ""
+                    imagingTechnique = ""
+                    imagingContrast = ""
+                    imagingRadiologist = ""
+                    imagingReportNumber = ""
                 }, modifier = Modifier.fillMaxWidth()) { Text("Add imaging study") }
                 imagingStudies.forEach { study ->
                     Card {
@@ -223,6 +239,10 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                             Text("Date: " + study.studyDate + " · Facility: " + study.facility)
                             if (study.findings.isNotBlank()) Text("Findings: " + study.findings)
                             if (study.impression.isNotBlank()) Text("Impression: " + study.impression)
+                            if (study.technique.isNotBlank()) Text("Technique: " + study.technique)
+                            if (study.contrast.isNotBlank()) Text("Contrast: " + study.contrast)
+                            if (study.radiologistName.isNotBlank()) Text("Radiologist: " + study.radiologistName)
+                            if (study.reportNumber.isNotBlank()) Text("Report number: " + study.reportNumber)
                             Text("Remove", color = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.clickable { imagingStudies.remove(study) })
                         }
