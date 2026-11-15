@@ -12,8 +12,10 @@ class PaymentLedgerRepository(
     context: Context,
     databaseName: String = PaymentLedgerDatabase.DATABASE_NAME
 ) : AutoCloseable {
-    private val database = PaymentLedgerDatabase(context.applicationContext, databaseName)
-    private val attachmentStorage = DonationAttachmentStorage(context.applicationContext)
+    private val appContext = context.applicationContext
+    private val fileProviderAuthority = "${appContext.packageName}.ocrfiles"
+    private val database = PaymentLedgerDatabase(appContext, databaseName)
+    private val attachmentStorage = DonationAttachmentStorage(appContext)
 
     suspend fun getEntries(): List<BankStatementEntry> = withContext(Dispatchers.IO) {
         database.readAll()
@@ -66,7 +68,7 @@ class PaymentLedgerRepository(
         require(id.isNotBlank()) { "Identyfikator załącznika jest wymagany." }
         val attachment = database.readDonationAttachments().firstOrNull { it.id == id }
             ?: throw IllegalStateException("Nie znaleziono załącznika.")
-        attachmentStorage.contentUri(attachment, "${context.packageName}.ocrfiles")
+        attachmentStorage.contentUri(attachment, fileProviderAuthority)
     }
 
     suspend fun attachDonationDocument(
