@@ -83,10 +83,12 @@ internal fun MedicalDoctorDirectoryScreen(onBack:()->Unit){
  val c=LocalContext.current;var revision by remember{mutableIntStateOf(0)}
  val records=remember(revision){runCatching{MedicalDoctorDirectory.list(c)}}
  var deleting by remember{mutableStateOf<MedicalDoctorRecord?>(null)}
+ var editing by remember{mutableStateOf<MedicalDoctorRecord?>(null)}
  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
   Text("‹ Powrót",color=MaterialTheme.colorScheme.primary,modifier=Modifier.clickable(onClick=onBack))
   Text("Katalog lekarzy",style=MaterialTheme.typography.headlineSmall)
   Text("Katalog informacyjny. Kryterium: deklarowany język polski albo polsko brzmiące nazwisko / potwierdzone pochodzenie oraz publicznie potwierdzona praktyka. Nazwisko nie potwierdza znajomości języka. Podpisywanie jest wyłączone.",style=MaterialTheme.typography.bodySmall)
+  Button(onClick={editing=MedicalDoctorRecord(UUID.randomUUID().toString(),"","","","","","","","","","",DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.PENDING,DoctorConsentStatus.USER_REPORTED_ORAL,"","",false)}){Text("Dodaj rekord lekarza")}
   records.onSuccess{list->list.forEach{d->
    Card(Modifier.fillMaxWidth()){Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
     Text(d.name,style=MaterialTheme.typography.titleMedium);Text(d.specialty+" · "+d.city+", "+d.country)
@@ -98,11 +100,49 @@ internal fun MedicalDoctorDirectoryScreen(onBack:()->Unit){
     Text("Podpisujący: wyłączony",color=MaterialTheme.colorScheme.error)
     Text("Źródła: "+d.source,style=MaterialTheme.typography.bodySmall)
     Text("Weryfikacja praktyki: "+d.verifiedAt,style=MaterialTheme.typography.labelSmall)
-    TextButton(onClick={deleting=d}){Text("Usuń wpis")}
+    Row { TextButton(onClick={editing=d}){Text("Edytuj")}; TextButton(onClick={deleting=d}){Text("Usuń wpis")} }
    }}
   }}.onFailure{Text("Błąd katalogu: "+(it.message?:"nieznany"),color=MaterialTheme.colorScheme.error)}
  }
+ editing?.let{d->DoctorDirectoryRecordDialog(d,{editing=null}){updated->runCatching{MedicalDoctorDirectory.save(c,updated)}.onSuccess{editing=null;revision++}.onFailure{editing=null}} }
  deleting?.let{d->AlertDialog(onDismissRequest={deleting=null},title={Text("Usunąć wpis?")},text={Text("Usunąć "+d.name+"?")},
   confirmButton={TextButton(onClick={runCatching{MedicalDoctorDirectory.delete(c,d.id)}.onSuccess{deleting=null;revision++}.onFailure{deleting=null}){Text("Usuń")}},
   dismissButton={TextButton(onClick={deleting=null}){Text("Anuluj")}})}
+}
+
+
+@Composable
+private fun DoctorDirectoryRecordDialog(initial:MedicalDoctorRecord,onDismiss:()->Unit,onSave:(MedicalDoctorRecord)->Unit){
+ var name by remember(initial.id){mutableStateOf(initial.name)}
+ var specialty by remember(initial.id){mutableStateOf(initial.specialty)}
+ var country by remember(initial.id){mutableStateOf(initial.country)}
+ var city by remember(initial.id){mutableStateOf(initial.city)}
+ var practice by remember(initial.id){mutableStateOf(initial.practice)}
+ var address by remember(initial.id){mutableStateOf(initial.address)}
+ var phone by remember(initial.id){mutableStateOf(initial.phone)}
+ var website by remember(initial.id){mutableStateOf(initial.website)}
+ var register by remember(initial.id){mutableStateOf(initial.register)}
+ var license by remember(initial.id){mutableStateOf(initial.license)}
+ var source by remember(initial.id){mutableStateOf(initial.source)}
+ var date by remember(initial.id){mutableStateOf(if(initial.verifiedAt.isBlank()) "2026-11-15" else initial.verifiedAt)}
+ var polish by remember(initial.id){mutableStateOf(initial.polishDeclared)}
+ var evidence by remember(initial.id){mutableStateOf(initial.evidence)}
+ AlertDialog(onDismissRequest=onDismiss,title={Text("Dane lekarza")},text={
+  Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(5.dp)){
+   @Composable fun field(v:String,label:String,change:(String)->Unit){OutlinedTextField(v,change,label={Text(label)},modifier=Modifier.fillMaxWidth())}
+   field(name,"Imię i nazwisko"){name=it};field(specialty,"Specjalizacja"){specialty=it}
+   field(country,"Kraj"){country=it};field(city,"Miasto"){city=it};field(practice,"Nazwa praktyki"){practice=it}
+   field(address,"Adres praktyki"){address=it};field(phone,"Telefon publiczny"){phone=it};field(website,"Strona / rejestracja"){website=it}
+   field(register,"Rejestr zawodowy"){register=it};field(license,"Numer licencji"){license=it}
+   field(source,"Źródła potwierdzenia praktyki"){source=it};field(date,"Data weryfikacji RRRR-MM-DD"){date=it}
+   Row{Checkbox(polish,{polish=it});Text("Deklaruje znajomość języka polskiego")}
+   Text("Podstawa polskiego kryterium")
+   Row{RadioButton(evidence==DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,{evidence=DoctorPolishEvidence.POLISH_ORIGIN_SURNAME});Text("Polsko brzmiące nazwisko")}
+   Row{RadioButton(evidence==DoctorPolishEvidence.POLISH_ORIGIN_CONFIRMED,{evidence=DoctorPolishEvidence.POLISH_ORIGIN_CONFIRMED});Text("Potwierdzone polskie pochodzenie")}
+   Text("Zgoda na publikację: ustna — zgłoszona przez administratora. Podpisywanie pozostaje wyłączone.",style=MaterialTheme.typography.bodySmall)
+  }
+ },confirmButton={TextButton(onClick={onSave(initial.copy(name=name.trim(),specialty=specialty.trim(),country=country.trim(),city=city.trim(),
+  practice=practice.trim(),address=address.trim(),phone=phone.trim(),website=website.trim(),register=register.trim(),license=license.trim(),
+  source=source.trim(),verifiedAt=date.trim(),polishDeclared=polish,evidence=if(polish)DoctorPolishEvidence.DECLARED_LANGUAGE else evidence,
+  signerEnabled=false))}){Text("Zapisz")}},dismissButton={TextButton(onClick=onDismiss){Text("Anuluj")}})
 }
