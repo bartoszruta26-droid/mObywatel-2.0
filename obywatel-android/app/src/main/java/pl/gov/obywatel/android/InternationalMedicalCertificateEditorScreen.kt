@@ -403,7 +403,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                                 sourceLabel = translationValues["$sourceLanguage|label:" + definition.key] ?: definition.label,
                                 sourceValue = sourceValue,
                                 targetLabel = languageName + " — " + (translationValues["$target|label:" + definition.key] ?: definition.label),
-                                targetValue = translationValues["$target|" + definition.key].orEmpty().ifBlank { "[Translation not available]" }
+                                targetValue = translationValues["$target|" + definition.key] ?: sourceValue
                             )
                         }
                     }
