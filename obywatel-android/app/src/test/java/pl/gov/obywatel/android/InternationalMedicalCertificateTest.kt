@@ -92,3 +92,15 @@ class InternationalMedicalCertificateTest {
         assertEquals("Example Patient", document.sourceFields["patientName"])
     }
 }
+
+    @Test
+    fun imagingStudyDateAcceptsValidIsoDatesAndRejectsInvalidDates() {
+        assertTrue(isValidMedicalStudyDate("2024-02-29"))
+        assertTrue(isValidMedicalStudyDate("2026-11-15"))
+        assertTrue(isValidMedicalStudyDate(""))
+        assertFalse(isValidMedicalStudyDate("2026-02-29"))
+        assertFalse(isValidMedicalStudyDate("2026-04-31"))
+        assertFalse(isValidMedicalStudyDate("2026-13-01"))
+        assertFalse(isValidMedicalStudyDate("15-11-2026"))
+        assertFalse(isValidMedicalStudyDate("2026-11-15extra"))
+    }
