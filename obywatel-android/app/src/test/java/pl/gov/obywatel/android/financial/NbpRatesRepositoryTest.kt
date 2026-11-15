@@ -6,6 +6,7 @@ import java.nio.file.Files
 import java.time.Duration
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -131,6 +132,30 @@ class NbpRatesRepositoryTest {
         assertEquals(expected, restored)
         assertEquals(1, networkCalls)
         assertEquals(1, directory.listFiles()?.count { it.extension == "json" })
+        directory.deleteRecursively()
+    }
+
+    @Test
+    fun corruptedDiskEnvelopeIsIgnoredAndReplacedFromNetwork() {
+        val directory = Files.createTempDirectory("nbp-corrupt").toFile()
+        val key = "table-A-2026-11-13"
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(key.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+        java.io.File(directory, "$digest.json").writeText("not-a-valid-cache-envelope")
+        var calls = 0
+        val validJson = """[{"table":"A","no":"220/A/NBP/2026","effectiveDate":"2026-11-13","rates":[{"currency":"euro","code":"EUR","mid":4.31}]}]"""
+        val repository = NbpRatesRepository(
+            transport = object : NbpHttpTransport {
+                override fun get(url: String): String { calls++; return validJson }
+            },
+            cacheDirectory = directory
+        )
+
+        val table = repository.tableForDate(NbpTable.A, LocalDate.parse("2026-11-13"))
+        assertEquals("4.31", table.rate("EUR")?.mid.toString())
+        assertEquals(1, calls)
+        assertTrue(java.io.File(directory, "$digest.json").readText().contains(validJson))
         directory.deleteRecursively()
     }
 
