@@ -4,7 +4,6 @@ package pl.gov.obywatel.android.financial
 
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -74,5 +73,36 @@ class NbpRatesRepositoryTest {
             repository.goldPriceRange(LocalDate.parse("2026-01-01"), LocalDate.parse("2026-04-10"))
         }
         assertEquals(0, calls)
+    }
+
+    @Test
+    fun resolvesLastPublishedTableForWeekendDate() {
+        var requestedUrl = ""
+        val repository = NbpRatesRepository(object : NbpHttpTransport {
+            override fun get(url: String): String {
+                requestedUrl = url
+                return """[
+                    {"table":"A","no":"219/A/NBP/2026","effectiveDate":"2026-11-12","rates":[{"currency":"euro","code":"EUR","mid":4.30}]},
+                    {"table":"A","no":"220/A/NBP/2026","effectiveDate":"2026-11-13","rates":[{"currency":"euro","code":"EUR","mid":4.31}]}
+                ]"""
+            }
+        })
+        val table = repository.tableOnOrBefore(NbpTable.A, LocalDate.parse("2026-11-15"))
+        assertEquals(LocalDate.parse("2026-11-13"), table.effectiveDate)
+        assertEquals(true, requestedUrl.contains("/2026-11-08/2026-11-15"))
+    }
+
+    @Test
+    fun resolvesLastPublishedGoldPriceForWeekendDate() {
+        val repository = NbpRatesRepository(object : NbpHttpTransport {
+            override fun get(url: String): String =
+                """[
+                    {"data":"2026-11-12","cena":519.10},
+                    {"data":"2026-11-13","cena":520.25}
+                ]"""
+        })
+        val price = repository.goldPriceOnOrBefore(LocalDate.parse("2026-11-15"))
+        assertEquals(LocalDate.parse("2026-11-13"), price.date)
+        assertEquals("520.25", price.pricePerGramPln.toString())
     }
 }
