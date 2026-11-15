@@ -4538,3 +4538,9 @@ Pierwszy przebieg testów instrumentacyjnych wykrył utratę skali BigDecimal pr
 
 ### Status
 Kod i test regresyjny zapisano w gałęzi. Etap 92 pozostaje weryfikacyjnie otwarty do zakończenia CI dla dokładnego SHA `8e8434e05fc17cbed604ec67c8dc9659294472be`.
+
+
+### Uzupełnienie etapu 92 — zgodność skali przy deduplikacji
+Dalszy przegląd wykazał, że podgląd repozytorium i właściwy import porównywały wartości `BigDecimal` przez `compareTo()`, co ignoruje różnice skali. Ponieważ archiwum historii ma zachowywać dokładną reprezentację dziesiętną, porównania trzech pól liczbowych historii zmieniono na `BigDecimal.equals` (operator `==` w Kotlinie). Dodano test `currencyConversionArchiveTreatsDifferentDecimalScaleAsConflict`: rekord o tym samym identyfikatorze i wartości matematycznej, lecz innej skali, jest konfliktem; import jest odrzucany atomowo, a istniejący zapis pozostaje bez zmian.
+
+Dla nowego zestawu zmian obowiązuje ponowna walidacja CI na końcowym SHA. Nie przypisuje się mu wyników CI poprzednich commitów.
