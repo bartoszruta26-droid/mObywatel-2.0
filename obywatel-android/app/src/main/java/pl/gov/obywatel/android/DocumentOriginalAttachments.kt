@@ -564,7 +564,7 @@ internal object OriginalAttachmentStore {
         }
 
         val existingByDocument = mutableMapOf<String, MutableList<OriginalAttachment>>()
-        preferences.all.forEach { (documentId, value) ->
+        backend.all.forEach { (documentId, value) ->
             require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu w magazynie." }
             val rawMetadata = value as? String ?: error("Nieprawidłowy rejestr załączników: $documentId")
             validateOriginalAttachmentMetadata(rawMetadata)
