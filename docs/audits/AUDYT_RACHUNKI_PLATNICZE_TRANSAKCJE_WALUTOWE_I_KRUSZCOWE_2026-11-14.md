@@ -4275,3 +4275,28 @@ Korekta usuwa przyczynę bieżącego błędu diagnostycznego, ale nie jest jeszc
 **Status:** diagnostyka z etapu 78 skorygowana; testy wyboru dat nadal otwarte; brak podstaw do zamknięcia etapu kalendarza. Nie zmieniono modelu identyfikacji CSV — ryzyko skrótu SHA-256 opisu, migracja i obsługa kolizji pozostają otwarte. Etapy NBP, wyceny, raportowania i XLS/BIFF nie zostały rozpoczęte.
 
 PR #68 pozostaje otwarty i niescalony.
+
+
+## 19. Etap 80 — fundament przelicznika walut i walidacja nóg FX (15 listopada 2026 r.)
+
+### Zakres wykonany
+- Dodano `ExchangeRate` z jednoznaczną konwencją: `quotePerBase` oznacza liczbę jednostek waluty kwotowanej za 1 jednostkę waluty bazowej (np. EUR/PLN = 4,30).
+- Dodano `ExchangeRateCalculator` obsługujący przeliczenie bezpośrednie i odwrotne, precyzję waluty docelowej oraz jawny `RoundingMode`. Obliczenia pozostają w `BigDecimal`; brak kursu dla innej pary, kurs zerowy, waluta identyczna i kwota ujemna są odrzucane.
+- Dodano testy jednostkowe dla obu kierunków, zaokrągleń i błędnych danych.
+- Wzmocniono `BankExchangeOperationProjector`: para wymiany jest kompletna tylko wtedy, gdy „UZNANIE” ma dodatnią kwotę, a „OBCIĄŻENIE” ujemną, niezależnie od kolejności nóg. Dodano test regresyjny obu sprzecznych wariantów.
+
+### Ograniczenia
+- Jest to silnik obliczeniowy dla jawnie przekazanego kursu, a nie jeszcze pełny ekran kalkulatora ani źródło notowań. Adapter NBP, wybór walut i kursu, cache, daty publikacji i oznaczanie wyceny referencyjnej pozostają kolejnym etapem.
+- Nie należy przedstawiać kursu referencyjnego jako kursu wykonania transakcji bankowej.
+- Import XLS/BIFF oraz usunięcie ryzyka pseudonimizacji opisów CSV nadal pozostają otwarte.
+
+### Weryfikacja
+- Zmiany zapisano w gałęzi `feature/payment-ledger-stage-1` w commitach: `3108a87db2421d64b372f6b4e44e5b6ef0047419` (kalkulator), `12f8dffa38785cfdd66f0d8f8d3b6cb2834f3fbf` (testy kalkulatora), `3a48c401987cf5aa4495257d7596486eeb382bed` (walidacja nóg), `670636e2d29123a05007e365b56eb3a6efe5b44e` (test regresyjny).
+- Ponownie pobrano zmienione pliki z GitHub i sprawdzono obecność implementacji oraz testów.
+- Ostatni znany przebieg GUI CI dla poprzedniego SHA `6a7411f9566915c9296b0270a60c9fcab0c18d1b` zakończył się niepowodzeniem dwóch testów interakcji DatePicker (`Failed to inject touch input`); testy JVM przeszły, a budowa debug APK i compliance w osobnych zadaniach zakończyły się sukcesem. Nie jest to wynik dla nowych commitów.
+- Do zamknięcia etapu wymagane jest pełne CI dla końcowego SHA, w tym ponowne wykonanie testów emulatorowych. Nie deklarować APK ani pełnej regresji jako zaliczonych przed tym wynikiem.
+
+### Następny etap
+1. Uzyskać zielone GUI CI i naprawić testy DatePicker bez usuwania asercji sprawdzających zmianę granic okresu.
+2. Dodać adapter NBP dla tabel A/B/C i cen złota, z cache, datą efektywną, obsługą dni bez publikacji i zakresów historycznych.
+3. Zintegrować kalkulator z interfejsem i etykietami źródła kursu, daty oraz rodzaju wyceny.
