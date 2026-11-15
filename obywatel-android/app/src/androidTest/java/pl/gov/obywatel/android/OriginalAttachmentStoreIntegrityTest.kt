@@ -241,4 +241,26 @@ class OriginalAttachmentStoreIntegrityTest {
             runCatching { removeOriginalAttachmentDocumentScope(context, document) }
         }
     }
+
+    @Test
+    fun attachmentMetadataAndEncryptedBytesAreReadableThroughFreshPackageContext() {
+        val document = documentId()
+        val attachmentId = "fresh-context-${UUID.randomUUID().toString().take(8)}"
+        val original = "persistent medical report".toByteArray(Charsets.UTF_8)
+        try {
+            importOriginalAttachmentArchive(context, archive(document, attachmentId, original))
+
+            val freshContext = context.createPackageContext(context.packageName, 0)
+            assertEquals(listOf(attachmentId), listOriginalAttachmentIds(freshContext, document))
+
+            val exported = JSONObject(exportOriginalAttachmentArchive(freshContext))
+                .getJSONArray("attachments")
+            val item = (0 until exported.length())
+                .map { exported.getJSONObject(it) }
+                .first { it.getString("documentId") == document && it.getString("id") == attachmentId }
+            assertArrayEquals(original, Base64.decode(item.getString("dataBase64"), Base64.DEFAULT))
+        } finally {
+            runCatching { removeOriginalAttachmentDocumentScope(context, document) }
+        }
+    }
 }
