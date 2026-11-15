@@ -4,6 +4,7 @@ package pl.gov.obywatel.android.financial
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.content.FileProvider
 import android.provider.OpenableColumns
 import pl.gov.obywatel.android.DonationAttachment
 import java.io.File
@@ -15,8 +16,9 @@ import java.util.UUID
 
 /** Kopiuje wybrane przez SAF dokumenty do prywatnego katalogu aplikacji. */
 class DonationAttachmentStorage(context: Context) {
-    private val resolver = context.applicationContext.contentResolver
-    private val root = File(context.applicationContext.filesDir, "donation-attachments")
+    private val appContext = context.applicationContext
+    private val resolver = appContext.contentResolver
+    private val root = File(appContext.filesDir, "donation-attachments")
 
     fun import(donationId: String, uri: Uri): DonationAttachment {
         require(donationId.isNotBlank()) { "Identyfikator darowizny jest wymagany." }
@@ -81,6 +83,32 @@ class DonationAttachmentStorage(context: Context) {
             target.delete()
             throw error
         }
+    }
+
+    /**
+     * Zwraca URI FileProvider dopiero po sprawdzeniu istnienia, rozmiaru i SHA-256
+     * pliku. Do odbiorcy trafia wyłącznie URI content://, nigdy ścieżka prywatna.
+     */
+    fun contentUri(attachment: DonationAttachment, authority: String): Uri {
+        attachment.validate()
+        require(authority.isNotBlank()) { "Identyfikator FileProvider jest wymagany." }
+        val file = File(root, attachment.storedFileName)
+        require(file.isFile) { "Plik załącznika nie istnieje w prywatnym magazynie." }
+        require(file.length() == attachment.sizeBytes) { "Rozmiar załącznika nie zgadza się z metadanymi." }
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().buffered().use { input ->
+            val buffer = ByteArray(8192)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                digest.update(buffer, 0, count)
+            }
+        }
+        val actualHash = digest.digest().joinToString("") { "%02x".format(it) }
+        require(actualHash.equals(attachment.sha256, ignoreCase = true)) {
+            "Suma kontrolna załącznika jest niezgodna. Plik może być uszkodzony."
+        }
+        return FileProvider.getUriForFile(appContext, authority, file)
     }
 
     fun delete(storedFileName: String) {
