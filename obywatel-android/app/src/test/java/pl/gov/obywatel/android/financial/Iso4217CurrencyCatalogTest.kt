@@ -10,6 +10,21 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class Iso4217CurrencyCatalogTest {
+    @Test fun officialSnapshotSizesAndIsoFieldsAreConsistent() {
+        assertEquals(178, Iso4217CurrencySnapshot.current.size)
+        assertEquals(137, Iso4217CurrencySnapshot.historical.size)
+        assertTrue(Iso4217CurrencySnapshot.current.all {
+            it.code.matches(Regex("[A-Z]{3}")) &&
+                it.numericCode.matches(Regex("[0-9]{3}")) &&
+                (it.minorUnits == null || it.minorUnits in 0..4)
+        })
+        assertTrue(Iso4217CurrencySnapshot.historical.all {
+            it.code.matches(Regex("[A-Z]{3}")) &&
+                (it.numericCode.isEmpty() || it.numericCode.matches(Regex("[0-9]{3}"))) &&
+                !it.withdrawnAt.isNullOrBlank()
+        })
+    }
+
     @Test fun catalogContainsCurrenciesBeyondNbpCoverage() {
         assertNotNull(Iso4217CurrencyCatalog.find("USD"))
         assertNotNull(Iso4217CurrencyCatalog.find("EUR"))
