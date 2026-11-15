@@ -21,9 +21,9 @@ data class NbpRate(
     val bid: BigDecimal?,
     val ask: BigDecimal?
 ) {
-    fun toExchangeRate(baseCurrency: String = "PLN"): ExchangeRate {
+    fun toExchangeRate(): ExchangeRate {
         require(mid != null) { "Tabela NBP nie udostępnia kursu średniego dla tej pozycji." }
-        return ExchangeRate(baseCurrency, code, BigDecimal.ONE.divide(mid, java.math.MathContext(34)))
+        return ExchangeRate(code, "PLN", mid)
     }
 }
 
