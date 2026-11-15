@@ -1482,7 +1482,7 @@ Data: 2026-11-15. Gałąź: `feature/medical-certificate-management-translation`
 ### Uwagi bezpieczeństwa i ograniczenia
 - Google ML Kit Translation jest biblioteką Google do tłumaczenia na urządzeniu; nie jest to serwis Google Translate ani otwartoźródłowy silnik. Modele są pobierane z infrastruktury Google, natomiast treść pacjenta jest przekazywana do lokalnego modelu.
 - Tłumaczenie maszynowe nie stanowi tłumaczenia przysięgłego ani zatwierdzonego przekładu medycznego. Wymaga weryfikacji przez kompetentnego człowieka.
-- PDF pokazuje brakujący przekład wartości jako oryginał (np. dla pól celowo wyłączonych z tłumaczenia), a nie jako pustą treść. Etykiety pól docelowych używają tłumaczenia, jeśli zostało wygenerowane i zapisane; w przeciwnym razie stosują etykietę źródłową.
+- PDF oznacza brakujący przekład pola tekstowego jako „Translation missing”; wartości chronione (np. identyfikatory, daty, numery i dane kontaktowe) zachowują wartość źródłową w kolumnie docelowej. Etykiety pól docelowych używają tłumaczenia, jeśli zostało wygenerowane i zapisane; w przeciwnym razie stosują etykietę źródłową.
 - Test PDF jest dodany do zestawu instrumentacyjnego; wynik kompilacji i testu emulatora musi zostać potwierdzony przez GitHub Actions dla końcowego SHA.
 
 ### Kryteria odbioru
