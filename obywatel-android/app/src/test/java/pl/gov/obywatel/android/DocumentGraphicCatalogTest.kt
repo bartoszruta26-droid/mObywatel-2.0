@@ -27,7 +27,7 @@ class DocumentGraphicCatalogTest {
             "insurance_professional", "insurance_private", "insurance_business", "criminal_record",
             "mission_travel", "ehic", "eu_education", "church_bishop", "church_archbishop",
             "church_cardinal", "church_abbot", "church_minister", "church_missionary",
-            "professional_medical", "professional_education", "professional_therapeutic",
+            "professional_medical", "international_medical_certificate", "professional_education", "professional_therapeutic",
             "professional_other", "organization_foundation", "organization_church",
             "organization_company", "organization_association", "official", "loyalty_cards", "military_book", "martial_arts", "shooting_sport", "archery",
             "tactical_training", "survival_training", "security_guard", "defense_training",
