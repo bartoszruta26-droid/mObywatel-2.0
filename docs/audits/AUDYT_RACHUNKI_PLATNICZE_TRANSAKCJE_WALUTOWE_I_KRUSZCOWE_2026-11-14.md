@@ -3321,7 +3321,7 @@ Testy `FinancialReportTest` obejmują:
 - UTF-8 BOM, quoting, ochronę tekstu przed formułami i zachowanie precyzji kwoty;
 - odrzucenie nieprawidłowego okresu.
 
-Pierwszy przebieg dla kodu raportowego (run `43700475571`) zakończył się sukcesem testów JVM i budowy prototypu. Przebieg GUI dla tego commitu został przerwany przez kolejne aktualizacje plików, zanim zakończyły się testy emulatora. Po dodaniu podsumowań CSV, przycisku SAF i końcowych asercji testowych uruchomiono pełne CI dla aktualnego drzewa; jego końcowy wynik należy potwierdzić przed uznaniem etapu 55 za zamknięty.
+Pierwszy przebieg dla kodu raportowego (run `43700475571`) zakończył się sukcesem testów JVM i budowy prototypu. Przebieg GUI dla tego commitu został przerwany przez kolejne aktualizacje plików, zanim zakończyły się testy emulatora. Po dodaniu podsumowań CSV, przycisku SAF i końcowych asercji testowych pełne CI dla commitu a2d5062d4e9694e60e93106288dd54d8166eda25 zakończyło się sukcesem: Android GUI validation run 43700851621, Android prototype build run 43700851615 i repository compliance run 43700851597. Job GUI 132771447929 potwierdził sukces testów JVM, testów Compose na emulatorze, archiwizacji raportów i budowy debug APK. Artefakt instrumentacyjny 14156567496 zawiera 80 testów, 0 awarii, 0 błędów i 0 pominiętych przypadków; w zestawie znajduje się 5 testów BankStatementXmlParserTest, 11 testów DonationAttachmentStorageTest, 23 testy PaymentLedgerDatabaseTest i 8 testów PaymentLedgerRepositoryTest. Test importDeletesPartialFileWhenProviderFailsAfterWritingBytes jest zaliczony. Etap 55 — CSV — uznaje się za zweryfikowany.
 
 ### Ograniczenia i następny etap
 
@@ -3330,3 +3330,38 @@ Pierwszy przebieg dla kodu raportowego (run `43700475571`) zakończył się sukc
 - Status przechowywania jest stanem bieżącym, ponieważ schemat nie przechowuje historii statusów.
 - Raport nie wycenia aktywów w PLN ani nie wylicza zysku/straty bez jawnych kursów i kosztów nabycia.
 - Przed wdrożeniem PDF należy dodać testy renderowania i wielostronicowego układu, a dla CSV wykonać końcową walidację na aktualnym commicie.
+
+
+## 56. Wielostronicowy raport finansowy PDF (15 listopada 2026 r.)
+
+### 56.1. Cel i zakres
+
+Po zamknięciu walidacji CSV rozpoczęto kolejny etap raportowania: generowanie czytelnego, wielostronicowego raportu PDF na podstawie tego samego modelu FinancialReportBuilder. PDF zachowuje rozdzielenie walut i kruszców, osobne ujęcie prowizji oraz rozdział przepływów darowizn od ich stanów przechowywania. Nie wprowadza przeliczeń aktywów na PLN ani nowych reguł księgowych.
+
+### 56.2. Wykonane zmiany
+
+- Dodano financial/FinancialReportPdf.kt. Renderer wykorzystuje natywne android.graphics.pdf.PdfDocument i Canvas, bez zewnętrznych bibliotek i bez uprawnień do pamięci współdzielonej.
+- PDF ma format strony A4, tytuł, zakres raportu, osobne zestawienia aktywów i darowizn oraz szczegółowe zdarzenia.
+- Długie opisy są zawijane do szerokości strony; szczegółowe zdarzenia są dzielone na kolejne strony, a każda strona otrzymuje numer.
+- PaymentLedgerRepository.exportFinancialReportPdf(period) buduje raport i generuje PDF na Dispatchers.IO.
+- PaymentLedgerScreen.kt otrzymał eksport przez Storage Access Framework (CreateDocument z MIME application/pdf) i zapis do lokalizacji wskazanej przez użytkownika. Eksport UI obejmuje całą historię, analogicznie do istniejącego CSV.
+- Dodano FinancialReportPdfTest.kt: test pustego raportu jako poprawnego jednostronicowego PDF oraz test długiego raportu, który musi zostać rozłożony na więcej niż jedną stronę. Test sprawdza sygnaturę PDF, możliwość otwarcia przez PdfRenderer, wymiary strony i liczbę stron.
+
+### 56.3. Zmienione pliki i rewizje
+
+- obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/FinancialReportPdf.kt — nowy renderer; commit 416b2e5e6f6f9b0f6c6451a1b2208f8398699ca8.
+- obywatel-android/app/src/main/java/pl/gov/obywatel/android/PaymentLedgerScreen.kt — przycisk eksportu PDF i zapis SAF; commit 7e46fd18c5eaa6343a71d782306cd1e03b7de907.
+- obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/PaymentLedgerRepository.kt — generowanie PDF poza głównym wątkiem; commit c29c375f4c89202fa772c709c38761a9e0e0588b.
+- obywatel-android/app/src/androidTest/java/pl/gov/obywatel/android/financial/FinancialReportPdfTest.kt — testy renderowania i wielostronicowości; commit b1831c5129ca53032f3f58563f5994bc6d28b14a.
+
+### 56.4. Walidacja i status
+
+Implementacja i testy zostały zapisane w gałęzi. Na moment tej aktualizacji audytu wynik CI dla rewizji zawierającej etap 56 pozostaje oczekujący. Nie uznaje się PDF za zweryfikowany przed potwierdzeniem kompilacji, testów JVM, testów instrumentacyjnych na emulatorze i kontroli zgodności repozytorium. W szczególności należy potwierdzić, że test długiego raportu otwiera rzeczywisty PDF i wykazuje więcej niż jedną stronę.
+
+### 56.5. Ograniczenia i następne prace
+
+- Interfejs PDF, podobnie jak CSV, eksportuje obecnie całą historię; wybór zakresu dat pozostaje osobnym zadaniem.
+- Test emulatorowy nie zastępuje ręcznego sprawdzenia pliku w zewnętrznych czytnikach PDF ani testu zapisu przez dostawcę SAF na fizycznym urządzeniu.
+- Raport nadal nie wycenia aktywów w PLN i nie wylicza zysku/straty bez jawnych kursów oraz kosztów nabycia.
+- Stany przechowywania darowizn nadal odzwierciedlają bieżące statusy rekordów, ponieważ schemat nie ma historii zmian statusów.
+- Po walidacji PDF kolejnym krokiem jest dodanie wyboru zakresu dat dla CSV i PDF, a następnie testów granicznych zakresu i eksportu SAF.
