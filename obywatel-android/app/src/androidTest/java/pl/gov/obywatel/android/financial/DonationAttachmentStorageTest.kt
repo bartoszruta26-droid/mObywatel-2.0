@@ -189,4 +189,23 @@ class DonationAttachmentStorageTest {
 
         assertTrue(directory.listFiles().isNullOrEmpty())
     }
+
+    @Test
+    fun importDeletesPartialFileWhenProviderFailsAfterWritingBytes() {
+        val testContext = androidx.test.platform.app.InstrumentationRegistry
+            .getInstrumentation().context
+        val uri = Uri.parse(
+            "content://pl.gov.obywatel.android.prototype.test.failingstream/partial.pdf"
+        )
+
+        val error = assertThrows(java.io.IOException::class.java) {
+            DonationAttachmentStorage(testContext)
+                .import("donation-saf-midstream-error", uri)
+        }
+
+        assertTrue(error.message.orEmpty().contains("controlled read failure"))
+        val privateDirectory = File(testContext.filesDir, "donation-attachments")
+        assertTrue(privateDirectory.listFiles().isNullOrEmpty())
+    }
+
 }
