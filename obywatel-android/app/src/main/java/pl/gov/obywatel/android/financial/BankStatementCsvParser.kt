@@ -111,16 +111,24 @@ object BankStatementCsvParser {
 
     private fun detectDelimiter(csv: String): Char {
         var quoted = false
-        val counts = linkedMapOf(',' to 0, ';' to 0, '\t' to 0)
-        for (character in csv) {
-            if (character == '"') quoted = !quoted
-            else if (!quoted && (character == '\n' || character == '\r')) break
-            else if (!quoted && counts.containsKey(character)) counts[character] = counts.getValue(character) + 1
+        val counts = linkedMapOf(',' to 0, ';' to 0, '\\t' to 0)
+        var index = 0
+        while (index < csv.length) {
+            val character = csv[index]
+            if (character == '"' && quoted && index + 1 < csv.length && csv[index + 1] == '"') {
+                index++
+            } else if (character == '"') {
+                quoted = !quoted
+            } else if (!quoted && (character == '\\n' || character == '\\r')) {
+                break
+            } else if (!quoted && counts.containsKey(character)) {
+                counts[character] = counts.getValue(character) + 1
+            }
+            index++
         }
         return counts.maxByOrNull { it.value }?.takeIf { it.value > 0 }?.key
             ?: throw IllegalArgumentException("Nie można rozpoznać separatora CSV.")
     }
-
     private fun parseRecords(csv: String, delimiter: Char): List<List<String>> {
         val records = mutableListOf<List<String>>()
         var row = mutableListOf<String>()
