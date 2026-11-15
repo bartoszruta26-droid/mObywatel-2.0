@@ -104,6 +104,13 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun imagingStudyAttachmentsUseStableIsolatedDocumentScopes() {
+        assertEquals("imaging_study_study-001", medicalImagingAttachmentDocumentId("study-001"))
+        assertTrue(runCatching { medicalImagingAttachmentDocumentId("../outside") }.isFailure)
+        assertTrue(medicalImagingAttachmentDocumentId("study-001") != medicalImagingAttachmentDocumentId("study-002"))
+    }
+
+    @Test
     fun imagingStudiesPreserveEveryFieldAcrossJsonRoundTrip() {
         val original = listOf(
             MedicalImagingStudy(
