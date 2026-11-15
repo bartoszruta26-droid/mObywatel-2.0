@@ -140,14 +140,34 @@ internal data class InternationalMedicalCertificate(
             add("Unsupported medical certificate schema version.")
         }
         if (sourceLanguage.isBlank()) add("Original language is required.")
+        if (sourceLanguage != "other" && MedicalCertificateLanguages.find(sourceLanguage) == null) {
+            add("Original language is not supported.")
+        }
         if (sourceLanguage == "other" && otherSourceLanguage.isBlank()) {
             add("Specify the original language.")
         }
-        if (targetLanguages.any { it.isBlank() }) add("Target language codes must not be blank.")
+        if (targetLanguages.any { MedicalCertificateLanguages.find(it) == null }) {
+            add("A target language is blank or unsupported.")
+        }
         if (translations.any { it.fieldKey !in sourceFields }) {
             add("A translation references a field absent from the source document.")
         }
-        if (imagingStudies.any { it.id.isBlank() }) add("Every imaging study requires a stable identifier.")
+        val imagingIds = imagingStudies.map { it.id }
+        if (imagingIds.any { !it.matches(Regex("[A-Za-z0-9_.:-]{1,96}")) }) {
+            add("Every imaging study requires a valid stable identifier.")
+        }
+        if (imagingIds.size != imagingIds.toSet().size) {
+            add("Imaging study identifiers must be unique.")
+        }
+        if (imagingStudies.any { !isValidMedicalStudyDate(it.studyDate) }) {
+            add("An imaging study contains an invalid examination date.")
+        }
+        if (imagingStudies.any { study ->
+                study.attachmentIds.any { !it.matches(Regex("[A-Za-z0-9-]{1,64}")) } ||
+                    study.attachmentIds.size != study.attachmentIds.toSet().size
+            }) {
+            add("Imaging study attachment identifiers are invalid or duplicated.")
+        }
     }
 }
 
