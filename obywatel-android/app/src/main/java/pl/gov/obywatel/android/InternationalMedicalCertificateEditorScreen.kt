@@ -39,7 +39,7 @@ private const val IMC_TARGET_LANGUAGES_KEY = "imc_target_languages"
 internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val values = remember(context) {
-        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
+        mutableStateMapOf<String, String>().apply { putAll(InternationalMedicalCertificateStore.load(context)) }
     }
     val definitions = remember {
         documentEditorFieldDefinitions(INTERNATIONAL_MEDICAL_CERTIFICATE_ID)
@@ -175,7 +175,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 values[IMC_SOURCE_LANGUAGE_KEY] = sourceLanguage
                 values[IMC_OTHER_LANGUAGE_KEY] = otherLanguage
                 values[IMC_TARGET_LANGUAGES_KEY] = selectedTargets.filterValues { it }.keys.sorted().joinToString(",")
-                DemoIdentityStore.save(context, values.toMap())
+                InternationalMedicalCertificateStore.save(context, values.toMap())
                 saveMessage = "Certificate data saved securely on this device."
             },
             modifier = Modifier.fillMaxWidth()
