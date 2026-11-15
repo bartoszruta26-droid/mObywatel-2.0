@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -213,20 +214,27 @@ internal fun exportOriginalAttachmentArchive(context: Context): String = Origina
 internal fun importOriginalAttachmentArchive(context: Context, raw: String) = OriginalAttachmentStore.importArchive(context, raw)
 
 @Composable
-internal fun DocumentOriginalAttachments(documentId: String, readOnly: Boolean = false) {
+internal fun DocumentOriginalAttachments(
+    documentId: String,
+    readOnly: Boolean = false,
+    onAttachmentIdsChanged: (List<String>) -> Unit = {}
+) {
     val context = LocalContext.current
     val items = remember(documentId) { mutableStateListOf<OriginalAttachment>().apply {
         addAll(OriginalAttachmentStore.list(context, documentId))
     } }
     val status = remember(documentId) { mutableStateOf("") }
+    LaunchedEffect(documentId, items.size) {
+        onAttachmentIdsChanged(items.map { it.id })
+    }
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching { OriginalAttachmentStore.addFile(context, documentId, uri) }
-            .onSuccess { items.clear(); items.addAll(OriginalAttachmentStore.list(context, documentId)); status.value = "Dołączono oryginał dokumentu." }
+            .onSuccess { items.clear(); items.addAll(OriginalAttachmentStore.list(context, documentId)); onAttachmentIdsChanged(items.map { it.id }); status.value = "Dołączono oryginał dokumentu." }
             .onFailure { status.value = it.localizedMessage ?: "Nie udało się dołączyć pliku." }
     }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         if (bitmap != null) runCatching { OriginalAttachmentStore.addPhoto(context, documentId, bitmap) }
-            .onSuccess { items.clear(); items.addAll(OriginalAttachmentStore.list(context, documentId)); status.value = "Dołączono zdjęcie oryginału." }
+            .onSuccess { items.clear(); items.addAll(OriginalAttachmentStore.list(context, documentId)); onAttachmentIdsChanged(items.map { it.id }); status.value = "Dołączono zdjęcie oryginału." }
             .onFailure { status.value = it.localizedMessage ?: "Nie udało się zapisać zdjęcia." }
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -253,6 +261,7 @@ internal fun DocumentOriginalAttachments(documentId: String, readOnly: Boolean =
                         if (!readOnly) TextButton(onClick = {
                             OriginalAttachmentStore.remove(context, documentId, item.id)
                             items.remove(item)
+                            onAttachmentIdsChanged(items.map { it.id })
                         }) { Text("Usuń") }
                     }
                 }
