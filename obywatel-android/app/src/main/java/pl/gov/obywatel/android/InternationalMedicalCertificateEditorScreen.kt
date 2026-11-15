@@ -293,13 +293,12 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 val currentStudies = imagingStudies.toList()
                 values[IMC_IMAGING_STUDIES_KEY] = encodeMedicalImagingStudies(currentStudies)
                 InternationalMedicalCertificateStore.save(context, values.toMap())
-                val currentStudyIds = currentStudies.map { it.id }.toSet()
-                val removedStudies = previousStudies.filterNot { it.id in currentStudyIds }
-                val cleanupFailures = removedStudies.count { study ->
+                val removedStudyIds = removedMedicalImagingStudyIds(previousStudies, currentStudies)
+                val cleanupFailures = removedStudyIds.count { studyId ->
                     runCatching {
                         removeOriginalAttachmentDocumentScope(
                             context,
-                            medicalImagingAttachmentDocumentId(study.id)
+                            medicalImagingAttachmentDocumentId(studyId)
                         )
                     }.isFailure
                 }
@@ -318,6 +317,14 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
             Text(saveMessage, color = MaterialTheme.colorScheme.primary)
         }
     }
+}
+
+internal fun removedMedicalImagingStudyIds(
+    previous: List<MedicalImagingStudy>,
+    current: List<MedicalImagingStudy>
+): List<String> {
+    val currentIds = current.map { it.id }.toSet()
+    return previous.filterNot { it.id in currentIds }.map { it.id }
 }
 
 internal fun medicalImagingAttachmentDocumentId(studyId: String): String {
