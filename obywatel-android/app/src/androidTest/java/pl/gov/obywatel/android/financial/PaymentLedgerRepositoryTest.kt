@@ -68,6 +68,35 @@ class PaymentLedgerRepositoryTest {
     }
 
     @Test
+    fun currencyConversionHistoryIsAvailableThroughRepositoryAndPersistsAfterReopen() = runBlocking {
+        val record = CurrencyConversionRecord(
+            id = "repository-conversion-1",
+            convertedAt = java.time.Instant.parse("2026-11-15T10:00:00Z"),
+            sourceAmount = BigDecimal("125.50"),
+            sourceCurrencyCode = "USD",
+            targetAmount = BigDecimal("501.25"),
+            targetCurrencyCode = "PLN",
+            appliedRate = BigDecimal("3.99402390438247"),
+            rateDate = LocalDate.parse("2026-11-13"),
+            rateSource = "NBP_TABLE_A"
+        )
+        val repository = PaymentLedgerRepository(context, sourceDatabase)
+        try {
+            repository.saveCurrencyConversion(record)
+            assertEquals(listOf(record), repository.getCurrencyConversionHistory())
+        } finally {
+            repository.close()
+        }
+
+        val reopened = PaymentLedgerRepository(context, sourceDatabase)
+        try {
+            assertEquals(listOf(record), reopened.getCurrencyConversionHistory())
+        } finally {
+            reopened.close()
+        }
+    }
+
+    @Test
     fun exportImportRoundTripIsIdempotent() = runBlocking {
         val source = PaymentLedgerRepository(context, sourceDatabase)
         val target = PaymentLedgerRepository(context, targetDatabase)
