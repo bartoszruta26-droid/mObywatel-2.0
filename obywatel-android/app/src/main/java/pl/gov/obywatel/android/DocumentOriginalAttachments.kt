@@ -166,6 +166,33 @@ private object OriginalAttachmentStore {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(documentId, json.toString()).apply()
     }
 
+    /** Removes one complete, exclusively owned attachment scope. */
+    fun removeDocument(context: Context, documentId: String) {
+        require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
+            "Nieprawidłowy identyfikator dokumentu."
+        }
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val raw = preferences.getString(documentId, null) ?: return
+        val items = JSONArray(raw)
+        val ids = (0 until items.length()).map { index ->
+            items.getJSONObject(index).getString("id").also { id ->
+                require(id.matches(Regex("[A-Za-z0-9-]{1,64}"))) {
+                    "Nieprawidłowy identyfikator załącznika."
+                }
+            }
+        }
+        check(preferences.edit().remove(documentId).commit()) {
+            "Nie udało się usunąć rejestru załączników."
+        }
+        val directory = File(context.noBackupFilesDir, "original-document-attachments")
+        ids.forEach { id ->
+            val file = File(directory, "$id.enc")
+            if (file.exists()) check(file.delete() || !file.exists()) {
+                "Nie udało się usunąć pliku załącznika."
+            }
+        }
+    }
+
     /**
      * Includes both attachment metadata and decrypted source bytes in the
      * application archive. Export fails rather than silently omitting a
@@ -233,6 +260,9 @@ private object OriginalAttachmentStore {
 internal fun exportOriginalAttachmentArchive(context: Context): String = OriginalAttachmentStore.exportArchive(context)
 
 internal fun importOriginalAttachmentArchive(context: Context, raw: String) = OriginalAttachmentStore.importArchive(context, raw)
+
+internal fun removeOriginalAttachmentDocumentScope(context: Context, documentId: String) =
+    OriginalAttachmentStore.removeDocument(context, documentId)
 
 @Composable
 internal fun DocumentOriginalAttachments(
