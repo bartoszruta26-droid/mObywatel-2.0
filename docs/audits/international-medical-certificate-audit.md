@@ -694,3 +694,38 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Wykonać testy na dwóch instalacjach Androida oraz po restarcie urządzenia.
 
 **Status:** poprawiono obsługę błędów zapisu i kolejność usuwania pojedynczych załączników. Poprawki potwierdzono ponownym odczytem źródła. CI dla nowego SHA oczekuje na uruchomienie/zakończenie. PR #69 pozostaje otwarty, Draft i niescalony.
+
+---
+
+## 28. Ścisła walidacja rejestru metadanych załączników — 2026-11-15
+
+### Kontrola poprzedniego etapu
+- [x] Ponownie sprawdzono PR #69 i gałąź `zaswaidczenie`; PR pozostaje otwarty, Draft i niescalony.
+- [x] Dla SHA `05cf4fe336c200c43e93d5169f69e626bad398db` wszystkie trzy workflow zakończyły się powodzeniem: REUSE compliance, Android prototype build oraz Android GUI validation.
+- [x] W Android GUI validation potwierdzono testy JVM, testy Compose UI na emulatorze, budowanie APK i archiwizację raportów. Publikacja podpisanego APK została pominięta zgodnie z konfiguracją workflow.
+
+### Wykryty problem
+- [x] Funkcja `list()` magazynu załączników używała `runCatching(...).getOrDefault(emptyList())`. Uszkodzony JSON metadanych, nieprawidłowy rekord lub błąd odczytu były więc przedstawiane jako pusty rejestr.
+- [x] Taki wynik mógł doprowadzić do nadpisania istniejących metadanych podczas kolejnego dodawania załącznika. Błąd integralności był ukrywany zamiast zatrzymać zapis.
+
+### Wykonane poprawki
+- [x] Usunięto ciche zamienianie błędu odczytu metadanych na pustą listę. Błąd parsowania jest teraz zgłaszany wywołującemu, a operacja zapisu zostaje przerwana.
+- [x] Dodano walidację identyfikatora dokumentu, formatu identyfikatorów załączników, duplikatów ID, niepustej nazwy o maksymalnej długości 180 znaków oraz dozwolonej listy MIME.
+- [x] Walidację metadanych wydzielono do funkcji `validateOriginalAttachmentMetadata`, aby można ją było sprawdzać testami jednostkowymi.
+- [x] Dodano test poprawnego rekordu oraz testy odrzucania nieprawidłowego ID, powtórzonego ID, niedozwolonego MIME i pustej nazwy.
+- [x] Zmiany źródłowe zapisano w commitach `ce1059dd91ff7144f97b4661257eadd417072cfd` i `2e63c6fa878b80d40ccf025bc0859927c0b23161`.
+- [x] Testy zapisano w commicie `c7e435f95ad84bbf2a7b11889a8bffacb1c267f5`.
+- [x] Ponownie odczytano plik źródłowy i testowy z GitHub; potwierdzono obecność funkcji walidującej, jej użycie w `list()` i testów.
+
+### CI po poprawkach
+- [ ] Dla końcowego SHA `c7e435f95ad84bbf2a7b11889a8bffacb1c267f5` nie było jeszcze zarejestrowanych workflow runs w chwili aktualizacji tego audytu. Wyników CI dla nowych zmian nie oznacza się jako PASS.
+- [x] Poprzedni SHA `05cf4fe336c200c43e93d5169f69e626bad398db` ma potwierdzone trzy zakończone powodzeniem workflow; jest to walidacja poprzedniej wersji, a nie bieżących poprawek.
+
+### Pozostałe ryzyka i następne prace
+- [ ] Dodać testy integracyjne wymuszające błędy `SharedPreferences.commit()` oraz weryfikujące sprzątanie plików po nieudanym dodaniu/usunięciu.
+- [ ] Dodać procedurę uzgadniania metadanych i plików po restarcie oraz dziennik transakcji dla importu.
+- [ ] Rozszerzyć testy importu o duplikaty i konflikty ID między dokumentami, błędne Base64, limity 50 MiB/200 wpisów oraz wycofanie zmian.
+- [ ] Dodać pełne dekodowanie obrazów i ograniczenia wymiarów/dekompresji.
+- [ ] Wykonać testy eksportu/importu między dwiema instalacjami Androida oraz po restarcie urządzenia.
+
+**Status:** poprawiono zachowanie magazynu w przypadku uszkodzonych metadanych: błędy nie są już maskowane jako pusty rejestr, a nieprawidłowe rekordy są odrzucane. Kod i testy potwierdzono ponownym odczytem z GitHub. CI dla końcowego SHA oczekuje na uruchomienie. PR #69 pozostaje otwarty, Draft i niescalony.
