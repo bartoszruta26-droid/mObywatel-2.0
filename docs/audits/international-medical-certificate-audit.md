@@ -1060,3 +1060,30 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 ### Weryfikacja
 - [x] Testy zostały zapisane w zestawie JVM.
 - [ ] Wynik testów JVM, testów GUI, instrumentacji i kompilacji APK dla nowego SHA wymaga potwierdzenia przez GitHub Actions.
+
+
+---
+
+## 41. Integralność powiązań badań obrazowych z zaszyfrowanym magazynem — 2026-11-15
+
+### Wykryta luka
+- [x] Dotychczasowy `reconcile()` sprawdzał zgodność metadanych załączników z plikami zaszyfrowanymi oraz usuwał osierocone pliki, ale formularz nie porównywał listy `attachmentIds` zapisanej w badaniu obrazowym z metadanymi konkretnego zakresu załączników.
+- [x] W rezultacie rekord badania mógł wskazywać brakujący załącznik albo pomijać plik istniejący w jego zakresie, mimo że sam magazyn plików był spójny.
+
+### Wykonane prace
+- [x] Udostępniono funkcje odczytu identyfikatorów załączników zakresu oraz jawnego uzgadniania magazynu.
+- [x] Dodano kontrolę dokładnej zgodności identyfikatorów: wykrywane są brakujące odwołania, niepowiązane pliki metadanych i duplikaty.
+- [x] Przed zapisem zaświadczenia formularz uzgadnia magazyn i sprawdza każdy zakres badania obrazowego. W razie błędu kontroli lub rozbieżności zapis zaświadczenia jest blokowany.
+- [x] Zapis zaświadczenia jest obsłużony jako operacja z wynikiem; zakresy załączników usuniętych badań są czyszczone dopiero po udanym zapisie głównego magazynu.
+- [x] Nieudany zapis głównego magazynu pozostawia dotychczasowe zakresy załączników bez zmian.
+- [x] Dodano testy czystej funkcji porównującej zbiory identyfikatorów, w tym kolejność, pusty zakres, brakujący identyfikator, dodatkowy identyfikator i duplikaty.
+- [x] Zmiany zapisano w commitach `dad8cea9a8e872de7a36e14e8a0bd3ab36d2bb55`, `86f66b3d389560bb0ac8c81a33f3a180a4f62715` i `7273731dbc3326b4abf4229318288762055326f2`.
+
+### Weryfikacja i ograniczenia
+- [x] Ponownie pobrano z gałęzi zmienione pliki źródłowe i testy; potwierdzono obecność nowych funkcji, kontroli przed zapisem i testu regresyjnego.
+- [ ] Testy JVM, testy instrumentacyjne, GUI/emulator, kompilacja APK i REUSE dla końcowego SHA po etapie 41 wymagają wyniku GitHub Actions.
+- [ ] Test sprawdza regułę porównania identyfikatorów na JVM; nie zastępuje testu instrumentacyjnego z rzeczywistym `SharedPreferences`, plikami zaszyfrowanymi i błędami I/O.
+- [ ] Wymagany jest test integracyjny, który wymusi niepowodzenie zapisu głównego magazynu i potwierdzi, że zakresy załączników usuniętych badań pozostają zachowane.
+- [ ] Należy dodać scenariusz odtworzenia po restarcie procesu oraz test naprawy brakujących/osieroconych plików w magazynie.
+
+**Status:** dodano kontrolę zgodności identyfikatorów badania z metadanymi zakresu załączników i blokadę zapisu przy rozbieżności. Zmiany są zapisane i ponownie odczytane z gałęzi. Nie deklaruje się jeszcze zaliczenia testów CI dla końcowego SHA.
