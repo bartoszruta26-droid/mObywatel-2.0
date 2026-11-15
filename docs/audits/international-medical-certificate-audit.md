@@ -1219,3 +1219,27 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Synchronizacja pozostaje blokadą wewnątrz jednego procesu; nie jest blokadą międzyprocesową.
 
 **Status:** usuwanie nie skasuje już pliku, jeśli metadane wskazują, że należy on również do innego dokumentu. Etap zapisany; potwierdzenie CI pozostaje otwarte.
+
+
+---
+
+## 48. Atomowa instalacja pojedynczego załącznika — 2026-11-15
+
+### Wykryte ryzyko
+- [x] Metoda dodawania zapisywała zaszyfrowane bajty bezpośrednio do docelowego pliku `.enc` przez `writeBytes()`, jeszcze przed wejściem do bloku obsługi błędów.
+- [x] Przerwanie lub błąd I/O podczas zapisu mogły pozostawić niekompletny plik docelowy. Ponowienie operacji z tym samym identyfikatorem byłoby blokowane przez istniejący plik, a sprzątanie zależałoby od późniejszego uzgadniania magazynu.
+
+### Wykonane poprawki
+- [x] Dodano zapis zaszyfrowanych bajtów do unikalnego pliku etapowego `.import` w tym samym katalogu.
+- [x] Wymuszono synchronizację deskryptora pliku przez `FileDescriptor.sync()` przed instalacją.
+- [x] Plik etapowy jest przenoszony do nazwy docelowej dopiero po kompletnym zapisie; nieudany zapis lub przeniesienie nie pozostawia częściowego pliku docelowego.
+- [x] Instalacja pliku została objęta blokiem `try/catch/finally`; plik etapowy jest sprzątany, a plik docelowy jest usuwany przy błędzie przed próbą zatwierdzenia metadanych.
+- [x] Zachowano ostrożną regułę dla niejednoznacznego wyniku `SharedPreferences.commit()`: po rozpoczęciu zatwierdzania plik docelowy pozostaje, ponieważ metadane mogły zostać zaktualizowane.
+
+### Weryfikacja i ograniczenia
+- [x] Zmianę zapisano w commicie `80e7a7319141a18a597e17462e901a5de4dbb6dd`.
+- [ ] Należy dodać test instrumentacyjny błędu zapisu/przeniesienia pliku etapowego i potwierdzić brak częściowego pliku docelowego.
+- [ ] Nadal nie ma kontrolowanego backendu metadanych pozwalającego wymusić `SharedPreferences.commit() == false`; rzeczywisty scenariusz nieudanego zatwierdzania pozostaje otwarty.
+- [ ] Wykonanie testów JVM, instrumentacyjnych, GUI/emulator i kompilacji APK dla nowego SHA wymaga potwierdzenia w GitHub Actions.
+
+**Status:** dodano bezpieczniejszą instalację pojedynczego zaszyfrowanego pliku przez zsynchronizowany plik etapowy. Nie oznacza to jeszcze potwierdzenia testów ani rozwiązania testowania awarii zatwierdzania metadanych.
