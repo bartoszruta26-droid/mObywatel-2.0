@@ -4300,3 +4300,38 @@ PR #68 pozostaje otwarty i niescalony.
 1. Uzyskać zielone GUI CI i naprawić testy DatePicker bez usuwania asercji sprawdzających zmianę granic okresu.
 2. Dodać adapter NBP dla tabel A/B/C i cen złota, z cache, datą efektywną, obsługą dni bez publikacji i zakresów historycznych.
 3. Zintegrować kalkulator z interfejsem i etykietami źródła kursu, daty oraz rodzaju wyceny.
+
+
+## 20. Etap 81–82 — stabilizacja testów dat i adapter oficjalnego API NBP (15 listopada 2026 r.)
+
+### Etap 81 — poprawa testów wyboru dat
+- Dwa testy instrumentacyjne kalendarza raportu kończyły się błędem `Failed to inject touch input` przy wskazywaniu dnia miesiąca, mimo że pozostałe testy przebiegały.
+- Zmieniono wyłącznie sposób wywołania akcji wyboru dnia: test korzysta z akcji semantycznej Compose `SemanticsActions.OnClick`, zamiast emulować fizyczne dotknięcie ekranu. Asercje zachowują kontrolę, że zmienia się wyłącznie wskazana granica okresu.
+- Zmiana wymaga potwierdzenia w emulatorowym CI; nie uznawać jej za zaliczoną przed zielonym przebiegiem.
+
+### Etap 82 — adapter NBP
+- Dodano `NbpRatesRepository.kt` z transportem HTTP opartym na `HttpURLConnection`, limitami czasu połączenia/odczytu, nagłówkiem JSON i obsługą błędów HTTP.
+- Obsługiwane są tabele A, B i C, odczyt tabeli bieżącej, tabeli z datą, zakresu historycznego oraz ceny złota za gram.
+- Model zachowuje numer tabeli, datę efektywną i wartości dziesiętne. Tabela C zachowuje osobno `bid` i `ask`; nie tworzy sztucznego kursu średniego. Konwersja przez `toExchangeRate()` jest dostępna tylko, gdy źródło dostarcza `mid` (A/B).
+- Dodano cache procesowy: 15 minut dla najnowszych notowań i 30 dni dla zapytań historycznych; udostępniono jawne czyszczenie cache.
+- Dodano obsługę dni bez publikacji przez wyszukanie ostatniej opublikowanej tabeli/ceny w zakresie do 7 dni wstecz (parametr można zmienić). Zakresy API są walidowane do maksymalnie 93 dni kalendarzowych.
+- Dodano testy parsera tabeli A i C, ceny złota, konwersji kursu średniego, cache, limitów zakresu i dat weekendowych.
+
+### Zakres nadal otwarty
+- Adapter NBP jest warstwą danych; nie został jeszcze podłączony do ekranu kalkulatora, selektorów walut, historii przeliczeń ani trwałego cache.
+- Nie dodano jeszcze pobierania pełnej listy walut do wyboru, automatycznego odświeżania w UI ani prezentacji daty efektywnej i rodzaju kursu w ekranie.
+- Testy jednostkowe i emulatorowe dla nowych zmian oczekują na wynik CI dla końcowego SHA.
+
+### Weryfikacja i commity
+- `1187ebe17034dd974879cf91292e26d853ba5a48` — pierwsza implementacja adaptera NBP.
+- `16869a351b2de2fe8005e8e1d68fbd6b18d91e2c` — prawidłowa konwencja kursu NBP: waluta obca → PLN.
+- `48a344f9a907cb0c30b4725f902e7d6873e1b8fb` — testy parsera i cache.
+- `b7f3286d58c3ee288d84c351f853d8a0254bb2e2` — semantyczna akcja wyboru dnia w testach DatePicker.
+- `47a4ba1c15a985b2832381b201ff93b6adbaa961`, `56100c390f0abe40ca3f2e0a696634a7aa7be346`, `a7ae350f7963bfc6e07bf8d5a3c76c2a49e39aac` — obsługa dat bez publikacji, limity kalendarzowe i testy weekendów.
+- Ostatni znany CI dla poprzedniego SHA miał sukces budowania debug APK i kontroli REUSE, ale niepowodzenie 2 z 101 testów instrumentacyjnych w DatePicker. Wynik dla nowego SHA musi zostać odczytany oddzielnie.
+
+### Następny etap
+1. Uzyskać zielony CI dla końcowego SHA i usunąć ewentualne błędy kompilacji/testów.
+2. Zintegrować adapter z kalkulatorem i ekranem Compose: wybór waluty, kwota, odwrócenie pary, kurs, źródło, tabela i data efektywna.
+3. Dodać listę walut z NBP, obsługę braku kursu dla waluty źródłowej/docelowej i czytelne komunikaty offline.
+4. Dopiero potem rozszerzyć trwały cache i historię wycen.
