@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: CC0-1.0
 package pl.gov.obywatel.android.financial
 
+import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import androidx.test.core.app.ApplicationProvider
@@ -34,9 +35,27 @@ class FinancialReportPdfTest {
             ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
                 PdfRenderer(descriptor).use { renderer ->
                     assertTrue(renderer.pageCount >= 1)
-                    renderer.openPage(0).use { page ->
-                        assertTrue(page.width > 0)
-                        assertTrue(page.height > page.width)
+                    for (pageIndex in 0 until renderer.pageCount) {
+                        renderer.openPage(pageIndex).use { page ->
+                            assertTrue(page.width > 0)
+                            assertTrue(page.height > page.width)
+                            val bitmap = Bitmap.createBitmap(
+                                page.width,
+                                page.height,
+                                Bitmap.Config.ARGB_8888
+                            )
+                            try {
+                                page.render(
+                                    bitmap,
+                                    null,
+                                    null,
+                                    PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY
+                                )
+                                assertTrue(bitmap.width > 0 && bitmap.height > 0)
+                            } finally {
+                                bitmap.recycle()
+                            }
+                        }
                     }
                     return renderer.pageCount
                 }
