@@ -8,6 +8,8 @@ import pl.gov.obywatel.android.DonationCustodyStatus
 import pl.gov.obywatel.android.FinancialTransactionType
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 /** Okres raportu: początek włącznie, koniec wyłącznie. */
 data class FinancialReportPeriod(
@@ -20,6 +22,23 @@ data class FinancialReportPeriod(
 
     fun contains(value: Instant): Boolean =
         !value.isBefore(fromInclusive) && value.isBefore(toExclusive)
+
+    companion object {
+        /** Buduje okres z dat lokalnych; obie daty są włączne dla użytkownika. */
+        fun fromInclusiveDates(
+            startDate: LocalDate,
+            endDateInclusive: LocalDate,
+            zoneId: ZoneId = ZoneId.systemDefault()
+        ): FinancialReportPeriod {
+            require(!endDateInclusive.isBefore(startDate)) {
+                "Data końcowa musi przypadać tego samego dnia lub po dacie początkowej."
+            }
+            return FinancialReportPeriod(
+                startDate.atStartOfDay(zoneId).toInstant(),
+                endDateInclusive.plusDays(1).atStartOfDay(zoneId).toInstant()
+            )
+        }
+    }
 }
 
 data class FinancialAssetTotals(
