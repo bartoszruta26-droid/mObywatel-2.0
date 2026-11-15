@@ -65,6 +65,24 @@ class FinancialReportSafExportTest {
     }
 
     @Test
+    fun overwritingExistingDocumentTruncatesPreviousContent() {
+        assertTrue(directory.exists() || directory.mkdirs())
+        val target = File(directory, "report-saf-overwrite.csv")
+        target.writeBytes(ByteArray(4096) { 0x41 })
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.ocrfiles",
+            target
+        )
+        val replacement = "nowy raport".toByteArray(Charsets.UTF_8)
+
+        FinancialReportSafWriter.write(context.contentResolver, uri, replacement)
+
+        assertArrayEquals(replacement, target.readBytes())
+        target.delete()
+    }
+
+    @Test
     fun reportsOutputProviderFailureInsteadOfTreatingItAsSuccessfulExport() {
         val missingProviderUri = Uri.parse(
             "content://pl.gov.obywatel.android.prototype.missing/report.csv"
