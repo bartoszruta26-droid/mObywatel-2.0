@@ -299,4 +299,36 @@ class PaymentLedgerRepositoryTest {
         }
     }
 
+    @Test
+    fun sameDonationIdWithChangedDonorMetadataIsReportedAsConflictAndPreservesRecord() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val original = pl.gov.obywatel.android.CashDonation(
+                id = "donation-metadata-conflict",
+                receivedAt = java.time.Instant.parse("2026-11-14T12:00:00Z"),
+                amount = BigDecimal("250.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Zakup książek",
+                donorName = "Darczyńca A",
+                isAnonymous = false,
+                campaignName = "Jesienna zbiórka",
+                note = "Oryginalna notatka"
+            )
+            target.saveCashDonation(original)
+            val changed = original.copy(donorName = "Darczyńca B")
+            val archive = PaymentLedgerJsonCodec.encode(emptyList(), emptyList(), listOf(changed))
+
+            val preview = target.previewArchive(archive)
+            assertEquals(1, preview.donationConflicts)
+            assertTrue(preview.hasConflicts)
+            val result = runCatching { target.importJson(archive) }
+
+            assertTrue("Zmiana danych darczyńcy pod tym samym ID musi być konfliktem.", result.isFailure)
+            assertEquals("Darczyńca A", target.getCashDonations().single().donorName)
+        } finally {
+            target.close()
+        }
+    }
+
 }
