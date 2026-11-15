@@ -1243,3 +1243,29 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Wykonanie testów JVM, instrumentacyjnych, GUI/emulator i kompilacji APK dla nowego SHA wymaga potwierdzenia w GitHub Actions.
 
 **Status:** dodano bezpieczniejszą instalację pojedynczego zaszyfrowanego pliku przez zsynchronizowany plik etapowy. Nie oznacza to jeszcze potwierdzenia testów ani rozwiązania testowania awarii zatwierdzania metadanych.
+
+
+---
+
+## 49. Ujednolicenie synchronizowanego zapisu plików etapowych — 2026-11-15
+
+### Wykryte ryzyko
+- [x] Import archiwum używał `writeBytes()` do zapisu zaszyfrowanych plików etapowych, bez synchronizacji deskryptora przed zmianą nazwy na docelową.
+- [x] Plik etapowy był dodawany do listy sprzątania dopiero po zakończeniu zapisu. Błąd lub przerwanie zapisu mogły więc pozostawić plik tymczasowy poza listą sprzątania bieżącej operacji.
+
+### Wykonane poprawki
+- [x] Wydzielono wspólną funkcję `writeOriginalAttachmentStagingFile`, która odrzuca pusty ładunek, zapisuje dane przez `FileOutputStream` i wykonuje `FileDescriptor.sync()`.
+- [x] Pojedyncze dodawanie załącznika oraz import archiwum korzystają z tego samego mechanizmu zapisu etapowego.
+- [x] Import rejestruje plik tymczasowy w liście sprzątania przed rozpoczęciem operacji wejścia/wyjścia. Blok `finally` może więc usunąć plik również po błędzie zapisu lub synchronizacji.
+- [x] Dodano test JVM kompletnego zapisu i odczytu bajtów oraz test odrzucenia pustego ładunku bez utworzenia pliku.
+
+### Commity
+- [x] Implementacja: `f6f01ead34ebe114886a64982a890c548ad4f076`.
+- [x] Testy JVM: `c42ddd52092dffce021a02fe406238a94f0535c8`.
+
+### Weryfikacja i ograniczenia
+- [ ] Testy JVM, instrumentacyjne, GUI/emulator i kompilacja APK dla aktualnego SHA wymagają wyników GitHub Actions.
+- [ ] Test JVM sprawdza zachowanie funkcji zapisu etapowego na rzeczywistym systemie plików, ale nie symuluje awarii urządzenia, błędu nośnika ani wymuszonego przerwania procesu.
+- [ ] Kontrolowane wymuszanie `SharedPreferences.commit() == false` pozostaje otwarte; nie wprowadzono jeszcze abstrakcji backendu metadanych.
+
+**Status:** zapis etapowy jest wspólny dla dodawania i importu, synchronizowany przed instalacją, a plik tymczasowy importu jest rejestrowany do sprzątania przed zapisem. Wyników CI dla tego etapu jeszcze nie potwierdzono.
