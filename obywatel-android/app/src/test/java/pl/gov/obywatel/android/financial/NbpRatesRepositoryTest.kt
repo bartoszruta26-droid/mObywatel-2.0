@@ -107,4 +107,60 @@ class NbpRatesRepositoryTest {
         assertEquals(LocalDate.parse("2026-11-13"), price.date)
         assertEquals("520.25", price.pricePerGramPln.toString())
     }
+
+    @Test
+    fun historicalRatesPersistAcrossRepositoryInstancesAndWorkOffline() {
+        val directory = Files.createTempDirectory("nbp-history").toFile()
+        var networkCalls = 0
+        val json = """[{"table":"A","no":"220/A/NBP/2026","effectiveDate":"2026-11-13","rates":[{"currency":"euro","code":"EUR","mid":4.31}]}]"""
+        val first = NbpRatesRepository(
+            transport = object : NbpHttpTransport {
+                override fun get(url: String): String { networkCalls++; return json }
+            },
+            cacheDirectory = directory
+        )
+        val expected = first.tableForDate(NbpTable.A, LocalDate.parse("2026-11-13"))
+        val second = NbpRatesRepository(
+            transport = object : NbpHttpTransport {
+                override fun get(url: String): String = throw java.io.IOException("offline")
+            },
+            cacheDirectory = directory
+        )
+
+        val restored = second.tableForDate(NbpTable.A, LocalDate.parse("2026-11-13"))
+        assertEquals(expected, restored)
+        assertEquals(1, networkCalls)
+        assertEquals(1, directory.listFiles()?.count { it.extension == "json" })
+        directory.deleteRecursively()
+    }
+
+    @Test
+    fun latestRatesRefreshAfterTtlWhileHistoricalArchiveRemainsSeparate() {
+        val directory = Files.createTempDirectory("nbp-current").toFile()
+        var clock = 1_000_000L
+        var currentCalls = 0
+        val firstJson = """[{"table":"A","no":"220/A/NBP/2026","effectiveDate":"2026-11-13","rates":[{"currency":"euro","code":"EUR","mid":4.31}]}]"""
+        val updatedJson = """[{"table":"A","no":"221/A/NBP/2026","effectiveDate":"2026-11-16","rates":[{"currency":"euro","code":"EUR","mid":4.32}]}]"""
+        val transport = object : NbpHttpTransport {
+            override fun get(url: String): String {
+                currentCalls++
+                return if (currentCalls == 1) firstJson else updatedJson
+            }
+        }
+        val repository = NbpRatesRepository(
+            transport = transport,
+            now = { clock },
+            latestTtl = Duration.ofMinutes(15),
+            cacheDirectory = directory
+        )
+        assertEquals("4.31", repository.latestTable(NbpTable.A).rate("EUR")?.mid.toString())
+        assertEquals("4.31", repository.latestTable(NbpTable.A).rate("EUR")?.mid.toString())
+        assertEquals(1, currentCalls)
+
+        clock += Duration.ofMinutes(16).toMillis()
+        assertEquals("4.32", repository.latestTable(NbpTable.A).rate("EUR")?.mid.toString())
+        assertEquals(2, currentCalls)
+        directory.deleteRecursively()
+    }
+
 }
