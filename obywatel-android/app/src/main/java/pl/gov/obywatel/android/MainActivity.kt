@@ -1669,6 +1669,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
                         importStatus = importStatus
                     )
+                    selectedDocumentId == INTERNATIONAL_MEDICAL_CERTIFICATE_ID -> InternationalMedicalCertificateEditorScreen(
+                        onBack = { selectedDocumentId = null }
+                    )
                     selectedDocumentId != null -> DocumentDetailsScreen(
                         documentId = selectedDocumentId!!,
                         onBack = { selectedDocumentId = null }
