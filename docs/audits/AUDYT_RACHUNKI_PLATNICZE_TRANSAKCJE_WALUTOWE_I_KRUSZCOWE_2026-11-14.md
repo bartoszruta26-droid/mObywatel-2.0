@@ -4490,3 +4490,10 @@ Dodano testy instrumentacyjne:
 **Ograniczenie:** historia przeliczeń nie została jeszcze dodana do eksportu/importu JSON. Wymaga to osobnej, wersjonowanej zmiany formatu archiwum. Status aktywności walut ISO wymaga również kontrolowanego źródła danych, a nie tylko bazy platformy.
 
 Wyniki testów instrumentacyjnych i kompilacji muszą zostać potwierdzone przez GitHub Actions dla najnowszego SHA. Nie deklaruje się gotowości APK przed tym potwierdzeniem.
+
+
+## Etap 88 — integracja historii przeliczeń z archiwum JSON
+
+Format eksportu/importu rejestru podniesiono do wersji 3. Dodano tablicę `currencyConversions`; dekoder zachowuje zgodność z wersjami 1 i 2. Historia jest eksportowana z SQLite, a import obejmuje ją w jednej transakcji wraz z wpisami bankowymi, transakcjami i darowiznami. Powtórny import identycznych zapisów jest idempotentny. Konflikt treści pod istniejącym identyfikatorem jest raportowany w podglądzie i blokuje import bez częściowego zapisu.
+
+Dodano testy kodeka oraz testy instrumentacyjne round-trip, ponownego importu i konfliktu. Wyniki CI dla końcowego SHA pozostają warunkiem uznania etapu za zweryfikowany. PR #68 pozostaje otwarty.
