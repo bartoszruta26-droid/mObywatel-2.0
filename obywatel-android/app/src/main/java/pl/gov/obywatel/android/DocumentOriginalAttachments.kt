@@ -310,15 +310,15 @@ internal object OriginalAttachmentStore {
         name: String,
         mime: String,
         bytes: ByteArray,
-        attachmentId: String = UUID.randomUUID().toString()
+        attachmentId: String = UUID.randomUUID().toString(),
+        backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)
     ) {
         require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu." }
         require(attachmentId.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
         val safeMime = mime.substringBefore(';').trim().lowercase()
         validateOriginalAttachmentPayload(safeMime, bytes)
-        val backend = attachmentMetadataBackend(context)
         val existingOwners = mutableMapOf<String, String>()
-        preferences.all.forEach { (ownerDocumentId, value) ->
+        backend.all.forEach { (ownerDocumentId, value) ->
             require(ownerDocumentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
                 "Nieprawidłowy identyfikator dokumentu w magazynie."
             }
@@ -413,7 +413,6 @@ internal object OriginalAttachmentStore {
     fun remove(context: Context, documentId: String, id: String, backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)) {
         val current = list(context, documentId, backend)
         if (current.none { it.id == id }) return
-        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val existingOwners = mutableMapOf<String, String>()
         preferences.all.forEach { (ownerDocumentId, value) ->
             require(ownerDocumentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
