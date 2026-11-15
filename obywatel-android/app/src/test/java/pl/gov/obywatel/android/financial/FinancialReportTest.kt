@@ -16,6 +16,8 @@ import pl.gov.obywatel.android.FinancialTransaction
 import pl.gov.obywatel.android.FinancialTransactionType
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 class FinancialReportTest {
     private val period = FinancialReportPeriod(
@@ -158,6 +160,37 @@ class FinancialReportTest {
         assertTrue(csv.contains("10.0000000001"))
         assertTrue(csv.contains(";"))
         assertTrue(csv.endsWith("\r\n"))
+    }
+
+    @Test
+    fun localDateRangeIncludesBothCalendarDaysAcrossDaylightSavingTransition() {
+        val period = FinancialReportPeriod.fromInclusiveDates(
+            LocalDate.parse("2026-03-28"),
+            LocalDate.parse("2026-03-29"),
+            ZoneId.of("Europe/Warsaw")
+        )
+        assertTrue(period.contains(period.fromInclusive))
+        assertTrue(period.contains(period.toExclusive.minusNanos(1)))
+        assertFalse(period.contains(period.toExclusive))
+        assertEquals(
+            Instant.parse("2026-03-27T23:00:00Z"),
+            period.fromInclusive
+        )
+        assertEquals(
+            Instant.parse("2026-03-29T22:00:00Z"),
+            period.toExclusive
+        )
+    }
+
+    @Test
+    fun localDateRangeRejectsEndDateBeforeStartDate() {
+        assertThrows(IllegalArgumentException::class.java) {
+            FinancialReportPeriod.fromInclusiveDates(
+                LocalDate.parse("2026-11-16"),
+                LocalDate.parse("2026-11-15"),
+                ZoneId.of("Europe/Warsaw")
+            )
+        }
     }
 
     @Test
