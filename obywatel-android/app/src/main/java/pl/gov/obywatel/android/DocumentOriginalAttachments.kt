@@ -175,6 +175,14 @@ internal fun shouldDeleteInstalledAttachmentsAfterImportFailure(metadataCommitAt
 internal fun shouldDeleteAddedAttachmentAfterFailure(metadataCommitAttempted: Boolean): Boolean =
     !metadataCommitAttempted
 
+internal fun writeOriginalAttachmentStagingFile(staging: File, encryptedBytes: ByteArray) {
+    require(encryptedBytes.isNotEmpty()) { "Zaszyfrowany załącznik jest pusty." }
+    FileOutputStream(staging, false).use { output ->
+        output.write(encryptedBytes)
+        output.fd.sync()
+    }
+}
+
 private data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
 private object OriginalAttachmentStore {
@@ -319,10 +327,7 @@ private object OriginalAttachmentStore {
         try {
             // Install the encrypted payload through a synced staging file. A
             // failed/partial write must never leave a truncated final .enc file.
-            FileOutputStream(staging).use { output ->
-                output.write(crypt(bytes, true))
-                output.fd.sync()
-            }
+            writeOriginalAttachmentStagingFile(staging, crypt(bytes, true))
             check(staging.renameTo(target)) { "Nie udało się atomowo zainstalować pliku załącznika." }
             targetInstalled = true
 
@@ -588,8 +593,10 @@ private object OriginalAttachmentStore {
                     }
                 } else {
                     val temporary = File(directory, ".${item.id}.${UUID.randomUUID()}.import")
-                    temporary.writeBytes(crypt(item.bytes, true))
+                    // Register the staging file before I/O so finally can clean it
+                    // even when writing or syncing fails partway through.
                     staged.add(temporary to target)
+                    writeOriginalAttachmentStagingFile(temporary, crypt(item.bytes, true))
                     metadata.add(OriginalAttachment(item.id, item.name, item.mime))
                 }
             }
