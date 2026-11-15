@@ -844,3 +844,25 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] CI dla końcowego SHA tej sekcji wymaga potwierdzenia po zakończeniu workflow.
 
 **Status:** import odrzuca teraz niekanoniczne i wadliwe ciągi Base64 oraz weryfikuje rozmiar danych przed i po dekodowaniu. Testy regresyjne dodano; wykonanie CI pozostaje do potwierdzenia.
+
+
+---
+
+## 33. Walidacja właściciela identyfikatora załącznika przy imporcie — 2026-11-15
+
+### Wykryta luka
+- [x] Import sprawdzał powtórzenia identyfikatorów wewnątrz archiwum i duplikaty w istniejących metadanych, ale nie porównywał właściciela identyfikatora z dokumentem wskazanym przez importowany wpis.
+- [x] W przypadku niespójności między metadanymi a plikami mogło dojść do próby przypisania identyfikatora istniejącego w innym dokumencie.
+- [x] Brak pola `attachments` w archiwum był traktowany jak pusta lista, co mogło ukryć wadliwy format wejściowy.
+
+### Wykonane poprawki
+- [x] Dodano walidację, która dopuszcza ponowny import identyfikatora wyłącznie do tego samego dokumentu, a odrzuca próbę przeniesienia go do innego dokumentu.
+- [x] Import wymaga jawnej, poprawnej tablicy `attachments`; brak pola lub nieprawidłowy typ jest odrzucany.
+- [x] Eksport waliduje strukturę metadanych przed odczytem załączników.
+- [x] Dodano test jednostkowy dla ponownego importu do tego samego dokumentu, nowego identyfikatora oraz konfliktu między dokumentami.
+
+### Weryfikacja
+- [ ] Ponowny odczyt zmian i kontrola CI dla końcowego SHA — do wykonania po zapisaniu commitów.
+- [ ] Testy integracyjne rzeczywistego importu, rollbacku i awarii procesu nadal pozostają wymagane.
+
+**Status:** dodano kontrolę właściciela identyfikatora oraz odrzucanie niekompletnych archiwów. Nie oznacza to jeszcze pełnej transakcyjności importu ani walidacji obrazu przez dekoder.
