@@ -3718,3 +3718,37 @@ Poprzedni przebieg dla HEAD `734e9c99f91fba2e7645d5483e7ea3b723563be0` miał zak
 ### 65.5. Status i dalsze kryteria
 
 Zmiana kodu i testy regresyjne są zapisane oraz ponownie odczytane z gałęzi. Etap 65 pozostaje **wdrożony, lecz niezweryfikowany CI**. Do jego zamknięcia wymagane są: powodzenie testów JVM, testów instrumentacyjnych/Compose, budowy debug APK i kontroli zgodności dla dokładnego HEAD `6dce33c8fb8bd004d4e130dbe0745a83f753dea7`. PR `#68` pozostaje otwarty i niescalony.
+
+
+## 66. Naprawa testów wyboru dni w kalendarzu zakresu raportu (15 listopada 2026 r.)
+
+### 66.1. Wynik walidacji etapu 65
+
+Dla HEAD `2756e7725b71da04feb8700fcf88b7cfd74faa6e`:
+- Repository compliance — sukces;
+- Android prototype build — sukces, w tym testy jednostkowe;
+- Android GUI validation — **niepowodzenie**;
+- testy instrumentacyjne: 91 uruchomionych, 2 niepowodzenia.
+
+Niepowodzenia dotyczyły:
+- `FinancialReportDateRangePickerTest.selectingDifferentStartDateUpdatesOnlyStartBoundary`;
+- `FinancialReportDateRangePickerTest.selectingDifferentEndDateUpdatesOnlyEndBoundary`.
+
+Raport testów i log wskazują na `java.lang.AssertionError: Failed to inject touch input.` Oba przypadki używały selektora `onNodeWithText(..., useUnmergedTree = true)`. Wymuszenie drzewa niepołączonego wybierało wewnętrzny węzeł tekstowy dnia kalendarza, zamiast węzła z połączoną semantyką elementu klikalnego. Test próbował więc symulować dotyk w węźle, który nie reprezentował właściwego celu interakcji.
+
+### 66.2. Wykonana poprawka
+
+W `FinancialReportDateRangePickerTest.kt` usunięto `useUnmergedTree = true` dla wyboru dni 10 i 25. Testy korzystają teraz ze standardowego, połączonego drzewa semantycznego Compose, które powinno wskazać klikalny element dnia. Asercje końcowe pozostały bez zmian i nadal wymagają potwierdzenia, że zmienia się wyłącznie odpowiednia granica zakresu:
+- początek: `2026-11-10 / 2026-11-20`;
+- koniec: `2026-11-01 / 2026-11-25`.
+
+Nie osłabiono asercji biznesowych ani nie pominięto testów.
+
+### 66.3. Rewizja
+
+- `FinancialReportDateRangePickerTest.kt` — commit `c85765a93a455beaff7bea4ffc2b7b857e2ff50b`.
+- Zmiana dotyczy wyłącznie selektorów w dwóch testach instrumentacyjnych; logika produkcyjnego DatePicker pozostaje bez zmian.
+
+### 66.4. Status walidacji
+
+Poprawka została zapisana. Wymaga ponownego uruchomienia i pomyślnego zakończenia testów instrumentacyjnych na emulatorze. Do czasu zakończenia CI nie uznaje się etapu 66 za zweryfikowany. APK z poprzedniego przebiegu nie zostało opublikowane, ponieważ etap testów instrumentacyjnych zakończył się niepowodzeniem.
