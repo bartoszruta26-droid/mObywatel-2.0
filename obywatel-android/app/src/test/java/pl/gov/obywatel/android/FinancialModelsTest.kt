@@ -148,4 +148,43 @@ class FinancialModelsTest {
         }
     }
 
+    @Test
+    fun donationCustodyStatusMustMatchTransferredAmountAndTimestamp() {
+        val base = CashDonation(
+            id = "donation-status-1",
+            receivedAt = Instant.parse("2026-11-14T12:00:00Z"),
+            amount = BigDecimal("500.00"),
+            currencyCode = "PLN",
+            beneficiaryOrganizationName = "Fundacja Aria",
+            purpose = "Wsparcie rodzin"
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            base.copy(custodyStatus = DonationCustodyStatus.TRANSFERRED).validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            base.copy(
+                custodyStatus = DonationCustodyStatus.PARTIALLY_TRANSFERRED,
+                transferredAmount = BigDecimal("500.00"),
+                transferredAt = Instant.parse("2026-11-15T12:00:00Z")
+            ).validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            base.copy(
+                custodyStatus = DonationCustodyStatus.HELD,
+                transferredAmount = BigDecimal("1.00"),
+                transferredAt = Instant.parse("2026-11-15T12:00:00Z")
+            ).validate()
+        }
+        base.copy(
+            custodyStatus = DonationCustodyStatus.PARTIALLY_TRANSFERRED,
+            transferredAmount = BigDecimal("200.00"),
+            transferredAt = Instant.parse("2026-11-15T12:00:00Z")
+        ).validate()
+        base.copy(
+            custodyStatus = DonationCustodyStatus.TRANSFERRED,
+            transferredAmount = BigDecimal("500.00"),
+            transferredAt = Instant.parse("2026-11-15T12:00:00Z")
+        ).validate()
+    }
+
 }
