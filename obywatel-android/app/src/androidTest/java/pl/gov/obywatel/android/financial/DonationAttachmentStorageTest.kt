@@ -151,4 +151,42 @@ class DonationAttachmentStorageTest {
             )
         }
     }
+
+    @Test
+    fun importAcceptsJpegWithMatchingMimeAndSignature() {
+        val bytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0x00)
+        val uri = sourceUri("saf-source-valid.jpg", bytes)
+
+        val imported = DonationAttachmentStorage(context).import("donation-saf-test", uri)
+
+        assertEquals("image/jpeg", imported.mimeType)
+        assertEquals(bytes.size.toLong(), imported.sizeBytes)
+        assertTrue(bytes.contentEquals(File(directory, imported.storedFileName).readBytes()))
+    }
+
+    @Test
+    fun importAcceptsPngWithMatchingMimeAndSignature() {
+        val bytes = byteArrayOf(
+            0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00
+        )
+        val uri = sourceUri("saf-source-valid.png", bytes)
+
+        val imported = DonationAttachmentStorage(context).import("donation-saf-test", uri)
+
+        assertEquals("image/png", imported.mimeType)
+        assertEquals(bytes.size.toLong(), imported.sizeBytes)
+        assertTrue(bytes.contentEquals(File(directory, imported.storedFileName).readBytes()))
+    }
+
+    @Test
+    fun importRemovesPartialTargetWhenProviderFailsDuringRead() {
+        val uri = sourceUri("saf-source-read-error.pdf", "%PDF-1.7".toByteArray())
+        File(directory, "saf-source-read-error.pdf").delete()
+
+        assertThrows(Exception::class.java) {
+            DonationAttachmentStorage(context).import("donation-saf-test", uri)
+        }
+
+        assertTrue(directory.listFiles().isNullOrEmpty())
+    }
 }
