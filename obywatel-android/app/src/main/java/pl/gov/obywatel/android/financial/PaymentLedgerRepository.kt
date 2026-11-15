@@ -40,6 +40,18 @@ class PaymentLedgerRepository(
         database.saveFinancialTransaction(transaction, accountingEntryIds)
     }
 
+    suspend fun saveCashDonation(donation: pl.gov.obywatel.android.CashDonation) =
+        withContext(Dispatchers.IO) { database.saveCashDonation(donation) }
+
+    suspend fun updateCashDonation(donation: pl.gov.obywatel.android.CashDonation) =
+        withContext(Dispatchers.IO) { database.updateCashDonation(donation) }
+
+    suspend fun getCashDonations(): List<pl.gov.obywatel.android.CashDonation> =
+        withContext(Dispatchers.IO) { database.readCashDonations() }
+
+    suspend fun deleteCashDonation(id: String) =
+        withContext(Dispatchers.IO) { database.deleteCashDonation(id) }
+
     suspend fun getFinancialTransactions(): List<StoredFinancialTransaction> =
         withContext(Dispatchers.IO) {
             database.readFinancialTransactions()
