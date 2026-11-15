@@ -160,6 +160,12 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun importFailureKeepsInstalledFilesOnceMetadataCommitWasAttempted() {
+        assertTrue(shouldDeleteInstalledAttachmentsAfterImportFailure(false))
+        assertFalse(shouldDeleteInstalledAttachmentsAfterImportFailure(true))
+    }
+
+    @Test
     fun attachmentRecoveryPlanFindsOnlyUnreferencedEncryptedFiles() {
         val referenced = setOf("keep-1", "keep-2")
         val stored = setOf("keep-1", "keep-2", "orphan-1", "orphan-2")
