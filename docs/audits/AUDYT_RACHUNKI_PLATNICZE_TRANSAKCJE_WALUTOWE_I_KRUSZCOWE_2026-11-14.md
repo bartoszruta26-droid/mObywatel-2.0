@@ -3749,6 +3749,66 @@ Nie osłabiono asercji biznesowych ani nie pominięto testów.
 - `FinancialReportDateRangePickerTest.kt` — commit `c85765a93a455beaff7bea4ffc2b7b857e2ff50b`.
 - Zmiana dotyczy wyłącznie selektorów w dwóch testach instrumentacyjnych; logika produkcyjnego DatePicker pozostaje bez zmian.
 
-### 66.4. Status walidacji
+### 66.4. Dodatkowe zabezpieczenie testu i wynik CI
 
-Poprawka została zapisana. Wymaga ponownego uruchomienia i pomyślnego zakończenia testów instrumentacyjnych na emulatorze. Do czasu zakończenia CI nie uznaje się etapu 66 za zweryfikowany. APK z poprzedniego przebiegu nie zostało opublikowane, ponieważ etap testów instrumentacyjnych zakończył się niepowodzeniem.
+W kolejnym commicie `f11f42f79014b625d3fd082d6bb0733163a19770` dodano `assertIsDisplayed()` przed kliknięciem dnia 10 i 25. Ma to odróżnić brak widoczności celu od błędu wstrzyknięcia dotyku i dostarczyć wcześniejszej, czytelniejszej diagnozy.
+
+Dla HEAD `f11f42f79014b625d3fd082d6bb0733163a19770`:
+- Repository compliance, run `43715732276` — **success**;
+- Android prototype build, run `43715732258` — **success**;
+- Android GUI validation, run `43715732250` — **cancelled** wskutek kolejnego pushu przed zakończeniem testów emulatorowych.
+
+Wynik budowy APK i testów JVM jest pozytywny dla tego SHA, ale testy DatePicker na emulatorze nadal nie mają potwierdzonego wyniku. Etap 66 pozostaje **częściowo zweryfikowany; walidacja GUI oczekuje na nowy pełny przebieg**.
+
+
+## 67. Ochrona pełnego importu archiwum przed nadpisaniem transakcji (15 listopada 2026 r.)
+
+### 67.1. Ustalenie audytu
+
+Ścieżka `previewArchive()` wykrywała konflikt, gdy istniejąca transakcja finansowa i importowana transakcja miały ten sam identyfikator, lecz różniły się danymi. Ścieżka zatwierdzająca `importJson()` przechodziła jednak do `PaymentLedgerDatabase.importArchive()`, gdzie `saveFinancialTransaction()` aktualizowało rekord o tym samym identyfikatorze. W praktyce można było więc nadpisać istniejącą historię finansową mimo konfliktu wykrywanego przez podgląd.
+
+Dodatkowa niespójność: podgląd porównywał obiekty z użyciem równości `data class`, która dla `BigDecimal` rozróżnia skalę (np. `100.0` i `100.00`), mimo że są to równe wartości księgowe.
+
+### 67.2. Wdrożona poprawka
+
+W `PaymentLedgerDatabase.importArchive()`:
+- przed zapisem transakcji pobierane są istniejące rekordy;
+- ten sam identyfikator i te same dane oznaczają ponowny, idempotentny import — rekord pozostaje bez zmian;
+- ten sam identyfikator z innymi danymi lub innymi powiązaniami do wpisów bankowych powoduje wyjątek i wycofanie całej transakcji SQLite;
+- nie jest już wywoływana aktualizująca metoda zapisu dla istniejącego identyfikatora archiwum.
+
+Porównanie tożsamości transakcji obejmuje datę/czas, typ, obie strony aktywów i kwot, prowizję, źródło, identyfikator zewnętrzny, opis, status parsowania oraz zbiór identyfikatorów powiązanych wpisów. Kwoty i prowizje są porównywane numerycznie przez `BigDecimal.compareTo`, a nie przez skalowrażliwą równość obiektów.
+
+W `PaymentLedgerRepository.previewArchive()` zastosowano tę samą semantykę porównania, aby podgląd i zatwierdzenie importu nie rozbiegały się dla równoważnych zapisów dziesiętnych.
+
+### 67.3. Testy regresyjne
+
+Dodano testy instrumentacyjne:
+- `sameTransactionIdWithChangedDataIsRejectedAndPreservesExistingRecord` — zmiana kwoty pod istniejącym identyfikatorem jest odrzucana, a poprzedni rekord pozostaje zachowany;
+- `identicalTransactionArchiveCanBeImportedRepeatedlyWithoutChangingRecord` — wielokrotny import tej samej transakcji nie tworzy duplikatów;
+- `archivePreviewUsesNumericTransactionIdentityAndDetectsChangedAmounts` — podgląd uznaje kwoty różniące się wyłącznie skalą za równoważne, a rzeczywistą zmianę kwoty klasyfikuje jako konflikt.
+
+### 67.4. Zmienione pliki i commity
+
+- `PaymentLedgerDatabase.kt` — kontrola istniejącego identyfikatora i porównanie pełnej tożsamości transakcji; commit `fe14a5d8bc20b2282402a21cf6611cad4acf9fff`, doprecyzowanie typu `BigDecimal` w `fd08ab26071d6396a91a55d219e64a2be7faee24`.
+- `PaymentLedgerDatabaseTest.kt` — testy konfliktu i idempotencji; commit `9c0c5d7bdf3e83d1615959e8440c0d680b9ca403`, korekta porównań dziesiętnych w `e640f6bc3a54479c8a5de09f58f7dc00a748546b`.
+- `PaymentLedgerRepository.kt` — zgodność semantyki podglądu z zatwierdzaniem; commit `3c5b930c4d48e99d4a8f815696cdfb226d1bd787`.
+- `PaymentLedgerRepositoryTest.kt` — test podglądu równoważnych i zmienionych kwot; commit `516966bb693e7f5fc13ce0c2b02088f1248eb2ee`.
+
+### 67.5. Kontrola zapisu i walidacja
+
+Po zapisaniu zmian ponownie pobrano z GitHuba pliki `PaymentLedgerDatabase.kt`, `PaymentLedgerDatabaseTest.kt`, `PaymentLedgerRepository.kt` i `PaymentLedgerRepositoryTest.kt`. Potwierdzono obecność kontroli konfliktu, porównania numerycznego oraz trzech testów regresyjnych.
+
+Końcowy HEAD na moment aktualizacji tej sekcji: `516966bb693e7f5fc13ce0c2b02088f1248eb2ee`.
+
+Przebiegi dla wcześniejszego HEAD `e640f6bc3a54479c8a5de09f58f7dc00a748546b`:
+- Repository compliance, run `43716125542` — **success**;
+- Android prototype build, run `43716125516` — w toku w chwili aktualizacji;
+- Android GUI validation, run `43716125495` — **cancelled** po kolejnym pushu.
+
+Dla końcowego HEAD `516966bb693e7f5fc13ce0c2b02088f1248eb2ee`:
+- Android prototype build, run `43716177341` — oczekujący;
+- Repository compliance, run `43716177346` — w kolejce;
+- nie stwierdzono jeszcze potwierdzonego pełnego przebiegu Android GUI dla tego SHA.
+
+Etap 67 jest **zapisany i sprawdzony w źródłach, ale oczekuje na pełną walidację CI**. Nie uznaje się jeszcze testów instrumentacyjnych ani APK za zaliczone dla końcowego HEAD. PR `#68` pozostaje otwarty i niescalony.
