@@ -16,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import java.time.Instant
@@ -43,7 +42,7 @@ fun FinancialReportDateRangePicker(
     }.getOrDefault(true)
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(androidx.compose.ui.unit.dp(8))) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { showStartPicker = true }) {
                 Text("Data początkowa: $startDate")
             }
