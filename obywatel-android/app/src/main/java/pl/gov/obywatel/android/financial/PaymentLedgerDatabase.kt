@@ -619,6 +619,9 @@ class PaymentLedgerDatabase(
     }
 
     /** Odtwarza transakcje wraz z prowizjami i identyfikatorami źródłowych zapisów. */
+    fun previewArchiveEntries(entries: List<BankStatementEntry>): BankImportPreview =
+        BankImportDeduplicator.preview(entries, readAll())
+
     fun readFinancialTransactions(): List<StoredFinancialTransaction> {
         val db = readableDatabase
         val result = mutableListOf<StoredFinancialTransaction>()
