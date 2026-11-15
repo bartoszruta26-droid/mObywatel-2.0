@@ -102,6 +102,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var donationReceiptText by remember { mutableStateOf("") }
     var donationStatus by remember { mutableStateOf(DonationCustodyStatus.HELD) }
     var donationTransferredAmountText by remember { mutableStateOf("") }
+    var donationTransferredAtText by remember { mutableStateOf("") }
     var donationNoteText by remember { mutableStateOf("") }
     var editingDonationId by remember { mutableStateOf<String?>(null) }
     var editingTransactionId by remember { mutableStateOf<String?>(null) }
@@ -236,6 +237,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         donationReceiptText = ""
         donationStatus = DonationCustodyStatus.HELD
         donationTransferredAmountText = ""
+        donationTransferredAtText = ""
         donationNoteText = ""
     }
 
@@ -256,7 +258,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     collectedBy = donationCollectedByText.trim().ifBlank { null },
                     receiptNumber = donationReceiptText.trim().ifBlank { null },
                     custodyStatus = donationStatus,
-                    transferredAt = if (donationTransferredAmountText.isBlank()) null else previous?.transferredAt ?: Instant.now(),
+                    transferredAt = donationTransferredAtText.trim().takeIf { it.isNotBlank() }?.let(Instant::parse),
                     transferredAmount = donationTransferredAmountText.trim().takeIf { it.isNotBlank() }?.let(::BigDecimal),
                     note = donationNoteText.trim().ifBlank { null },
                     source = previous?.source ?: FinancialRecordSource.MANUAL
@@ -287,6 +289,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         donationReceiptText = donation.receiptNumber.orEmpty()
         donationStatus = donation.custodyStatus
         donationTransferredAmountText = donation.transferredAmount?.toPlainString().orEmpty()
+        donationTransferredAtText = donation.transferredAt?.toString().orEmpty()
         donationNoteText = donation.note.orEmpty()
     }
 
@@ -748,6 +751,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     }
                 }
                 OutlinedTextField(value = donationTransferredAmountText, onValueChange = { donationTransferredAmountText = it }, label = { Text("Kwota przekazana organizacji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = donationTransferredAtText, onValueChange = { donationTransferredAtText = it }, label = { Text("Data przekazania ISO-8601 (wymagana z kwotą)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = donationNoteText, onValueChange = { donationNoteText = it }, label = { Text("Uwagi (opcjonalnie)") }, modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
