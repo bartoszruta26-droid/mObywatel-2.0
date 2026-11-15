@@ -731,11 +731,11 @@ class PaymentLedgerDatabase(
 
     private fun sameCurrencyConversion(first: CurrencyConversionRecord, second: CurrencyConversionRecord): Boolean =
         first.id == second.id && first.convertedAt == second.convertedAt &&
-            first.sourceAmount.compareTo(second.sourceAmount) == 0 &&
+            first.sourceAmount == second.sourceAmount &&
             first.sourceCurrencyCode == second.sourceCurrencyCode &&
-            first.targetAmount.compareTo(second.targetAmount) == 0 &&
+            first.targetAmount == second.targetAmount &&
             first.targetCurrencyCode == second.targetCurrencyCode &&
-            first.appliedRate.compareTo(second.appliedRate) == 0 &&
+            first.appliedRate == second.appliedRate &&
             first.rateDate == second.rateDate && first.rateSource == second.rateSource
 
     private fun sameDonationIdentity(
