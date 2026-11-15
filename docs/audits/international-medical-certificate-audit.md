@@ -378,3 +378,16 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Build Android, testy JVM i Compose UI dla nowego formularza badań obrazowych — oczekują na wynik workflow uruchomionego po commicie `2f4f1c9`.
 
 **Status:** formularz podstawowy i wielokrotna lista badań obrazowych są zaimplementowane, ale załączniki, skany podpisów, automatyczne tłumaczenie, PDF/druk i testy końcowe pozostają otwarte. PR #69 pozostaje WIP.
+
+
+---
+
+## 16. Ochrona integralności danych badań obrazowych — 2026-11-15
+
+- [x] Dekoder listy badań obrazowych zgłasza teraz błąd niepoprawnego JSON zamiast po cichu zwracać pustą listę.
+- [x] Błąd odszyfrowania magazynu lub odczytu zapisanej listy badań blokuje przycisk zapisu, chroniąc wcześniejsze dane przed zastąpieniem pustą zawartością.
+- [x] REUSE compliance: PASS dla SHA `b08788aba9d4a01c5904895dc3d3a9f65a37f289`.
+- [ ] Testy JVM, kompilacja APK i testy Compose dla formularza obrazowania: workflow dla SHA `0bc922e60135ba5ed32fef5efc1a216278579f4d` są uruchomione; końcowego wyniku jeszcze brak.
+- [ ] Pozytywny build i testy muszą potwierdzić sekcję obrazowania oraz blokadę zapisu po błędach odczytu.
+
+**Status:** ukończono interfejs listy badań obrazowych i ochronę przed utratą danych po błędzie dekodowania. Załączniki, podpisy, tłumaczenia, PDF i druk pozostają otwarte. PR #69 pozostaje WIP i nie jest scalony.
