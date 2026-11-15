@@ -3258,3 +3258,26 @@ To jest korekta przyczyny awarii klasy w procesie providera, ale nie jest jeszcz
 ### Następny krok
 
 Uruchomić pełne CI dla rewizji z Java providerem. W razie kolejnego niepowodzenia pobrać raporty instrumentacyjne i poprawić konkretną przyczynę; dopiero po zielonym przebiegu przejść do implementacji raportów finansowych z rozdzieleniem walut, kruszców, kwot przyjętych, przechowywanych, przekazanych i nierozliczonych.
+
+## 54.9. Korekta symulacji awarii strumienia — niezawodny potok (15 listopada 2026 r.)
+
+### Wynik ponownego CI dla rewizji d7b6586f
+
+Android GUI validation (run `43699181019`) zakończył się niepowodzeniem. Testy JVM przeszły, natomiast instrumentacja wykonała 80 testów i zgłosiła jedną porażkę:
+`DonationAttachmentStorageTest.importDeletesPartialFileWhenProviderFailsAfterWritingBytes` — `AssertionError: expected java.io.IOException to be thrown, but nothing was thrown`.
+
+Pozostałe 79 testów instrumentacyjnych przeszło. Repository compliance (run `43699181045`) i Android prototype build (run `43699181009`) zakończyły się sukcesem. Raporty instrumentacyjne zostały zarchiwizowane jako artefakt runu `43699181019` (artifact ID `14154699972`). Ponieważ test błędu strumienia nie przeszedł, etap 2Q.4 pozostaje niezweryfikowany.
+
+### Diagnoza i korekta
+
+Wcześniejsze logi dla tego runu potwierdzają, że Java provider uruchomił się bez błędu Kotlin Runtime, zapisał przypadek testowy, a niepowodzenie nastąpiło na asercji oczekiwanego wyjątku. Provider używał `ParcelFileDescriptor.createPipe()`, czyli zwykłego potoku, podczas gdy test wymaga propagacji kontrolowanego stanu błędu przez `closeWithError()`.
+
+Zmieniono tworzenie potoku na `ParcelFileDescriptor.createReliablePipe()`. Jest to mechanizm przeznaczony do propagowania informacji o błędzie z końca zapisującego do odbiorcy; pozostawiono zapis części payloadu, `closeWithError("controlled read failure")`, URI providera, produkcyjną metodę importu i asercje usunięcia częściowego pliku bez zmian.
+
+- Plik: `obywatel-android/app/src/androidTest/java/pl/gov/obywatel/android/financial/FailingStreamContentProvider.java`.
+- Commit korekty: `a3baf7c137464f4285b507d3f104a48219547b38`.
+
+### Status i wymagane potwierdzenie
+
+Korekta jest zapisana, ale nie jest jeszcze zweryfikowana. Należy wykonać pełne Android GUI validation i potwierdzić, że wskazany test przechodzi oraz że cały zestaw instrumentacyjny kończy się bez błędów. Do tego czasu nie oznaczać etapu 2Q.4 jako zamkniętego i nie rozpoczynać raportów PDF/CSV na podstawie niezweryfikowanego założenia o sprzątaniu plików po błędzie odczytu.
+
