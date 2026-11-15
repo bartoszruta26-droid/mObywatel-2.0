@@ -3477,3 +3477,37 @@ Korekta:
 - Commit poprawki: `89183d9ea57f2ed78b7720ed7f13051f80944024`.
 
 Status po poprawce: zmiana jest zapisana na gałęzi, ale wymaga ponownego pełnego CI. Nie uznaje się etapu 58 za zweryfikowany do czasu sukcesu testów JVM, testów instrumentacyjnych/Compose, budowy APK i kontroli zgodności dla dokładnego nowego HEAD.
+
+## 59. Wzmocnienie testów kalendarzowego wyboru zakresu raportu (15 listopada 2026 r.)
+
+### 59.1. Cel
+
+Uzupełnienie testów komponentu `FinancialReportDateRangePicker` o rzeczywistą zmianę wybranej daty. Dotychczasowe testy potwierdzały otwarcie kalendarza, zatwierdzenie daty początkowej bez zmiany wartości, anulowanie oraz komunikat dla odwróconego zakresu. Nie sprawdzały, czy wskazanie innego dnia aktualizuje właściwą granicę i pozostawia drugą datę bez zmian.
+
+### 59.2. Wykonane zmiany
+
+W pliku `obywatel-android/app/src/androidTest/java/pl/gov/obywatel/android/financial/FinancialReportDateRangePickerTest.kt` dodano dwa testy Compose:
+- `selectingDifferentStartDateUpdatesOnlyStartBoundary` — wybór 10 listopada 2026 r. zmienia datę początkową z 1 na 10 listopada i zachowuje datę końcową 20 listopada;
+- `selectingDifferentEndDateUpdatesOnlyEndBoundary` — wybór 25 listopada 2026 r. zmienia datę końcową z 15 na 25 listopada i zachowuje datę początkową 1 listopada.
+
+Testy sprawdzają callback komponentu i końcową parę dat, a więc weryfikują obie ścieżki aktualizacji, a nie tylko samo wyświetlenie okna dialogowego.
+
+### 59.3. Rewizja
+
+- Zmieniony plik: `FinancialReportDateRangePickerTest.kt`.
+- Commit: `8303bb9fab5c8731f44aab7006d1ca584d7a5dfb`.
+- Gałąź: `feature/payment-ledger-stage-1`.
+
+### 59.4. Walidacja
+
+- Repository compliance (alfa), run `43710469128` — **success** dla commitu `8303bb9`.
+- Android prototype build, run `43710469143` — uruchomiony; wynik testów JVM i budowy APK oczekuje na zakończenie.
+- Android GUI validation, run `43710469168` — uruchomiony; wynik testów JVM, Compose na emulatorze i budowy APK oczekuje na zakończenie.
+
+Etap 59 jest wdrożony w kodzie, lecz pozostaje **niezweryfikowany testami Android** do czasu zakończenia obu przebiegów i sprawdzenia, że nowe testy wyboru dni przeszły na emulatorze. Nie należy uznawać samego uruchomienia zadań ani kontroli REUSE za potwierdzenie poprawności testów interfejsu.
+
+### 59.5. Dalsze kontrole
+
+- Potwierdzić, że selektor Material 3 udostępnia jednoznaczny węzeł dnia w semantyce Compose na obrazie emulatora CI.
+- Jeżeli testy nie przejdą z powodu selektora węzła, poprawić asercje na podstawie rzeczywistego drzewa semantyki, bez osłabiania sprawdzenia zmiany daty.
+- Po pomyślnym CI zachować PR `#68` otwarty do dalszego przeglądu.
