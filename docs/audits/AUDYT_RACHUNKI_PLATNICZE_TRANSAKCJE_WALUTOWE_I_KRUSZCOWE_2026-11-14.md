@@ -2919,7 +2919,7 @@ W ekranie rejestru darowizn dodano:
 - test trwałości metadanych w SQLite;
 - test kaskadowego usunięcia metadanych przy usunięciu darowizny.
 
-Testy automatyczne nie zastępują jeszcze ręcznego sprawdzenia selektora SAF i fizycznego kopiowania PDF/JPEG/PNG na urządzeniu. Nie dodano podglądu/otwierania załącznika ani importu załączników w archiwum JSON.
+Testy obejmują walidację modelu, zapis/odczyt metadanych, kaskadę usuwania i migrację 6 → 7 z zachowaniem przykładowej darowizny. Testy automatyczne nie zastępują jeszcze ręcznego sprawdzenia selektora SAF i fizycznego kopiowania PDF/JPEG/PNG na urządzeniu. Nie dodano podglądu/otwierania załącznika ani importu załączników w archiwum JSON.
 
 #### 47.6. Pliki i rewizje
 
@@ -2928,7 +2928,8 @@ Testy automatyczne nie zastępują jeszcze ręcznego sprawdzenia selektora SAF i
 - `PaymentLedgerDatabase.kt` — schemat 7 i CRUD metadanych;
 - `PaymentLedgerRepository.kt` — import pliku, zapis metadanych i usuwanie;
 - `PaymentLedgerScreen.kt` — selektor SAF, lista i usuwanie;
-- `PaymentLedgerDatabaseTest.kt` — testy metadanych i kaskady;
+- `PaymentLedgerDatabaseTest.kt` — testy metadanych, kaskady i migracji 6 → 7;
+- `FinancialModelsTest.kt` — test walidacji MIME, limitu rozmiaru, SHA-256 i nazwy prywatnego pliku;
 - `FinancialModelsTest.kt` — uzupełnienie testów modelu.
 
 #### 47.7. Weryfikacja
@@ -2941,3 +2942,6 @@ Zmiany zapisano w jednej rewizji, aby uniknąć niepotrzebnego uruchamiania wiel
 2. Dodać bezpieczne otwieranie/podgląd plików przez kontrolowany `FileProvider`, bez ujawniania bezpośrednich ścieżek prywatnych.
 3. Dodać eksport raportu darowizn PDF/CSV z oddzieleniem sum przyjętych, przechowywanych i przekazanych.
 4. Rozważyć jawny eksport/backup załączników jako osobne archiwum, z walidacją sum kontrolnych i limitów.
+
+
+**Uzupełnienie kontroli implementacji:** po ponownym odczycie plików skorygowano zapis separatora ścieżki w literałach znakowych Kotlin. Dodano także jawny test migracji z wersji 6 do 7 oraz jednostkowy test walidacji metadanych. Te uzupełnienia wchodzą do tej samej rewizji przed oceną CI.

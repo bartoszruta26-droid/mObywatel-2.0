@@ -188,4 +188,33 @@ class FinancialModelsTest {
         ).validate()
     }
 
+
+    @Test
+    fun donationAttachmentValidatesPrivateFileMetadataAndLimits() {
+        val attachment = DonationAttachment(
+            id = "00000000-0000-0000-0000-000000000001",
+            donationId = "donation-attachment",
+            fileName = "pokwitowanie.pdf",
+            mimeType = "application/pdf",
+            sizeBytes = 1024,
+            sha256 = "a".repeat(64),
+            storedFileName = "00000000-0000-0000-0000-000000000002.pdf",
+            addedAt = Instant.parse("2026-11-15T10:00:00Z")
+        )
+        attachment.validate()
+        assertThrows(IllegalArgumentException::class.java) {
+            attachment.copy(mimeType = "application/octet-stream").validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            attachment.copy(sizeBytes = DonationAttachment.MAX_BYTES + 1).validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            attachment.copy(sha256 = "bad").validate()
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            attachment.copy(storedFileName = "../outside.pdf").validate()
+        }
+    }
+
+
 }

@@ -27,7 +27,7 @@ class DonationAttachmentStorage(context: Context) {
         val displayName = resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
             if (cursor.moveToFirst()) cursor.getString(0) else null
         }?.takeIf { it.isNotBlank() } ?: "zalacznik"
-        val safeName = displayName.substringAfterLast('/').substringAfterLast('\\\\')
+        val safeName = displayName.substringAfterLast('/').substringAfterLast('\\')
             .filter { it.isLetterOrDigit() || it in " ._-()" }
             .take(180).ifBlank { "zalacznik" }
         val extension = when (mimeType) {

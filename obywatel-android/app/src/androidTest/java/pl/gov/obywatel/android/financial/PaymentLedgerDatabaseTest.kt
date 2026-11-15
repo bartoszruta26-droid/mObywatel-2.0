@@ -789,4 +789,53 @@ class PaymentLedgerDatabaseTest {
     }
 
 
+
+    @Test
+    fun versionSixMigrationCreatesDonationAttachmentTableAndPreservesDonation() {
+        val legacy = object : SQLiteOpenHelper(context, databaseName, null, 6) {
+            override fun onCreate(db: SQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE cash_donations (
+                        donation_id TEXT PRIMARY KEY NOT NULL,
+                        received_at TEXT NOT NULL,
+                        amount TEXT NOT NULL,
+                        currency_code TEXT NOT NULL,
+                        beneficiary_organization_name TEXT NOT NULL,
+                        purpose TEXT NOT NULL,
+                        donor_name TEXT,
+                        is_anonymous INTEGER NOT NULL,
+                        campaign_name TEXT,
+                        collected_by TEXT,
+                        receipt_number TEXT,
+                        custody_status TEXT NOT NULL,
+                        transferred_at TEXT,
+                        transferred_amount TEXT,
+                        note TEXT,
+                        source TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "INSERT INTO cash_donations(donation_id, received_at, amount, currency_code, beneficiary_organization_name, purpose, is_anonymous, custody_status, source) " +
+                        "VALUES ('legacy-donation', '2026-11-14T10:00:00Z', '12.00', 'PLN', 'Fundacja Aria', 'Cel', 0, 'HELD', 'MANUAL')"
+                )
+            }
+            override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+        }
+        legacy.writableDatabase
+        legacy.close()
+        val upgraded = openDatabase()
+        try {
+            assertEquals("Fundacja Aria", upgraded.readCashDonations().single().beneficiaryOrganizationName)
+            upgraded.readableDatabase.rawQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='donation_attachments'",
+                null
+            ).use { assertEquals(true, it.moveToFirst()) }
+        } finally {
+            upgraded.close()
+        }
+    }
+
+
 }
