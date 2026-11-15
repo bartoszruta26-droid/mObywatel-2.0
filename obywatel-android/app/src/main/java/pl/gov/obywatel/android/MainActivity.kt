@@ -1275,6 +1275,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showSettingsMenu by remember { mutableStateOf(false) }
     var showDocumentEditorCatalog by remember { mutableStateOf(false) }
     var showApplicationAppearanceSettings by remember { mutableStateOf(false) }
+    var showTranslationLanguageSettings by remember { mutableStateOf(false) }
     var showDocumentVisibilitySettings by remember { mutableStateOf(false) }
     var showDocumentBrandAssets by remember { mutableStateOf(false) }
     var documentBrandTarget by remember { mutableStateOf<String?>(null) }
@@ -1359,6 +1360,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             selectedMedicalCertificateRecordId != null -> selectedMedicalCertificateRecordId = null
             credentialAppearanceTarget != null -> credentialAppearanceTarget = null
             showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
+            showTranslationLanguageSettings -> { showTranslationLanguageSettings = false; showSettingsMenu = true }
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
@@ -1384,7 +1386,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1460,6 +1462,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             showSettingsMenu = true
                         }
                     })
+                    showTranslationLanguageSettings -> MedicalTranslationLanguagesSettingsScreen(onBack = { showTranslationLanguageSettings = false; showSettingsMenu = true })
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
                         onChange = onAppearanceChange,
@@ -1599,6 +1602,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         },
                         onBack = { showSettingsMenu = false },
                         onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
+                        onManageTranslationLanguages = { showSettingsMenu = false; showTranslationLanguageSettings = true },
                         onManageCredentialAppearance = { showSettingsMenu = false; showCredentialAppearanceEditor = true },
                         onManageDocumentEditing = { showSettingsMenu = false; showDocumentEditorCatalog = true },
                         onManageDocumentVisibility = { openDocumentVisibilityCatalog() },
@@ -3542,6 +3546,7 @@ private fun DocumentEditorCatalogScreen(
 private fun SettingsMenuScreen(
     documentPlacements: Map<String, String>,
     onManageApplicationAppearance: () -> Unit,
+    onManageTranslationLanguages: () -> Unit,
     onManageCredentialAppearance: () -> Unit,
     onManageDocumentEditing: () -> Unit,
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
@@ -3585,6 +3590,12 @@ private fun SettingsMenuScreen(
             "Motyw kolorystyczny, godło oraz tła ekranów uruchamiania i logowania",
             Icons.Filled.Settings,
             onManageApplicationAppearance
+        )
+        ProfileActionCard(
+            "Języki i tłumaczenia",
+            "Zarządzaj modelami tłumaczeń, automatycznym pobieraniem i użyciem Wi-Fi",
+            Icons.Filled.Language,
+            onManageTranslationLanguages
         )
         ProfileActionCard(
             "Wspólny wygląd legitymacji",
