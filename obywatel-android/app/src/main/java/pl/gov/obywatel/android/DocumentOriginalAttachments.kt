@@ -34,6 +34,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.security.KeyStore
 import java.util.UUID
 import javax.crypto.Cipher
@@ -312,9 +313,19 @@ private object OriginalAttachmentStore {
         val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
         val target = File(directory, "$attachmentId.enc")
         require(!target.exists()) { "Plik załącznika o tym identyfikatorze już istnieje." }
-        target.writeBytes(crypt(bytes, true))
+        val staging = File(directory, ".$attachmentId.${UUID.randomUUID()}.import")
+        var targetInstalled = false
         var metadataCommitAttempted = false
         try {
+            // Install the encrypted payload through a synced staging file. A
+            // failed/partial write must never leave a truncated final .enc file.
+            FileOutputStream(staging).use { output ->
+                output.write(crypt(bytes, true))
+                output.fd.sync()
+            }
+            check(staging.renameTo(target)) { "Nie udało się atomowo zainstalować pliku załącznika." }
+            targetInstalled = true
+
             updated.add(OriginalAttachment(attachmentId, name.take(180).ifBlank { "Oryginał dokumentu" }, safeMime))
             val json = JSONArray()
             updated.forEach { item ->
@@ -325,12 +336,15 @@ private object OriginalAttachmentStore {
                 .putString(documentId, json.toString()).commit()) { "Nie udało się zapisać załącznika." }
         } catch (failure: Throwable) {
             // A failed commit may have updated SharedPreferences' in-memory map.
-            // Keep the encrypted file after the commit attempt; reconciliation
-            // removes it only if durable metadata does not reference it.
-            if (shouldDeleteAddedAttachmentAfterFailure(metadataCommitAttempted) && target.exists()) {
+            // Keep the installed encrypted file after the commit attempt;
+            // reconciliation removes it only if durable metadata does not reference it.
+            if (shouldDeleteAddedAttachmentAfterFailure(metadataCommitAttempted) &&
+                targetInstalled && target.exists()) {
                 target.delete()
             }
             throw failure
+        } finally {
+            staging.delete()
         }
     }
 
