@@ -7,8 +7,8 @@ import java.math.BigDecimal
 import java.net.HttpURLConnection
 import java.net.URL
 import java.time.Duration
-import java.time.temporal.ChronoUnit
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
 import org.json.JSONArray
 import org.json.JSONObject
@@ -122,7 +122,7 @@ class NbpRatesRepository(
 
     fun goldPriceRange(start: LocalDate, end: LocalDate): List<NbpGoldPrice> {
         require(!end.isBefore(start)) { "Data końcowa musi przypadać po dacie początkowej." }
-        require(Duration.between(start.atStartOfDay(), end.plusDays(1).atStartOfDay()).toDays() <= 93) {
+        require(ChronoUnit.DAYS.between(start, end) + 1 <= 93) {
             "Jedno zapytanie NBP może obejmować maksymalnie 93 dni."
         }
         return cached("gold-$start-$end", historicalTtl) {
