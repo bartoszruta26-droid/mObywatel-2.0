@@ -3652,3 +3652,29 @@ Dla commitu `1d5949e2a31fd9f57179ebc8f2cf0d818b221523`:
 - Android GUI validation, run `43713289577` — uruchomiony.
 
 Do zamknięcia etapu wymagane jest zakończenie obu przebiegów Android dla tego samego SHA. W szczególności należy potwierdzić kompilację `androidTest`, wykonanie testów DatePicker i SAF na emulatorze oraz utworzenie debug APK. Do tego czasu etap 63 pozostaje poprawką zapisaną, ale niepotwierdzoną pełnym CI.
+
+
+## 64. Korekta selektorów dni kalendarza po walidacji emulatorowej (15 listopada 2026 r.)
+
+### 64.1. Wynik pełnego przebiegu dla HEAD 4bead0f
+
+- Repository compliance, run `43713349221` — **success**.
+- Android prototype build, run `43713349254` — **success**; testy JVM i budowa debug APK zakończone powodzeniem; artefakt `obywatel-android-debug` został opublikowany.
+- Android GUI validation, run `43713349290` — **failure** w `:app:connectedDebugAndroidTest`.
+- Wykonano 91 testów instrumentacyjnych; 89 zakończyło się powodzeniem, 2 niepowodzeniem.
+- Niepowodzenia dotyczyły wyłącznie `selectingDifferentStartDateUpdatesOnlyStartBoundary` i `selectingDifferentEndDateUpdatesOnlyEndBoundary`. Selektory `onNodeWithContentDescription` nie znalazły dni pod oczekiwanym angielskim opisem. Nie jest to potwierdzenie błędu logiki zakresu dat; testy nie dotarły do kliknięcia dnia i sprawdzenia callbacku.
+
+### 64.2. Wykonana korekta
+
+W `FinancialReportDateRangePickerTest.kt` zastąpiono zależne od języka opisy dostępnościowe selektorami tekstu dnia w niepołączonym drzewie semantyki Compose:
+
+- dzień 10: `onNodeWithText("10", useUnmergedTree = true)`;
+- dzień 25: `onNodeWithText("25", useUnmergedTree = true)`.
+
+Asercje końcowe pozostały bez zmian: test początku wymaga pary `2026-11-10 / 2026-11-20`, a test końca `2026-11-01 / 2026-11-25`. Zachowano więc kontrolę aktualizacji tylko jednej granicy okresu.
+
+### 64.3. Ograniczenia i dalsza walidacja
+
+To jest korekta testu, nie dowód jego poprawności. Należy uruchomić pełne Android GUI validation i potwierdzić, że oba selektory trafiają w pojedynczy węzeł dnia na emulatorze oraz że callback przekazuje oczekiwane daty. Jeśli selektor tekstu nadal nie zostanie znaleziony, następnym krokiem jest zebranie drzewa semantyki DatePicker w raporcie testowym i dopasowanie selektora do rzeczywistego drzewa, bez usuwania asercji końcowych.
+
+Etap 64 pozostaje **oczekujący na walidację emulatorową**. PR `#68` pozostaje otwarty i niescalony.
