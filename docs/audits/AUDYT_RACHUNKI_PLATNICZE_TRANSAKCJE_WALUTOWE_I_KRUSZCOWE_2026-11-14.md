@@ -4400,3 +4400,33 @@ PR #68 pozostaje otwarty i niescalony.
 
 ### Uzupełnienie kontroli kodu
 - `0c877a34a748db8d2beae47154eebeb7a675ea4e` — jawne parsowanie daty historycznej w karcie kalkulatora.
+
+
+## 23. Etap 85 — usunięcie blokady kompilacji i kontrola CI (15 listopada 2026 r.)
+
+### Diagnoza
+Kontrola GitHub Actions dla PR #68 wykazała:
+- Android prototype build, run `43744986147`, job `132907174308` — **failure** na kroku `:app:compileDebugKotlin`;
+- Android GUI validation, run `43744986141` — **cancelled** przed testami JVM i emulatorowymi;
+- Repository compliance, run `43744986154` — **success**.
+
+Log kompilacji wskazał jednoznacznie błąd w `NbpCurrencyConverterCard.kt`: import `androidx.compose.foundation.layout.weight` próbował udostępnić wewnętrzną właściwość `RowColumnParentData?.weight`. W obrębie treści `Row` dostęp do `Modifier.weight` zapewnia zakres `RowScope`; jawny import nie jest potrzebny.
+
+### Wykonana poprawka
+- Usunięto błędny import `androidx.compose.foundation.layout.weight`.
+- Zachowano wywołania `Modifier.weight(1f)` w polach waluty źródłowej i docelowej, ponieważ znajdują się w treści `Row`.
+- Nie zmieniano logiki kursów, obliczeń, dat historycznych ani obsługi złota.
+
+Commit poprawki: `6f2772b4449040ad5f0a4eb96bca1f7429444773`.
+
+### Status weryfikacji
+Poprawkę zapisano na gałęzi. Wymagane jest ponowne uruchomienie pełnego CI dla nowego SHA: testy JVM, kompilacja debug, testy Compose na emulatorze i compliance. Nie uznaje się jeszcze kompilacji ani testów UI za zaliczone; APK nie jest potwierdzone.
+
+### Kolejne etapy po usunięciu blokady
+1. Ustalić wynik CI na aktualnym SHA i naprawić ewentualne dalsze błędy.
+2. Przed trwałą historią przeliczeń zinwentaryzować istniejący Room/SQLite, wersję bazy i migracje; nie tworzyć drugiej bazy ani nie zgadywać schematu.
+3. Dodać trwałą historię przeliczeń z kursem, tabelą, datą publikacji, kwotą, parą i wynikiem.
+4. Uzupełnić słownik ISO 4217 oraz wyszukiwanie nazw.
+5. Dodać testy UI i sieciowe dla tabel A/B, błędów HTTP, timeoutów, pustych odpowiedzi i trybu offline.
+
+PR #68 pozostaje otwarty i niescalony.
