@@ -4515,3 +4515,8 @@ Testy katalogu weryfikują teraz także liczebność migawek SIX (178 bieżącyc
 
 
 Uzupełnienie etapu 90: po weryfikacji istniejącego testu precyzji zachowano kody funduszy z określonym wykładnikiem w katalogu metadanych (np. CLF), aby nie zmieniać dotychczasowej precyzji obliczeń. Oddzielna lista `paymentCurrencies` i wyszukiwarka nadal wykluczają fundusze z wyboru waluty płatniczej. Dodano test regresyjny.
+
+
+## Etap 91 — korekty po weryfikacji emulatorowej
+
+Pierwszy przebieg testów instrumentacyjnych wykrył utratę skali BigDecimal przy zapisie historii przeliczeń oraz zbyt ścisłe dopasowanie w dwóch testach DatePicker. Zmieniono zapis kwot i kursów historii na toPlainString(), zachowując zapisane końcowe zera; testy DatePicker dopasowują fragment tekstu. Testy JVM i kompilacja debug dla poprzedniego SHA przeszły; ponowna walidacja emulatorowa po poprawkach oczekuje na CI.
