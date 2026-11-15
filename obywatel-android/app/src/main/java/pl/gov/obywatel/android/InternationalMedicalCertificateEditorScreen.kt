@@ -238,7 +238,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                     imagingRadiologist = ""
                     imagingReportNumber = ""
                 }, modifier = Modifier.fillMaxWidth()) { Text("Add imaging study") }
-                imagingStudies.forEach { study ->
+                imagingStudies.forEachIndexed { index, study ->
                     Card {
                         Column(Modifier.fillMaxWidth().padding(10.dp)) {
                             Text(study.modality.label + " — " + study.bodyRegion, fontWeight = FontWeight.SemiBold)
@@ -249,6 +249,14 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                             if (study.contrast.isNotBlank()) Text("Contrast: " + study.contrast)
                             if (study.radiologistName.isNotBlank()) Text("Radiologist: " + study.radiologistName)
                             if (study.reportNumber.isNotBlank()) Text("Report number: " + study.reportNumber)
+                            DocumentOriginalAttachments(
+                                documentId = medicalImagingAttachmentDocumentId(study.id),
+                                onAttachmentIdsChanged = { ids ->
+                                    if (index < imagingStudies.size && imagingStudies[index].id == study.id && imagingStudies[index].attachmentIds != ids) {
+                                        imagingStudies[index] = imagingStudies[index].copy(attachmentIds = ids)
+                                    }
+                                }
+                            )
                             Text("Remove", color = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.clickable { imagingStudies.remove(study) })
                         }
@@ -291,6 +299,11 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
             Text(saveMessage, color = MaterialTheme.colorScheme.primary)
         }
     }
+}
+
+internal fun medicalImagingAttachmentDocumentId(studyId: String): String {
+    require(studyId.matches(Regex("[A-Za-z0-9_.:-]{1,96}"))) { "Invalid imaging study identifier." }
+    return "imaging_study_$studyId"
 }
 
 internal fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): String {
