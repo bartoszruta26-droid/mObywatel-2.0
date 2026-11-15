@@ -12,6 +12,7 @@ import java.text.Normalizer
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.time.format.ResolverStyle
 import java.util.Locale
 
 /**
@@ -173,8 +174,8 @@ object BankStatementCsvParser {
         require(value.isNotBlank()) { "Brak daty w wierszu $row." }
         val formats = listOf(
             DateTimeFormatter.ISO_LOCAL_DATE,
-            DateTimeFormatter.ofPattern("dd.MM.uuuu"),
-            DateTimeFormatter.ofPattern("dd-MM-uuuu")
+            DateTimeFormatter.ofPattern("dd.MM.uuuu").withResolverStyle(ResolverStyle.STRICT),
+            DateTimeFormatter.ofPattern("dd-MM-uuuu").withResolverStyle(ResolverStyle.STRICT)
         )
         for (format in formats) {
             try { return LocalDate.parse(value, format) } catch (_: DateTimeParseException) { }
