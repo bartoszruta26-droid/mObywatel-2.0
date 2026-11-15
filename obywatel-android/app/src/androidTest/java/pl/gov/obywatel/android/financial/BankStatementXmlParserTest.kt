@@ -112,6 +112,50 @@ class BankStatementXmlParserTest {
     }
 
     @Test
+    fun rejectsDocumentTypeDeclarationsAndEntityReferences() {
+        val xmlWithExternalEntity = """
+            <!DOCTYPE account-history [
+              <!ENTITY leaked SYSTEM "file:///etc/passwd">
+            ]>
+            <account-history><operations><operation>
+              <order-date>2026-11-12</order-date>
+              <type>PRZELEW</type>
+              <description>&leaked;</description>
+              <amount curr="PLN">1.00</amount>
+            </operation></operations></account-history>
+        """.trimIndent()
+
+        assertThrows(IllegalArgumentException::class.java) {
+            BankStatementXmlParser.parse(xmlWithExternalEntity, "local-account-alias")
+        }
+    }
+
+    @Test
+    fun rejectsZeroAmountAndUnsupportedCurrencyCode() {
+        val zeroAmount = """
+            <account-history><operations><operation>
+              <order-date>2026-11-12</order-date>
+              <type>PRZELEW</type>
+              <amount curr="PLN">0.00</amount>
+            </operation></operations></account-history>
+        """.trimIndent()
+        val unsupportedCurrency = """
+            <account-history><operations><operation>
+              <order-date>2026-11-12</order-date>
+              <type>PRZELEW</type>
+              <amount curr="EURO">1.00</amount>
+            </operation></operations></account-history>
+        """.trimIndent()
+
+        assertThrows(IllegalArgumentException::class.java) {
+            BankStatementXmlParser.parse(zeroAmount, "local-account-alias")
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            BankStatementXmlParser.parse(unsupportedCurrency, "local-account-alias")
+        }
+    }
+
+    @Test
     fun rejectsMissingLocalAccountScopeAndMalformedOperation() {
         assertThrows(IllegalArgumentException::class.java) {
             BankStatementXmlParser.parse(fixture, " ")
