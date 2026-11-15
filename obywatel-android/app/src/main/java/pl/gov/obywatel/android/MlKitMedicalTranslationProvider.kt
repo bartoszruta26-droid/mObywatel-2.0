@@ -30,18 +30,20 @@ internal class MlKitMedicalTranslationProvider(private val context: Context) : M
                 .build()
         )
         return try {
-            val model = TranslateRemoteModel.Builder(target).build()
-            val downloaded = RemoteModelManager.getInstance()
-                .getDownloadedModels(TranslateRemoteModel::class.java).await()
-                .any { it.language == target }
-            if (!downloaded) {
-                check(MedicalTranslationModelSettings.automaticDownload(context)) {
-                    "Brak pobranego modelu językowego. Pobierz go w Więcej → Ustawienia → Języki i tłumaczenia."
+            listOf(source, target).distinct().forEach { language ->
+                val model = TranslateRemoteModel.Builder(language).build()
+                val downloaded = RemoteModelManager.getInstance()
+                    .getDownloadedModels(TranslateRemoteModel::class.java).await()
+                    .any { it.language == language }
+                if (!downloaded) {
+                    check(MedicalTranslationModelSettings.automaticDownload(context)) {
+                        "Brak pobranego modelu językowego. Pobierz modele języków źródłowego i docelowego w Więcej → Ustawienia → Języki i tłumaczenia."
+                    }
+                    val conditions = DownloadConditions.Builder().apply {
+                        if (MedicalTranslationModelSettings.wifiOnly(context)) requireWifi()
+                    }.build()
+                    RemoteModelManager.getInstance().download(model, conditions).await()
                 }
-                val conditions = DownloadConditions.Builder().apply {
-                    if (MedicalTranslationModelSettings.wifiOnly(context)) requireWifi()
-                }.build()
-                RemoteModelManager.getInstance().download(model, conditions).await()
             }
             translator.translate(text).await()
         } finally {
