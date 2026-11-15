@@ -156,3 +156,35 @@ Commity: `45277d72d878fb467c4c98f7d7843bb95c71a914`, `b099b7185001fd0f7d5f53ea3b
 - XLS/BIFF nie został jeszcze zaimplementowany. Nie dodano Apache POI bez oceny jego zależności, rozmiaru APK i zgodności z Androidem.
 - Nie dodano żadnej próbki zawierającej dane osobowe, numer rachunku, adres lub hasło.
 - PR #68 pozostaje otwarty i niescalony.
+
+
+## 76. Diagnoza testów daty i selektory niezależne od języka — 15 listopada 2026 r.
+
+### 76.1. Wynik rzeczywistego przebiegu emulatorowego
+
+Dla SHA `6ec5d9609a2f69e61df23f21a21bcaaa42c535ee`:
+- Android prototype build, run `43731287729` — **success**;
+- Repository compliance, run `43731287676` — **success**;
+- Android GUI validation, run `43731287681` — **failure**.
+
+Pobrany raport instrumentacyjny potwierdził 101 testów, z czego 99 zaliczono, a 2 nie przeszły. Nie był to już problem `assertIsDisplayed()`: testy nie znajdowały węzłów z opisami dostępności w języku angielskim `November 10, 2026` i `November 25, 2026`. Błąd występował przy `performClick()` i brzmiał `Failed to inject touch input`, ponieważ selektor nie dopasował żadnego węzła. Trzy pozostałe testy kalendarza przechodziły.
+
+Wniosek: poprzednia korekta usunęła problem asercji widoczności, ale pozostawiła zależność od lokalizowanego tekstu dostępności. To nadal wada testu, a nie dowód usterki produkcyjnego kalendarza.
+
+### 76.2. Wykonana korekta
+
+W `FinancialReportDateRangePickerTest.kt`:
+- usunięto selektory oparte na angielskich opisach dostępności;
+- wybór dni 10 i 25 oparto na widocznym tekście liczbowym dnia w niepołączonym drzewie semantyki (`useUnmergedTree = true`);
+- zachowano asercje końcowego zakresu dat, więc test nadal weryfikuje, że zmienia się tylko wskazana granica;
+- usunięto nieużywane importy.
+
+Commit: `2762cf82543334797475fc15de6f03244f6d77e5`.
+
+### 76.3. Weryfikacja i status
+
+Źródłem diagnozy jest raport HTML/XML z artefaktu `android-instrumentation-reports` przebiegu `43731287681`. Na poprzednim SHA build i compliance przeszły, lecz emulator zakończył się błędem, a kroki budowania i publikacji APK zostały pominięte.
+
+**Status etapu 76:** poprawka selektorów zapisana; oczekuje na pełny CI dla końcowego SHA po aktualizacji niniejszego audytu. Nie oznaczać kalendarza ani APK jako zaliczonych do czasu przejścia wszystkich 101 testów emulatorowych i końcowych kroków workflow.
+
+Etap XLS/BIFF pozostaje wstrzymany do czasu zielonego GUI validation, build i compliance na tym samym SHA. PR #68 pozostaje otwarty i niescalony.
