@@ -3187,3 +3187,16 @@ Test celowo symuluje błąd ContentProvider po wysłaniu części danych. Nie za
 ### 54.5. Następny krok
 
 Uruchomić i ocenić pełne CI dla rewizji obejmującej etap 2Q.4. Po zielonym wyniku przejść do raportów darowizn PDF/CSV, z odrębnym wykazaniem kwot przyjętych, pozostających w przechowaniu, przekazanych i salda nierozliczonego. Nie scalać PR #68 bez osobnego polecenia.
+
+### 54.6. Wynik pierwszego CI i korekta testu (15 listopada 2026 r.)
+
+Pierwsze pełne CI dla etapu 2Q.4 zakończyło się następująco:
+- Android prototype build — sukces (run 43694436390);
+- REUSE — sukces (run 43694436391);
+- Android GUI validation — porażka (run 43694436379), 80 testów instrumentacyjnych, 1 niepowodzenie.
+
+Jedyny nieudany test to nowy `importDeletesPartialFileWhenProviderFailsAfterWritingBytes`. Asercja wykazała `NullPointerException` zamiast oczekiwanego `IOException`. Analiza implementacji ujawniła błąd konfiguracji testu: użyto kontekstu APK instrumentacyjnego jako kontekstu magazynu, podczas gdy `DonationAttachmentStorage` pobiera `context.applicationContext` i korzysta z katalogu aplikacji docelowej. Test powinien używać kontekstu aplikacji testowanej, a resolver tej aplikacji może odczytać wyeksportowanego dostawcę z APK testowego.
+
+Poprawiono test: magazyn i katalog kontrolny korzystają teraz z istniejącego `ApplicationProvider.getApplicationContext()` (wspólnego kontekstu testów klasy), natomiast URI nadal wskazuje testowego dostawcę zarejestrowanego w manifeście androidTest. Nie zmieniono produkcyjnej logiki importu ani nie osłabiono asercji. Korekta zapisana w commicie `77c101a8f2fa2684392145e184fa424fb0b162a6`.
+
+Po tej korekcie wymagane jest ponowne pełne CI. Do czasu zakończenia ponownego Android GUI validation etap 2Q.4 pozostaje niezweryfikowany. Nie należy interpretować sukcesu kompilacji APK i REUSE jako potwierdzenia poprawności testu instrumentacyjnego.
