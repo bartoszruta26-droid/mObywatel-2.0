@@ -202,4 +202,26 @@ class FinancialReportTest {
             )
         }
     }
+
+    @Test
+    fun reportIncludesBothLocalCalendarDaysAcrossDstAndExcludesFollowingMidnight() {
+        val dstPeriod = FinancialReportPeriod.fromInclusiveDates(
+            LocalDate.parse("2026-03-28"),
+            LocalDate.parse("2026-03-29"),
+            ZoneId.of("Europe/Warsaw")
+        )
+        val entries = listOf(
+            transaction("at-local-start", "2026-03-27T23:00:00Z", toCode = "PLN", toAmount = "1"),
+            transaction("last-nanosecond-of-end-day", "2026-03-29T21:59:59.999999999Z", toCode = "PLN", toAmount = "2"),
+            transaction("at-following-midnight", "2026-03-29T22:00:00Z", toCode = "PLN", toAmount = "4")
+        )
+
+        val report = FinancialReportBuilder.build(dstPeriod, entries, emptyList(), emptyList())
+
+        assertEquals(
+            listOf("at-local-start", "last-nanosecond-of-end-day"),
+            report.rows.map { it.recordId }
+        )
+        assertEquals(0, BigDecimal("3").compareTo(report.assetTotals.single().incoming))
+    }
 }
