@@ -111,6 +111,17 @@ internal fun validateOriginalAttachmentMetadata(raw: String) {
     }
 }
 
+internal fun validateOriginalAttachmentIdOwner(
+    attachmentId: String,
+    requestedDocumentId: String,
+    existingOwners: Map<String, String>
+) {
+    val existingOwner = existingOwners[attachmentId]
+    require(existingOwner == null || existingOwner == requestedDocumentId) {
+        "Identyfikator załącznika jest już przypisany do innego dokumentu: $attachmentId"
+    }
+}
+
 internal fun findOrphanedOriginalAttachmentIds(referencedIds: Set<String>, storedIds: Set<String>): Set<String> =
     storedIds - referencedIds
 
@@ -338,6 +349,7 @@ private object OriginalAttachmentStore {
         preferences.all.toSortedMap().forEach { (documentId, rawValue) ->
             require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu w załącznikach." }
             val raw = rawValue as? String ?: error("Nieprawidłowy rejestr załączników: $documentId")
+            validateOriginalAttachmentMetadata(raw)
             val items = JSONArray(raw)
             for (index in 0 until items.length()) {
                 val item = items.getJSONObject(index)
@@ -369,7 +381,10 @@ private object OriginalAttachmentStore {
         }
         val root = JSONObject(raw)
         require(root.optInt("version") == 1) { "Nieobsługiwana wersja archiwum załączników." }
-        val entries = root.optJSONArray("attachments") ?: JSONArray()
+        require(root.has("attachments") && root.optJSONArray("attachments") != null) {
+            "Archiwum nie zawiera prawidłowej listy załączników."
+        }
+        val entries = root.getJSONArray("attachments")
         require(entries.length() <= MAX_ARCHIVE_ENTRIES) { "Archiwum zawiera ponad 200 załączników." }
         var totalBytes = 0L
         data class Pending(
@@ -424,12 +439,17 @@ private object OriginalAttachmentStore {
             }
         }
 
+        val existingOwners = existingByDocument.flatMap { (ownerDocumentId, metadata) ->
+            metadata.map { it.id to ownerDocumentId }
+        }.toMap()
+
         val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
         val staged = mutableListOf<Pair<File, File>>()
         val newlyInstalled = mutableListOf<File>()
         var metadataCommitAttempted = false
         try {
             decoded.forEach { item ->
+                validateOriginalAttachmentIdOwner(item.id, item.documentId, existingOwners)
                 val metadata = existingByDocument.getOrPut(item.documentId) { mutableListOf() }
                 val current = metadata.firstOrNull { it.id == item.id }
                 val target = File(directory, "${item.id}.enc")
