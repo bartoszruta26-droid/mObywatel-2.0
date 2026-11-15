@@ -62,10 +62,9 @@ object Iso4217CurrencyCatalog {
 
     /** Waluty historyczne, których kod nie figuruje już w bieżącej Liście One. */
     val historical: List<Iso4217HistoricalCurrency> by lazy(LazyThreadSafetyMode.PUBLICATION) {
-        val activeCodes = Iso4217CurrencySnapshot.current.mapTo(hashSetOf()) { it.code }
         Iso4217CurrencySnapshot.historical
             .asSequence()
-            .filter { it.code !in activeCodes && it.withdrawnAt != null }
+            .filter { it.withdrawnAt != null }
             .map {
                 Iso4217HistoricalCurrency(
                     code = it.code,
