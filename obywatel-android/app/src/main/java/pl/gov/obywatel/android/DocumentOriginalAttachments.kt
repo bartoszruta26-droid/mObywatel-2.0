@@ -225,11 +225,19 @@ private object OriginalAttachmentStore {
         return JSONObject().put("version", 1).put("attachments", entries).toString()
     }
 
-    /** Imports source bytes and re-encrypts them with this installation's Android Keystore key. */
+    /** Validates the complete archive before committing any imported attachment. */
     fun importArchive(context: Context, raw: String) {
         val root = JSONObject(raw)
         require(root.optInt("version") == 1) { "Nieobsługiwana wersja archiwum załączników." }
         val entries = root.optJSONArray("attachments") ?: JSONArray()
+        data class Pending(
+            val documentId: String,
+            val id: String,
+            val name: String,
+            val mime: String,
+            val bytes: ByteArray
+        )
+        val seen = mutableSetOf<String>()
         val decoded = (0 until entries.length()).map { index ->
             val item = entries.getJSONObject(index)
             val documentId = item.getString("documentId")
@@ -237,28 +245,77 @@ private object OriginalAttachmentStore {
             val archivedId = item.optString("id")
             val id = archivedId.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
             require(id.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
-            val name = item.getString("name")
-            val mime = item.getString("mime")
-            val encoded = item.getString("dataBase64")
-            val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+            require(seen.add(id)) { "Archiwum zawiera powtórzony identyfikator załącznika: $id" }
+            val name = item.getString("name").take(180).ifBlank { "Oryginał dokumentu" }
+            val mime = item.getString("mime").substringBefore(';').trim().lowercase()
+            require(mime == "application/pdf" || mime.startsWith("image/") ||
+                mime.startsWith("text/") || mime == "application/xml") {
+                "Nieobsługiwany typ MIME załącznika: $mime"
+            }
+            val bytes = android.util.Base64.decode(item.getString("dataBase64"), android.util.Base64.DEFAULT)
             require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) { "Załącznik przekracza limit 25 MB lub jest pusty." }
-            Triple(documentId, id, Triple(name, mime, bytes))
-        }
-        decoded.forEach { (documentId, id, metadata) ->
-            val existing = list(context, documentId).firstOrNull { it.id == id }
-            if (existing == null) {
-                add(context, documentId, metadata.first, metadata.second, metadata.third, id)
-            } else {
-                val encryptedFile = File(File(context.noBackupFilesDir, "original-document-attachments"), "$id.enc")
-                require(
-                    existing.name == metadata.first.take(180).ifBlank { "Oryginał dokumentu" } &&
-                        existing.mime == metadata.second.substringBefore(';').trim().lowercase() &&
-                        encryptedFile.isFile &&
-                        crypt(encryptedFile.readBytes(), false).contentEquals(metadata.third)
-                ) {
-                    "Załącznik o identyfikatorze $id już istnieje z inną zawartością lub metadanymi."
+            if (mime == "application/pdf") require(bytes.size >= 5 &&
+                String(bytes, 0, 5, Charsets.US_ASCII) == "%PDF-") { "Nieprawidłowy nagłówek PDF." }
+            if (mime.startsWith("text/") || mime.contains("xml")) {
+                val sample = String(bytes.take(4096).toByteArray(), Charsets.UTF_8)
+                require(!sample.contains("<!DOCTYPE", true) && !sample.contains("<!ENTITY", true)) {
+                    "Plik zawiera niedozwoloną deklarację DTD/ENTITY."
                 }
             }
+            Pending(documentId, id, name, mime, bytes)
+        }
+
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val existingByDocument = mutableMapOf<String, MutableList<OriginalAttachment>>()
+        preferences.all.forEach { (documentId, value) ->
+            require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu w magazynie." }
+            val rawMetadata = value as? String ?: error("Nieprawidłowy rejestr załączników: $documentId")
+            val json = JSONArray(rawMetadata)
+            existingByDocument[documentId] = (0 until json.length()).map { i ->
+                val item = json.getJSONObject(i)
+                OriginalAttachment(item.getString("id"), item.getString("name"), item.getString("mime"))
+            }.toMutableList()
+        }
+
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val staged = mutableListOf<Pair<File, File>>()
+        val newlyInstalled = mutableListOf<File>()
+        try {
+            decoded.forEach { item ->
+                val metadata = existingByDocument.getOrPut(item.documentId) { mutableListOf() }
+                val current = metadata.firstOrNull { it.id == item.id }
+                val target = File(directory, "${item.id}.enc")
+                if (current != null || target.exists()) {
+                    require(current != null && current.name == item.name && current.mime == item.mime &&
+                        target.isFile && crypt(target.readBytes(), false).contentEquals(item.bytes)) {
+                        "Załącznik o identyfikatorze ${item.id} już istnieje z inną zawartością lub metadanymi."
+                    }
+                } else {
+                    val temporary = File(directory, ".${item.id}.${UUID.randomUUID()}.import")
+                    temporary.writeBytes(crypt(item.bytes, true))
+                    staged.add(temporary to target)
+                    metadata.add(OriginalAttachment(item.id, item.name, item.mime))
+                }
+            }
+
+            staged.forEach { (temporary, target) ->
+                check(temporary.renameTo(target)) { "Nie udało się przygotować pliku załącznika." }
+                newlyInstalled.add(target)
+            }
+            val editor = preferences.edit()
+            existingByDocument.forEach { (documentId, metadata) ->
+                val json = JSONArray()
+                metadata.forEach { item ->
+                    json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime))
+                }
+                editor.putString(documentId, json.toString())
+            }
+            check(editor.commit()) { "Nie udało się zatwierdzić rejestru importowanych załączników." }
+        } catch (failure: Throwable) {
+            newlyInstalled.forEach { it.delete() }
+            throw failure
+        } finally {
+            staged.forEach { (temporary, _) -> temporary.delete() }
         }
     }
 }
