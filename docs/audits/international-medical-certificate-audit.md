@@ -1135,3 +1135,28 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Test nie symuluje zaniku zasilania ani przerwania procesu w dowolnym punkcie systemowego zapisu; sprawdza deterministyczne ścieżki błędów importu i uzgadniania.
 
 **Status:** poprawiono kolejność odzyskiwania plików etapowych i dodano trzy scenariusze regresyjne. Kod i testy są zapisane na gałęzi. Wynik CI dla końcowego SHA wymaga potwierdzenia.
+
+
+---
+
+## 44. Serializacja transakcji magazynu załączników — 2026-11-15
+
+### Wykryte ryzyko
+- [x] Operacje importu, dodawania i usuwania załączników odczytywały oraz aktualizowały wspólny rejestr SharedPreferences. Bez wspólnej blokady dwie równoległe operacje mogły odczytać ten sam stan początkowy, a następnie nadpisać sobie wzajemnie aktualizacje.
+- [x] Uzgadnianie i eksport mogły wykonywać odczyt w trakcie modyfikacji magazynu. Wewnętrzna synchronizacja ogranicza takie wyścigi w obrębie jednego procesu.
+
+### Wykonane zmiany
+- [x] Dodano synchronizację metod reconcile, add, remove, removeDocument, exportArchive i importArchive w obiekcie magazynu załączników.
+- [x] Blokada obejmuje pełną operację, w tym przygotowanie plików, zatwierdzanie metadanych i sprzątanie po błędzie.
+- [x] Dodano test instrumentacyjny uruchamiający dwa równoległe importy różnych załączników do tego samego dokumentu. Test sprawdza, czy po obu operacjach oba identyfikatory pozostają w rejestrze i czy uzgadnianie nie wykrywa niespójności.
+- [x] Zmianę implementacji zapisano w commicie ebc06d879decc35dffb744255fbaefefaeceeff0.
+- [x] Test zapisano w commicie 52390a05fea3758a50eb3122e19f63629c4e9757.
+
+### Zakres ochrony i ograniczenia
+- [x] Synchronizacja JVM chroni wywołania wykonywane przez ten obiekt w jednym procesie aplikacji.
+- [ ] Nie jest to blokada międzyprocesowa. Jeśli aplikacja zacznie używać magazynu z wielu procesów Androida, konieczny będzie mechanizm międzyprocesowy lub transakcyjna baza danych.
+- [ ] Nie jest to test awarii zasilania ani wymuszonego zakończenia procesu w każdej instrukcji transakcji.
+- [ ] Nie zasymulowano SharedPreferences.commit() == false; do takiego testu potrzebna jest kontrolowana abstrakcja magazynu preferencji albo inny bezpieczny punkt wstrzykiwania zależności.
+- [ ] Test instrumentacyjny został dodany, ale jego wykonanie wymaga zakończenia bieżącego workflow emulatora.
+
+**Status:** operacje magazynu są serializowane w obrębie procesu, a test równoległych importów dodano do zestawu instrumentacyjnego. Weryfikacja wykonania testu oczekuje na CI.
