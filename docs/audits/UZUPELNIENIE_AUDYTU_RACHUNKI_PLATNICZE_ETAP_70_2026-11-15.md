@@ -367,3 +367,57 @@ Katalog jest oparty na bazie `java.util.Currency` dostarczanej przez daną wersj
 3. Dodać testy uszkodzonego JSON, błędów zapisu, przerwanego pobierania i odczytu offline.
 4. Zintegrować trwałą historię przeliczeń z istniejącym magazynem SQLite po analizie migracji i zgodności wstecznej.
 5. Nie scalać PR #68 przed zakończeniem testów i przeglądu zmian.
+
+
+---
+
+## Etap 72 — trwała historia przeliczeń walutowych i odporność cache NBP
+
+**Data:** 2026-11-15  
+**Gałąź:** `feature/payment-ledger-stage-1`
+
+### Inwentaryzacja przed zmianą
+
+W repozytorium istniał już magazyn SQLite `PaymentLedgerDatabase` (wersja 7) oraz warstwa `PaymentLedgerRepository`. Zamiast tworzyć drugą bazę, rozszerzono istniejącą bazę migracją do wersji 8.
+
+### Wykonane zmiany
+
+1. Dodano tabelę `currency_conversion_history` z polami:
+   - identyfikator i czas przeliczenia;
+   - kwota i kod waluty źródłowej;
+   - wynik i kod waluty docelowej;
+   - dokładny zastosowany kurs krzyżowy;
+   - data publikacji notowania;
+   - źródło/tabela kursowa.
+2. Kwoty i kurs przechowywane są jako tekst dziesiętny, bez konwersji do typu zmiennoprzecinkowego.
+3. Dodano walidację rekordów: nieujemne kwoty, dwa różne kody walut, dodatni kurs, wymagane źródło i identyfikator.
+4. Dodano odczyt historii z limitem 1–1000 rekordów i sortowaniem od najnowszych.
+5. Udostępniono zapis i odczyt przez `PaymentLedgerRepository`, wykonywane na `Dispatchers.IO`.
+6. Przelicznik zapisuje każde udane przeliczenie wraz z kursem krzyżowym, datą publikacji i źródłem tabel; udostępnia przycisk wyświetlenia ostatnich 50 zapisów.
+7. Dodano migrację SQLite 7 → 8 bez usuwania dotychczasowych tabel.
+8. Dodano testy instrumentacyjne trwałości historii, precyzji dziesiętnej, duplikatów identyfikatora, walidacji kursu, migracji i dostępu przez repozytorium.
+9. Rozszerzono testy cache NBP o przerwane pobieranie (kolejna próba może się udać) oraz błąd zapisu na dysk (udana odpowiedź sieciowa pozostaje dostępna w pamięci).
+
+### Pliki
+
+- `PaymentLedgerDatabase.kt`
+- `PaymentLedgerRepository.kt`
+- `NbpCurrencyConverterCard.kt`
+- `PaymentLedgerDatabaseTest.kt`
+- `PaymentLedgerRepositoryTest.kt`
+- `NbpRatesRepositoryTest.kt`
+
+### Ograniczenia i uwagi do przeglądu
+
+- Historia przeliczeń jest lokalna dla instalacji i nie jest jeszcze częścią eksportu JSON rejestru. Należy zaprojektować wersjonowanie archiwum i idempotentny import/eksport tej historii przed synchronizacją między urządzeniami.
+- Data kursu dla przeliczenia walut obcych jest konserwatywnie wybierana jako najwcześniejsza data publikacji spośród użytych kursów. Źródło zapisuje użyte tabele NBP. Dla pary z PLN używana jest data kursu drugiej waluty.
+- Historia nie powinna być usuwana przy odświeżeniu notowań. Usuwanie pojedynczych zapisów ani czyszczenie historii nie zostały udostępnione.
+- Testy instrumentacyjne są zapisane, ale ich PASS wymaga ukończenia aktualnego workflow emulatorowego. Nie deklaruje się kompilacji ani APK jako gotowych przed wynikiem CI.
+
+### Następne prace
+
+1. Zakończyć CI dla końcowego SHA i naprawić ewentualne błędy kompilacji/testów.
+2. Dodać wersjonowany, kontrolowany katalog ISO 4217 ze statusem i datami obowiązywania; nie traktować `java.util.Currency` jako urzędowego źródła statusu aktywności.
+3. Włączyć historię przeliczeń do wersjonowanego eksportu JSON i testów round-trip.
+4. Dodać testy UI historii i obsługi błędów zapisu.
+5. Zachować PR #68 otwarty do końcowego przeglądu.
