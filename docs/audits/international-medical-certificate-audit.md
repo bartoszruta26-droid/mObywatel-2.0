@@ -1473,6 +1473,7 @@ Data: 2026-11-15. Gałąź: `feature/medical-certificate-management-translation`
 ### Wykonane zmiany
 - [x] Dodano generator PDF oparty na Android PdfDocument. Plik zawiera oryginalne wartości oraz odpowiadające im wartości docelowe; przy wielu językach docelowych każda wartość jest zestawiona z nazwą języka.
 - [x] Eksport obejmuje również etykiety pól. Etykiety docelowe są tłumaczone tym samym lokalnym modelem ML Kit i można je ręcznie poprawić.
+- [x] Etykiety pól mają kanoniczne brzmienie angielskie w definicjach formularza; przy eksporcie tłumaczone są osobno z angielskiego na język źródłowy i każdy język docelowy, dzięki czemu opis pól w PDF odpowiada wskazanym językom dokumentu.
 - [x] Dla pól chronionych przed automatycznym tłumaczeniem (np. identyfikatory, daty, numery, dane kontaktowe) PDF zachowuje oryginalną wartość także w kolumnie języka docelowego zamiast wstawiać pusty tekst lub pozorny przekład.
 - [x] Dodano systemowy wybór lokalizacji zapisu PDF przez Android CreateDocument.
 - [x] Dodano przycisk „Swap original and translation”. Zamienia on język źródłowy z wybranym docelowym oraz treści pól; dotychczasowy oryginał jest zachowywany jako treść w poprzednim języku.
