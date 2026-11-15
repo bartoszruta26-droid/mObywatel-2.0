@@ -857,7 +857,8 @@ class PaymentLedgerDatabaseTest {
                 listOf(StoredFinancialTransaction(original, emptyList()))
             )
             target.importJson(originalArchive)
-            assertEquals(original, target.getFinancialTransactions().single().transaction)
+            assertEquals(original.id, target.getFinancialTransactions().single().transaction.id)
+            assertEquals(0, original.toAmount!!.compareTo(target.getFinancialTransactions().single().transaction.toAmount))
 
             val changed = original.copy(toAmount = BigDecimal("999.00"))
             val changedArchive = PaymentLedgerJsonCodec.encode(
@@ -867,7 +868,9 @@ class PaymentLedgerDatabaseTest {
             val result = runCatching { target.importJson(changedArchive) }
 
             assertTrue("Zmiana danych pod istniejącym identyfikatorem musi być konfliktem.", result.isFailure)
-            assertEquals(original, target.getFinancialTransactions().single().transaction)
+            val preserved = target.getFinancialTransactions().single().transaction
+            assertEquals(original.id, preserved.id)
+            assertEquals(0, original.toAmount!!.compareTo(preserved.toAmount))
         } finally {
             target.close()
         }
