@@ -112,6 +112,43 @@ class NbpRatesRepository(
         })
     }
 
+    /**
+     * Historyczny szereg kursu waluty względem PLN. Zakresy są dzielone na
+     * odcinki po maksymalnie 93 dni zgodnie z limitem API NBP.
+     */
+    fun currencyRateHistory(
+        table: NbpTable,
+        currencyCode: String,
+        start: LocalDate,
+        end: LocalDate
+    ): List<Pair<LocalDate, BigDecimal>> {
+        require(currencyCode.matches(Regex("[A-Z]{3}"))) { "Kod waluty musi mieć trzy litery ISO." }
+        require(!end.isBefore(start)) { "Data końcowa musi przypadać po dacie początkowej." }
+        val result = mutableListOf<Pair<LocalDate, BigDecimal>>()
+        var cursor = start
+        while (!cursor.isAfter(end)) {
+            val chunkEnd = minOf(cursor.plusDays(92), end)
+            tableRange(table, cursor, chunkEnd).forEach { rateTable ->
+                rateTable.rate(currencyCode)?.mid?.let { result += rateTable.effectiveDate to it }
+            }
+            cursor = chunkEnd.plusDays(1)
+        }
+        return result.distinctBy { it.first }.sortedBy { it.first }
+    }
+
+    /** Historyczny szereg cen złota w PLN/g z automatycznym dzieleniem zakresu. */
+    fun goldPriceHistory(start: LocalDate, end: LocalDate): List<NbpGoldPrice> {
+        require(!end.isBefore(start)) { "Data końcowa musi przypadać po dacie początkowej." }
+        val result = mutableListOf<NbpGoldPrice>()
+        var cursor = start
+        while (!cursor.isAfter(end)) {
+            val chunkEnd = minOf(cursor.plusDays(92), end)
+            result += goldPriceRange(cursor, chunkEnd)
+            cursor = chunkEnd.plusDays(1)
+        }
+        return result.distinctBy { it.date }.sortedBy { it.date }
+    }
+
     fun latestGoldPrice(): NbpGoldPrice =
         parseGold(JSONArray(cachedResponse("latest-gold", latestTtl, historical = false) {
             transport.get("$BASE_URL/cenyzlota?format=json")
