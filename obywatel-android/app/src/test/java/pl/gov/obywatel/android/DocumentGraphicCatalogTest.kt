@@ -22,7 +22,7 @@ class DocumentGraphicCatalogTest {
     @Test
     fun allAuditedDocumentsHaveUniqueIndependentDefinitions() {
         val expected = setOf(
-            "registry", "birth_extract", "marriage_extract", "death_extract", "large_family",
+            "registry", "birth_extract", "marriage_extract", "death_extract", "international_medical_certificate", "large_family",
             "blood_donor", "disability_card", "vehicle_registration", "insurance_vehicle",
             "insurance_professional", "insurance_private", "insurance_business", "criminal_record",
             "mission_travel", "ehic", "eu_education", "church_bishop", "church_archbishop",
