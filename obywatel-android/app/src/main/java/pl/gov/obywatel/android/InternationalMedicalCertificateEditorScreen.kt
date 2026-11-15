@@ -322,7 +322,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 Button(enabled = !translating && selectedTargets.any { it.value } && sourceLanguage != "other", onClick = {
                     translating = true
                     translationScope.launch {
-                        val provider = MlKitMedicalTranslationProvider()
+                        val provider = MlKitMedicalTranslationProvider(context)
                         var completed = 0
                         var failed = 0
                         val eligible = definitions.filter { definition -> values[fieldKey(definition.key)].orEmpty().isNotBlank() }
