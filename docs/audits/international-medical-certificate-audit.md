@@ -1665,3 +1665,35 @@ Niniejsza sekcja zastępuje wcześniejsze wymagania dotyczące podpisu elektroni
 - Wybór lekarza nie składa podpisu i nie oznacza, że lekarz już zaakceptował treść zaświadczenia.
 - Wydruk musi zostać sprawdzony przez lekarza, uzupełniony i podpisany przez niego na papierze.
 - Pozostaje do wykonania pełna weryfikacja CI na nowym SHA oraz inspekcja artefaktu APK. PR #71 pozostaje otwarty i nie jest scalany.
+
+
+---
+
+## 62. Przykładowy przypadek kliniczny — anatomia, funkcja i diagnostyka — 2026-11-15
+
+### Zrealizowane w danych demonstracyjnych
+- [x] Język oryginału ustawiany jest na angielski, a język docelowy na polski.
+- [x] Dodano przykładowy opis MRI odcinka lędźwiowego z poziomami L2-L3, L3-L4, L4-L5 i L5-S1, zmianami zwyrodnieniowo-dyskopatycznymi oraz korelacją z prawym korzeniem L5.
+- [x] Opisano stan struktur: krążki międzykręgowe, wysokość i sygnał dysków, stawy międzywyrostkowe, kanał kręgowy, zachyłki boczne, otwory międzykręgowe, blaszki graniczne i struktury nerwowe.
+- [x] Rozszerzono badanie przedmiotowe o przykładowe zakresy ruchu, test SLR, siłę mięśniową w skali MRC, czucie, odruchy, chód oraz chód na piętach i palcach.
+- [x] Rozszerzono opis funkcji: tolerancja siedzenia, stania i chodzenia, transfery, samoobsługa, ubieranie, sen i ograniczenia zawodowe.
+- [x] Uwzględniono ocenę objawów alarmowych, w tym zaburzeń zwieraczy, znieczulenia siodłowego, postępującego niedowładu, gorączki, utraty masy ciała i bólu nocnego.
+- [x] Dodano przykładową listę leków spotykanych w praktyce Ameryki Południowej (dipirona/metamizol, diklofenak, omeprazol, pregabalina) z jednoznacznym oznaczeniem, że to fikcyjna historia farmakoterapii, a nie zalecenie leczenia.
+- [x] W części onkologicznej wyraźnie wskazano, że diagnostyka trwa, a rozpoznanie nowotworu nie jest potwierdzone.
+
+### Ograniczenia i bezpieczeństwo kliniczne
+- Wszystkie dane pacjenta, pomiary, objawy neurologiczne, wartości funkcjonalne, opis MRI i historia lekowa są fikcyjnym materiałem demonstracyjnym.
+- Nie należy przedstawiać wymyślonego opisu MRI jako rzeczywistego wyniku radiologicznego ani fikcyjnych pomiarów jako wyniku badania pacjenta.
+- Wpisane poziomy, stopień zwężenia i kontakt korzenia nerwowego wymagają w realnym przypadku potwierdzenia w oryginalnym badaniu DICOM i opisie radiologa.
+- Brak opisanego ogniska destrukcyjnego w ograniczonym przykładzie MRI nie wyklucza nowotworu ani przerzutów poza badanym obszarem.
+- Leki, dawki, czas stosowania, przeciwwskazania, alergie, interakcje i bezpieczeństwo w kontekście diagnostyki onkologicznej muszą być zweryfikowane przez lekarza prowadzącego. Przykładowa lista nie jest receptą.
+- Przed użyciem dokumentu klinicznego lekarz musi zastąpić wszystkie przykładowe dane faktami z badania i dokumentacji oraz samodzielnie zatwierdzić treść.
+
+### Weryfikacja techniczna
+- Commit z rozszerzeniem opisu strukturalnego i funkcjonalnego: `186f9ecae77cbcdc8827f571cfbfa95230e71524`.
+- Kolejne uruchomienie CI musi dotyczyć dokładnie najnowszego SHA; wcześniejsze zielone wyniki nie potwierdzają tego commitu.
+- [ ] Testy JVM i kompilacja debug.
+- [ ] Testy GUI na emulatorze.
+- [ ] Kontrola artefaktów i sumy kontrolnej APK.
+- [ ] Weryfikacja, że publiczny link instalacyjny wskazuje na APK z najnowszego przetestowanego SHA.
+- [ ] Dopiero po spełnieniu powyższych warunków rozważyć scalenie PR.
