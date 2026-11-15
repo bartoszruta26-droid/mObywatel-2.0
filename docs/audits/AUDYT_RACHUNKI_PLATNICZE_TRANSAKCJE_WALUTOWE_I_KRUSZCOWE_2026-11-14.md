@@ -4396,3 +4396,7 @@ PR #68 pozostaje otwarty i niescalony.
 2. Dodać trwałą historię przeliczeń z datą kursu, tabelą, parą walutową, kwotą i wynikiem.
 3. Dodać pełny słownik ISO 4217 i wyszukiwanie walut po nazwie.
 4. Dodać testy UI dla pobierania kursów, wyboru daty i błędów sieciowych.
+
+
+### Uzupełnienie kontroli kodu
+- `0c877a34a748db8d2beae47154eebeb7a675ea4e` — jawne parsowanie daty historycznej w karcie kalkulatora.
