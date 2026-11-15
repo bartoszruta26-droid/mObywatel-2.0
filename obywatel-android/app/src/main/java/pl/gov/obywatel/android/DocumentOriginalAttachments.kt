@@ -236,6 +236,16 @@ private object OriginalAttachmentStore {
         }
         val directory = File(context.noBackupFilesDir, "original-document-attachments")
         if (!directory.exists()) return
+        // Staging files are never referenced by committed metadata. Clean them
+        // before integrity checks so a missing attachment cannot prevent recovery
+        // from an interrupted import.
+        directory.listFiles().orEmpty()
+            .filter { it.isFile && it.name.startsWith(".") && it.name.endsWith(".import") }
+            .forEach { temporary ->
+                check(temporary.delete() || !temporary.exists()) {
+                    "Nie udało się usunąć tymczasowego pliku importu."
+                }
+            }
         val storedIds = directory.listFiles().orEmpty()
             .filter { it.isFile && it.name.endsWith(".enc") }
             .map { it.name.removeSuffix(".enc") }
@@ -250,13 +260,6 @@ private object OriginalAttachmentStore {
                 "Nie udało się usunąć osieroconego załącznika: $id"
             }
         }
-        directory.listFiles().orEmpty()
-            .filter { it.isFile && it.name.startsWith(".") && it.name.endsWith(".import") }
-            .forEach { temporary ->
-                check(temporary.delete() || !temporary.exists()) {
-                    "Nie udało się usunąć tymczasowego pliku importu."
-                }
-            }
     }
 
     fun add(
