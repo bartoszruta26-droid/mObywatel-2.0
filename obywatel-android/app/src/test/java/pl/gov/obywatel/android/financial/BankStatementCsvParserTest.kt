@@ -61,6 +61,10 @@ class BankStatementCsvParserTest {
         assertThrows(IllegalArgumentException::class.java) {
             BankStatementCsvParser.parse("data;waluta;kwota;typ\n15.11.2026;PLN;10;PRZELEW;extra\n", "konto-1")
         }
+        assertThrows(IllegalArgumentException::class.java) {
+            BankStatementCsvParser.parse("data;waluta;kwota;typ\\n15.11.2026;PLN;10;PRZE\\"LEW\\n", "konto-1")
+        }
+
     }
 
     @Test
