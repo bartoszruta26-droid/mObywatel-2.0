@@ -622,22 +622,39 @@ class PaymentLedgerDatabase(
                 } else {
                     val previous = db.query(
                         TABLE_CASH_DONATIONS,
-                        arrayOf("received_at", "amount", "currency_code", "beneficiary_organization_name", "purpose"),
+                        arrayOf(
+                            "received_at", "amount", "currency_code", "beneficiary_organization_name",
+                            "purpose", "donor_name", "is_anonymous", "campaign_name", "collected_by",
+                            "receipt_number", "custody_status", "transferred_at", "transferred_amount",
+                            "note", "source"
+                        ),
                         "donation_id = ?",
                         arrayOf(donation.id),
                         null, null, null
                     ).use { cursor ->
                         require(cursor.moveToFirst())
-                        listOf(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4))
+                        pl.gov.obywatel.android.CashDonation(
+                            id = donation.id,
+                            receivedAt = java.time.Instant.parse(cursor.getString(0)),
+                            amount = java.math.BigDecimal(cursor.getString(1)),
+                            currencyCode = cursor.getString(2),
+                            beneficiaryOrganizationName = cursor.getString(3),
+                            purpose = cursor.getString(4),
+                            donorName = cursor.getString(5),
+                            isAnonymous = cursor.getInt(6) == 1,
+                            campaignName = cursor.getString(7),
+                            collectedBy = cursor.getString(8),
+                            receiptNumber = cursor.getString(9),
+                            custodyStatus = pl.gov.obywatel.android.DonationCustodyStatus.valueOf(cursor.getString(10)),
+                            transferredAt = cursor.getString(11)?.let { java.time.Instant.parse(it) },
+                            transferredAmount = cursor.getString(12)?.let { java.math.BigDecimal(it) },
+                            note = cursor.getString(13),
+                            source = pl.gov.obywatel.android.FinancialRecordSource.valueOf(cursor.getString(14))
+                        )
                     }
-                    val same = previous == listOf(
-                        donation.receivedAt.toString(),
-                        donation.amount.stripTrailingZeros().toPlainString(),
-                        donation.currencyCode,
-                        donation.beneficiaryOrganizationName.trim(),
-                        donation.purpose.trim()
-                    )
-                    require(same) { "Konflikt identyfikatora darowizny ${donation.id}; dane wymagają weryfikacji." }
+                    require(sameDonationIdentity(previous, donation)) {
+                        "Konflikt identyfikatora darowizny ${donation.id}; dane wymagają weryfikacji."
+                    }
                 }
             }
             db.setTransactionSuccessful()
@@ -649,6 +666,29 @@ class PaymentLedgerDatabase(
             db.endTransaction()
         }
     }
+
+    private fun sameDonationIdentity(
+        existing: pl.gov.obywatel.android.CashDonation,
+        incoming: pl.gov.obywatel.android.CashDonation
+    ): Boolean =
+        existing.receivedAt == incoming.receivedAt &&
+            existing.amount.compareTo(incoming.amount) == 0 &&
+            existing.currencyCode == incoming.currencyCode &&
+            existing.beneficiaryOrganizationName.trim() == incoming.beneficiaryOrganizationName.trim() &&
+            existing.purpose.trim() == incoming.purpose.trim() &&
+            existing.donorName == incoming.donorName &&
+            existing.isAnonymous == incoming.isAnonymous &&
+            existing.campaignName == incoming.campaignName &&
+            existing.collectedBy == incoming.collectedBy &&
+            existing.receiptNumber == incoming.receiptNumber &&
+            existing.custodyStatus == incoming.custodyStatus &&
+            existing.transferredAt == incoming.transferredAt &&
+            sameAmount(existing.transferredAmount, incoming.transferredAmount) &&
+            existing.note == incoming.note &&
+            existing.source == incoming.source
+
+    private fun sameAmount(first: java.math.BigDecimal?, second: java.math.BigDecimal?): Boolean =
+        if (first == null || second == null) first == second else first.compareTo(second) == 0
 
     private fun sameStoredTransaction(
         existing: StoredFinancialTransaction,
