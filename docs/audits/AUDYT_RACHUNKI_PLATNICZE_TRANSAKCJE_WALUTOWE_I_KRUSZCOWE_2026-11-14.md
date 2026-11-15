@@ -2796,12 +2796,12 @@ Po zapisaniu ponownie pobrano wszystkie dziewięć plików i potwierdzono obecno
 
 Kontrolowany końcowy SHA w chwili zapisu audytu: `2ca5026b7985f42c593dd995157929339f65db9c`.
 
-Dla tego dokładnego SHA GitHub Actions zgłosił:
-- Repository compliance (alfa) — `pending`;
-- Android GUI validation — `in_progress`;
-- Android prototype build — `pending`.
+Dla tego dokładnego SHA GitHub Actions utworzył trzy przebiegi:
+- Android prototype build — run `43681543185`, pierwszy job anulowany podczas konfiguracji Gradle, przed testami JVM;
+- Repository compliance (alfa) — run `43681543135`, oczekiwał na runner w chwili ostatniej kontroli;
+- Android GUI validation — run `43681543103`, job anulowany podczas przygotowania Android SDK, przed testami JVM i emulatora.
 
-Nie ma jeszcze potwierdzenia testów JVM, testów emulatorowych ani nowego APK dla darowizn. Wynik wcześniejszego builda nie potwierdza tych zmian. Kontrola treści źródeł potwierdziła spójność nazw i obecność testów, ale nie zastępuje wykonania Gradle i emulatora.
+Ponowiono joby kompilacji i GUI, ale ponowienia również zostały anulowane/przerwane w fazie konfiguracji środowiska. Nie ma potwierdzenia wykonania testów JVM, testów emulatorowych ani nowego APK dla darowizn. Nie stwierdzono błędu kompilacji Kotlin — kompilacja nie doszła do tego kroku. Kontrola treści źródeł potwierdziła spójność nazw metod i obecność testów, ale nie zastępuje wykonania Gradle i emulatora.
 
 ### 46.9. Status i dalsze prace
 
