@@ -1494,3 +1494,29 @@ Data: 2026-11-15. Gałąź: `feature/medical-certificate-management-translation`
 5. Błąd generowania lub zapisu PDF nie zmienia zaszyfrowanych danych zaświadczenia.
 
 **Status:** kod i test dodane; oczekują na kompilację, testy JVM, testy emulatora i przegląd zmian.
+
+
+---
+
+## 56. Panel zarządzania modelami tłumaczeniowymi — 2026-11-15
+
+### Wykonane zmiany
+- [x] Dodano ekran „Języki i tłumaczenia” dostępny z menu Więcej → Ustawienia.
+- [x] Dodano listę modeli językowych obsługiwanych przez bieżący zestaw języków zaświadczenia.
+- [x] Dodano ręczne pobieranie i usuwanie modeli przez publiczne API Google ML Kit RemoteModelManager.
+- [x] Dodano przełącznik automatycznego pobierania brakujących modeli; wyłączenie blokuje automatyczne pobieranie podczas tłumaczenia.
+- [x] Dodano ograniczenie pobierania do Wi-Fi; warunek jest przekazywany do ML Kit przy pobieraniu.
+- [x] Dodano status „Gotowy” / „Brak modelu”, status operacji oraz odświeżanie listy po pobraniu i usunięciu.
+- [x] Ustawienia są zapisywane lokalnie w SharedPreferences.
+- [ ] Dokładny rozmiar pojedynczego modelu i łączny rozmiar modeli: publiczne API ML Kit RemoteModelManager nie udostępnia rozmiaru plików modelu. Ekran wyświetla to ograniczenie jawnie zamiast podawać niezweryfikowane wartości.
+- [ ] Weryfikacja kompilacji, testów JVM i UI/instrumentacyjnych na emulatorze dla końcowego SHA.
+
+### Kryteria odbioru
+1. Ustawienia dostępne pod Więcej → Ustawienia → Języki i tłumaczenia.
+2. Ręczne pobranie modelu zmienia jego status na „Gotowy”.
+3. Usunięcie modelu zmienia status na „Brak modelu”.
+4. Wyłączenie automatycznego pobierania uniemożliwia pobranie brakującego modelu podczas tłumaczenia i wskazuje użytkownikowi panel zarządzania.
+5. Włączenie „Tylko przez Wi-Fi” stosuje warunek requireWifi() podczas ręcznego i automatycznego pobierania.
+6. Brak publicznego odczytu rozmiaru modeli jest komunikowany użytkownikowi bez prezentowania fikcyjnych danych.
+
+**Status:** implementacja dodana do PR #71; oczekuje na pełną weryfikację CI i emulatora.
