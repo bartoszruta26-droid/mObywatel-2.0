@@ -72,7 +72,11 @@ class PaymentLedgerRepository(
     }
 
     suspend fun exportJson(): String = withContext(Dispatchers.IO) {
-        PaymentLedgerJsonCodec.encode(database.readAll(), database.readFinancialTransactions())
+        PaymentLedgerJsonCodec.encode(
+            database.readAll(),
+            database.readFinancialTransactions(),
+            database.readCashDonations()
+        )
     }
 
     override fun close() {
