@@ -1017,3 +1017,8 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] W chwili kontroli oba workflow Android dla SHA `5416625` były nadal w toku; nie stanowią potwierdzenia zmian wprowadzonych w sekcji 38.
 - [ ] Nowe testy JVM i pełny build wymagają wyniku CI dla końcowego SHA po tej sekcji.
 - [ ] Nadal wymagane są testy instrumentacyjne magazynu i obrazów, testy restartu procesu, integracja eksportu/importu oraz weryfikacja PDF/RTL.
+
+- [x] Dodatkowo zabezpieczono dekodowanie już zapisanych badań: odrzuca ono powtórzone/niebezpieczne identyfikatory, nieprawidłowe daty oraz nieprawidłowe lub powtórzone identyfikatory załączników, zanim rekordy trafią do interfejsu.
+- [x] Zastąpiono identyfikator oparty na milisekundowym znaczniku czasu identyfikatorem UUID, eliminując ryzyko kolizji przy szybkim dodawaniu kolejnych badań.
+- [x] Dodano testy regresyjne dla uszkodzonych zapisanych rekordów badań.
+- [x] Dodatkowe zmiany zapisano w commitach `07e7b3008291a0a1572363565e2d286996b5902a` i `c96f276a91b544c8fcfd5563086c2ada662716ad`.
