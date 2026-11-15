@@ -113,25 +113,82 @@ class PaymentLedgerRepository(
     /** Podgląd pełnego archiwum; liczy nowe wpisy, duplikaty i konflikty księgowe. */
     suspend fun previewArchive(json: String): ArchiveImportPreview = withContext(Dispatchers.IO) {
         val archive = PaymentLedgerJsonCodec.decodeArchive(json)
-        val existingTransactions = database.readFinancialTransactions().associateBy { it.transaction.id }
+        val existingTransactionList = database.readFinancialTransactions()
+        val existingTransactions = existingTransactionList.associateBy { it.transaction.id }
         val existingDonations = database.readCashDonations().associateBy { it.id }
-        val bankPreview = database.previewArchiveEntries(archive.entries)
-        val transactionConflicts = archive.transactions.count { incoming ->
-            val existing = existingTransactions[incoming.transaction.id]
-            existing != null && !sameStoredTransaction(existing, incoming)
+        val existingEntries = database.readAll()
+        val bankPreview = BankImportDeduplicator.preview(archive.entries, existingEntries)
+
+        val transactionCandidates = existingTransactions.toMutableMap()
+        var newTransactions = 0
+        var duplicateTransactions = 0
+        var transactionConflicts = 0
+        archive.transactions.forEach { incoming ->
+            val id = incoming.transaction.id
+            val previous = transactionCandidates[id]
+            when {
+                previous == null -> {
+                    transactionCandidates[id] = incoming
+                    newTransactions++
+                }
+                sameStoredTransaction(previous, incoming) -> duplicateTransactions++
+                else -> transactionConflicts++
+            }
         }
-        val donationConflicts = archive.donations.count { incoming ->
-            val existing = existingDonations[incoming.id]
-            existing != null && !sameDonationIdentity(existing, incoming)
+
+        val donationCandidates = existingDonations.toMutableMap()
+        var newDonations = 0
+        var duplicateDonations = 0
+        var donationConflicts = 0
+        archive.donations.forEach { incoming ->
+            val previous = donationCandidates[incoming.id]
+            when {
+                previous == null -> {
+                    donationCandidates[incoming.id] = incoming
+                    newDonations++
+                }
+                sameDonationIdentity(previous, incoming) -> duplicateDonations++
+                else -> donationConflicts++
+            }
         }
+
+        // Podgląd sprawdza te same warunki powiązań, które wymusza SQLite przy zatwierdzaniu.
+        val knownEntries = (existingEntries + archive.entries).associateBy { it.accountingEntryId() }
+        val linkOwners = mutableMapOf<String, String>()
+        existingTransactionList.forEach { stored ->
+            stored.accountingEntryIds.forEach { entryId -> linkOwners[entryId] = stored.transaction.id }
+        }
+        var transactionLinkConflicts = 0
+        archive.transactions.distinctBy { it.transaction.id }.forEach { stored ->
+            val tx = stored.transaction
+            stored.accountingEntryIds.forEach { entryId ->
+                val entry = knownEntries[entryId]
+                val compatible = entry != null && (
+                    (tx.fromAssetCode == entry.currencyCode && entry.signedAmount.signum() < 0 &&
+                        tx.fromAmount?.compareTo(entry.signedAmount.abs()) == 0) ||
+                    (tx.toAssetCode == entry.currencyCode && entry.signedAmount.signum() > 0 &&
+                        tx.toAmount?.compareTo(entry.signedAmount.abs()) == 0) ||
+                    (tx.fee?.assetCode == entry.currencyCode && entry.signedAmount.signum() < 0 &&
+                        tx.fee.amount.compareTo(entry.signedAmount.abs()) == 0)
+                )
+                if (!compatible) transactionLinkConflicts++
+                val owner = linkOwners[entryId]
+                if (owner != null && owner != tx.id) transactionLinkConflicts++
+                else linkOwners[entryId] = tx.id
+            }
+        }
+
         ArchiveImportPreview(
             newBankEntries = bankPreview.newEntries.size,
             duplicateBankEntries = bankPreview.duplicates.size,
             bankConflicts = bankPreview.conflicts.size,
-            newTransactions = archive.transactions.count { existingTransactions[it.transaction.id] == null },
+            newTransactions = newTransactions,
+            duplicateTransactions = duplicateTransactions,
             transactionConflicts = transactionConflicts,
-            newDonations = archive.donations.count { existingDonations[it.id] == null },
-            donationConflicts = donationConflicts
+            newDonations = newDonations,
+            duplicateDonations = duplicateDonations,
+            donationConflicts = donationConflicts,
+            transactionLinkConflicts = transactionLinkConflicts
         )
     }
 
@@ -231,10 +288,14 @@ data class ArchiveImportPreview(
     val duplicateBankEntries: Int,
     val bankConflicts: Int,
     val newTransactions: Int,
+    val duplicateTransactions: Int,
     val transactionConflicts: Int,
     val newDonations: Int,
-    val donationConflicts: Int
+    val duplicateDonations: Int,
+    val donationConflicts: Int,
+    val transactionLinkConflicts: Int
 ) {
     val hasConflicts: Boolean get() =
-        bankConflicts > 0 || transactionConflicts > 0 || donationConflicts > 0
+        bankConflicts > 0 || transactionConflicts > 0 ||
+            donationConflicts > 0 || transactionLinkConflicts > 0
 }
