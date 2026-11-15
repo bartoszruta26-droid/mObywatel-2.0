@@ -60,7 +60,7 @@ public final class FailingStreamContentProvider extends ContentProvider {
         }
         final ParcelFileDescriptor[] pipe;
         try {
-            pipe = ParcelFileDescriptor.createPipe();
+            pipe = ParcelFileDescriptor.createReliablePipe();
         } catch (IOException error) {
             throw new FileNotFoundException(error.getMessage());
         }
