@@ -12,6 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -52,10 +57,10 @@ internal fun medicalImagingAttachmentReferencesMatch(
         expectedIds.toSet() == storedIds.toSet()
 
 @Composable
-internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
+internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBack: () -> Unit) {
     val context = LocalContext.current
     val initialLoad = remember(context) {
-        runCatching { InternationalMedicalCertificateStore.loadStrict(context) }
+        runCatching { InternationalMedicalCertificateRecords.load(context, recordId) }
     }
     val values = remember(context) {
         mutableStateMapOf<String, String>().apply { putAll(initialLoad.getOrDefault(emptyMap())) }
@@ -80,7 +85,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 .filter { it.isNotBlank() }.forEach { put(it, true) }
         }
     }
-    var saveMessage by remember { mutableStateOf("") }
+    var saveMessage by remember { mutableStateOf("") }\n    var sourceLanguageExpanded by remember { mutableStateOf(false) }\n    var targetLanguagesExpanded by remember { mutableStateOf(false) }
     val imagingStudies = remember {
         mutableStateListOf<MedicalImagingStudy>().apply {
             addAll(imagingLoad.getOrDefault(emptyList()))
@@ -132,30 +137,27 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Original Language", fontWeight = FontWeight.SemiBold)
-                languages.forEach { language ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(
-                            selected = sourceLanguage == language.code,
-                            onClick = { sourceLanguage = language.code }
-                        )
-                        Text(language.englishName, modifier = Modifier.clickable { sourceLanguage = language.code })
+                Box {
+                    OutlinedButton(onClick = { sourceLanguageExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(languages.firstOrNull { it.code == sourceLanguage }?.englishName
+                            ?: if (sourceLanguage == "other") "Other" else "Select language")
+                    }
+                    DropdownMenu(expanded = sourceLanguageExpanded, onDismissRequest = { sourceLanguageExpanded = false }) {
+                        languages.forEach { language ->
+                            DropdownMenuItem(text = { Text(language.englishName) }, onClick = {
+                                sourceLanguage = language.code
+                                sourceLanguageExpanded = false
+                            })
+                        }
+                        DropdownMenuItem(text = { Text("Other") }, onClick = {
+                            sourceLanguage = "other"
+                            sourceLanguageExpanded = false
+                        })
                     }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = sourceLanguage == "other",
-                        onClick = { sourceLanguage = "other" }
-                    )
-                    Text("Other", modifier = Modifier.clickable { sourceLanguage = "other" })
-                }
                 if (sourceLanguage == "other") {
-                    OutlinedTextField(
-                        value = otherLanguage,
-                        onValueChange = { otherLanguage = it.take(35) },
-                        label = { Text("Other source language") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    OutlinedTextField(value = otherLanguage, onValueChange = { otherLanguage = it.take(35) },
+                        label = { Text("Other source language") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                 }
             }
         }
@@ -163,22 +165,26 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Target Languages", fontWeight = FontWeight.SemiBold)
-                Text(
-                    "Select one or more languages for a later translation step.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                languages.forEach { language ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = selectedTargets[language.code] == true,
-                            onCheckedChange = { selectedTargets[language.code] = it }
-                        )
-                        Text(language.englishName, modifier = Modifier.clickable {
-                            selectedTargets[language.code] = selectedTargets[language.code] != true
-                        })
+                Box {
+                    OutlinedButton(onClick = { targetLanguagesExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                        val selectedNames = languages.filter { selectedTargets[it.code] == true }.joinToString(", ") { it.englishName }
+                        Text(selectedNames.ifBlank { "Select target languages" }, maxLines = 2)
+                    }
+                    DropdownMenu(expanded = targetLanguagesExpanded, onDismissRequest = { targetLanguagesExpanded = false }) {
+                        languages.forEach { language ->
+                            DropdownMenuItem(
+                                text = { Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(checked = selectedTargets[language.code] == true,
+                                        onCheckedChange = { selectedTargets[language.code] = it })
+                                    Text(language.englishName)
+                                } },
+                                onClick = { selectedTargets[language.code] = selectedTargets[language.code] != true }
+                            )
+                        }
                     }
                 }
+                Text("You can select multiple target languages.", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
@@ -331,7 +337,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                             put(IMC_IMAGING_STUDIES_KEY, encodeMedicalImagingStudies(currentStudies))
                         }
                         val saveResult = runCatching {
-                            InternationalMedicalCertificateStore.save(context, updatedValues)
+                            InternationalMedicalCertificateRecords.save(context, recordId, updatedValues)
                         }
                         if (saveResult.isFailure) {
                             saveMessage = "Certificate data could not be saved; existing attachment scopes were preserved."
