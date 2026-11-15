@@ -994,3 +994,26 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [x] PR #69 pozostaje otwarty i Draft; gałąź `zaswaidczenie` jest 99 commitów przed `main` i 0 commitów za nim.
 - [x] Końcowy SHA po aktualizacji audytu: `3700c63eb4bbaf7e14778aaac024a5171e6be3f0`.
 - [ ] Dla tego SHA GitHub nie zwrócił jeszcze nowych workflow ani statusów. Nie można zatem potwierdzić, że poprawka przeszła testy; wymagane jest uruchomienie CI przez zdarzenie PR/push w repozytorium.
+
+---
+
+## 38. Walidacja domenowa języków i badań obrazowych — 2026-11-15
+
+### Ustalenia
+- [x] Wcześniejsza walidacja daty była powiązana głównie z polem formularza. Model domenowy nie kontrolował spójności języków, unikalności identyfikatorów badań ani identyfikatorów załączników.
+- [x] Przycisk zapisu nie korzystał z pełnej walidacji modelu domenowego, przez co część błędnych danych mogła zostać utrwalona mimo istnienia metod `validate()`.
+
+### Wykonane prace
+- [x] Model odrzuca nieobsługiwany język źródłowy i nieobsługiwane/nieprawidłowe języki docelowe.
+- [x] Dodano walidację formatu i unikalności identyfikatorów badań obrazowych.
+- [x] Dodano kontrolę rzeczywistej daty badania, a nie tylko jej formatu.
+- [x] Dodano kontrolę formatu i unikalności identyfikatorów załączników w obrębie badania.
+- [x] Formularz wyświetla błędy walidacji modelu i blokuje zapis, dopóki dane nie są poprawne.
+- [x] Dodano testy dla nieobsługiwanych języków, powtórzonych identyfikatorów badań, błędnych dat, nieprawidłowych identyfikatorów załączników oraz poprawnego zestawu danych.
+- [x] Zmiany kodu i testów zapisano w commitach `f23b19150ffd4b9343c2b386d517cc89810241e5`, `9301be32d24f816e52f8488494980410701465ba` i `0b492edaa21a37dbfde6c8d40b5105cfcb324932`.
+
+### Weryfikacja CI
+- [x] Dla poprzedniego SHA `5416625dbe1bd9500f8af0f28cfa077d21fc6b1b` potwierdzono uruchomienie dwóch workflow Android (build i GUI) oraz powodzenie REUSE.
+- [ ] W chwili kontroli oba workflow Android dla SHA `5416625` były nadal w toku; nie stanowią potwierdzenia zmian wprowadzonych w sekcji 38.
+- [ ] Nowe testy JVM i pełny build wymagają wyniku CI dla końcowego SHA po tej sekcji.
+- [ ] Nadal wymagane są testy instrumentacyjne magazynu i obrazów, testy restartu procesu, integracja eksportu/importu oraz weryfikacja PDF/RTL.
