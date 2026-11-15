@@ -3121,8 +3121,31 @@ Tablice bajtów JPEG/PNG są atrapami sygnatur, a nie kompletnymi obrazami. Test
 
 ### 52.4. Weryfikacja i status
 
-Testy zapisano w commicie `affabb3ece285e0d028f1e109e938e3905433253`. Audyt uzupełniono po tym commicie. Etap 2Q.3 pozostaje oczekujący do czasu zielonego CI dla końcowego commitu audytu. Należy potwierdzić przejście scenariusza usuniętego pliku oraz testów JPEG/PNG na emulatorze.
+Testy zapisano w commicie `affabb3ece285e0d028f1e109e938e3905433253`. Audyt uzupełniono po tym commicie. Pierwszy przebieg CI dla commitu testowego `affabb3ece285e0d028f1e109e938e3905433253` wykazał: REUSE — sukces, budowanie debug — sukces, Android GUI validation — niepowodzenie. Jedyny wykazany błąd instrumentacyjny dotyczył istniejącego testu `BankAccountsNavigationTest.sharedCredentialAppearanceExposesSeparateCrestAndFlagTransforms`: `performScrollTo()` zgłosiło, że węzeł semantyki zniknął z drzewa. Log nie wskazuje awarii żadnego z trzech nowych testów importu. Z tego powodu 2Q.3 nie został uznany za zweryfikowany. W kolejnym commicie poprawiono odporność tego testu interfejsu; wynik poprawki wymaga ponownego CI.
 
 ### 52.5. Następny etap
 
 Po zielonym CI dodać kontrolowany błąd strumienia w trakcie odczytu (testowy dostawca treści), a następnie rozpocząć raport darowizn PDF/CSV z odrębnymi sumami: przyjęte, pozostające w przechowaniu, przekazane oraz saldo nierozliczone.
+
+
+---
+
+## 53. Etap 2Q.3a — korekta niestabilnego testu Compose i ponowna walidacja (15 listopada 2026 r.)
+
+### 53.1. Ustalenie z CI
+
+Analiza logu Android GUI validation (run `43688211066`) wykazała jedną porażkę w teście `BankAccountsNavigationTest.sharedCredentialAppearanceExposesSeparateCrestAndFlagTransforms`. Przy przewijaniu elementu `Skala godła` framework Compose zgłosił, że wcześniej znaleziony węzeł semantyczny nie znajduje się już w drzewie. Pozostałe 78 z 79 testów zakończyło się bez zgłoszonej porażki. Log nie wskazuje, aby błąd pochodził z testów importu załączników dodanych w 2Q.3.
+
+### 53.2. Wykonana korekta
+
+W `BankAccountsNavigationTest.kt` dodano pomocniczą metodę `assertTextCanBeScrolledIntoView`, która ponownie wyszukuje węzeł po każdej próbie przewinięcia i ponawia czynność do 10 sekund, jeśli drzewo semantyczne zmieni się w trakcie przewijania. Cztery sprawdzenia skali i obrotu godła oraz flagi korzystają teraz z tej metody. Test nadal wymaga rzeczywistego wyświetlenia wszystkich czterech etykiet; nie pominięto ani nie osłabiono oczekiwań funkcjonalnych.
+
+Zmiana została zapisana w commicie `505275ad1c0804318c035d032ed3e548afc8e446`.
+
+### 53.3. Weryfikacja
+
+Po korekcie należy ponownie uruchomić Android GUI validation, Android prototype build i REUSE na aktualnym commicie. Do uzyskania wyników nie uznaje się poprawki za potwierdzoną. W szczególności należy sprawdzić testy importu PDF/JPEG/PNG i obsługę błędu otwarcia strumienia w wynikach instrumentacyjnych.
+
+### 53.4. Status i kolejny krok
+
+Etap 2Q.3 oraz korekta 2Q.3a pozostają oczekujące na zielone CI. Po ich potwierdzeniu kolejnym zadaniem jest kontrolowany błąd odczytu w połowie strumienia z testowym dostawcą treści. Raportowanie darowizn PDF/CSV pozostaje dalszym etapem i nie jest częścią tej zmiany.
