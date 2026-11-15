@@ -475,4 +475,35 @@ class InternationalMedicalCertificateTest {
         assertTrue(runCatching { decodeMedicalImagingStudies(invalidAttachments) }.isFailure)
     }
 
+    @Test
+    fun stagedAttachmentWriterPersistsCompleteBytesBeforeReturning() {
+        val directory = java.nio.file.Files.createTempDirectory("attachment-stage-test").toFile()
+        try {
+            val staging = java.io.File(directory, ".attachment-1.import")
+            val encryptedBytes = byteArrayOf(1, 2, 3, 4, 5, 6)
+
+            writeOriginalAttachmentStagingFile(staging, encryptedBytes)
+
+            assertTrue(staging.isFile)
+            assertTrue(staging.readBytes().contentEquals(encryptedBytes))
+        } finally {
+            directory.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun stagedAttachmentWriterRejectsEmptyPayloadWithoutCreatingFile() {
+        val directory = java.nio.file.Files.createTempDirectory("attachment-stage-empty-test").toFile()
+        try {
+            val staging = java.io.File(directory, ".attachment-empty.import")
+
+            assertTrue(runCatching {
+                writeOriginalAttachmentStagingFile(staging, byteArrayOf())
+            }.isFailure)
+            assertFalse(staging.exists())
+        } finally {
+            directory.deleteRecursively()
+        }
+    }
+
 }
