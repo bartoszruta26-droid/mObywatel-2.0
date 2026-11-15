@@ -61,6 +61,14 @@ class PaymentLedgerRepository(
     suspend fun getDonationAttachments(): List<pl.gov.obywatel.android.DonationAttachment> =
         withContext(Dispatchers.IO) { database.readDonationAttachments() }
 
+    /** Tworzy ograniczone URI content:// po ponownej weryfikacji pliku i jego SHA-256. */
+    suspend fun getDonationAttachmentUri(id: String): Uri = withContext(Dispatchers.IO) {
+        require(id.isNotBlank()) { "Identyfikator załącznika jest wymagany." }
+        val attachment = database.readDonationAttachments().firstOrNull { it.id == id }
+            ?: throw IllegalStateException("Nie znaleziono załącznika.")
+        attachmentStorage.contentUri(attachment, "${context.packageName}.ocrfiles")
+    }
+
     suspend fun attachDonationDocument(
         donationId: String,
         uri: Uri
