@@ -1571,3 +1571,33 @@ Dokumentacja Google opisuje tłumaczenie ML Kit jako funkcję z modelami pobiera
 - [ ] Przed wpisem produkcyjnym uzyskać potwierdzenie języka polskiego, aktualnej licencji, praktyki oraz zgody lekarza na publikację danych.
 
 **Status:** kwerenda zapisana; brak wystarczających dowodów do dodania kilku rzeczywistych lekarzy polskojęzycznych. Nie zastępować brakujących dowodów domysłami na podstawie nazwiska lub polonijnego miasta.
+
+
+---
+
+## 59. Naprawa stanów modeli, ustawień i anulowania — 2026-11-15
+
+### Zmiany wprowadzone w kodzie
+- [x] Dodano jawny model stanu inwentarza: `Loading`, `Available`, `ReadError`.
+- [x] Status „Brak modelu” jest prezentowany wyłącznie po udanym odczycie listy, gdy modelu faktycznie nie ma.
+- [x] Błąd odczytu pokazuje osobny status „Błąd odczytu”, komunikat wyjaśniający i możliwość ponowienia odczytu.
+- [x] Usunięto z repozytorium modeli metodę, która przechwytywała dowolny błąd odczytu i zwracała `false`, co fałszywie oznaczało brak modelu.
+- [x] Dodano anulowanie trwającego pobierania/usuwania i blokadę równoległego uruchomienia kolejnej operacji.
+- [x] Po zakończeniu, błędzie lub anulowaniu operacji wykonywane jest odświeżenie stanu w sekcji nieanulowalnej; błąd odświeżenia pozostaje jawnie widoczny.
+- [x] Dodano testy JVM dla rozróżnienia błędu odczytu, pustego poprawnego wyniku, stanu ładowania i wariantu regionalnego.
+- [x] Dodano testy instrumentacyjne ustawień: wartości domyślne, trwałość automatycznego pobierania, trwałość ograniczenia Wi-Fi i niezależność przełączników.
+- [x] Naprawiono brak metadanych SPDX w pliku kwerendy lekarzy, który był przyczyną niepowodzenia kontroli REUSE w uruchomieniu dla wcześniejszego SHA.
+
+### Weryfikacja
+- [ ] Nowe testy JVM i instrumentacyjne wymagają wykonania w CI na najnowszym SHA.
+- [ ] Wymagane pełne zadania kompilacji debug/release, testy emulatora, kontrola REUSE oraz inspekcja APK.
+- [ ] Poprzedni wynik REUSE dla SHA `5ff9e7b50957cbe41d3dc678e723daa1f429c5d0` wskazał wyłącznie brak SPDX w `docs/research/polish-speaking-doctors-south-america.md`; metadane zostały dodane w kolejnym commicie.
+- [ ] Nie przenosić wyników wcześniejszego CI na nowe commity.
+
+### Katalog lekarzy i podpis
+- [ ] Katalog produkcyjny nie może zawierać niezweryfikowanych osób ani sugerować ich zgody na użycie danych.
+- [ ] Następny krok implementacyjny: katalog zarządzany przez uprawnionego administratora, z walidacją pól, krajem/jurysdykcją, identyfikatorem rejestracyjnym, źródłem, datą weryfikacji i statusem zgody.
+- [ ] Podpis musi być osobnym procesem z potwierdzeniem tożsamości i uprawnień, podpisem kryptograficznym oraz walidacją certyfikatu i znacznika czasu. Samo zapisanie nazwiska lekarza lub podpis odręczny na ekranie nie stanowi bezpiecznego podpisu elektronicznego.
+- [ ] Nie włączać statusu „Podpisano” ani nie generować pozornego podpisu bez skonfigurowanego dostawcy zaufanej usługi podpisu i uzgodnionych jurysdykcji.
+
+**Status:** poprawki stanów modeli, anulowania i testów zostały zapisane w gałęzi PR. Katalog lekarzy i rzeczywisty mechanizm podpisu pozostają nieukończone; wymagają osobnego wdrożenia. PR pozostaje otwarty.
