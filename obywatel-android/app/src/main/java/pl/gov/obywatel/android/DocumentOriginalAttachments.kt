@@ -105,14 +105,30 @@ private object OriginalAttachmentStore {
         return cipher.doFinal(bytes.copyOfRange(12, bytes.size))
     }
 
-    fun list(context: Context, documentId: String): List<OriginalAttachment> = runCatching {
-        val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(documentId, "[]") ?: "[]"
-        val json = JSONArray(raw)
-        (0 until json.length()).map { i ->
-            val item = json.getJSONObject(i)
-            OriginalAttachment(item.getString("id"), item.getString("name"), item.getString("mime"))
+    fun list(context: Context, documentId: String): List<OriginalAttachment> {
+        require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
+            "Nieprawidłowy identyfikator dokumentu."
         }
-    }.getOrDefault(emptyList())
+        val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(documentId, "[]") ?: "[]"
+        val json = JSONArray(raw)
+        val seen = mutableSetOf<String>()
+        return (0 until json.length()).map { index ->
+            val item = json.getJSONObject(index)
+            val id = item.getString("id")
+            require(id.matches(Regex("[A-Za-z0-9-]{1,64}")) && seen.add(id)) {
+                "Nieprawidłowy lub powtórzony identyfikator załącznika."
+            }
+            val name = item.getString("name")
+            val mime = item.getString("mime").substringBefore(';').trim().lowercase()
+            require(name.isNotBlank() && name.length <= 180) { "Nieprawidłowa nazwa załącznika." }
+            require(mime in setOf(
+                "application/pdf", "image/jpeg", "image/png", "image/webp",
+                "text/plain", "text/csv", "application/xml"
+            )) { "Nieobsługiwany typ MIME w rejestrze załączników." }
+            OriginalAttachment(id, name, mime)
+        }
+    }
 
     fun add(
         context: Context,
