@@ -61,6 +61,16 @@ class InternationalMedicalCertificateTest {
         )
         assertEquals("Lumbar spine", study.bodyRegion)
         assertEquals("report-1", study.attachmentIds.single())
+        val completedReport = study.copy(
+            technique = "T1/T2 sagittal sequences",
+            contrast = "Gadolinium",
+            radiologistName = "Dr Example",
+            reportNumber = "MRI-2026-001"
+        )
+        assertEquals("T1/T2 sagittal sequences", completedReport.technique)
+        assertEquals("Gadolinium", completedReport.contrast)
+        assertEquals("Dr Example", completedReport.radiologistName)
+        assertEquals("MRI-2026-001", completedReport.reportNumber)
     }
 
     @Test
