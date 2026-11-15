@@ -3034,7 +3034,7 @@ Testy wymagają emulatora/urządzenia Android i nie są uznawane za wykonane na 
 - `PaymentLedgerRepository.kt`;
 - `PaymentLedgerScreen.kt`;
 - `res/xml/ocr_file_paths.xml`;
-- nowy `DonationAttachmentStorageTest.kt);
+- nowy `DonationAttachmentStorageTest.kt`;
 - niniejszy audyt.
 
 ### 50.5. Status weryfikacji
@@ -3062,3 +3062,38 @@ Zmiany źródłowe i testy zapisano na `feature/payment-ledger-stage-1`. Wszystk
 - końcowa aktualizacja audytu i korekta statusu CI — bieżący commit aktualizujący ten rozdział.
 
 Wyniki REUSE/Android CI należy przypisać wyłącznie do końcowego SHA po tej aktualizacji, a nie do wcześniejszej rewizji.
+
+
+---
+
+## 51. Etap 2Q.2 — testy importu SAF, limitu i sprzątania po błędach (15 listopada 2026 r.)
+
+### 51.1. Cel
+
+Etap 2Q.1 weryfikował bezpieczne otwieranie istniejących załączników. Nadal brakowało testów przepływu importu z rzeczywistego `ContentResolver`/URI `content://`, w tym zachowania przy pustym i nadmiernie dużym pliku oraz rozbieżności MIME i sygnatury.
+
+### 51.2. Wykonane rozszerzenie testów
+
+Rozszerzono `DonationAttachmentStorageTest.kt`. Testy wykorzystują AndroidX FileProvider jako źródło URI `content://`, a następnie wykonują import przez produkcyjną metodę `DonationAttachmentStorage.import()`. Oznacza to sprawdzenie rzeczywistej ścieżki `ContentResolver.getType/query/openInputStream`, a nie wyłącznie test pomocniczej funkcji walidującej.
+
+Dodane scenariusze:
+1. prawidłowy PDF: kopia do magazynu prywatnego, zachowanie rozmiaru, MIME i zgodnej sumy SHA-256;
+2. pusty plik: odrzucenie importu i usunięcie częściowego pliku docelowego;
+3. plik o rozmiarze `MAX_BYTES + 1`: odrzucenie po przekroczeniu limitu 10 MiB i usunięcie częściowego pliku;
+4. MIME `application/pdf` przy sygnaturze PNG: odrzucenie pliku i usunięcie częściowego pliku.
+
+Źródłowy plik testowy pozostaje w katalogu do sprzątnięcia przez `@After`; po nieudanym imporcie liczba plików w katalogu ma pozostać równa jeden (sam plik źródłowy). Test sukcesu sprawdza także bajtową zgodność kopii.
+
+### 51.3. Zakres i ograniczenia
+
+- Test używa FileProvider jako lokalnego dostawcy dokumentów. Sprawdza API ContentResolver i przepływ strumienia, lecz nie zastępuje testów z zewnętrznymi dostawcami SAF (np. Dokumenty/Pliki lub dostawcą chmurowym).
+- Testy JPEG i PNG dla poprawnych sygnatur oraz pełna obsługa błędu odczytu strumienia pozostają osobnymi przypadkami do uzupełnienia.
+- Testy wymagają Android instrumentation runner/emulatora; samo skompilowanie testów nie stanowi dowodu ich wykonania.
+
+### 51.4. Status weryfikacji
+
+Zmiana źródła testowego została zapisana na `feature/payment-ledger-stage-1` razem z aktualizacją audytu. Należy sprawdzić ponownie pobrane pliki oraz uruchomić CI dla najnowszego SHA: JVM, testy instrumentacyjne/Compose, budowę debug APK i REUSE. Do czasu zielonego wyniku testu emulatorowego etap 2Q.2 pozostaje oczekujący na weryfikację.
+
+### 51.5. Następny etap
+
+Po zielonym CI rozszerzyć testy poprawnego importu JPEG/PNG i kontrolowanego błędu odczytu. Następnie rozpocząć raport darowizn PDF/CSV, rozdzielając kwoty przyjęte, pozostające w przechowaniu, przekazane oraz saldo nierozliczone.
