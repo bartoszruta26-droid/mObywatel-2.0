@@ -4,6 +4,7 @@ package pl.gov.obywatel.android
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -57,6 +58,29 @@ internal fun decodeOriginalAttachmentBase64(encoded: String, maxBytes: Int): Byt
     return decoded
 }
 
+internal fun validateOriginalAttachmentImage(bytes: ByteArray) {
+    require(bytes.isNotEmpty() && bytes.size <= 25 * 1024 * 1024) {
+        "Obraz przekracza dopuszczalny rozmiar."
+    }
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    val width = bounds.outWidth
+    val height = bounds.outHeight
+    require(width > 0 && height > 0) { "Nie można odczytać wymiarów obrazu." }
+    require(width <= 12000 && height <= 12000 && width.toLong() * height.toLong() <= 40000000L) {
+        "Wymiary obrazu przekraczają dopuszczalny limit."
+    }
+    var sampleSize = 1
+    while (width / sampleSize > 2048 || height / sampleSize > 2048) sampleSize *= 2
+    val options = BitmapFactory.Options().apply {
+        inSampleSize = sampleSize
+        inPreferredConfig = Bitmap.Config.RGB_565
+    }
+    val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+        ?: throw IllegalArgumentException("Plik obrazu jest uszkodzony lub ma nieobsługiwany format.")
+    decoded.recycle()
+}
+
 internal fun validateOriginalAttachmentPayload(mime: String, bytes: ByteArray) {
     require(bytes.isNotEmpty() && bytes.size <= 25 * 1024 * 1024) {
         "Plik musi mieć od 1 bajta do 25 MB."
@@ -66,18 +90,25 @@ internal fun validateOriginalAttachmentPayload(mime: String, bytes: ByteArray) {
             String(bytes, 0, 5, Charsets.US_ASCII) == "%PDF-") {
             "Nieprawidłowy nagłówek PDF."
         }
-        "image/jpeg" -> require(bytes.size >= 3 &&
-            bytes[0] == 0xff.toByte() && bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte()) {
-            "Nieprawidłowa sygnatura JPEG."
+        "image/jpeg" -> {
+            require(bytes.size >= 3 && bytes[0] == 0xff.toByte() &&
+                bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte()) {
+                "Nieprawidłowa sygnatura JPEG."
+            }
+            validateOriginalAttachmentImage(bytes)
         }
-        "image/png" -> require(bytes.size >= 8 &&
-            bytes.copyOfRange(0, 8).contentEquals(byteArrayOf(
+        "image/png" -> {
+            require(bytes.size >= 8 && bytes.copyOfRange(0, 8).contentEquals(byteArrayOf(
                 0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
             ))) { "Nieprawidłowa sygnatura PNG." }
-        "image/webp" -> require(bytes.size >= 12 &&
-            String(bytes, 0, 4, Charsets.US_ASCII) == "RIFF" &&
-            String(bytes, 8, 4, Charsets.US_ASCII) == "WEBP") {
-            "Nieprawidłowa sygnatura WebP."
+            validateOriginalAttachmentImage(bytes)
+        }
+        "image/webp" -> {
+            require(bytes.size >= 12 && String(bytes, 0, 4, Charsets.US_ASCII) == "RIFF" &&
+                String(bytes, 8, 4, Charsets.US_ASCII) == "WEBP") {
+                "Nieprawidłowa sygnatura WebP."
+            }
+            validateOriginalAttachmentImage(bytes)
         }
         "text/plain", "text/csv", "application/xml" -> {
             // Scan the complete payload: declarations beyond a short prefix must
