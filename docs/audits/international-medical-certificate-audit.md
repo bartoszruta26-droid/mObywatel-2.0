@@ -580,3 +580,34 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Nie potwierdzono jeszcze fizycznego odtworzenia po restarcie urządzenia ani przeniesienia archiwum między dwiema instalacjami Androida.
 
 **Status:** naprawiono zachowanie identyfikatorów przy eksporcie i imporcie oraz dodano odroczone sprzątanie załączników po trwałym usunięciu badania. Zmiany źródłowe potwierdzono odczytem z GitHub; walidacja CI dla końcowego SHA pozostaje w toku. PR #69 nadal jest otwarty, Draft i niescalony.
+---
+
+## 24. Walidacja i etapowe zatwierdzanie importu archiwum załączników — 2026-11-15
+
+### Wykryte ryzyko
+- [x] Poprzedni import przetwarzał wpisy sekwencyjnie przez `add()`. Błąd przy późniejszym wpisie mógł pozostawić wcześniejsze załączniki zapisane, mimo że całe archiwum nie zostało odtworzone.
+- [x] Import nie odrzucał powtórzonych identyfikatorów w obrębie jednego archiwum przed rozpoczęciem zapisu.
+- [x] Konieczne było sprawdzanie całego wejścia przed modyfikacją magazynu oraz oddzielenie plików tymczasowych od zatwierdzonego rejestru.
+
+### Wykonane zmiany
+- [x] Import najpierw parsuje i waliduje wszystkie wpisy archiwum: wersję, identyfikator dokumentu, identyfikator załącznika, unikalność ID, nazwę, MIME, Base64, niepustą zawartość i limit 25 MB.
+- [x] Dodano kontrolę nagłówka PDF i blokadę deklaracji DTD/ENTITY w plikach tekstowych/XML.
+- [x] Przed instalacją plików sprawdzane są istniejące metadane, pliki i zawartość; identyczne wpisy są pomijane, a konflikty przerywają import.
+- [x] Nowe pliki są najpierw szyfrowane do plików tymczasowych, następnie przenoszone do docelowych nazw, a rejestr metadanych jest zatwierdzany jednym synchronicznym `SharedPreferences.Editor.commit()`.
+- [x] Przy błędzie przed zatwierdzeniem rejestru usuwane są pliki zainstalowane w ramach bieżącej próby; pliki tymczasowe są sprzątane w bloku `finally`.
+- [x] Zachowano obsługę starszego archiwum bez pola `id` przez wygenerowanie nowego identyfikatora.
+- [x] Zmieniony plik `DocumentOriginalAttachments.kt` ponownie odczytano z GitHub; sprawdzono kolejność walidacji, staging, kontrolę konfliktów i obsługę błędów.
+
+### Ograniczenia i testy do wykonania
+- [ ] Nie dodano jeszcze testów instrumentalnych importu z rzeczywistym Android Keystore i `SharedPreferences`; wymagane są przypadki: pusty wpis, powtórzony ID, konflikt ID, nieprawidłowy Base64, błędny PDF, nieobsługiwany MIME, rozmiar 25 MB i przekroczenie limitu.
+- [ ] Operacja jest odporna na typowe błędy walidacji i zapisu w trakcie jednej próby, ale nie stanowi pełnej transakcji systemu plików odporniej na nagłe odcięcie zasilania pomiędzy przeniesieniem plików a zatwierdzeniem metadanych. Potrzebny jest dziennik transakcji/odtwarzanie po awarii procesu.
+- [ ] Kontrola sygnatur obrazów (JPEG/PNG/WebP) oraz ścisłe mapowanie rozszerzeń MIME wymagają osobnego testu i ujednolicenia z walidacją dodawania plików.
+- [ ] Testy eksportu/importu na dwóch fizycznych instalacjach i odtworzenia po restarcie nadal nie zostały wykonane.
+
+### CI dla zmiany źródłowej
+- [ ] Android prototype build dla SHA `4b83a59614a8d2882956018671ae16c8d262459f`: w toku.
+- [ ] Android GUI validation dla SHA `4b83a59614a8d2882956018671ae16c8d262459f`: w toku.
+- [ ] REUSE compliance dla SHA `4b83a59614a8d2882956018671ae16c8d262459f`: w toku.
+- [x] Poprzedni SHA `cf319727315712a9bff3c7dbf2b6117bed56c959`: Android prototype build zakończony powodzeniem; Android GUI validation anulowano przy aktualizacji gałęzi, więc nie stanowi potwierdzenia testów Compose dla tego SHA.
+
+**Status:** import przebudowano na walidację całego archiwum i etapowe zatwierdzanie danych. Kontrola źródła zakończona; wynik CI dla tej zmiany oczekuje na zakończenie workflow. PR #69 pozostaje otwarty, Draft i niescalony.
