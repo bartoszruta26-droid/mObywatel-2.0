@@ -35,6 +35,8 @@ internal fun InternationalMedicalCertificateManagerScreen(
 ) {
     val context = LocalContext.current
     var refresh by remember { mutableStateOf(0) }
+    var showDoctorDirectory by remember { mutableStateOf(false) }
+    if (showDoctorDirectory) { MedicalDoctorDirectoryScreen(onBack = { showDoctorDirectory = false }); return }
     var deleteId by remember { mutableStateOf<String?>(null) }
     var actionError by remember { mutableStateOf("") }
     val records = remember(refresh) { runCatching { InternationalMedicalCertificateRecords.list(context) } }
@@ -49,6 +51,7 @@ internal fun InternationalMedicalCertificateManagerScreen(
             fontWeight = FontWeight.Bold)
         Text("Otwórz zapisane zaświadczenie, aby je wyświetlić lub edytować. Usunięcie wymaga potwierdzenia.",
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        OutlinedButton(onClick = { showDoctorDirectory = true }, modifier = Modifier.fillMaxWidth()) { Text("Katalog lekarzy") }
         Button(onClick = { onEdit(UUID.randomUUID().toString().replace("-", "")) },
             modifier = Modifier.fillMaxWidth()) { Text("New certificate") }
         if (records.isFailure) {
