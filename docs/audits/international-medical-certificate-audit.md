@@ -1635,3 +1635,33 @@ Dokumentacja Google opisuje tłumaczenie ML Kit jako funkcję z modelami pobiera
 - [ ] Uruchomić nowe testy instrumentacyjne katalogu na emulatorze.
 - [ ] Zweryfikować kompilację debug i release, testy JVM, testy GUI, REUSE oraz APK na najnowszym SHA.
 - [ ] PR pozostaje otwarty do czasu zielonego CI i inspekcji APK.
+
+
+---
+
+## 61. Zmiana zakresu katalogu i papierowego podpisu — 2026-11-15
+
+Niniejsza sekcja zastępuje wcześniejsze wymagania dotyczące podpisu elektronicznego i weryfikacji uprawnień lekarza.
+
+### Uzgodniony sposób wystawiania
+- [x] Zaświadczenie jest generowane jako PDF przeznaczony do wydruku.
+- [x] Lekarz składa własnoręczny podpis na wydrukowanym dokumencie.
+- [x] PDF otrzymuje wydzielone miejsce na podpis lekarza, pieczątkę oraz datę i miejsce wystawienia.
+- [x] Dane wybranego lekarza (nazwisko, praktyka, adres) są przekazywane do sekcji lekarza w PDF.
+- [x] Nie wdraża się podpisu kryptograficznego, kwalifikowanego ani innego podpisu elektronicznego.
+- [x] Nie wdraża się sprawdzania prawa wykonywania zawodu ani statusu licencji w rejestrach.
+- [x] Numer rejestracyjny i nazwa rejestru są polami opcjonalnymi, wyłącznie informacyjnymi.
+
+### Zmiany kodu
+- [x] Usunięto z interfejsu katalogu komunikaty sugerujące konieczność weryfikacji licencji i uprawnień.
+- [x] Pola rejestru i numeru rejestracyjnego są opcjonalne.
+- [x] Walidacja rekordu wymaga danych potrzebnych do identyfikacji lekarza i praktyki, a nie numeru licencji, źródła rejestrowego ani daty weryfikacji.
+- [x] Dodano sekcję lekarza oraz pola odręcznego podpisu, pieczątki i daty/miejsca w generatorze PDF.
+- [x] Dodano migrację katalogu z klucza records_v1 do records_v2, aby zachować istniejące wpisy po zmianie schematu.
+- [x] Rozszerzono test CRUD o zapis rekordu bez danych rejestrowych.
+
+### Ograniczenia
+- Katalog jest narzędziem do wstępnego uzupełnienia danych, a nie urzędowym rejestrem.
+- Wybór lekarza nie składa podpisu i nie oznacza, że lekarz już zaakceptował treść zaświadczenia.
+- Wydruk musi zostać sprawdzony przez lekarza, uzupełniony i podpisany przez niego na papierze.
+- Pozostaje do wykonania pełna weryfikacja CI na nowym SHA oraz inspekcja artefaktu APK. PR #71 pozostaje otwarty i nie jest scalany.
