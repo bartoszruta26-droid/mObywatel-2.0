@@ -220,16 +220,25 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
-    fun attachmentPayloadValidatorAcceptsSupportedFileSignatures() {
+    fun attachmentPayloadValidatorAcceptsSupportedNonImagePayloads() {
         validateOriginalAttachmentPayload("application/pdf", "%PDF-1.7".toByteArray(Charsets.US_ASCII))
-        validateOriginalAttachmentPayload("image/jpeg", byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 0x00))
-        validateOriginalAttachmentPayload("image/png", byteArrayOf(
-            0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
-        ))
-        validateOriginalAttachmentPayload("image/webp", "RIFF0000WEBP".toByteArray(Charsets.US_ASCII))
         validateOriginalAttachmentPayload("text/plain", "Clinical report".toByteArray(Charsets.UTF_8))
         validateOriginalAttachmentPayload("text/csv", "date,result".toByteArray(Charsets.UTF_8))
         validateOriginalAttachmentPayload("application/xml", "<report/>".toByteArray(Charsets.UTF_8))
+    }
+
+    @Test
+    fun attachmentPayloadValidatorRejectsImageSignaturesWithoutDecodableImageData() {
+        val invalidImages = listOf(
+            "image/jpeg" to byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 0x00),
+            "image/png" to byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a),
+            "image/webp" to "RIFF0000WEBP".toByteArray(Charsets.US_ASCII)
+        )
+        invalidImages.forEach { (mime, bytes) ->
+            assertTrue("Expected invalid image data rejection for $mime", runCatching {
+                validateOriginalAttachmentPayload(mime, bytes)
+            }.isFailure)
+        }
     }
 
     @Test
