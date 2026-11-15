@@ -17,11 +17,6 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
- * Dedicated encrypted store for the international medical certificate.
- * It uses a separate Android Keystore key and file; clinical data is not mixed
- * with the general identity-profile archive.
- */
-/**
  * Replaces a file without exposing a partially written destination.
  * The temporary file is synced before the same-filesystem atomic rename.
  * If atomic replacement is unavailable, the operation fails and leaves the
@@ -59,6 +54,11 @@ internal fun writeMedicalCertificateAtomically(directory: File, fileName: String
     }
 }
 
+/**
+ * Dedicated encrypted store for the international medical certificate.
+ * It uses a separate Android Keystore key and file; clinical data is not mixed
+ * with the general identity-profile archive.
+ */
 internal object InternationalMedicalCertificateStore {
     private const val KEY_ALIAS = "international_medical_certificate_aes"
     private const val FILE_NAME = "international_medical_certificate.enc"
