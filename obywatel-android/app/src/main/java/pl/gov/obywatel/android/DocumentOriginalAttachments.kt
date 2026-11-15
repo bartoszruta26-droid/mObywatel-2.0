@@ -207,7 +207,6 @@ private fun attachmentMetadataBackend(context: Context): OriginalAttachmentMetad
     SharedPreferencesOriginalAttachmentMetadataBackend(context.getSharedPreferences("original_document_attachments", Context.MODE_PRIVATE))
 
 internal object OriginalAttachmentStore {
-    private const val PREFS = "original_document_attachments"
     private const val ALIAS = "obywatel_original_attachments_aes"
     private const val MAX_BYTES = 25 * 1024 * 1024
     private const val MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
