@@ -204,3 +204,19 @@ Ponowny przegląd parsera CSV potwierdził zapis deterministycznego SHA-256 opis
 Szczegółowa diagnoza, ograniczenia i kryteria następnych prac znajdują się w sekcji 77 głównego audytu: `docs/audits/AUDYT_RACHUNKI_PLATNICZE_TRANSAKCJE_WALUTOWE_I_KRUSZCOWE_2026-11-14.md`.
 
 **Status:** etap 77 — diagnoza i dokumentacja wykonane; poprawki kodu i ponowny zielony CI pozostają otwarte. PR #68 nadal otwarty i niescalony.
+
+
+## 78. Ponowna kontrola CI i instrumentacja testów kalendarza — 15 listopada 2026 r.
+
+Dla SHA `ad533d4a1a2d0c9df967f9788750c6628918248d`:
+- Android prototype build `43733058556` — **success**;
+- Repository compliance `43733058562` — **success**;
+- Android GUI validation `43733058566` — **failure**.
+
+Raport instrumentacyjny ID `14169510439` wykazał 5 testów klasy kalendarza: 3 sukcesy i 2 błędy. Testy wyboru daty początkowej i końcowej nadal nie znajdują węzłów dni `10` i `25`; pozostałe trzy testy kalendarza przechodzą.
+
+W commicie `2db3a8f5a0890bf5eda7d5021428a6fc84ac031c` dodano zapis niepołączonego drzewa semantyki Compose dla obu testów, z etykietami `START_DATE_PICKER_SEMANTICS` i `END_DATE_PICKER_SEMANTICS`. Jest to diagnostyka mająca ustalić rzeczywiste semantyki DatePicker; nie jest jeszcze poprawką funkcjonalną.
+
+Ponownie przeanalizowano identyfikację wpisów CSV: `accountingEntryId()` korzysta z opisu, gdy brak referencji bankowej, a archiwum JSON zachowuje identyfikatory powiązań transakcji. Zmiana wymaga migracji i jawnej obsługi kolizji, dlatego nie usunięto skrótu opisu bez bezpiecznego zamiennika.
+
+**Status:** etap kalendarza nadal niezaliczony; etap diagnostyczny 78 wykonany i oczekuje na wyniki kolejnego CI. Ryzyko pseudonimizacji opisów CSV pozostaje otwarte. PR #68 pozostaje otwarty i niescalony.
