@@ -297,3 +297,17 @@ Dodatkowy commit: `0c877a34a748db8d2beae47154eebeb7a675ea4e` — jawne parsowani
 Kontrola logów run `43744986147` wykazała błąd Kotlin w `NbpCurrencyConverterCard.kt`: niedozwolony import `androidx.compose.foundation.layout.weight`. Usunięto import, pozostawiając użycie `Modifier.weight(1f)` wewnątrz zakresu `RowScope`. Commit: `6f2772b4449040ad5f0a4eb96bca1f7429444773`.
 
 Wyniki poprzedniego CI: Android build — failure (kompilacja Kotlin), GUI validation — cancelled przed testami, REUSE — success. Poprawka oczekuje na nowy pełny przebieg CI. Nie uznaje się jeszcze APK ani testów emulatorowych za zaliczone. PR #68 pozostaje otwarty i niescalony.
+
+
+## Etap 86 — archiwum notowań NBP na dysku aplikacji (15 listopada 2026 r.)
+
+Zgodnie z decyzją użytkownika dane historyczne zapisują się trwale w prywatnym katalogu aplikacji `filesDir/nbp-rates-cache`. Repozytorium przechowuje oryginalne odpowiedzi JSON wraz ze znacznikiem czasu. Historyczne tabele i ceny złota są odczytywane z dysku bezterminowo i nie są nadpisywane przez odświeżanie kursów bieżących. Wpisy bieżące (tabele A/B i złoto) mają osobne klucze i TTL 15 minut.
+
+Karta przelicznika przekazuje repozytorium katalog prywatny aplikacji; nie dodano uprawnień do pamięci zewnętrznej. Nazwy plików wynikają z SHA-256 kluczy cache. Zapis jest wykonywany przez plik tymczasowy. Dodano testy odczytu historycznego wpisu po odtworzeniu repozytorium offline i odświeżenia wpisu bieżącego po upływie TTL.
+
+Commity:
+- repozytorium cache: `a952f8c8a2b6c4b15142c7217ff87872d60b7d06`;
+- podłączenie katalogu aplikacji: `eff36b1989dc5a6239fd40a4a600e715ebf1115c`;
+- testy cache: `9f7606d89b8358da6012ec650989d74009192c61`, `6039d9d2dc6fcb0b89e4fc5074d0a5a4e7209824`.
+
+Ograniczenie: archiwum jest lokalne dla instalacji i znika po wyczyszczeniu danych lub odinstalowaniu aplikacji. Świeże CI na końcowym SHA jest wymagane przed uznaniem kompilacji i testów za zaliczone.
