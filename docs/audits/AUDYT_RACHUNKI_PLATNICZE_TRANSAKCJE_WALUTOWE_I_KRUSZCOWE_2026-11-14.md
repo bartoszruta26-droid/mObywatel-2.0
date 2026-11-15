@@ -10,7 +10,7 @@ SPDX-License-Identifier: CC0-1.0
 - **Gałąź audytowana:** `feature/payment-ledger-stage-1`
 - **Commit bazowy:** `631aa68ed0e2bcbedd70201751214bd4c08fd5cc`
 - **Obszar:** `obywatel-android` (Android, Kotlin, Jetpack Compose)
-- **Status:** etapy 1–2L wdrożone w gałęzi PR; etap 2M dodaje trwały model transakcji finansowych, prowizji i relacji do zapisów bankowych oraz migrację SQLite 3 → 4. Weryfikacja CI etapu 2M trwa dla konkretnego SHA; parser CSV/XLS, adapter PDF, pełna obsługa JSON transakcji/darowizn, formularze ręczne i notowania NBP pozostają do wykonania. PR #68 pozostaje otwarty i niescalony.
+- **Status (aktualizacja 15 listopada 2026 r.):** etapy 1–2L oraz obsługa trwałych transakcji, prowizji, darowizn i archiwum JSON są wdrożone w gałęzi PR. Etap 68 naprawił umieszczenie testów repozytorium w niewłaściwej klasie, ale walidacja emulatorowa dla SHA `1f260607` wykazała 3 błędy (2 testy wyboru daty i 1 asercja skali `BigDecimal`); testy JVM i budowa APK przechodziły. W gałęzi wykonano poprawki testów oraz etap 69: zgodność podglądu archiwum z zatwierdzaniem, duplikaty identyfikatorów w paczce i konflikty powiązań transakcji z zapisami bankowymi. Nowa walidacja CI oczekuje na wynik dla końcowego SHA. Parser CSV/XLS, adapter PDF, formularze ręczne i notowania NBP pozostają do wykonania. PR #68 pozostaje otwarty i niescalony.
 - **Cel:** przygotowanie nowego, domyślnie widocznego kafelka **Rachunki płatnicze** dla lokalnej ewidencji transakcji wymiany walut i operacji na kruszcach, importu/eksportu danych w JSON oraz wyceny historycznej i bieżącej z wykorzystaniem publicznych danych NBP.
 
 > **Zasada nadrzędna:** rejestr ma wiernie przechowywać to, co faktycznie wydarzyło się w transakcji, i wyraźnie oddzielać dane źródłowe od obliczeń, wycen referencyjnych i hipotetycznych wyników. Kurs NBP nie jest kursem wykonania transakcji w banku ani ofertą, po której użytkownik może rzeczywiście kupić lub sprzedać walutę czy kruszec.
@@ -3877,3 +3877,44 @@ Dla nowego HEAD `de7de2de13c3e4ee9b769c5183f3931cd3f27c3f`:
 - Android prototype build dla poprzedniego commitu `d9e90db57750b52e54a4d8381aad8f4674f34705`, run `43717735740` — **in_progress**; nie jest to jeszcze przebieg dla końcowego HEAD.
 
 Położenie testów poprawiono i zweryfikowano ponownym odczytem plików, ale etap 68 pozostaje **otwarty walidacyjnie** do zakończenia testów JVM, emulatorowych i budowy APK dla aktualnego HEAD. PR `#68` pozostaje otwarty i niescalony z `main`.
+
+
+---
+
+## 68.3b. Ponowna walidacja emulatorowa i korekta testów — 15 listopada 2026 r.
+
+Dla SHA `1f260607e130e2684b1343253c050332035ed834` workflow `Android GUI validation` (run `43717791760`) zakończył się niepowodzeniem po uruchomieniu 96 testów instrumentacyjnych: 3 testy nie przeszły. Testy JVM zakończyły się sukcesem. Odrębny workflow budowy Androida (run `43717791762`) oraz kontrola REUSE (run `43717791792`) zakończyły się sukcesem.
+
+Ustalone przyczyny:
+- `FinancialReportDateRangePickerTest`: dwa testy nie przewijały komórki dnia kalendarza do widocznego obszaru przed asercją i kliknięciem;
+- `PaymentLedgerRepositoryTest.sameDonationIdWithChangedMetadataIsReportedAsConflictAndPreservesRecord`: porównanie całego obiektu uwzględniało skalę `BigDecimal`; SQLite zapisuje kwotę tekstowo po normalizacji, więc wartość `250` była równa liczbowo `2.5E+2`, ale nie była równa obiektowo.
+
+Wprowadzone korekty:
+- testy wyboru daty wykonują przewinięcie komórki dnia do widocznego obszaru przed kliknięciem;
+- asercja zachowanego rekordu kanonizuje kwoty do postaci dziesiętnej bez wykładnika przed porównaniem obiektów; logika produkcyjna i walidacja konfliktów pozostały bez zmian.
+
+**Status:** poprawki zapisane w gałęzi; wymagane ponowne potwierdzenie pełnym workflow emulatorowym.
+
+## 69. Zgodność podglądu i zatwierdzania archiwum JSON
+
+### 69.1. Ustalenia audytowe
+
+Wcześniejszy podgląd archiwum porównywał transakcje i darowizny wyłącznie z rekordami już zapisanymi w bazie. Nie klasyfikował powtórzonych identyfikatorów występujących wewnątrz jednego importowanego archiwum. Zatwierdzanie odrzucało każdą powtórzoną tożsamość, nawet gdy powielone rekordy miały identyczną treść. Podgląd nie wykrywał również przed zatwierdzeniem sytuacji, w której dwa różne rekordy transakcji wskazywały ten sam zapis bankowy.
+
+### 69.2. Wykonane zmiany
+
+- Podgląd archiwum śledzi identyfikatory transakcji i darowizn zarówno względem bazy, jak i w obrębie importowanej paczki.
+- Identyczne powtórzenia są raportowane jako duplikaty; zmieniona treść pod tym samym identyfikatorem jest raportowana jako konflikt.
+- Zatwierdzanie archiwum deduplikuje identyczne powtórzenia transakcji i darowizn, a sprzeczne powtórzenia odrzuca.
+- Podgląd sprawdza, czy powiązany zapis bankowy istnieje w bazie lub w importowanej paczce, czy kwota i waluta odpowiadają jednej z nóg transakcji albo prowizji oraz czy zapis nie jest przypisany do innej transakcji.
+- Do wyniku podglądu dodano liczniki `duplicateTransactions`, `duplicateDonations` i `transactionLinkConflicts`; `hasConflicts` uwzględnia również konflikty powiązań.
+- Import pozostaje transakcyjny w SQLite; ograniczenia kluczy obcych i unikalności nadal stanowią ostatnią ochronę przed wyścigiem lub niespójnością.
+
+### 69.3. Testy regresyjne
+
+Dodano testy instrumentacyjne obejmujące:
+1. identyczne powtórzenia transakcji i darowizn — podgląd raportuje duplikaty, a import zapisuje po jednym rekordzie;
+2. sprzeczne rekordy o tym samym identyfikatorze — podgląd zgłasza konflikty, import zostaje odrzucony bez zmiany bazy;
+3. powiązanie jednego zapisu bankowego z dwiema różnymi transakcjami — podgląd wykrywa konflikt, a zatwierdzenie pozostawia bazę bez częściowych zapisów.
+
+**Kryterium odbioru:** testy JVM, wszystkie testy instrumentacyjne, budowa APK oraz REUSE muszą zakończyć się sukcesem dla tego samego końcowego SHA. Samo zapisanie zmian nie oznacza zaliczenia etapu.
