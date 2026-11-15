@@ -127,4 +127,92 @@ class OriginalAttachmentStoreIntegrityTest {
             runCatching { removeOriginalAttachmentDocumentScope(context, document) }
         }
     }
+
+    @Test
+    fun reconciliationCleansInterruptedImportStagingBeforeReportingMissingSource() {
+        val document = documentId()
+        val attachmentId = "missing-${UUID.randomUUID().toString().take(8)}"
+        val directory = File(context.noBackupFilesDir, "original-document-attachments")
+        val staging = File(directory.apply { mkdirs() }, ".interrupted-${UUID.randomUUID()}.import")
+        val preferences = context.getSharedPreferences("original_document_attachments", Context.MODE_PRIVATE)
+        val metadata = JSONArray().put(
+            JSONObject().put("id", attachmentId).put("name", "missing.txt").put("mime", "text/plain")
+        ).toString()
+        try {
+            staging.writeBytes(byteArrayOf(1, 2, 3))
+            assertTrue(preferences.edit().putString(document, metadata).commit())
+
+            assertTrue(runCatching { reconcileOriginalAttachments(context) }.isFailure)
+
+            assertFalse(staging.exists())
+            assertEquals(listOf(attachmentId), listOriginalAttachmentIds(context, document))
+        } finally {
+            preferences.edit().remove(document).commit()
+            staging.delete()
+        }
+    }
+
+    @Test
+    fun invalidLaterArchiveEntryDoesNotPartiallyInstallEarlierValidEntry() {
+        val document = documentId()
+        val validId = "valid-${UUID.randomUUID().toString().take(8)}"
+        val invalidId = "invalid-${UUID.randomUUID().toString().take(8)}"
+        val directory = File(context.noBackupFilesDir, "original-document-attachments")
+        val entries = JSONArray()
+            .put(JSONObject().put("documentId", document).put("id", validId)
+                .put("name", "valid.txt").put("mime", "text/plain")
+                .put("dataBase64", Base64.encodeToString("valid".toByteArray(), Base64.NO_WRAP)))
+            .put(JSONObject().put("documentId", document).put("id", invalidId)
+                .put("name", "invalid.bin").put("mime", "application/octet-stream")
+                .put("dataBase64", Base64.encodeToString("invalid".toByteArray(), Base64.NO_WRAP)))
+        try {
+            assertTrue(runCatching {
+                importOriginalAttachmentArchive(context, JSONObject().put("version", 1)
+                    .put("attachments", entries).toString())
+            }.isFailure)
+
+            assertTrue(listOriginalAttachmentIds(context, document).isEmpty())
+            assertFalse(File(directory, "$validId.enc").exists())
+            assertFalse(File(directory, "$invalidId.enc").exists())
+        } finally {
+            runCatching { removeOriginalAttachmentDocumentScope(context, document) }
+            File(directory, "$validId.enc").delete()
+            File(directory, "$invalidId.enc").delete()
+        }
+    }
+
+    @Test
+    fun importFailureAfterStagingCleansTemporaryFilesWithoutCommittingMetadata() {
+        val document = documentId()
+        val stagedId = "staged-${UUID.randomUUID().toString().take(8)}"
+        val collisionId = "collision-${UUID.randomUUID().toString().take(8)}"
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val collision = File(directory, "$collisionId.enc")
+        collision.writeBytes(ByteArray(32) { it.toByte() })
+        val entries = JSONArray()
+            .put(JSONObject().put("documentId", document).put("id", stagedId)
+                .put("name", "staged.txt").put("mime", "text/plain")
+                .put("dataBase64", Base64.encodeToString("staged".toByteArray(), Base64.NO_WRAP)))
+            .put(JSONObject().put("documentId", document).put("id", collisionId)
+                .put("name", "collision.txt").put("mime", "text/plain")
+                .put("dataBase64", Base64.encodeToString("collision".toByteArray(), Base64.NO_WRAP)))
+        try {
+            assertTrue(runCatching {
+                importOriginalAttachmentArchive(context, JSONObject().put("version", 1)
+                    .put("attachments", entries).toString())
+            }.isFailure)
+
+            assertTrue(listOriginalAttachmentIds(context, document).isEmpty())
+            assertFalse(File(directory, "$stagedId.enc").exists())
+            assertTrue(directory.listFiles().orEmpty().none {
+                it.name.startsWith(".$stagedId.") && it.name.endsWith(".import")
+            })
+        } finally {
+            runCatching { removeOriginalAttachmentDocumentScope(context, document) }
+            collision.delete()
+            directory.listFiles().orEmpty().filter {
+                it.name.startsWith(".$stagedId.") && it.name.endsWith(".import")
+            }.forEach { it.delete() }
+        }
+    }
 }
