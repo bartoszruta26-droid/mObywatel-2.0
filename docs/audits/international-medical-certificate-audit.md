@@ -951,6 +951,9 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Testy instrumentacyjne, JVM, Compose UI, build APK i REUSE dla końcowego SHA wymagają potwierdzenia w GitHub Actions.
 - [ ] Testy instrumentacyjne nie symulują twardego zaniku zasilania ani awarii systemu plików po zmianie wpisu katalogowego. Nie potwierdzają też trwałości wpisu katalogowego po utracie zasilania; synchronizacja katalogu wymaga osobnej oceny kompatybilności Androida.
 - [ ] Należy sprawdzić zachowanie `ATOMIC_MOVE` na docelowych wersjach Androida i systemach plików urządzeń wspieranych przez aplikację.
-- [ ] Funkcja pomocnicza `load()` nadal opakowuje `loadStrict()` i zwraca pustą mapę po błędzie; ekran edytora korzysta z `loadStrict()` i blokuje zapis po błędzie odczytu. Należy rozważyć usunięcie niebezpiecznego, maskującego błędy wariantu po sprawdzeniu wszystkich wywołań.
+- [x] Usunięto maskowanie błędów w `load()`: metoda deleguje teraz bezpośrednio do `loadStrict()`, więc uszkodzenie lub brak możliwości odszyfrowania danych jest jawnie zgłaszane zamiast zwracać pustą mapę.
+- [x] Zawężono obsługę błędów atomowego zapisu z `Throwable` do `Exception`, aby nie przechwytywać błędów krytycznych procesu/maszyny wirtualnej.
+- [x] Dodano test instrumentacyjny potwierdzający, że zmodyfikowany szyfrogram powoduje błąd odczytu, a nie pozornie poprawny pusty rekord.
+- [x] Dalsze zmiany zapisano w commitach `1de4bae3a64388b1d441e8cbace2887676c5415b`, `67cde662eb5d39967c128c46b7668a51368963bf` i `4d1621cc7403f85bcd5f72e9e6cb7f7f8b5c0370`.
 
 **Status:** usunięto nieatomowy mechanizm kopiowania na plik docelowy i dodano atomową zamianę z synchronizacją oraz limitami rozmiaru. Dodano testy instrumentacyjne. Ostateczne CI dla nowego SHA pozostaje wymagane; PR #69 nadal otwarty, Draft i niescalony.
