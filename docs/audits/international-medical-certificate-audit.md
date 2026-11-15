@@ -1,3 +1,6 @@
+SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+SPDX-License-Identifier: CC0-1.0
+
 # Audyt: Międzynarodowe zaświadczenie lekarskie
 
 - Data audytu: 2026-11-15
@@ -285,3 +288,40 @@ Powyższe zmiany stanowią **etap katalogowo-modelowy**, a nie kompletny działa
 6. Uruchomić testy JVM, kompilację APK i testy urządzeniowe, a następnie zaktualizować status na podstawie rzeczywistych wyników.
 
 **Status całości:** częściowo wykonano — katalog i model domenowy są dodane; formularz, tłumaczenia, PDF, podpis i walidacja kompilacyjna pozostają otwarte.
+
+
+---
+
+## 13. Aktualizacja po kontroli CI i wdrożeniu pierwszego ekranu — 2026-11-15
+
+### Ustalenia z pierwszego uruchomienia CI
+- Workflow GUI i workflow budowania APK zakończyły się błędem na SHA `a3166529bd793614385b995b92041e60c1e381a4`.
+- Kompilacja Kotlin aplikacji przeszła; awaria nastąpiła w testach jednostkowych: 110 testów, 2 niepowodzenia.
+- `DocumentGraphicCatalogTest.credentialDocumentsUseCredentialPreview` błędnie wymagał obsługi zdjęcia od wszystkich definicji, także dokumentów typu RECORD. Poprawiono asercję: wymóg dotyczy wyłącznie dokumentów typu CREDENTIAL.
+- `DocumentGroupCatalogTest.documentEditorFieldKeysAreStableAndUniqueAcrossCatalog` wykrył przekroczenie limitu 64 znaków przez długie klucze pól skanu podpisów. Skrócono klucze do `clinicianSignRef` i `patientSignRef`, zachowując angielskie etykiety pól.
+- Kolejne uruchomienie compliance wykazało brak metadanych SPDX w pliku niniejszego audytu; dodano nagłówek CC0-1.0. Pozostał osobny, wcześniej istniejący plik audytu rachunków płatniczych bez metadanych SPDX — to niezależny problem repozytorium, nie zmiana zakresu tego dokumentu.
+
+### Wykonany etap interfejsu
+- [x] Dodano dedykowany ekran Compose dla kafelka `International Medical Certificate`; kafelek otwiera ten ekran zamiast ogólnego podglądu legitymacji.
+- [x] Dodano wybór jednego języka oryginału przez RadioButton.
+- [x] Dodano wielokrotny wybór języków docelowych przez Checkbox, z wariantami belgijskimi NL/FR/DE i opcją „Other” dla języka źródłowego.
+- [x] Dodano pola formularza z angielskimi etykietami na podstawie schematu dokumentu.
+- [x] Dodano przycisk zapisu i informację, że rzeczywiste tłumaczenie automatyczne nie jest jeszcze aktywne.
+- [x] Dodano osobny magazyn szyfrowany AES-GCM z kluczem Android Keystore i plikiem w `noBackupFilesDir`; dane zaświadczenia nie są mieszane z ogólnym archiwum profilu.
+- [x] Ekran nie wysyła danych medycznych do żadnego zewnętrznego dostawcy tłumaczeń.
+
+### Zakres nadal otwarty
+- [ ] Powtarzalne formularze badań obrazowych (RTG, MRI, CT, USG, inne) i załączniki obrazów/opisów.
+- [ ] Import skanów podpisu pacjenta, lekarza i pieczęci przez aparat / selektor plików.
+- [ ] Zapis i odtwarzanie pełnego modelu domenowego wraz z tłumaczeniami, listą badań, załącznikami i historią zmian.
+- [ ] Rzeczywisty dostawca tłumaczeń, zgoda na przekazanie danych oraz statusy weryfikacji.
+- [ ] Wielostronicowy PDF, obsługa Hebrew/RTL i Android Print Framework.
+- [ ] Testy instrumentalne oraz walidacja na urządzeniu.
+
+### Weryfikacja zmian bieżącej iteracji
+- [x] Ponownie odczytano pliki ekranu, magazynu i punktu nawigacji z gałęzi `zaswaidczenie`.
+- [x] Potwierdzono, że ekran korzysta z osobnego magazynu AES-GCM, a nie z ogólnego `DemoIdentityStore`.
+- [ ] Testy i build dla najnowszego SHA — oczekują na wynik GitHub Actions; poprzednie uruchomienia po kolejnych commitach zostały anulowane przez nowsze uruchomienia.
+- [ ] Testy urządzeniowe i APK — nie uzyskano jeszcze pozytywnego wyniku.
+
+**Status:** katalog, model danych i pierwszy ekran formularza są dodane. Nie uznaje się jeszcze za gotowe tłumaczeń, obrazowania, podpisów, PDF, druku ani wydania APK. PR #69 pozostaje otwarty jako WIP.
