@@ -27,6 +27,8 @@ import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.Instant
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,6 +66,13 @@ object NbpCurrencyConverter {
     }
 }
 
+private data class LoadedNbpRates(
+    val rates: Map<String, BigDecimal>,
+    val label: String,
+    val goldLabel: String?,
+    val metadata: Map<String, Pair<LocalDate, String>>
+)
+
 @Composable
 fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -75,6 +84,7 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
     var fromCode by remember { mutableStateOf("EUR") }
     var toCode by remember { mutableStateOf("PLN") }
     var rates by remember { mutableStateOf<Map<String, BigDecimal>>(emptyMap()) }
+    var rateMetadata by remember { mutableStateOf<Map<String, Pair<LocalDate, String>>>(emptyMap()) }
     var rateTableLabel by remember { mutableStateOf("") }
     var rateDateText by remember { mutableStateOf(LocalDate.now().toString()) }
     var goldPriceLabel by remember { mutableStateOf<String?>(null) }
@@ -103,18 +113,28 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                     val rateMap = allTables.flatMap { table ->
                         table.rates.mapNotNull { rate -> rate.mid?.let { rate.code to it } }
                     }.toMap()
+                    val metadata = allTables.flatMap { table ->
+                        table.rates.map { rate -> rate.code to (table.effectiveDate to "NBP_TABLE_${table.table.apiCode}") }
+                    }.toMap()
                     val periodLabel = if (requestedDate == null) "Notowania bieżące" else "Notowania historyczne dla ${requestedDate}"
-                    Triple(rateMap, periodLabel + " • " + allTables.joinToString(" • ") {
-                        "Tabela ${it.table.apiCode}: ${it.effectiveDate}"
-                    }, gold?.let { "${it.pricePerGramPln.toPlainString()} PLN/g • ${it.date}" })
+                    LoadedNbpRates(
+                        rates = rateMap,
+                        label = periodLabel + " • " + allTables.joinToString(" • ") {
+                            "Tabela ${it.table.apiCode}: ${it.effectiveDate}"
+                        },
+                        goldLabel = gold?.let { "${it.pricePerGramPln.toPlainString()} PLN/g • ${it.date}" },
+                        metadata = metadata
+                    )
                 }
-                rates = loaded.first
-                rateTableLabel = loaded.second
-                goldPriceLabel = loaded.third
+                rates = loaded.rates
+                rateMetadata = loaded.metadata
+                rateTableLabel = loaded.label
+                goldPriceLabel = loaded.goldLabel
                 if (rates.isEmpty()) error = "NBP nie zwrócił dostępnych kursów średnich."
                 result = null
             } catch (exception: Exception) {
                 rates = emptyMap()
+                rateMetadata = emptyMap()
                 goldPriceLabel = null
                 result = null
                 error = exception.message ?: "Nie udało się pobrać kursów NBP."
@@ -132,6 +152,38 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
             require(rates.isNotEmpty()) { "Najpierw pobierz aktualne kursy NBP." }
             val converted = NbpCurrencyConverter.convert(amount, source, target, rates)
             result = "${amount.toPlainString()} $source = ${converted.toPlainString()} $target"
+            val sourcePln = if (source == "PLN") BigDecimal.ONE else
+                rates[source] ?: throw IllegalArgumentException("Brak kursu NBP dla waluty $source.")
+            val targetPln = if (target == "PLN") BigDecimal.ONE else
+                rates[target] ?: throw IllegalArgumentException("Brak kursu NBP dla waluty $target.")
+            val appliedRate = sourcePln.divide(targetPln, MathContext(34, RoundingMode.HALF_EVEN))
+            val metadata = listOf(source, target).filter { it != "PLN" }
+                .mapNotNull { rateMetadata[it] }
+            val appliedDate = metadata.minOfOrNull { it.first }
+                ?: throw IllegalStateException("Brak daty publikacji kursu dla użytej waluty.")
+            val appliedSource = metadata.map { it.second }.distinct().sorted().joinToString("+")
+            val record = CurrencyConversionRecord(
+                id = UUID.randomUUID().toString(),
+                convertedAt = Instant.now(),
+                sourceAmount = amount,
+                sourceCurrencyCode = source,
+                targetAmount = converted,
+                targetCurrencyCode = target,
+                appliedRate = appliedRate,
+                rateDate = appliedDate,
+                rateSource = appliedSource
+            )
+            scope.launch {
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        PaymentLedgerRepository(context).use { ledger ->
+                            kotlinx.coroutines.runBlocking { ledger.saveCurrencyConversion(record) }
+                        }
+                    }
+                }.onFailure { saveError ->
+                    error = "Przeliczenie wykonano, ale nie zapisano historii: ${saveError.message ?: "błąd magazynu"}"
+                }
+            }
             error = null
         } catch (exception: Exception) {
             result = null
