@@ -43,9 +43,11 @@ class Iso4217CurrencyCatalogTest {
     }
 
     @Test fun fundsAndNonCurrencyCodesAreNotOfferedAsPaymentCurrencies() {
-        assertNull(Iso4217CurrencyCatalog.find("BOV"))
+        assertTrue(Iso4217CurrencyCatalog.find("BOV")?.isFund == true)
+        assertFalse(Iso4217CurrencyCatalog.search("BOV", limit = 100).any { it.code == "BOV" })
         assertNull(Iso4217CurrencyCatalog.find("XAU"))
         assertNull(Iso4217CurrencyCatalog.find("XXX"))
+        assertEquals(4, Iso4217CurrencyCatalog.find("CLF")?.minorUnits)
     }
 
     @Test fun historicalCodesExposeWithdrawalDateAndDoNotOverrideActiveCurrency() {
