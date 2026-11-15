@@ -31,18 +31,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Liczba miejsc dziesiętnych ISO 4217 dla najczęstszych wyjątków; pozostałe waluty mają 2. */
+/** Liczba miejsc dziesiętnych zgodna z metadanymi katalogu ISO 4217. */
 object CurrencyPrecision {
-    private val zeroDigits = setOf("BIF", "CLP", "DJF", "GNF", "ISK", "JPY", "KMF", "KRW", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF")
-    private val threeDigits = setOf("BHD", "IQD", "JOD", "KWD", "LYD", "OMR", "TND")
-    private val fourDigits = setOf("CLF", "UYW")
-
-    fun scale(code: String): Int = when (code.uppercase()) {
-        in zeroDigits -> 0
-        in threeDigits -> 3
-        in fourDigits -> 4
-        else -> 2
-    }
+    fun scale(code: String): Int = Iso4217CurrencyCatalog.find(code)?.minorUnits ?: 2
 }
 
 /** Przelicza dowolną parę przez PLN na podstawie kursów średnich NBP (PLN za 1 jednostkę). */
@@ -173,6 +164,23 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f)
             )
         }
+        Text("Katalog ISO 4217 — wpisz kod, nazwę lub symbol waluty.")
+        Text("Podpowiedzi waluty źródłowej")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(Iso4217CurrencyCatalog.search(fromCode), key = { it.code }) { currency ->
+                Button(onClick = { fromCode = currency.code; result = null }) {
+                    Text("${currency.code} · ${currency.name}")
+                }
+            }
+        }
+        Text("Podpowiedzi waluty docelowej")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(Iso4217CurrencyCatalog.search(toCode), key = { it.code }) { currency ->
+                Button(onClick = { toCode = currency.code; result = null }) {
+                    Text("${currency.code} · ${currency.name}")
+                }
+            }
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
                 val previous = fromCode
@@ -199,22 +207,7 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
         if (rates.isNotEmpty()) {
             Text("Źródło: NBP • $rateTableLabel")
             goldPriceLabel?.let { Text("Cena złota: $it") }
-            Text("Waluta źródłowa")
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(rates.keys.sorted(), key = { it }) { code ->
-                    Button(onClick = { fromCode = code; result = null }) {
-                        Text(if (fromCode == code) "✓ $code" else code)
-                    }
-                }
-            }
-            Text("Waluta docelowa")
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(rates.keys.sorted(), key = { it }) {
-                    Button(onClick = { toCode = it; result = null }) {
-                        Text(if (toCode == it) "✓ $it" else it)
-                    }
-                }
-            }
+            Text("Dostępność kursu zależy od tabel NBP A/B, a nie od pełnego katalogu ISO 4217.")
         }
         result?.let { Text(it, style = MaterialTheme.typography.titleLarge) }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
