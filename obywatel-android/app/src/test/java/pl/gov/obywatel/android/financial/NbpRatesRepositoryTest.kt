@@ -232,4 +232,44 @@ class NbpRatesRepositoryTest {
         directory.deleteRecursively()
     }
 
+
+    @Test
+    fun currencyRateHistorySplitsLongRangesIntoNbpCompatibleRequests() {
+        val requested = mutableListOf<String>()
+        val repository = NbpRatesRepository(object : NbpHttpTransport {
+            override fun get(url: String): String {
+                requested += url
+                return """[{"table":"A","no":"1/A/NBP/2026","effectiveDate":"2026-01-02","rates":[{"currency":"euro","code":"EUR","mid":4.25}]}]"""
+            }
+        })
+        val history = repository.currencyRateHistory(
+            NbpTable.A, "EUR", LocalDate.parse("2026-01-01"), LocalDate.parse("2026-04-04")
+        )
+        assertEquals(2, requested.size)
+        assertTrue(requested[0].contains("/2026-01-01/2026-04-03"))
+        assertTrue(requested[1].contains("/2026-04-04/2026-04-04"))
+        assertEquals(1, history.size)
+        assertEquals("4.25", history.single().second.toPlainString())
+    }
+
+    @Test
+    fun goldPriceHistorySplitsLongRangesAndSortsPublishedPrices() {
+        val requested = mutableListOf<String>()
+        val repository = NbpRatesRepository(object : NbpHttpTransport {
+            override fun get(url: String): String {
+                requested += url
+                return """[{"data":"2026-01-02","cena":510.25},{"data":"2026-01-05","cena":512.50}]"""
+            }
+        })
+        val history = repository.goldPriceHistory(
+            LocalDate.parse("2026-01-01"), LocalDate.parse("2026-04-04")
+        )
+        assertEquals(2, requested.size)
+        assertTrue(requested[0].contains("/2026-01-01/2026-04-03"))
+        assertTrue(requested[1].contains("/2026-04-04/2026-04-04"))
+        assertEquals(2, history.size)
+        assertEquals(LocalDate.parse("2026-01-02"), history.first().date)
+        assertEquals("512.50", history.last().pricePerGramPln.toPlainString())
+    }
+
 }
