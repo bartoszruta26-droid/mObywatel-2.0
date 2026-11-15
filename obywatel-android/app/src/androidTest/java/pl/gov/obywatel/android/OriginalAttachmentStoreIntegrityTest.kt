@@ -492,7 +492,7 @@ class OriginalAttachmentStoreIntegrityTest {
         val executor = Executors.newFixedThreadPool(2)
         val directory = File(context.noBackupFilesDir, "original-document-attachments")
         try {
-            val first = executor.submit {
+            val first = executor.submit(java.util.concurrent.Callable<Boolean> {
                 start.await()
                 runCatching {
                     OriginalAttachmentStore.add(
@@ -500,8 +500,8 @@ class OriginalAttachmentStoreIntegrityTest {
                         attachmentId, backend
                     )
                 }.isSuccess
-            }
-            val second = executor.submit {
+            })
+            val second = executor.submit(java.util.concurrent.Callable<Boolean> {
                 start.await()
                 runCatching {
                     OriginalAttachmentStore.add(
@@ -509,7 +509,7 @@ class OriginalAttachmentStoreIntegrityTest {
                         attachmentId, backend
                     )
                 }.isSuccess
-            }
+            })
             start.countDown()
 
             val successes = listOf(first.get(), second.get()).count { it }
