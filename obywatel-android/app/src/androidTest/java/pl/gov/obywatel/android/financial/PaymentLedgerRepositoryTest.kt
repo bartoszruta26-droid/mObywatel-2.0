@@ -466,4 +466,130 @@ class PaymentLedgerRepositoryTest {
     }
 
 
+
+    @Test
+    fun archivePreviewAndImportDeduplicateIdenticalRepeatedTransactionAndDonationIds() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val transaction = pl.gov.obywatel.android.FinancialTransaction(
+                id = "repeated-archive-transaction",
+                executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+                type = pl.gov.obywatel.android.FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null,
+                fromAmount = null,
+                toAssetCode = "USD",
+                toAmount = BigDecimal("100.00")
+            )
+            val donation = pl.gov.obywatel.android.CashDonation(
+                id = "repeated-archive-donation",
+                receivedAt = java.time.Instant.parse("2026-11-14T12:00:00Z"),
+                amount = BigDecimal("25.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Wsparcie"
+            )
+            val archive = PaymentLedgerJsonCodec.encode(
+                emptyList(),
+                listOf(
+                    StoredFinancialTransaction(transaction, emptyList()),
+                    StoredFinancialTransaction(transaction.copy(toAmount = BigDecimal("100.000")), emptyList())
+                ),
+                listOf(donation, donation.copy(amount = BigDecimal("25.000")))
+            )
+
+            val preview = target.previewArchive(archive)
+            assertEquals(1, preview.newTransactions)
+            assertEquals(1, preview.duplicateTransactions)
+            assertEquals(0, preview.transactionConflicts)
+            assertEquals(1, preview.newDonations)
+            assertEquals(1, preview.duplicateDonations)
+            assertEquals(0, preview.donationConflicts)
+            assertTrue(!preview.hasConflicts)
+
+            assertEquals(BatchImportSummary(1, 0), target.importJson(archive))
+            assertEquals(1, target.getFinancialTransactions().size)
+            assertEquals(1, target.getCashDonations().size)
+        } finally {
+            target.close()
+        }
+    }
+
+    @Test
+    fun archivePreviewDetectsConflictingRepeatedIdsAndImportLeavesDatabaseUnchanged() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val transaction = pl.gov.obywatel.android.FinancialTransaction(
+                id = "conflicting-repeated-transaction",
+                executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+                type = pl.gov.obywatel.android.FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null,
+                fromAmount = null,
+                toAssetCode = "USD",
+                toAmount = BigDecimal("100.00")
+            )
+            val donation = pl.gov.obywatel.android.CashDonation(
+                id = "conflicting-repeated-donation",
+                receivedAt = java.time.Instant.parse("2026-11-14T12:00:00Z"),
+                amount = BigDecimal("25.00"),
+                currencyCode = "PLN",
+                beneficiaryOrganizationName = "Fundacja Aria",
+                purpose = "Cel A"
+            )
+            val archive = PaymentLedgerJsonCodec.encode(
+                emptyList(),
+                listOf(
+                    StoredFinancialTransaction(transaction, emptyList()),
+                    StoredFinancialTransaction(transaction.copy(toAmount = BigDecimal("101.00")), emptyList())
+                ),
+                listOf(donation, donation.copy(purpose = "Cel B"))
+            )
+
+            val preview = target.previewArchive(archive)
+            assertEquals(1, preview.transactionConflicts)
+            assertEquals(1, preview.donationConflicts)
+            assertTrue(preview.hasConflicts)
+            assertTrue(runCatching { target.importJson(archive) }.isFailure)
+            assertTrue(target.getFinancialTransactions().isEmpty())
+            assertTrue(target.getCashDonations().isEmpty())
+        } finally {
+            target.close()
+        }
+    }
+
+    @Test
+    fun archivePreviewDetectsOneBankEntryLinkedToTwoDifferentTransactions() = runBlocking {
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val bankEntry = entry("100.00", "SHARED-ENTRY").copy(
+                currencyCode = "USD",
+                operationType = "UZNANIE"
+            )
+            fun deposit(id: String) = pl.gov.obywatel.android.FinancialTransaction(
+                id = id,
+                executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+                type = pl.gov.obywatel.android.FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null,
+                fromAmount = null,
+                toAssetCode = "USD",
+                toAmount = BigDecimal("100.00")
+            )
+            val archive = PaymentLedgerJsonCodec.encode(
+                listOf(bankEntry),
+                listOf(
+                    StoredFinancialTransaction(deposit("link-owner-a"), listOf(bankEntry.accountingEntryId())),
+                    StoredFinancialTransaction(deposit("link-owner-b"), listOf(bankEntry.accountingEntryId()))
+                )
+            )
+
+            val preview = target.previewArchive(archive)
+            assertEquals(1, preview.transactionLinkConflicts)
+            assertTrue(preview.hasConflicts)
+            assertTrue(runCatching { target.importJson(archive) }.isFailure)
+            assertTrue(target.getEntries().isEmpty())
+            assertTrue(target.getFinancialTransactions().isEmpty())
+        } finally {
+            target.close()
+        }
+    }
+
 }
