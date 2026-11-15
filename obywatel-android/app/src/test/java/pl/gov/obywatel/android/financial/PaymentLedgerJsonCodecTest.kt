@@ -40,7 +40,7 @@ class PaymentLedgerJsonCodecTest {
 
     @Test fun rejectsUnknownSchemaVersion() {
         val json = PaymentLedgerJsonCodec.encode(listOf(sample))
-            .replace("\"schemaVersion\":2", "\"schemaVersion\":99")
+            .replace("\"schemaVersion\":3", "\"schemaVersion\":99")
         assertThrows(IllegalArgumentException::class.java) {
             PaymentLedgerJsonCodec.decode(json)
         }
@@ -75,7 +75,7 @@ class PaymentLedgerJsonCodecTest {
 
     @Test fun schemaOneArchiveRemainsReadable() {
         val legacy = PaymentLedgerJsonCodec.encode(listOf(sample))
-            .replace("\"schemaVersion\":2", "\"schemaVersion\":1")
+            .replace("\"schemaVersion\":3", "\"schemaVersion\":1")
             .replace(",\"transactions\":[]", "")
         val archive = PaymentLedgerJsonCodec.decodeArchive(legacy)
         assertEquals(1, archive.entries.size)
@@ -115,6 +115,40 @@ class PaymentLedgerJsonCodecTest {
         assertEquals("Fundacja Aria", archive.donations.single().beneficiaryOrganizationName)
         assertEquals("Wsparcie rodzin", archive.donations.single().purpose)
         assertEquals(0, BigDecimal("200.00").compareTo(archive.donations.single().transferredAmount))
+    }
+
+    @Test
+    fun schemaThreeRoundTripPreservesCurrencyConversionDecimalsAndMetadata() {
+        val record = CurrencyConversionRecord(
+            id = "conversion-codec-1",
+            convertedAt = java.time.Instant.parse("2026-11-15T12:30:00Z"),
+            sourceAmount = BigDecimal("123.450000"),
+            sourceCurrencyCode = "USD",
+            targetAmount = BigDecimal("112.2300"),
+            targetCurrencyCode = "EUR",
+            appliedRate = BigDecimal("0.909514"),
+            rateDate = LocalDate.parse("2026-11-14"),
+            rateSource = "NBP:A:2026-11-14"
+        )
+        val json = PaymentLedgerJsonCodec.encode(emptyList(), emptyList(), emptyList(), listOf(record))
+        val decoded = PaymentLedgerJsonCodec.decodeArchive(json).currencyConversions.single()
+        assertEquals(record.id, decoded.id)
+        assertEquals(record.convertedAt, decoded.convertedAt)
+        assertEquals(0, record.sourceAmount.compareTo(decoded.sourceAmount))
+        assertEquals(0, record.targetAmount.compareTo(decoded.targetAmount))
+        assertEquals(0, record.appliedRate.compareTo(decoded.appliedRate))
+        assertEquals(record.rateDate, decoded.rateDate)
+        assertEquals(record.rateSource, decoded.rateSource)
+    }
+
+    @Test
+    fun schemaTwoArchiveRemainsReadableWithoutConversionHistory() {
+        val json = PaymentLedgerJsonCodec.encode(listOf(sample))
+            .replace("\\"schemaVersion\\":3", "\\"schemaVersion\\":2")
+            .replace(",\\"currencyConversions\\":[]", "")
+        val archive = PaymentLedgerJsonCodec.decodeArchive(json)
+        assertEquals(1, archive.entries.size)
+        assertEquals(0, archive.currencyConversions.size)
     }
 
 }
