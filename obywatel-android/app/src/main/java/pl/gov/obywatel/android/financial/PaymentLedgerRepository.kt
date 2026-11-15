@@ -171,7 +171,20 @@ class PaymentLedgerRepository(
             existing.amount.compareTo(incoming.amount) == 0 &&
             existing.currencyCode == incoming.currencyCode &&
             existing.beneficiaryOrganizationName.trim() == incoming.beneficiaryOrganizationName.trim() &&
-            existing.purpose.trim() == incoming.purpose.trim()
+            existing.purpose.trim() == incoming.purpose.trim() &&
+            existing.donorName == incoming.donorName &&
+            existing.isAnonymous == incoming.isAnonymous &&
+            existing.campaignName == incoming.campaignName &&
+            existing.collectedBy == incoming.collectedBy &&
+            existing.receiptNumber == incoming.receiptNumber &&
+            existing.custodyStatus == incoming.custodyStatus &&
+            existing.transferredAt == incoming.transferredAt &&
+            sameNullableAmount(existing.transferredAmount, incoming.transferredAmount) &&
+            existing.note == incoming.note &&
+            existing.source == incoming.source
+
+    private fun sameNullableAmount(first: java.math.BigDecimal?, second: java.math.BigDecimal?): Boolean =
+        if (first == null || second == null) first == second else first.compareTo(second) == 0
 
     suspend fun importJson(json: String): BatchImportSummary = withContext(Dispatchers.IO) {
         val archive = PaymentLedgerJsonCodec.decodeArchive(json)
