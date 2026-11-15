@@ -1601,3 +1601,37 @@ Dokumentacja Google opisuje tłumaczenie ML Kit jako funkcję z modelami pobiera
 - [ ] Nie włączać statusu „Podpisano” ani nie generować pozornego podpisu bez skonfigurowanego dostawcy zaufanej usługi podpisu i uzgodnionych jurysdykcji.
 
 **Status:** poprawki stanów modeli, anulowania i testów zostały zapisane w gałęzi PR. Katalog lekarzy i rzeczywisty mechanizm podpisu pozostają nieukończone; wymagają osobnego wdrożenia. PR pozostaje otwarty.
+
+
+---
+
+## 60. Katalog lekarzy — rekordy, kryteria i wybór w zaświadczeniu — 2026-11-15
+
+### Zrealizowane
+- [x] Dodano lokalny katalog lekarzy z inicjalnymi rekordami trzech lekarzy przyjmujących w Ameryce Południowej.
+- [x] Kryterium wpisu obejmuje jawnie deklarowaną znajomość polskiego albo polsko brzmiące nazwisko / potwierdzone polskie pochodzenie oraz publicznie potwierdzoną praktykę.
+- [x] Wpisy rozróżniają deklarację znajomości języka od kryterium nazwiskowego. Żaden z trzech profili nie deklarował polskiego w opublikowanej liście języków; nie oznaczono ich jako polskojęzycznych.
+- [x] Zapisano publiczne dane praktyk, źródła, datę weryfikacji, kraj, miasto, identyfikator rejestru i status weryfikacji licencji.
+- [x] Zgoda jest oznaczona jako ustna i zgłoszona przez administratora; nie jest przedstawiana jako niezależnie zweryfikowana przez aplikację.
+- [x] Dodano lokalne operacje dodawania, edycji i usuwania rekordów.
+- [x] Dodano dostęp do katalogu z ekranu zarządzania zaświadczeniami.
+- [x] Dodano możliwość wybrania lekarza w edytorze zaświadczenia; dane wyboru są zapisywane razem z dokumentem.
+- [x] Katalog nie nadaje uprawnień do podpisywania. Pole `signerEnabled` pozostaje wymuszone na `false`.
+- [x] Dodano testy instrumentacyjne inicjalnych rekordów oraz cyklu aktualizacji i usuwania.
+
+### Rekordy początkowe i ograniczenia weryfikacji
+1. **Dr Gustavo Polacow Korn**, São Paulo, Brazylia — otorynolaryngologia; CRM-SP 101458, RQE 45010 według profilu; publiczny gabinet przy Av. Brig. Faria Lima 1811. Publiczny katalog CNES/DATASUS wskazuje placówki w kompetencji sierpień 2026, ale aktywny status licencji należy potwierdzić bezpośrednio w CFM/CREMESP.
+2. **Dr Sergio Czerwonko**, Buenos Aires, Argentyna — geriatria; profil wymienia również psychiatrię; gabinet przy Blanco Encalada 1451; profil podaje matrícula 77456 i telefon +54 11 4781-2958. Numer i aktualny status należy sprawdzić w REFEPS.
+3. **Dr Pietra Stanicki, MD**, Buenos Aires, Argentyna — podstawowa opieka; profil CARE THERE podaje wizyty osobiste i wideo; FAQ usługi informuje o licencjonowaniu personelu, lecz indywidualny numer nie był widoczny w sprawdzonym profilu. Weryfikacja indywidualnej licencji pozostaje oczekująca.
+
+### Granice funkcjonalne i bezpieczeństwo
+- Katalog przechowuje publiczne dane praktyk i deklarację administratora o ustnej zgodzie. Przed szerszą publikacją należy uzyskać bezpośrednie, możliwe do udokumentowania potwierdzenie zgody każdego lekarza.
+- Praktyka potwierdzona publicznym profilem nie oznacza automatycznie aktywnego prawa wykonywania zawodu ani uprawnienia do wystawienia konkretnego zaświadczenia.
+- Wybór lekarza w formularzu jest wyłącznie informacyjny. Nie potwierdza tożsamości osoby, jej uprawnień, obecności przy badaniu ani podpisu.
+- Zarządzanie katalogiem jest obecnie lokalne; nie wdrożono jeszcze uwierzytelniania ról administratora ani synchronizacji z rejestrami.
+- Mechanizm podpisu kryptograficznego / kwalifikowanego pozostaje niezaimplementowany. Nie wolno ustawiać statusu „Podpisano”.
+
+### CI
+- [ ] Uruchomić nowe testy instrumentacyjne katalogu na emulatorze.
+- [ ] Zweryfikować kompilację debug i release, testy JVM, testy GUI, REUSE oraz APK na najnowszym SHA.
+- [ ] PR pozostaje otwarty do czasu zielonego CI i inspekcji APK.
