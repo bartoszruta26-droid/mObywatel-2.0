@@ -264,4 +264,14 @@ class InternationalMedicalCertificateTest {
         }.isFailure)
     }
 
+    @Test
+    fun attachmentImportRejectsIdsOwnedByAnotherDocumentButAllowsSameDocumentRetry() {
+        val owners = mapOf("attachment-1" to "medical-certificate-1")
+        validateOriginalAttachmentIdOwner("attachment-1", "medical-certificate-1", owners)
+        validateOriginalAttachmentIdOwner("attachment-2", "medical-certificate-2", owners)
+        assertTrue(runCatching {
+            validateOriginalAttachmentIdOwner("attachment-1", "medical-certificate-2", owners)
+        }.isFailure)
+    }
+
 }
