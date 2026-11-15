@@ -118,38 +118,40 @@ object FinancialReportBuilder {
             }
 
         val donationGroups = linkedMapOf<String, DonationMutableTotals>()
-        donations.asSequence()
-            .filter { period.contains(it.receivedAt) }
-            .sortedWith(compareBy({ it.receivedAt }, { it.id }))
-            .forEach { donation ->
-                donation.validate()
+        donations.sortedWith(compareBy({ it.receivedAt }, { it.id })).forEach { donation ->
+            donation.validate()
+            val receivedInPeriod = period.contains(donation.receivedAt)
+            val transferInPeriod = donation.transferredAt?.let(period::contains) == true
+            if (receivedInPeriod || transferInPeriod) {
                 val group = donationGroups.getOrPut(donation.currencyCode) { DonationMutableTotals() }
-                group.accepted = group.accepted.add(donation.amount)
-                val transferred = donation.transferredAmount ?: ZERO
-                group.transferred = group.transferred.add(transferred)
-                val remaining = donation.amount.subtract(transferred)
-                when (donation.custodyStatus) {
-                    DonationCustodyStatus.HELD -> {
-                        group.held = group.held.add(remaining)
-                        group.stored = group.stored.add(remaining)
+                if (receivedInPeriod) {
+                    group.accepted = group.accepted.add(donation.amount)
+                    val remaining = donation.amount.subtract(donation.transferredAmount ?: ZERO)
+                    when (donation.custodyStatus) {
+                        DonationCustodyStatus.HELD -> {
+                            group.held = group.held.add(remaining)
+                            group.stored = group.stored.add(remaining)
+                        }
+                        DonationCustodyStatus.DEPOSITED -> {
+                            group.deposited = group.deposited.add(remaining)
+                            group.stored = group.stored.add(remaining)
+                        }
+                        DonationCustodyStatus.PARTIALLY_TRANSFERRED ->
+                            group.stored = group.stored.add(remaining)
+                        DonationCustodyStatus.TRANSFERRED -> Unit
+                        DonationCustodyStatus.REQUIRES_REVIEW ->
+                            group.unsettledReview = group.unsettledReview.add(remaining)
                     }
-                    DonationCustodyStatus.DEPOSITED -> {
-                        group.deposited = group.deposited.add(remaining)
-                        group.stored = group.stored.add(remaining)
-                    }
-                    DonationCustodyStatus.PARTIALLY_TRANSFERRED ->
-                        group.stored = group.stored.add(remaining)
-                    DonationCustodyStatus.TRANSFERRED -> Unit
-                    DonationCustodyStatus.REQUIRES_REVIEW ->
-                        group.unsettledReview = group.unsettledReview.add(remaining)
+                    rows += FinancialReportRow(
+                        "DAROWIZNA", donation.id, donation.receivedAt, "PRZYJĘTO",
+                        donation.currencyCode, donation.amount, donation.currencyCode,
+                        donation.custodyStatus.name,
+                        listOf(donation.beneficiaryOrganizationName, donation.purpose).joinToString(" — ")
+                    )
                 }
-                rows += FinancialReportRow(
-                    "DAROWIZNA", donation.id, donation.receivedAt, "PRZYJĘTO",
-                    donation.currencyCode, donation.amount, donation.currencyCode,
-                    donation.custodyStatus.name,
-                    listOf(donation.beneficiaryOrganizationName, donation.purpose).joinToString(" — ")
-                )
-                if (transferred > ZERO) {
+                if (transferInPeriod) {
+                    val transferred = requireNotNull(donation.transferredAmount)
+                    group.transferred = group.transferred.add(transferred)
                     rows += FinancialReportRow(
                         "DAROWIZNA", donation.id, requireNotNull(donation.transferredAt),
                         "PRZEKAZANO", donation.currencyCode, transferred,
@@ -158,6 +160,7 @@ object FinancialReportBuilder {
                     )
                 }
             }
+        }
 
         val assetTotals = totals.toSortedMap().map { (code, value) ->
             FinancialAssetTotals(code, value.unit, value.incoming, value.outgoing, value.fees)
