@@ -440,3 +440,34 @@ W repozytorium istniał już magazyn SQLite `PaymentLedgerDatabase` (wersja 7) o
 
 - Korekta została zapisana w gałęzi `feature/payment-ledger-stage-1`.
 - Oczekuje na ponowne wykonanie testów JVM, kompilacji debug i walidacji GUI dla nowego SHA. Do czasu ich zakończenia nie deklaruje się PASS ani gotowego APK.
+
+
+## Etap 74 — archiwum JSON w wersji 3 z historią przeliczeń (15 listopada 2026 r.)
+
+### Zakres zmian
+
+1. Podniesiono `PaymentLedgerJsonCodec.SCHEMA_VERSION` z 2 do 3.
+2. Dodano tablicę `currencyConversions`, obejmującą identyfikator, czas przeliczenia, kwoty i kody walut, zastosowany kurs, datę notowania oraz źródło.
+3. Dekoder nadal akceptuje archiwa wersji 1 i 2. Dla wersji 3 wymaga tablicy historii; waliduje każdy rekord i odrzuca nieprawidłowe dane.
+4. Eksport repozytorium dołącza historię przeliczeń.
+5. Import zapisuje historię w tej samej transakcji SQLite co pozostałe dane archiwum. Identyczne rekordy są pomijane, a ten sam identyfikator z odmienną treścią powoduje konflikt i wycofanie transakcji.
+6. Podgląd importu prezentuje liczbę nowych, powtórzonych i konfliktowych rekordów historii; konflikt historii blokuje zatwierdzenie importu.
+7. Dodano testy kodeka dla precyzji dziesiętnej i odczytu starszych wersji oraz testy instrumentacyjne round-trip, idempotencji i konfliktu.
+
+### Pliki zmienione
+
+- `PaymentLedgerJsonCodec.kt`
+- `PaymentLedgerDatabase.kt`
+- `PaymentLedgerRepository.kt`
+- `PaymentLedgerJsonCodecTest.kt`
+- `PaymentLedgerRepositoryTest.kt`
+
+### Status weryfikacji
+
+Zmiany zostały zapisane na gałęzi `feature/payment-ledger-stage-1`. Kontrole CI muszą zostać uruchomione dla końcowego SHA po wszystkich zmianach. Do czasu ich zakończenia nie deklaruje się poprawności kompilacji ani PASS testów. PR #68 pozostaje otwarty i niescalony.
+
+### Pozostałe prace
+
+1. Potwierdzić CI dla końcowego SHA, w tym testy instrumentacyjne emulatora.
+2. Wdrożyć kontrolowany katalog ISO 4217 z wersją danych, statusem i datami obowiązywania.
+3. Rozszerzyć testy interfejsu historii przeliczeń i obsługi błędu zapisu.
