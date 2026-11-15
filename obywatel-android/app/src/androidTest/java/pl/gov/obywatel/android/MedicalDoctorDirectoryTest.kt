@@ -13,7 +13,8 @@ class MedicalDoctorDirectoryTest {
     @Test fun seededDirectoryContainsOnlyInformationalNonSigners() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val prefs = context.getSharedPreferences("medical_doctor_directory", 0)
-        val previous = prefs.getString("records_v1", null)
+        val previous = prefs.getString("records_v2", null)
+        val legacy = prefs.getString("records_v1", null)
         try {
             prefs.edit().clear().commit()
             val doctors = MedicalDoctorDirectory.list(context)
@@ -25,7 +26,8 @@ class MedicalDoctorDirectoryTest {
             assertTrue(doctors.any { it.name.contains("Stanicki") })
         } finally {
             val edit = prefs.edit().clear()
-            if (previous != null) edit.putString("records_v1", previous)
+            if (previous != null) edit.putString("records_v2", previous)
+            if (legacy != null) edit.putString("records_v1", legacy)
             edit.commit()
         }
     }
@@ -37,9 +39,13 @@ class MedicalDoctorDirectoryTest {
         try {
             prefs.edit().clear().commit()
             val original = MedicalDoctorDirectory.list(context).first()
-            val updated = original.copy(phone = "+55 11 0000-0000")
+            val updated = original.copy(
+                phone = "+55 11 0000-0000", register = "", license = "", source = "", verifiedAt = ""
+            )
             MedicalDoctorDirectory.save(context, updated)
-            assertEquals("+55 11 0000-0000", MedicalDoctorDirectory.list(context).first { it.id == original.id }.phone)
+            val saved = MedicalDoctorDirectory.list(context).first { it.id == original.id }
+            assertEquals("+55 11 0000-0000", saved.phone)
+            assertTrue(saved.register.isBlank() && saved.license.isBlank())
             MedicalDoctorDirectory.delete(context, original.id)
             assertFalse(MedicalDoctorDirectory.list(context).any { it.id == original.id })
         } finally {
