@@ -3144,7 +3144,7 @@ Zmiana została zapisana w commicie `505275ad1c0804318c035d032ed3e548afc8e446`.
 
 ### 53.3. Weryfikacja
 
-Po korekcie należy ponownie uruchomić Android GUI validation, Android prototype build i REUSE na aktualnym commicie. Do uzyskania wyników nie uznaje się poprawki za potwierdzoną. W szczególności należy sprawdzić testy importu PDF/JPEG/PNG i obsługę błędu otwarcia strumienia w wynikach instrumentacyjnych.
+Po korekcie uruchomiono ponownie trzy przepływy dla rewizji `567dec9b9b7707c85c1b77f5a94732892dfa8640`: Android GUI validation — run `43688918284` (w toku przy ostatnim odczycie), Android prototype build — run `43688918245` (w toku), REUSE — run `43688918327` (sukces). Do uzyskania wyników obu przepływów Android poprawka nie jest uznana za potwierdzoną. W szczególności należy sprawdzić testy importu PDF/JPEG/PNG i obsługę błędu otwarcia strumienia w wynikach instrumentacyjnych.
 
 ### 53.4. Status i kolejny krok
 
