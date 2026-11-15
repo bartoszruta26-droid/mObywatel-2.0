@@ -665,3 +665,32 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Po zakończeniu CI wykonać testy eksportu/importu na dwóch instalacjach i po restarcie urządzenia.
 
 **Status:** dodano testowalny walidator i testy jednostkowe. Zidentyfikowaną usterkę kompilacyjną wydzielonej funkcji poprawiono przed końcowym zapisem. Wynik CI dla aktualnego SHA pozostaje niepotwierdzony. PR #69 nadal jest otwarty, Draft i niescalony.
+---
+
+## 27. Spójność zapisu i usuwania pojedynczych załączników — 2026-11-15
+
+### Kontrola stanu i CI przed zmianą
+- [x] Odczytano PR #69, źródło magazynu załączników, testy jednostkowe i aktualny audyt z gałęzi zaswaidczenie.
+- [x] Dla poprzedniego SHA 64855a567b39a129ed3b90e75970fc4235e374a7 wszystkie trzy workflow zakończyły się powodzeniem: REUSE compliance, Android prototype build oraz Android GUI validation.
+- [x] W Android prototype build potwierdzono powodzenie testów JVM, budowania APK i archiwizacji APK.
+- [x] W Android GUI validation potwierdzono powodzenie testów JVM, testów Compose na emulatorze, budowania APK i archiwizacji raportów.
+
+### Wykryte problemy i wykonane poprawki
+- [x] W operacji add() plik szyfrowany był zapisywany przed zatwierdzeniem metadanych. Jeśli zapis SharedPreferences kończył się błędem, pozostawał osierocony plik .enc. Dodano obsługę błędu, która usuwa plik utworzony przez nieudaną próbę i ponownie zgłasza pierwotny wyjątek.
+- [x] W operacji remove() plik był usuwany przed zatwierdzeniem zmian metadanych, a zapis wykonywano asynchronicznie przez apply(). Zmieniono kolejność: synchroniczny commit metadanych, a dopiero po jego powodzeniu usunięcie pliku. Błąd zatwierdzenia nie powoduje już usunięcia pliku nadal wskazywanego przez rejestr.
+- [x] Zmiany zapisano w commicie 46fc4643e9de09d5d2edb51cb846579884bd1264.
+- [x] Ponownie odczytano plik źródłowy z GitHub i potwierdzono obecność obu zabezpieczeń.
+
+### Weryfikacja po zmianie
+- [x] PR #69 nadal jest otwarty, Draft i niescalony.
+- [ ] Dla SHA 46fc4643e9de09d5d2edb51cb846579884bd1264 nie było jeszcze zarejestrowanych uruchomień CI w chwili aktualizacji audytu. Nowe poprawki nie są jeszcze oznaczone jako zaliczone przez CI.
+- [ ] Nie dodano jeszcze testów integracyjnych wymuszających błąd commit() ani testów sprawdzających sprzątanie pliku po nieudanym dodaniu i usunięciu.
+
+### Pozostałe ryzyka i następne prace
+- [ ] Operacje dodawania/usuwania i import archiwum nie mają jeszcze wspólnego dziennika transakcji. Nagłe zakończenie procesu w krytycznym momencie może pozostawić plik osierocony albo metadane bez odpowiadającego pliku; potrzebna jest procedura uzgadniania magazynu przy uruchomieniu.
+- [ ] Import nadal nie jest w pełni odporny na nagłą awarię pomiędzy instalacją plików a zatwierdzeniem SharedPreferences.
+- [ ] Dodać testy archiwum: duplikaty ID, konflikt z innym dokumentem, wadliwe Base64, limity 50 MiB/200 wpisów oraz rollback.
+- [ ] Dodać pełne dekodowanie obrazów i limity wymiarów przed przyjęciem plików.
+- [ ] Wykonać testy na dwóch instalacjach Androida oraz po restarcie urządzenia.
+
+**Status:** poprawiono obsługę błędów zapisu i kolejność usuwania pojedynczych załączników. Poprawki potwierdzono ponownym odczytem źródła. CI dla nowego SHA oczekuje na uruchomienie/zakończenie. PR #69 pozostaje otwarty, Draft i niescalony.
