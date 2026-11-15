@@ -129,7 +129,6 @@ class PaymentLedgerRepositoryTest {
             source.saveFinancialTransaction(tx, setOf(bankEntry.accountingEntryId()))
             val archive = source.exportJson()
             assertTrue(archive.contains("transactions"))
-            assertTrue(archive.contains("transactions"))
             assertEquals(BatchImportSummary(1, 0), target.importJson(archive))
             val imported = target.getFinancialTransactions().single()
             assertEquals(tx.id, imported.transaction.id)
@@ -300,7 +299,7 @@ class PaymentLedgerRepositoryTest {
     }
 
     @Test
-    fun sameDonationIdWithChangedDonorMetadataIsReportedAsConflictAndPreservesRecord() = runBlocking {
+    fun sameDonationIdWithChangedMetadataIsReportedAsConflictAndPreservesRecord() = runBlocking {
         val target = PaymentLedgerRepository(context, conflictDatabase)
         try {
             val original = pl.gov.obywatel.android.CashDonation(
@@ -313,19 +312,44 @@ class PaymentLedgerRepositoryTest {
                 donorName = "Darczyńca A",
                 isAnonymous = false,
                 campaignName = "Jesienna zbiórka",
+                collectedBy = "Osoba A",
+                receiptNumber = "KW-001",
                 note = "Oryginalna notatka"
             )
-            target.saveCashDonation(original)
-            val changed = original.copy(donorName = "Darczyńca B")
-            val archive = PaymentLedgerJsonCodec.encode(emptyList(), emptyList(), listOf(changed))
+            val changes: List<(pl.gov.obywatel.android.CashDonation) -> pl.gov.obywatel.android.CashDonation> =
+                listOf(
+                    { it.copy(donorName = "Darczyńca B") },
+                    { it.copy(isAnonymous = true) },
+                    { it.copy(campaignName = "Inna kampania") },
+                    { it.copy(collectedBy = "Osoba B") },
+                    { it.copy(receiptNumber = "KW-002") },
+                    { it.copy(custodyStatus = pl.gov.obywatel.android.DonationCustodyStatus.DEPOSITED) },
+                    {
+                        it.copy(
+                            custodyStatus = pl.gov.obywatel.android.DonationCustodyStatus.TRANSFERRED,
+                            transferredAt = java.time.Instant.parse("2026-11-15T12:00:00Z"),
+                            transferredAmount = BigDecimal("250.00")
+                        )
+                    },
+                    { it.copy(note = "Zmieniona notatka") },
+                    { it.copy(source = pl.gov.obywatel.android.FinancialRecordSource.JSON_IMPORT) }
+                )
 
-            val preview = target.previewArchive(archive)
-            assertEquals(1, preview.donationConflicts)
-            assertTrue(preview.hasConflicts)
-            val result = runCatching { target.importJson(archive) }
+            changes.forEachIndexed { index, change ->
+                val saved = original.copy(id = "donation-metadata-conflict-$index")
+                target.saveCashDonation(saved)
+                val changed = change(saved)
+                val archive = PaymentLedgerJsonCodec.encode(emptyList(), emptyList(), listOf(changed))
 
-            assertTrue("Zmiana danych darczyńcy pod tym samym ID musi być konfliktem.", result.isFailure)
-            assertEquals("Darczyńca A", target.getCashDonations().single().donorName)
+                val preview = target.previewArchive(archive)
+                assertEquals("Podgląd musi wykryć zmianę metadanych nr $index.", 1, preview.donationConflicts)
+                assertTrue(preview.hasConflicts)
+                val result = runCatching { target.importJson(archive) }
+
+                assertTrue("Zmiana metadanych darowizny nr $index musi być konfliktem.", result.isFailure)
+                val preserved = target.getCashDonations().single { it.id == saved.id }
+                assertEquals(saved, preserved)
+            }
         } finally {
             target.close()
         }
