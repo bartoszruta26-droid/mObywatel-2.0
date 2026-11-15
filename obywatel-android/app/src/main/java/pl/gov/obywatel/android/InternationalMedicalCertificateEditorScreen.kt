@@ -90,6 +90,12 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
         "doc_${INTERNATIONAL_MEDICAL_CERTIFICATE_ID}_${key}"
     }
     val languages = MedicalCertificateLanguages.supported
+    val validationErrors = InternationalMedicalCertificate(
+        sourceLanguage = sourceLanguage,
+        otherSourceLanguage = otherLanguage,
+        targetLanguages = selectedTargets.filterValues { it }.keys,
+        imagingStudies = imagingStudies.toList()
+    ).validate()
 
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
@@ -279,6 +285,9 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 color = MaterialTheme.colorScheme.error
             )
         }
+        validationErrors.forEach { error ->
+            Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
         Button(
             onClick = {
                 values[fieldKey("sourceLanguage")] = sourceLanguage
@@ -309,7 +318,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = loadError.isBlank()
+            enabled = loadError.isBlank() && validationErrors.isEmpty()
         ) {
             Text("Save certificate")
         }
