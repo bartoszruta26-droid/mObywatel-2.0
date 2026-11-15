@@ -4370,3 +4370,29 @@ PR #68 pozostaje otwarty i niescalony.
 3. Dodać wybór daty historycznej z użyciem `tableOnOrBefore` i `goldPriceOnOrBefore` oraz jawne pokazanie faktycznej daty publikacji.
 4. Uzupełnić słownik precyzji ISO 4217 i dodać lokalizowane nazwy walut.
 5. Dodać trwały cache z oznaczeniem czasu pobrania i historii przeliczeń.
+
+
+## 22. Etap 84 — wybór daty historycznej i notowanie złota (15 listopada 2026 r.)
+
+### Zakres wykonany
+- Rozszerzono kartę przelicznika o pole daty `RRRR-MM-DD` i osobną akcję pobrania notowań dla wskazanego dnia.
+- Dla dat historycznych aplikacja pobiera ostatnią opublikowaną tabelę A i opcjonalnie B nie późniejszą niż wybrana data, korzystając z `tableOnOrBefore` i zakresu publikacji do 7 dni wstecz.
+- Dodano pobieranie ceny złota z ostatniego dostępnego dnia publikacji do wybranej daty; cena jest wyświetlana jako PLN/g wraz z rzeczywistą datą notowania.
+- Błąd pobierania ceny złota jest niezależny od kursów walut i nie blokuje przelicznika. Błąd głównej tabeli A czyści aktywne kursy, aby nie pokazywać starej wyceny jako aktualnej.
+- W audycie rozdzielono daty efektywne tabel A i B, ponieważ nie należy zakładać, że obie tabele mają identyczny dzień publikacji.
+
+### Zakres nadal otwarty
+- Historia przeliczeń nie jest jeszcze trwale zapisywana.
+- Brak wyboru daty przez kalendarz; data jest wprowadzana w formacie ISO.
+- Brak trwałego cache, wyszukiwania nazw walut i pełnego słownika jednostek ISO 4217.
+- CI dla końcowego SHA musi potwierdzić kompilację, testy JVM i emulatorowe.
+
+### Commity etapu 84
+- `f7d1aeda662057dcbdf213f0d73f5c09b581905d` — wybór daty historycznej i cena złota w UI.
+- `bbaa5c6e00b41dc61966194599b12ac00948ee63` — niezależność błędu ceny złota od przelicznika.
+
+### Następny etap
+1. Potwierdzić CI dla końcowego SHA i poprawić wszystkie wykryte problemy.
+2. Dodać trwałą historię przeliczeń z datą kursu, tabelą, parą walutową, kwotą i wynikiem.
+3. Dodać pełny słownik ISO 4217 i wyszukiwanie walut po nazwie.
+4. Dodać testy UI dla pobierania kursów, wyboru daty i błędów sieciowych.
