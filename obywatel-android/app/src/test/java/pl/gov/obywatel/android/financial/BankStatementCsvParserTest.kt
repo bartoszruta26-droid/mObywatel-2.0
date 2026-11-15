@@ -83,4 +83,17 @@ class BankStatementCsvParserTest {
             BankStatementCsvParser.parse("data;waluta;kwota;typ\n15.11.2026;PLN;10;PRZELEW\n", "123 456")
         }
     }
+
+    @Test
+    fun byteParserAcceptsUtf8BomAndProducesEntriesForSharedDeduplication() {
+        val csv = "\uFEFFdata;waluta;kwota;typ;referencja\n" +
+            "15.11.2026;PLN;10,00;UZNANIE;CSV-REF-1\n"
+        val bytes = csv.toByteArray(Charsets.UTF_8)
+        val parsed = BankStatementCsvParser.parse(bytes, "konto-1")
+        val preview = BankImportDeduplicator.preview(parsed + parsed, emptyList())
+        assertEquals(1, preview.newEntries.size)
+        assertEquals(1, preview.duplicates.size)
+        assertEquals(0, preview.conflicts.size)
+    }
+
 }
