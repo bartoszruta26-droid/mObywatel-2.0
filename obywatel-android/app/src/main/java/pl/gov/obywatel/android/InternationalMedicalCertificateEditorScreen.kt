@@ -183,8 +183,8 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         }
                     }
                 }
-                Text("Selection does not authenticate the doctor or sign the certificate. Verify the current licence and authority separately.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                Text("Dane lekarza zostaną umieszczone na wydruku. Lekarz składa własnoręczny podpis i pieczątkę na papierowym dokumencie.",
+                    style = MaterialTheme.typography.bodySmall)
             }
         }
 
@@ -439,7 +439,14 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         }
                     }
                 pendingPdfBytes = runCatching {
-                    createBilingualMedicalCertificatePdf(sourceLanguage, targets.joinToString(", ") { target -> languages.firstOrNull { it.code == target }?.englishName ?: target }, fields)
+                    createBilingualMedicalCertificatePdf(
+                        sourceLanguage,
+                        targets.joinToString(", ") { target -> languages.firstOrNull { it.code == target }?.englishName ?: target },
+                        fields,
+                        doctorName = selectedDoctor?.name.orEmpty(),
+                        doctorPractice = selectedDoctor?.practice.orEmpty(),
+                        doctorAddress = selectedDoctor?.address.orEmpty()
+                    )
                 }.getOrElse { saveMessage = "PDF generation failed: " + (it.message ?: "unknown error"); null }
                 if (pendingPdfBytes != null) pdfLauncher.launch("international-medical-certificate-bilingual.pdf")
             },
