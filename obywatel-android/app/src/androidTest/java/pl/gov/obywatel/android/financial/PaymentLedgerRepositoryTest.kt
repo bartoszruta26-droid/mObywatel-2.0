@@ -263,4 +263,40 @@ class PaymentLedgerRepositoryTest {
         }
     }
 
+    @Test
+    fun archivePreviewUsesNumericTransactionIdentityAndDetectsChangedAmounts() = runBlocking {
+        val repository = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            val original = pl.gov.obywatel.android.FinancialTransaction(
+                id = "preview-transaction-id",
+                executedAt = java.time.Instant.parse("2026-11-12T10:15:30Z"),
+                type = pl.gov.obywatel.android.FinancialTransactionType.DEPOSIT,
+                fromAssetCode = null,
+                fromAmount = null,
+                toAssetCode = "USD",
+                toAmount = BigDecimal("100.00")
+            )
+            repository.importJson(PaymentLedgerJsonCodec.encode(
+                emptyList(),
+                listOf(StoredFinancialTransaction(original, emptyList()))
+            ))
+
+            val sameValueDifferentScale = original.copy(toAmount = BigDecimal("100"))
+            val samePreview = repository.previewArchive(PaymentLedgerJsonCodec.encode(
+                emptyList(),
+                listOf(StoredFinancialTransaction(sameValueDifferentScale, emptyList()))
+            ))
+            assertEquals(0, samePreview.transactionConflicts)
+
+            val changed = original.copy(toAmount = BigDecimal("101.00"))
+            val changedPreview = repository.previewArchive(PaymentLedgerJsonCodec.encode(
+                emptyList(),
+                listOf(StoredFinancialTransaction(changed, emptyList()))
+            ))
+            assertEquals(1, changedPreview.transactionConflicts)
+        } finally {
+            repository.close()
+        }
+    }
+
 }
