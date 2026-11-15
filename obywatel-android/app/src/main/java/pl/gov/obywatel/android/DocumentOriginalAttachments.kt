@@ -92,6 +92,9 @@ internal fun validateOriginalAttachmentMetadata(raw: String) {
     }
 }
 
+internal fun findOrphanedOriginalAttachmentIds(referencedIds: Set<String>, storedIds: Set<String>): Set<String> =
+    storedIds - referencedIds
+
 private data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
 private object OriginalAttachmentStore {
@@ -140,6 +143,53 @@ private object OriginalAttachmentStore {
                 item.getString("mime").substringBefore(';').trim().lowercase()
             )
         }
+    }
+
+    /**
+     * Reconciles the encrypted attachment directory with committed metadata.
+     * Missing referenced files are treated as integrity failures; unreferenced
+     * encrypted files and abandoned import staging files are safe to remove.
+     */
+    fun reconcile(context: Context) {
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val referencedIds = mutableSetOf<String>()
+        preferences.all.forEach { (documentId, value) ->
+            require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
+                "Nieprawidłowy identyfikator dokumentu w magazynie."
+            }
+            val raw = value as? String ?: error("Nieprawidłowy rejestr załączników: $documentId")
+            validateOriginalAttachmentMetadata(raw)
+            val json = JSONArray(raw)
+            for (index in 0 until json.length()) {
+                val id = json.getJSONObject(index).getString("id")
+                require(referencedIds.add(id)) {
+                    "Ten sam identyfikator załącznika jest przypisany do więcej niż jednego dokumentu."
+                }
+            }
+        }
+        val directory = File(context.noBackupFilesDir, "original-document-attachments")
+        if (!directory.exists()) return
+        val storedIds = directory.listFiles().orEmpty()
+            .filter { it.isFile && it.name.endsWith(".enc") }
+            .map { it.name.removeSuffix(".enc") }
+            .toSet()
+        val missing = referencedIds - storedIds
+        check(missing.isEmpty()) {
+            "Brakuje zaszyfrowanych plików załączników: ${missing.joinToString()}"
+        }
+        findOrphanedOriginalAttachmentIds(referencedIds, storedIds).forEach { id ->
+            val orphan = File(directory, "$id.enc")
+            check(!orphan.exists() || orphan.delete() || !orphan.exists()) {
+                "Nie udało się usunąć osieroconego załącznika: $id"
+            }
+        }
+        directory.listFiles().orEmpty()
+            .filter { it.isFile && it.name.startsWith(".") && it.name.endsWith(".import") }
+            .forEach { temporary ->
+                check(temporary.delete() || !temporary.exists()) {
+                    "Nie udało się usunąć tymczasowego pliku importu."
+                }
+            }
     }
 
     fun add(
@@ -402,6 +452,10 @@ internal fun DocumentOriginalAttachments(
         addAll(OriginalAttachmentStore.list(context, documentId))
     } }
     val status = remember(documentId) { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        runCatching { OriginalAttachmentStore.reconcile(context) }
+            .onFailure { status.value = it.localizedMessage ?: "Nie udało się sprawdzić magazynu załączników." }
+    }
     LaunchedEffect(documentId, items.size) {
         onAttachmentIdsChanged(items.map { it.id })
     }
