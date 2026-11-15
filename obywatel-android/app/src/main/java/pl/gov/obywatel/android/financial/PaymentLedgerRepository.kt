@@ -96,6 +96,13 @@ class PaymentLedgerRepository(
         attachments.forEach { attachmentStorage.delete(it.storedFileName) }
     }
 
+    suspend fun saveCurrencyConversion(record: CurrencyConversionRecord) = withContext(Dispatchers.IO) {
+        database.saveCurrencyConversion(record)
+    }
+
+    suspend fun getCurrencyConversionHistory(limit: Int = 100): List<CurrencyConversionRecord> =
+        withContext(Dispatchers.IO) { database.readCurrencyConversions(limit) }
+
     suspend fun getFinancialTransactions(): List<StoredFinancialTransaction> =
         withContext(Dispatchers.IO) {
             database.readFinancialTransactions()
