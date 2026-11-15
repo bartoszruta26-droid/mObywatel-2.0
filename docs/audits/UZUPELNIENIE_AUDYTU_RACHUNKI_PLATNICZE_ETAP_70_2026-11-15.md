@@ -566,3 +566,22 @@ Kod i test regresyjny zapisano w gałęzi. Etap 92 pozostaje weryfikacyjnie otwa
 Dalszy przegląd wykazał, że podgląd repozytorium i właściwy import porównywały wartości `BigDecimal` przez `compareTo()`, co ignoruje różnice skali. Ponieważ archiwum historii ma zachowywać dokładną reprezentację dziesiętną, porównania trzech pól liczbowych historii zmieniono na `BigDecimal.equals` (operator `==` w Kotlinie). Dodano test `currencyConversionArchiveTreatsDifferentDecimalScaleAsConflict`: rekord o tym samym identyfikatorze i wartości matematycznej, lecz innej skali, jest konfliktem; import jest odrzucany atomowo, a istniejący zapis pozostaje bez zmian.
 
 Dla nowego zestawu zmian obowiązuje ponowna walidacja CI na końcowym SHA. Nie przypisuje się mu wyników CI poprzednich commitów.
+
+
+
+## Etap 93 — wykresy historycznych notowań walut i złota
+
+### Zakres implementacji
+- Dodano `PriceHistoryChartCard.kt` i umieszczono wykres w sekcji „Notowania i wycena” ekranu rachunków, przed dotychczasowym przelicznikiem walut.
+- Interfejs umożliwia wybór złota lub waluty (kod ISO), a także okresu: 7 dni, 1 miesiąc, 3 miesiące, 6 miesięcy, 1 rok i 5 lat.
+- Wykres liniowy jest rysowany natywnie przez Jetpack Compose Canvas, bez dodatkowej biblioteki wykresów.
+- Prezentowane są: minimum, maksimum, zmiana procentowa, ostatnia cena, zakres dat i liczba punktów. Dni bez publikacji (weekendy i święta) są pomijane, bez interpolowania sztucznych notowań.
+- Złoto jest wyrażane w PLN/g, waluta w PLN za jednostkę według średniego kursu tabeli A NBP.
+- `NbpRatesRepository` otrzymał metody `goldPriceHistory` i `currencyRateHistory`. Dzielą zakresy na odcinki maksymalnie 93-dniowe, zgodnie z ograniczeniem API NBP; pięcioletni zakres jest pobierany partiami i korzysta z dotychczasowego trwałego cache.
+- Dodano testy JVM sprawdzające dzielenie długich zakresów i poprawność odczytu/sortowania danych.
+
+### Ograniczenia i dalsza weryfikacja
+- Dostępne instrumenty to obecnie złoto i waluty publikowane w tabeli A NBP. Srebro i inne kruszce wymagają odrębnego, wiarygodnego źródła notowań.
+- Wykres prezentuje notowania referencyjne NBP, a nie ceny transakcyjne banków lub giełd.
+- Testy i kompilacja dla nowego commitu muszą zostać potwierdzone przez CI; nie przypisuje się nowym zmianom wyników poprzednich przebiegów.
+- PR #68 pozostaje otwarty i niescalony.
