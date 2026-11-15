@@ -368,4 +368,107 @@ class OriginalAttachmentStoreIntegrityTest {
             File(directory, secondId + ".enc").delete()
         }
     }
+
+
+    @Test
+    fun productionSharedPreferencesBackendPersistsAcrossFreshAdapterInstances() {
+        val preferencesName = "attachment_backend_test_${UUID.randomUUID()}"
+        val preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+        val firstBackend = SharedPreferencesOriginalAttachmentMetadataBackend(preferences)
+        val document = documentId()
+        try {
+            assertTrue(firstBackend.commit(mapOf(document to "[]")))
+            val freshPreferences = context.createPackageContext(context.packageName, 0)
+                .getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
+            val freshBackend = SharedPreferencesOriginalAttachmentMetadataBackend(freshPreferences)
+            assertEquals("[]", freshBackend.getString(document, null))
+            assertTrue(freshBackend.commit(mapOf(document to null)))
+            assertEquals(null, firstBackend.getString(document, null))
+        } finally {
+            preferences.edit().clear().commit()
+        }
+    }
+
+    @Test
+    fun reconciliationRemovesFilesLeftByImportWhenMetadataCommitDidNotApply() {
+        val document = documentId()
+        val firstId = "reconcile-a-" + UUID.randomUUID().toString().take(8)
+        val secondId = "reconcile-b-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val entries = JSONArray()
+            .put(JSONObject().put("documentId", document).put("id", firstId).put("name", "a.txt")
+                .put("mime", "text/plain").put("dataBase64", Base64.encodeToString("first".toByteArray(), Base64.NO_WRAP)))
+            .put(JSONObject().put("documentId", document).put("id", secondId).put("name", "b.txt")
+                .put("mime", "text/plain").put("dataBase64", Base64.encodeToString("second".toByteArray(), Base64.NO_WRAP)))
+        val backend = FailingMetadataBackend(commitResult = false)
+        try {
+            assertTrue(runCatching {
+                OriginalAttachmentStore.importArchive(
+                    context, JSONObject().put("version", 1).put("attachments", entries).toString(), backend
+                )
+            }.isFailure)
+            assertTrue(File(directory, "$firstId.enc").isFile)
+            assertTrue(File(directory, "$secondId.enc").isFile)
+
+            OriginalAttachmentStore.reconcile(context, backend)
+
+            assertFalse(File(directory, "$firstId.enc").exists())
+            assertFalse(File(directory, "$secondId.enc").exists())
+            assertTrue(OriginalAttachmentStore.list(context, document, backend).isEmpty())
+        } finally {
+            File(directory, "$firstId.enc").delete()
+            File(directory, "$secondId.enc").delete()
+        }
+    }
+
+    @Test
+    fun reconciliationPreservesFilesWhenFailedCommitPartiallyAppliedMetadata() {
+        val document = documentId()
+        val attachmentId = "reconcile-partial-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val backend = FailingMetadataBackend(commitResult = false, applyChangesWhenReturningFalse = true)
+        try {
+            assertTrue(runCatching {
+                OriginalAttachmentStore.add(
+                    context, document, "report.txt", "text/plain",
+                    "partial commit".toByteArray(Charsets.UTF_8), attachmentId, backend
+                )
+            }.isFailure)
+            assertTrue(File(directory, "$attachmentId.enc").isFile)
+
+            OriginalAttachmentStore.reconcile(context, backend)
+
+            assertTrue(File(directory, "$attachmentId.enc").isFile)
+            assertEquals(listOf(attachmentId), OriginalAttachmentStore.list(context, document, backend).map { it.id })
+        } finally {
+            File(directory, "$attachmentId.enc").delete()
+        }
+    }
+
+    @Test
+    fun addRejectsAttachmentIdAlreadyOwnedByAnotherDocumentWithoutChangingFiles() {
+        val firstDocument = documentId()
+        val secondDocument = documentId()
+        val attachmentId = "cross-owner-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val backend = FailingMetadataBackend()
+        try {
+            OriginalAttachmentStore.add(
+                context, firstDocument, "first.txt", "text/plain", "first".toByteArray(),
+                attachmentId, backend
+            )
+            assertTrue(runCatching {
+                OriginalAttachmentStore.add(
+                    context, secondDocument, "second.txt", "text/plain", "second".toByteArray(),
+                    attachmentId, backend
+                )
+            }.isFailure)
+            assertEquals(listOf(attachmentId), OriginalAttachmentStore.list(context, firstDocument, backend).map { it.id })
+            assertTrue(OriginalAttachmentStore.list(context, secondDocument, backend).isEmpty())
+            assertTrue(File(directory, "$attachmentId.enc").isFile)
+        } finally {
+            File(directory, "$attachmentId.enc").delete()
+        }
+    }
+
 }
