@@ -124,8 +124,6 @@ internal fun MedicalDoctorDirectoryScreen(onBack:()->Unit){
 
 }
 
-}
-
 @Composable
 private fun DoctorDirectoryRecordDialog(initial:MedicalDoctorRecord,onDismiss:()->Unit,onSave:(MedicalDoctorRecord)->Unit){
  var name by remember(initial.id){mutableStateOf(initial.name)}
