@@ -289,4 +289,55 @@ class InternationalMedicalCertificateTest {
         }.isFailure)
     }
 
+
+    @Test
+    fun certificateValidationRejectsUnsupportedLanguagesAndDuplicateImagingIds() {
+        val document = InternationalMedicalCertificate(
+            sourceLanguage = "xx",
+            targetLanguages = setOf("pl", "unknown"),
+            imagingStudies = listOf(
+                MedicalImagingStudy(id = "study-1", modality = MedicalImagingModality.MRI),
+                MedicalImagingStudy(id = "study-1", modality = MedicalImagingModality.CT)
+            )
+        )
+        val errors = document.validate()
+        assertTrue(errors.any { it.contains("Original language is not supported") })
+        assertTrue(errors.any { it.contains("target language") })
+        assertTrue(errors.any { it.contains("identifiers must be unique") })
+    }
+
+    @Test
+    fun certificateValidationRejectsInvalidImagingDatesAndAttachmentIds() {
+        val document = InternationalMedicalCertificate(
+            imagingStudies = listOf(
+                MedicalImagingStudy(
+                    id = "study-1",
+                    modality = MedicalImagingModality.MRI,
+                    studyDate = "2026-02-30",
+                    attachmentIds = listOf("valid-id", "../escape", "valid-id")
+                )
+            )
+        )
+        val errors = document.validate()
+        assertTrue(errors.any { it.contains("invalid examination date") })
+        assertTrue(errors.any { it.contains("attachment identifiers") })
+    }
+
+    @Test
+    fun certificateValidationAcceptsSupportedLanguagesAndValidImagingMetadata() {
+        val document = InternationalMedicalCertificate(
+            sourceLanguage = "he",
+            targetLanguages = setOf("pl", "en"),
+            imagingStudies = listOf(
+                MedicalImagingStudy(
+                    id = "study-2026-01",
+                    modality = MedicalImagingModality.MRI,
+                    studyDate = "2024-02-29",
+                    attachmentIds = listOf("report-1", "image-2")
+                )
+            )
+        )
+        assertTrue(document.validate().isEmpty())
+    }
+
 }
