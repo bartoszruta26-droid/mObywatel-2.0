@@ -797,3 +797,26 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Wyniki CI dla commitów sekcji 30 należy potwierdzić osobno; nie przenosić statusu poprzedniego SHA na nowe zmiany.
 
 **Status:** poprawiono sprzątanie importu w przypadku błędu po rozpoczęciu zapisu metadanych. Zmiana ogranicza ryzyko usunięcia plików, do których metadane mogły zostać już zapisane. Testy CI dla nowego końcowego SHA pozostają do potwierdzenia.
+
+---
+
+## 31. Pełna kontrola deklaracji XML w załącznikach — 2026-11-15
+
+### Wykryta luka
+- [x] Walidator tekstowych załączników sprawdzał deklaracje `DOCTYPE` i `ENTITY` wyłącznie w pierwszych 4096 bajtach.
+- [x] Deklaracja umieszczona dalej w treści mogła ominąć tę kontrolę.
+
+### Wykonana poprawka
+- [x] Walidator analizuje teraz całą treść UTF-8 dla typów `text/plain`, `text/csv` i `application/xml`.
+- [x] Dodano test regresyjny umieszczający deklarację XML po 4096 znakach.
+- [x] Zmianę źródłową zapisano w commicie `b4bc63159896b0c90c965a75ec2e3ef5fe8a1292`.
+- [x] Test zapisano w commicie `9aff38277751833619eeea392a554185dfcc93d4`.
+
+### Ograniczenia
+- [ ] Jest to kontrola tekstowa deklaracji, a nie pełny parser XML ani walidacja schematu dokumentu.
+- [ ] Nadal należy dodać pełne dekodowanie obrazów i limity wymiarów, testy integracyjne magazynu na rzeczywistym Android Context oraz dziennik transakcji importu.
+
+### CI
+- [ ] Wyniki workflow dla końcowego SHA tej sekcji wymagają odczytu po zakończeniu uruchomień. Nie przenosi się wyników z wcześniejszych commitów.
+
+**Status:** rozszerzono wykrywanie deklaracji DTD/ENTITY na całą treść załącznika i dodano test regresyjny. Poprawka wymaga potwierdzenia przez CI dla końcowego SHA.
