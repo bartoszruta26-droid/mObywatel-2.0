@@ -63,9 +63,18 @@ internal object MedicalDoctorDirectory {
   }
  }
  fun list(c:Context):List<MedicalDoctorRecord>{
-  val p=c.getSharedPreferences(PREFS,Context.MODE_PRIVATE);val raw=p.getString(KEY,null)
-  if(raw==null){val initial=seeds();check(p.edit().putString(KEY,encode(initial)).commit());return initial}
-  return decode(raw)
+  val p=c.getSharedPreferences(PREFS,Context.MODE_PRIVATE)
+  val current=p.getString(KEY,null)
+  if(current!=null)return decode(current)
+  val legacy=p.getString("records_v1",null)
+  if(legacy!=null){
+   val migrated=decode(legacy)
+   check(p.edit().putString(KEY,encode(migrated)).commit())
+   return migrated
+  }
+  val initial=seeds()
+  check(p.edit().putString(KEY,encode(initial)).commit())
+  return initial
  }
  fun save(c:Context,d:MedicalDoctorRecord){
   require(d.name.isNotBlank()&&d.practice.isNotBlank()&&d.address.isNotBlank()){
