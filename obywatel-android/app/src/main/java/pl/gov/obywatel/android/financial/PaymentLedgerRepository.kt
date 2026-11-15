@@ -168,8 +168,10 @@ class PaymentLedgerRepository(
                         tx.fromAmount?.compareTo(entry.signedAmount.abs()) == 0) ||
                     (tx.toAssetCode == entry.currencyCode && entry.signedAmount.signum() > 0 &&
                         tx.toAmount?.compareTo(entry.signedAmount.abs()) == 0) ||
-                    (tx.fee?.assetCode == entry.currencyCode && entry.signedAmount.signum() < 0 &&
-                        tx.fee.amount.compareTo(entry.signedAmount.abs()) == 0)
+                    (tx.fee?.let { fee ->
+                        fee.assetCode == entry.currencyCode && entry.signedAmount.signum() < 0 &&
+                            fee.amount.compareTo(entry.signedAmount.abs()) == 0
+                    } == true)
                 )
                 if (!compatible) transactionLinkConflicts++
                 val owner = linkOwners[entryId]
