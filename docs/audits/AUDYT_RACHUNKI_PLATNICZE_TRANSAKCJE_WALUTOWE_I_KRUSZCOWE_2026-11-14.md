@@ -3356,7 +3356,7 @@ Po zamknięciu walidacji CSV rozpoczęto kolejny etap raportowania: generowanie 
 
 ### 56.4. Walidacja i status
 
-Implementacja i testy zostały zapisane w gałęzi. Na moment tej aktualizacji audytu wynik CI dla rewizji zawierającej etap 56 pozostaje oczekujący. Nie uznaje się PDF za zweryfikowany przed potwierdzeniem kompilacji, testów JVM, testów instrumentacyjnych na emulatorze i kontroli zgodności repozytorium. W szczególności należy potwierdzić, że test długiego raportu otwiera rzeczywisty PDF i wykazuje więcej niż jedną stronę.
+Pierwszy pełny przebieg dla commitu `1a65ec1550fe31799f47f80b3624263db689d925` wykazał: Android prototype build — sukces (run `43704484468`), repository compliance — sukces (run `43704484394`), Android GUI validation — niepowodzenie (run `43704484493`). Testy JVM przeszły, lecz kompilacja źródeł instrumentacyjnych zakończyła się błędem w `FinancialReportPdfTest.kt`: konstruktor `FinancialTransaction` wymagał jawnego przekazania `fromAssetCode` i `fromAmount`. Błąd nie dotyczył renderera PDF; test nie został uruchomiony. Poprawkę zapisano w commicie `212963efd1180c2cb63b4f012bc969a0b59d8693`, przekazując oba pola jako `null`. Równolegle wzmocniono test tak, aby otwierał i renderował każdą stronę przez `PdfRenderer`, nie tylko pierwszą (commit `745fe24e84841a2addec0c094e7a00acee661e6e`). Po tych zmianach uruchomiono nowy pełny przebieg CI dla aktualnej rewizji; wynik pozostaje oczekujący. Etapu PDF nie uznaje się za zweryfikowany do czasu pomyślnego zakończenia kompilacji testów instrumentacyjnych i emulatora.
 
 ### 56.5. Ograniczenia i następne prace
 
@@ -3365,3 +3365,49 @@ Implementacja i testy zostały zapisane w gałęzi. Na moment tej aktualizacji a
 - Raport nadal nie wycenia aktywów w PLN i nie wylicza zysku/straty bez jawnych kursów oraz kosztów nabycia.
 - Stany przechowywania darowizn nadal odzwierciedlają bieżące statusy rekordów, ponieważ schemat nie ma historii zmian statusów.
 - Po walidacji PDF kolejnym krokiem jest dodanie wyboru zakresu dat dla CSV i PDF, a następnie testów granicznych zakresu i eksportu SAF.
+
+
+## 57. Wybór zakresu dat dla raportów CSV i PDF (15 listopada 2026 r.)
+
+### 57.1. Cel
+
+Umożliwienie przygotowania raportu za wskazany okres kalendarzowy zamiast ograniczenia eksportu z ekranu do całej historii. Użytkownik podaje datę początkową i końcową w formacie ISO `RRRR-MM-DD`; obie daty są włączne.
+
+### 57.2. Zmiany w modelu okresu
+
+W `FinancialReportPeriod` dodano fabrykę `fromInclusiveDates(startDate, endDateInclusive, zoneId)`:
+- zamienia datę początkową na początek dnia w strefie lokalnej urządzenia;
+- zamienia datę końcową na początek następnego dnia, co pozwala zachować włączne znaczenie daty końcowej przy wewnętrznym przedziale `[fromInclusive, toExclusive)`;
+- odrzuca datę końcową wcześniejszą niż początkowa;
+- uwzględnia reguły strefy czasowej, w tym dni o długości 23 lub 25 godzin podczas zmiany czasu.
+
+### 57.3. Zmiany interfejsu
+
+W `PaymentLedgerScreen.kt` dodano dwa pola dat oraz walidację wejścia przed uruchomieniem eksportu. CSV i PDF otrzymują ten sam wyliczony obiekt okresu, więc zakres raportowania jest spójny. Domyślnie pola wskazują bieżący miesiąc kalendarzowy od pierwszego dnia do dnia dzisiejszego. Błędny format lub odwrócony zakres blokuje uruchomienie eksportu i wyświetla komunikat błędu.
+
+### 57.4. Testy
+
+W `FinancialReportTest.kt` dodano test:
+- obejmujący oba dni zakresu przechodzącego przez zmianę czasu w strefie `Europe/Warsaw`, z asercjami dokładnych granic UTC;
+- odrzucający zakres, w którym data końcowa poprzedza początkową.
+
+W `FinancialReportPdfTest.kt` wzmocniono sprawdzenie PDF: test renderuje każdą stronę przez `PdfRenderer`, sprawdza jej wymiary i zwalnia bitmapę po renderowaniu. Poprawiono także konstruktor testowej transakcji, jawnie przekazując wymagane pola `fromAssetCode` i `fromAmount` jako `null`.
+
+### 57.5. Zmienione pliki i commity
+
+- `FinancialReport.kt` — fabryka lokalnego zakresu dat; commit `d253ee3155b7de607b338c15b6cf739a5ed15df4`.
+- `FinancialReportTest.kt` — testy granic i zmiany czasu; commit `b08e90939ac6dde4c006d2d6eea34c9a53f0824b`.
+- `PaymentLedgerScreen.kt` — pola dat i wspólny zakres dla CSV/PDF; commit `684ebc5092b7e4f29da9d1bdc791d04586403466`.
+- `FinancialReportPdfTest.kt` — renderowanie każdej strony; commit `745fe24e84841a2addec0c094e7a00acee661e6e`.
+- `FinancialReportPdfTest.kt` — jawne wartości pól wymaganych konstruktorem; commit `212963efd1180c2cb63b4f012bc969a0b59d8693`.
+
+### 57.6. Status weryfikacji
+
+Kontrola zgodności dla pośrednich rewizji zakończyła się sukcesem. Przebieg Android GUI dla commitu `1a65ec1` wykrył błąd kompilacji testu PDF opisany w sekcji 56.4; poprawka została zapisana. Pełne CI dla najnowszego commitu `212963efd1180c2cb63b4f012bc969a0b59d8693` jest wymagane do zamknięcia etapu 57 i ponownej weryfikacji etapu 56. Do czasu zakończenia tego przebiegu funkcjonalność zakresu dat i PDF pozostaje wdrożona w kodzie, lecz niezweryfikowana w pełnym CI.
+
+### 57.7. Ograniczenia i dalsze prace
+
+- Daty są obecnie wpisywane ręcznie w formacie `RRRR-MM-DD`; nie dodano jeszcze kalendarzowego selektora dat.
+- Domyślny zakres to bieżący miesiąc, nie cała historia. Użytkownik może wpisać wcześniejszy początek, aby objąć dłuższy okres.
+- Konwersja odbywa się według strefy czasowej urządzenia. Raport przechowuje granice jako chwile UTC.
+- W dalszym etapie należy dodać testy interfejsu walidacji pól, sprawdzić zapis obu formatów przez SAF na emulatorze oraz rozważyć selektor kalendarzowy.
