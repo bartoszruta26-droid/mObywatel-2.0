@@ -64,6 +64,7 @@ internal object GraphicDocumentCatalog {
         GraphicDocumentDefinition("church_minister", "Dokument posługi kościelnej", DocumentPreviewKind.CREDENTIAL),
         GraphicDocumentDefinition("church_missionary", "Dokument posługi misyjnej", DocumentPreviewKind.CREDENTIAL),
         GraphicDocumentDefinition("professional_medical", "Kwalifikacje medyczne", DocumentPreviewKind.CREDENTIAL),
+        GraphicDocumentDefinition("international_medical_certificate", "International Medical Certificate", DocumentPreviewKind.RECORD, "Medical report scan", supportsPhoto = false),
         GraphicDocumentDefinition("professional_education", "Kwalifikacje edukacyjne", DocumentPreviewKind.CREDENTIAL),
         GraphicDocumentDefinition("professional_therapeutic", "Kwalifikacje terapeutyczne", DocumentPreviewKind.CREDENTIAL),
         GraphicDocumentDefinition("professional_other", "Pozostałe kwalifikacje zawodowe", DocumentPreviewKind.CREDENTIAL),
