@@ -957,3 +957,10 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [x] Dalsze zmiany zapisano w commitach `1de4bae3a64388b1d441e8cbace2887676c5415b`, `67cde662eb5d39967c128c46b7668a51368963bf` i `4d1621cc7403f85bcd5f72e9e6cb7f7f8b5c0370`.
 
 **Status:** usunięto nieatomowy mechanizm kopiowania na plik docelowy i dodano atomową zamianę z synchronizacją oraz limitami rozmiaru. Dodano testy instrumentacyjne. Ostateczne CI dla nowego SHA pozostaje wymagane; PR #69 nadal otwarty, Draft i niescalony.
+
+
+### Uzupełnienie kontroli CI — 2026-11-15
+- [x] GitHub Actions uruchomił trzy workflow dla pośredniego SHA `0ae9db61e186555de83a9bc986d557ba1984486c`: Android prototype build, Android GUI validation oraz Repository compliance.
+- [x] Workflow zgodności REUSE zakończył się powodzeniem.
+- [ ] Build Android i walidacja GUI dla tego pośredniego SHA zostały anulowane po kolejnych aktualizacjach gałęzi; nie stanowią wyniku testów końcowej wersji.
+- [ ] Dla końcowego SHA `3bec148e53866fbb55a1a97ff6fbdfc1c54545a1` odczyt statusów i listy workflow nie zwrócił uruchomień. Testy nowego kodu pozostają zatem niepotwierdzone.
