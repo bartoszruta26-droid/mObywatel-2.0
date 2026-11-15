@@ -4512,3 +4512,6 @@ Dodano migawkę List One SIX (2026-09-17, 178 wpisów) i List Three (2026-01-01,
 ### Etap 90 — uzupełnienie kontroli danych
 
 Testy katalogu weryfikują teraz także liczebność migawek SIX (178 bieżących i 137 historycznych), format kodów ISO, wykładniki jednostek mniejszych oraz daty wycofania. Kontrole CI dla najnowszego commitu są uruchomione; nie uznaję kompilacji i testów emulatorowych za zakończone do czasu ich wyniku.
+
+
+Uzupełnienie etapu 90: po weryfikacji istniejącego testu precyzji zachowano kody funduszy z określonym wykładnikiem w katalogu metadanych (np. CLF), aby nie zmieniać dotychczasowej precyzji obliczeń. Oddzielna lista `paymentCurrencies` i wyszukiwarka nadal wykluczają fundusze z wyboru waluty płatniczej. Dodano test regresyjny.
