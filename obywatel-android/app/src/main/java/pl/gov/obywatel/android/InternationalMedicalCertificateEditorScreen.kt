@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,10 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.json.JSONArray
+import org.json.JSONObject
 
 private const val IMC_SOURCE_LANGUAGE_KEY = "imc_source_language"
 private const val IMC_OTHER_LANGUAGE_KEY = "imc_other_source_language"
 private const val IMC_TARGET_LANGUAGES_KEY = "imc_target_languages"
+private const val IMC_IMAGING_STUDIES_KEY = "imc_imaging_studies"
 
 @Composable
 internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
@@ -61,6 +65,18 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
         }
     }
     var saveMessage by remember { mutableStateOf("") }
+    val imagingStudies = remember {
+        mutableStateListOf<MedicalImagingStudy>().apply {
+            addAll(decodeMedicalImagingStudies(values[IMC_IMAGING_STUDIES_KEY].orEmpty()))
+        }
+    }
+    var imagingModality by remember { mutableStateOf(MedicalImagingModality.X_RAY) }
+    var imagingBodyRegion by remember { mutableStateOf("") }
+    var imagingDate by remember { mutableStateOf("") }
+    var imagingFacility by remember { mutableStateOf("") }
+    var imagingIndication by remember { mutableStateOf("") }
+    var imagingFindings by remember { mutableStateOf("") }
+    var imagingImpression by remember { mutableStateOf("") }
     val fieldKey: (String) -> String = { key ->
         "doc_${INTERNATIONAL_MEDICAL_CERTIFICATE_ID}_${key}"
     }
@@ -164,6 +180,55 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 )
             }
 
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Medical Imaging Studies", fontWeight = FontWeight.SemiBold)
+                Text("Add each imaging examination separately.", style = MaterialTheme.typography.bodySmall)
+                MedicalImagingModality.values().forEach { modality ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = imagingModality == modality, onClick = { imagingModality = modality })
+                        Text(modality.label, modifier = Modifier.clickable { imagingModality = modality })
+                    }
+                }
+                OutlinedTextField(value = imagingBodyRegion, onValueChange = { imagingBodyRegion = it }, label = { Text("Body Region") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = imagingDate, onValueChange = { imagingDate = it }, label = { Text("Examination Date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = imagingFacility, onValueChange = { imagingFacility = it }, label = { Text("Imaging Facility") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = imagingIndication, onValueChange = { imagingIndication = it }, label = { Text("Clinical Indication") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+                OutlinedTextField(value = imagingFindings, onValueChange = { imagingFindings = it }, label = { Text("Findings") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
+                OutlinedTextField(value = imagingImpression, onValueChange = { imagingImpression = it }, label = { Text("Impression") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
+                Button(onClick = {
+                    imagingStudies.add(MedicalImagingStudy(
+                        id = "imaging-" + System.currentTimeMillis().toString(),
+                        modality = imagingModality,
+                        bodyRegion = imagingBodyRegion,
+                        studyDate = imagingDate,
+                        facility = imagingFacility,
+                        indication = imagingIndication,
+                        findings = imagingFindings,
+                        impression = imagingImpression
+                    ))
+                    imagingBodyRegion = ""
+                    imagingDate = ""
+                    imagingFacility = ""
+                    imagingIndication = ""
+                    imagingFindings = ""
+                    imagingImpression = ""
+                }, modifier = Modifier.fillMaxWidth()) { Text("Add imaging study") }
+                imagingStudies.forEach { study ->
+                    Card {
+                        Column(Modifier.fillMaxWidth().padding(10.dp)) {
+                            Text(study.modality.label + " — " + study.bodyRegion, fontWeight = FontWeight.SemiBold)
+                            Text("Date: " + study.studyDate + " · Facility: " + study.facility)
+                            if (study.findings.isNotBlank()) Text("Findings: " + study.findings)
+                            if (study.impression.isNotBlank()) Text("Impression: " + study.impression)
+                            Text("Remove", color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.clickable { imagingStudies.remove(study) })
+                        }
+                    }
+                }
+            }
+        }
+
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
             Text(
                 "Automatic translation is not active yet. The original text remains stored locally; no medical data is sent to a translation service from this screen.",
@@ -185,6 +250,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 values[IMC_SOURCE_LANGUAGE_KEY] = sourceLanguage
                 values[IMC_OTHER_LANGUAGE_KEY] = otherLanguage
                 values[IMC_TARGET_LANGUAGES_KEY] = selectedTargets.filterValues { it }.keys.sorted().joinToString(",")
+                values[IMC_IMAGING_STUDIES_KEY] = encodeMedicalImagingStudies(imagingStudies)
                 InternationalMedicalCertificateStore.save(context, values.toMap())
                 saveMessage = "Certificate data saved securely on this device."
             },
@@ -198,3 +264,49 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
         }
     }
 }
+
+private fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): String {
+    val array = JSONArray()
+    studies.forEach { study ->
+        array.put(JSONObject().apply {
+            put("id", study.id)
+            put("modality", study.modality.name)
+            put("bodyRegion", study.bodyRegion)
+            put("studyDate", study.studyDate)
+            put("facility", study.facility)
+            put("indication", study.indication)
+            put("findings", study.findings)
+            put("impression", study.impression)
+            put("technique", study.technique)
+            put("contrast", study.contrast)
+            put("radiologistName", study.radiologistName)
+            put("reportNumber", study.reportNumber)
+            put("attachmentIds", JSONArray(study.attachmentIds))
+        })
+    }
+    return array.toString()
+}
+
+private fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagingStudy> = runCatching {
+    val array = JSONArray(serialized)
+    (0 until array.length()).map { index ->
+        val item = array.getJSONObject(index)
+        MedicalImagingStudy(
+            id = item.getString("id"),
+            modality = MedicalImagingModality.valueOf(item.getString("modality")),
+            bodyRegion = item.optString("bodyRegion"),
+            studyDate = item.optString("studyDate"),
+            facility = item.optString("facility"),
+            indication = item.optString("indication"),
+            findings = item.optString("findings"),
+            impression = item.optString("impression"),
+            technique = item.optString("technique"),
+            contrast = item.optString("contrast"),
+            radiologistName = item.optString("radiologistName"),
+            reportNumber = item.optString("reportNumber"),
+            attachmentIds = item.optJSONArray("attachmentIds")?.let { items ->
+                (0 until items.length()).map { items.getString(it) }
+            }.orEmpty()
+        )
+    }
+}.getOrDefault(emptyList())
