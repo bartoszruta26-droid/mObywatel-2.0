@@ -7,8 +7,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.printToLog
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -80,7 +78,6 @@ class FinancialReportDateRangePickerTest {
         }
 
         composeRule.onNodeWithText("Data początkowa: 2026-11-01").performClick()
-        composeRule.onRoot(useUnmergedTree = true).printToLog("START_DATE_PICKER_SEMANTICS")
         composeRule.onNodeWithText("10", useUnmergedTree = true).performClick()
         composeRule.onNodeWithText("Zastosuj datę").performClick()
 
@@ -99,7 +96,6 @@ class FinancialReportDateRangePickerTest {
         }
 
         composeRule.onNodeWithText("Data końcowa: 2026-11-15").performClick()
-        composeRule.onRoot(useUnmergedTree = true).printToLog("END_DATE_PICKER_SEMANTICS")
         composeRule.onNodeWithText("25", useUnmergedTree = true).performClick()
         composeRule.onNodeWithText("Zastosuj datę").performClick()
 
