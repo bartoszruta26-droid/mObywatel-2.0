@@ -3461,3 +3461,19 @@ Przed uruchomieniem walidacji końcowej uproszczono układ komponentu selektora,
 - Korekta asercji błędu dostawcy w FinancialReportSafExportTest.kt — commit 547053b9723addb748a15c58e35295f45a2b4583.
 
 Obie poprawki zostały ponownie pobrane z gałęzi i sprawdzone. Wyniki kompilacji i testów dla tych rewizji są nadal oczekujące.
+
+### 58.7. Naprawa błędu kompilacji wykrytego w CI (15 listopada 2026 r.)
+
+Pierwsza walidacja etapu 58 na HEAD `d99749467a7d5d8912e64fa2c60495c1f259b081` wykazała błąd kompilacji Kotlin w `FinancialReportDateRangePicker.kt`. Zadania `:app:compileDebugKotlin` zgłosiły użycie eksperymentalnego API Material 3 bez jawnej zgody kompilatora. Błąd powtórzył się w dwóch niezależnych przebiegach:
+- Android GUI validation run `43705829655`, job `132786585199` — niepowodzenie w kroku `Run Android unit tests`;
+- Android prototype build run `43705829550`, job `132786577817` — niepowodzenie w kroku `Run Android JVM unit tests`.
+- Repository compliance run `43705829528` — sukces.
+
+Wskutek błędu testy Compose na emulatorze, budowa debug APK i publikacja artefaktu zostały pominięte. Nie powstał artefakt APK ani raport instrumentacyjny dla tego przebiegu.
+
+Korekta:
+- Dodano import `androidx.compose.material3.ExperimentalMaterial3Api`.
+- Oznaczono funkcję `FinancialReportDateRangePicker` adnotacją `@OptIn(ExperimentalMaterial3Api::class)`, ograniczając zgodę na eksperymentalne API do komponentu, który używa `DatePicker` i `DatePickerDialog`.
+- Commit poprawki: `89183d9ea57f2ed78b7720ed7f13051f80944024`.
+
+Status po poprawce: zmiana jest zapisana na gałęzi, ale wymaga ponownego pełnego CI. Nie uznaje się etapu 58 za zweryfikowany do czasu sukcesu testów JVM, testów instrumentacyjnych/Compose, budowy APK i kontroli zgodności dla dokładnego nowego HEAD.
