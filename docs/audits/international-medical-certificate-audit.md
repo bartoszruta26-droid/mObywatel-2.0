@@ -500,3 +500,24 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Następny zakres: import załączników do rekordu badania z trwałym powiązaniem ID, kontrolą MIME/rozmiaru i szyfrowaniem; następnie osobne skany podpisów i pieczęci.
 
 **Status:** walidacja wcześniejszego etapu 19 zakończona powodzeniem. Test round-trip dodany do kodu i oczekuje na CI. PR #69 nadal pozostaje otwarty i niescalony.
+
+
+---
+
+## 21. Korekta testu round-trip i ponowne uruchomienie walidacji — 2026-11-15
+
+### Korekta wykonania
+- [x] Kontrola odczytu wykazała, że wcześniejszy zapis testu round-trip nie umieścił testu w klasie JUnit; nie uznano go za wykonany.
+- [x] Poprawiono zapis i ponownie odczytano plik testowy z gałęzi. Test `imagingStudiesPreserveEveryFieldAcrossJsonRoundTrip` jest obecny wewnątrz `InternationalMedicalCertificateTest`.
+- [x] Test tworzy dwa badania, wykonuje `encodeMedicalImagingStudies` i `decodeMedicalImagingStudies`, a następnie porównuje pełne obiekty przez `assertEquals`.
+- [x] Potwierdzono, że obie funkcje kodera/dekodera mają widoczność `internal`, nie publiczną.
+
+### Status CI
+- [x] REUSE compliance zakończyło się powodzeniem dla SHA `a3598a50d81b516485ad90ccff03f41357dcf5c9`.
+- [ ] Uruchomienia Android build i GUI dla SHA `a3598a50d81b516485ad90ccff03f41357dcf5c9` zostały anulowane w trakcie testów JVM przez kolejną aktualizację gałęzi; nie są wynikiem pozytywnym ani negatywnym testu.
+- [ ] Wymagane jest nowe CI dla bieżącego SHA zawierającego poprawiony test round-trip. Dopiero jego wynik będzie podstawą do oznaczenia testu jako zaliczonego.
+
+### Stan gałęzi
+- [x] Test round-trip jest obecny w aktualnym pliku testowym.
+- [x] Audyt zawiera rozróżnienie między wynikiem wcześniejszego CI (SHA `14c9ab7`) a oczekującą walidacją nowego testu.
+- [ ] Nie uznaje się jeszcze najnowszego testu za zweryfikowany przez CI.
