@@ -52,7 +52,10 @@ object BankStatementCsvParser {
             .filterNot { row -> row.all { it.isBlank() } }
         require(records.size >= 2) { "CSV musi zawierać nagłówek i co najmniej jeden zapis." }
 
-        val headers = records.first().map(::normalizeHeader)
+        val rawHeaders = records.first()
+        val headers = rawHeaders.mapIndexed { index, value ->
+            if (value.isBlank()) "__unnamed_" + (index + 1) else normalizeHeader(value)
+        }
         require(headers.isNotEmpty() && headers.all { it.isNotEmpty() }) {
             "Nagłówek CSV zawiera pustą nazwę kolumny."
         }
@@ -62,9 +65,15 @@ object BankStatementCsvParser {
         val dateIndex = findColumn(indexes, "data", "dataksiegowania", "dataoperacji", "bookingdate", "operationdate")
         val currencyIndex = findColumn(indexes, "waluta", "currency", "currencycode")
         val amountIndex = findColumn(indexes, "kwota", "amount", "signedamount")
-        val typeIndex = findColumn(indexes, "typ", "typoperacji", "operacja", "operationtype", "type")
+        val typeIndex = findColumn(indexes, "typ", "typoperacji", "typtransakcji", "operacja", "operationtype", "type")
         val referenceIndex = findOptionalColumn(indexes, "referencja", "referencjabankowa", "reference", "bankoperationreference", "externalid")
-        val descriptionIndex = findOptionalColumn(indexes, "opis", "tytul", "description", "title")
+        val descriptionIndex = findOptionalColumn(indexes, "opis", "opistransakcji", "tytul", "description", "title")
+        // Eksport iPKO rozkłada opis na kilka pól: opis główny oraz kolejne,
+        // nienazwane pola z nazwą/adresem/tytułem/referencją. Traktujemy je
+        // jako jeden opis wejściowy, ale nigdy nie zapisujemy ich jawnej treści.
+        val descriptionIndexes = descriptionIndex?.let { first ->
+            (first until headers.size).filter { it == first || rawHeaders[it].isBlank() }
+        }.orEmpty()
 
         require(dateIndex != null && currencyIndex != null && amountIndex != null && typeIndex != null) {
             "Brak wymaganych kolumn CSV: data, waluta, kwota i typ operacji."
@@ -84,10 +93,17 @@ object BankStatementCsvParser {
             val amount = parseAmount(value(amountIndex), rowNumber + 2)
             val type = value(typeIndex)
             require(type.isNotBlank()) { "Brak typu operacji w wierszu ${rowNumber + 2}." }
-            val reference = value(referenceIndex).takeIf { it.isNotBlank() }
-            val description = value(descriptionIndex)
-            val safeDescription = if (reference == null && description.isNotBlank()) {
-                "CSV-OP-" + sha256("$scope|$description")
+            val combinedDescription = descriptionIndexes
+                .map { row[it].trim() }
+                .filter { it.isNotBlank() }
+                .joinToString(" ")
+            val embeddedReference = Regex(
+                """Referencje\s+własne\s+zleceniodawcy\s*:\s*([A-Za-z0-9_-]+)""",
+                RegexOption.IGNORE_CASE
+            ).find(combinedDescription)?.groupValues?.get(1)
+            val reference = value(referenceIndex).takeIf { it.isNotBlank() } ?: embeddedReference
+            val safeDescription = if (reference == null && combinedDescription.isNotBlank()) {
+                "CSV-OP-" + sha256("$scope|$combinedDescription")
             } else ""
             BankStatementEntry(
                 accountScopeId = scope,
