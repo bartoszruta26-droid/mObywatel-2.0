@@ -286,9 +286,28 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 values[IMC_SOURCE_LANGUAGE_KEY] = sourceLanguage
                 values[IMC_OTHER_LANGUAGE_KEY] = otherLanguage
                 values[IMC_TARGET_LANGUAGES_KEY] = selectedTargets.filterValues { it }.keys.sorted().joinToString(",")
-                values[IMC_IMAGING_STUDIES_KEY] = encodeMedicalImagingStudies(imagingStudies)
+                val previousStudies = values[IMC_IMAGING_STUDIES_KEY]
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let(::decodeMedicalImagingStudies)
+                    .orEmpty()
+                val currentStudies = imagingStudies.toList()
+                values[IMC_IMAGING_STUDIES_KEY] = encodeMedicalImagingStudies(currentStudies)
                 InternationalMedicalCertificateStore.save(context, values.toMap())
-                saveMessage = "Certificate data saved securely on this device."
+                val currentStudyIds = currentStudies.map { it.id }.toSet()
+                val removedStudies = previousStudies.filterNot { it.id in currentStudyIds }
+                val cleanupFailures = removedStudies.count { study ->
+                    runCatching {
+                        removeOriginalAttachmentDocumentScope(
+                            context,
+                            medicalImagingAttachmentDocumentId(study.id)
+                        )
+                    }.isFailure
+                }
+                saveMessage = if (cleanupFailures == 0) {
+                    "Certificate data saved securely on this device."
+                } else {
+                    "Certificate data saved, but $cleanupFailures removed study attachment scope(s) could not be fully cleaned up."
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = loadError.isBlank()
