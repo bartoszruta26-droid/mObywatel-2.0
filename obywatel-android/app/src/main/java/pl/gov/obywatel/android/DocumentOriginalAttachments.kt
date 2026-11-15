@@ -185,7 +185,28 @@ internal fun writeOriginalAttachmentStagingFile(staging: File, encryptedBytes: B
 
 private data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
-private object OriginalAttachmentStore {
+internal interface OriginalAttachmentMetadataBackend {
+    val all: Map<String, *>
+    fun getString(key: String, defaultValue: String?): String?
+    fun commit(changes: Map<String, String?>): Boolean
+}
+
+internal class SharedPreferencesOriginalAttachmentMetadataBackend(
+    private val preferences: android.content.SharedPreferences
+) : OriginalAttachmentMetadataBackend {
+    override val all: Map<String, *> get() = preferences.all
+    override fun getString(key: String, defaultValue: String?): String? = preferences.getString(key, defaultValue)
+    override fun commit(changes: Map<String, String?>): Boolean {
+        val editor = preferences.edit()
+        changes.forEach { (key, value) -> if (value == null) editor.remove(key) else editor.putString(key, value) }
+        return editor.commit()
+    }
+}
+
+private fun attachmentMetadataBackend(context: Context): OriginalAttachmentMetadataBackend =
+    SharedPreferencesOriginalAttachmentMetadataBackend(context.getSharedPreferences("original_document_attachments", Context.MODE_PRIVATE))
+
+internal object OriginalAttachmentStore {
     private const val PREFS = "original_document_attachments"
     private const val ALIAS = "obywatel_original_attachments_aes"
     private const val MAX_BYTES = 25 * 1024 * 1024
@@ -215,12 +236,11 @@ private object OriginalAttachmentStore {
         return cipher.doFinal(bytes.copyOfRange(12, bytes.size))
     }
 
-    fun list(context: Context, documentId: String): List<OriginalAttachment> {
+    fun list(context: Context, documentId: String, backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)): List<OriginalAttachment> {
         require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
             "Nieprawidłowy identyfikator dokumentu."
         }
-        val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getString(documentId, "[]") ?: "[]"
+        val raw = backend.getString(documentId, "[]") ?: "[]"
         validateOriginalAttachmentMetadata(raw)
         val json = JSONArray(raw)
         return (0 until json.length()).map { index ->
@@ -239,10 +259,9 @@ private object OriginalAttachmentStore {
      * encrypted files and abandoned import staging files are safe to remove.
      */
     @Synchronized
-    fun reconcile(context: Context) {
-        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    fun reconcile(context: Context, backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)) {
         val referencedIds = mutableSetOf<String>()
-        preferences.all.forEach { (documentId, value) ->
+        backend.all.forEach { (documentId, value) ->
             require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
                 "Nieprawidłowy identyfikator dokumentu w magazynie."
             }
@@ -297,7 +316,7 @@ private object OriginalAttachmentStore {
         require(attachmentId.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
         val safeMime = mime.substringBefore(';').trim().lowercase()
         validateOriginalAttachmentPayload(safeMime, bytes)
-        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val backend = attachmentMetadataBackend(context)
         val existingOwners = mutableMapOf<String, String>()
         preferences.all.forEach { (ownerDocumentId, value) ->
             require(ownerDocumentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
@@ -316,7 +335,7 @@ private object OriginalAttachmentStore {
             }
         }
         validateOriginalAttachmentIdOwner(attachmentId, documentId, existingOwners)
-        val updated = list(context, documentId).toMutableList()
+        val updated = list(context, documentId, backend).toMutableList()
         require(updated.none { it.id == attachmentId }) { "Załącznik o tym identyfikatorze już istnieje." }
         val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
         val target = File(directory, "$attachmentId.enc")
@@ -337,8 +356,7 @@ private object OriginalAttachmentStore {
                 json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime))
             }
             metadataCommitAttempted = true
-            check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-                .putString(documentId, json.toString()).commit()) { "Nie udało się zapisać załącznika." }
+            check(backend.commit(mapOf(documentId to json.toString()))) { "Nie udało się zapisać załącznika." }
         } catch (failure: Throwable) {
             // A failed commit may have updated SharedPreferences' in-memory map.
             // Keep the installed encrypted file after the commit attempt;
@@ -392,8 +410,8 @@ private object OriginalAttachmentStore {
     }
 
     @Synchronized
-    fun remove(context: Context, documentId: String, id: String) {
-        val current = list(context, documentId)
+    fun remove(context: Context, documentId: String, id: String, backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)) {
+        val current = list(context, documentId, backend)
         if (current.none { it.id == id }) return
         val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val existingOwners = mutableMapOf<String, String>()
@@ -417,8 +435,7 @@ private object OriginalAttachmentStore {
         val updated = current.filterNot { it.id == id }
         val json = JSONArray()
         updated.forEach { item -> json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime)) }
-        check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString(documentId, json.toString()).commit()) { "Nie udało się zaktualizować rejestru załączników." }
+        check(backend.commit(mapOf(documentId to json.toString()))) { "Nie udało się zaktualizować rejestru załączników." }
         // Metadata is committed first: a failed commit must not orphan a live reference.
         val file = File(File(context.noBackupFilesDir, "original-document-attachments"), "$id.enc")
         if (file.exists()) check(file.delete() || !file.exists()) { "Nie udało się usunąć pliku załącznika." }
@@ -426,12 +443,11 @@ private object OriginalAttachmentStore {
 
     /** Removes one complete, exclusively owned attachment scope. */
     @Synchronized
-    fun removeDocument(context: Context, documentId: String) {
+    fun removeDocument(context: Context, documentId: String, backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)) {
         require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
             "Nieprawidłowy identyfikator dokumentu."
         }
-        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val raw = preferences.getString(documentId, null) ?: return
+        val raw = backend.getString(documentId, null) ?: return
         val items = JSONArray(raw)
         validateOriginalAttachmentMetadata(raw)
         val ids = (0 until items.length()).map { index ->
@@ -455,7 +471,7 @@ private object OriginalAttachmentStore {
             }
         }
         validateOriginalAttachmentIdsOwnedByDocument(ids, documentId, existingOwners)
-        check(preferences.edit().remove(documentId).commit()) {
+        check(backend.commit(mapOf(documentId to null))) {
             "Nie udało się usunąć rejestru załączników."
         }
         val directory = File(context.noBackupFilesDir, "original-document-attachments")
@@ -473,12 +489,11 @@ private object OriginalAttachmentStore {
      * missing/corrupt source file.
      */
     @Synchronized
-    fun exportArchive(context: Context): String {
+    fun exportArchive(context: Context, backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)): String {
         val entries = JSONArray()
         var totalBytes = 0L
-        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val directory = File(context.noBackupFilesDir, "original-document-attachments")
-        preferences.all.toSortedMap().forEach { (documentId, rawValue) ->
+        backend.all.toSortedMap().forEach { (documentId, rawValue) ->
             require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu w załącznikach." }
             val raw = rawValue as? String ?: error("Nieprawidłowy rejestr załączników: $documentId")
             validateOriginalAttachmentMetadata(raw)
@@ -508,7 +523,7 @@ private object OriginalAttachmentStore {
 
     /** Validates the complete archive before committing any imported attachment. */
     @Synchronized
-    fun importArchive(context: Context, raw: String) {
+    fun importArchive(context: Context, raw: String, backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)) {
         require(raw.length <= (MAX_ARCHIVE_BYTES * 4L / 3L + 1024 * 1024).toInt()) {
             "Archiwum przekracza maksymalny rozmiar."
         }
@@ -549,7 +564,6 @@ private object OriginalAttachmentStore {
             Pending(documentId, id, name, mime, bytes)
         }
 
-        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val existingByDocument = mutableMapOf<String, MutableList<OriginalAttachment>>()
         preferences.all.forEach { (documentId, value) ->
             require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu w magazynie." }
@@ -605,16 +619,13 @@ private object OriginalAttachmentStore {
                 check(temporary.renameTo(target)) { "Nie udało się przygotować pliku załącznika." }
                 newlyInstalled.add(target)
             }
-            val editor = preferences.edit()
-            existingByDocument.forEach { (documentId, metadata) ->
+            val changes = existingByDocument.mapValues { (_, metadata) ->
                 val json = JSONArray()
-                metadata.forEach { item ->
-                    json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime))
-                }
-                editor.putString(documentId, json.toString())
+                metadata.forEach { item -> json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime)) }
+                json.toString()
             }
             metadataCommitAttempted = true
-            check(editor.commit()) { "Nie udało się zatwierdzić rejestru importowanych załączników." }
+            check(backend.commit(changes)) { "Nie udało się zatwierdzić rejestru importowanych załączników." }
         } catch (failure: Throwable) {
             // A failed commit may still have changed SharedPreferences' in-memory map.
             // Keep installed files after commit was attempted; startup reconciliation
