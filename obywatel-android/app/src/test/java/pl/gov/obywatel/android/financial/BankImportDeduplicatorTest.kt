@@ -219,4 +219,37 @@ class BankImportDeduplicatorTest {
         assertEquals(1, preview.conflicts.size)
     }
 
+
+    @Test
+    fun oppositeFxLegsWithSignsContradictingOperationLabelsAreConflicts() {
+        val validCredit = entry(
+            currency = "USD",
+            amount = "100.00",
+            reference = "FX-LABEL-SIGN",
+            type = "WYMIANA W KANTORZE - UZNANIE"
+        )
+        val mislabeledDebit = entry(
+            currency = "CHF",
+            amount = "-80.00",
+            reference = "FX-LABEL-SIGN",
+            type = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+        )
+        val reversedCredit = validCredit.copy(signedAmount = BigDecimal("-100.00"))
+        val reversedDebit = mislabeledDebit.copy(signedAmount = BigDecimal("80.00"))
+
+        val invalidPair = BankImportDeduplicator.preview(
+            incoming = listOf(validCredit, mislabeledDebit),
+            existingEntries = emptyList()
+        )
+        assertEquals(1, invalidPair.newEntries.size)
+        assertEquals(1, invalidPair.conflicts.size)
+
+        val reversedPair = BankImportDeduplicator.preview(
+            incoming = listOf(reversedCredit, reversedDebit),
+            existingEntries = emptyList()
+        )
+        assertEquals(1, reversedPair.newEntries.size)
+        assertEquals(1, reversedPair.conflicts.size)
+    }
+
 }
