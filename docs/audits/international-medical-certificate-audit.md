@@ -6,8 +6,9 @@ SPDX-License-Identifier: CC0-1.0
 - Data audytu: 2026-11-15
 - Repozytorium: `bartoszruta26-droid/mObywatel-2.0`
 - Gałąź docelowa wskazana w zleceniu: `zaswaidczenie`
-- Stan gałęzi: **nieodnaleziona**. GitHub zwraca listę 66 gałęzi i nie zawiera refu `zaswaidczenie` ani zbliżonej nazwy. Audyt zapisano na istniejącej gałęzi `main` wyłącznie jako dokument planistyczny. Przed implementacją należy utworzyć / wskazać właściwą gałąź roboczą.
-- Zakres tego commitu: audyt wymagań i plan prac; brak zmian aplikacji i brak deklaracji ukończenia funkcji.
+- Stan gałęzi: `zaswaidczenie` istnieje; prace są prowadzone w ramach otwartego, roboczego PR #69.
+- Stan PR na 2026-11-15: open, draft, nie scalony. Aktualny punkt kontrolny przed etapem 19: `b3ba8636289ce303ef0e31e7f3282115e72bc588`.
+- Zakres audytu: bieżący stan implementacji, wyniki CI i jawnie oznaczone braki. Historyczne wpisy poniżej zachowują kontekst wcześniejszych etapów; ich status należy czytać łącznie z najnowszymi sekcjami.
 
 ## 1. Źródła i zakres wzorów
 
@@ -449,3 +450,31 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Testy odtwarzania danych po ponownym uruchomieniu oraz testy odporności magazynu szyfrowanego.
 
 **Status:** rozszerzono formularz i test modelu o brakujące metadane raportu obrazowego. Nie potwierdzono jeszcze testami UI poprawnego działania nowych pól ani końcowego działania na urządzeniu. PR #69 pozostaje otwarty i niescalony.
+
+
+---
+
+## 19. Walidacja dat badań obrazowych — 2026-11-15
+
+### Wykonane zmiany
+- [x] Dodano walidator daty badania w formacie ISO `YYYY-MM-DD`, z kontrolą rzeczywistej daty kalendarzowej (bez akceptowania np. 30 lutego).
+- [x] Niepoprawna data wpisana w formularzu jest oznaczana komunikatem błędu i blokuje dodanie rekordu badania.
+- [x] Puste pole daty pozostaje dopuszczalne, ponieważ formularz na tym etapie nie wymusza daty jako pola obowiązkowego.
+- [x] Dodano testy daty przestępnej, daty prawidłowej, nieistniejących dni/miesięcy, błędnego formatu i dodatkowego tekstu.
+- [x] Zmiany zapisano w commitach: `03b536ffa74c60f85148d05d588e7c9dfe5d046b` (formularz/walidator) oraz `c3a72bf8d1559fb47d35ca42fd4cfb4423054c6f` (testy).
+
+### Weryfikacja
+- [x] Sprawdzono ręcznie logikę walidatora: parser działa w trybie niepobłażliwym, a pozycja parsowania musi obejmować cały ciąg.
+- [x] Przycisk dodania badania jest aktywny przy pustej dacie lub poprawnej dacie ISO; jest nieaktywny dla niepoprawnej daty.
+- [ ] Testy JVM i kompilacja Androida dla nowych commitów — wymagają wyniku CI.
+- [ ] Test Compose / emulator — wymaga potwierdzenia po zakończeniu aktualnego workflow.
+
+### Kolejne zadania
+- [ ] Rozszerzyć testy serializacji/deserializacji wszystkich pól obrazowania (w tym technique, contrast, radiologistName, reportNumber) jako pełny test round-trip, a nie tylko test właściwości modelu.
+- [ ] Dodać import plików raportów/obrazów i trwale przechowywać załączniki w prywatnym magazynie aplikacji, z limitem rozmiaru, kontrolą MIME i powiązaniem z rekordem badania.
+- [ ] Rozdzielić załączniki źródłowe od skanów podpisów pacjenta/lekarza i pieczęci.
+- [ ] Dodać walidację pól wymaganych zależnie od celu zaświadczenia.
+- [ ] Zrealizować wielostronicowy PDF, Hebrew/RTL i Android Print Framework.
+- [ ] Tłumaczenia pozostają nieaktywne do czasu wdrożenia dostawcy, jawnej zgody na przekazanie danych i rejestru tłumaczeń.
+
+**Status etapu 19:** zmiana kodu i testów została zapisana. Nie uznaje się jej za zweryfikowaną przez CI, dopóki workflow dla najnowszego SHA nie zakończy się powodzeniem. PR #69 pozostaje otwarty, Draft/WIP i niescalony.
