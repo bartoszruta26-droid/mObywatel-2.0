@@ -32,8 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.translate.TranslateRemoteModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.NonCancellable
 
 internal object MedicalTranslationModelSettings {
     private const val PREFS = "medical_translation_model_settings"
@@ -53,6 +57,26 @@ internal object MedicalTranslationModelSettings {
     fun setWifiOnly(context: Context, enabled: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(WIFI_ONLY, enabled).apply()
     }
+}
+
+internal sealed interface MedicalTranslationModelInventory {
+    data object Loading : MedicalTranslationModelInventory
+    data class Available(val downloadedLanguages: Set<String>) : MedicalTranslationModelInventory
+    data class ReadError(val message: String) : MedicalTranslationModelInventory
+}
+
+internal fun medicalTranslationModelStatus(
+    inventory: MedicalTranslationModelInventory,
+    languageCode: String
+): String = when (inventory) {
+    MedicalTranslationModelInventory.Loading -> "Sprawdzanie…"
+    is MedicalTranslationModelInventory.ReadError -> "Błąd odczytu"
+    is MedicalTranslationModelInventory.Available ->
+        if (inventory.downloadedLanguages.any { it.substringBefore('-') == languageCode.substringBefore('-') }) {
+            "Gotowy"
+        } else {
+            "Brak modelu"
+        }
 }
 
 internal object MedicalTranslationModelRepository {
@@ -79,11 +103,6 @@ internal object MedicalTranslationModelRepository {
         RemoteModelManager.getInstance().deleteDownloadedModel(model(languageCode)).await()
     }
 
-    suspend fun isDownloaded(languageCode: String): Boolean =
-        runCatching { mlKitLanguageCode(languageCode) in RemoteModelManager.getInstance()
-            .getDownloadedModels(TranslateRemoteModel::class.java).await().map { it.language }.toSet() }
-            .getOrDefault(false)
-
     fun sizeDescription(): String =
         "ML Kit nie udostępnia publicznego interfejsu odczytu rozmiaru poszczególnych modeli."
 }
@@ -94,12 +113,45 @@ internal fun MedicalTranslationLanguagesSettingsScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     var automatic by remember { mutableStateOf(MedicalTranslationModelSettings.automaticDownload(context)) }
     var wifiOnly by remember { mutableStateOf(MedicalTranslationModelSettings.wifiOnly(context)) }
-    var downloaded by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var inventory by remember { mutableStateOf<MedicalTranslationModelInventory>(MedicalTranslationModelInventory.Loading) }
     var busyLanguage by remember { mutableStateOf<String?>(null) }
+    var operationJob by remember { mutableStateOf<Job?>(null) }
     var status by remember { mutableStateOf("") }
 
-    suspend fun refresh() { downloaded = MedicalTranslationModelRepository.downloadedLanguages() }
-    LaunchedEffect(Unit) { runCatching { refresh() }.onFailure { status = "Nie udało się odczytać modeli: ${it.message}" } }
+    suspend fun refresh() {
+        inventory = try {
+            MedicalTranslationModelInventory.Available(MedicalTranslationModelRepository.downloadedLanguages())
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            MedicalTranslationModelInventory.ReadError(failure.message ?: "Nieznany błąd odczytu")
+        }
+    }
+
+    LaunchedEffect(Unit) { refresh() }
+
+    fun startOperation(languageCode: String, operation: String, action: suspend () -> Unit) {
+        if (operationJob?.isActive == true) return
+        busyLanguage = languageCode
+        status = "$operation: $languageCode…"
+        operationJob = scope.launch {
+            try {
+                action()
+                status = "$operation zakończona: $languageCode."
+            } catch (cancelled: CancellationException) {
+                status = "$operation anulowana: $languageCode."
+                throw cancelled
+            } catch (failure: Exception) {
+                status = "Błąd — $operation ($languageCode): ${failure.message ?: "nieznana przyczyna"}"
+            } finally {
+                withContext(NonCancellable) {
+                    refresh()
+                    busyLanguage = null
+                    operationJob = null
+                }
+            }
+        }
+    }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -127,36 +179,40 @@ internal fun MedicalTranslationLanguagesSettingsScreen(onBack: () -> Unit) {
             }
         }
         Text("Dostępne modele językowe", style = MaterialTheme.typography.titleMedium)
+        if (inventory is MedicalTranslationModelInventory.ReadError) {
+            Text(
+                "Nie udało się odczytać listy modeli. Statusów dostępności nie można teraz ustalić; nie oznaczają one braku modelu.",
+                color = MaterialTheme.colorScheme.error
+            )
+            OutlinedButton(onClick = { scope.launch { refresh() } }, enabled = busyLanguage == null) {
+                Text("Ponów odczyt")
+            }
+        }
         MedicalCertificateLanguages.supported.distinctBy { it.code.substringBefore('-') }.forEach { language ->
             val code = language.code.substringBefore('-')
-            val ready = downloaded.any { it.substringBefore('-') == code }
+            val modelStatus = medicalTranslationModelStatus(inventory, code)
+            val ready = modelStatus == "Gotowy"
+            val statusUnknown = inventory !is MedicalTranslationModelInventory.Available
             Card {
                 Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(language.englishName, modifier = Modifier.weight(1f))
-                        Text(if (ready) "Gotowy" else "Brak modelu",
-                            color = if (ready) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(modelStatus,
+                            color = when (modelStatus) {
+                                "Błąd odczytu" -> MaterialTheme.colorScheme.error
+                                "Gotowy" -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            })
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(enabled = busyLanguage == null && !ready, onClick = {
-                            busyLanguage = code
-                            status = "Pobieranie modelu: ${language.englishName}…"
-                            scope.launch {
-                                runCatching { MedicalTranslationModelRepository.download(context, code) }
-                                    .onSuccess { status = "Model ${language.englishName} został pobrany." }
-                                    .onFailure { status = "Błąd pobierania ${language.englishName}: ${it.message}" }
-                                runCatching { refresh() }
-                                busyLanguage = null
+                        Button(enabled = busyLanguage == null && !ready && !statusUnknown, onClick = {
+                            startOperation(code, "Pobieranie") {
+                                MedicalTranslationModelRepository.download(context, code)
                             }
                         }) { Text(if (busyLanguage == code) "Pobieranie…" else "Pobierz model") }
                         OutlinedButton(enabled = busyLanguage == null && ready, onClick = {
-                            busyLanguage = code
-                            scope.launch {
-                                runCatching { MedicalTranslationModelRepository.delete(code) }
-                                    .onSuccess { status = "Usunięto model ${language.englishName}." }
-                                    .onFailure { status = "Nie udało się usunąć modelu: ${it.message}" }
-                                runCatching { refresh() }
-                                busyLanguage = null
+                            startOperation(code, "Usuwanie") {
+                                MedicalTranslationModelRepository.delete(code)
                             }
                         }) { Text("Usuń") }
                     }
@@ -165,7 +221,10 @@ internal fun MedicalTranslationLanguagesSettingsScreen(onBack: () -> Unit) {
         }
         Text(MedicalTranslationModelRepository.sizeDescription(), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (busyLanguage != null) Text("Operacja w toku: ${busyLanguage}")
-        if (status.isNotBlank()) Text(status, color = MaterialTheme.colorScheme.primary)
+        if (busyLanguage != null) {
+            Text("Operacja w toku: $busyLanguage")
+            OutlinedButton(onClick = { operationJob?.cancel() }) { Text("Anuluj operację") }
+        }
+        if (status.isNotBlank()) Text(status, color = if (status.startsWith("Błąd")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
     }
 }
