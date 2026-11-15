@@ -50,6 +50,14 @@ class Iso4217CurrencyCatalogTest {
         assertEquals(4, Iso4217CurrencyCatalog.find("CLF")?.minorUnits)
     }
 
+    @Test fun snapshotSupportsRecentlyAddedIsoCodesWithoutPlatformCurrencyData() {
+        val caribbeanGuilder = Iso4217CurrencyCatalog.find("XCG")
+        assertNotNull(caribbeanGuilder)
+        assertEquals("532", caribbeanGuilder?.numericCode)
+        assertEquals(2, caribbeanGuilder?.minorUnits)
+        assertEquals("2026-09-17", Iso4217CurrencyCatalog.version)
+    }
+
     @Test fun historicalCodesExposeWithdrawalDateAndDoNotOverrideActiveCurrency() {
         assertEquals("2026-01", Iso4217CurrencyCatalog.findHistorical("BGN")?.withdrawnAt)
         assertNull(Iso4217CurrencyCatalog.find("BGN"))
