@@ -128,6 +128,21 @@ data class CashDonation(
         require(transferredAmount == null || transferredAmount >= BigDecimal.ZERO) { "Kwota przekazania nie może być ujemna." }
         require(transferredAmount == null || transferredAmount <= amount) { "Kwota przekazania przekracza przyjętą darowiznę." }
         require((transferredAt == null) == (transferredAmount == null)) { "Data i kwota przekazania muszą występować razem." }
+        when (custodyStatus) {
+            DonationCustodyStatus.HELD, DonationCustodyStatus.DEPOSITED ->
+                require(transferredAmount == null || transferredAmount.compareTo(BigDecimal.ZERO) == 0) {
+                    "Dla statusu przechowywana/wpłacona kwota przekazania musi wynosić zero."
+                }
+            DonationCustodyStatus.PARTIALLY_TRANSFERRED ->
+                require(transferredAmount != null && transferredAmount > BigDecimal.ZERO && transferredAmount < amount) {
+                    "Status częściowego przekazania wymaga kwoty większej od zera i mniejszej od darowizny."
+                }
+            DonationCustodyStatus.TRANSFERRED ->
+                require(transferredAmount != null && transferredAmount.compareTo(amount) == 0) {
+                    "Status przekazana wymaga rozliczenia całej przyjętej kwoty."
+                }
+            DonationCustodyStatus.REQUIRES_REVIEW -> Unit
+        }
     }
 }
 
