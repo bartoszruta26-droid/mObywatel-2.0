@@ -38,9 +38,13 @@ private const val IMC_TARGET_LANGUAGES_KEY = "imc_target_languages"
 @Composable
 internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val values = remember(context) {
-        mutableStateMapOf<String, String>().apply { putAll(InternationalMedicalCertificateStore.load(context)) }
+    val initialLoad = remember(context) {
+        runCatching { InternationalMedicalCertificateStore.loadStrict(context) }
     }
+    val values = remember(context) {
+        mutableStateMapOf<String, String>().apply { putAll(initialLoad.getOrDefault(emptyMap())) }
+    }
+    val loadError = initialLoad.exceptionOrNull()?.message.orEmpty()
     val definitions = remember {
         documentEditorFieldDefinitions(INTERNATIONAL_MEDICAL_CERTIFICATE_ID)
     }
@@ -168,6 +172,12 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
             )
         }
 
+        if (loadError.isNotBlank()) {
+            Text(
+                "Saved medical data could not be decrypted. Saving is disabled to protect the existing file.",
+                color = MaterialTheme.colorScheme.error
+            )
+        }
         Button(
             onClick = {
                 values[fieldKey("sourceLanguage")] = sourceLanguage
@@ -178,7 +188,8 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 InternationalMedicalCertificateStore.save(context, values.toMap())
                 saveMessage = "Certificate data saved securely on this device."
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = loadError.isBlank()
         ) {
             Text("Save certificate")
         }
