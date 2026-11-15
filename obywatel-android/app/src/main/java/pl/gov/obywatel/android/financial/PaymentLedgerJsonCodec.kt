@@ -9,6 +9,8 @@ import pl.gov.obywatel.android.FinancialParseStatus
 import pl.gov.obywatel.android.FinancialRecordSource
 import pl.gov.obywatel.android.FinancialTransaction
 import pl.gov.obywatel.android.FinancialTransactionType
+import pl.gov.obywatel.android.CashDonation
+import pl.gov.obywatel.android.DonationCustodyStatus
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -24,14 +26,21 @@ object PaymentLedgerJsonCodec {
 
     data class Archive(
         val entries: List<BankStatementEntry>,
-        val transactions: List<StoredFinancialTransaction>
+        val transactions: List<StoredFinancialTransaction>,
+        val donations: List<CashDonation>
     )
 
-    fun encode(entries: List<BankStatementEntry>): String = encode(entries, emptyList())
+    fun encode(entries: List<BankStatementEntry>): String = encode(entries, emptyList(), emptyList())
 
     fun encode(
         entries: List<BankStatementEntry>,
         transactions: List<StoredFinancialTransaction>
+    ): String = encode(entries, transactions, emptyList())
+
+    fun encode(
+        entries: List<BankStatementEntry>,
+        transactions: List<StoredFinancialTransaction>,
+        donations: List<CashDonation>
     ): String {
         val root = JSONObject()
             .put("format", FORMAT)
@@ -75,6 +84,30 @@ object PaymentLedgerJsonCodec {
             transactionArray.put(item)
         }
         root.put("transactions", transactionArray)
+
+        val donationArray = JSONArray()
+        donations.forEach { donation ->
+            donation.validate()
+            val item = JSONObject()
+                .put("id", donation.id)
+                .put("receivedAt", donation.receivedAt.toString())
+                .put("amount", donation.amount.stripTrailingZeros().toPlainString())
+                .put("currencyCode", donation.currencyCode)
+                .put("beneficiaryOrganizationName", donation.beneficiaryOrganizationName)
+                .put("purpose", donation.purpose)
+                .put("isAnonymous", donation.isAnonymous)
+                .put("custodyStatus", donation.custodyStatus.name)
+                .put("source", donation.source.name)
+            putNullable(item, "donorName", donation.donorName)
+            putNullable(item, "campaignName", donation.campaignName)
+            putNullable(item, "collectedBy", donation.collectedBy)
+            putNullable(item, "receiptNumber", donation.receiptNumber)
+            putNullable(item, "transferredAt", donation.transferredAt?.toString())
+            putNullable(item, "transferredAmount", donation.transferredAmount?.stripTrailingZeros()?.toPlainString())
+            putNullable(item, "note", donation.note)
+            donationArray.put(item)
+        }
+        root.put("donations", donationArray)
         return root.toString()
     }
 
@@ -149,7 +182,37 @@ object PaymentLedgerJsonCodec {
                 throw IllegalArgumentException("Nieprawidłowa transakcja JSON pod indeksem $index.", error)
             }
         }
-        return Archive(entries, transactions)
+        val donations = mutableListOf<CashDonation>()
+        val donationArray = root.optJSONArray("donations")
+        if (donationArray != null) for (index in 0 until donationArray.length()) {
+            val item = donationArray.optJSONObject(index)
+                ?: throw IllegalArgumentException("Nieprawidłowa darowizna JSON pod indeksem $index.")
+            try {
+                val donation = CashDonation(
+                    id = item.getString("id"),
+                    receivedAt = Instant.parse(item.getString("receivedAt")),
+                    amount = BigDecimal(item.getString("amount")),
+                    currencyCode = item.getString("currencyCode"),
+                    beneficiaryOrganizationName = item.getString("beneficiaryOrganizationName"),
+                    purpose = item.getString("purpose"),
+                    donorName = nullableString(item, "donorName"),
+                    isAnonymous = item.getBoolean("isAnonymous"),
+                    campaignName = nullableString(item, "campaignName"),
+                    collectedBy = nullableString(item, "collectedBy"),
+                    receiptNumber = nullableString(item, "receiptNumber"),
+                    custodyStatus = DonationCustodyStatus.valueOf(item.getString("custodyStatus")),
+                    transferredAt = nullableString(item, "transferredAt")?.let(Instant::parse),
+                    transferredAmount = nullableDecimal(item, "transferredAmount"),
+                    note = nullableString(item, "note"),
+                    source = FinancialRecordSource.valueOf(item.getString("source"))
+                )
+                donation.validate()
+                donations += donation
+            } catch (error: Exception) {
+                throw IllegalArgumentException("Nieprawidłowa darowizna JSON pod indeksem $index.", error)
+            }
+        }
+        return Archive(entries, transactions, donations)
     }
 
     private fun putNullable(item: JSONObject, key: String, value: String?) {
