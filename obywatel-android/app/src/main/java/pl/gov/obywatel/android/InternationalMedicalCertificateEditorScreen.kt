@@ -43,6 +43,14 @@ private const val IMC_OTHER_LANGUAGE_KEY = "imc_other_source_language"
 private const val IMC_TARGET_LANGUAGES_KEY = "imc_target_languages"
 private const val IMC_IMAGING_STUDIES_KEY = "imc_imaging_studies"
 
+internal fun medicalImagingAttachmentReferencesMatch(
+    expectedIds: List<String>,
+    storedIds: List<String>
+): Boolean =
+    expectedIds.size == expectedIds.toSet().size &&
+        storedIds.size == storedIds.toSet().size &&
+        expectedIds.toSet() == storedIds.toSet()
+
 @Composable
 internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -293,31 +301,58 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
         }
         Button(
             onClick = {
-                values[fieldKey("sourceLanguage")] = sourceLanguage
-                values[fieldKey("targetLanguages")] = selectedTargets.filterValues { it }.keys.sorted().joinToString(",")
-                values[IMC_SOURCE_LANGUAGE_KEY] = sourceLanguage
-                values[IMC_OTHER_LANGUAGE_KEY] = otherLanguage
-                values[IMC_TARGET_LANGUAGES_KEY] = selectedTargets.filterValues { it }.keys.sorted().joinToString(",")
-                val previousStudies = values[IMC_IMAGING_STUDIES_KEY]
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let(::decodeMedicalImagingStudies)
-                    .orEmpty()
-                val currentStudies = imagingStudies.toList()
-                values[IMC_IMAGING_STUDIES_KEY] = encodeMedicalImagingStudies(currentStudies)
-                InternationalMedicalCertificateStore.save(context, values.toMap())
-                val removedStudyIds = removedMedicalImagingStudyIds(previousStudies, currentStudies)
-                val cleanupFailures = removedStudyIds.count { studyId ->
-                    runCatching {
-                        removeOriginalAttachmentDocumentScope(
-                            context,
-                            medicalImagingAttachmentDocumentId(studyId)
+                val integrity = runCatching {
+                    reconcileOriginalAttachments(context)
+                    imagingStudies.filterNot { study ->
+                        medicalImagingAttachmentReferencesMatch(
+                            study.attachmentIds,
+                            listOriginalAttachmentIds(context, medicalImagingAttachmentDocumentId(study.id))
                         )
-                    }.isFailure
+                    }.map { it.id }
                 }
-                saveMessage = if (cleanupFailures == 0) {
-                    "Certificate data saved securely on this device."
+                if (integrity.isFailure) {
+                    saveMessage = "Attachment integrity check failed; certificate data was not changed."
                 } else {
-                    "Certificate data saved, but $cleanupFailures removed study attachment scope(s) could not be fully cleaned up."
+                    val mismatchedStudyIds = integrity.getOrThrow()
+                    if (mismatchedStudyIds.isNotEmpty()) {
+                        saveMessage = "Attachment references do not match the encrypted attachment store for: ${mismatchedStudyIds.joinToString()}."
+                    } else {
+                        val previousStudies = values[IMC_IMAGING_STUDIES_KEY]
+                            ?.takeIf { it.isNotBlank() }
+                            ?.let(::decodeMedicalImagingStudies)
+                            .orEmpty()
+                        val currentStudies = imagingStudies.toList()
+                        val updatedValues = values.toMutableMap().apply {
+                            put(fieldKey("sourceLanguage"), sourceLanguage)
+                            put(fieldKey("targetLanguages"), selectedTargets.filterValues { it }.keys.sorted().joinToString(","))
+                            put(IMC_SOURCE_LANGUAGE_KEY, sourceLanguage)
+                            put(IMC_OTHER_LANGUAGE_KEY, otherLanguage)
+                            put(IMC_TARGET_LANGUAGES_KEY, selectedTargets.filterValues { it }.keys.sorted().joinToString(","))
+                            put(IMC_IMAGING_STUDIES_KEY, encodeMedicalImagingStudies(currentStudies))
+                        }
+                        val saveResult = runCatching {
+                            InternationalMedicalCertificateStore.save(context, updatedValues)
+                        }
+                        if (saveResult.isFailure) {
+                            saveMessage = "Certificate data could not be saved; existing attachment scopes were preserved."
+                        } else {
+                            values.putAll(updatedValues)
+                            val removedStudyIds = removedMedicalImagingStudyIds(previousStudies, currentStudies)
+                            val cleanupFailures = removedStudyIds.count { studyId ->
+                                runCatching {
+                                    removeOriginalAttachmentDocumentScope(
+                                        context,
+                                        medicalImagingAttachmentDocumentId(studyId)
+                                    )
+                                }.isFailure
+                            }
+                            saveMessage = if (cleanupFailures == 0) {
+                                "Certificate data saved securely on this device."
+                            } else {
+                                "Certificate data saved, but $cleanupFailures removed study attachment scope(s) could not be fully cleaned up."
+                            }
+                        }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
