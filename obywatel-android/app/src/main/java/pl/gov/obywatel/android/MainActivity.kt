@@ -1356,6 +1356,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun handleSystemBack() {
         when {
+            selectedMedicalCertificateRecordId != null -> selectedMedicalCertificateRecordId = null
             credentialAppearanceTarget != null -> credentialAppearanceTarget = null
             showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
