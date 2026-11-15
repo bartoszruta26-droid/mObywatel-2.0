@@ -166,6 +166,12 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun addFailureDeletesOnlyBeforeMetadataCommitAttempt() {
+        assertTrue(shouldDeleteAddedAttachmentAfterFailure(false))
+        assertFalse(shouldDeleteAddedAttachmentAfterFailure(true))
+    }
+
+    @Test
     fun attachmentRecoveryPlanFindsOnlyUnreferencedEncryptedFiles() {
         val referenced = setOf("keep-1", "keep-2")
         val stored = setOf("keep-1", "keep-2", "orphan-1", "orphan-2")
