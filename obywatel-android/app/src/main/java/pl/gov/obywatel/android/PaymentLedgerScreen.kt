@@ -43,6 +43,7 @@ import pl.gov.obywatel.android.financial.BankExchangeOperationProjector
 import pl.gov.obywatel.android.financial.ExchangeOperationStatus
 import pl.gov.obywatel.android.financial.BankImportPreview
 import pl.gov.obywatel.android.financial.PaymentLedgerRepository
+import pl.gov.obywatel.android.financial.FinancialReportPeriod
 import pl.gov.obywatel.android.financial.PaymentAccountScope
 import pl.gov.obywatel.android.financial.StoredFinancialTransaction
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
@@ -419,6 +420,28 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             }
         }
     }
+    
+    val csvExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    val period = FinancialReportPeriod(Instant.MIN, Instant.MAX)
+                    val csv = repository.exportFinancialReportCsv(period)
+                    withContext(Dispatchers.IO) {
+                        val output = context.contentResolver.openOutputStream(uri)
+                            ?: throw IllegalStateException("Nie można zapisać pliku CSV.")
+                        output.use { it.write(csv.toByteArray(Charsets.UTF_8)) }
+                    }
+                    message = "Raport CSV został zapisany."
+                    error = null
+                } catch (exception: Exception) {
+                    error = exception.message ?: "Nie udało się zapisać raportu CSV."
+                }
+            }
+        }
+    }
 
     LaunchedEffect(repository) { reload() }
     DisposableEffect(repository) {
@@ -500,6 +523,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 }
                 Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
                     Text("Eksportuj JSON")
+                }
+                Button(onClick = { csvExportLauncher.launch("raport-rachunki-platnicze.csv") }) {
+                    Text("Eksportuj raport CSV — cała historia")
                 }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
                 importPreview?.let { preview ->
