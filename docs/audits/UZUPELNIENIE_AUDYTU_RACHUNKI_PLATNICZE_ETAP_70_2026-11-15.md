@@ -515,3 +515,8 @@ SIX Group jest oficjalną agencją utrzymania kodów ISO 4217. Migawki są opart
 ### Status
 
 Kod i testy dodano na gałęzi feature/payment-ledger-stage-1. Wyniki kompilacji i testów dla końcowego SHA wymagają potwierdzenia w GitHub Actions. PR #68 pozostaje otwarty i niescalony.
+
+
+### Uzupełnienie testów etapu 76
+
+Dodano kontrolę integralności migawki: dokładnie 178 wpisów bieżącej List One i 137 wpisów List Three, format kodów alfabetycznych i numerycznych, dopuszczalny zakres wykładnika jednostki mniejszej oraz obecność daty wycofania dla każdego wpisu historycznego. Testy te weryfikują kompletność i podstawowe invariants danych włączonych do aplikacji.
