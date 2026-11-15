@@ -76,7 +76,7 @@ object BankStatementXmlParser {
                     current = null
                 }
             }
-            event = parser.next()
+            event = parser.nextToken()
         }
         require(rootValidated) { "Dokument XML nie zawiera elementu account-history." }
         require(entries.isNotEmpty()) { "Dokument XML nie zawiera operacji do importu." }
