@@ -50,6 +50,7 @@ class PaymentLedgerDatabase(
         createAccountScopesTable(db)
         createFinancialTransactionTables(db)
         createAssetTable(db)
+        createCashDonationTable(db)
         seedDefaultAccountScope(db)
     }
 
