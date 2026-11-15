@@ -66,3 +66,40 @@ class FinancialReportDateRangePickerTest {
         ).assertIsDisplayed()
     }
 }
+
+    @Test
+    fun selectingDifferentStartDateUpdatesOnlyStartBoundary() {
+        val dates = mutableStateOf("2026-11-01" to "2026-11-20")
+        composeRule.setContent {
+            FinancialReportDateRangePicker(
+                startDate = dates.value.first,
+                endDate = dates.value.second,
+                onDatesChanged = { start, end -> dates.value = start to end }
+            )
+        }
+
+        composeRule.onNodeWithText("Data początkowa: 2026-11-01").performClick()
+        composeRule.onNodeWithText("10", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("Zastosuj datę").performClick()
+
+        assertEquals("2026-11-10" to "2026-11-20", dates.value)
+    }
+
+    @Test
+    fun selectingDifferentEndDateUpdatesOnlyEndBoundary() {
+        val dates = mutableStateOf("2026-11-01" to "2026-11-15")
+        composeRule.setContent {
+            FinancialReportDateRangePicker(
+                startDate = dates.value.first,
+                endDate = dates.value.second,
+                onDatesChanged = { start, end -> dates.value = start to end }
+            )
+        }
+
+        composeRule.onNodeWithText("Data końcowa: 2026-11-15").performClick()
+        composeRule.onNodeWithText("25", useUnmergedTree = true).performClick()
+        composeRule.onNodeWithText("Zastosuj datę").performClick()
+
+        assertEquals("2026-11-01" to "2026-11-25", dates.value)
+    }
+}
