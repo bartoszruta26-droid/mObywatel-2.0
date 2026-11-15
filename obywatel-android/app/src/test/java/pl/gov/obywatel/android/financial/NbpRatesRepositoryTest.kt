@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: CC0-1.0
 package pl.gov.obywatel.android.financial
 
-import java.io.File
 import java.nio.file.Files
 import java.time.Duration
 import java.time.LocalDate
