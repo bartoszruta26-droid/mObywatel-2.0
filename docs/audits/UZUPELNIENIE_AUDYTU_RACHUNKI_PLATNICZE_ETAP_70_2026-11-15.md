@@ -290,3 +290,10 @@ Otwarte: trwała historia przeliczeń, kalendarz dat, trwały cache, pełny sło
 
 
 Dodatkowy commit: `0c877a34a748db8d2beae47154eebeb7a675ea4e` — jawne parsowanie daty historycznej.
+
+
+## Etap 85 — korekta błędu kompilacji przelicznika (15 listopada 2026 r.)
+
+Kontrola logów run `43744986147` wykazała błąd Kotlin w `NbpCurrencyConverterCard.kt`: niedozwolony import `androidx.compose.foundation.layout.weight`. Usunięto import, pozostawiając użycie `Modifier.weight(1f)` wewnątrz zakresu `RowScope`. Commit: `6f2772b4449040ad5f0a4eb96bca1f7429444773`.
+
+Wyniki poprzedniego CI: Android build — failure (kompilacja Kotlin), GUI validation — cancelled przed testami, REUSE — success. Poprawka oczekuje na nowy pełny przebieg CI. Nie uznaje się jeszcze APK ani testów emulatorowych za zaliczone. PR #68 pozostaje otwarty i niescalony.
