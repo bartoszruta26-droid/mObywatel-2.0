@@ -6,11 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -50,7 +49,6 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
     var fromCode by remember { mutableStateOf("EUR") }
     var toCode by remember { mutableStateOf("PLN") }
     var rates by remember { mutableStateOf<Map<String, BigDecimal>>(emptyMap()) }
-    var currencyNames by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var rateTableLabel by remember { mutableStateOf("") }
     var effectiveDate by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
@@ -71,18 +69,13 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                             rate.mid?.let { rate.code to it }
                         }
                     }.toMap()
-                    val names = allTables.flatMap { table ->
-                        table.rates.map { it.code to it.currency }
-                    }.toMap()
-                    Triple(rateMap, names, allTables.joinToString(" / ") { "Tabela ${it.table.apiCode}" } to
+                    Pair(rateMap, allTables.joinToString(" / ") { "Tabela ${it.table.apiCode}" } to
                         allTables.maxOf { it.effectiveDate }.toString())
                 }
                 rates = loaded.first
-                currencyNames = loaded.second
-                rateTableLabel = loaded.third.first
-                effectiveDate = loaded.third.second
+                rateTableLabel = loaded.second.first
+                effectiveDate = loaded.second.second
                 if (rates.isEmpty()) error = "NBP nie zwrócił dostępnych kursów średnich."
-                else messageForCurrencies()
                 result = null
             } catch (exception: Exception) {
                 error = exception.message ?: "Nie udało się pobrać kursów NBP."
