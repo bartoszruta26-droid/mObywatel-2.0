@@ -334,8 +334,12 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                                     val result = runCatching { provider.translate(values[fieldKey(key)].orEmpty(), sourceLanguage, target) }
                                     result.onSuccess { translationValues["$target|$key"] = it; completed++ }.onFailure { failed++ }
                                 }
-                                val labelResult = runCatching { provider.translate(definition.label, sourceLanguage, target) }
+                                val labelResult = if (target == "en") Result.success(definition.label) else runCatching { provider.translate(definition.label, "en", target) }
                                 labelResult.onSuccess { translationValues["$target|label:$key"] = it }.onFailure { failed++ }
+                                if (sourceLanguage != "en") {
+                                    val sourceLabelResult = runCatching { provider.translate(definition.label, "en", sourceLanguage) }
+                                    sourceLabelResult.onSuccess { translationValues["$sourceLanguage|label:$key"] = it }.onFailure { failed++ }
+                                }
                             }
                         }
                         translating = false
