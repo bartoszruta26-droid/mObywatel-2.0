@@ -289,7 +289,7 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
-    fun attachmentImportRejectsIdsOwnedByAnotherDocumentButAllowsSameDocumentRetry() {
+    fun attachmentOwnershipValidationRejectsCrossDocumentReuseAndAllowsSameDocumentRetry() {
         val owners = mapOf("attachment-1" to "medical-certificate-1")
         validateOriginalAttachmentIdOwner("attachment-1", "medical-certificate-1", owners)
         validateOriginalAttachmentIdOwner("attachment-2", "medical-certificate-2", owners)
