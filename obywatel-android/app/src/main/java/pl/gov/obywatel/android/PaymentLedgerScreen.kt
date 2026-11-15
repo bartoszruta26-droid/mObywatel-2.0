@@ -955,6 +955,10 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Notowania i wycena", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(6.dp))
+                pl.gov.obywatel.android.financial.PriceHistoryChartCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
                 pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
                     modifier = Modifier.fillMaxWidth()
                 )
