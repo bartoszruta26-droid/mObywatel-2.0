@@ -525,3 +525,20 @@ Dodano kontrolę integralności migawki: dokładnie 178 wpisów bieżącej List 
 ### Korekta zgodności precyzji dla kodów funduszy
 
 Przegląd testu konwertera wykazał, że niektóre pozycje List One oznaczone jako fundusze (np. CLF) mają określony wykładnik jednostki mniejszej, wykorzystywany przez dotychczasową logikę precyzji. Katalog zachowuje więc te pozycje w `all` i w `find()` dla poprawnej precyzji, natomiast `paymentCurrencies` oraz podpowiedzi wyszukiwania wykluczają fundusze z typowego wyboru walut płatniczych. Dodano regresję dla CLF i filtrowania BOV.
+
+
+## Etap 77 — poprawki po pierwszym uruchomieniu testów emulatorowych
+
+### Wynik analizy CI
+
+Testy JVM zakończyły się powodzeniem. Pierwsze testy instrumentacyjne ujawniły cztery niepowodzenia: dwa asercje daty w DatePicker używały zbyt ścisłego dopasowania tekstu w drzewie semantyki Compose, a dwa testy historii przeliczeń wykazały utratę skali dziesiętnej (np. 100.000 zapisywane jako 100) przez stripTrailingZeros() w warstwie SQLite.
+
+### Wykonane poprawki
+
+1. Historia przeliczeń zapisuje kwoty i kurs przez BigDecimal.toPlainString(), bez usuwania końcowych zer. Zachowuje to również skalę reprezentacji dziesiętnej, przydatną do wiernego odtworzenia danych i prezentacji.
+2. Testy wyboru dnia w DatePicker używają dopasowania fragmentu tekstu, aby nie zakładać konkretnego podziału węzłów semantycznych.
+3. Nie zmieniono sposobu obliczania kursów ani zaokrąglania wyników konwersji.
+
+### Status
+
+Poprawki zapisano w gałęzi feature/payment-ledger-stage-1. Nowe testy emulatorowe dla końcowego SHA są wymagane. Poprzedni przebieg wykazał 104/108 testów zakończonych bez błędu; 4 niepowodzenia zostały zdiagnozowane. Kompilacja debug i testy JVM przeszły. PR #68 pozostaje otwarty i niescalony.
