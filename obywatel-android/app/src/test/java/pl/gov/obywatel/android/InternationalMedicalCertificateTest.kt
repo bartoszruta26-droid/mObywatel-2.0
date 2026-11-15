@@ -102,4 +102,39 @@ class InternationalMedicalCertificateTest {
         assertFalse(isValidMedicalStudyDate("15-11-2026"))
         assertFalse(isValidMedicalStudyDate("2026-11-15extra"))
     }
+
+    @Test
+    fun imagingStudiesPreserveEveryFieldAcrossJsonRoundTrip() {
+        val original = listOf(
+            MedicalImagingStudy(
+                id = "study-mri-001",
+                modality = MedicalImagingModality.MRI,
+                bodyRegion = "Lumbar spine",
+                studyDate = "2026-11-15",
+                facility = "Regional Imaging Centre",
+                indication = "Persistent lower back pain",
+                technique = "T1/T2 sagittal and axial sequences",
+                contrast = "Gadolinium",
+                findings = "L4-L5 disc protrusion",
+                impression = "Degenerative changes",
+                radiologistName = "Dr Example",
+                reportNumber = "MRI-2026-001",
+                attachmentIds = listOf("report-001", "image-002")
+            ),
+            MedicalImagingStudy(
+                id = "study-xray-002",
+                modality = MedicalImagingModality.X_RAY,
+                bodyRegion = "Chest",
+                studyDate = "",
+                facility = "Clinic",
+                indication = "Baseline examination",
+                findings = "No focal opacity",
+                impression = "No acute findings"
+            )
+        )
+
+        val restored = decodeMedicalImagingStudies(encodeMedicalImagingStudies(original))
+        assertEquals(original, restored)
+    }
+
 }
