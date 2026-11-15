@@ -1065,9 +1065,10 @@ private val armedServiceDocumentIds = setOf(
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to if (id == "identity" || id == "receipts") "dashboard" else "hidden"
+    id to if (id in setOf("identity", "receipts", INTERNATIONAL_MEDICAL_CERTIFICATE_ID)) "dashboard" else "hidden"
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
+private const val INTERNATIONAL_MEDICAL_CERTIFICATE_VISIBILITY_MIGRATION_KEY = "international_medical_certificate_dashboard_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
 private const val ARMED_SERVICE_DASHBOARD_CLEANUP_MIGRATION_KEY = "armed_service_dashboard_cleanup_v1"
 private const val DOCUMENT_CARD_STYLE_KEY = "document_card_style"
@@ -1167,6 +1168,21 @@ private fun loadDocumentPlacements(context: Context): Map<String, String> {
         }
         editor.putBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, true)
         check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności dokumentów." }
+    }
+    if (!prefs.getBoolean(INTERNATIONAL_MEDICAL_CERTIFICATE_VISIBILITY_MIGRATION_KEY, false)) {
+        // Nowy formularz medyczny ma być od razu dostępny z ekranu głównego.
+        // Wcześniejsza migracja katalogu mogła zapisać go jako ukryty, zanim
+        // kafelek został dodany; dlatego wykonujemy jednorazową migrację tylko
+        // dla tego nowego dokumentu.
+        val key = DOCUMENT_DISPLAY_KEY_PREFIX + INTERNATIONAL_MEDICAL_CERTIFICATE_ID
+        if (prefs.getString(key, null) == null || prefs.getString(key, null) == "hidden") {
+            check(prefs.edit().putString(key, "dashboard").commit()) {
+                "Nie udało się udostępnić kafelka zaświadczenia medycznego."
+            }
+        }
+        check(prefs.edit().putBoolean(INTERNATIONAL_MEDICAL_CERTIFICATE_VISIBILITY_MIGRATION_KEY, true).commit()) {
+            "Nie udało się zapisać migracji widoczności zaświadczenia medycznego."
+        }
     }
     if (!prefs.getBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, false)) {
         // Dodanie grupy do katalogu nie oznacza zgody na publikację jej kafelków.
