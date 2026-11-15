@@ -1520,3 +1520,40 @@ Data: 2026-11-15. Gałąź: `feature/medical-certificate-management-translation`
 6. Brak publicznego odczytu rozmiaru modeli jest komunikowany użytkownikowi bez prezentowania fikcyjnych danych.
 
 **Status:** implementacja dodana do PR #71; oczekuje na pełną weryfikację CI i emulatora.
+
+
+---
+
+## 57. Kontynuacja audytu — panel modeli i katalog lekarzy — 2026-11-15
+
+### Ponowna kontrola PR i CI
+- [x] PR #71 pozostaje otwarty; gałąź: `feature/medical-certificate-management-translation`.
+- [x] Dla aktualnego punktu kontrolnego `ee7086b2436900947293aebf6c9b423e92bab4cb` testy jednostkowe Androida zakończyły się powodzeniem.
+- [x] Kontrola REUSE zakończyła się powodzeniem.
+- [ ] Testy Compose na emulatorze pozostają w toku w chwili sporządzenia wpisu.
+- [ ] Archiwizacja raportów instrumentacyjnych, budowa APK, suma kontrolna i publikacja APK są krokami oczekującymi; nie uznawać ich za wykonane.
+
+### Ponowna inspekcja panelu modeli
+- [x] Potwierdzono użycie `RemoteModelManager` do pobierania, listowania i usuwania modeli ML Kit.
+- [x] Potwierdzono zapis przełączników automatycznego pobierania i Wi-Fi w lokalnych preferencjach.
+- [x] Potwierdzono, że provider tłumaczenia sprawdza obecność modelu źródłowego i docelowego przed tłumaczeniem.
+- [ ] Dodać testy jednostkowe logiki ustawień: wartości domyślne, trwałość przełączników oraz zachowanie po wyłączeniu automatycznego pobierania.
+- [ ] Dodać testy instrumentacyjne ścieżek pobierania i usuwania modelu, z kontrolą błędu sieci, braku Wi-Fi oraz ponownego odświeżenia statusu.
+- [ ] Wprowadzić jawny stan błędu odczytu listy modeli. Aktualny ekran ustawia komunikat błędu, ale lista nadal może prezentować modele jako „Brak modelu”; należy odróżnić błąd odczytu od rzeczywistego braku modelu.
+- [ ] Uzupełnić statusy operacji o anulowanie/niepowodzenie i zapewnić blokadę powtórnego uruchomienia tej samej operacji.
+- [ ] Rozmiar: ML Kit Translation używa dynamicznego pobierania modeli. Publiczny `RemoteModelManager` nie udostępnia rozmiaru modelu; nie pokazywać wartości szacunkowych jako faktycznych. Ewentualny pomiar zajętości katalogu aplikacji wymaga osobnego, wspieranego i testowalnego rozwiązania, bez zakładania niepublicznych ścieżek Usług Google Play.
+
+### Katalog lekarzy i podpis dokumentu — wymagania bezpieczeństwa
+- [x] Dodano specyfikację w komentarzu PR: dane lekarza są oddzielone od procesu podpisu.
+- [ ] Nie dodawać prawdziwych osób znalezionych w internecie do produkcyjnego katalogu bez udokumentowanej zgody, potwierdzenia aktualnych uprawnień i prawa do użycia danych.
+- [ ] Nie generować podpisu ani nie ustawiać statusu „podpisany” po samym wyborze lekarza.
+- [ ] Katalog ma być zarządzany przez upoważnioną placówkę/użytkownika; pola: imię, nazwisko, tytuł zawodowy, stopień/tytuł naukowy (opcjonalnie), specjalizacja, kraj/jurysdykcja, miejsce praktyki, publiczne dane kontaktowe, identyfikator rejestracyjny, źródło i data weryfikacji.
+- [ ] Weryfikować osobno prawo wykonywania zawodu w kraju praktyki oraz ewentualne uprawnienia do wystawiania dokumentów w kraju, w którym dokument będzie używany.
+- [ ] Podpis ma być oddzielnym, audytowalnym krokiem (np. podpis kwalifikowany lub inny prawnie właściwy mechanizm), z zachowaniem danych walidacyjnych.
+- [ ] Do testów używać wyłącznie jawnie fikcyjnych rekordów oznaczonych „DANE TESTOWE — NIEPRAWIDŁOWE DO PODPISU”.
+
+### Ważne rozróżnienie dotyczące ML Kit
+Dokumentacja Google opisuje tłumaczenie ML Kit jako funkcję z modelami pobieranymi dynamicznie; zarządzanie nimi obejmuje pobieranie, aktualizowanie i usuwanie. Dane kliniczne pozostają przetwarzane lokalnie po pobraniu modelu, natomiast same modele są dostarczane z infrastruktury Google. Źródło: https://developers.google.com/ml-kit/tips/installation-paths?hl=pl
+
+### Status etapu
+**Audyt zaktualizowany.** Kod panelu istnieje, ale nie jest jeszcze odbierany jako kompletny: potrzebne są testy ustawień i operacji modelu, jawny stan błędu odczytu oraz zakończony CI. Katalog lekarzy pozostaje specyfikacją — nie dodano żadnych rzeczywistych osób ani podpisów.
