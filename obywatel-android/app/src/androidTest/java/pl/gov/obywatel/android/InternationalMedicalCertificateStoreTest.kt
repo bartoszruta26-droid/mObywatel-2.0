@@ -60,6 +60,23 @@ class InternationalMedicalCertificateStoreTest {
     }
 
     @Test
+    fun loadDoesNotConvertCorruptedEncryptedDataIntoAnEmptyRecord() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val file = File(context.noBackupFilesDir, "international_medical_certificate.enc")
+        val existed = file.isFile
+        if (!existed) InternationalMedicalCertificateStore.save(context, emptyMap())
+        val original = file.readBytes()
+        try {
+            val corrupted = original.copyOf().also { it[it.lastIndex] = (it.last().toInt() xor 0x01).toByte() }
+            file.writeBytes(corrupted)
+
+            assertTrue(runCatching { InternationalMedicalCertificateStore.load(context) }.isFailure)
+        } finally {
+            if (existed) file.writeBytes(original) else file.delete()
+        }
+    }
+
+    @Test
     fun encryptedStoreRoundTripsAndAtomicallyOverwritesValues() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val original = InternationalMedicalCertificateStore.loadStrict(context)
