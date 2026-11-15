@@ -183,7 +183,7 @@ internal fun writeOriginalAttachmentStagingFile(staging: File, encryptedBytes: B
     }
 }
 
-private data class OriginalAttachment(val id: String, val name: String, val mime: String)
+internal data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
 internal interface OriginalAttachmentMetadataBackend {
     val all: Map<String, *>
