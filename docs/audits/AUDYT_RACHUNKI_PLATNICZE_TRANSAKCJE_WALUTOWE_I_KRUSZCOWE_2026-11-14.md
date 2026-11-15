@@ -3047,3 +3047,6 @@ Zmiany źródłowe i testy zostały przygotowane do zapisania na `feature/paymen
 - Otwieranie zależy od zainstalowanej aplikacji obsługującej dany MIME; brak takiej aplikacji ma zostać przedstawiony użytkownikowi jako błąd otwarcia, bez ujawniania pliku.
 - Należy wykonać ręczny test PDF/JPEG/PNG na emulatorze i urządzeniu.
 - Następny etap: raport darowizn PDF/CSV z osobnymi sumami przyjętymi, pozostającymi w przechowaniu i faktycznie przekazanymi; nie łączyć tych kategorii w jedną wartość.
+
+
+**Kontrola przed CI — korekta dostępu do kontekstu repozytorium:** w przeglądzie przygotowanej zmiany wykryto, że identyfikator pakietu FileProvider odwoływał się bezpośrednio do parametru konstruktora wewnątrz metody instancyjnej. Przeniesiono aplikacyjny Context i wyliczony authority do właściwości klasy, a bazę i magazyn załączników podłączono do tego samego `applicationContext`. Korekta została zapisana przed końcową walidacją; wynik CI musi dotyczyć rewizji po tej korekcie.
