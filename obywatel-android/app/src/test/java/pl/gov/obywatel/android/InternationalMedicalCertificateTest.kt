@@ -160,6 +160,23 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun attachmentMetadataValidatorRejectsDuplicateOrInvalidRecords() {
+        val valid = """[{"id":"attachment-1","name":"report.pdf","mime":"application/pdf"}]"""
+        validateOriginalAttachmentMetadata(valid)
+        val invalidRecords = listOf(
+            """[{"id":"../escape","name":"report.pdf","mime":"application/pdf"}]""",
+            """[{"id":"same","name":"a.pdf","mime":"application/pdf"},{"id":"same","name":"b.pdf","mime":"application/pdf"}]""",
+            """[{"id":"valid","name":"report.html","mime":"text/html"}]""",
+            """[{"id":"valid","name":"","mime":"application/pdf"}]"""
+        )
+        invalidRecords.forEach { raw ->
+            assertTrue("Expected invalid metadata rejection: $raw", runCatching {
+                validateOriginalAttachmentMetadata(raw)
+            }.isFailure)
+        }
+    }
+
+    @Test
     fun attachmentPayloadValidatorAcceptsSupportedFileSignatures() {
         validateOriginalAttachmentPayload("application/pdf", "%PDF-1.7".toByteArray(Charsets.US_ASCII))
         validateOriginalAttachmentPayload("image/jpeg", byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 0x00))
