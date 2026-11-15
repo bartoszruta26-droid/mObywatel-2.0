@@ -3594,7 +3594,7 @@ private fun SettingsMenuScreen(
         ProfileActionCard(
             "Języki i tłumaczenia",
             "Zarządzaj modelami tłumaczeń, automatycznym pobieraniem i użyciem Wi-Fi",
-            Icons.Filled.Language,
+            Icons.Filled.Settings,
             onManageTranslationLanguages
         )
         ProfileActionCard(
