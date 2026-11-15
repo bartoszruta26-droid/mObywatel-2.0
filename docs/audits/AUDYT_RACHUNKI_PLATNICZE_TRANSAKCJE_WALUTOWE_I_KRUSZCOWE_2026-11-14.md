@@ -4507,3 +4507,8 @@ Usunięto niejawne ograniczenie do 1000 rekordów z operacji archiwalnych. Metod
 ## Etap 90 — wersjonowany katalog ISO 4217
 
 Dodano migawkę List One SIX (2026-09-17, 178 wpisów) i List Three (2026-01-01, 137 wpisów), kod numeryczny, jednostki mniejsze, rozróżnienie funduszy i daty wycofania. Katalog walut płatniczych odrzuca fundusze i kody specjalne bez jednostki mniejszej; kody historyczne są dostępne osobno i nie nadpisują aktywnych kodów o tym samym identyfikatorze. Nazwy lokalne i symbole pochodzą z Androida, z kontrolowanym zapasowym użyciem nazwy źródłowej/kodu. Testy dodane; CI dla końcowego SHA oczekuje na zakończenie.
+
+
+### Etap 90 — uzupełnienie kontroli danych
+
+Testy katalogu weryfikują teraz także liczebność migawek SIX (178 bieżących i 137 historycznych), format kodów ISO, wykładniki jednostek mniejszych oraz daty wycofania. Kontrole CI dla najnowszego commitu są uruchomione; nie uznaję kompilacji i testów emulatorowych za zakończone do czasu ich wyniku.
