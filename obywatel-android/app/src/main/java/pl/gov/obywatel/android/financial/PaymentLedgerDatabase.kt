@@ -704,7 +704,7 @@ class PaymentLedgerDatabase(
                     }
                 }
             }
-            val existingConversions = readCurrencyConversions(1000).associateBy { it.id }
+            val existingConversions = readAllCurrencyConversions().associateBy { it.id }
             var importedConversions = 0
             uniqueConversions.values.forEach { incoming ->
                 val existing = existingConversions[incoming.id]
@@ -991,8 +991,20 @@ class PaymentLedgerDatabase(
         writableDatabase.insertOrThrow("currency_conversion_history", null, values)
     }
 
+    /** Historia dla widoku użytkownika; limit chroni interfejs przed nieograniczonym odczytem. */
     fun readCurrencyConversions(limit: Int = 100): List<CurrencyConversionRecord> {
         require(limit in 1..1000) { "Limit historii musi mieścić się w zakresie 1–1000." }
+        return readCurrencyConversionsInternal(limit.toString())
+    }
+
+    /**
+     * Pełna historia do archiwizacji, deduplikacji i kontroli integralności.
+     * Ta metoda celowo nie stosuje limitu prezentacyjnego.
+     */
+    fun readAllCurrencyConversions(): List<CurrencyConversionRecord> =
+        readCurrencyConversionsInternal(null)
+
+    private fun readCurrencyConversionsInternal(limit: String?): List<CurrencyConversionRecord> {
         val result = mutableListOf<CurrencyConversionRecord>()
         readableDatabase.query(
             "currency_conversion_history",
@@ -1000,7 +1012,7 @@ class PaymentLedgerDatabase(
                 "conversion_id", "converted_at", "source_amount", "source_currency_code",
                 "target_amount", "target_currency_code", "applied_rate", "rate_date", "rate_source"
             ),
-            null, null, null, null, "converted_at DESC, conversion_id DESC", limit.toString()
+            null, null, null, null, "converted_at DESC, conversion_id DESC", limit
         ).use { cursor ->
             while (cursor.moveToNext()) {
                 result += CurrencyConversionRecord(
