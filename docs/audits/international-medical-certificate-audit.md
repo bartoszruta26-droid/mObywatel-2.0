@@ -478,3 +478,25 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Tłumaczenia pozostają nieaktywne do czasu wdrożenia dostawcy, jawnej zgody na przekazanie danych i rejestru tłumaczeń.
 
 **Status etapu 19:** zmiana kodu i testów została zapisana. Nie uznaje się jej za zweryfikowaną przez CI, dopóki workflow dla najnowszego SHA nie zakończy się powodzeniem. PR #69 pozostaje otwarty, Draft/WIP i niescalony.
+
+
+---
+
+## 20. Zakończenie walidacji CI i test pełnego odtwarzania badań — 2026-11-15
+
+### Wynik wcześniejszego workflow
+- [x] Workflow Android GUI dla SHA `14c9ab7651b8cbe4c932d74baaeb75af01bb3db0` zakończył się statusem `completed / success`.
+- [x] Testy jednostkowe, testy Compose na emulatorze i kroki budowania/archiwizacji APK w tym workflow zakończyły się powodzeniem.
+- [x] PR #69 pozostaje otwarty, Draft/WIP i niescalony.
+
+### Wykonany następny etap — round-trip JSON
+- [x] Udostępniono funkcje kodowania i dekodowania badań obrazowych w zakresie `internal`, aby testy modułu mogły sprawdzać rzeczywistą serializację.
+- [x] Dodano test wieloelementowej listy badań, porównujący obiekty przed i po cyklu JSON encode/decode.
+- [x] Test obejmuje modalność, identyfikator, lokalizację anatomiczną, datę, placówkę, wskazanie, technikę, kontrast, opis, wnioski, radiologa, numer raportu oraz listę identyfikatorów załączników; sprawdza także puste pola i pustą listę załączników.
+
+### Weryfikacja
+- [x] Potwierdzono wynik sukcesu workflow poprzedniego SHA `14c9ab7651b8cbe4c932d74baaeb75af01bb3db0`.
+- [ ] Nowy test round-trip wymaga uruchomienia testów JVM, kompilacji APK i emulatora dla nowego commitu; nie należy przypisywać mu wyniku poprzedniego workflow.
+- [ ] Następny zakres: import załączników do rekordu badania z trwałym powiązaniem ID, kontrolą MIME/rozmiaru i szyfrowaniem; następnie osobne skany podpisów i pieczęci.
+
+**Status:** walidacja wcześniejszego etapu 19 zakończona powodzeniem. Test round-trip dodany do kodu i oczekuje na CI. PR #69 nadal pozostaje otwarty i niescalony.
