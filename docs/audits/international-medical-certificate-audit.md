@@ -611,3 +611,31 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [x] Poprzedni SHA `cf319727315712a9bff3c7dbf2b6117bed56c959`: Android prototype build zakończony powodzeniem; Android GUI validation anulowano przy aktualizacji gałęzi, więc nie stanowi potwierdzenia testów Compose dla tego SHA.
 
 **Status:** import przebudowano na walidację całego archiwum i etapowe zatwierdzanie danych. Kontrola źródła zakończona; wynik CI dla tej zmiany oczekuje na zakończenie workflow. PR #69 pozostaje otwarty, Draft i niescalony.
+---
+
+## 25. Ścisła walidacja MIME i limity archiwum załączników — 2026-11-15
+
+### Wykonane zmiany
+- [x] Ujednolicono walidację danych wejściowych dla dodawania i importu załączników przez wspólną funkcję validatePayload.
+- [x] Zastąpiono ogólne dopuszczenie dowolnego image/* i text/* ścisłą listą typów: PDF, JPEG, PNG, WebP, text/plain, text/csv i application/xml.
+- [x] Dodano kontrolę sygnatur bajtowych PDF (%PDF-), JPEG, PNG i WebP. Plik deklarujący obrazowy MIME, ale zawierający inną zawartość, jest odrzucany.
+- [x] Zachowano dotychczasowe formaty tekstowe mapowane przez selektor plików; nadal blokowane są deklaracje DTD/ENTITY w próbce pierwszych 4096 bajtów.
+- [x] Dodano limit archiwum: 50 MiB łącznej zawartości, maksymalnie 200 wpisów i kontrolę długości wejściowego Base64 przed dekodowaniem.
+- [x] Limit 25 MiB na pojedynczy załącznik pozostaje bez zmian.
+- [x] Zmiany zapisano w commicie a8435c1a9c50c5af1ef8ee454108100bbc5636ef.
+- [x] Ponownie odczytano źródło z GitHub; potwierdzono obecność wspólnego walidatora, kontroli sygnatur oraz limitów archiwum.
+
+### Weryfikacja CI
+- [x] Dla poprzedniego SHA 08f665d3c23acdc56f726123ab2b845c7056c779 workflow Android prototype build zakończył się powodzeniem: JVM unit tests, assembleDebug i przesłanie APK — PASS.
+- [x] Dla tego samego poprzedniego SHA REUSE compliance — PASS.
+- [ ] Android GUI validation dla poprzedniego SHA pozostawało w toku; testy JVM zakończyły się powodzeniem, testy Compose na emulatorze były uruchomione.
+- [ ] Dla nowego SHA a8435c1a9c50c5af1ef8ee454108100bbc5636ef REUSE compliance jest w kolejce, a Android GUI validation oczekuje na wykonanie. Nie ma jeszcze wyniku testów ani kompilacji dla tej zmiany.
+
+### Pozostałe ryzyka i zadania
+- [ ] Dodać testy jednostkowe czystej funkcji walidującej MIME i sygnatury: poprawne i błędne nagłówki PDF/JPEG/PNG/WebP, nieobsługiwane typy oraz granice rozmiaru.
+- [ ] Dodać testy importu archiwum obejmujące limit 200 wpisów, 50 MiB, wadliwe Base64, konflikt ID, duplikaty oraz rollback.
+- [ ] Dodać dziennik transakcji i odzyskiwanie po nagłym przerwaniu procesu pomiędzy instalacją plików a zatwierdzeniem metadanych.
+- [ ] Zweryfikować eksport/import na dwóch instalacjach Androida i po restarcie urządzenia.
+- [ ] Weryfikacja sygnatur obrazów potwierdza format kontenera, ale nie zastępuje pełnego dekodowania obrazu ani kontroli jego wymiarów/dekompresji.
+
+**Status:** ścisłe mapowanie MIME, kontrola sygnatur i limity archiwum zostały zaimplementowane oraz potwierdzone ponownym odczytem pliku. Nie są jeszcze zaliczone przez CI. PR #69 pozostaje otwarty, Draft/WIP i niescalony.
