@@ -481,6 +481,51 @@ class OriginalAttachmentStoreIntegrityTest {
     }
 
 
+
+    @Test
+    fun concurrentAddsWithSameAttachmentIdCommitExactlyOneOwner() {
+        val firstDocument = documentId()
+        val secondDocument = documentId()
+        val attachmentId = "parallel-owner-" + UUID.randomUUID().toString().take(8)
+        val backend = FailingMetadataBackend()
+        val start = CountDownLatch(1)
+        val executor = Executors.newFixedThreadPool(2)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments")
+        try {
+            val first = executor.submit {
+                start.await()
+                runCatching {
+                    OriginalAttachmentStore.add(
+                        context, firstDocument, "first.txt", "text/plain", "first".toByteArray(),
+                        attachmentId, backend
+                    )
+                }.isSuccess
+            }
+            val second = executor.submit {
+                start.await()
+                runCatching {
+                    OriginalAttachmentStore.add(
+                        context, secondDocument, "second.txt", "text/plain", "second".toByteArray(),
+                        attachmentId, backend
+                    )
+                }.isSuccess
+            }
+            start.countDown()
+
+            val successes = listOf(first.get(), second.get()).count { it }
+            assertEquals(1, successes)
+            val firstOwns = OriginalAttachmentStore.list(context, firstDocument, backend).any { it.id == attachmentId }
+            val secondOwns = OriginalAttachmentStore.list(context, secondDocument, backend).any { it.id == attachmentId }
+            assertTrue(firstOwns.xor(secondOwns))
+            assertTrue(File(directory, "$attachmentId.enc").isFile)
+        } finally {
+            executor.shutdownNow()
+            runCatching { OriginalAttachmentStore.removeDocument(context, firstDocument, backend) }
+            runCatching { OriginalAttachmentStore.removeDocument(context, secondDocument, backend) }
+            File(directory, "$attachmentId.enc").delete()
+        }
+    }
+
     @Test
     fun productionSharedPreferencesBackendPersistsAcrossFreshAdapterInstances() {
         val preferencesName = "attachment_backend_test_${UUID.randomUUID()}"
