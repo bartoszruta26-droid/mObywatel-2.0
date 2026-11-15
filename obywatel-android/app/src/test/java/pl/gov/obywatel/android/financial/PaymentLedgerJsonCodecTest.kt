@@ -144,8 +144,8 @@ class PaymentLedgerJsonCodecTest {
     @Test
     fun schemaTwoArchiveRemainsReadableWithoutConversionHistory() {
         val json = PaymentLedgerJsonCodec.encode(listOf(sample))
-            .replace("\\"schemaVersion\\":3", "\\"schemaVersion\\":2")
-            .replace(",\\"currencyConversions\\":[]", "")
+            .replace("\"schemaVersion\":3", "\"schemaVersion\":2")
+            .replace(",\"currencyConversions\":[]", "")
         val archive = PaymentLedgerJsonCodec.decodeArchive(json)
         assertEquals(1, archive.entries.size)
         assertEquals(0, archive.currencyConversions.size)
