@@ -3281,3 +3281,52 @@ Zmieniono tworzenie potoku na `ParcelFileDescriptor.createReliablePipe()`. Jest 
 
 Korekta jest zapisana, ale nie jest jeszcze zweryfikowana. Należy wykonać pełne Android GUI validation i potwierdzić, że wskazany test przechodzi oraz że cały zestaw instrumentacyjny kończy się bez błędów. Do tego czasu nie oznaczać etapu 2Q.4 jako zamkniętego i nie rozpoczynać raportów PDF/CSV na podstawie niezweryfikowanego założenia o sprzątaniu plików po błędzie odczytu.
 
+## 54.10. Zamknięcie walidacji testu kontrolowanego błędu strumienia (15 listopada 2026 r.)
+
+Pełny przebieg Android GUI validation dla commitu audytu `932e034516bcb02e3d932f1e967e566633b972f1` zakończył się sukcesem (run `43699744020`). Job `132768066976` zakończył się sukcesem; kroki testów JVM, Compose UI na emulatorze, archiwizacji raportów instrumentacyjnych i budowy debug APK zakończyły się sukcesem. Repository compliance (run `43699744057`) oraz Android prototype build (run `43699744016`) również zakończyły się sukcesem.
+
+Pobrany artefakt `android-instrumentation-reports` (ID `14156032877`) zawiera raport XML z zestawem 80 testów, 0 błędów, 0 awarii i 0 pominiętych przypadków. W raporcie test `DonationAttachmentStorageTest.importDeletesPartialFileWhenProviderFailsAfterWritingBytes` występuje jako zaliczony (bez elementu `failure`).
+
+Wynik potwierdza korektę Java providera i użycie `ParcelFileDescriptor.createReliablePipe()` do przekazania błędu przez `closeWithError()`. Etap 2Q.4 — kontrolowany błąd odczytu w trakcie importu i sprzątanie częściowego pliku — uznaje się za **zweryfikowany**. Nie jest to jednak test rzeczywistego zewnętrznego dostawcy dokumentów ani test na fizycznym urządzeniu.
+
+## 55. Raportowanie finansowe — model raportu, CSV i eksport SAF (15 listopada 2026 r.)
+
+### Zakres implementacji
+
+Dodano:
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/FinancialReport.kt` — okres raportu z granicą początkową włącznie i końcową wyłącznie, agregaty aktywów, agregaty darowizn, wiersze zdarzeń i generator CSV;
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/PaymentLedgerRepository.kt` — metodę `exportFinancialReportCsv(period)`, odczytującą transakcje, darowizny i słownik aktywów na `Dispatchers.IO`;
+- `obywatel-android/app/src/main/java/pl/gov/obywatel/android/PaymentLedgerScreen.kt` — przycisk eksportu całej historii przez Storage Access Framework (`CreateDocument`, MIME `text/csv`), zapis UTF-8 do lokalizacji wybranej przez użytkownika;
+- `obywatel-android/app/src/test/java/pl/gov/obywatel/android/financial/FinancialReportTest.kt` — testy czystego modelu raportowego i CSV.
+
+### Zasady księgowe i zakres danych
+
+1. Kwoty pozostają typu `BigDecimal`; nie ma konwersji do `Double` ani sumowania różnych walut/kruszców.
+2. Każdy kod aktywa ma oddzielny agregat, a jednostka kruszcu pochodzi ze słownika aktywów (np. g); brak kursu oznacza brak przeliczenia do wspólnej waluty.
+3. Transakcja tworzy osobne zdarzenia strony oddanej, otrzymanej i prowizji. Prowizja może dotyczyć trzeciego aktywa i jest ujmowana jako odrębny koszt.
+4. Wpisy wyciągu bankowego są pomijane w agregacji raportu transakcji, ponieważ mogą być powiązane z transakcją i ponowne dodanie ich kwot groziłoby podwójnym liczeniem.
+5. Darowizna jest odrębnym rejestrem. Przyjęcie trafia do okresu według `receivedAt`, a przekazanie według `transferredAt`; transfery z darowizn przyjętych wcześniej są zatem widoczne w okresie przekazania.
+6. Agregaty darowizn rozdzielają przyjęte, przekazane, przechowywane, gotówkę pozostającą w dyspozycji, środki wpłacone na rachunek i kwoty wymagające weryfikacji. Kategorie przechowywania/weryfikacji odzwierciedlają bieżący status rekordów darowizn przy generowaniu raportu, a nie historyczny stan na koniec przeszłego okresu — model nie przechowuje historii zmian statusów.
+7. CSV ma separator średnikowy, wszystkie pola w cudzysłowie, podwajanie cudzysłowów, UTF-8 BOM i ochronę tekstowych komórek zaczynających się (także po białych znakach) od `=`, `+`, `-`, `@`, tabulatora lub CR. Pola kwotowe pozostają polami liczbowymi, nie są prefiksowane apostrofem.
+8. CSV zawiera podsumowania aktywów (przychody, rozchody, prowizje, zmiana netto), podsumowania darowizn oraz szczegółowe zdarzenia. Eksport z ekranu obejmuje całą historię.
+
+### Testy i status walidacji
+
+Testy `FinancialReportTest` obejmują:
+- rozdzielenie USD, CHF, PLN i złota w gramach;
+- dokładność dziesiętną oraz oddzielne ujęcie prowizji;
+- kwoty przyjęte, przekazane, przechowywane, wpłacone i wymagające weryfikacji;
+- raportowanie przekazania według daty przekazania, także dla darowizny przyjętej przed okresem;
+- przedział `[fromInclusive, toExclusive)`;
+- UTF-8 BOM, quoting, ochronę tekstu przed formułami i zachowanie precyzji kwoty;
+- odrzucenie nieprawidłowego okresu.
+
+Pierwszy przebieg dla kodu raportowego (run `43700475571`) zakończył się sukcesem testów JVM i budowy prototypu. Przebieg GUI dla tego commitu został przerwany przez kolejne aktualizacje plików, zanim zakończyły się testy emulatora. Po dodaniu podsumowań CSV, przycisku SAF i końcowych asercji testowych uruchomiono pełne CI dla aktualnego drzewa; jego końcowy wynik należy potwierdzić przed uznaniem etapu 55 za zamknięty.
+
+### Ograniczenia i następny etap
+
+- Nie dodano jeszcze raportu PDF.
+- Eksport CSV jest dostępny z ekranu jako raport całej historii; wybór własnego zakresu dat będzie osobnym usprawnieniem.
+- Status przechowywania jest stanem bieżącym, ponieważ schemat nie przechowuje historii statusów.
+- Raport nie wycenia aktywów w PLN ani nie wylicza zysku/straty bez jawnych kursów i kosztów nabycia.
+- Przed wdrożeniem PDF należy dodać testy renderowania i wielostronicowego układu, a dla CSV wykonać końcową walidację na aktualnym commicie.
