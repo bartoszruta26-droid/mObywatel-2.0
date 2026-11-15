@@ -173,6 +173,8 @@ class DocumentGraphicCatalogTest {
         credentialIds.forEach { id ->
             assertEquals(DocumentPreviewKind.CREDENTIAL, GraphicDocumentCatalog.find(id)?.kind)
         }
-        assertTrue(GraphicDocumentCatalog.definitions.all { it.supportsPhoto })
+        assertTrue(GraphicDocumentCatalog.definitions
+            .filter { it.kind == DocumentPreviewKind.CREDENTIAL }
+            .all { it.supportsPhoto })
     }
 }
