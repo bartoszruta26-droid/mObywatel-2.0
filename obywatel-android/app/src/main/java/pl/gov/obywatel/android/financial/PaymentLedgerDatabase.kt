@@ -556,9 +556,13 @@ class PaymentLedgerDatabase(
      * Importuje pełne archiwum atomowo: wpisy bankowe oraz transakcje i ich powiązania.
      * Każde powiązanie jest sprawdzane po zapisaniu (w tej samej transakcji) wpisów źródłowych.
      */
+    /** Importuje wszystkie typy danych archiwum w jednej transakcji SQLite. */
     fun importArchive(archive: PaymentLedgerJsonCodec.Archive): BatchImportSummary {
         require(archive.transactions.map { it.transaction.id }.distinct().size == archive.transactions.size) {
             "Archiwum zawiera powtórzone identyfikatory transakcji."
+        }
+        require(archive.donations.map { it.id }.distinct().size == archive.donations.size) {
+            "Archiwum zawiera powtórzone identyfikatory darowizn."
         }
         val db = writableDatabase
         db.beginTransaction()
@@ -571,106 +575,47 @@ class PaymentLedgerDatabase(
             archive.transactions.forEach { stored ->
                 saveFinancialTransaction(stored.transaction, stored.accountingEntryIds.toSet())
             }
+            var importedDonations = 0
+            archive.donations.forEach { donation ->
+                val exists = db.query(
+                    TABLE_CASH_DONATIONS,
+                    arrayOf("donation_id"),
+                    "donation_id = ?",
+                    arrayOf(donation.id),
+                    null, null, null
+                ).use { it.moveToFirst() }
+                if (!exists) {
+                    saveCashDonation(donation)
+                    importedDonations++
+                } else {
+                    val previous = db.query(
+                        TABLE_CASH_DONATIONS,
+                        arrayOf("received_at", "amount", "currency_code", "beneficiary_organization_name", "purpose"),
+                        "donation_id = ?",
+                        arrayOf(donation.id),
+                        null, null, null
+                    ).use { cursor ->
+                        require(cursor.moveToFirst())
+                        listOf(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4))
+                    }
+                    val same = previous == listOf(
+                        donation.receivedAt.toString(),
+                        donation.amount.stripTrailingZeros().toPlainString(),
+                        donation.currencyCode,
+                        donation.beneficiaryOrganizationName.trim(),
+                        donation.purpose.trim()
+                    )
+                    require(same) { "Konflikt identyfikatora darowizny ${donation.id}; dane wymagają weryfikacji." }
+                }
+            }
             db.setTransactionSuccessful()
             return BatchImportSummary(
-                inserted = inserted.inserted,
-                duplicates = inserted.duplicates + preview.duplicates.size
+                inserted = inserted.inserted + importedDonations,
+                duplicates = inserted.duplicates + preview.duplicates.size + (archive.donations.size - importedDonations)
             )
         } finally {
             db.endTransaction()
         }
-    }
-
-    /** Atomowo zapisuje darowiznę; ten sam identyfikator nie może zostać powielony. */
-    fun saveCashDonation(donation: pl.gov.obywatel.android.CashDonation) {
-        donation.validate()
-        val db = writableDatabase
-        val values = ContentValues().apply {
-            put("donation_id", donation.id)
-            put("received_at", donation.receivedAt.toString())
-            put("amount", donation.amount.stripTrailingZeros().toPlainString())
-            put("currency_code", donation.currencyCode)
-            put("beneficiary_organization_name", donation.beneficiaryOrganizationName.trim())
-            put("purpose", donation.purpose.trim())
-            put("donor_name", donation.donorName)
-            put("is_anonymous", if (donation.isAnonymous) 1 else 0)
-            put("campaign_name", donation.campaignName)
-            put("collected_by", donation.collectedBy)
-            put("receipt_number", donation.receiptNumber)
-            put("custody_status", donation.custodyStatus.name)
-            put("transferred_at", donation.transferredAt?.toString())
-            put("transferred_amount", donation.transferredAmount?.stripTrailingZeros()?.toPlainString())
-            put("note", donation.note)
-            put("source", donation.source.name)
-        }
-        db.insertOrThrow(TABLE_CASH_DONATIONS, null, values)
-    }
-
-    /** Aktualizuje darowiznę z zachowaniem jej identyfikatora. */
-    fun updateCashDonation(donation: pl.gov.obywatel.android.CashDonation) {
-        donation.validate()
-        val db = writableDatabase
-        val values = ContentValues().apply {
-            put("received_at", donation.receivedAt.toString())
-            put("amount", donation.amount.stripTrailingZeros().toPlainString())
-            put("currency_code", donation.currencyCode)
-            put("beneficiary_organization_name", donation.beneficiaryOrganizationName.trim())
-            put("purpose", donation.purpose.trim())
-            put("donor_name", donation.donorName)
-            put("is_anonymous", if (donation.isAnonymous) 1 else 0)
-            put("campaign_name", donation.campaignName)
-            put("collected_by", donation.collectedBy)
-            put("receipt_number", donation.receiptNumber)
-            put("custody_status", donation.custodyStatus.name)
-            put("transferred_at", donation.transferredAt?.toString())
-            put("transferred_amount", donation.transferredAmount?.stripTrailingZeros()?.toPlainString())
-            put("note", donation.note)
-            put("source", donation.source.name)
-        }
-        val changed = db.update(TABLE_CASH_DONATIONS, values, "donation_id = ?", arrayOf(donation.id))
-        check(changed == 1) { "Nie znaleziono darowizny do aktualizacji." }
-    }
-
-    fun readCashDonations(): List<pl.gov.obywatel.android.CashDonation> {
-        val result = mutableListOf<pl.gov.obywatel.android.CashDonation>()
-        readableDatabase.query(
-            TABLE_CASH_DONATIONS,
-            arrayOf(
-                "donation_id", "received_at", "amount", "currency_code",
-                "beneficiary_organization_name", "purpose", "donor_name",
-                "is_anonymous", "campaign_name", "collected_by", "receipt_number",
-                "custody_status", "transferred_at", "transferred_amount", "note", "source"
-            ),
-            null, null, null, null, "received_at ASC, donation_id ASC"
-        ).use { cursor ->
-            while (cursor.moveToNext()) {
-                result += pl.gov.obywatel.android.CashDonation(
-                    id = cursor.getString(0),
-                    receivedAt = java.time.Instant.parse(cursor.getString(1)),
-                    amount = java.math.BigDecimal(cursor.getString(2)),
-                    currencyCode = cursor.getString(3),
-                    beneficiaryOrganizationName = cursor.getString(4),
-                    purpose = cursor.getString(5),
-                    donorName = cursor.getString(6),
-                    isAnonymous = cursor.getInt(7) == 1,
-                    campaignName = cursor.getString(8),
-                    collectedBy = cursor.getString(9),
-                    receiptNumber = cursor.getString(10),
-                    custodyStatus = pl.gov.obywatel.android.DonationCustodyStatus.valueOf(cursor.getString(11)),
-                    transferredAt = cursor.getString(12)?.let { java.time.Instant.parse(it) },
-                    transferredAmount = cursor.getString(13)?.let { java.math.BigDecimal(it) },
-                    note = cursor.getString(14),
-                    source = pl.gov.obywatel.android.FinancialRecordSource.valueOf(cursor.getString(15))
-                ).also { it.validate() }
-            }
-        }
-        return result
-    }
-
-    fun deleteCashDonation(id: String) {
-        require(id.isNotBlank()) { "Identyfikator darowizny jest wymagany." }
-        val deleted = writableDatabase.delete(TABLE_CASH_DONATIONS, "donation_id = ?", arrayOf(id))
-        check(deleted == 1) { "Nie znaleziono darowizny do usunięcia." }
     }
 
     /** Odtwarza transakcje wraz z prowizjami i identyfikatorami źródłowych zapisów. */
