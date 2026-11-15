@@ -216,7 +216,7 @@ object FinancialReportCsv {
     }
 
     private fun quote(value: String, protectFormula: Boolean): String {
-        val safe = if (protectFormula && value.trimStart().firstOrNull() in setOf('=', '+', '-', '@', '\t', '\r')) {
+        val safe = if (protectFormula && (value.trimStart().firstOrNull()?.let { it in setOf('=', '+', '-', '@', '\t', '\r') } == true)) {
             "'$value"
         } else value
         return "${safe.replace("\"", "\"\"")}".let { "\"$it\"" }
