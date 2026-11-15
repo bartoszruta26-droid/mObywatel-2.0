@@ -269,3 +269,12 @@ Dodano testy parsera, konwersji, cache, zakresów i dat weekendowych. Adapter po
 Commity: `1187ebe17034dd974879cf91292e26d853ba5a48`, `16869a351b2de2fe8005e8e1d68fbd6b18d91e2c`, `48a344f9a907cb0c30b4725f902e7d6873e1b8fb`, `b7f3286d58c3ee288d84c351f853d8a0254bb2e2`, `47a4ba1c15a985b2832381b201ff93b6adbaa961`, `56100c390f0abe40ca3f2e0a696634a7aa7be346`, `a7ae350f7963bfc6e07bf8d5a3c76c2a49e39aac`.
 
 Następny etap: potwierdzenie zielonego CI, integracja adaptera NBP z kalkulatorem Compose i prezentacja źródła oraz daty kursu.
+
+
+## 83. Interfejs przelicznika NBP — 15 listopada 2026 r.
+
+Podłączono kartę `NbpCurrencyConverterCard` w panelu „Notowania i wycena” rejestru. Karta pobiera kursy średnie z tabel A/B w tle, pozwala wpisać kwotę, wybrać walutę źródłową i docelową, odwrócić parę i przeliczyć przez PLN. Wyświetla źródło i daty efektywne tabel oraz informację, że kurs NBP jest referencyjny. Obliczenia wydzielono do testowalnego `NbpCurrencyConverter`, z obsługą precyzji 0/2/3/4 miejsc dziesiętnych i testami par bezpośrednich, odwrotnych i krzyżowych. Po nieudanym odświeżeniu poprzednie kursy są czyszczone.
+
+Commity: `1c283e6cc3f08c84283769fc9eb55a1608365284`, `79fc28f4b22b1a3075d3bd9a14e451cfbafb16bb`, `6e6875776616e5644db90558d745f4a015da2df8`, `f341121b6e8b8ee0428b638ac530c501421d07fc`, `c31458233be669f3d9efeab14aeba614fc36d619`, `820940857524f4ece2717bebd49e31e5b1012068`, `7a06fbde78873ecb95ab62212906b3f375398c15`, `6689f3dfac64e546b42ec2469278ca6836f24db3`, `f38fc56742db09048c7266df2a29f051a51e4e73`.
+
+Do zamknięcia etapu wymagane jest zielone CI. Otwarta pozostaje obsługa dat historycznych, pełnego słownika ISO, testów UI, trwałego cache i historii przeliczeń.
