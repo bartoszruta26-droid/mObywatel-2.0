@@ -103,7 +103,8 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                     val rateMap = allTables.flatMap { table ->
                         table.rates.mapNotNull { rate -> rate.mid?.let { rate.code to it } }
                     }.toMap()
-                    Triple(rateMap, allTables.joinToString(" • ") {
+                    val periodLabel = if (requestedDate == null) "Notowania bieżące" else "Notowania historyczne dla ${requestedDate}"
+                    Triple(rateMap, periodLabel + " • " + allTables.joinToString(" • ") {
                         "Tabela ${it.table.apiCode}: ${it.effectiveDate}"
                     }, gold?.let { "${it.pricePerGramPln.toPlainString()} PLN/g • ${it.date}" })
                 }
