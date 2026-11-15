@@ -40,6 +40,23 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
+internal fun decodeOriginalAttachmentBase64(encoded: String, maxBytes: Int): ByteArray {
+    require(maxBytes > 0) { "Nieprawidłowy limit dekodowania załącznika." }
+    require(encoded.isNotEmpty() && encoded.length <= (maxBytes * 4L / 3L + 4L).toInt()) {
+        "Zakodowany załącznik przekracza dopuszczalny rozmiar."
+    }
+    val decoded = try {
+        java.util.Base64.getDecoder().decode(encoded)
+    } catch (failure: IllegalArgumentException) {
+        throw IllegalArgumentException("Nieprawidłowe kodowanie Base64 załącznika.", failure)
+    }
+    require(decoded.size <= maxBytes) { "Załącznik przekracza dopuszczalny rozmiar." }
+    require(java.util.Base64.getEncoder().encodeToString(decoded) == encoded) {
+        "Kodowanie Base64 załącznika nie jest kanoniczne."
+    }
+    return decoded
+}
+
 internal fun validateOriginalAttachmentPayload(mime: String, bytes: ByteArray) {
     require(bytes.isNotEmpty() && bytes.size <= 25 * 1024 * 1024) {
         "Plik musi mieć od 1 bajta do 25 MB."
@@ -377,7 +394,7 @@ private object OriginalAttachmentStore {
             require(encoded.length <= (MAX_BYTES * 4L / 3L + 8).toInt()) {
                 "Załącznik przekracza limit 25 MB."
             }
-            val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+            val bytes = decodeOriginalAttachmentBase64(encoded, MAX_BYTES)
             validateOriginalAttachmentPayload(mime, bytes)
             totalBytes += bytes.size
             require(totalBytes <= MAX_ARCHIVE_BYTES) { "Archiwum przekracza łączny limit 50 MB." }
