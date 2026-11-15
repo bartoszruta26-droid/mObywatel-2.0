@@ -1283,6 +1283,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var graphicEditorReturnTarget by remember { mutableStateOf("graphic_catalog") }
     var credentialAppearanceTarget by remember { mutableStateOf<String?>(null) }
     var selectedDocumentId by remember { mutableStateOf<String?>(null) }
+    var selectedMedicalCertificateRecordId by remember { mutableStateOf<String?>(null) }
     var showDisabilitySettings by remember { mutableStateOf(false) }
     var showCertificates by remember { mutableStateOf(false) }
     var showIdentityDesigner by remember { mutableStateOf(false) }
@@ -1669,9 +1670,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
                         importStatus = importStatus
                     )
-                    selectedDocumentId == INTERNATIONAL_MEDICAL_CERTIFICATE_ID -> InternationalMedicalCertificateEditorScreen(
-                        onBack = { selectedDocumentId = null }
-                    )
+                    selectedDocumentId == INTERNATIONAL_MEDICAL_CERTIFICATE_ID && selectedMedicalCertificateRecordId != null ->
+                        InternationalMedicalCertificateEditorScreen(
+                            recordId = selectedMedicalCertificateRecordId!!,
+                            onBack = { selectedMedicalCertificateRecordId = null }
+                        )
+                    selectedDocumentId == INTERNATIONAL_MEDICAL_CERTIFICATE_ID ->
+                        InternationalMedicalCertificateManagerScreen(
+                            onBack = { selectedDocumentId = null },
+                            onEdit = { selectedMedicalCertificateRecordId = it }
+                        )
                     selectedDocumentId != null -> DocumentDetailsScreen(
                         documentId = selectedDocumentId!!,
                         onBack = { selectedDocumentId = null }
