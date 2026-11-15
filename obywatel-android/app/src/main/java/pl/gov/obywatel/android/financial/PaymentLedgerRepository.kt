@@ -150,6 +150,17 @@ class PaymentLedgerRepository(
         database.importArchive(archive)
     }
 
+    /** Eksportuje raport CSV z transakcji i darowizn bez ponownego sumowania wpisów bankowych. */
+    suspend fun exportFinancialReportCsv(period: FinancialReportPeriod): String = withContext(Dispatchers.IO) {
+        val report = FinancialReportBuilder.build(
+            period = period,
+            transactions = database.readFinancialTransactions(),
+            donations = database.readCashDonations(),
+            assets = database.readAssets()
+        )
+        FinancialReportCsv.encode(report)
+    }
+
     suspend fun exportJson(): String = withContext(Dispatchers.IO) {
         PaymentLedgerJsonCodec.encode(
             database.readAll(),
