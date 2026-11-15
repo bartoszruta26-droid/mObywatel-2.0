@@ -3411,3 +3411,43 @@ Kontrola zgodności dla pośrednich rewizji zakończyła się sukcesem. Przebieg
 - Domyślny zakres to bieżący miesiąc, nie cała historia. Użytkownik może wpisać wcześniejszy początek, aby objąć dłuższy okres.
 - Konwersja odbywa się według strefy czasowej urządzenia. Raport przechowuje granice jako chwile UTC.
 - W dalszym etapie należy dodać testy interfejsu walidacji pól, sprawdzić zapis obu formatów przez SAF na emulatorze oraz rozważyć selektor kalendarzowy.
+
+
+## 58. Kalendarzowy wybór dat i testy eksportu SAF (15 listopada 2026 r.)
+
+### 58.1. Cel
+
+Zastąpienie ręcznego wpisywania dat w raporcie CSV/PDF selektorem kalendarzowym oraz rozszerzenie walidacji interfejsu i zapisu dokumentów przez ContentResolver. Zachowany zostaje wspólny zakres raportu dla obu formatów oraz semantyka dat początkowej i końcowej włącznie.
+
+### 58.2. Wdrożone zmiany
+
+- W financial/FinancialReportDateRangePicker.kt dodano wielokrotnego użytku komponent Compose z dwoma selektorami Material 3 DatePicker: daty początkowej i końcowej.
+- Wybrany dzień jest przenoszony jako data kalendarzowa (bez przesunięcia zależnego od strefy urządzenia); dopiero FinancialReportPeriod.fromInclusiveDates mapuje granice na chwile w lokalnej strefie urządzenia.
+- Anulowanie lub zamknięcie kalendarza nie zmienia wybranej daty.
+- Komponent pokazuje komunikat, gdy data końcowa poprzedza początkową. Dodatkowo dotychczasowa walidacja selectedReportPeriod() nadal blokuje uruchomienie eksportu dla odwróconego lub niepoprawnego zakresu.
+- W PaymentLedgerScreen.kt ręczne pola tekstowe zastąpiono komponentem kalendarzowym. CSV i PDF nadal korzystają z jednego pendingReportPeriod.
+- Dodano FinancialReportDateRangePickerTest.kt: otwieranie kalendarza i zatwierdzenie wybranej daty, anulowanie bez zmiany stanu oraz komunikat dla odwróconego zakresu.
+- Dodano FinancialReportSafExportTest.kt: zapis bajtów CSV (z BOM i separatorem) oraz PDF przez ContentResolver/FileProvider, kontrola zachowania bajtów i test błędu nieistniejącego dostawcy.
+
+### 58.3. Zmienione pliki i rewizje
+
+- PaymentLedgerScreen.kt — integracja selektora dat; commit c63d93575ec84a78f62ff2bd3aa2e340a5e25b1c.
+- financial/FinancialReportDateRangePicker.kt — nowy komponent kalendarzowy; kolejne korekty układu i jednostek dp w commitach 2b7911bf48036ce93448b21ad269b5afa247f8d1, 9dd01ed8ba69f34548a4b4f603767e49f4d9e5ed i e50201f8ed29956c2e2c438897a2c184fa58732f.
+- FinancialReportDateRangePickerTest.kt — testy Compose; commit 5f81d068be5d6d5258278251043651d6d977439e.
+- FinancialReportSafExportTest.kt — testy zapisu przez ContentResolver; commit f5dc541eed1c384058cd08db44fcae2223a6c711.
+
+### 58.4. Walidacja i status
+
+Zmiany źródłowe i testowe zostały zapisane na gałęzi feature/payment-ledger-stage-1. Po zapisaniu sekcji audytu należy uruchomić pełne CI dla nowego HEAD. W chwili przygotowania tej sekcji nie ma jeszcze wyników testów dla commitów etapu 58; nie uznaje się zatem etapu za zweryfikowany.
+
+Dla poprzedniej rewizji 23384cc106999694dd25eb9de74feeee993d8551:
+- Android prototype build run 43705069384 zakończył się sukcesem; artefakt obywatel-android-debug ID 14158476988, SHA-256 f633d4687122517aa19b84b34697e72f80d77406666a5f1f7655f7523bfa51e9.
+- Repository compliance run 43705069378 zakończył się sukcesem.
+- Android GUI validation run 43705069390 pozostawał w stanie in_progress; krok testów Compose emulatorowych nie miał wyniku końcowego ani raportu instrumentacyjnego. Ten przebieg nie waliduje zmian etapu 58.
+
+### 58.5. Ograniczenia i dalsze kontrole
+
+- Testy SAF wykorzystują testowy FileProvider i ContentResolver; nie są testem wyboru dostawcy plików przez użytkownika ani fizycznego urządzenia. Anulowanie wyboru dokumentu w launcherze pozostaje obsługiwane przez istniejące zachowanie callbacku uri == null, które nie rozpoczyna zapisu.
+- Testy Compose trzeba potwierdzić na emulatorze w nowym przebiegu CI. W szczególności należy sprawdzić semantykę DatePicker na docelowym obrazie emulatora.
+- Należy potwierdzić, że testy PDF renderują każdą stronę, testy raportu JVM przechodzą, a zapis CSV/PDF przez ContentResolver przechowuje dokładne bajty.
+- Do czasu pomyślnego zakończenia nowego Android GUI validation, Android prototype build i repository compliance etap 58 pozostaje wdrożony, lecz niezweryfikowany.
