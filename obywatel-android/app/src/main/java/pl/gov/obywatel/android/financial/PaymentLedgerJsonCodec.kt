@@ -20,14 +20,16 @@ import java.time.LocalDate
  * Wersja 1 (same wpisy bankowe) pozostaje czytelna; wersja 2 dodaje transakcje.
  */
 object PaymentLedgerJsonCodec {
-    const val SCHEMA_VERSION = 2
+    const val SCHEMA_VERSION = 3
     private const val LEGACY_SCHEMA_VERSION = 1
+    private const val TRANSACTIONS_SCHEMA_VERSION = 2
     private const val FORMAT = "mobywatel-payment-ledger"
 
     data class Archive(
         val entries: List<BankStatementEntry>,
         val transactions: List<StoredFinancialTransaction>,
-        val donations: List<CashDonation>
+        val donations: List<CashDonation>,
+        val currencyConversions: List<CurrencyConversionRecord> = emptyList()
     )
 
     fun encode(entries: List<BankStatementEntry>): String = encode(entries, emptyList(), emptyList())
@@ -40,7 +42,8 @@ object PaymentLedgerJsonCodec {
     fun encode(
         entries: List<BankStatementEntry>,
         transactions: List<StoredFinancialTransaction>,
-        donations: List<CashDonation>
+        donations: List<CashDonation>,
+        currencyConversions: List<CurrencyConversionRecord> = emptyList()
     ): String {
         val root = JSONObject()
             .put("format", FORMAT)
@@ -108,6 +111,21 @@ object PaymentLedgerJsonCodec {
             donationArray.put(item)
         }
         root.put("donations", donationArray)
+        val conversionArray = JSONArray()
+        currencyConversions.forEach { record ->
+            record.validate()
+            conversionArray.put(JSONObject()
+                .put("id", record.id)
+                .put("convertedAt", record.convertedAt.toString())
+                .put("sourceAmount", record.sourceAmount.stripTrailingZeros().toPlainString())
+                .put("sourceCurrencyCode", record.sourceCurrencyCode)
+                .put("targetAmount", record.targetAmount.stripTrailingZeros().toPlainString())
+                .put("targetCurrencyCode", record.targetCurrencyCode)
+                .put("appliedRate", record.appliedRate.stripTrailingZeros().toPlainString())
+                .put("rateDate", record.rateDate.toString())
+                .put("rateSource", record.rateSource))
+        }
+        root.put("currencyConversions", conversionArray)
         return root.toString()
     }
 
@@ -121,7 +139,7 @@ object PaymentLedgerJsonCodec {
         }
         require(root.optString("format") == FORMAT) { "Nieobsługiwany format archiwum." }
         val version = root.optInt("schemaVersion", -1)
-        require(version == LEGACY_SCHEMA_VERSION || version == SCHEMA_VERSION) {
+        require(version in LEGACY_SCHEMA_VERSION..SCHEMA_VERSION) {
             "Nieobsługiwana wersja schematu JSON."
         }
         val entriesArray = root.optJSONArray("entries")
@@ -150,8 +168,8 @@ object PaymentLedgerJsonCodec {
 
         val transactions = mutableListOf<StoredFinancialTransaction>()
         val txArray = root.optJSONArray("transactions")
-        if (version == SCHEMA_VERSION && txArray == null) {
-            throw IllegalArgumentException("Brak tablicy transactions w schemacie 2.")
+        if (version >= TRANSACTIONS_SCHEMA_VERSION && txArray == null) {
+            throw IllegalArgumentException("Brak tablicy transactions w archiwum wersji 2 lub nowszej.")
         }
         if (txArray != null) for (index in 0 until txArray.length()) {
             val item = txArray.optJSONObject(index)
@@ -212,7 +230,33 @@ object PaymentLedgerJsonCodec {
                 throw IllegalArgumentException("Nieprawidłowa darowizna JSON pod indeksem $index.", error)
             }
         }
-        return Archive(entries, transactions, donations)
+        val conversions = mutableListOf<CurrencyConversionRecord>()
+        val conversionArray = root.optJSONArray("currencyConversions")
+        if (version == SCHEMA_VERSION && conversionArray == null) {
+            throw IllegalArgumentException("Brak tablicy currencyConversions w schemacie 3.")
+        }
+        if (conversionArray != null) for (index in 0 until conversionArray.length()) {
+            val item = conversionArray.optJSONObject(index)
+                ?: throw IllegalArgumentException("Nieprawidłowe przeliczenie JSON pod indeksem $index.")
+            try {
+                val record = CurrencyConversionRecord(
+                    id = item.getString("id"),
+                    convertedAt = Instant.parse(item.getString("convertedAt")),
+                    sourceAmount = BigDecimal(item.getString("sourceAmount")),
+                    sourceCurrencyCode = item.getString("sourceCurrencyCode"),
+                    targetAmount = BigDecimal(item.getString("targetAmount")),
+                    targetCurrencyCode = item.getString("targetCurrencyCode"),
+                    appliedRate = BigDecimal(item.getString("appliedRate")),
+                    rateDate = LocalDate.parse(item.getString("rateDate")),
+                    rateSource = item.getString("rateSource")
+                )
+                record.validate()
+                conversions += record
+            } catch (error: Exception) {
+                throw IllegalArgumentException("Nieprawidłowe przeliczenie JSON pod indeksem $index.", error)
+            }
+        }
+        return Archive(entries, transactions, donations, conversions)
     }
 
     private fun putNullable(item: JSONObject, key: String, value: String?) {
