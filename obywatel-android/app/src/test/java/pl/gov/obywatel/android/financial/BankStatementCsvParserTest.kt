@@ -25,7 +25,7 @@ class BankStatementCsvParserTest {
 
     @Test
     fun detectsWindows1250WhenUtf8DecodingFails() {
-        val text = "data;waluta;kwota;typ;opis\\n15.11.2026;PLN;10,00;PRZELEW;Wpłata za książki\\n"
+        val text = "data;waluta;kwota;typ;opis\n15.11.2026;PLN;10,00;PRZELEW;Wpłata za książki\n"
         val bytes = text.toByteArray(java.nio.charset.Charset.forName("windows-1250"))
         val entry = BankStatementCsvParser.parse(bytes, "konto-1").single()
         assertEquals("PLN", entry.currencyCode)
