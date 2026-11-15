@@ -4469,3 +4469,24 @@ Weryfikacja ponownego odczytu pliku testowego ujawniła, że poprzednia próba d
 - `latestRatesRefreshAfterTtlWhileHistoricalArchiveRemainsSeparate`.
 
 Testy są zapisane w repozytorium, ale ich wykonanie nadal wymaga potwierdzenia w GitHub Actions. Nie należy utożsamiać obecności testów ze statusem PASS.
+
+
+---
+
+## Etap 87 — trwała historia przeliczeń walutowych i odporność cache NBP (15 listopada 2026 r.)
+
+Wykorzystano istniejący magazyn SQLite `PaymentLedgerDatabase` (wcześniej wersja 7) i istniejący `PaymentLedgerRepository`; nie utworzono drugiej bazy. Migracja podnosi wersję do 8 i tworzy tabelę `currency_conversion_history`.
+
+Historia przechowuje identyfikator, czas, kwotę źródłową i docelową, kody walut, zastosowany kurs krzyżowy, datę notowania i źródło kursu. Wartości liczbowe są przechowywane jako tekst dziesiętny. Przelicznik zapisuje udane operacje i umożliwia odczyt ostatnich 50. Warstwa repozytorium wykonuje operacje SQLite na `Dispatchers.IO`.
+
+Dodano testy instrumentacyjne:
+- trwałość historii po zamknięciu i ponownym otwarciu bazy;
+- dokładność wartości dziesiętnych i kolejność od najnowszego;
+- odrzucenie kursu zerowego i duplikatu identyfikatora;
+- migracja z wersji 7 do 8 bez utraty istniejących tabel;
+- dostęp do historii przez repozytorium po ponownym otwarciu;
+- testy cache NBP dla przerwanego pobierania i błędu zapisu na dysk.
+
+**Ograniczenie:** historia przeliczeń nie została jeszcze dodana do eksportu/importu JSON. Wymaga to osobnej, wersjonowanej zmiany formatu archiwum. Status aktywności walut ISO wymaga również kontrolowanego źródła danych, a nie tylko bazy platformy.
+
+Wyniki testów instrumentacyjnych i kompilacji muszą zostać potwierdzone przez GitHub Actions dla najnowszego SHA. Nie deklaruje się gotowości APK przed tym potwierdzeniem.
