@@ -391,3 +391,33 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Pozytywny build i testy muszą potwierdzić sekcję obrazowania oraz blokadę zapisu po błędach odczytu.
 
 **Status:** ukończono interfejs listy badań obrazowych i ochronę przed utratą danych po błędzie dekodowania. Załączniki, podpisy, tłumaczenia, PDF i druk pozostają otwarte. PR #69 pozostaje WIP i nie jest scalony.
+
+---
+
+## 17. Korekta kompilacji dekodera i ponowna walidacja — 2026-11-15
+
+### Usterka wykryta w CI
+- [x] Dla SHA `86a7f367676bf9817ac3309e87145b16028cb600` workflow `Android prototype build` i `Android GUI validation` zakończyły się błędem kompilacji Kotlin.
+- [x] Komunikat kompilatora: `InternationalMedicalCertificateEditorScreen.kt:314:1 Missing return statement`.
+- [x] Przyczyna: `decodeMedicalImagingStudies` wykonywała `map { ... }`, ale nie zwracała utworzonej listy.
+- [x] Poprawiono funkcję przez jawne `return (0 until array.length()).map { ... }`.
+- [x] Poprawkę zapisano w commicie `c463c42323a9dfcc061375a918cc70a9d8ca7a36` na gałęzi `zaswaidczenie`.
+
+### Kontrola po poprawce
+- [x] Ponownie odczytano plik źródłowy i potwierdzono obecność instrukcji `return` w dekoderze.
+- [x] REUSE compliance: PASS dla SHA `c463c42323a9dfcc061375a918cc70a9d8ca7a36`.
+- [ ] Workflow `Android prototype build` dla SHA `c463c42323a9dfcc061375a918cc70a9d8ca7a36`: testy JVM w toku; wynik budowania APK jeszcze niepotwierdzony.
+- [ ] Workflow `Android GUI validation` dla SHA `c463c42323a9dfcc061375a918cc70a9d8ca7a36`: testy JVM zakończone i rozpoczęły się testy Compose na emulatorze; końcowy wynik jeszcze niepotwierdzony.
+- [ ] Nie uznaje się jeszcze poprawki za zweryfikowaną końcowo, dopóki oba workflow Androida nie zakończą się powodzeniem.
+
+### Stan PR i zakres dalszych prac
+- [x] Zaktualizowano opis PR #69 o przyczynę błędu, commit naprawczy i bieżący status walidacji.
+- [x] PR #69 pozostaje otwarty, jako Draft/WIP, bez scalania.
+- [ ] Import załączników obrazowych i raportów do konkretnego zaświadczenia oraz ich powiązanie z poszczególnymi badaniami.
+- [ ] Import skanów podpisu pacjenta, podpisu lekarza i pieczęci.
+- [ ] Rozszerzenie pól badania o technique, contrast, radiologistName i reportNumber w interfejsie.
+- [ ] Walidacja dat i pól klinicznych oraz testy odtwarzania po ponownym uruchomieniu.
+- [ ] Dostawca tłumaczeń z jawną zgodą na przekazanie danych, oznaczeniem tłumaczenia maszynowego i zachowaniem oryginału.
+- [ ] Wielostronicowy PDF, Hebrew/RTL, podpisy i Android Print Framework.
+
+**Status:** błąd kompilacji z poprzedniego commitu został poprawiony. Zgodność REUSE przeszła. Wyniki testów Androida dla commitu naprawczego oczekują na zakończenie CI; nie deklaruje się jeszcze gotowości APK ani pełnej funkcjonalności dokumentu.
