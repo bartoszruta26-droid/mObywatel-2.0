@@ -62,8 +62,8 @@ class Iso4217CurrencyCatalogTest {
         assertEquals("2026-01", Iso4217CurrencyCatalog.findHistorical("BGN")?.withdrawnAt)
         assertNull(Iso4217CurrencyCatalog.find("BGN"))
         assertNotNull(Iso4217CurrencyCatalog.find("EUR"))
-        assertNull(Iso4217CurrencyCatalog.findHistorical("EUR"))
-        assertTrue(Iso4217CurrencyCatalog.historical.size > 100)
+        assertEquals("2006-10", Iso4217CurrencyCatalog.findHistorical("EUR")?.withdrawnAt)
+        assertEquals(137, Iso4217CurrencyCatalog.historical.size)
     }
 
     @Test fun searchMatchesCodePolishNameAndSymbol() {
