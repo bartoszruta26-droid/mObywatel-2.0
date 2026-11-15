@@ -902,3 +902,28 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Zweryfikować bezpieczny, atomowy zapis głównego magazynu `InternationalMedicalCertificateStore.save()`; obecny mechanizm awaryjnego kopiowania do pliku docelowego wymaga osobnego testu przerwania zapisu.
 
 **Status:** poprawiono ryzyko usunięcia pliku po niejednoznacznym wyniku zatwierdzania metadanych w pojedynczym `add()`. Kod i test regresyjny zapisano i ponownie odczytano. Końcowa walidacja CI dla nowego SHA pozostaje wymagana; PR #69 pozostaje otwarty, Draft i niescalony.
+
+
+---
+
+## 35. Dekodowanie obrazów załączników i limity wymiarów — 2026-11-15
+
+### Wykryta luka
+- [x] Walidacja JPEG/PNG/WebP sprawdzała sygnatury, ale nie potwierdzała, że zawartość jest dekodowalnym obrazem.
+- [x] Brakowało limitów wymiarów oraz łącznej liczby pikseli, co pozostawiało ryzyko nadmiernej alokacji podczas dekodowania.
+
+### Wykonane poprawki
+- [x] Dodano wstępne odczytanie wymiarów przez BitmapFactory.Options.inJustDecodeBounds.
+- [x] Odrzucane są obrazy z wymiarem powyżej 12 000 pikseli w dowolnej osi lub ponad 40 mln pikseli łącznie.
+- [x] Po kontroli wymiarów wykonywane jest dekodowanie próbkowane do maksymalnie 2048 pikseli na oś, z konfiguracją RGB_565; bitmapa jest zwalniana po walidacji.
+- [x] Kontrola obejmuje JPEG, PNG i WebP po sprawdzeniu sygnatury.
+- [x] Dodano testy instrumentacyjne Androida: prawidłowy PNG, fałszywa sygnatura PNG i przekroczenie limitu wymiarów.
+- [x] Kod źródłowy zapisano w commicie f9ac77d9da2951fd5423ff29e428aacfae500e27, testy instrumentacyjne w commicie 9b662c4751f7087ca2258519143463e21b62d6d7.
+
+### Weryfikacja i ograniczenia
+- [x] Ponownie odczytano z GitHub kod, test i audyt; potwierdzono obecność funkcji dekodującej, trzy wywołania dla formatów obrazów oraz trzy testy instrumentacyjne.
+- [ ] Testy instrumentacyjne, JVM, Compose UI, build APK i REUSE dla końcowego SHA wymagają potwierdzenia w GitHub Actions.
+- [ ] Dekodowanie próbkowane nie jest pełnym testem odporności wszystkich implementacji dekoderów na złośliwe pliki; należy nadal traktować pliki jako niezaufane.
+- [ ] Pozostają testy integracyjne rzeczywistego importu/eksportu, rollbacku, awarii procesu i limitów archiwum.
+
+**Status:** rozszerzono kontrolę sygnatur o odczyt wymiarów i rzeczywiste dekodowanie próbkowane. Nie oznacza to jeszcze pełnej walidacji semantycznej plików PDF ani testów awarii całego magazynu.
