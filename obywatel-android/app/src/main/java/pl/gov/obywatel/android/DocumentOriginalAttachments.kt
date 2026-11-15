@@ -384,11 +384,22 @@ private object OriginalAttachmentStore {
         preferences.all.forEach { (documentId, value) ->
             require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu w magazynie." }
             val rawMetadata = value as? String ?: error("Nieprawidłowy rejestr załączników: $documentId")
+            validateOriginalAttachmentMetadata(rawMetadata)
             val json = JSONArray(rawMetadata)
             existingByDocument[documentId] = (0 until json.length()).map { i ->
                 val item = json.getJSONObject(i)
-                OriginalAttachment(item.getString("id"), item.getString("name"), item.getString("mime"))
+                OriginalAttachment(
+                    item.getString("id"),
+                    item.getString("name"),
+                    item.getString("mime").substringBefore(';').trim().lowercase()
+                )
             }.toMutableList()
+        }
+        val existingIds = mutableSetOf<String>()
+        existingByDocument.values.flatten().forEach { item ->
+            require(existingIds.add(item.id)) {
+                "Identyfikator załącznika jest już przypisany do więcej niż jednego dokumentu: ${item.id}"
+            }
         }
 
         val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
