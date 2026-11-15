@@ -4520,3 +4520,21 @@ Uzupełnienie etapu 90: po weryfikacji istniejącego testu precyzji zachowano ko
 ## Etap 91 — korekty po weryfikacji emulatorowej
 
 Pierwszy przebieg testów instrumentacyjnych wykrył utratę skali BigDecimal przy zapisie historii przeliczeń oraz zbyt ścisłe dopasowanie w dwóch testach DatePicker. Zmieniono zapis kwot i kursów historii na toPlainString(), zachowując zapisane końcowe zera; testy DatePicker dopasowują fragment tekstu. Testy JVM i kompilacja debug dla poprzedniego SHA przeszły; ponowna walidacja emulatorowa po poprawkach oczekuje na CI.
+
+
+
+## Etap 92 — zachowanie skali liczb w archiwum i pełny round-trip historii (15 listopada 2026 r.)
+
+### Ustalenia i poprawki
+- Kontrola kodeka wykazała, że SQLite zapisywał kwoty i kursy historii przeliczeń przez `toPlainString()`, ale eksport JSON nadal stosował `stripTrailingZeros()`. Powodowało to utratę skali reprezentacji, np. `1.000` stawało się `1`, mimo że wartość matematyczna pozostawała równa.
+- W `PaymentLedgerJsonCodec.kt` zmieniono eksport pól `sourceAmount`, `targetAmount` i `appliedRate` na `toPlainString()`. Dekoder nadal odtwarza wartości bezpośrednio przez `BigDecimal`.
+- W istniejącym teście archiwum zaostrzono asercje do `BigDecimal.equals` i dodano kontrolę literalnej reprezentacji `100.000`.
+- Dodano test instrumentacyjny `currencyConversionArchiveRoundTripsMoreThanOneThousandRecordsAndPreservesScale`: tworzy 1005 rekordów, sprawdza pełny eksport i podgląd, import, idempotentny ponowny import oraz ponowny eksport; weryfikuje zachowanie skal `1.000`, `0.9000` i `0.900000`.
+
+### Weryfikacja
+- Wcześniejszy SHA `fc78028c7388433ed55eb1f0f1f924b5e33431f2`: Android GUI validation zakończone sukcesem (testy JVM, testy Compose UI na emulatorze i budowa debug APK); Android prototype build zakończony sukcesem; Repository compliance zakończone sukcesem.
+- Dla SHA etapu 92 `8e8434e05fc17cbed604ec67c8dc9659294472be` testy nie zostały jeszcze potwierdzone przez CI w chwili zapisu tego audytu. Wyników poprzedniego SHA nie przypisuje się nowemu commitowi.
+- PR #68 pozostaje otwarty i niescalony. APK z poprzedniego SHA nie jest artefaktem z nowego SHA.
+
+### Status
+Kod i test regresyjny zapisano w gałęzi. Etap 92 pozostaje weryfikacyjnie otwarty do zakończenia CI dla dokładnego SHA `8e8434e05fc17cbed604ec67c8dc9659294472be`.
