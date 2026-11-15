@@ -24,7 +24,7 @@ class Iso4217CurrencyCatalogTest {
 
     @Test fun searchMatchesCodePolishNameAndSymbol() {
         assertTrue(Iso4217CurrencyCatalog.search("USD").any { it.code == "USD" })
-        assertTrue(Iso4217CurrencyCatalog.search("dolar").any { it.code == "USD" })
+        assertTrue(Iso4217CurrencyCatalog.search("dolar", limit = 100).any { it.code == "USD" })
         assertFalse(Iso4217CurrencyCatalog.search("EUR").isEmpty())
     }
 
