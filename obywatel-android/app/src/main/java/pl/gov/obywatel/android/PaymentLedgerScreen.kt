@@ -567,19 +567,14 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                     Text("Eksportuj JSON")
                 }
                 Text("Zakres raportu (daty włącznie)", style = MaterialTheme.typography.titleSmall)
-                OutlinedTextField(
-                    value = reportFromDate,
-                    onValueChange = { reportFromDate = it },
-                    label = { Text("Data początkowa — RRRR-MM-DD") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = reportToDate,
-                    onValueChange = { reportToDate = it },
-                    label = { Text("Data końcowa — RRRR-MM-DD") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                pl.gov.obywatel.android.financial.FinancialReportDateRangePicker(
+                    startDate = reportFromDate,
+                    endDate = reportToDate,
+                    onDatesChanged = { start, end ->
+                        reportFromDate = start
+                        reportToDate = end
+                        error = null
+                    }
                 )
                 Button(onClick = {
                     selectedReportPeriod()?.let { period ->
