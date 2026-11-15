@@ -94,4 +94,33 @@ class InternationalMedicalCertificateStoreTest {
             InternationalMedicalCertificateStore.save(context, original)
         }
     }
+
+    @Test
+    fun encryptedCertificateRecordsSupportCreateReadUpdateListAndDelete() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val original = InternationalMedicalCertificateStore.loadStrict(context)
+        val id = "test_${UUID.randomUUID().toString().replace("-", "")}"
+        try {
+            InternationalMedicalCertificateRecords.save(context, id, mapOf(
+                "doc_international_medical_certificate_documentNumber" to "CERT-001",
+                "imc_source_language" to "pl"
+            ))
+            assertEquals("CERT-001", InternationalMedicalCertificateRecords.load(context, id)
+                ["doc_international_medical_certificate_documentNumber"])
+            assertTrue(InternationalMedicalCertificateRecords.list(context).any { it.first == id })
+
+            InternationalMedicalCertificateRecords.save(context, id, mapOf(
+                "doc_international_medical_certificate_documentNumber" to "CERT-002"
+            ))
+            assertEquals("CERT-002", InternationalMedicalCertificateRecords.load(context, id)
+                ["doc_international_medical_certificate_documentNumber"])
+
+            InternationalMedicalCertificateRecords.delete(context, id)
+            assertFalse(InternationalMedicalCertificateRecords.list(context).any { it.first == id })
+            assertTrue(InternationalMedicalCertificateRecords.load(context, id).isEmpty())
+        } finally {
+            InternationalMedicalCertificateStore.save(context, original)
+        }
+    }
+
 }
