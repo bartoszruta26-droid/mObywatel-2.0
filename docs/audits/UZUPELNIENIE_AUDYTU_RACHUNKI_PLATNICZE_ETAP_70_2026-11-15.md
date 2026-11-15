@@ -471,3 +471,27 @@ Zmiany zostały zapisane na gałęzi `feature/payment-ledger-stage-1`. Kontrole 
 1. Potwierdzić CI dla końcowego SHA, w tym testy instrumentacyjne emulatora.
 2. Wdrożyć kontrolowany katalog ISO 4217 z wersją danych, statusem i datami obowiązywania.
 3. Rozszerzyć testy interfejsu historii przeliczeń i obsługi błędu zapisu.
+
+
+## Etap 75 — kompletność historii przeliczeń w archiwum (15 listopada 2026 r.)
+
+### Ustalenie audytowe
+
+Weryfikacja etapu 74 wykazała, że eksport, podgląd importu i kontrola duplikatów korzystały z odczytu ograniczonego do 1000 najnowszych rekordów. Limit jest właściwy dla prezentacji w interfejsie, ale nie dla archiwizacji: przy większej historii mógł powodować pominięcie starszych przeliczeń w eksporcie albo nierozpoznanie istniejącego identyfikatora podczas importu.
+
+### Wykonana korekta
+
+1. Dodano readAllCurrencyConversions() bez limitu SQL, przeznaczoną wyłącznie do operacji archiwalnych i kontroli integralności.
+2. Zachowano readCurrencyConversions(limit) z zakresem 1–1000 jako odczyt prezentacyjny.
+3. Eksport JSON, podgląd importu i transakcyjna deduplikacja importu korzystają teraz z pełnego odczytu historii.
+4. Dodano test instrumentacyjny zapisujący 1005 rekordów i sprawdzający, że odczyt UI zwraca 1000, a odczyt archiwalny wszystkie 1005.
+
+### Status weryfikacji
+
+Zmiany zapisano na gałęzi feature/payment-ledger-stage-1. Test przekracza dotychczasowy limit prezentacyjny i weryfikuje zachowanie warstwy SQLite. Wynik testu oraz kompilacji dla nowego SHA wymaga potwierdzenia przez GitHub Actions. PR #68 pozostaje otwarty i niescalony.
+
+### Następne prace
+
+1. Potwierdzić testy JVM, kompilację Android i test instrumentacyjny 1005 rekordów.
+2. Dodać wersjonowany katalog ISO 4217 z kontrolowanym źródłem, statusem aktywności i datami obowiązywania.
+3. Rozszerzyć testy interfejsu historii oraz obsługi błędu zapisu przeliczenia.
