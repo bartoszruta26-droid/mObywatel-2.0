@@ -73,6 +73,25 @@ internal fun validateOriginalAttachmentPayload(mime: String, bytes: ByteArray) {
 }
 
 
+internal fun validateOriginalAttachmentMetadata(raw: String) {
+    val json = JSONArray(raw)
+    val seen = mutableSetOf<String>()
+    for (index in 0 until json.length()) {
+        val item = json.getJSONObject(index)
+        val id = item.getString("id")
+        require(id.matches(Regex("[A-Za-z0-9-]{1,64}")) && seen.add(id)) {
+            "Nieprawidłowy lub powtórzony identyfikator załącznika."
+        }
+        val name = item.getString("name")
+        val mime = item.getString("mime").substringBefore(';').trim().lowercase()
+        require(name.isNotBlank() && name.length <= 180) { "Nieprawidłowa nazwa załącznika." }
+        require(mime in setOf(
+            "application/pdf", "image/jpeg", "image/png", "image/webp",
+            "text/plain", "text/csv", "application/xml"
+        )) { "Nieobsługiwany typ MIME w rejestrze załączników." }
+    }
+}
+
 private data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
 private object OriginalAttachmentStore {
@@ -111,22 +130,15 @@ private object OriginalAttachmentStore {
         }
         val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getString(documentId, "[]") ?: "[]"
+        validateOriginalAttachmentMetadata(raw)
         val json = JSONArray(raw)
-        val seen = mutableSetOf<String>()
         return (0 until json.length()).map { index ->
             val item = json.getJSONObject(index)
-            val id = item.getString("id")
-            require(id.matches(Regex("[A-Za-z0-9-]{1,64}")) && seen.add(id)) {
-                "Nieprawidłowy lub powtórzony identyfikator załącznika."
-            }
-            val name = item.getString("name")
-            val mime = item.getString("mime").substringBefore(';').trim().lowercase()
-            require(name.isNotBlank() && name.length <= 180) { "Nieprawidłowa nazwa załącznika." }
-            require(mime in setOf(
-                "application/pdf", "image/jpeg", "image/png", "image/webp",
-                "text/plain", "text/csv", "application/xml"
-            )) { "Nieobsługiwany typ MIME w rejestrze załączników." }
-            OriginalAttachment(id, name, mime)
+            OriginalAttachment(
+                item.getString("id"),
+                item.getString("name"),
+                item.getString("mime").substringBefore(';').trim().lowercase()
+            )
         }
     }
 
