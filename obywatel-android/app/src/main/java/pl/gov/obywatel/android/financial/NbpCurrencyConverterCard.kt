@@ -33,11 +33,41 @@ import kotlinx.coroutines.withContext
 object CurrencyPrecision {
     private val zeroDigits = setOf("BIF", "CLP", "DJF", "GNF", "ISK", "JPY", "KMF", "KRW", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF")
     private val threeDigits = setOf("BHD", "IQD", "JOD", "KWD", "LYD", "OMR", "TND")
+    private val fourDigits = setOf("CLF", "UYW")
 
     fun scale(code: String): Int = when (code.uppercase()) {
         in zeroDigits -> 0
         in threeDigits -> 3
+        in fourDigits -> 4
         else -> 2
+    }
+}
+
+/** Przelicza dowolną parę przez PLN na podstawie kursów średnich NBP (PLN za 1 jednostkę). */
+object NbpCurrencyConverter {
+    fun convert(
+        amount: BigDecimal,
+        fromCode: String,
+        toCode: String,
+        plnPerCurrency: Map<String, BigDecimal>
+    ): BigDecimal {
+        require(amount >= BigDecimal.ZERO) { "Kwota nie może być ujemna." }
+        val source = fromCode.trim().uppercase()
+        val target = toCode.trim().uppercase()
+        require(source.matches(Regex("[A-Z]{3}")) && target.matches(Regex("[A-Z]{3}"))) {
+            "Wprowadź trzyliterowe kody walut ISO 4217."
+        }
+        require(source != target) { "Wybierz dwie różne waluty." }
+        val sourcePln = if (source == "PLN") BigDecimal.ONE else
+            plnPerCurrency[source] ?: throw IllegalArgumentException("Brak kursu NBP dla waluty $source.")
+        val targetPln = if (target == "PLN") BigDecimal.ONE else
+            plnPerCurrency[target] ?: throw IllegalArgumentException("Brak kursu NBP dla waluty $target.")
+        require(sourcePln > BigDecimal.ZERO && targetPln > BigDecimal.ZERO) {
+            "Kursy NBP muszą być większe od zera."
+        }
+        return amount.multiply(sourcePln)
+            .divide(targetPln, MathContext(34, RoundingMode.HALF_EVEN))
+            .setScale(CurrencyPrecision.scale(target), RoundingMode.HALF_EVEN)
     }
 }
 
@@ -88,21 +118,10 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
     fun calculate() {
         try {
             val amount = BigDecimal(amountText.trim().replace(',', '.'))
-            require(amount >= BigDecimal.ZERO) { "Kwota nie może być ujemna." }
             val source = fromCode.trim().uppercase()
             val target = toCode.trim().uppercase()
-            require(source.matches(Regex("[A-Z]{3}")) && target.matches(Regex("[A-Z]{3}"))) {
-                "Wprowadź trzyliterowe kody walut ISO 4217."
-            }
-            require(source != target) { "Wybierz dwie różne waluty." }
             require(rates.isNotEmpty()) { "Najpierw pobierz aktualne kursy NBP." }
-            val sourcePln = if (source == "PLN") BigDecimal.ONE else
-                rates[source] ?: throw IllegalArgumentException("Brak kursu NBP dla waluty $source.")
-            val targetPln = if (target == "PLN") BigDecimal.ONE else
-                rates[target] ?: throw IllegalArgumentException("Brak kursu NBP dla waluty $target.")
-            val converted = amount.multiply(sourcePln)
-                .divide(targetPln, MathContext(34, RoundingMode.HALF_EVEN))
-                .setScale(CurrencyPrecision.scale(target), RoundingMode.HALF_EVEN)
+            val converted = NbpCurrencyConverter.convert(amount, source, target, rates)
             result = "${amount.toPlainString()} $source = ${converted.toPlainString()} $target"
             error = null
         } catch (exception: Exception) {
