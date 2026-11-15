@@ -2967,3 +2967,6 @@ Status etapu 2P: implementacja metadanych, magazynu prywatnego, interfejsu i mig
 
 
 **Doprecyzowanie rewizji kontroli sygnatur:** po pierwszym zapisie sprawdzono zgodność typów Kotlin w porównaniach bajtów sygnatur PNG i poprawiono jawne konwersje do `Byte`. Rewizja końcowa kodu kontroli sygnatur: `908537392875831fbd04fba6d74211103179d103`. Poprzedni przebieg CI dla `187d57ff...` został anulowany wskutek kolejnej aktualizacji gałęzi; nie stanowi wyniku walidacji rewizji końcowej. Należy uruchomić i ocenić CI na aktualnym HEAD.
+
+
+**Kontrola testu jednostkowego:** podczas przeglądu importów testu sygnatur wykryto brak jawnych importów `assertTrue` i `assertFalse`; dodano je przed końcową walidacją. Rewizja zawierająca tę korektę: `91f71405d1189e194f1bdd96c544f6b6a211a3f6`. Przebiegi uruchomione dla poprzedniej rewizji mogą zostać anulowane; o wyniku końcowym decyduje CI dla aktualnego HEAD.
