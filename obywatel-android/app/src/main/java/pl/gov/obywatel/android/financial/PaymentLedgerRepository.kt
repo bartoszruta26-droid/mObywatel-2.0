@@ -123,7 +123,7 @@ class PaymentLedgerRepository(
         val existingTransactionList = database.readFinancialTransactions()
         val existingTransactions = existingTransactionList.associateBy { it.transaction.id }
         val existingDonations = database.readCashDonations().associateBy { it.id }
-        val existingConversions = database.readCurrencyConversions(1000).associateBy { it.id }
+        val existingConversions = database.readAllCurrencyConversions().associateBy { it.id }
         val existingEntries = database.readAll()
         val bankPreview = BankImportDeduplicator.preview(archive.entries, existingEntries)
 
@@ -310,7 +310,7 @@ class PaymentLedgerRepository(
             database.readAll(),
             database.readFinancialTransactions(),
             database.readCashDonations(),
-            database.readCurrencyConversions(1000)
+            database.readAllCurrencyConversions()
         )
     }
 
