@@ -980,11 +980,11 @@ class PaymentLedgerDatabase(
         val values = ContentValues().apply {
             put("conversion_id", record.id)
             put("converted_at", record.convertedAt.toString())
-            put("source_amount", record.sourceAmount.stripTrailingZeros().toPlainString())
+            put("source_amount", record.sourceAmount.toPlainString())
             put("source_currency_code", record.sourceCurrencyCode)
-            put("target_amount", record.targetAmount.stripTrailingZeros().toPlainString())
+            put("target_amount", record.targetAmount.toPlainString())
             put("target_currency_code", record.targetCurrencyCode)
-            put("applied_rate", record.appliedRate.stripTrailingZeros().toPlainString())
+            put("applied_rate", record.appliedRate.toPlainString())
             put("rate_date", record.rateDate.toString())
             put("rate_source", record.rateSource)
         }
