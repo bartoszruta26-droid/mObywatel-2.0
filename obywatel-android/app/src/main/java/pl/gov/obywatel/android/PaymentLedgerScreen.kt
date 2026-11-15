@@ -59,6 +59,7 @@ import pl.gov.obywatel.android.FinancialTransaction
 import pl.gov.obywatel.android.FinancialTransactionType
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -83,6 +84,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
     var pendingJson by remember { mutableStateOf<String?>(null) }
     var importPreview by remember { mutableStateOf<BankImportPreview?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
+    var reportFromDate by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
+    var reportToDate by remember { mutableStateOf(LocalDate.now().toString()) }
+    var pendingReportPeriod by remember { mutableStateOf<FinancialReportPeriod?>(null) }
     var accountScopeId by remember { mutableStateOf("ipko-account-1") }
     var accountScopes by remember { mutableStateOf<List<PaymentAccountScope>>(emptyList()) }
     var transactionType by remember { mutableStateOf(FinancialTransactionType.EXCHANGE) }
@@ -421,13 +425,28 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         }
     }
     
+    fun selectedReportPeriod(): FinancialReportPeriod? {
+        return try {
+            val start = LocalDate.parse(reportFromDate.trim())
+            val end = LocalDate.parse(reportToDate.trim())
+            val period = FinancialReportPeriod.fromInclusiveDates(start, end)
+            error = null
+            period
+        } catch (exception: Exception) {
+            error = exception.message
+                ?: "Podaj poprawny zakres dat w formacie RRRR-MM-DD."
+            null
+        }
+    }
+
     val pdfExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri ->
         if (uri != null) {
             scope.launch {
                 try {
-                    val period = FinancialReportPeriod(Instant.MIN, Instant.MAX)
+                    val period = pendingReportPeriod
+                        ?: throw IllegalStateException("Najpierw wybierz poprawny zakres dat raportu.")
                     val pdf = repository.exportFinancialReportPdf(period)
                     withContext(Dispatchers.IO) {
                         val output = context.contentResolver.openOutputStream(uri)
@@ -449,7 +468,8 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
         if (uri != null) {
             scope.launch {
                 try {
-                    val period = FinancialReportPeriod(Instant.MIN, Instant.MAX)
+                    val period = pendingReportPeriod
+                        ?: throw IllegalStateException("Najpierw wybierz poprawny zakres dat raportu.")
                     val csv = repository.exportFinancialReportCsv(period)
                     withContext(Dispatchers.IO) {
                         val output = context.contentResolver.openOutputStream(uri)
@@ -546,11 +566,36 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                 Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
                     Text("Eksportuj JSON")
                 }
-                Button(onClick = { csvExportLauncher.launch("raport-rachunki-platnicze.csv") }) {
-                    Text("Eksportuj raport CSV — cała historia")
+                Text("Zakres raportu (daty włącznie)", style = MaterialTheme.typography.titleSmall)
+                OutlinedTextField(
+                    value = reportFromDate,
+                    onValueChange = { reportFromDate = it },
+                    label = { Text("Data początkowa — RRRR-MM-DD") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = reportToDate,
+                    onValueChange = { reportToDate = it },
+                    label = { Text("Data końcowa — RRRR-MM-DD") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Button(onClick = {
+                    selectedReportPeriod()?.let { period ->
+                        pendingReportPeriod = period
+                        csvExportLauncher.launch("raport-rachunki-platnicze.csv")
+                    }
+                }) {
+                    Text("Eksportuj raport CSV")
                 }
-                Button(onClick = { pdfExportLauncher.launch("raport-rachunki-platnicze.pdf") }) {
-                    Text("Eksportuj raport PDF — cała historia")
+                Button(onClick = {
+                    selectedReportPeriod()?.let { period ->
+                        pendingReportPeriod = period
+                        pdfExportLauncher.launch("raport-rachunki-platnicze.pdf")
+                    }
+                }) {
+                    Text("Eksportuj raport PDF")
                 }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
                 importPreview?.let { preview ->
