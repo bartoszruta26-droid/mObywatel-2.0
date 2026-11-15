@@ -91,6 +91,8 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var result by remember { mutableStateOf<String?>(null) }
+    var conversionHistory by remember { mutableStateOf<List<CurrencyConversionRecord>>(emptyList()) }
+    var showHistory by remember { mutableStateOf(false) }
 
     fun loadRates(dateText: String? = null) {
         scope.launch {
@@ -180,6 +182,8 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                             ledger.saveCurrencyConversion(record)
                         }
                     }
+                }.onSuccess {
+                    conversionHistory = (listOf(record) + conversionHistory).take(50)
                 }.onFailure { saveError ->
                     error = "Przeliczenie wykonano, ale nie zapisano historii: ${saveError.message ?: "błąd magazynu"}"
                 }
@@ -263,6 +267,36 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
             Text("Dostępność kursu zależy od tabel NBP A/B, a nie od pełnego katalogu ISO 4217.")
         }
         result?.let { Text(it, style = MaterialTheme.typography.titleLarge) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = {
+                scope.launch {
+                    runCatching {
+                        withContext(Dispatchers.IO) {
+                            PaymentLedgerRepository(context).use { ledger ->
+                                ledger.getCurrencyConversionHistory(50)
+                            }
+                        }
+                    }.onSuccess {
+                        conversionHistory = it
+                        showHistory = !showHistory
+                    }.onFailure { historyError ->
+                        error = "Nie udało się odczytać historii: ${historyError.message ?: "błąd magazynu"}"
+                    }
+                }
+            }) { Text(if (showHistory) "Ukryj historię" else "Historia przeliczeń") }
+        }
+        if (showHistory) {
+            Text("Ostatnie przeliczenia zapisane na urządzeniu")
+            if (conversionHistory.isEmpty()) Text("Historia jest pusta.")
+            conversionHistory.forEach { item ->
+                Text(
+                    "${item.convertedAt} • ${item.sourceAmount.toPlainString()} ${item.sourceCurrencyCode} → " +
+                        "${item.targetAmount.toPlainString()} ${item.targetCurrencyCode} • kurs ${item.appliedRate.toPlainString()} • " +
+                        "${item.rateSource}, ${item.rateDate}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(
             "Wycena referencyjna według kursu średniego NBP. Nie jest to oferta ani kurs wykonania transakcji bankowej.",
