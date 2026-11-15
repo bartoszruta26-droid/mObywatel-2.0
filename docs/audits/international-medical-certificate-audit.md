@@ -228,3 +228,60 @@ Wszystkie strony muszą mieć spójny numer, identyfikator dokumentu, język str
 - [ ] Testy, build i PR.
 
 **Decyzja techniczna:** najpierw uzyskać poprawną gałąź bazową, następnie realizować etapy 1–8. Nie wdrażać automatycznego tłumaczenia zewnętrznego bez jawnej zgody użytkownika i widocznego ostrzeżenia o maszynowym charakterze przekładu.
+
+
+---
+
+## 12. Aktualizacja wykonania — 2026-11-15
+
+### Gałąź robocza
+- [x] Utworzono gałąź `zaswaidczenie` od aktualnego `main` (SHA bazowy: `64632d45f796b5e7d77c8d48c675ac83061b5f8d`).
+- [x] Zmiany z pierwszego etapu zapisano na tej gałęzi; `main` nie był dalej modyfikowany.
+- [ ] Nie scalono innych rozbieżnych gałęzi roboczych — ich historie nie są liniowe względem `main`.
+
+### Wykonane etapy
+- [x] Dodano kafelek `international_medical_certificate` do katalogu dokumentów, z angielską nazwą i istniejącym zasobem ikony medycznej.
+- [x] Dodano cel przypisania grafiki dokumentu oraz definicję podglądu typu RECORD.
+- [x] Przypisano dokument do grupy `Służba zdrowotna`.
+- [x] Rejestr tras obejmuje nowy dokument przez istniejące generowanie tras z `documentBrandTargets`; nie dodano osobnej trasy GROUP.
+- [x] Dodano angielskojęzyczny schemat pól obejmujący dane dokumentu, pacjenta, lekarza, wywiad, rozpoznanie, parametry badania, ograniczenia funkcjonalne, rokowanie, deklarację oraz referencje skanów podpisu i pieczęci.
+- [x] Dodano model domenowy z osobnym przechowywaniem pól źródłowych i tłumaczeń, statusami tłumaczeń, listą języków, modelem badań obrazowych i referencjami podpisów.
+- [x] Lista języków modelu obejmuje języki wymagane oraz rozróżnia belgijskie warianty Dutch (Belgium), French (Belgium) i German (Belgium); „Belgian” nie jest traktowany jako osobny język.
+- [x] Dodano testy jednostkowe modelu: lista języków, RTL Hebrew, unieważnianie tłumaczenia po zmianie źródła, modalności obrazowania i walidacja kluczy tłumaczeń.
+- [x] Rozszerzono testy katalogu, tras i podglądu.
+
+### Kontrola spójności po zapisaniu zmian
+Weryfikacja odczytem plików z gałęzi `zaswaidczenie` potwierdziła obecność:
+- kafelka i wpisu w katalogu;
+- grupy zdrowotnej;
+- celu graficznego i definicji RECORD;
+- schematu angielskich pól;
+- modelu języków i wariantów belgijskich;
+- pięciu modalności obrazowania;
+- testów tras i katalogu graficznego.
+
+### Korekta oceny — co nadal NIE jest ukończone
+Powyższe zmiany stanowią **etap katalogowo-modelowy**, a nie kompletny działający formularz. Nie należy uznawać za wykonane:
+- dedykowanego ekranu edycji z radiobuttonami języka źródłowego i wielokrotnym wyborem języków docelowych;
+- trwałego, szyfrowanego zapisu całego modelu klinicznego;
+- integracji rzeczywistego dostawcy tłumaczeń i automatycznego tłumaczenia stron;
+- osobnego formularza badań obrazowych i zarządzania ich załącznikami;
+- dodawania skanów podpisów przez aparat/galerię;
+- generowania wielostronicowego PDF i integracji z Android Print Framework;
+- testów kompilacji i uruchomienia na urządzeniu.
+
+### Wyniki testów i ograniczenia środowiska
+- [x] Wykonano kontrolę strukturalną zmian przez ponowny odczyt plików z gałęzi.
+- [ ] Nie uzyskano wyniku `gradle :app:testDebugUnitTest` ani `gradle :app:assembleDebug` w tej sesji.
+- [ ] GitHub Actions nie zwrócił workflow runów dla gałęzi po zapisaniu commitów; brak wyniku CI nie jest dowodem przejścia testów.
+- [ ] Testy instrumentalne i kontrola RTL na urządzeniu pozostają do wykonania.
+
+### Następne prace
+1. Zaimplementować dedykowany ekran Compose dla dokumentu, w tym wybór języka źródłowego jako RadioButton oraz wielokrotny wybór języków docelowych.
+2. Dodać trwały magazyn danych klinicznych i badań, szyfrowanie oraz migracje schematu.
+3. Dodać bezpieczny adapter tłumaczeń; nie wysyłać danych do dostawcy zewnętrznego bez wyraźnej zgody i konfiguracji.
+4. Dodać załączniki badań i podpisów przez systemowe selektory plików.
+5. Zbudować generator PDF i wydruk; zapewnić Unicode i RTL.
+6. Uruchomić testy JVM, kompilację APK i testy urządzeniowe, a następnie zaktualizować status na podstawie rzeczywistych wyników.
+
+**Status całości:** częściowo wykonano — katalog i model domenowy są dodane; formularz, tłumaczenia, PDF, podpis i walidacja kompilacyjna pozostają otwarte.
