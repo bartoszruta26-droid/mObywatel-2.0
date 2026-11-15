@@ -1432,3 +1432,24 @@ Wcześniejszy test równoległego importu dwóch różnych załączników do teg
 - [ ] Ponowna kompilacja testów instrumentacyjnych, wykonanie testów emulatora, budowa APK i REUSE dla nowego SHA — oczekują na GitHub Actions.
 
 **Status:** poprawiono konkretny błąd kompilacji wykryty w CI. PR pozostaje otwarty; scalanie nastąpi dopiero po zielonej weryfikacji nowego SHA.
+
+---
+
+## 54. Naprawa widoczności kafelka na ekranie głównym — 2026-11-15
+
+### Przyczyna
+- [x] Kafelek `international_medical_certificate` był obecny w `documentDisplayOptions` i przypisany do grupy `Służba zdrowotna`.
+- [x] Domyślna konfiguracja `defaultDocumentPlacements` oznaczała jednak wszystkie dokumenty poza `identity` i `receipts` jako `hidden`.
+- [x] Jednorazowa migracja katalogu zapisywała ukrycie nowego wpisu w preferencjach. Samo dodanie dokumentu do katalogu nie powodowało jego pokazania na ekranie głównym.
+
+### Poprawka
+- [x] Ustawiono `international_medical_certificate` jako dokument domyślnie widoczny na pulpicie.
+- [x] Dodano jednorazową migrację `international_medical_certificate_dashboard_v1`, która ujawnia kafelek również u dotychczasowych użytkowników, jeśli jego zapisane ustawienie to brak wpisu lub `hidden`.
+- [x] Zachowano świadomy wybór użytkownika `other` — migracja go nie nadpisuje.
+- [x] Dodano test jednostkowy potwierdzający domyślne położenie `dashboard`.
+
+### Weryfikacja
+- [ ] Testy JVM, testy Compose/instrumentacyjne na emulatorze, kompilacja APK i REUSE dla nowego PR — oczekują na CI.
+- [ ] Po scaleniu wymagane jest ponowne opublikowanie i sprawdzenie APK z dokładnego SHA `main`.
+
+**Status:** poprawka zapisana na gałęzi `fix/show-international-medical-certificate-dashboard`; nie jest jeszcze scalona ani wydana.
