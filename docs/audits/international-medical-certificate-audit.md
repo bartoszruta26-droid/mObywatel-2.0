@@ -1432,3 +1432,37 @@ Wcześniejszy test równoległego importu dwóch różnych załączników do teg
 - [ ] Ponowna kompilacja testów instrumentacyjnych, wykonanie testów emulatora, budowa APK i REUSE dla nowego SHA — oczekują na GitHub Actions.
 
 **Status:** poprawiono konkretny błąd kompilacji wykryty w CI. PR pozostaje otwarty; scalanie nastąpi dopiero po zielonej weryfikacji nowego SHA.
+
+---
+
+## 54. Rozszerzenie modułu — zarządzanie zapisanymi zaświadczeniami, wybór języków i tłumaczenia
+
+Data: 2026-11-15. Gałąź: `feature/medical-certificate-management-translation`.
+
+### Zakres zmian wprowadzonych w kodzie
+- [x] Pole `Original Language` zastąpiono zwijaną listą rozwijaną; po wyborze lista zamyka się.
+- [x] Pole `Target Languages` zastąpiono zwijaną listą rozwijaną z wielokrotnym wyborem.
+- [x] Dodano ekran zarządzania zapisanymi zaświadczeniami: lista, otwarcie/edycja oraz usunięcie z potwierdzeniem.
+- [x] Rozszerzono istniejący szyfrowany magazyn AES-GCM o wiele rekordów. Indeks i treść każdego zaświadczenia pozostają w tym samym magazynie chronionym kluczem Android Keystore.
+- [x] Dodano migrację dotychczasowego pojedynczego zaświadczenia do rekordu `legacy`, bez utraty istniejących pól.
+- [x] Kafelek jest już wpisany do wspólnego katalogu widoczności, a domyślna konfiguracja `defaultDocumentPlacements` przypisuje nowe dokumenty do `hidden`; dodano test potwierdzający tę regułę dla zaświadczenia.
+- [x] Dodano automatyczne tłumaczenie lokalne z użyciem ML Kit Translation. Modele językowe są pobierane w razie potrzeby; tekst kliniczny jest przekazywany do translatora działającego na urządzeniu.
+- [x] Dodano pola ręcznej korekty tłumaczenia. Oryginalne wartości są zachowane osobno, a przekład zapisywany jest jako osobny zestaw danych.
+- [x] Dodano test instrumentalny cyklu życia rekordów: utworzenie, odczyt, lista, aktualizacja i usunięcie.
+
+### Ograniczenia i kontrola jakości
+- Warianty regionalne języka niderlandzkiego, francuskiego i niemieckiego są mapowane na odpowiednie podstawowe modele ML Kit; sam model nie gwarantuje lokalnej odmiany terminologicznej.
+- Pozycja `Other` może być zapisana jako język źródłowy, ale nie jest obsługiwana przez automatyczny translator ML Kit; przycisk tłumaczenia pozostaje wtedy nieaktywny.
+- Tłumaczenie maszynowe wymaga przeglądu człowieka. Przed wykorzystaniem zaświadczenia w postępowaniu medycznym lub urzędowym należy sprawdzić terminologię, liczby, jednostki, daty i nazwy własne.
+- Status CI, kompilacji i testów emulatora dla tej gałęzi: **oczekuje na uruchomienie i weryfikację**. Nie oznaczać etapu jako zakończonego przed przejściem wszystkich wymaganych kontroli.
+- Nie publikować nowego APK przed pomyślnym przejściem testów JVM, testów UI/instrumentacyjnych na emulatorze i kompilacji.
+
+### Kryteria odbioru dla tego rozszerzenia
+1. Lista języka źródłowego rozwija się i zwija po wyborze.
+2. Lista języków docelowych pozwala zaznaczyć kilka języków i zachowuje wybór po zapisaniu.
+3. Użytkownik może utworzyć wiele niezależnych zaświadczeń, otwierać je, edytować i usuwać.
+4. Usunięcie wymaga potwierdzenia i nie narusza pozostałych rekordów.
+5. Kafelek pozostaje ukryty przy pierwszym uruchomieniu; można go włączyć w `Ustawienia → Widoczność dokumentów`.
+6. Ukrycie kafelka nie usuwa zapisanych zaświadczeń.
+7. Tłumaczenie tworzy osobną treść docelową; zmiana przekładu ręcznego nie nadpisuje oryginału.
+8. Błąd pobierania modelu lub tłumaczenia nie może usunąć danych źródłowych.
