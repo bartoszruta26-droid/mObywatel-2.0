@@ -3614,3 +3614,41 @@ Zmiany są zapisane na gałęzi `feature/payment-ledger-stage-1`. Przebiegi CI u
 - kontrola zgodności REUSE.
 
 Do czasu zakończenia tych kontroli etapy 61–62 pozostają wdrożone w kodzie, ale niezweryfikowane w pełnym CI. PR `#68` pozostaje otwarty i niescalony.
+
+
+## 63. Naprawa kompilacji testów Compose kalendarza (15 listopada 2026 r.)
+
+### 63.1. Wynik kontroli CI dla etapu 62
+
+Dla commitu `d011fcf4e97772a656782badb3d5f74c641f6542`:
+
+- Repository compliance (alfa), run `43711825198` — **success**.
+- Android prototype build, run `43711825175` — **success**.
+- Android GUI validation, run `43711825166` — **failure**.
+
+Testy JVM zakończyły się sukcesem. Testy instrumentacyjne nie doszły do wykonania scenariuszy na emulatorze, ponieważ kompilacja źródeł `androidTest` zakończyła się błędem:
+
+`FinancialReportDateRangePickerTest.kt:8:33 Unresolved reference 'onNode'`.
+
+Błąd wynikał z dodania importu `androidx.compose.ui.test.onNode`, którego nie udostępnia wersja Compose UI Test używana w tym projekcie. Nie był to błąd aplikacji ani testów logiki zakresu dat.
+
+### 63.2. Wykonana poprawka
+
+W pliku `FinancialReportDateRangePickerTest.kt`:
+
+- usunięto import niedostępnego `onNode`;
+- usunięto niepotrzebny matcher `hasContentDescription`;
+- zastosowano publiczny selektor `onNodeWithContentDescription` z pakietu `androidx.compose.ui.test`;
+- zachowano selekcję pełnego opisu dnia oraz asercje, że aktualizowana jest wyłącznie właściwa granica okresu.
+
+Commit: `1d5949e2a31fd9f57179ebc8f2cf0d818b221523`.
+
+### 63.3. Walidacja po poprawce
+
+Dla commitu `1d5949e2a31fd9f57179ebc8f2cf0d818b221523`:
+
+- Repository compliance (alfa), run `43713289536` — **success**.
+- Android prototype build, run `43713289546` — uruchomiony.
+- Android GUI validation, run `43713289577` — uruchomiony.
+
+Do zamknięcia etapu wymagane jest zakończenie obu przebiegów Android dla tego samego SHA. W szczególności należy potwierdzić kompilację `androidTest`, wykonanie testów DatePicker i SAF na emulatorze oraz utworzenie debug APK. Do tego czasu etap 63 pozostaje poprawką zapisaną, ale niepotwierdzoną pełnym CI.
