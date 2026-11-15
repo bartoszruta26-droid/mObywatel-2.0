@@ -585,3 +585,21 @@ Dla nowego zestawu zmian obowiązuje ponowna walidacja CI na końcowym SHA. Nie 
 - Wykres prezentuje notowania referencyjne NBP, a nie ceny transakcyjne banków lub giełd.
 - Testy i kompilacja dla nowego commitu muszą zostać potwierdzone przez CI; nie przypisuje się nowym zmianom wyników poprzednich przebiegów.
 - PR #68 pozostaje otwarty i niescalony.
+
+
+## Etap 94 — synchronizacja z main po scaleniu gałęzi zaświadczeń (15 listopada 2026 r.)
+
+- Wykryto, że PR #68 był rozbieżny z `main`: dwa commity gałęzi głównej nie były jeszcze w gałęzi walut i kruszców, a GitHub oznaczał PR jako `dirty`.
+- W `main` znajdowały się zmiany dotyczące `International Medical Certificate`, w tym `MainActivity.kt`, `DocumentEditorSchemas.kt`, `DocumentBranding.kt`, `DocumentGraphicCatalog.kt`, `DocumentOriginalAttachments.kt` oraz nowe klasy i testy zaświadczenia.
+- Wykonano trójstronne połączenie drzewa zmian: zachowano funkcje finansowe, dodano pliki i zmiany zaświadczenia z `main`, połączono wpisy w `MainActivity.kt` oraz `DocumentEditorSchemas.kt`. Utrzymano obie funkcje w katalogu i nawigacji.
+- Utworzony commit synchronizujący: `e70d5af757a26afd2ba2318b9e7790b4d6c617da`; następnie poprawiono przypisanie certyfikatu do grupy „Służba zdrowotna” w `MainActivity.kt`.
+- Poprzedni błąd kompilacji `PriceHistoryChartCard.kt` (import wewnętrznej właściwości `Modifier.weight`) poprawiono przez usunięcie zbędnego importu.
+- Końcowy SHA gałęzi po poprawkach: `0d8305891fb8a600c59af571fb211a67df9d3c6b`.
+- Kontrola strukturalna: gałąź jest aktualna względem `main` (0 commitów za), porównanie GitHub ma status `ahead`, a PR #68 ma `mergeable=true`; PR pozostaje otwarty i niescalony.
+- CI dla końcowego SHA uruchomiono: Repository compliance (alfa) — `in_progress`; Android prototype build i Android GUI validation — `pending` przy ostatnim odczycie. Pełna zgodność wykonawcza wymaga zielonego CI; nie deklaruje się jeszcze sukcesu kompilacji ani testów.
+
+### Kontrola zachowania współistniejących modułów
+
+- W drzewie po synchronizacji są obecne `InternationalMedicalCertificate.kt`, `InternationalMedicalCertificateEditorScreen.kt`, `InternationalMedicalCertificateStore.kt`, `DocumentOriginalAttachments.kt`, `DocumentBranding.kt` i `DocumentGraphicCatalog.kt`.
+- Zachowano ekran `PaymentLedgerScreen.kt`, repozytorium NBP, przelicznik, wykres cen i notowań oraz ich testy.
+- Potwierdzono obecność wpisów nawigacyjnych obu modułów; nie stwierdzono kolizji identyfikatorów ani zastąpienia jednego modułu drugim.
