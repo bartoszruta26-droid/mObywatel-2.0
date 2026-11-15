@@ -1269,3 +1269,27 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Kontrolowane wymuszanie `SharedPreferences.commit() == false` pozostaje otwarte; nie wprowadzono jeszcze abstrakcji backendu metadanych.
 
 **Status:** zapis etapowy jest wspólny dla dodawania i importu, synchronizowany przed instalacją, a plik tymczasowy importu jest rejestrowany do sprzątania przed zapisem. Wyników CI dla tego etapu jeszcze nie potwierdzono.
+
+---
+
+## 50. Weryfikacja polityki awarii zatwierdzania metadanych — 2026-11-15
+
+### Wynik przeglądu ścieżek transakcyjnych
+
+- [x] Ponownie przeanalizowano implementację add, remove, removeDocument i importArchive na aktualnej gałęzi.
+- [x] add: plik docelowy jest usuwany wyłącznie wtedy, gdy błąd wystąpił przed próbą zatwierdzenia metadanych. Po rozpoczęciu commit() plik pozostaje, ponieważ wynik może być niejednoznaczny.
+- [x] importArchive: analogicznie, nowo zainstalowane pliki są usuwane wyłącznie przy błędzie przed próbą zatwierdzenia. Po próbie commita pozostają do późniejszego uzgodnienia.
+- [x] remove i removeDocument: usunięcie pliku następuje dopiero po sprawdzeniu wyniku commit(). Gdy commit() zwróci false, wyjątek przerywa operację przed usuwaniem plików.
+- [x] Dodano testy JVM potwierdzające obie decyzje sprzątania dla dodawania i importu: sprzątanie przed próbą commita oraz zachowanie plików po niejednoznacznym wyniku zatwierdzania.
+
+### Ograniczenie — kontrolowany backend
+
+- [ ] Nie wprowadzono jeszcze abstrakcji backendu metadanych i testowego adaptera wymuszającego commit() == false. Dodane testy sprawdzają politykę decyzji sprzątania, a nie wykonanie pełnych operacji magazynu na fałszywym backendzie.
+- [ ] Nie zasymulowano backendu, który częściowo zmienia stan metadanych, a następnie zwraca false.
+- [ ] Nie przeprowadzono w tym etapie testu integracyjnego awarii commita dla dodawania, usuwania pojedynczego pliku, usuwania całego zakresu i wieloelementowego importu.
+- [ ] Wyniki testów i kompilacji dla nowego SHA wymagają potwierdzenia w GitHub Actions.
+
+### Status
+
+**Częściowa weryfikacja zakończona.** Potwierdzono i objęto testami JVM reguły zachowania plików w dwóch ścieżkach instalacyjnych. Kolejnym wymaganym etapem pozostaje wydzielenie wąskiego interfejsu metadanych, podłączenie produkcyjnego adaptera SharedPreferences i testowego adaptera z wymuszanym wynikiem false, a następnie testy integracyjne czterech operacji. Nie oznacza to jeszcze pełnego zamknięcia problemu awarii SharedPreferences.commit().
+
