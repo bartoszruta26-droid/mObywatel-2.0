@@ -5,14 +5,17 @@ package pl.gov.obywatel.android
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
+import android.content.Context
 import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.common.model.RemoteModelManager
+import com.google.mlkit.nl.translate.TranslateRemoteModel
 import kotlinx.coroutines.tasks.await
 
 /**
  * On-device translation. The clinical text is processed by the ML Kit translator
  * on the device; only the language model is downloaded when it is not cached.
  */
-internal class MlKitMedicalTranslationProvider : MedicalTranslationProvider {
+internal class MlKitMedicalTranslationProvider(private val context: Context) : MedicalTranslationProvider {
     override val providerId: String = "google-mlkit-on-device"
 
     override suspend fun translate(text: String, sourceLanguage: String, targetLanguage: String): String {
@@ -27,7 +30,19 @@ internal class MlKitMedicalTranslationProvider : MedicalTranslationProvider {
                 .build()
         )
         return try {
-            translator.downloadModelIfNeeded(DownloadConditions.Builder().build()).await()
+            val model = TranslateRemoteModel.Builder(target).build()
+            val downloaded = RemoteModelManager.getInstance()
+                .getDownloadedModels(TranslateRemoteModel::class.java).await()
+                .any { it.language == target }
+            if (!downloaded) {
+                check(MedicalTranslationModelSettings.automaticDownload(context)) {
+                    "Brak pobranego modelu językowego. Pobierz go w Więcej → Ustawienia → Języki i tłumaczenia."
+                }
+                val conditions = DownloadConditions.Builder().apply {
+                    if (MedicalTranslationModelSettings.wifiOnly(context)) requireWifi()
+                }.build()
+                RemoteModelManager.getInstance().download(model, conditions).await()
+            }
             translator.translate(text).await()
         } finally {
             translator.close()
