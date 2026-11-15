@@ -44,6 +44,7 @@ import pl.gov.obywatel.android.financial.ExchangeOperationStatus
 import pl.gov.obywatel.android.financial.BankImportPreview
 import pl.gov.obywatel.android.financial.PaymentLedgerRepository
 import pl.gov.obywatel.android.financial.FinancialReportPeriod
+import pl.gov.obywatel.android.financial.FinancialReportSafWriter
 import pl.gov.obywatel.android.financial.PaymentAccountScope
 import pl.gov.obywatel.android.financial.StoredFinancialTransaction
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
