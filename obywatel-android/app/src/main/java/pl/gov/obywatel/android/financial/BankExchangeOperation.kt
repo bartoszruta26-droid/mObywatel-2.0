@@ -63,11 +63,12 @@ object BankExchangeOperationProjector {
         val secondType = second.operationType.uppercase(Locale.ROOT)
         val bothExchange = firstType.contains("WYMIANA W KANTORZE") &&
             secondType.contains("WYMIANA W KANTORZE")
-        val oppositeDirections = first.signedAmount.signum() == -second.signedAmount.signum()
+        val firstCredit = firstType.contains("UZNANIE") && first.signedAmount.signum() > 0
+        val firstDebit = firstType.contains("OBCIĄŻENIE") && first.signedAmount.signum() < 0
+        val secondCredit = secondType.contains("UZNANIE") && second.signedAmount.signum() > 0
+        val secondDebit = secondType.contains("OBCIĄŻENIE") && second.signedAmount.signum() < 0
+        val validOppositeDirections = (firstCredit && secondDebit) || (firstDebit && secondCredit)
         val distinctCurrencies = first.currencyCode != second.currencyCode
-        val oneDebitOneCredit = listOf(first, second).count {
-            it.signedAmount.compareTo(BigDecimal.ZERO) < 0
-        } == 1
-        return bothExchange && oppositeDirections && distinctCurrencies && oneDebitOneCredit
+        return bothExchange && validOppositeDirections && distinctCurrencies
     }
 }
