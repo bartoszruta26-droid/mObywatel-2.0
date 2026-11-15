@@ -158,4 +158,51 @@ class InternationalMedicalCertificateTest {
         assertEquals(listOf("study-remove"), removedMedicalImagingStudyIds(previous, current))
         assertTrue(removedMedicalImagingStudyIds(previous, previous).isEmpty())
     }
+
+    @Test
+    fun attachmentPayloadValidatorAcceptsSupportedFileSignatures() {
+        validateOriginalAttachmentPayload("application/pdf", "%PDF-1.7".toByteArray(Charsets.US_ASCII))
+        validateOriginalAttachmentPayload("image/jpeg", byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 0x00))
+        validateOriginalAttachmentPayload("image/png", byteArrayOf(
+            0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
+        ))
+        validateOriginalAttachmentPayload("image/webp", "RIFF0000WEBP".toByteArray(Charsets.US_ASCII))
+        validateOriginalAttachmentPayload("text/plain", "Clinical report".toByteArray(Charsets.UTF_8))
+        validateOriginalAttachmentPayload("text/csv", "date,result".toByteArray(Charsets.UTF_8))
+        validateOriginalAttachmentPayload("application/xml", "<report/>".toByteArray(Charsets.UTF_8))
+    }
+
+    @Test
+    fun attachmentPayloadValidatorRejectsMismatchedAndUnsupportedMimeTypes() {
+        val invalidCases = listOf(
+            "image/jpeg" to "not an image".toByteArray(),
+            "image/png" to byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8),
+            "image/webp" to "RIFF0000JPEG".toByteArray(Charsets.US_ASCII),
+            "application/pdf" to "not a pdf".toByteArray(),
+            "image/gif" to byteArrayOf(1, 2, 3),
+            "text/html" to "<html/>".toByteArray()
+        )
+        invalidCases.forEach { (mime, bytes) ->
+            assertTrue("Expected rejection for $mime", runCatching {
+                validateOriginalAttachmentPayload(mime, bytes)
+            }.isFailure)
+        }
+    }
+
+    @Test
+    fun attachmentPayloadValidatorRejectsEmptyOversizedAndExternalEntityText() {
+        assertTrue(runCatching {
+            validateOriginalAttachmentPayload("text/plain", byteArrayOf())
+        }.isFailure)
+        assertTrue(runCatching {
+            validateOriginalAttachmentPayload("text/plain", ByteArray(25 * 1024 * 1024 + 1))
+        }.isFailure)
+        assertTrue(runCatching {
+            validateOriginalAttachmentPayload(
+                "application/xml",
+                "<!DOCTYPE report [<!ENTITY x SYSTEM \"file:///etc/passwd\">]><report>&x;</report>".toByteArray()
+            )
+        }.isFailure)
+    }
+
 }
