@@ -506,7 +506,7 @@ class PaymentLedgerRepositoryTest {
             assertEquals(0, preview.donationConflicts)
             assertTrue(!preview.hasConflicts)
 
-            assertEquals(BatchImportSummary(1, 0), target.importJson(archive))
+            assertEquals(BatchImportSummary(1, 1), target.importJson(archive))
             assertEquals(1, target.getFinancialTransactions().size)
             assertEquals(1, target.getCashDonations().size)
         } finally {
