@@ -93,7 +93,7 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
             error = null
             try {
                 val loaded = withContext(Dispatchers.IO) {
-                    val requestedDate = dateText?.let(LocalDate::parse)
+                    val requestedDate = dateText?.let { LocalDate.parse(it) }
                     val tableA = if (requestedDate == null) repository.latestTable(NbpTable.A)
                         else repository.tableOnOrBefore(NbpTable.A, requestedDate)
                     val tableB = runCatching {
