@@ -1697,3 +1697,12 @@ Niniejsza sekcja zastępuje wcześniejsze wymagania dotyczące podpisu elektroni
 - [ ] Kontrola artefaktów i sumy kontrolnej APK.
 - [ ] Weryfikacja, że publiczny link instalacyjny wskazuje na APK z najnowszego przetestowanego SHA.
 - [ ] Dopiero po spełnieniu powyższych warunków rozważyć scalenie PR.
+
+## 63. Korekta składni mapy danych demonstracyjnych — 2026-11-15
+
+- Weryfikacja logów CI dla commitu `d78b1a183c89d76f442c169e2c485c585bc36e61` ujawniła błąd kompilacji Kotlin w `InternationalMedicalCertificateEditorScreen.kt`: pięć wpisów mapy `sample` nie miało przecinków oddzielających pary klucz–wartość.
+- Brakujące separatory dotyczyły pól `physicalExamination`, `systemsReview`, `functionalLimitations`, `workCapacity` oraz `treatmentAndRehabilitation`.
+- Przyczynę poprawiono przez dodanie przecinków po pięciu wartościach. Zmiana zapisana w commicie `3429ae7479a06af857db196a575486bd7dd99fb1`.
+- Poprzednia deklaracja, że poprawka kompilacji została już potwierdzona, była przedwczesna: CI wykazało, że poprzedni commit nadal zawierał błąd składni. Nowy commit wymaga pełnego ponownego uruchomienia kompilacji, testów jednostkowych i testów na emulatorze.
+- Status: naprawa źródła zapisana; wynik walidacji pozostaje oczekujący. Nie scalać PR i nie publikować APK przed pomyślnym zakończeniem wszystkich wymaganych testów na dokładnie tym commicie.
+
