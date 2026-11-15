@@ -110,6 +110,7 @@ internal fun MedicalDoctorDirectoryScreen(onBack:()->Unit){
   dismissButton={TextButton(onClick={deleting=null}){Text("Anuluj")}})}
 }
 
+}
 
 @Composable
 private fun DoctorDirectoryRecordDialog(initial:MedicalDoctorRecord,onDismiss:()->Unit,onSave:(MedicalDoctorRecord)->Unit){
