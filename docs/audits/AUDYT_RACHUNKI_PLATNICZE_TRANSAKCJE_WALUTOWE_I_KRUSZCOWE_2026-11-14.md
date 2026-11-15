@@ -3836,26 +3836,23 @@ W `PaymentLedgerRepository.previewArchive()` zastosowano zgodne kryterium pełne
 
 ### 68.3. Test regresyjny
 
-Dodano test instrumentacyjny:
-- `sameDonationIdWithChangedDonorMetadataIsReportedAsConflictAndPreservesRecord` — zmiana danych darczyńcy przy zachowaniu identyfikatora powoduje wskazanie konfliktu w podglądzie, odrzucenie importu i zachowanie pierwotnego rekordu.
+Dodano rozszerzony test instrumentacyjny:
+- `sameDonationIdWithChangedMetadataIsReportedAsConflictAndPreservesRecord` — testuje dziewięć zmian metadanych (darczyńca, anonimowość, kampania, osoba przyjmująca, numer pokwitowania, status przechowywania, dane przekazania, notatka i źródło). Dla każdej zmiany podgląd zgłasza konflikt, import zostaje odrzucony, a pierwotny rekord pozostaje zachowany.
+- Asercja odczytu normalizuje skalę `BigDecimal`, ponieważ SQLite zapisuje wartości po `stripTrailingZeros()`.
 
 ### 68.4. Zmienione pliki i commity
 
 - `PaymentLedgerDatabase.kt` — pełne porównanie danych darowizny; commit `aaf5ee534b7d51b198c5b8d6b0f49e587194a794`.
 - `PaymentLedgerRepository.kt` — zgodna kontrola w podglądzie; commit `07cb282621a543628c58363666d6d374fa4ac5a1`.
-- `PaymentLedgerRepositoryTest.kt` — test konfliktu danych darczyńcy i zachowania rekordu; commit `55ecc820cb5b0f0ee2482a23f0f5041378385d32`.
+- `PaymentLedgerRepositoryTest.kt` — rozszerzony test dziewięciu pól metadanych; commit `53251f0c35cc15a6a66d0216c762ae53334c7206`; korekta asercji skali dziesiętnej; commit `1d5ff946550013414ebccd78734abca035ae76c0`.
 
 ### 68.5. Kontrola zapisu i walidacja
 
-Po zapisaniu zmian ponownie pobrano wszystkie trzy pliki z gałęzi i potwierdzono:
-- porównanie wszystkich pól modelu darowizny w bazie;
-- zgodność kryterium w podglądzie archiwum;
-- obecność testu regresyjnego.
+Po zapisaniu zmian ponownie pobrano z GitHuba pliki bazy, repozytorium i testu. Potwierdzono pełne porównanie pól modelu darowizny, zgodność kryterium podglądu oraz obecność testu obejmującego dziewięć wariantów konfliktu.
 
-Dla HEAD `55ecc820cb5b0f0ee2482a23f0f5041378385d32`:
-- Repository compliance, run `43716604238` — **success**;
-- Android prototype build, run `43716604196` — **in_progress`;
-- Android GUI validation, run `43716604187` — **in_progress`.
+Dla końcowego SHA kodu `1d5ff946550013414ebccd78734abca035ae76c0`:
+- Repository compliance, run `43716840286` — **success** (potwierdzony przed ostatnim odczytem);
+- Android prototype build, run `43716840245` — **in_progress**;
+- Android GUI validation, run `43716840257` — **in_progress**.
 
-W trakcie testowania nie zgłoszono jeszcze błędu kodu, ale testy JVM, testy emulatorowe i budowa APK nie zostały zakończone. Etap 68 jest **zapisany i sprawdzony w źródłach; walidacja CI oczekuje na zakończenie**. PR `#68` pozostaje otwarty i niescalony z `main`.
-
+Przebiegi dla wcześniejszych SHA zostały anulowane po kolejnych pushach. Nie ma jeszcze potwierdzenia zaliczenia testów JVM, emulatorowych ani budowy APK dla końcowego SHA kodu. Etap 68 jest **zapisany, odczytany ponownie i objęty walidacją CI; pozostaje niezamknięty do czasu wyników**. PR `#68` pozostaje otwarty i niescalony z `main`.
