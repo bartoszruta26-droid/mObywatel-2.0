@@ -45,7 +45,7 @@ internal fun writeMedicalCertificateAtomically(directory: File, fileName: String
             StandardCopyOption.ATOMIC_MOVE,
             StandardCopyOption.REPLACE_EXISTING
         )
-    } catch (failure: Throwable) {
+    } catch (failure: Exception) {
         runCatching { temporary.delete() }
         throw IllegalStateException(
             "Could not atomically replace the encrypted medical certificate; the previous file was preserved.",
@@ -67,8 +67,7 @@ internal object InternationalMedicalCertificateStore {
     private const val MAX_ENCRYPTED_BYTES = 10 * 1024 * 1024
     private const val MAX_PLAINTEXT_BYTES = 9 * 1024 * 1024
 
-    fun load(context: Context): Map<String, String> =
-        runCatching { loadStrict(context) }.getOrDefault(emptyMap())
+    fun load(context: Context): Map<String, String> = loadStrict(context)
 
     fun loadStrict(context: Context): Map<String, String> {
         val file = File(context.noBackupFilesDir, FILE_NAME)
