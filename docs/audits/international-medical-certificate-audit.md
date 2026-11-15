@@ -352,3 +352,29 @@ Powyższe zmiany stanowią **etap katalogowo-modelowy**, a nie kompletny działa
 Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpisów i pieczęci, automatycznego tłumaczenia, wielostronicowego PDF ani wydruku. Model domenowy badań obrazowych istnieje, ale interfejs do dodawania i zarządzania badaniami oraz załącznikami nie jest jeszcze ukończony.
 
 **Status iteracji:** formularz bazowy i szyfrowany zapis są zbudowane; kontrola REUSE przeszła; testy JVM i APK przeszły na poprzednim commicie; końcowy wynik testów GUI i ponowny build po ostatniej korekcie nadal oczekiwane. PR #69 pozostaje otwarty jako WIP.
+
+
+---
+
+## 15. Etap formularza badań obrazowych — 2026-11-15
+
+### Wykonane
+- [x] Dodano sekcję `Medical Imaging Studies` do dedykowanego formularza.
+- [x] Użytkownik może dodać wiele osobnych badań i wybrać modalność: X-ray, MRI, CT, Ultrasound lub Other.
+- [x] Dodano pola: Body Region, Examination Date, Imaging Facility, Clinical Indication, Findings i Impression.
+- [x] Dodane badania są serializowane do JSON i zapisywane razem z pozostałymi danymi w szyfrowanym magazynie AES-GCM.
+- [x] Lista badań jest odtwarzana po ponownym otwarciu formularza; można usuwać pozycje przed zapisem.
+- [x] Dane badań i pól dokumentu nadal pozostają w lokalnym magazynie; brak transmisji do usług zewnętrznych.
+
+### Ograniczenia tej części
+- [ ] Nie ma jeszcze selektora plików ani importu obrazów RTG/MRI/CT/USG i opisów w formie załączników.
+- [ ] Pola `technique`, `contrast`, `radiologistName`, `reportNumber` i `attachmentIds` są zachowane w modelu/serializacji, ale nie mają jeszcze pełnego interfejsu edycji.
+- [ ] Należy dodać walidację dat, limitów rozmiaru oraz obsługę błędnego JSON bez pomijania istniejących danych.
+- [ ] Nowy ekran wymaga ponownego potwierdzenia kompilacją i testami Android CI.
+
+### Kontrola repozytorium po etapie
+- [x] REUSE compliance: PASS dla SHA `c1d2e5eb7a60ba2c8c5a54b0bd8dfb8266c6402d`.
+- [x] Wcześniejszy build APK: PASS dla SHA `3a57c34992d8590641341f5778c7ff3a7695beee`; nie jest to jeszcze dowód kompilacji nowej sekcji obrazowania.
+- [ ] Build Android, testy JVM i Compose UI dla nowego formularza badań obrazowych — oczekują na wynik workflow uruchomionego po commicie `2f4f1c9`.
+
+**Status:** formularz podstawowy i wielokrotna lista badań obrazowych są zaimplementowane, ale załączniki, skany podpisów, automatyczne tłumaczenie, PDF/druk i testy końcowe pozostają otwarte. PR #69 pozostaje WIP.
