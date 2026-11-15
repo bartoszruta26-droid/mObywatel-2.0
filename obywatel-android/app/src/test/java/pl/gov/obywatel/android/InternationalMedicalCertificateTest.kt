@@ -506,4 +506,17 @@ class InternationalMedicalCertificateTest {
         }
     }
 
+
+
+    @Test
+    fun attachmentAddFailurePolicyDeletesOnlyBeforeMetadataCommitAttempt() {
+        assertTrue(shouldDeleteAddedAttachmentAfterFailure(metadataCommitAttempted = false))
+        assertFalse(shouldDeleteAddedAttachmentAfterFailure(metadataCommitAttempted = true))
+    }
+
+    @Test
+    fun attachmentImportFailurePolicyKeepsInstalledFilesAfterAmbiguousMetadataCommit() {
+        assertTrue(shouldDeleteInstalledAttachmentsAfterImportFailure(metadataCommitAttempted = false))
+        assertFalse(shouldDeleteInstalledAttachmentsAfterImportFailure(metadataCommitAttempted = true))
+    }
 }
