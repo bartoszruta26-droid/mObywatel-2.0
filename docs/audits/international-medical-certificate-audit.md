@@ -988,3 +988,9 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 ### Status weryfikacji
 - [ ] Nowy commit wymaga ponownego uruchomienia i potwierdzenia workflow Android JVM, GUI/emulator oraz REUSE.
 - [ ] Do czasu zakończenia nowych workflow nie deklaruje się naprawienia CI ani gotowości APK.
+
+### Kontrola końcowego stanu etapu 37
+- [x] Ponownie odczytano zmieniony test JVM i potwierdzono, że nie wywołuje on już dekodera Androida dla pozytywnych przypadków obrazu; prawidłowe dekodowanie jest testowane w klasie instrumentacyjnej.
+- [x] PR #69 pozostaje otwarty i Draft; gałąź `zaswaidczenie` jest 99 commitów przed `main` i 0 commitów za nim.
+- [x] Końcowy SHA po aktualizacji audytu: `3700c63eb4bbaf7e14778aaac024a5171e6be3f0`.
+- [ ] Dla tego SHA GitHub nie zwrócił jeszcze nowych workflow ani statusów. Nie można zatem potwierdzić, że poprawka przeszła testy; wymagane jest uruchomienie CI przez zdarzenie PR/push w repozytorium.
