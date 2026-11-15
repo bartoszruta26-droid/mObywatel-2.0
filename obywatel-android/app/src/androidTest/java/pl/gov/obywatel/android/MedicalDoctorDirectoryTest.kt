@@ -35,7 +35,8 @@ class MedicalDoctorDirectoryTest {
     @Test fun directorySupportsUpdatingAndDeletingRecords() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val prefs = context.getSharedPreferences("medical_doctor_directory", 0)
-        val previous = prefs.getString("records_v1", null)
+        val previous = prefs.getString("records_v2", null)
+        val legacy = prefs.getString("records_v1", null)
         try {
             prefs.edit().clear().commit()
             val original = MedicalDoctorDirectory.list(context).first()
@@ -50,7 +51,8 @@ class MedicalDoctorDirectoryTest {
             assertFalse(MedicalDoctorDirectory.list(context).any { it.id == original.id })
         } finally {
             val edit = prefs.edit().clear()
-            if (previous != null) edit.putString("records_v1", previous)
+            if (previous != null) edit.putString("records_v2", previous)
+            if (legacy != null) edit.putString("records_v1", legacy)
             edit.commit()
         }
     }
