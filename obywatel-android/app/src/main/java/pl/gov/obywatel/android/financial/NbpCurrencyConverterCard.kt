@@ -20,7 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import java.io.File
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -73,7 +75,10 @@ object NbpCurrencyConverter {
 
 @Composable
 fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
-    val repository = remember { NbpRatesRepository() }
+    val context = LocalContext.current
+    val repository = remember(context) {
+        NbpRatesRepository(cacheDirectory = File(context.filesDir, "nbp-rates-cache"))
+    }
     val scope = rememberCoroutineScope()
     var amountText by remember { mutableStateOf("100") }
     var fromCode by remember { mutableStateOf("EUR") }
