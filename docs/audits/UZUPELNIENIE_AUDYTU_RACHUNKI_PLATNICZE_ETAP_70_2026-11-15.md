@@ -220,3 +220,28 @@ W commicie `2db3a8f5a0890bf5eda7d5021428a6fc84ac031c` dodano zapis niepołączon
 Ponownie przeanalizowano identyfikację wpisów CSV: `accountingEntryId()` korzysta z opisu, gdy brak referencji bankowej, a archiwum JSON zachowuje identyfikatory powiązań transakcji. Zmiana wymaga migracji i jawnej obsługi kolizji, dlatego nie usunięto skrótu opisu bez bezpiecznego zamiennika.
 
 **Status:** etap kalendarza nadal niezaliczony; etap diagnostyczny 78 wykonany i oczekuje na wyniki kolejnego CI. Ryzyko pseudonimizacji opisów CSV pozostaje otwarte. PR #68 pozostaje otwarty i niescalony.
+
+
+## 79. Wynik GUI CI i korekta diagnostyki DatePicker — 15 listopada 2026 r.
+
+### 79.1. Wynik przebiegu dla SHA `169bb3af859e61ce19b2051a7b99bd9c61907c47`
+
+- Android GUI validation, run [43734169856](https://github.com/bartoszruta26-droid/mObywatel-2.0/actions/runs/43734169856) — **failure**.
+- Repository compliance, run `43734169836` — **success**.
+- Android prototype build, run `43734169823` — **success**.
+- Zadanie Android GUI: JVM unit tests — **success**; Compose UI tests na emulatorze — **failure**.
+- Raport instrumentacyjny: artefakt `14169757103`, SHA-256 archiwum `03aa14e3c7da7679b4756347ee3bc0c331ba8c416fc0f149cd44d8815979d383`.
+
+Raport XML wykazał, że dwa testy wyboru daty zakończyły się błędem w diagnostycznym wywołaniu `onRoot(useUnmergedTree = true).printToLog(...)`. Matcher `isRoot` zwrócił dwa korzenie (węzeł okna dialogowego i korzeń głównej hierarchii), podczas gdy `printToLog` wymaga dokładnie jednego węzła. Błąd wystąpił przed selektorem dnia i przed kliknięciem. W tym przebiegu **nie uzyskano zatem nowego dowodu**, czy selektory dni `10` i `25` działają.
+
+### 79.2. Wykonana korekta
+
+W commicie `89fd9c1ca0f7c3ee88cdcfa518d0817c84060d24` usunięto wadliwą diagnostykę `printToLog` oraz nieużywane importy `onRoot` i `printToLog` z `FinancialReportDateRangePickerTest.kt`. Nie zmieniano produkcyjnego komponentu DatePicker ani logiki aktualizacji granic dat. Testy wyboru dni nadal sprawdzają końcowy zakres dat po kliknięciu i zatwierdzeniu.
+
+### 79.3. Status i kryteria
+
+Korekta usuwa przyczynę bieżącego błędu diagnostycznego, ale nie jest jeszcze potwierdzoną naprawą testów wyboru dni. Wymagany jest nowy pełny CI dla SHA po tej korekcie: kompilacja testów instrumentacyjnych, wszystkie testy emulatorowe, compliance i build. W GUI workflow kroki budowania oraz publikacji APK zostały pominięte po błędzie testów; brak nowego APK z tego przebiegu.
+
+**Status:** diagnostyka z etapu 78 skorygowana; testy wyboru dat nadal otwarte; brak podstaw do zamknięcia etapu kalendarza. Nie zmieniono modelu identyfikacji CSV — ryzyko skrótu SHA-256 opisu, migracja i obsługa kolizji pozostają otwarte. Etapy NBP, wyceny, raportowania i XLS/BIFF nie zostały rozpoczęte.
+
+PR #68 pozostaje otwarty i niescalony.
