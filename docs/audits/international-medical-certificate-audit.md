@@ -820,3 +820,27 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Wyniki workflow dla końcowego SHA tej sekcji wymagają odczytu po zakończeniu uruchomień. Nie przenosi się wyników z wcześniejszych commitów.
 
 **Status:** rozszerzono wykrywanie deklaracji DTD/ENTITY na całą treść załącznika i dodano test regresyjny. Poprawka wymaga potwierdzenia przez CI dla końcowego SHA.
+
+---
+
+## 32. Ścisła walidacja kodowania Base64 przy imporcie — 2026-11-15
+
+### Wykryta luka
+- [x] Import używał dekodera Base64 w trybie tolerującym białe znaki i nie sprawdzał kanoniczności zakodowanego ciągu.
+- [x] Nieprawidłowe lub niekanoniczne reprezentacje mogły być akceptowane mimo że eksport aplikacji generuje standardowy zapis bez dodatkowych znaków.
+
+### Wykonana poprawka
+- [x] Dodano `decodeOriginalAttachmentBase64`, korzystające ze ścisłego dekodera Base64.
+- [x] Funkcja sprawdza limit rozmiaru przed dekodowaniem, rozmiar danych po dekodowaniu oraz zgodność z kanonicznym ponownym kodowaniem.
+- [x] Import archiwum korzysta teraz z tej funkcji zamiast tolerancyjnego dekodera Androida.
+- [x] Dodano testy poprawnego kodowania, błędnych znaków, brakującego/podwójnego paddingu, białych znaków, niekanonicznego kodowania, pustej wartości i przekroczenia limitu.
+- [x] Kod zapisano w commicie `8666ed38739d1dd0a3f3206ff0cf7e4e6d755a29`; testy w commicie `3a2c68d1d69075f688380f6bdc7bf729a0ef9471`.
+
+### Ograniczenia
+- [ ] Nie zastępuje to testów integracyjnych całego importu na Androidzie ani testów awarii procesu.
+- [ ] Nadal wymagane są testy limitów całego archiwum i liczby wpisów, konfliktów ID, pełnego dekodowania obrazów i ograniczeń wymiarów.
+
+### CI
+- [ ] CI dla końcowego SHA tej sekcji wymaga potwierdzenia po zakończeniu workflow.
+
+**Status:** import odrzuca teraz niekanoniczne i wadliwe ciągi Base64 oraz weryfikuje rozmiar danych przed i po dekodowaniu. Testy regresyjne dodano; wykonanie CI pozostaje do potwierdzenia.
