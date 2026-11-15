@@ -4084,3 +4084,49 @@ Usunięto nieprawidłowy import. Wywołania `composeRule.onNode(...)` pozostają
 Korekta źródła została zapisana. Oczekuje na nowy pełny przebieg CI dla SHA `42d466b48619f9d798e12f285664cfbb6a2faa7a`. Etap pozostaje **otwarty** do potwierdzenia kompilacji testów instrumentacyjnych, wykonania wszystkich testów emulatorowych, budowy APK, archiwizacji sumy kontrolnej i publikacji artefaktu. Etap 74 dotyczy wyłącznie usunięcia błędu kompilacji testów; nie oznacza jeszcze zaliczenia funkcjonalnych testów kalendarza.
 
 Etap XLS/XLSX pozostaje zablokowany do czasu pełnego zielonego CI etapu CSV i testów Androida.
+
+## 75. Adapter CSV dla rzeczywistego układu eksportu iPKO — 15 listopada 2026 r.
+
+### 75.1. Wynik kontroli wcześniejszego CI
+
+Dla SHA `a45dd7cdb7c4c076269829aac41403b9898a30b4`:
+- Android prototype build, run `43729630235` — **success**;
+- Repository compliance, run `43729630224` — **success**;
+- Android GUI validation, run `43729630242` — **failure**.
+
+Raport instrumentacyjny został pobrany i odczytany. Wykonano 101 testów: 99 zakończyło się sukcesem, a dwa testy `FinancialReportDateRangePickerTest` nie przeszły na asercji `assertIsDisplayed()` dla komórek dni kalendarza (linie 83 i 101). Kompilacja testów, testy JVM i uruchomienie emulatora zakończyły się poprawnie. Budowa i publikacja APK zostały pominięte z powodu niezaliczonych testów GUI.
+
+### 75.2. Analiza dostarczonych próbek iPKO
+
+Przeanalizowano bez zapisywania danych identyfikujących do repozytorium:
+- XML `account-history`: parser rozpoznaje datę wykonania, typ, walutę, kwotę i referencję z pola opisu;
+- CSV: kodowanie Windows-1250, separator przecinkowy, nagłówki `Data operacji`, `Data waluty`, `Typ transakcji`, `Kwota`, `Waluta`, `Saldo po transakcji`, `Opis transakcji`, a także dodatkowe puste nagłówki; opis jest rozłożony na kilka kolejnych pól;
+- XLS: plik jest binarnym skoroszytem OLE/BIFF, a nie plikiem XLSX. Wymaga odrębnego parsera HSSF/BIFF; nie wolno kierować go do parsera OOXML ani CSV.
+
+Pliki źródłowe i hasło do archiwum nie są dodawane do repozytorium. Testy korzystają z syntetycznych danych odtwarzających układ kolumn, bez prawdziwych numerów rachunków, nazwisk ani adresów.
+
+### 75.3. Wykonane poprawki CSV
+
+W `BankStatementCsvParser.kt`:
+- puste nazwy kolumn są mapowane na techniczne, lokalne identyfikatory kolumn, zamiast powodować natychmiastowe odrzucenie pliku;
+- dodano aliasy `typtransakcji` i `opistransakcji`;
+- dodatkowe kolumny o pustych nagłówkach następujące po opisie są łączone wyłącznie na potrzeby ekstrakcji metadanych;
+- z opisu wyodrębniana jest referencja `Referencje własne zleceniodawcy`;
+- jawna treść opisu nie jest zapisywana do wpisu, gdy referencja została rozpoznana; bez referencji pozostaje dotychczasowy skrót SHA-256.
+
+Dodano test kontraktowy `parsesIpkoCsvWithTrailingUnnamedDescriptionColumnsWithoutPersistingPersonalData` z syntetycznym rekordem. Test weryfikuje datę, walutę, kwotę ze znakiem, typ, referencję i brak jawnego opisu.
+
+### 75.4. Korekta testów kalendarza
+
+W dwóch testach wyboru dnia usunięto asercję `assertIsDisplayed()` na komórce kalendarza. Raport wskazywał, że dopasowany węzeł semantyczny nie był raportowany jako wyświetlony; test wykonuje teraz bezpośrednio akcję `performClick()` na dopasowanym węźle i nadal sprawdza końcowe wartości obu granic okresu. Jest to korekta testu, nie zmiana logiki produkcyjnego kalendarza.
+
+Commity zmian:
+- adapter CSV: `45277d72d878fb467c4c98f7d7843bb95c71a914`;
+- test CSV iPKO: `b099b7185001fd0f7d5f53ea3b300c35e2c4f1ff`;
+- testy kalendarza: `34797f67398e9727168b78d0b832aae4df565ed5`.
+
+### 75.5. Status i kryteria zamknięcia
+
+Źródła i testy zostały zapisane na gałęzi. Poprawność działania nowych zmian wymaga pełnego CI na końcowym SHA po aktualizacji audytów. Nie uznaje się jeszcze adaptera CSV ani testów kalendarza za zaliczone.
+
+Obsługa XLS pozostaje **otwarta**: potrzebny jest wybór i ocena bezpiecznej biblioteki HSSF/BIFF dla Androida albo wąskiego parsera BIFF8, wraz z testami limitów OLE/BIFF i ekstrakcji bez przechowywania danych osobowych. Nie dodano ciężkiej zależności Apache POI bez oceny wpływu na rozmiar APK i zgodność Androida.
