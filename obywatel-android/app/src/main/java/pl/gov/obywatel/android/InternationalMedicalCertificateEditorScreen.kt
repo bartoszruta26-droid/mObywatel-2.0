@@ -293,7 +293,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
     }
 }
 
-private fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): String {
+internal fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): String {
     val array = JSONArray()
     studies.forEach { study ->
         array.put(JSONObject().apply {
@@ -315,7 +315,7 @@ private fun encodeMedicalImagingStudies(studies: List<MedicalImagingStudy>): Str
     return array.toString()
 }
 
-private fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagingStudy> {
+internal fun decodeMedicalImagingStudies(serialized: String): List<MedicalImagingStudy> {
     val array = JSONArray(serialized)
     return (0 until array.length()).map { index ->
         val item = array.getJSONObject(index)
