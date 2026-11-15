@@ -461,13 +461,13 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [x] Niepoprawna data wpisana w formularzu jest oznaczana komunikatem błędu i blokuje dodanie rekordu badania.
 - [x] Puste pole daty pozostaje dopuszczalne, ponieważ formularz na tym etapie nie wymusza daty jako pola obowiązkowego.
 - [x] Dodano testy daty przestępnej, daty prawidłowej, nieistniejących dni/miesięcy, błędnego formatu i dodatkowego tekstu.
-- [x] Zmiany zapisano w commitach: `03b536ffa74c60f85148d05d588e7c9dfe5d046b` (formularz/walidator) oraz `c3a72bf8d1559fb47d35ca42fd4cfb4423054c6f` (testy).
+- [x] Zmiany zapisano w commitach: `03b536ffa74c60f85148d05d588e7c9dfe5d046b` (formularz/walidator), `c3a72bf8d1559fb47d35ca42fd4cfb4423054c6f` (pierwszy zapis testu) oraz `791c90a14c6f09421d798ca2818cbed2653f2868` (korekta położenia testu wewnątrz klasy JUnit).
 
 ### Weryfikacja
 - [x] Sprawdzono ręcznie logikę walidatora: parser działa w trybie niepobłażliwym, a pozycja parsowania musi obejmować cały ciąg.
 - [x] Przycisk dodania badania jest aktywny przy pustej dacie lub poprawnej dacie ISO; jest nieaktywny dla niepoprawnej daty.
-- [ ] Testy JVM i kompilacja Androida dla nowych commitów — wymagają wyniku CI.
-- [ ] Test Compose / emulator — wymaga potwierdzenia po zakończeniu aktualnego workflow.
+- [ ] Dla commitu `54a8a112042c95f8916f21a4d4c405e19383a9fe` workflow Androida i GUI rozpoczęły się, ale zostały anulowane po kolejnym commicie poprawiającym położenie testu.
+- [ ] Dla najnowszego commitu `791c90a14c6f09421d798ca2818cbed2653f2868` należy potwierdzić ponowne uruchomienie i końcowy wynik testów JVM, kompilacji APK oraz Compose/emulatora.
 
 ### Kolejne zadania
 - [ ] Rozszerzyć testy serializacji/deserializacji wszystkich pól obrazowania (w tym technique, contrast, radiologistName, reportNumber) jako pełny test round-trip, a nie tylko test właściwości modelu.
