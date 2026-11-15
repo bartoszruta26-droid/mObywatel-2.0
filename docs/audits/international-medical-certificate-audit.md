@@ -964,3 +964,27 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [x] Workflow zgodności REUSE zakończył się powodzeniem.
 - [ ] Build Android i walidacja GUI dla tego pośredniego SHA zostały anulowane po kolejnych aktualizacjach gałęzi; nie stanowią wyniku testów końcowej wersji.
 - [ ] Dla końcowego SHA `3bec148e53866fbb55a1a97ff6fbdfc1c54545a1` odczyt statusów i listy workflow nie zwrócił uruchomień. Testy nowego kodu pozostają zatem niepotwierdzone.
+
+---
+
+## 37. Naprawa testu JVM wywołującego Android BitmapFactory — 2026-11-15
+
+### Wynik kontroli CI dla SHA `54ec2908a38af3092ba6f202b670a85ff0a02d7a`
+- [x] REUSE compliance zakończył się powodzeniem (run `43737706100`).
+- [x] Android prototype build oraz Android GUI validation zakończyły się niepowodzeniem na etapie wspólnego zadania testów JVM (runy `43737706087` i `43737706138`).
+- [x] Oba logi wskazały ten sam test: `InternationalMedicalCertificateTest.attachmentPayloadValidatorAcceptsSupportedFileSignatures`.
+- [x] Kompilacja Kotlin aplikacji zakończyła się poprawnie; zadanie `:app:testDebugUnitTest` przerwało dalsze kroki, dlatego kompilacja APK i testy emulatora zostały pominięte.
+
+### Przyczyna
+- [x] Test JVM przekazywał do `validateOriginalAttachmentPayload()` sztuczne nagłówki JPEG/PNG/WebP.
+- [x] Walidator celowo wywołuje `android.graphics.BitmapFactory`, aby odczytać rzeczywiste wymiary i zdekodować obraz. W środowisku lokalnych testów JVM Android SDK udostępnia atrapę tej klasy, która zgłasza `RuntimeException` („Method ... not mocked”).
+- [x] To błąd umiejscowienia testu i danych testowych, a nie dowód błędu kompilacji ani powód do osłabienia walidatora obrazów.
+
+### Wykonana poprawka
+- [x] Test JVM rozdzielono na akceptację typów nieobrazowych (PDF, tekst, CSV, XML) oraz odrzucanie sztucznych, niedekodowalnych danych obrazowych.
+- [x] Weryfikacja rzeczywistego dekodowania poprawnych obrazów pozostaje w `OriginalAttachmentImageValidationTest` w zestawie Android instrumented tests, gdzie używany jest prawdziwy `Bitmap`/ `BitmapFactory`.
+- [x] Zmianę zapisano w commicie `6b568a9c5314b98e480acc18693baa5cb1d698ef`.
+
+### Status weryfikacji
+- [ ] Nowy commit wymaga ponownego uruchomienia i potwierdzenia workflow Android JVM, GUI/emulator oraz REUSE.
+- [ ] Do czasu zakończenia nowych workflow nie deklaruje się naprawienia CI ani gotowości APK.
