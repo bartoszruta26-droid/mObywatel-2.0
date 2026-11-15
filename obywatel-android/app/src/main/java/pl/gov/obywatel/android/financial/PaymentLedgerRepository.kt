@@ -123,6 +123,7 @@ class PaymentLedgerRepository(
         val existingTransactionList = database.readFinancialTransactions()
         val existingTransactions = existingTransactionList.associateBy { it.transaction.id }
         val existingDonations = database.readCashDonations().associateBy { it.id }
+        val existingConversions = database.readCurrencyConversions(1000).associateBy { it.id }
         val existingEntries = database.readAll()
         val bankPreview = BankImportDeduplicator.preview(archive.entries, existingEntries)
 
@@ -156,6 +157,19 @@ class PaymentLedgerRepository(
                 }
                 sameDonationIdentity(previous, incoming) -> duplicateDonations++
                 else -> donationConflicts++
+            }
+        }
+
+        val conversionCandidates = existingConversions.toMutableMap()
+        var newConversions = 0
+        var duplicateConversions = 0
+        var conversionConflicts = 0
+        archive.currencyConversions.forEach { incoming ->
+            val previous = conversionCandidates[incoming.id]
+            when {
+                previous == null -> { conversionCandidates[incoming.id] = incoming; newConversions++ }
+                sameCurrencyConversion(previous, incoming) -> duplicateConversions++
+                else -> conversionConflicts++
             }
         }
 
@@ -197,9 +211,21 @@ class PaymentLedgerRepository(
             newDonations = newDonations,
             duplicateDonations = duplicateDonations,
             donationConflicts = donationConflicts,
-            transactionLinkConflicts = transactionLinkConflicts
+            transactionLinkConflicts = transactionLinkConflicts,
+            newCurrencyConversions = newConversions,
+            duplicateCurrencyConversions = duplicateConversions,
+            currencyConversionConflicts = conversionConflicts
         )
     }
+
+    private fun sameCurrencyConversion(first: CurrencyConversionRecord, second: CurrencyConversionRecord): Boolean =
+        first.id == second.id && first.convertedAt == second.convertedAt &&
+            first.sourceAmount.compareTo(second.sourceAmount) == 0 &&
+            first.sourceCurrencyCode == second.sourceCurrencyCode &&
+            first.targetAmount.compareTo(second.targetAmount) == 0 &&
+            first.targetCurrencyCode == second.targetCurrencyCode &&
+            first.appliedRate.compareTo(second.appliedRate) == 0 &&
+            first.rateDate == second.rateDate && first.rateSource == second.rateSource
 
     private fun sameStoredTransaction(
         existing: StoredFinancialTransaction,
@@ -283,7 +309,8 @@ class PaymentLedgerRepository(
         PaymentLedgerJsonCodec.encode(
             database.readAll(),
             database.readFinancialTransactions(),
-            database.readCashDonations()
+            database.readCashDonations(),
+            database.readCurrencyConversions(1000)
         )
     }
 
@@ -302,9 +329,12 @@ data class ArchiveImportPreview(
     val newDonations: Int,
     val duplicateDonations: Int,
     val donationConflicts: Int,
-    val transactionLinkConflicts: Int
+    val transactionLinkConflicts: Int,
+    val newCurrencyConversions: Int = 0,
+    val duplicateCurrencyConversions: Int = 0,
+    val currencyConversionConflicts: Int = 0
 ) {
     val hasConflicts: Boolean get() =
         bankConflicts > 0 || transactionConflicts > 0 ||
-            donationConflicts > 0 || transactionLinkConflicts > 0
+            donationConflicts > 0 || transactionLinkConflicts > 0 || currencyConversionConflicts > 0
 }
