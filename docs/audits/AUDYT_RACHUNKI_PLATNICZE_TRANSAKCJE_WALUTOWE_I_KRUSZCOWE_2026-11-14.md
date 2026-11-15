@@ -2792,18 +2792,28 @@ Import darowizn jest częścią atomowego importu archiwum:
 
 Po zapisaniu ponownie pobrano wszystkie dziewięć plików i potwierdzono obecność tabeli i migracji, metod CRUD, API repozytorium, JSON, formularza oraz testów.
 
-### 46.8. CI dla aktualnego kodu
+### 46.8. CI — wynik rzeczywistej kompilacji i korekta audytu
 
-Kontrolowany końcowy SHA w chwili zapisu audytu: `2ca5026b7985f42c593dd995157929339f65db9c`.
+Końcowa rewizja przed kontrolą CI: `4deebe7254db9c9312bb3a6e8ec12301af91dd66`.
 
-Dla tego dokładnego SHA GitHub Actions utworzył trzy przebiegi:
-- Android prototype build — run `43681543185`, pierwszy job anulowany podczas konfiguracji Gradle, przed testami JVM;
-- Repository compliance (alfa) — run `43681543135`, oczekiwał na runner w chwili ostatniej kontroli;
-- Android GUI validation — run `43681543103`, job anulowany podczas przygotowania Android SDK, przed testami JVM i emulatora.
+Dla tej rewizji GitHub Actions wykonał:
+- Android prototype build — run `43681601693`: **niepowodzenie** na `:app:compileDebugKotlin`;
+- Android GUI validation — run `43681601617`: **niepowodzenie** na kroku testów JVM, przed testami emulatorowymi;
+- Repository compliance (alfa) — run `43681601643`: **sukces**.
 
-Ponowiono joby kompilacji i GUI, ale ponowienia również zostały anulowane/przerwane w fazie konfiguracji środowiska. Nie ma potwierdzenia wykonania testów JVM, testów emulatorowych ani nowego APK dla darowizn. Nie stwierdzono błędu kompilacji Kotlin — kompilacja nie doszła do tego kroku. Kontrola treści źródeł potwierdziła spójność nazw metod i obecność testów, ale nie zastępuje wykonania Gradle i emulatora.
+Logi ujawniły konkretną przyczynę: w `PaymentLedgerDatabase.kt` dwukrotnie zadeklarowano metody `saveCashDonation`, `updateCashDonation`, `readCashDonations`, `deleteCashDonation` oraz mapper `CashDonation.toContentValues()`. Powodowało to błędy „Conflicting overloads” i niejednoznaczne wywołania w repozytorium. Wcześniejsze stwierdzenie, że nie wykryto błędu kompilacji, było nieprawidłowe — niniejsza korekta zastępuje tamtą ocenę.
 
-### 46.9. Status i dalsze prace
+### 46.9. Korekta kodu po CI
+
+Usunięto drugi, powielony zestaw deklaracji CRUD z `PaymentLedgerDatabase.kt`, pozostawiając jedną implementację każdej metody. Zachowano pierwotną implementację aktualizacji, która usuwa identyfikator z `ContentValues` i aktualizuje rekord po kluczu `donation_id`.
+
+- plik: `obywatel-android/app/src/main/java/pl/gov/obywatel/android/financial/PaymentLedgerDatabase.kt`;
+- commit poprawki: `0ed532d8a474d57c3ebdb4a6d8ba0b2c5b2f32f8`.
+
+Po tej poprawce trzeba ponownie wykonać kompilację, testy JVM i testy instrumentacyjne. Do czasu uzyskania wyników nie oznacza się etapu 2O jako zweryfikowanego i nie publikuje APK.
+
+
+### 46.10. Status i dalsze prace
 
 | Element | Status |
 |---|---|
