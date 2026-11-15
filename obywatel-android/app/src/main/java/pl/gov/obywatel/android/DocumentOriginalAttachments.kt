@@ -132,13 +132,19 @@ private object OriginalAttachmentStore {
         val target = File(directory, "$attachmentId.enc")
         require(!target.exists()) { "Plik załącznika o tym identyfikatorze już istnieje." }
         target.writeBytes(crypt(bytes, true))
-        updated.add(OriginalAttachment(attachmentId, name.take(180).ifBlank { "Oryginał dokumentu" }, safeMime))
-        val json = JSONArray()
-        updated.forEach { item ->
-            json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime))
+        try {
+            updated.add(OriginalAttachment(attachmentId, name.take(180).ifBlank { "Oryginał dokumentu" }, safeMime))
+            val json = JSONArray()
+            updated.forEach { item ->
+                json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime))
+            }
+            check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .putString(documentId, json.toString()).commit()) { "Nie udało się zapisać załącznika." }
+        } catch (failure: Throwable) {
+            // Do not leave an encrypted orphan when metadata persistence fails.
+            if (target.exists()) target.delete()
+            throw failure
         }
-        check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putString(documentId, json.toString()).commit()) { "Nie udało się zapisać załącznika." }
     }
 
     fun addFile(context: Context, documentId: String, uri: Uri) {
@@ -182,11 +188,14 @@ private object OriginalAttachmentStore {
     fun remove(context: Context, documentId: String, id: String) {
         val current = list(context, documentId)
         if (current.none { it.id == id }) return
-        File(File(context.noBackupFilesDir, "original-document-attachments"), "$id.enc").delete()
         val updated = current.filterNot { it.id == id }
         val json = JSONArray()
         updated.forEach { item -> json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime)) }
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(documentId, json.toString()).apply()
+        check(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(documentId, json.toString()).commit()) { "Nie udało się zaktualizować rejestru załączników." }
+        // Metadata is committed first: a failed commit must not orphan a live reference.
+        val file = File(File(context.noBackupFilesDir, "original-document-attachments"), "$id.enc")
+        if (file.exists()) check(file.delete() || !file.exists()) { "Nie udało się usunąć pliku załącznika." }
     }
 
     /** Removes one complete, exclusively owned attachment scope. */
