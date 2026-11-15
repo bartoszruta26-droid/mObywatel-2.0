@@ -4461,3 +4461,11 @@ Dane historyczne NBP są publikacjami archiwalnymi: po zapisaniu na urządzeniu 
 2. Dodać testy odporności cache: uszkodzony plik, brak praw do zapisu, przerwane pobieranie, brak sieci, wygasły wpis bieżący i zachowanie wpisów historycznych.
 3. Dodać testy UI wyboru daty oraz jawnie oznaczyć źródło jako bieżące albo historyczne.
 4. Po zielonym CI rozszerzyć testy integracyjne i przeprowadzić kontrolę końcową PR.
+
+
+### Uzupełnienie testów etapu 86
+Weryfikacja ponownego odczytu pliku testowego ujawniła, że poprzednia próba dopisania dwóch testów nie zmieniła treści pliku. Poprawiono to w commicie `3442726541015b648307ad44009e712318720953`. Ponownie pobrany plik zawiera teraz oba testy:
+- `historicalRatesPersistAcrossRepositoryInstancesAndWorkOffline`;
+- `latestRatesRefreshAfterTtlWhileHistoricalArchiveRemainsSeparate`.
+
+Testy są zapisane w repozytorium, ale ich wykonanie nadal wymaga potwierdzenia w GitHub Actions. Nie należy utożsamiać obecności testów ze statusem PASS.
