@@ -234,6 +234,11 @@ class InternationalMedicalCertificateTest {
                 "<!DOCTYPE report [<!ENTITY x SYSTEM \"file:///etc/passwd\">]><report>&x;</report>".toByteArray()
             )
         }.isFailure)
+        val lateDeclaration = " ".repeat(4096) +
+            "<!DOCTYPE report [<!ENTITY x SYSTEM \"file:///etc/passwd\">]><report>&x;</report>"
+        assertTrue(runCatching {
+            validateOriginalAttachmentPayload("application/xml", lateDeclaration.toByteArray())
+        }.isFailure)
     }
 
 }
