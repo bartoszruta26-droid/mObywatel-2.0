@@ -4206,3 +4206,47 @@ W konsekwencji obecny zapis należy traktować jako pseudonimizację, a nie anon
 **Status etapu 76:** niezaliczony — poprawka selektorów nie zadziałała.  
 **Status etapu 77:** diagnoza i aktualizacja audytu wykonane; poprawka testu kalendarza i bezpieczna zmiana identyfikacji CSV pozostają otwarte.  
 **Etapy 78–81 oraz XLS/BIFF:** wstrzymane do czasu usunięcia błędów testów GUI i przeglądu wpływu zmiany identyfikatora na dane już zapisane.
+
+
+## 78. Ponowna walidacja GUI i diagnostyka drzewa semantyki DatePicker — 15 listopada 2026 r.
+
+### 78.1. Wyniki dla SHA `ad533d4a1a2d0c9df967f9788750c6628918248d`
+
+Zakończone przebiegi:
+- Android prototype build, run `43733058556` — **success**;
+- Repository compliance, run `43733058562` — **success**;
+- Android GUI validation, run `43733058566` — **failure**.
+
+Artefakt raportu instrumentacyjnego: `android-instrumentation-reports`, ID `14169510439`. Raport HTML klasy `FinancialReportDateRangePickerTest` potwierdza 5 testów: 3 zaliczone, 2 niezaliczone. Nadal zawodzą wyłącznie:
+- `selectingDifferentStartDateUpdatesOnlyStartBoundary` — nie znaleziono węzła tekstowego `10`;
+- `selectingDifferentEndDateUpdatesOnlyEndBoundary` — nie znaleziono węzła tekstowego `25`.
+
+Pozostałe testy kalendarza: otwarcie i zatwierdzenie bez zmiany daty, anulowanie oraz walidacja odwróconego zakresu — **success**. Pełny zestaw GUI pozostaje niezaliczony. Oddzielny build debug APK i compliance zakończyły się sukcesem, lecz nie zastępują zielonego GUI validation.
+
+### 78.2. Wykonana praca diagnostyczna
+
+Raport HTML i logi emulatora zostały pobrane i przeanalizowane. Potwierdzono, że awaria następuje na etapie dopasowania semantycznego dnia, przed wykonaniem kliknięcia. Nie ma dowodu na błąd logiki aktualizacji dat w komponencie produkcyjnym.
+
+W commicie `2db3a8f5a0890bf5eda7d5021428a6fc84ac031c` dodano do obu niezaliczonych testów zapis pełnego, niepołączonego drzewa semantyki Compose po otwarciu DatePicker:
+- `START_DATE_PICKER_SEMANTICS`;
+- `END_DATE_PICKER_SEMANTICS`.
+
+Celem jest ustalenie rzeczywistych etykiet, opisów dostępności, identyfikatorów i granic węzłów w używanej wersji Material3, zamiast kolejnego zgadywania selektora. Jest to poprawka diagnostyczna testów, nie zmiana zachowania produkcyjnego kalendarza.
+
+### 78.3. Weryfikacja ochrony danych i identyfikacji CSV
+
+Ponowny odczyt `BankStatementCsvParser.kt`, `BankImportDeduplicator.kt` i `PaymentLedgerJsonCodec.kt` potwierdził:
+- przy braku referencji parser umieszcza deterministyczny skrót opisu w polu `description`;
+- `BankStatementEntry.accountingEntryId()` wykorzystuje opis w tożsamości wpisu bez referencji;
+- identyfikatory powiązań transakcji są eksportowane i importowane w archiwum JSON.
+
+Zmiana tej strategii bez migracji może zmienić identyfikatory istniejących wpisów i zerwać powiązania transakcji. Ponadto zastąpienie opisu pustą wartością i użycie wyłącznie pól strukturalnych grozi scaleniem dwóch odrębnych, lecz identycznych kwotowo i datowo operacji. Dlatego nie wprowadzono pozornej poprawki polegającej na usunięciu skrótu bez zaprojektowania stabilnego identyfikatora, migracji i obsługi kolizji.
+
+### 78.4. Status i następne kryteria
+
+- Etap 76 — **niezaliczony**; dwa testy wyboru dnia nadal nie przechodzą.
+- Etap 77 — diagnoza ryzyka pseudonimizacji potwierdzona; bezpieczna zmiana modelu identyfikacji pozostaje otwarta.
+- Etap 78 — wykonano instrumentację semantyki testów; oczekuje na raport z kolejnego emulatorowego przebiegu.
+- Etapy formularzy, NBP, wyceny i raportowania oraz XLS/BIFF pozostają wstrzymane do czasu stabilizacji importu i zielonego GUI.
+
+PR #68 pozostaje otwarty i niescalony. Nie oznaczać kalendarza jako naprawionego ani APK jako zweryfikowanego końcowym workflow, dopóki nowy przebieg GUI nie zakończy się sukcesem.
