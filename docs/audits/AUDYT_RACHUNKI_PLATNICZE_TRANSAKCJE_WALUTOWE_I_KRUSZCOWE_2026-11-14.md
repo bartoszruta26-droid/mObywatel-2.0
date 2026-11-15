@@ -3451,3 +3451,13 @@ Dla poprzedniej rewizji 23384cc106999694dd25eb9de74feeee993d8551:
 - Testy Compose trzeba potwierdzić na emulatorze w nowym przebiegu CI. W szczególności należy sprawdzić semantykę DatePicker na docelowym obrazie emulatora.
 - Należy potwierdzić, że testy PDF renderują każdą stronę, testy raportu JVM przechodzą, a zapis CSV/PDF przez ContentResolver przechowuje dokładne bajty.
 - Do czasu pomyślnego zakończenia nowego Android GUI validation, Android prototype build i repository compliance etap 58 pozostaje wdrożony, lecz niezweryfikowany.
+
+
+### 58.6. Korekty po przeglądzie kodu
+
+Przed uruchomieniem walidacji końcowej uproszczono układ komponentu selektora, usuwając zbędne kontenery wierszy i eliminując niepoprawne odwołanie do jednostki dp. Zmieniono też test nieistniejącego dostawcy SAF tak, aby sprawdzał wystąpienie wyjątku wejścia/wyjścia bez uzależniania testu od konkretnej klasy wyjątku implementacji ContentResolver.
+
+- Ostateczna korekta komponentu FinancialReportDateRangePicker.kt — commit d41e337e3a03f3eec2e2a23c91b5c29ed8b17fa8.
+- Korekta asercji błędu dostawcy w FinancialReportSafExportTest.kt — commit 547053b9723addb748a15c58e35295f45a2b4583.
+
+Obie poprawki zostały ponownie pobrane z gałęzi i sprawdzone. Wyniki kompilacji i testów dla tych rewizji są nadal oczekujące.
