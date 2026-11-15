@@ -78,6 +78,10 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
     val definitions = remember {
         documentEditorFieldDefinitions(INTERNATIONAL_MEDICAL_CERTIFICATE_ID)
     }
+    val doctorDirectory = remember(context) { runCatching { MedicalDoctorDirectory.list(context) }.getOrDefault(emptyList()) }
+    var doctorMenuExpanded by remember { mutableStateOf(false) }
+    var selectedDoctorId by remember { mutableStateOf(values["imc_doctor_id"].orEmpty()) }
+    val selectedDoctor = doctorDirectory.firstOrNull { it.id == selectedDoctorId }
     var sourceLanguage by remember {
         mutableStateOf(values[IMC_SOURCE_LANGUAGE_KEY] ?: "en")
     }
@@ -160,6 +164,29 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Attending doctor (informational selection)", fontWeight = FontWeight.SemiBold)
+                Box {
+                    OutlinedButton(onClick = { doctorMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(selectedDoctor?.name ?: "Select doctor from directory")
+                    }
+                    DropdownMenu(expanded = doctorMenuExpanded, onDismissRequest = { doctorMenuExpanded = false }) {
+                        DropdownMenuItem(text = { Text("No doctor selected") }, onClick = {
+                            selectedDoctorId = ""; doctorMenuExpanded = false
+                        })
+                        doctorDirectory.forEach { doctor ->
+                            DropdownMenuItem(text = { Text(doctor.name + " — " + doctor.city) }, onClick = {
+                                selectedDoctorId = doctor.id; doctorMenuExpanded = false
+                            })
+                        }
+                    }
+                }
+                Text("Selection does not authenticate the doctor or sign the certificate. Verify the current licence and authority separately.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
+        }
 
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -447,6 +474,12 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                             put(IMC_SOURCE_LANGUAGE_KEY, sourceLanguage)
                             put(IMC_OTHER_LANGUAGE_KEY, otherLanguage)
                             put(IMC_TARGET_LANGUAGES_KEY, selectedTargets.filterValues { it }.keys.sorted().joinToString(","))
+                            put("imc_doctor_id", selectedDoctor?.id.orEmpty())
+                            put("imc_doctor_name", selectedDoctor?.name.orEmpty())
+                            put("imc_doctor_practice", selectedDoctor?.practice.orEmpty())
+                            put("imc_doctor_address", selectedDoctor?.address.orEmpty())
+                            put("imc_doctor_register", selectedDoctor?.register.orEmpty())
+                            put("imc_doctor_license", selectedDoctor?.license.orEmpty())
                             val translatedJson = JSONObject()
                             selectedTargets.filterValues { it }.keys.forEach { target ->
                                 val targetJson = JSONObject()
