@@ -287,3 +287,6 @@ Dodano pole daty historycznej i akcję pobierania notowań NBP dla wybranego dni
 Commity: `f7d1aeda662057dcbdf213f0d73f5c09b581905d`, `bbaa5c6e00b41dc61966194599b12ac00948ee63`.
 
 Otwarte: trwała historia przeliczeń, kalendarz dat, trwały cache, pełny słownik ISO i testy UI. Zamknięcie etapu wymaga zielonego CI dla końcowego SHA.
+
+
+Dodatkowy commit: `0c877a34a748db8d2beae47154eebeb7a675ea4e` — jawne parsowanie daty historycznej.
