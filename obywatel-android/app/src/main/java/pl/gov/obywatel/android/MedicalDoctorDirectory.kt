@@ -71,6 +71,7 @@ internal object MedicalDoctorDirectory {
   require(d.name.isNotBlank()&&d.practice.isNotBlank()&&d.address.isNotBlank()&&d.source.contains("https://")&&d.verifiedAt.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))){
    "Wymagane: nazwisko, praktyka, adres, źródło i data weryfikacji."
   }
+  require(d.consent != DoctorConsentStatus.PENDING){"Przed publikacją rekordu zapisz status zgody lekarza."}
   require(!d.signerEnabled){"Katalog informacyjny nie aktywuje podpisywania."}
   val all=list(c).toMutableList();val i=all.indexOfFirst{it.id==d.id};if(i<0)all.add(d)else all[i]=d
   check(c.getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putString(KEY,encode(all)).commit())
