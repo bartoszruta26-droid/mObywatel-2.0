@@ -93,4 +93,24 @@ class BankStatementCsvParserTest {
         assertEquals(0, preview.conflicts.size)
     }
 
+
+    @Test
+    fun parsesIpkoCsvWithTrailingUnnamedDescriptionColumnsWithoutPersistingPersonalData() {
+        val csv = "\"Data operacji\",\"Data waluty\",\"Typ transakcji\",\"Kwota\",\"Waluta\",\"Saldo po transakcji\",\"Opis transakcji\",\"\",\"\",\"\",\"\"\r\n" +
+            "\"2026-11-08\",\"2026-11-08\",\"WYMIANA W KANTORZE - UZNANIE\",\"+617.42\",\"CHF\",\"\",\"Rachunek nadawcy: 00000000000000000000000000\",\"Nazwa nadawcy: Osoba Testowa\",\"Adres nadawcy: ULICA TESTOWA 1\",\"Tytuł: FX102498834 CHF/PLN 4.8589 617,42 CHF\",\"Referencje własne zleceniodawcy: 102498834\"\r\n"
+        val entry = BankStatementCsvParser.parse(
+            csv.toByteArray(Charsets.UTF_8),
+            "ipko-test-account"
+        ).single()
+
+        assertEquals(LocalDate.parse("2026-11-08"), entry.bookingDate)
+        assertEquals("CHF", entry.currencyCode)
+        assertEquals(0, BigDecimal("617.42").compareTo(entry.signedAmount))
+        assertEquals("WYMIANA W KANTORZE - UZNANIE", entry.operationType)
+        assertEquals("102498834", entry.bankOperationReference)
+        assertEquals("", entry.description)
+        assertFalse(entry.description.contains("Osoba Testowa"))
+        assertFalse(entry.description.contains("00000000000000000000000000"))
+    }
+
 }
