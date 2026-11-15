@@ -191,6 +191,29 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun attachmentArchiveBase64DecoderAcceptsCanonicalPayload() {
+        val original = "Clinical report".toByteArray(Charsets.UTF_8)
+        val encoded = java.util.Base64.getEncoder().encodeToString(original)
+        assertTrue(decodeOriginalAttachmentBase64(encoded, 1024).contentEquals(original))
+    }
+
+    @Test
+    fun attachmentArchiveBase64DecoderRejectsMalformedNonCanonicalAndOversizedPayloads() {
+        listOf("%%%=", "YQ", "YQ==\\n", "YR==").forEach { invalid ->
+            assertTrue("Expected invalid Base64 rejection: $invalid", runCatching {
+                decodeOriginalAttachmentBase64(invalid, 1024)
+            }.isFailure)
+        }
+        val tooLarge = java.util.Base64.getEncoder().encodeToString(ByteArray(5))
+        assertTrue(runCatching {
+            decodeOriginalAttachmentBase64(tooLarge, 4)
+        }.isFailure)
+        assertTrue(runCatching {
+            decodeOriginalAttachmentBase64("", 1024)
+        }.isFailure)
+    }
+
+    @Test
     fun attachmentPayloadValidatorAcceptsSupportedFileSignatures() {
         validateOriginalAttachmentPayload("application/pdf", "%PDF-1.7".toByteArray(Charsets.US_ASCII))
         validateOriginalAttachmentPayload("image/jpeg", byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 0x00))
