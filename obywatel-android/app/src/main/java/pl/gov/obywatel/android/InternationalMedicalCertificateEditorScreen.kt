@@ -4,6 +4,7 @@ package pl.gov.obywatel.android
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -42,6 +44,7 @@ import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.UUID
+import kotlinx.coroutines.launch
 
 private const val IMC_SOURCE_LANGUAGE_KEY = "imc_source_language"
 private const val IMC_OTHER_LANGUAGE_KEY = "imc_other_source_language"
@@ -86,6 +89,16 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
         }
     }
     var saveMessage by remember { mutableStateOf("") }\n    var sourceLanguageExpanded by remember { mutableStateOf(false) }\n    var targetLanguagesExpanded by remember { mutableStateOf(false) }
+    var translating by remember { mutableStateOf(false) }
+    val translationValues = remember { mutableStateMapOf<String, String>().apply {
+        runCatching { JSONObject(values["imc_translations"].orEmpty()) }.getOrNull()?.let { root ->
+            val targets = root.keys()
+            while (targets.hasNext()) { val target = targets.next(); val fields = root.optJSONObject(target) ?: continue
+                val keys = fields.keys(); while (keys.hasNext()) { val key = keys.next(); put("$target|$key", fields.optString(key)) }
+            }
+        }
+    } }
+    val translationScope = rememberCoroutineScope()
     val imagingStudies = remember {
         mutableStateListOf<MedicalImagingStudy>().apply {
             addAll(imagingLoad.getOrDefault(emptyList()))
@@ -289,11 +302,48 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
         }
 
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-            Text(
-                "Automatic translation is not active yet. The original text remains stored locally; no medical data is sent to a translation service from this screen.",
-                modifier = Modifier.padding(12.dp),
-                style = MaterialTheme.typography.bodySmall
-            )
+            Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Automatic on-device translation", fontWeight = FontWeight.SemiBold)
+                Text("Translation is processed on this device. The first use may download language models. Original values are preserved and never overwritten.", style = MaterialTheme.typography.bodySmall)
+                Button(enabled = !translating && selectedTargets.any { it.value } && sourceLanguage != "other", onClick = {
+                    translating = true
+                    translationScope.launch {
+                        val provider = MlKitMedicalTranslationProvider()
+                        var completed = 0
+                        var failed = 0
+                        val eligible = definitions.filter { definition -> isMedicalCertificateTranslatableField(definition.key) && values[fieldKey(definition.key)].orEmpty().isNotBlank() }
+                        selectedTargets.filterValues { it }.keys.toList().forEach { target ->
+                            if (target.substringBefore('-') == sourceLanguage.substringBefore('-')) return@forEach
+                            eligible.forEach { definition ->
+                                val key = definition.key
+                                val result = runCatching { provider.translate(values[fieldKey(key)].orEmpty(), sourceLanguage, target) }
+                                result.onSuccess { translationValues["$target|$key"] = it; completed++ }.onFailure { failed++ }
+                            }
+                        }
+                        translating = false
+                        saveMessage = "Translation finished: $completed field(s) translated; $failed failed. Review and correct the translated text before use."
+                    }
+                }, modifier = Modifier.fillMaxWidth()) { Text(if (translating) "Translating…" else "Translate selected languages") }
+                if (translating) Text("Downloading language model or translating fields…", color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
+        selectedTargets.filterValues { it }.keys.forEach { target ->
+            val translatedFields = definitions.filter { definition -> isMedicalCertificateTranslatableField(definition.key) && translationValues.containsKey("$target|${definition.key}") }
+            if (translatedFields.isNotEmpty()) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                    Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Translation — ${languages.firstOrNull { it.code == target }?.englishName ?: target}", fontWeight = FontWeight.SemiBold)
+                        Text("Edit any field below to manually correct the machine translation. Source text remains unchanged.", style = MaterialTheme.typography.bodySmall)
+                        translatedFields.forEach { definition ->
+                            val translationKey = "$target|${definition.key}"
+                            OutlinedTextField(value = translationValues[translationKey].orEmpty(), onValueChange = { translationValues[translationKey] = it },
+                                label = { Text(definition.label + " — corrected translation") }, modifier = Modifier.fillMaxWidth(),
+                                minLines = if (definition.key in setOf("chiefComplaint", "medicalHistory", "diagnosis", "physicalExamination", "systemsReview", "functionalLimitations", "prognosis", "recommendations")) 3 else 1)
+                        }
+                    }
+                }
+            }
         }
 
         if (loadError.isNotBlank()) {
@@ -334,6 +384,13 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                             put(IMC_SOURCE_LANGUAGE_KEY, sourceLanguage)
                             put(IMC_OTHER_LANGUAGE_KEY, otherLanguage)
                             put(IMC_TARGET_LANGUAGES_KEY, selectedTargets.filterValues { it }.keys.sorted().joinToString(","))
+                            val translatedJson = JSONObject()
+                            selectedTargets.filterValues { it }.keys.forEach { target ->
+                                val targetJson = JSONObject()
+                                translationValues.filterKeys { it.startsWith("$target|") }.forEach { (compound, translated) -> targetJson.put(compound.substringAfter("|"), translated) }
+                                if (targetJson.length() > 0) translatedJson.put(target, targetJson)
+                            }
+                            put("imc_translations", translatedJson.toString())
                             put(IMC_IMAGING_STUDIES_KEY, encodeMedicalImagingStudies(currentStudies))
                         }
                         val saveResult = runCatching {
@@ -370,6 +427,12 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
             Text(saveMessage, color = MaterialTheme.colorScheme.primary)
         }
     }
+}
+
+internal fun isMedicalCertificateTranslatableField(fieldKey: String): Boolean {
+    val key = fieldKey.lowercase()
+    val protectedTokens = listOf("date", "number", "code", "id", "phone", "email", "postal", "zip", "icd", "height", "weight", "pressure", "pulse", "temperature", "saturation", "signature")
+    return protectedTokens.none { it in key } && !key.endsWith("name")
 }
 
 internal fun removedMedicalImagingStudyIds(
