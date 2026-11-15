@@ -242,6 +242,100 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
             }
         }
 
+        Button(
+            onClick = {
+                sourceLanguage = "en"
+                otherLanguage = ""
+                selectedTargets.clear()
+                selectedTargets["pl"] = true
+                val sample = mapOf(
+                    "documentNumber" to "SAMPLE-IMC-2026-001",
+                    "issueDate" to "2026-11-15",
+                    "purpose" to "Clinical summary for continuity of care and specialist assessment. FICTIONAL SAMPLE — NOT FOR CLINICAL USE.",
+                    "issuingCountry" to "United Kingdom (fictional example)",
+                    "destinationCountry" to "Poland (fictional example)",
+                    "sourceLanguage" to "English",
+                    "targetLanguages" to "Polish",
+                    "patientGivenName" to "Alex",
+                    "patientFamilyName" to "Morgan",
+                    "patientDateOfBirth" to "1968-03-12",
+                    "patientNationality" to "Fictional example",
+                    "patientAddress" to "Example Street 10, London, United Kingdom (fictional address)",
+                    "identityDocument" to "Passport: SAMPLE-PASSPORT-001 (fictional)",
+                    "insuranceIdentifier" to "SAMPLE-INS-001 (fictional)",
+                    "patientConsent" to "Fictional example: patient has consented to the preparation and sharing of this clinical summary for continuity of care.",
+                    "clinicianName" to "Dr Taylor Example (fictional clinician)",
+                    "clinicianProfession" to "Medical doctor",
+                    "clinicianSpecialty" to "General practice; referral for neurology and oncology assessment",
+                    "clinicianLicense" to "Not supplied in this demonstration",
+                    "facilityName" to "Example Medical Centre (fictional)",
+                    "facilityAddress" to "Example Road 1, London, United Kingdom (fictional)",
+                    "chiefComplaint" to "Acute severe low-back pain radiating from the lumbar region through the right buttock and posterior-lateral thigh into the calf and foot, consistent with right-sided sciatica. Pain worsens with prolonged sitting, forward flexion, coughing and walking. Paraesthesia is reported in the right lower leg. Symptoms substantially limit mobility and sleep.",
+                    "medicalHistory" to "Fictional case. Previously documented multilevel degenerative intervertebral disc disease. Current episode of acute right-sided lumbar radicular pain. Patient is undergoing diagnostic evaluation prompted by clinical concerns; an oncological diagnosis has NOT been established. Relevant prior illnesses, operations and family history require confirmation from the actual medical record.",
+                    "occupationalHistory" to "Fictional example: predominantly sedentary work with prolonged sitting; currently unable to tolerate sustained sitting or usual work duties.",
+                    "allergies" to "Not documented in this fictional example — verify directly with the patient before prescribing.",
+                    "currentMedication" to "Medication reconciliation required. No drug, dose or frequency is assumed in this sample; verify prescribed and over-the-counter medicines, anticoagulants and allergies before treatment.",
+                    "diagnosis" to "Acute right-sided lumbosacral radicular pain (sciatica), clinical syndrome: ICD-10 M54.4 (lumbago with sciatica). Multilevel intervertebral disc degeneration/discopathy, level-specific imaging correlation required: ICD-10 M51.3 (other specified intervertebral disc degeneration). Oncological diagnostic work-up in progress; malignancy is unconfirmed and must not be recorded as an established diagnosis.",
+                    "symptomsOnset" to "2026-11-10 (fictional example)",
+                    "examinationDate" to "2026-11-15",
+                    "height" to "Not measured — obtain actual measurement",
+                    "weight" to "Not measured — obtain actual measurement",
+                    "bloodPressure" to "Not measured — record actual value",
+                    "pulse" to "Not measured — record actual value",
+                    "temperature" to "Not measured — record actual value",
+                    "oxygenSaturation" to "Not measured — record actual value",
+                    "physicalExamination" to "Fictional illustrative description only: guarded lumbar movements and pain reproduced by lumbar flexion; right-sided straight-leg-raise may reproduce radicular pain. Formal neurological examination is required and must document side-specific myotomes, dermatomes, reflexes, gait, heel/toe walking and perineal/sphincter symptoms where clinically indicated. No strength, reflex or sensory deficit is assumed in this sample.",
+                    "systemsReview" to "Fictional example: radicular pain and paraesthesia as described. Ask and document fever, unexplained weight loss, night/rest pain, history of cancer, immunosuppression, recent infection, trauma, progressive weakness, saddle anaesthesia, urinary retention/incontinence and bowel dysfunction. These findings are not assumed; urgent escalation is required if red flags are present.",
+                    "functionalLimitations" to "Marked limitation of walking, prolonged sitting, bending, lifting and sleep due to acute radicular pain. Requires individual functional assessment.",
+                    "workCapacity" to "Temporarily reduced work capacity in this fictional scenario. Avoid prolonged sitting, heavy lifting and movements that exacerbate radicular symptoms pending clinical assessment. Formal fitness-for-work decision and duration must be made by the treating clinician.",
+                    "hospitalizations" to "No hospitalization information supplied in this fictional example; verify history.",
+                    "treatmentAndRehabilitation" to "Prompt clinical review and neurological assessment; review existing imaging and reports; analgesia only after medication/allergy/contraindication review; maintain tolerable activity and avoid prolonged bed rest. Rehabilitation plan to be individualized after exclusion of urgent causes and review of neurological status. Coordinate the ongoing oncological diagnostic pathway; do not delay indicated investigation.",
+                    "prognosis" to "Cannot be determined from this sample. Depends on neurological findings, imaging-clinical correlation, response to treatment and results of the ongoing diagnostic work-up. No oncological diagnosis is confirmed.",
+                    "recommendations" to "Urgent medical reassessment for progressive motor weakness, new saddle anaesthesia, urinary retention or incontinence, bowel dysfunction, bilateral symptoms, fever or rapidly worsening pain. Expedite review of the oncological work-up and communicate relevant history to the responsible specialist. Review MRI images/report and correlate with examination; consider neurology/spine specialist input. Complete all patient-specific fields from verified records before signing.",
+                    "clinicianDeclaration" to "This is a fictional demonstration record containing illustrative wording only. It is not a real medical assessment, diagnosis, prescription, fitness certificate or referral. A treating clinician must independently verify every fact, amend the clinical content and sign/stamp the printed document.",
+                    "clinicianSignRef" to "Leave blank — handwritten signature on the printed document",
+                    "patientSignRef" to "Leave blank — patient signature only if required",
+                    "medicalSealReference" to "Leave blank — clinician's physical stamp on the printed document"
+                )
+                definitions.forEach { definition ->
+                    sample[definition.key]?.let { values[fieldKey(definition.key)] = it }
+                }
+                imagingStudies.clear()
+                imagingStudies.add(MedicalImagingStudy(
+                    id = "sample-lumbar-mri-2026",
+                    modality = MedicalImagingModality.MRI,
+                    bodyRegion = "Lumbar spine",
+                    studyDate = "2026-11-12",
+                    facility = "Example Imaging Centre (fictional)",
+                    indication = "Acute right-sided sciatica; known/suspected multilevel disc disease. Oncological diagnostic work-up ongoing.",
+                    technique = "Illustrative placeholder only — replace with the exact sequence/technique from the original radiology report.",
+                    contrast = "Not specified — verify original report; do not infer contrast administration.",
+                    findings = "No authentic imaging findings are supplied in this sample. Transcribe the radiologist's actual level-by-level findings, canal dimensions, foraminal narrowing and any relevant marrow/soft-tissue observations from the signed report.",
+                    impression = "Multilevel discopathy is reported in the fictional case history, but exact levels, morphology and severity require the original MRI report. No conclusion about malignancy or metastases can be drawn from this sample.",
+                    radiologistName = "Not supplied",
+                    reportNumber = "SAMPLE-MRI-2026-001"
+                ))
+                imagingModality = MedicalImagingModality.MRI
+                imagingBodyRegion = "Lumbar spine"
+                imagingDate = "2026-11-12"
+                imagingFacility = "Example Imaging Centre (fictional)"
+                imagingIndication = "Acute right-sided sciatica; multilevel disc disease; oncological work-up ongoing."
+                imagingFindings = "Replace with the actual radiology report."
+                imagingImpression = "Replace with the actual radiology conclusion."
+                imagingTechnique = "Replace with the actual MRI protocol."
+                imagingContrast = "Verify from original report."
+                imagingRadiologist = "Not supplied"
+                imagingReportNumber = "SAMPLE-MRI-2026-001"
+                saveMessage = "Fictional sample loaded. It is not a real patient record. Verify and replace every field before clinical use or signing."
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Load fictional sample — acute sciatica and multilevel discopathy") }
+        Text(
+            "The sample is entirely fictional. It does not establish an oncological diagnosis or replace source reports; loading it overwrites the currently displayed field values.",
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall
+        )
+
         definitions.filterNot { it.key == "sourceLanguage" || it.key == "targetLanguages" }
             .forEach { definition ->
                 val key = fieldKey(definition.key)
