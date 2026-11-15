@@ -217,6 +217,7 @@ private object OriginalAttachmentStore {
      * Missing referenced files are treated as integrity failures; unreferenced
      * encrypted files and abandoned import staging files are safe to remove.
      */
+    @Synchronized
     fun reconcile(context: Context) {
         val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val referencedIds = mutableSetOf<String>()
@@ -262,6 +263,7 @@ private object OriginalAttachmentStore {
         }
     }
 
+    @Synchronized
     fun add(
         context: Context,
         documentId: String,
@@ -339,6 +341,7 @@ private object OriginalAttachmentStore {
         add(context, documentId, "Zdjęcie oryginału.jpg", "image/jpeg", output.toByteArray())
     }
 
+    @Synchronized
     fun remove(context: Context, documentId: String, id: String) {
         val current = list(context, documentId)
         if (current.none { it.id == id }) return
@@ -353,6 +356,7 @@ private object OriginalAttachmentStore {
     }
 
     /** Removes one complete, exclusively owned attachment scope. */
+    @Synchronized
     fun removeDocument(context: Context, documentId: String) {
         require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
             "Nieprawidłowy identyfikator dokumentu."
@@ -384,6 +388,7 @@ private object OriginalAttachmentStore {
      * application archive. Export fails rather than silently omitting a
      * missing/corrupt source file.
      */
+    @Synchronized
     fun exportArchive(context: Context): String {
         val entries = JSONArray()
         var totalBytes = 0L
@@ -418,6 +423,7 @@ private object OriginalAttachmentStore {
     }
 
     /** Validates the complete archive before committing any imported attachment. */
+    @Synchronized
     fun importArchive(context: Context, raw: String) {
         require(raw.length <= (MAX_ARCHIVE_BYTES * 4L / 3L + 1024 * 1024).toInt()) {
             "Archiwum przekracza maksymalny rozmiar."
