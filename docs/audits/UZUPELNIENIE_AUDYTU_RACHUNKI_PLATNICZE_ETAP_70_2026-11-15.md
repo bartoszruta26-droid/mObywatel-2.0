@@ -79,3 +79,43 @@ Wprowadzono korekty testów:
 Commity: `59322664c901457916c961256d3f11a7bbcca8cb` i `a1140471192b7273839a1dad03d6c9793f16f858`.
 
 Dla SHA `a1140471192b7273839a1dad03d6c9793f16f858` ponownie uruchomiono GUI validation (`43721522828`), Android prototype build (`43721522796`) i Repository compliance (`43721522885`). Wszystkie były w toku podczas aktualizacji. Etap 72 pozostaje otwarty do uzyskania końcowych wyników.
+
+
+## 73. Neutralny importer CSV — 15 listopada 2026 r.
+
+### Zakres wykonany
+
+Dodano `BankStatementCsvParser.kt` jako niezależny parser kontraktowy CSV, bez deklarowania zgodności z eksportem konkretnego banku. Parser:
+- przyjmuje tekst oraz bajty pliku; dekoduje UTF-8 (z BOM i bez BOM), a przy niepoprawnym UTF-8 stosuje Windows-1250;
+- rozpoznaje separator średnik, przecinek lub tabulator na podstawie nagłówka;
+- obsługuje pola cytowane, podwojone cudzysłowy, separatory wewnątrz pola i opisy wielowierszowe;
+- normalizuje polskie/angielskie warianty nagłówków i wymaga kolumn daty, waluty, kwoty oraz typu operacji;
+- obsługuje daty ISO, DD.MM.RRRR i DD-MM-RRRR z walidacją ścisłą;
+- przelicza kwoty dziesiętne z przecinkiem/kropką i separatorami grupowania bez użycia typów zmiennoprzecinkowych;
+- odrzuca zero, błędne kody walut, błędne wiersze, nieprawidłowe cytowanie, puste/zdublowane nagłówki i przekroczenie limitów 10 MiB/50 000 zapisów;
+- nie zachowuje surowego opisu kontrahenta: przy braku referencji przechowuje lokalny skrót SHA-256 opisu.
+
+Dodano `BankStatementCsvParserTest.kt` obejmujący polskie nagłówki i BOM, UTF-8, Windows-1250, separator średnik/przecinek, cytowane i wielowierszowe pola, kwoty z grupowaniem, brak wymaganych kolumn, nieprawidłowe cytowanie, niepoprawną datę/walutę/kwotę i pseudonim rachunku.
+
+### Ograniczenia i dalsze prace
+
+- Parser nie jest jeszcze podłączony do interfejsu importu ani do zatwierdzania w repozytorium — ten etap dostarcza i testuje warstwę parsowania.
+- Nie potwierdzono formatu żadnego banku, w tym iPKO. Mapowanie bankowe wymaga rzeczywistych, zanonimizowanych plików testowych oraz kontraktów eksportu.
+- Nie rozstrzygamy automatycznie niejednoznacznych semantyk kwoty ani znaków. Dane muszą już zawierać kwotę ze znakiem; rozpoznanie kolumny uznanie/obciążenie i mapowanie konkretnego eksportu należy do adaptera bankowego.
+
+### Commity
+
+- Parser CSV: `1523b85675b2c63bba34940184943ee1eacaae47`.
+- Testy bazowe: `e9c913b9c6dcff7971acfe4e65b5dae4ae58cab9`.
+- Dekodowanie UTF-8/Windows-1250 i test: `798f746bc7617f6e5202d6cbf4e1cf3eaa4c7308`, `c798b6e6d8b7175ef1d103c8bef2d331aad98052`.
+- Walidacja cytowania/separatorów i daty: `771fd32464939a267bfe2a34c996be166cede932`, `14559d186cc96c6ec20daf8585b2ab7fcc12b2cb`.
+- Końcowe poprawki skanera separatorów i testu: `309d6529feb3a0206db01ea35caa62914637eade`, `90863b46a86569ff86d52f75af8224078867d123`, `771fd32464939a267bfe2a34c996be166cede932`, `14559d186cc96c6ec20daf8585b2ab7fcc12b2cb`.
+
+### CI dla końcowego SHA etapu
+
+Dla SHA `14559d186cc96c6ec20daf8585b2ab7fcc12b2cb`:
+- Android prototype build run `43722027829` — w toku;
+- Repository compliance run `43722027827` — w toku;
+- Android GUI validation run `43722027901` — w toku.
+
+**Status etapu 73:** kod i testy zapisane oraz ponownie odczytane z gałęzi; CI jeszcze nie zakończył się, więc brak potwierdzenia kompilacji i zaliczenia testów. Etap pozostaje otwarty do wyników CI.
