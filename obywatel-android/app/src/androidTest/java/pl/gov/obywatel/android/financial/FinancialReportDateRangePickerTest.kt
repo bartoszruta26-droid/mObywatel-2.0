@@ -4,6 +4,8 @@ package pl.gov.obywatel.android.financial
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -79,7 +81,7 @@ class FinancialReportDateRangePickerTest {
         }
 
         composeRule.onNodeWithText("Data początkowa: 2026-11-01").performClick()
-        composeRule.onNodeWithContentDescription("Tuesday, November 10, 2026").assertIsDisplayed().performClick()
+        composeRule.onNode(hasContentDescription("November 10, 2026", substring = true)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Zastosuj datę").performClick()
 
         assertEquals("2026-11-10" to "2026-11-20", dates.value)
@@ -97,7 +99,7 @@ class FinancialReportDateRangePickerTest {
         }
 
         composeRule.onNodeWithText("Data końcowa: 2026-11-15").performClick()
-        composeRule.onNodeWithContentDescription("Wednesday, November 25, 2026").assertIsDisplayed().performClick()
+        composeRule.onNode(hasContentDescription("November 25, 2026", substring = true)).assertIsDisplayed().performClick()
         composeRule.onNodeWithText("Zastosuj datę").performClick()
 
         assertEquals("2026-11-01" to "2026-11-25", dates.value)
