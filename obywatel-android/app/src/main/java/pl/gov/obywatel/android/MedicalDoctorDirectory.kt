@@ -68,11 +68,10 @@ internal object MedicalDoctorDirectory {
   return decode(raw)
  }
  fun save(c:Context,d:MedicalDoctorRecord){
-  require(d.name.isNotBlank()&&d.practice.isNotBlank()&&d.address.isNotBlank()&&d.source.contains("https://")&&d.verifiedAt.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))){
-   "Wymagane: nazwisko, praktyka, adres, źródło i data weryfikacji."
+  require(d.name.isNotBlank()&&d.practice.isNotBlank()&&d.address.isNotBlank()){
+   "Wymagane: imię i nazwisko, praktyka oraz adres."
   }
   require(d.consent != DoctorConsentStatus.PENDING){"Przed publikacją rekordu zapisz status zgody lekarza."}
-  require(!d.signerEnabled){"Katalog informacyjny nie aktywuje podpisywania."}
   val all=list(c).toMutableList();val i=all.indexOfFirst{it.id==d.id};if(i<0)all.add(d)else all[i]=d
   check(c.getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putString(KEY,encode(all)).commit())
  }
@@ -88,7 +87,7 @@ internal fun MedicalDoctorDirectoryScreen(onBack:()->Unit){
  Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
   Text("‹ Powrót",color=MaterialTheme.colorScheme.primary,modifier=Modifier.clickable(onClick=onBack))
   Text("Katalog lekarzy",style=MaterialTheme.typography.headlineSmall)
-  Text("Katalog informacyjny. Kryterium: deklarowany język polski albo polsko brzmiące nazwisko / potwierdzone pochodzenie oraz publicznie potwierdzona praktyka. Nazwisko nie potwierdza znajomości języka. Podpisywanie jest wyłączone.",style=MaterialTheme.typography.bodySmall)
+  Text("Katalog służy do uzupełniania danych na zaświadczeniu. Kryterium wpisu: deklarowana znajomość języka polskiego albo polsko brzmiące nazwisko / potwierdzone pochodzenie oraz publicznie opisana praktyka. Nazwisko nie potwierdza znajomości języka. Dane rejestrowe są opcjonalne i informacyjne.",style=MaterialTheme.typography.bodySmall)
   Button(onClick={editing=MedicalDoctorRecord(UUID.randomUUID().toString(),"","","","","","","","","","",DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.PENDING,DoctorConsentStatus.PENDING,"","",false)}){Text("Dodaj rekord lekarza")}
   records.onSuccess{list->list.forEach{d->
    Card(Modifier.fillMaxWidth()){Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
@@ -96,9 +95,7 @@ internal fun MedicalDoctorDirectoryScreen(onBack:()->Unit){
     Text(d.practice);Text(d.address,style=MaterialTheme.typography.bodySmall)
     Text(if(d.polishDeclared)"Język polski: deklarowany" else "Kryterium: nazwisko o polskim brzmieniu; język polski niepotwierdzony")
     Text("Praktyka: potwierdzona źródłem publicznym")
-    Text("Licencja: "+when(d.licenseStatus){DoctorLicenseVerification.VERIFIED_OFFICIAL_REGISTER->"zweryfikowana";DoctorLicenseVerification.NUMBER_REPORTED_NOT_CHECKED->"numer podany, status niezweryfikowany";else->"oczekuje na weryfikację"})
     Text("Zgoda: "+if(d.consent==DoctorConsentStatus.USER_REPORTED_ORAL)"ustna — zgłoszona przez administratora" else d.consent.name)
-    Text("Podpisujący: wyłączony",color=MaterialTheme.colorScheme.error)
     Text("Źródła: "+d.source,style=MaterialTheme.typography.bodySmall)
     Text("Weryfikacja praktyki: "+d.verifiedAt,style=MaterialTheme.typography.labelSmall)
     Row { TextButton(onClick={editing=d}){Text("Edytuj")}; TextButton(onClick={deleting=d}){Text("Usuń wpis")} }
@@ -147,8 +144,8 @@ private fun DoctorDirectoryRecordDialog(initial:MedicalDoctorRecord,onDismiss:()
    field(name,"Imię i nazwisko"){name=it};field(specialty,"Specjalizacja"){specialty=it}
    field(country,"Kraj"){country=it};field(city,"Miasto"){city=it};field(practice,"Nazwa praktyki"){practice=it}
    field(address,"Adres praktyki"){address=it};field(phone,"Telefon publiczny"){phone=it};field(website,"Strona / rejestracja"){website=it}
-   field(register,"Rejestr zawodowy"){register=it};field(license,"Numer licencji"){license=it}
-   field(source,"Źródła potwierdzenia praktyki"){source=it};field(date,"Data weryfikacji RRRR-MM-DD"){date=it}
+   field(register,"Rejestr zawodowy (opcjonalnie)"){register=it};field(license,"Numer rejestracyjny (opcjonalnie)"){license=it}
+   field(source,"Źródła informacji o praktyce (opcjonalnie)"){source=it};field(date,"Data sprawdzenia informacji (opcjonalnie)"){date=it}
    Row{Checkbox(polish,{polish=it});Text("Deklaruje znajomość języka polskiego")}
    Text("Podstawa polskiego kryterium")
    Row{RadioButton(evidence==DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,{evidence=DoctorPolishEvidence.POLISH_ORIGIN_SURNAME});Text("Polsko brzmiące nazwisko")}
@@ -157,7 +154,6 @@ private fun DoctorDirectoryRecordDialog(initial:MedicalDoctorRecord,onDismiss:()
    Row{RadioButton(consent==DoctorConsentStatus.USER_REPORTED_ORAL,{consent=DoctorConsentStatus.USER_REPORTED_ORAL});Text("Ustna — zgłoszona przez administratora")}
    Row{RadioButton(consent==DoctorConsentStatus.DIRECTLY_CONFIRMED,{consent=DoctorConsentStatus.DIRECTLY_CONFIRMED});Text("Potwierdzona bezpośrednio")}
    Row{RadioButton(consent==DoctorConsentStatus.PENDING,{consent=DoctorConsentStatus.PENDING});Text("Oczekuje")}
-   Text("Podpisywanie pozostaje wyłączone.",style=MaterialTheme.typography.bodySmall)
   }
  },confirmButton={TextButton(onClick={onSave(initial.copy(name=name.trim(),specialty=specialty.trim(),country=country.trim(),city=city.trim(),
   practice=practice.trim(),address=address.trim(),phone=phone.trim(),website=website.trim(),register=register.trim(),license=license.trim(),
