@@ -1160,3 +1160,16 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Test instrumentacyjny został dodany, ale jego wykonanie wymaga zakończenia bieżącego workflow emulatora.
 
 **Status:** operacje magazynu są serializowane w obrębie procesu, a test równoległych importów dodano do zestawu instrumentacyjnego. Weryfikacja wykonania testu oczekuje na CI.
+
+
+---
+
+## 45. Odczyt załączników przez świeży kontekst pakietu — 2026-11-15
+
+- [x] Dodano test importujący załącznik, tworzący nowy obiekt Context przez createPackageContext, a następnie odczytujący rejestr i eksportujący oryginalne bajty załącznika.
+- [x] Test porównuje odzyskane bajty z oryginalnym ładunkiem, a w bloku finally usuwa dane testowe.
+- [x] Test zapisano w commicie 9fa43e0ef3dc34657c91422c0b06c393994aff44.
+- [ ] Test nie symuluje restartu procesu ani ponownego uruchomienia urządzenia. createPackageContext tworzy nowy kontekst, ale działa w tym samym procesie i korzysta z tego samego trwałego magazynu aplikacji.
+- [ ] Wykonanie testu oczekuje na workflow emulatora dla nowego SHA.
+
+**Status:** potwierdzono scenariusz ponownego dostępu do danych przez świeży kontekst pakietu na poziomie testu; pełny test restartu procesu pozostaje otwarty.
