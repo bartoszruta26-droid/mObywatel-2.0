@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,6 +27,7 @@ import java.time.ZoneOffset
  * Kalendarzowy wybór obu granic raportu. Daty z DatePicker są interpretowane
  * jako dni kalendarzowe UTC, a dopiero model okresu mapuje je na strefę urządzenia.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinancialReportDateRangePicker(
     startDate: String,
