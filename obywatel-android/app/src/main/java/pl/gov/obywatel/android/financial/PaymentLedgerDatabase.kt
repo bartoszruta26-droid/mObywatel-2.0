@@ -596,8 +596,16 @@ class PaymentLedgerDatabase(
                 "Import zawiera ${preview.conflicts.size} konfliktów referencji. Wymagana weryfikacja."
             }
             val inserted = insertEntries(db, preview.newEntries)
+            val existingTransactions = readFinancialTransactions().associateBy { it.transaction.id }
             archive.transactions.forEach { stored ->
-                saveFinancialTransaction(stored.transaction, stored.accountingEntryIds.toSet())
+                val existing = existingTransactions[stored.transaction.id]
+                if (existing != null) {
+                    require(sameStoredTransaction(existing, stored)) {
+                        "Konflikt identyfikatora transakcji ${stored.transaction.id}; dane wymagają weryfikacji."
+                    }
+                } else {
+                    saveFinancialTransaction(stored.transaction, stored.accountingEntryIds.toSet())
+                }
             }
             var importedDonations = 0
             archive.donations.forEach { donation ->
@@ -640,6 +648,35 @@ class PaymentLedgerDatabase(
         } finally {
             db.endTransaction()
         }
+    }
+
+    private fun sameStoredTransaction(
+        existing: StoredFinancialTransaction,
+        incoming: StoredFinancialTransaction
+    ): Boolean {
+        val first = existing.transaction
+        val second = incoming.transaction
+        fun sameAmount(a: BigDecimal?, b: BigDecimal?): Boolean =
+            if (a == null || b == null) a == b else a.compareTo(b) == 0
+
+        val sameFee = when {
+            first.fee == null || second.fee == null -> first.fee == second.fee
+            else -> first.fee.assetCode == second.fee.assetCode &&
+                first.fee.amount.compareTo(second.fee.amount) == 0
+        }
+        return first.id == second.id &&
+            first.executedAt == second.executedAt &&
+            first.type == second.type &&
+            first.fromAssetCode == second.fromAssetCode &&
+            sameAmount(first.fromAmount, second.fromAmount) &&
+            first.toAssetCode == second.toAssetCode &&
+            sameAmount(first.toAmount, second.toAmount) &&
+            sameFee &&
+            first.source == second.source &&
+            first.externalId == second.externalId &&
+            first.rawDescription == second.rawDescription &&
+            first.parseStatus == second.parseStatus &&
+            existing.accountingEntryIds.toSet() == incoming.accountingEntryIds.toSet()
     }
 
     /** Odtwarza transakcje wraz z prowizjami i identyfikatorami źródłowych zapisów. */
