@@ -107,6 +107,8 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                 if (rates.isEmpty()) error = "NBP nie zwrócił dostępnych kursów średnich."
                 result = null
             } catch (exception: Exception) {
+                rates = emptyMap()
+                result = null
                 error = exception.message ?: "Nie udało się pobrać kursów NBP."
             } finally {
                 loading = false
