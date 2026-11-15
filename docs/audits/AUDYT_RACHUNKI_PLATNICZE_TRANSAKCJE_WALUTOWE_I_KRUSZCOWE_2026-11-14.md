@@ -3986,3 +3986,36 @@ Dla tego SHA:
 - Repository compliance, run `43720318861` — **queued**.
 
 Etap 71 jest **zapisany i sprawdzony w źródłach; walidacja CI pozostaje otwarta**. Nie deklaruje się jeszcze sukcesu testów JVM, instrumentacyjnych, budowy APK ani publikacji artefaktu.
+
+
+## 72. Korekta testów wykrytych w CI — 15 listopada 2026 r.
+
+### 72.1. Wynik weryfikacji SHA 563a88c2
+
+Dla HEAD `563a88c2f37a9153466ea7446e2e4bbcaa40fd18`:
+- Repository compliance, run `43720380012` — **success**;
+- Android prototype build, run `43720379977` — **success**;
+- Android GUI validation, run `43720380022` — **failure**.
+
+Testy JVM zakończyły się sukcesem. Emulator wykonał 101 testów instrumentacyjnych; 3 nie przeszły:
+- `FinancialReportDateRangePickerTest.selectingDifferentStartDateUpdatesOnlyStartBoundary` — test szukał dnia jako zwykłego tekstu i wywoływał `performScrollTo()`, ale element dnia kalendarza Material 3 jest dostępny przez opis semantyczny daty;
+- `FinancialReportDateRangePickerTest.selectingDifferentEndDateUpdatesOnlyEndBoundary` — analogiczny problem selektora;
+- `PaymentLedgerRepositoryTest.archivePreviewAndImportDeduplicateIdenticalRepeatedTransactionAndDonationIds` — niezgodna oczekiwana liczba duplikatów w podsumowaniu importu.
+
+### 72.2. Wykonane korekty
+
+- Test wyboru daty początkowej używa teraz semantycznego opisu dostępności `November 10, 2026` zamiast wyszukiwania tekstu `10` i przewijania nieprzewijalnego węzła.
+- Test wyboru daty końcowej używa opisu `November 25, 2026`.
+- W teście importu archiwum skorygowano oczekiwanie podsumowania z `BatchImportSummary(1, 0)` na `BatchImportSummary(1, 1)`: w paczce występuje jedna nowa darowizna i jedno powtórzenie tej samej darowizny. Test nadal osobno potwierdza, że po deduplikacji zapisano po jednej transakcji i darowiźnie.
+- Nie zmieniano logiki produkcyjnej rejestru ani komponentu kalendarza.
+
+### 72.3. Commity i ponowna walidacja
+
+- Test kalendarza: `59322664c901457916c961256d3f11a7bbcca8cb`.
+- Test podsumowania importu: `a1140471192b7273839a1dad03d6c9793f16f858`.
+- Dla końcowego SHA `a1140471192b7273839a1dad03d6c9793f16f858` uruchomiono ponownie:
+  - Android GUI validation, run `43721522828` — **in_progress** przy aktualizacji;
+  - Android prototype build, run `43721522796` — **in_progress**;
+  - Repository compliance, run `43721522885` — **in_progress**.
+
+**Status etapu 72:** poprawki testów zapisane; ich skuteczność pozostaje do potwierdzenia zakończonym CI dla SHA `a1140471192b7273839a1dad03d6c9793f16f858`. Nie uznaje się jeszcze testów emulatorowych, kompilacji ani APK za zaliczone.
