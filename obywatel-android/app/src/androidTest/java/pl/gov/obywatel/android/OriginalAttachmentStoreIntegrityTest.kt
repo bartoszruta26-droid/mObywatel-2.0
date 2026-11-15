@@ -265,6 +265,117 @@ class OriginalAttachmentStoreIntegrityTest {
     }
 
 
+
+    private class ControlledStagingOperations(
+        private val failWriteAfterPartialBytes: Boolean = false,
+        private val failInstallAt: Int? = null
+    ) : OriginalAttachmentStagingOperations {
+        var installCalls = 0
+
+        override fun write(staging: File, encryptedBytes: ByteArray) {
+            if (failWriteAfterPartialBytes) {
+                staging.writeBytes(encryptedBytes.copyOfRange(0, minOf(4, encryptedBytes.size)))
+                throw IllegalStateException("simulated staging write failure")
+            }
+            writeOriginalAttachmentStagingFile(staging, encryptedBytes)
+        }
+
+        override fun install(staging: File, target: File): Boolean {
+            installCalls += 1
+            if (installCalls == failInstallAt) return false
+            return staging.renameTo(target)
+        }
+    }
+
+    @Test
+    fun addPartialStagingWriteFailureLeavesNoTargetMetadataOrTemporaryFile() {
+        val document = documentId()
+        val attachmentId = "write-fail-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val backend = FailingMetadataBackend()
+        val stagingOperations = ControlledStagingOperations(failWriteAfterPartialBytes = true)
+        try {
+            assertTrue(runCatching {
+                OriginalAttachmentStore.add(
+                    context, document, "partial.txt", "text/plain", "partial write".toByteArray(),
+                    attachmentId, backend, stagingOperations
+                )
+            }.isFailure)
+            assertTrue(OriginalAttachmentStore.list(context, document, backend).isEmpty())
+            assertFalse(File(directory, "$attachmentId.enc").exists())
+            assertTrue(directory.listFiles().orEmpty().none {
+                it.name.startsWith(".$attachmentId.") && it.name.endsWith(".import")
+            })
+        } finally {
+            File(directory, "$attachmentId.enc").delete()
+            directory.listFiles().orEmpty().filter {
+                it.name.startsWith(".$attachmentId.") && it.name.endsWith(".import")
+            }.forEach { it.delete() }
+        }
+    }
+
+    @Test
+    fun addInstallRenameFailureCleansStagingAndDoesNotCommitMetadata() {
+        val document = documentId()
+        val attachmentId = "rename-fail-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val backend = FailingMetadataBackend()
+        val stagingOperations = ControlledStagingOperations(failInstallAt = 1)
+        try {
+            assertTrue(runCatching {
+                OriginalAttachmentStore.add(
+                    context, document, "rename.txt", "text/plain", "rename failure".toByteArray(),
+                    attachmentId, backend, stagingOperations
+                )
+            }.isFailure)
+            assertEquals(1, stagingOperations.installCalls)
+            assertTrue(OriginalAttachmentStore.list(context, document, backend).isEmpty())
+            assertFalse(File(directory, "$attachmentId.enc").exists())
+            assertTrue(directory.listFiles().orEmpty().none {
+                it.name.startsWith(".$attachmentId.") && it.name.endsWith(".import")
+            })
+        } finally {
+            File(directory, "$attachmentId.enc").delete()
+            directory.listFiles().orEmpty().filter {
+                it.name.startsWith(".$attachmentId.") && it.name.endsWith(".import")
+            }.forEach { it.delete() }
+        }
+    }
+
+    @Test
+    fun importFailureOnSecondInstallRollsBackFirstInstalledFileAndAllStagingFiles() {
+        val document = documentId()
+        val firstId = "install-a-" + UUID.randomUUID().toString().take(8)
+        val secondId = "install-b-" + UUID.randomUUID().toString().take(8)
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val entries = JSONArray()
+            .put(JSONObject().put("documentId", document).put("id", firstId).put("name", "a.txt")
+                .put("mime", "text/plain").put("dataBase64", Base64.encodeToString("first".toByteArray(), Base64.NO_WRAP)))
+            .put(JSONObject().put("documentId", document).put("id", secondId).put("name", "b.txt")
+                .put("mime", "text/plain").put("dataBase64", Base64.encodeToString("second".toByteArray(), Base64.NO_WRAP)))
+        val raw = JSONObject().put("version", 1).put("attachments", entries).toString()
+        val backend = FailingMetadataBackend()
+        val stagingOperations = ControlledStagingOperations(failInstallAt = 2)
+        try {
+            assertTrue(runCatching {
+                OriginalAttachmentStore.importArchive(context, raw, backend, stagingOperations)
+            }.isFailure)
+            assertEquals(2, stagingOperations.installCalls)
+            assertTrue(OriginalAttachmentStore.list(context, document, backend).isEmpty())
+            assertFalse(File(directory, "$firstId.enc").exists())
+            assertFalse(File(directory, "$secondId.enc").exists())
+            assertTrue(directory.listFiles().orEmpty().none {
+                (it.name.startsWith(".$firstId.") || it.name.startsWith(".$secondId.")) && it.name.endsWith(".import")
+            })
+        } finally {
+            File(directory, "$firstId.enc").delete()
+            File(directory, "$secondId.enc").delete()
+            directory.listFiles().orEmpty().filter {
+                (it.name.startsWith(".$firstId.") || it.name.startsWith(".$secondId.")) && it.name.endsWith(".import")
+            }.forEach { it.delete() }
+        }
+    }
+
     private class FailingMetadataBackend(
         initial: Map<String, String> = emptyMap(),
         var commitResult: Boolean = true,
