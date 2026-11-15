@@ -1045,3 +1045,18 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 ### Weryfikacja
 - [x] Zmiana została przygotowana na gałęzi `zaswaidczenie`.
 - [ ] Wynik JVM, testów Compose UI, instrumentacji i kompilacji APK dla nowego SHA wymaga potwierdzenia przez GitHub Actions.
+
+
+---
+
+## 40. Zgodność zapisu JSON i kompatybilność starszych badań obrazowych — 2026-11-15
+
+### Wykonane prace
+- [x] Dodano test pełnego cyklu kodowania i dekodowania JSON, obejmujący wszystkie pola badania, znaki specjalne, różne modalności i identyfikatory załączników.
+- [x] Dodano test zgodności wstecznej dla starszych rekordów bez pola `attachmentIds`; brak pola jest interpretowany jako pusta lista.
+- [x] Dodano test funkcji wyznaczającej badania usunięte z formularza, aby sprzątanie załączników dotyczyło wyłącznie usuniętych identyfikatorów.
+- [x] Zachowano dotychczasowy format JSON i nie wprowadzono migracji zmieniającej zapisane dane.
+
+### Weryfikacja
+- [x] Testy zostały zapisane w zestawie JVM.
+- [ ] Wynik testów JVM, testów GUI, instrumentacji i kompilacji APK dla nowego SHA wymaga potwierdzenia przez GitHub Actions.
