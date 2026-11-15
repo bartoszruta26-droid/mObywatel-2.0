@@ -66,3 +66,16 @@ Dla końcowego SHA:
 - Repository compliance run `43720318861` — queued.
 
 **Status:** pliki źródłowe i audyt ponownie odczytane; pełne CI nadal wymagane. Nie oznaczać testów Android ani APK jako zaliczonych przed zakończeniem tych przebiegów.
+
+
+## Aktualizacja po kolejnym przebiegu CI — etap 72 (15 listopada 2026 r.)
+
+Dla SHA `563a88c2f37a9153466ea7446e2e4bbcaa40fd18` kontrola REUSE i budowa Androida zakończyły się sukcesem, natomiast GUI validation zakończyło się niepowodzeniem: 101 testów, 3 błędy. Dwa błędy wynikały z użycia selektora tekstowego i przewijania dnia kalendarza; trzeci z oczekiwania `duplicates=0` mimo jednego powtórzenia darowizny w archiwum.
+
+Wprowadzono korekty testów:
+- selektory dni kalendarza oparto na opisach dostępności pełnej daty;
+- podsumowanie importu w teście uwzględnia jeden duplikat darowizny.
+
+Commity: `59322664c901457916c961256d3f11a7bbcca8cb` i `a1140471192b7273839a1dad03d6c9793f16f858`.
+
+Dla SHA `a1140471192b7273839a1dad03d6c9793f16f858` ponownie uruchomiono GUI validation (`43721522828`), Android prototype build (`43721522796`) i Repository compliance (`43721522885`). Wszystkie były w toku podczas aktualizacji. Etap 72 pozostaje otwarty do uzyskania końcowych wyników.
