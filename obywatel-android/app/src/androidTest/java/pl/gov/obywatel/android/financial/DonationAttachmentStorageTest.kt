@@ -3,6 +3,8 @@
 package pl.gov.obywatel.android.financial
 
 import androidx.test.core.app.ApplicationProvider
+import androidx.core.content.FileProvider
+import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.content.Context
 import java.io.File
@@ -70,6 +72,73 @@ class DonationAttachmentStorageTest {
         assertThrows(IllegalArgumentException::class.java) {
             DonationAttachmentStorage(context).contentUri(metadata, "${context.packageName}.ocrfiles")
         }
+    }
+
+    private fun sourceUri(fileName: String, bytes: ByteArray): Uri {
+        assertTrue(directory.exists() || directory.mkdirs())
+        val source = File(directory, fileName)
+        source.writeBytes(bytes)
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.ocrfiles",
+            source
+        )
+    }
+
+    @Test
+    fun importCopiesValidPdfIntoPrivateStorageAndCalculatesSha256() {
+        val bytes = "%PDF-1.7\nvalid-test-document".toByteArray()
+        val uri = sourceUri("saf-source-valid.pdf", bytes)
+
+        val imported = DonationAttachmentStorage(context).import("donation-saf-test", uri)
+
+        assertEquals("application/pdf", imported.mimeType)
+        assertEquals(bytes.size.toLong(), imported.sizeBytes)
+        assertEquals(
+            MessageDigest.getInstance("SHA-256").digest(bytes)
+                .joinToString("") { "%02x".format(it) },
+            imported.sha256
+        )
+        val stored = File(directory, imported.storedFileName)
+        assertTrue(stored.isFile)
+        assertTrue(bytes.contentEquals(stored.readBytes()))
+    }
+
+    @Test
+    fun importRejectsEmptyDocumentAndRemovesPartialTarget() {
+        val uri = sourceUri("saf-source-empty.pdf", byteArrayOf())
+
+        assertThrows(IllegalArgumentException::class.java) {
+            DonationAttachmentStorage(context).import("donation-saf-test", uri)
+        }
+
+        assertEquals(1, directory.listFiles()?.size)
+    }
+
+    @Test
+    fun importRejectsDocumentLargerThanTenMiBAndRemovesPartialTarget() {
+        val bytes = ByteArray(pl.gov.obywatel.android.DonationAttachment.MAX_BYTES.toInt() + 1)
+        val uri = sourceUri("saf-source-oversize.pdf", bytes)
+
+        assertThrows(IllegalArgumentException::class.java) {
+            DonationAttachmentStorage(context).import("donation-saf-test", uri)
+        }
+
+        assertEquals(1, directory.listFiles()?.size)
+    }
+
+    @Test
+    fun importRejectsMimeAndBinarySignatureMismatchAndRemovesPartialTarget() {
+        val pngHeader = byteArrayOf(
+            0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A
+        )
+        val uri = sourceUri("saf-source-mismatch.pdf", pngHeader)
+
+        assertThrows(IllegalArgumentException::class.java) {
+            DonationAttachmentStorage(context).import("donation-saf-test", uri)
+        }
+
+        assertEquals(1, directory.listFiles()?.size)
     }
 
     @Test
