@@ -355,6 +355,66 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun imagingStudyJsonRoundTripPreservesAllFieldsAndAttachmentReferences() {
+        val original = listOf(
+            MedicalImagingStudy(
+                id = "study-2026-02",
+                modality = MedicalImagingModality.MRI,
+                bodyRegion = "Lumbar spine",
+                studyDate = "2026-02-14",
+                facility = "Regional Imaging Centre",
+                indication = "Persistent pain",
+                technique = "T1/T2 sequences",
+                contrast = "Gadolinium",
+                findings = "No acute lesion",
+                impression = "Degenerative changes",
+                radiologistName = "A. Example",
+                reportNumber = "MR-2026/014",
+                attachmentIds = listOf("report-001", "scan-002")
+            ),
+            MedicalImagingStudy(
+                id = "study-2026-03",
+                modality = MedicalImagingModality.CT,
+                bodyRegion = "Chest",
+                studyDate = "2026-03-01"
+            )
+        )
+
+        val decoded = decodeMedicalImagingStudies(encodeMedicalImagingStudies(original))
+
+        assertEquals(original, decoded)
+    }
+
+    @Test
+    fun imagingStudyDecoderKeepsLegacyRecordsWithoutAttachmentIdsReadable() {
+        val legacy = """[
+            {"id":"legacy-study-1","modality":"X_RAY","bodyRegion":"Chest","studyDate":"2024-05-20"},
+            {"id":"legacy-study-2","modality":"MRI","attachmentIds":[]}
+        ]"""
+
+        val decoded = decodeMedicalImagingStudies(legacy)
+
+        assertEquals(2, decoded.size)
+        assertTrue(decoded.all { it.attachmentIds.isEmpty() })
+        assertEquals("Chest", decoded.first().bodyRegion)
+    }
+
+    @Test
+    fun removingImagingStudyIdsReturnsOnlyDeletedStudies() {
+        val previous = listOf(
+            MedicalImagingStudy("study-1", MedicalImagingModality.MRI),
+            MedicalImagingStudy("study-2", MedicalImagingModality.CT),
+            MedicalImagingStudy("study-3", MedicalImagingModality.X_RAY)
+        )
+        val current = listOf(
+            MedicalImagingStudy("study-1", MedicalImagingModality.MRI),
+            MedicalImagingStudy("study-3", MedicalImagingModality.X_RAY)
+        )
+
+        assertEquals(listOf("study-2"), removedMedicalImagingStudyIds(previous, current))
+    }
+
+    @Test
     fun imagingStudyDecoderRejectsDuplicateIdsAndInvalidDates() {
         val duplicateIds = """[
             {"id":"same","modality":"MRI"},
