@@ -1368,3 +1368,47 @@ Dodano testy:
 - Usunięcie nieużywanej stałej: `9b95ec529e4056dd183bb98970dd15bfd548f744`.
 
 **Status:** rozszerzono testy instrumentacyjne i usunięto nieużywaną stałą. Oczekuje się na wynik CI dla aktualnego SHA. Etap nie jest uznany za w pełni zweryfikowany do czasu zakończenia testów emulatora i kontroli kompilacji po nowych commitach.
+
+---
+
+## 53. Wstrzykiwanie awarii operacji etapowych, instalacji plików i kolizji równoległych — 2026-11-15
+
+### Wyniki CI etapu 52
+
+Dla SHA `d9233ca228868d02337f64e9738386b2961f675d` potwierdzono:
+- [x] Android unit tests — PASS.
+- [x] Testy Compose i instrumentacyjne na emulatorze — PASS.
+- [x] Kompilacja `assembleDebug` — PASS.
+- [x] REUSE compliance — PASS.
+
+### Zmiany implementacyjne
+
+- [x] Dodano wewnętrzny interfejs `OriginalAttachmentStagingOperations`, oddzielający zapis pliku etapowego i instalację przez zmianę nazwy od logiki magazynu.
+- [x] Dodano domyślną implementację zachowującą dotychczasowe zachowanie produkcyjne: zapis z synchronizacją deskryptora oraz instalację przez `File.renameTo`.
+- [x] Wstrzyknięcie operacji etapowych udostępniono w ścieżkach `add` i `importArchive`; domyślne wywołania aplikacji nie wymagają zmian.
+
+### Nowe testy instrumentacyjne
+
+- [x] Częściowy zapis pliku etapowego zakończony wyjątkiem: brak pliku docelowego, brak wpisu metadanych i sprzątnięcie pliku tymczasowego.
+- [x] Niepowodzenie zmiany nazwy przy dodawaniu: brak zatwierdzenia metadanych i sprzątnięcie pliku etapowego.
+- [x] Niepowodzenie drugiej instalacji w imporcie wieloelementowym: wycofanie pierwszego zainstalowanego pliku, brak metadanych i usunięcie pozostałych plików etapowych.
+- [x] Równoległe dodanie tego samego identyfikatora do dwóch różnych dokumentów: dokładnie jedna operacja może uzyskać właściciela; test sprawdza wyłączność wpisu i istnienie pojedynczego pliku.
+
+### Zakres kontroli współbieżności
+
+Wcześniejszy test równoległego importu dwóch różnych załączników do tego samego dokumentu pozostaje częścią zestawu. Nowy test uzupełnia go o kolizję identyfikatora pomiędzy różnymi dokumentami. Synchronizacja magazynu jest nadal mechanizmem wewnątrz jednego procesu; testy nie dowodzą blokady międzyprocesowej.
+
+### Ograniczenia
+
+- [ ] Nowe testy etapu 53 oczekują na wykonanie w CI dla końcowego SHA.
+- [ ] Wstrzyknięcie obejmuje zapis i instalację pliku etapowego w ścieżkach dodawania i importu. Nie obejmuje jeszcze symulacji błędów usuwania pliku po zatwierdzeniu metadanych ani awarii systemu plików/nośnika.
+- [ ] Test świeżego kontekstu pakietu nie symuluje zakończenia procesu aplikacji i jego ponownego uruchomienia.
+- [ ] Nie wykonano testu wieloprocesowego.
+
+### Commity etapu 53
+
+- `0421dfb09c7e01a62b081212fa1768c0bdc75888` — wstrzyknięcie operacji plików etapowych.
+- `49b96fcf0d1083b271be8dd8b393007db37cb556` — testy błędów zapisu i instalacji.
+- `17a0124de4969477e336a89d51aac72f18cc0ec1` — test kolizji równoległego właściciela.
+
+**Status:** implementacja i testy etapu 53 zapisane. Weryfikacja końcowa zależy od CI dla aktualnego SHA.
