@@ -2690,3 +2690,133 @@ PR #68 pozostaje otwarty i niescalony. APK nie jest publikowany jako zweryfikowa
 3. Dodać test edycji importowanej transakcji z kodem spoza słownika.
 4. Uzupełnić testy graniczne ilości i prowizji: zero, wartości ujemne oraz nadmiarowa skala.
 5. Przeprowadzić końcowy przegląd importu/eksportu i integralności historii.
+
+---
+
+## 46. Etap 2O — pełna ewidencja darowizn gotówkowych (15 listopada 2026 r.)
+
+### 46.1. Kontrola stanu wyjściowego i wykryta luka
+
+Kontrola najnowszej gałęzi `feature/payment-ledger-stage-1` i PR #68 wykazała, że:
+- model `CashDonation` oraz walidacja podstawowych pól istniały już w `FinancialModels.kt`;
+- na ekranie znajdował się wyłącznie opis sekcji „Darowizny gotówkowe”, bez formularza;
+- brakowało kompletnej trwałej warstwy CRUD w bieżącej wersji `PaymentLedgerDatabase`;
+- wersjonowany JSON w schemacie 2 przenosił zapisy bankowe i transakcje, ale nie darowizny;
+- repozytorium i ekran nie zapewniały pełnego cyklu życia darowizny.
+
+Nie powielano więc modelu. Uzupełniono brakujące warstwy: SQLite, repozytorium, JSON, interfejs oraz testy.
+
+### 46.2. Migracja SQLite 5 → 6
+
+Podniesiono `PaymentLedgerDatabase.DATABASE_VERSION` do 6. Dodano tabelę `cash_donations` z polami:
+- identyfikator darowizny;
+- data i czas przyjęcia;
+- kwota dziesiętna oraz kod waluty;
+- obowiązkowa nazwa organizacji-beneficjenta;
+- obowiązkowy cel darowizny;
+- opcjonalna nazwa darczyńcy i jawny znacznik anonimowości;
+- kampania/zbiórka, osoba przyjmująca, numer pokwitowania;
+- status przechowywania/przekazania;
+- data i kwota przekazania;
+- uwagi i źródło rekordu.
+
+Dodano indeksy po dacie przyjęcia i nazwie organizacji. Migracja jest nieusuwająca danych: tworzy nową tabelę bez zmiany istniejących zapisów bankowych, transakcji, prowizji i aktywów.
+
+### 46.3. CRUD i walidacja
+
+W bazie dodano:
+- `saveCashDonation` — wstawienie z ochroną klucza głównego przed duplikatem;
+- `updateCashDonation` — aktualizacja istniejącego rekordu bez zmiany jego identyfikatora;
+- `readCashDonations` — odczyt z zachowaniem `BigDecimal`;
+- `deleteCashDonation` — jawne usunięcie po identyfikatorze.
+
+Repozytorium udostępnia odpowiadające metody wykonywane na `Dispatchers.IO`.
+
+Walidacja modelu obejmuje:
+- dodatnią kwotę darowizny;
+- trzyliterowy kod waluty;
+- obowiązkową nazwę organizacji-beneficjenta i cel;
+- opcjonalność danych darczyńcy przy zachowaniu znacznika anonimowości;
+- nieujemną kwotę przekazania, nieprzekraczającą przyjętej kwoty;
+- wymóg występowania daty i kwoty przekazania razem;
+- zgodność statusu z rozliczeniem: `PARTIALLY_TRANSFERRED` wymaga kwoty większej od zera i mniejszej od darowizny, `TRANSFERRED` wymaga przekazania całej kwoty, a `HELD`/`DEPOSITED` nie mogą wskazywać dodatniego przekazania.
+
+### 46.4. Formularz i lista w interfejsie
+
+W `PaymentLedgerScreen.kt` zastąpiono statyczny opis działającą ewidencją:
+- kwota i waluta;
+- obowiązkowa nazwa organizacji;
+- obowiązkowy cel;
+- darczyńca opcjonalny i przełącznik anonimowości;
+- kampania, osoba przyjmująca i numer pokwitowania;
+- status przechowywania/przekazania;
+- kwota przekazana i jawna data przekazania ISO-8601;
+- uwagi;
+- zapis, edycja, anulowanie edycji i usuwanie;
+- lista zapisanych darowizn z kwotą, organizacją, celem, datą i statusem.
+
+Data przekazania nie jest już automatycznie ustawiana na chwilę edycji — użytkownik wpisuje ją jawnie, a walidacja sprawdza zgodność z kwotą i statusem.
+
+### 46.5. Pełne archiwum JSON i deduplikacja darowizn
+
+Rozszerzono bieżący schemat 2 o tablicę `donations`, nie zmieniając numeru schematu, ponieważ dodano opcjonalny element, a dekoder nadal akceptuje archiwa schematu 1 i 2:
+- archiwa schematu 1 bez transakcji i darowizn pozostają czytelne;
+- archiwa schematu 2 bez tablicy darowizn pozostają czytelne;
+- nowe eksporty obejmują zapisy, transakcje, prowizje i darowizny;
+- dekoder rekonstruuje komplet pól darowizny i uruchamia walidację.
+
+Import darowizn jest częścią atomowego importu archiwum:
+- identyczny identyfikator i zgodne podstawowe dane oznaczają duplikat;
+- identyczny identyfikator z inną datą, kwotą, walutą, organizacją lub celem oznacza konflikt;
+- konflikt powoduje wycofanie całej transakcji importu;
+- import tej samej paczki ponownie nie tworzy kolejnych rekordów darowizn.
+
+### 46.6. Testy dodane
+
+- `PaymentLedgerDatabaseTest.kt`: trwałość po ponownym otwarciu bazy, wymagane pola organizacji i celu, anonimowy darczyńca, ochrona przed duplikatem identyfikatora, aktualizacja/usunięcie oraz migracja wersji 5 → 6 bez utraty danych.
+- `PaymentLedgerRepositoryTest.kt`: eksport/import JSON darowizn, idempotencja ponownego importu i konflikt tego samego identyfikatora z innym celem.
+- `PaymentLedgerJsonCodecTest.kt`: round-trip JSON z organizacją, celem, anonimowością i częściowym przekazaniem.
+- `FinancialModelsTest.kt`: zgodność statusu z kwotą i datą przekazania, w tym przypadki częściowego i pełnego przekazania oraz błędne kombinacje.
+
+### 46.7. Zmienione pliki i commity
+
+- `PaymentLedgerDatabase.kt` — `8e188337e97275eaa19f519b1f7392c83c58f207`;
+- `PaymentLedgerRepository.kt` — `cbf7e8044728aa9aad7879c2d802825a75fca2c5`;
+- `PaymentLedgerJsonCodec.kt` — `f3dcdb036e872ffc5c6111682a44749e80b32012`;
+- `PaymentLedgerScreen.kt` — `aa0bfb781152aea606bf2e39e3d7f9d8583bd06c` oraz `edf6cac93cfe2e905fa26402eb8c4336112b71b6`;
+- `FinancialModels.kt` — `8648e854b9a83a3f6db884930ca514c1588ab07c`;
+- `PaymentLedgerDatabaseTest.kt` — `df983760e97dca68a504ed709f7465ff107057a7`;
+- `PaymentLedgerRepositoryTest.kt` — `45664ba0b05f2c23f18103c5f9482e340bb3a2b2`;
+- `PaymentLedgerJsonCodecTest.kt` — `bdae62e08650955c1c726b47072ee67cbe02281a`;
+- `FinancialModelsTest.kt` — `2ca5026b7985f42c593dd995157929339f65db9c`.
+
+Po zapisaniu ponownie pobrano wszystkie dziewięć plików i potwierdzono obecność tabeli i migracji, metod CRUD, API repozytorium, JSON, formularza oraz testów.
+
+### 46.8. CI dla aktualnego kodu
+
+Kontrolowany końcowy SHA w chwili zapisu audytu: `2ca5026b7985f42c593dd995157929339f65db9c`.
+
+Dla tego dokładnego SHA GitHub Actions zgłosił:
+- Repository compliance (alfa) — `pending`;
+- Android GUI validation — `in_progress`;
+- Android prototype build — `pending`.
+
+Nie ma jeszcze potwierdzenia testów JVM, testów emulatorowych ani nowego APK dla darowizn. Wynik wcześniejszego builda nie potwierdza tych zmian. Kontrola treści źródeł potwierdziła spójność nazw i obecność testów, ale nie zastępuje wykonania Gradle i emulatora.
+
+### 46.9. Status i dalsze prace
+
+| Element | Status |
+|---|---|
+| Model i walidacja darowizny | Rozszerzone i zaostrzone |
+| SQLite 5 → 6 | Zaimplementowano migrację |
+| CRUD darowizn | Zaimplementowano |
+| Formularz i lista darowizn | Zaimplementowano |
+| Edycja i usuwanie | Zaimplementowano |
+| JSON — eksport i import | Rozszerzono |
+| Deduplikacja i konflikty darowizn | Zaimplementowano |
+| Testy jednostkowe i instrumentacyjne | Dodano; oczekują na CI |
+| Ręczny test formularza na urządzeniu | Do wykonania |
+| Pokwitowanie/załącznik dokumentujący darowiznę | Do wykonania |
+| Eksport raportu darowizn do PDF/CSV | Do wykonania |
+
+Następny etap po zielonym CI: dodać załączniki/pokwitowania do darowizn z ochroną prywatności i sumami kontrolnymi, a następnie raport okresowy przyjętych oraz przekazanych środków. Nie scalać PR i nie publikować APK jako zweryfikowanego wydania przed uzyskaniem wyników dla aktualnego SHA.
