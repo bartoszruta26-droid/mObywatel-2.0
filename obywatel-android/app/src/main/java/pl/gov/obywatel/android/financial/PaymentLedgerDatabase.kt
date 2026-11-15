@@ -626,6 +626,15 @@ class PaymentLedgerDatabase(
                 "Archiwum zawiera sprzeczne dane darowizny " + incoming.id + "."
             }
         }
+        val uniqueConversions = linkedMapOf<String, CurrencyConversionRecord>()
+        archive.currencyConversions.forEach { incoming ->
+            incoming.validate()
+            val previous = uniqueConversions[incoming.id]
+            if (previous == null) uniqueConversions[incoming.id] = incoming
+            else require(sameCurrencyConversion(previous, incoming)) {
+                "Archiwum zawiera sprzeczne dane przeliczenia " + incoming.id + "."
+            }
+        }
         val db = writableDatabase
         db.beginTransaction()
         try {
@@ -695,15 +704,39 @@ class PaymentLedgerDatabase(
                     }
                 }
             }
+            val existingConversions = readCurrencyConversions(1000).associateBy { it.id }
+            var importedConversions = 0
+            uniqueConversions.values.forEach { incoming ->
+                val existing = existingConversions[incoming.id]
+                if (existing == null) {
+                    saveCurrencyConversion(incoming)
+                    importedConversions++
+                } else {
+                    require(sameCurrencyConversion(existing, incoming)) {
+                        "Konflikt identyfikatora przeliczenia " + incoming.id + "; dane wymagają weryfikacji."
+                    }
+                }
+            }
             db.setTransactionSuccessful()
             return BatchImportSummary(
-                inserted = inserted.inserted + importedDonations,
-                duplicates = inserted.duplicates + preview.duplicates.size + (archive.donations.size - importedDonations)
+                inserted = inserted.inserted + importedDonations + importedConversions,
+                duplicates = inserted.duplicates + preview.duplicates.size +
+                    (archive.donations.size - importedDonations) +
+                    (archive.currencyConversions.size - importedConversions)
             )
         } finally {
             db.endTransaction()
         }
     }
+
+    private fun sameCurrencyConversion(first: CurrencyConversionRecord, second: CurrencyConversionRecord): Boolean =
+        first.id == second.id && first.convertedAt == second.convertedAt &&
+            first.sourceAmount.compareTo(second.sourceAmount) == 0 &&
+            first.sourceCurrencyCode == second.sourceCurrencyCode &&
+            first.targetAmount.compareTo(second.targetAmount) == 0 &&
+            first.targetCurrencyCode == second.targetCurrencyCode &&
+            first.appliedRate.compareTo(second.appliedRate) == 0 &&
+            first.rateDate == second.rateDate && first.rateSource == second.rateSource
 
     private fun sameDonationIdentity(
         existing: pl.gov.obywatel.android.CashDonation,
