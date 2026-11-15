@@ -144,4 +144,18 @@ class InternationalMedicalCertificateTest {
         assertEquals(original, restored)
     }
 
+
+    @Test
+    fun removingImagingStudiesSelectsOnlyPreviouslySavedStudyIds() {
+        val previous = listOf(
+            MedicalImagingStudy(id = "study-keep", modality = MedicalImagingModality.MRI),
+            MedicalImagingStudy(id = "study-remove", modality = MedicalImagingModality.CT)
+        )
+        val current = listOf(
+            MedicalImagingStudy(id = "study-keep", modality = MedicalImagingModality.MRI),
+            MedicalImagingStudy(id = "study-new", modality = MedicalImagingModality.X_RAY)
+        )
+        assertEquals(listOf("study-remove"), removedMedicalImagingStudyIds(previous, current))
+        assertTrue(removedMedicalImagingStudyIds(previous, previous).isEmpty())
+    }
 }
