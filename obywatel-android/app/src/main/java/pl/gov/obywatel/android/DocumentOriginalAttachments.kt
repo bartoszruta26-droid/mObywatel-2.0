@@ -453,7 +453,7 @@ internal object OriginalAttachmentStore {
             items.getJSONObject(index).getString("id")
         }
         val existingOwners = mutableMapOf<String, String>()
-        preferences.all.forEach { (ownerDocumentId, value) ->
+        backend.all.forEach { (ownerDocumentId, value) ->
             require(ownerDocumentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
                 "Nieprawidłowy identyfikator dokumentu w magazynie."
             }
