@@ -3149,3 +3149,41 @@ Po korekcie uruchomiono ponownie trzy przepływy dla rewizji `567dec9b9b7707c85c
 ### 53.4. Status i kolejny krok
 
 Etap 2Q.3 oraz korekta 2Q.3a pozostają oczekujące na zielone CI. Po ich potwierdzeniu kolejnym zadaniem jest kontrolowany błąd odczytu w połowie strumienia z testowym dostawcą treści. Raportowanie darowizn PDF/CSV pozostaje dalszym etapem i nie jest częścią tej zmiany.
+
+---
+
+## 54. Etap 2Q.4 — kontrolowany błąd odczytu w połowie strumienia (15 listopada 2026 r.)
+
+### 54.1. Ustalenia przed zmianą
+
+Dotychczasowy test błędu w etapie 2Q.3 usuwał plik źródłowy przed otwarciem strumienia. Weryfikował zatem błąd otwarcia URI, a nie awarię po częściowym skopiowaniu danych. Nie dowodził, że magazyn usuwa niekompletny plik, gdy dostawca zwróci część bajtów, a następnie zgłosi błąd odczytu.
+
+Dodatkowo przebiegi po poprawce testu Compose 2Q.3a nie stanowią pełnego zielonego potwierdzenia: Android GUI validation i Android prototype build uruchomione dla poprzedniego commitu zostały anulowane; REUSE zakończył się powodzeniem. Późniejszy Android prototype build dla commitu audytu zakończył się powodzeniem, ale nie zastępuje testów instrumentacyjnych/Compose.
+
+### 54.2. Wykonane zmiany
+
+Dodano testowy FailingStreamContentProvider, zadeklarowany wyłącznie w manifeście src/androidTest. Dostawca:
+- zgłasza typ MIME application/pdf i nazwę pliku;
+- tworzy potok ParcelFileDescriptor;
+- zapisuje do potoku poprawną sygnaturę PDF oraz część treści;
+- następnie kończy końcówkę zapisującą przez closeWithError("controlled read failure").
+
+Dodano test importDeletesPartialFileWhenProviderFailsAfterWritingBytes, który wywołuje produkcyjną metodę DonationAttachmentStorage.import() z URI dostawcy. Test oczekuje IOException z kontrolowanym komunikatem i sprawdza, że prywatny katalog załączników pozostaje pusty po nieudanym imporcie.
+
+Dostawca jest komponentem testowym, nie został dodany do manifestu produkcyjnego aplikacji. W teście wykorzystano kontekst APK instrumentacyjnego, aby zarówno dostawca, jak i katalog plików testowych należały do pakietu testowego.
+
+### 54.3. Zmienione pliki i rewizje
+
+- DonationAttachmentStorageTest.kt — dodano test awarii po częściowym odczycie; commit fc6c1475ba81c38e66343afd57f23e90805aeb7a;
+- FailingStreamContentProvider.kt — nowy dostawca testowy z potokiem i kontrolowanym błędem; commit e9c7cbdb8189233f7ca55242603632dc5ed4506d;
+- src/androidTest/AndroidManifest.xml — rejestracja dostawcy wyłącznie w APK testowym; commit 923b46f7e297711b0b586666a9fcbc290c6e36ee.
+
+### 54.4. Weryfikacja i ograniczenia
+
+Na moment aktualizacji audytu kod testu i dostawcy został zapisany w gałęzi, ale wyników CI dla tej rewizji jeszcze nie ma. Nie uznaje się etapu 2Q.4 za zweryfikowany przed przejściem kompilacji Kotlin, testów JVM, testów instrumentacyjnych/Compose, budowy debug APK i kontroli REUSE.
+
+Test celowo symuluje błąd ContentProvider po wysłaniu części danych. Nie zastępuje testu z zewnętrznym dostawcą SAF ani ręcznego sprawdzenia na fizycznym urządzeniu. Jeśli CI ujawni problem z rejestracją providera w testowym APK, należy poprawić konfigurację manifestu/authority i ponowić pełny przebieg.
+
+### 54.5. Następny krok
+
+Uruchomić i ocenić pełne CI dla rewizji obejmującej etap 2Q.4. Po zielonym wyniku przejść do raportów darowizn PDF/CSV, z odrębnym wykazaniem kwot przyjętych, pozostających w przechowaniu, przekazanych i salda nierozliczonego. Nie scalać PR #68 bez osobnego polecenia.
