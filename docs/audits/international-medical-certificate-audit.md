@@ -547,3 +547,36 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [ ] Nie dodano automatycznego przesyłania danych medycznych; załączniki nadal korzystają z lokalnego magazynu szyfrowanego kluczem Android Keystore.
 
 **Status:** integracja interfejsu i modelu załączników wykonana i zweryfikowana przez ponowny odczyt źródeł. Walidacja CI dla najnowszego kodu oczekuje na wynik. PR #69 pozostaje otwarty jako Draft i nie został scalony.
+---
+
+## 23. Zachowanie identyfikatorów archiwum i sprzątanie załączników badań — 2026-11-15
+
+### Usterki potwierdzone w kodzie
+- [x] Eksport archiwum załączników nie zapisywał pierwotnego identyfikatora załącznika.
+- [x] Import tworzył nowy identyfikator, mimo że `MedicalImagingStudy.attachmentIds` zachowywało stare identyfikatory. Po odtworzeniu na innej instalacji powiązania badanie–plik mogły być zerwane.
+- [x] Usunięcie badania z listy formularza nie usuwało metadanych ani zaszyfrowanych plików z jego zakresu załączników.
+- [x] Natychmiastowe usuwanie przy kliknięciu „Remove” byłoby niebezpieczne, ponieważ formularz zapisuje listę badań dopiero przy użyciu „Save certificate”.
+
+### Wykonane poprawki
+- [x] Eksport archiwum zapisuje teraz także stabilne pole `id` załącznika.
+- [x] Import zachowuje identyfikator z archiwum i ponownie szyfruje dane kluczem Android Keystore bieżącej instalacji.
+- [x] Import pozostaje zgodny ze starszym archiwum bez pola `id`: dla takiego wpisu generuje nowy identyfikator; starszy format nie zawiera jednak danych pozwalających odtworzyć wcześniejsze referencje `attachmentIds`.
+- [x] Import jest idempotentny dla istniejącego identyfikatora, jeżeli plik, zawartość i metadane są zgodne; konflikt identyfikatora z inną zawartością lub metadanymi zgłasza błąd.
+- [x] Dodano usuwanie całego zakresu załączników badania: najpierw zatwierdzane jest usunięcie wpisu z rejestru, a następnie usuwane są odpowiadające mu pliki.
+- [x] Sprzątanie uruchamia się dopiero po udanym zapisie nowej listy badań w szyfrowanym magazynie. Niezapisane usunięcie badania nie powoduje utraty jego załączników.
+- [x] Dodano test jednostkowy wyboru identyfikatorów badań usuniętych względem poprzednio zapisanej listy.
+- [x] Ponownie odczytano zmienione pliki z GitHub i potwierdzono obecność identyfikatora w eksporcie, jego odtwarzanie w imporcie, usuwanie zakresu oraz odroczone sprzątanie po zapisie.
+
+### Weryfikacja CI — stan na moment aktualizacji
+- [x] REUSE compliance: PASS dla SHA `5bf6e6f7ffecc095e8d1c6769ebaf19c2caadc1f`.
+- [x] Android JVM unit tests: PASS oraz `assembleDebug` i przesłanie APK: PASS dla SHA `4910da5bfc08e766f07a633f9e8d2a8b77a76fb4` — jest to kod sprzed niniejszych poprawek.
+- [ ] Testy emulatorowe dla SHA `4910da5bfc08e766f07a633f9e8d2a8b77a76fb4` pozostawały w toku; kolejne commity przerwały tamto uruchomienie.
+- [ ] Dla aktualnego SHA `d3cd6f7a865361f03ca2a99af9e3043175e504b0` uruchomiono nowe workflow; build Android jest w kolejce, a REUSE rozpoczęto. Wyników tych workflow nie uznaje się jeszcze za PASS.
+- [ ] Testy archiwum na dwóch instalacjach, awarie w połowie importu, uszkodzone pliki, nieprawidłowe MIME i graniczny rozmiar 25 MB nadal wymagają testów integracyjnych/instrumentalnych.
+
+### Ryzyka i dalsze prace
+- [ ] Import archiwum nadal wykonuje dodawanie wpisów sekwencyjnie; awaria po części wpisów może pozostawić częściowo odtworzone archiwum. Następny etap powinien wprowadzić przygotowanie i walidację wszystkich wpisów przed zatwierdzeniem importu jako całości.
+- [ ] Usuwanie zakresu jest bezpieczne dla obecnego modelu, w którym każdy zakres badania ma osobny identyfikator i załączniki nie są współdzielone. Przed wprowadzeniem współdzielenia plików trzeba dodać kontrolę referencji.
+- [ ] Nie potwierdzono jeszcze fizycznego odtworzenia po restarcie urządzenia ani przeniesienia archiwum między dwiema instalacjami Androida.
+
+**Status:** naprawiono zachowanie identyfikatorów przy eksporcie i imporcie oraz dodano odroczone sprzątanie załączników po trwałym usunięciu badania. Zmiany źródłowe potwierdzono odczytem z GitHub; walidacja CI dla końcowego SHA pozostaje w toku. PR #69 nadal jest otwarty, Draft i niescalony.
