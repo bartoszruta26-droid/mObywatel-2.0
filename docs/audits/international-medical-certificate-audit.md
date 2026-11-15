@@ -1334,3 +1334,37 @@ Dodano testy:
 - [x] Upubliczniono wyłącznie wewnętrzny model `OriginalAttachment` w zakresie wymaganym przez wewnętrzny punkt testowy; nie zmieniono publicznego API aplikacji.
 - [ ] Wyniki kompilacji i testów dla końcowego SHA po tych poprawkach pozostają do potwierdzenia w CI.
 
+---
+
+## 52. Weryfikacja adaptera produkcyjnego i odtwarzania po niejednoznacznym zatwierdzaniu — 2026-11-15
+
+### Kontrola poprzedniego CI
+
+- [x] Dla punktu kontrolnego `34a41db22201b37832fd85b3072657db8468625d` testy JVM w workflow Android GUI zakończyły się powodzeniem.
+- [x] Kompilacja debug APK w workflow Android prototype build zakończyła się powodzeniem.
+- [x] REUSE compliance zakończyło się powodzeniem.
+- [ ] Testy Compose/instrumentacyjne na emulatorze pozostawały w toku w chwili kontroli; nie oznaczono ich jako zaliczonych.
+
+### Wykonane kontrole i rozszerzenie testów
+
+- [x] Zweryfikowano, że produkcyjny adapter `SharedPreferencesOriginalAttachmentMetadataBackend` przekazuje mapę zmian do jednego `SharedPreferences.Editor.commit()`.
+- [x] Dodano test instrumentacyjny trwałości adaptera produkcyjnego po utworzeniu nowej instancji adaptera i ponownym pobraniu preferencji przez świeży kontekst pakietu. Test sprawdza zapis, odczyt i usunięcie wpisu.
+- [x] Dodano test uzgadniania po imporcie, w którym backend zwraca `false` bez zastosowania zmian: pliki zainstalowane przed nieudaną próbą zatwierdzenia są usuwane jako nieprzypisane do metadanych.
+- [x] Dodano test uzgadniania po niejednoznacznym wyniku, w którym backend zastosował metadane, a następnie zwrócił `false`: plik pozostaje, ponieważ rejestr nadal go wskazuje.
+- [x] Dodano test odrzucenia ponownego użycia identyfikatora załącznika należącego do innego dokumentu; kontrola sprawdza brak zmiany właściciela i zachowanie istniejącego pliku.
+- [x] Usunięto nieużywaną stałą `PREFS`; nazwa preferencji pozostaje określona w fabryce adaptera produkcyjnego.
+
+### Ograniczenia i ryzyka pozostające do zamknięcia
+
+- [ ] Nowe testy instrumentacyjne wymagają wykonania na emulatorze/urządzeniu przez CI; samo dodanie testów nie jest dowodem ich zaliczenia.
+- [ ] Test nowej instancji adaptera i świeżego kontekstu pakietu sprawdza odczyt trwałych preferencji w tym samym procesie. Nie zastępuje testu zakończenia i ponownego uruchomienia procesu aplikacji.
+- [ ] Nie wprowadzono wstrzykiwanego interfejsu operacji plikowych. Awaria zapisu, synchronizacji lub zmiany nazwy pliku etapowego jest objęta kontrolą błędów i wcześniejszymi testami funkcji zapisu, ale pełna symulacja błędów I/O w każdej fazie instalacji pozostaje otwarta.
+- [ ] Synchronizacja metod magazynu jest blokadą wewnątrz jednego procesu; nie jest blokadą międzyprocesową.
+- [ ] Nie przeprowadzono testu awarii zasilania ani uszkodzenia nośnika.
+
+### Commity etapu 52
+
+- Testy adaptera produkcyjnego, uzgadniania i kolizji właściciela: `e3892441b5a5f94b653894b0ffa720a1f579e50d`.
+- Usunięcie nieużywanej stałej: `9b95ec529e4056dd183bb98970dd15bfd548f744`.
+
+**Status:** rozszerzono testy instrumentacyjne i usunięto nieużywaną stałą. Oczekuje się na wynik CI dla aktualnego SHA. Etap nie jest uznany za w pełni zweryfikowany do czasu zakończenia testów emulatora i kontroli kompilacji po nowych commitach.
