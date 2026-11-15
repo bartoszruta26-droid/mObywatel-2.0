@@ -113,6 +113,11 @@ class FinancialReportTest {
         assertEquals(0, BigDecimal("200.00").compareTo(totals.deposited))
         assertEquals(0, BigDecimal("475.00").compareTo(totals.stored))
         assertEquals(0, BigDecimal("75.00").compareTo(totals.unsettledReview))
+        val csv = FinancialReportCsv.encode(FinancialReportBuilder.build(period, emptyList(), donations, emptyList()))
+        assertTrue(csv.contains("PRZYJĘTE"))
+        assertTrue(csv.contains("PRZECHOWYWANE"))
+        assertTrue(csv.contains("WPŁACONE_NA_RACHUNEK"))
+        assertTrue(csv.contains("NIEROZLICZONE_WERYFIKACJA"))
     }
 
     @Test
