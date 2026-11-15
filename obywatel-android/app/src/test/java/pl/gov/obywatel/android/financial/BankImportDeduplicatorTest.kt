@@ -168,4 +168,55 @@ class BankImportDeduplicatorTest {
         assertEquals(0, preview.duplicates.size)
     }
 
+
+    @Test
+    fun oppositeFxLegWithSameReferenceButDifferentBookingDateIsAConflict() {
+        val debit = entry(
+            currency = "USD",
+            amount = "-8000.00",
+            reference = "FX-REUSED-REF",
+            type = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+        )
+        val nextDayCredit = entry(
+            currency = "CHF",
+            amount = "6183.20",
+            reference = "FX-REUSED-REF",
+            type = "WYMIANA W KANTORZE - UZNANIE"
+        ).copy(bookingDate = debit.bookingDate.plusDays(1))
+
+        val preview = BankImportDeduplicator.preview(
+            incoming = listOf(nextDayCredit),
+            existingEntries = listOf(debit)
+        )
+
+        assertEquals(0, preview.newEntries.size)
+        assertEquals(0, preview.duplicates.size)
+        assertEquals(1, preview.conflicts.size)
+        assertEquals(debit, preview.conflicts.single().existing)
+    }
+
+    @Test
+    fun oppositeFxLegWithSameReferenceAndDateButSameDirectionIsAConflict() {
+        val debit = entry(
+            currency = "USD",
+            amount = "-8000.00",
+            reference = "FX-SAME-DIRECTION",
+            type = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+        )
+        val alsoDebit = entry(
+            currency = "CHF",
+            amount = "-6183.20",
+            reference = "FX-SAME-DIRECTION",
+            type = "WYMIANA W KANTORZE - OBCIĄŻENIE"
+        )
+
+        val preview = BankImportDeduplicator.preview(
+            incoming = listOf(alsoDebit),
+            existingEntries = listOf(debit)
+        )
+
+        assertEquals(0, preview.newEntries.size)
+        assertEquals(1, preview.conflicts.size)
+    }
+
 }
