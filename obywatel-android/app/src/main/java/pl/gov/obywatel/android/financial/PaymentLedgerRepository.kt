@@ -118,7 +118,7 @@ class PaymentLedgerRepository(
         val bankPreview = database.previewArchiveEntries(archive.entries)
         val transactionConflicts = archive.transactions.count { incoming ->
             val existing = existingTransactions[incoming.transaction.id]
-            existing != null && existing != incoming
+            existing != null && !sameStoredTransaction(existing, incoming)
         }
         val donationConflicts = archive.donations.count { incoming ->
             val existing = existingDonations[incoming.id]
@@ -133,6 +133,34 @@ class PaymentLedgerRepository(
             newDonations = archive.donations.count { existingDonations[it.id] == null },
             donationConflicts = donationConflicts
         )
+    }
+
+    private fun sameStoredTransaction(
+        existing: StoredFinancialTransaction,
+        incoming: StoredFinancialTransaction
+    ): Boolean {
+        val first = existing.transaction
+        val second = incoming.transaction
+        fun sameAmount(a: java.math.BigDecimal?, b: java.math.BigDecimal?): Boolean =
+            if (a == null || b == null) a == b else a.compareTo(b) == 0
+        val sameFee = when {
+            first.fee == null || second.fee == null -> first.fee == second.fee
+            else -> first.fee.assetCode == second.fee.assetCode &&
+                first.fee.amount.compareTo(second.fee.amount) == 0
+        }
+        return first.id == second.id &&
+            first.executedAt == second.executedAt &&
+            first.type == second.type &&
+            first.fromAssetCode == second.fromAssetCode &&
+            sameAmount(first.fromAmount, second.fromAmount) &&
+            first.toAssetCode == second.toAssetCode &&
+            sameAmount(first.toAmount, second.toAmount) &&
+            sameFee &&
+            first.source == second.source &&
+            first.externalId == second.externalId &&
+            first.rawDescription == second.rawDescription &&
+            first.parseStatus == second.parseStatus &&
+            existing.accountingEntryIds.toSet() == incoming.accountingEntryIds.toSet()
     }
 
     private fun sameDonationIdentity(
