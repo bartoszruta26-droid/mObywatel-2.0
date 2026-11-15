@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -80,30 +81,40 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
     var toCode by remember { mutableStateOf("PLN") }
     var rates by remember { mutableStateOf<Map<String, BigDecimal>>(emptyMap()) }
     var rateTableLabel by remember { mutableStateOf("") }
+    var rateDateText by remember { mutableStateOf(LocalDate.now().toString()) }
+    var goldPriceLabel by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var result by remember { mutableStateOf<String?>(null) }
 
-    fun loadRates() {
+    fun loadRates(dateText: String? = null) {
         scope.launch {
             loading = true
             error = null
             try {
                 val loaded = withContext(Dispatchers.IO) {
-                    val tableA = repository.latestTable(NbpTable.A)
-                    val tableB = runCatching { repository.latestTable(NbpTable.B) }.getOrNull()
+                    val requestedDate = dateText?.let(LocalDate::parse)
+                    val tableA = if (requestedDate == null) repository.latestTable(NbpTable.A)
+                        else repository.tableOnOrBefore(NbpTable.A, requestedDate)
+                    val tableB = runCatching {
+                        if (requestedDate == null) repository.latestTable(NbpTable.B)
+                        else repository.tableOnOrBefore(NbpTable.B, requestedDate)
+                    }.getOrNull()
+                    val gold = if (requestedDate == null) repository.latestGoldPrice()
+                        else repository.goldPriceOnOrBefore(requestedDate)
                     val allTables = listOfNotNull(tableA, tableB)
                     val rateMap = allTables.flatMap { table ->
                         table.rates.mapNotNull { rate ->
                             rate.mid?.let { rate.code to it }
                         }
                     }.toMap()
-                    Pair(rateMap, allTables.joinToString(" • ") {
+                    Triple(rateMap, allTables.joinToString(" • ") {
                         "Tabela ${it.table.apiCode}: ${it.effectiveDate}"
-                    })
+                    }, "${gold.pricePerGramPln.toPlainString()} PLN/g • ${gold.date}")
                 }
                 rates = loaded.first
                 rateTableLabel = loaded.second
+                goldPriceLabel = loaded.third
                 if (rates.isEmpty()) error = "NBP nie zwrócił dostępnych kursów średnich."
                 result = null
             } catch (exception: Exception) {
@@ -164,14 +175,25 @@ fun NbpCurrencyConverterCard(modifier: Modifier = Modifier) {
                 toCode = previous
                 result = null
             }) { Text("Zamień waluty") }
-            Button(onClick = ::loadRates, enabled = !loading) {
-                Text(if (rates.isEmpty()) "Pobierz kursy NBP" else "Odśwież kursy")
+            Button(onClick = { loadRates() }, enabled = !loading) {
+                Text(if (rates.isEmpty()) "Pobierz aktualne" else "Odśwież")
+            }
+            Button(onClick = { loadRates(rateDateText) }, enabled = !loading) {
+                Text("Pobierz dla daty")
             }
             Button(onClick = ::calculate, enabled = rates.isNotEmpty()) { Text("Przelicz") }
         }
+        OutlinedTextField(
+            value = rateDateText,
+            onValueChange = { rateDateText = it },
+            label = { Text("Data kursu (RRRR-MM-DD)") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
         if (loading) CircularProgressIndicator()
         if (rates.isNotEmpty()) {
             Text("Źródło: NBP • $rateTableLabel")
+            goldPriceLabel?.let { Text("Cena złota: $it") }
             Text("Waluta źródłowa")
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(rates.keys.sorted(), key = { it }) { code ->
