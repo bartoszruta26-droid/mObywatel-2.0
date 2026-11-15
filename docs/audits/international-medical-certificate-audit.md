@@ -1293,3 +1293,37 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 
 **Częściowa weryfikacja zakończona.** Potwierdzono i objęto testami JVM reguły zachowania plików w dwóch ścieżkach instalacyjnych. Kolejnym wymaganym etapem pozostaje wydzielenie wąskiego interfejsu metadanych, podłączenie produkcyjnego adaptera SharedPreferences i testowego adaptera z wymuszanym wynikiem false, a następnie testy integracyjne czterech operacji. Nie oznacza to jeszcze pełnego zamknięcia problemu awarii SharedPreferences.commit().
 
+---
+
+## 51. Wydzielenie backendu metadanych i testy wymuszonej awarii zatwierdzania — 2026-11-15
+
+### Zmiany implementacyjne
+
+- [x] Wprowadzono wewnętrzny interfejs `OriginalAttachmentMetadataBackend` obejmujący odczyt całego rejestru, odczyt pojedynczego wpisu oraz zatwierdzanie zmian.
+- [x] Dodano produkcyjny adapter `SharedPreferencesOriginalAttachmentMetadataBackend`; publiczny sposób korzystania z magazynu i format danych pozostają bez zmian.
+- [x] Wewnętrzne operacje magazynu przyjmują backend jako parametr z domyślnym adapterem produkcyjnym. Testy mogą przekazać kontrolowany backend bez modyfikowania ustawień aplikacji.
+- [x] Operacje dodawania, usuwania pojedynczego załącznika, usuwania zakresu dokumentu, uzgadniania i importu korzystają z tej samej granicy dostępu do metadanych.
+- [x] Zapis wielu wpisów importu jest przekazywany do backendu jako jedna mapa zmian, zachowując pojedynczą próbę zatwierdzenia.
+
+### Testy instrumentacyjne dodane
+
+Dodano kontrolowany backend, który może:
+- zwrócić `false` bez zastosowania zmian;
+- zastosować zmiany, a następnie zwrócić `false`, symulując niejednoznaczny wynik zatwierdzania.
+
+Dodano testy:
+- [x] Dodawanie: wynik `false` po częściowej aktualizacji metadanych nie usuwa zainstalowanego pliku, a metadane nadal wskazują jego identyfikator.
+- [x] Usuwanie pojedynczego załącznika: wynik `false` zachowuje metadane i plik.
+- [x] Usuwanie całego zakresu: wynik `false` zachowuje rejestr oraz wszystkie pliki.
+- [x] Import wieloelementowy: wynik `false` zachowuje wszystkie zainstalowane pliki, a pliki etapowe są sprzątane.
+
+### Granice weryfikacji
+
+- [ ] Testy instrumentacyjne zostały dodane, ale ich wykonanie na emulatorze/urządzeniu wymaga wyniku GitHub Actions.
+- [ ] Nie należy traktować kontrolowanego backendu jako dowodu zachowania wszystkich szczegółów implementacji Android SharedPreferences; adapter produkcyjny nadal wymaga weryfikacji w testach urządzeniowych.
+- [ ] Testy sprawdzają awarie zatwierdzania i ochronę plików. Nie obejmują awarii sprzętowej systemu plików ani przerwania zasilania w każdym możliwym punkcie operacji.
+
+### Status
+
+**Warstwa testowalności została wydzielona, a cztery scenariusze awarii mają testy instrumentacyjne.** Oczekuje się na kompilację i wykonanie testów w CI. Do czasu ich zakończenia etap jest implementacyjnie gotowy, ale nie ma potwierdzonego wyniku wykonania.
+
