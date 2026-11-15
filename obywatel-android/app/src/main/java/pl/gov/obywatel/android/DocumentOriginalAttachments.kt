@@ -183,6 +183,18 @@ internal fun writeOriginalAttachmentStagingFile(staging: File, encryptedBytes: B
     }
 }
 
+internal interface OriginalAttachmentStagingOperations {
+    fun write(staging: File, encryptedBytes: ByteArray)
+    fun install(staging: File, target: File): Boolean
+}
+
+internal object DefaultOriginalAttachmentStagingOperations : OriginalAttachmentStagingOperations {
+    override fun write(staging: File, encryptedBytes: ByteArray) =
+        writeOriginalAttachmentStagingFile(staging, encryptedBytes)
+
+    override fun install(staging: File, target: File): Boolean = staging.renameTo(target)
+}
+
 internal data class OriginalAttachment(val id: String, val name: String, val mime: String)
 
 internal interface OriginalAttachmentMetadataBackend {
@@ -310,7 +322,8 @@ internal object OriginalAttachmentStore {
         mime: String,
         bytes: ByteArray,
         attachmentId: String = UUID.randomUUID().toString(),
-        backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)
+        backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context),
+        stagingOperations: OriginalAttachmentStagingOperations = DefaultOriginalAttachmentStagingOperations
     ) {
         require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu." }
         require(attachmentId.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
@@ -345,8 +358,8 @@ internal object OriginalAttachmentStore {
         try {
             // Install the encrypted payload through a synced staging file. A
             // failed/partial write must never leave a truncated final .enc file.
-            writeOriginalAttachmentStagingFile(staging, crypt(bytes, true))
-            check(staging.renameTo(target)) { "Nie udało się atomowo zainstalować pliku załącznika." }
+            stagingOperations.write(staging, crypt(bytes, true))
+            check(stagingOperations.install(staging, target)) { "Nie udało się atomowo zainstalować pliku załącznika." }
             targetInstalled = true
 
             updated.add(OriginalAttachment(attachmentId, name.take(180).ifBlank { "Oryginał dokumentu" }, safeMime))
@@ -521,7 +534,12 @@ internal object OriginalAttachmentStore {
 
     /** Validates the complete archive before committing any imported attachment. */
     @Synchronized
-    fun importArchive(context: Context, raw: String, backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context)) {
+    fun importArchive(
+        context: Context,
+        raw: String,
+        backend: OriginalAttachmentMetadataBackend = attachmentMetadataBackend(context),
+        stagingOperations: OriginalAttachmentStagingOperations = DefaultOriginalAttachmentStagingOperations
+    ) {
         require(raw.length <= (MAX_ARCHIVE_BYTES * 4L / 3L + 1024 * 1024).toInt()) {
             "Archiwum przekracza maksymalny rozmiar."
         }
@@ -608,13 +626,13 @@ internal object OriginalAttachmentStore {
                     // Register the staging file before I/O so finally can clean it
                     // even when writing or syncing fails partway through.
                     staged.add(temporary to target)
-                    writeOriginalAttachmentStagingFile(temporary, crypt(item.bytes, true))
+                    stagingOperations.write(temporary, crypt(item.bytes, true))
                     metadata.add(OriginalAttachment(item.id, item.name, item.mime))
                 }
             }
 
             staged.forEach { (temporary, target) ->
-                check(temporary.renameTo(target)) { "Nie udało się przygotować pliku załącznika." }
+                check(stagingOperations.install(temporary, target)) { "Nie udało się przygotować pliku załącznika." }
                 newlyInstalled.add(target)
             }
             val changes = existingByDocument.mapValues { (_, metadata) ->
