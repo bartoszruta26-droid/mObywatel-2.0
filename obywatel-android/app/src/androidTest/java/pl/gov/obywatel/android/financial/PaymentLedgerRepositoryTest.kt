@@ -621,4 +621,69 @@ class PaymentLedgerRepositoryTest {
         }
     }
 
+    @Test
+    fun currencyConversionHistoryRoundTripsThroughSchemaThreeArchiveAndIsIdempotent() = runBlocking {
+        val record = CurrencyConversionRecord(
+            id = "archive-conversion-roundtrip",
+            convertedAt = java.time.Instant.parse("2026-11-15T12:30:00Z"),
+            sourceAmount = BigDecimal("100.000"),
+            sourceCurrencyCode = "USD",
+            targetAmount = BigDecimal("91.25"),
+            targetCurrencyCode = "EUR",
+            appliedRate = BigDecimal("0.9125"),
+            rateDate = LocalDate.parse("2026-11-14"),
+            rateSource = "NBP:A:2026-11-14"
+        )
+        val source = PaymentLedgerRepository(context, sourceDatabase)
+        val target = PaymentLedgerRepository(context, targetDatabase)
+        try {
+            source.saveCurrencyConversion(record)
+            val archive = source.exportJson()
+            val preview = target.previewArchive(archive)
+            assertEquals(1, preview.newCurrencyConversions)
+            assertEquals(0, preview.currencyConversionConflicts)
+            assertEquals(BatchImportSummary(1, 0), target.importJson(archive))
+            assertEquals(BatchImportSummary(0, 1), target.importJson(archive))
+            val restored = target.getCurrencyConversionHistory().single()
+            assertEquals(record.id, restored.id)
+            assertEquals(0, record.sourceAmount.compareTo(restored.sourceAmount))
+            assertEquals(0, record.targetAmount.compareTo(restored.targetAmount))
+            assertEquals(0, record.appliedRate.compareTo(restored.appliedRate))
+        } finally {
+            source.close()
+            target.close()
+        }
+    }
+
+    @Test
+    fun currencyConversionArchiveConflictIsPreviewedAndRejectedAtomically() = runBlocking {
+        val original = CurrencyConversionRecord(
+            id = "archive-conversion-conflict",
+            convertedAt = java.time.Instant.parse("2026-11-15T12:30:00Z"),
+            sourceAmount = BigDecimal("100"),
+            sourceCurrencyCode = "USD",
+            targetAmount = BigDecimal("91"),
+            targetCurrencyCode = "EUR",
+            appliedRate = BigDecimal("0.91"),
+            rateDate = LocalDate.parse("2026-11-14"),
+            rateSource = "NBP:A:2026-11-14"
+        )
+        val target = PaymentLedgerRepository(context, conflictDatabase)
+        try {
+            target.saveCurrencyConversion(original)
+            val conflicting = original.copy(targetAmount = BigDecimal("92"))
+            val archive = PaymentLedgerJsonCodec.encode(
+                emptyList(), emptyList(), emptyList(), listOf(conflicting)
+            )
+            val preview = target.previewArchive(archive)
+            assertEquals(1, preview.currencyConversionConflicts)
+            assertTrue(preview.hasConflicts)
+            assertTrue(runCatching { target.importJson(archive) }.isFailure)
+            val preserved = target.getCurrencyConversionHistory().single()
+            assertEquals(0, original.targetAmount.compareTo(preserved.targetAmount))
+        } finally {
+            target.close()
+        }
+    }
+
 }
