@@ -4059,3 +4059,28 @@ Dla SHA `14559d186cc96c6ec20daf8585b2ab7fcc12b2cb`:
 - Android GUI validation run `43722027901` — w toku.
 
 **Status etapu 73:** kod i testy zapisane oraz ponownie odczytane z gałęzi; CI jeszcze nie zakończył się, więc brak potwierdzenia kompilacji i zaliczenia testów. Etap pozostaje otwarty do wyników CI.
+
+
+## 74. Korekta kompilacji testów kalendarza — 15 listopada 2026 r.
+
+### 74.1. Wynik kontroli CI
+
+Dla SHA `8eae56297af6ddaf2bd58cb0481513e6b97072c0`:
+- Android prototype build, run `43728461800` — **success**;
+- Repository compliance, run `43728461822` — **success**;
+- Android GUI validation, run `43728461908` — **failure**.
+
+Testy JVM zakończyły się sukcesem, lecz zadanie `:app:compileDebugAndroidTestKotlin` nie przeszło kompilacji. Przyczyną był nieprawidłowy import `androidx.compose.ui.test.onNode` w `FinancialReportDateRangePickerTest.kt` (`Unresolved reference: onNode`). Testy kalendarza nie zostały uruchomione, dlatego poprzednie selektory dat nie mają jeszcze potwierdzenia emulatorowego. Nie opublikowano APK z tego przebiegu: kroki budowania i publikacji APK zostały pominięte po błędzie testów.
+
+### 74.2. Wykonana korekta
+
+Usunięto nieprawidłowy import. Wywołania `composeRule.onNode(...)` pozostają dostępne przez interfejs reguły Compose UI Test; matcher `hasContentDescription(..., substring = true)` pozostaje bez zmian.
+
+- Plik: `obywatel-android/app/src/androidTest/java/pl/gov/obywatel/android/financial/FinancialReportDateRangePickerTest.kt`.
+- Commit korekty: `42d466b48619f9d798e12f285664cfbb6a2faa7a`.
+
+### 74.3. Status i kryterium zamknięcia
+
+Korekta źródła została zapisana. Oczekuje na nowy pełny przebieg CI dla SHA `42d466b48619f9d798e12f285664cfbb6a2faa7a`. Etap pozostaje **otwarty** do potwierdzenia kompilacji testów instrumentacyjnych, wykonania wszystkich testów emulatorowych, budowy APK, archiwizacji sumy kontrolnej i publikacji artefaktu. Etap 74 dotyczy wyłącznie usunięcia błędu kompilacji testów; nie oznacza jeszcze zaliczenia funkcjonalnych testów kalendarza.
+
+Etap XLS/XLSX pozostaje zablokowany do czasu pełnego zielonego CI etapu CSV i testów Androida.
