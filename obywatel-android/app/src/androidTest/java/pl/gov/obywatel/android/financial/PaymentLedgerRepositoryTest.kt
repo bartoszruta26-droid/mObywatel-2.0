@@ -349,8 +349,9 @@ class PaymentLedgerRepositoryTest {
                 assertTrue("Zmiana metadanych darowizny nr $index musi być konfliktem.", result.isFailure)
                 val preserved = target.getCashDonations().single { it.id == saved.id }
                 assertEquals(saved.copy(
-                    amount = saved.amount.stripTrailingZeros(),
+                    amount = saved.amount.stripTrailingZeros().let { BigDecimal(it.toPlainString()) },
                     transferredAmount = saved.transferredAmount?.stripTrailingZeros()
+                        ?.let { BigDecimal(it.toPlainString()) }
                 ), preserved)
             }
         } finally {
