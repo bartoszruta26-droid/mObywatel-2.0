@@ -109,4 +109,22 @@ class BankExchangeOperationTest {
         )
     }
 
+
+    @Test
+    fun rejectsFxPairsWhenOperationLabelsContradictSignedAmounts() {
+        val validCredit = leg("EUR", "100.00", "WYMIANA W KANTORZE - UZNANIE")
+        val mislabeledDebit = leg("USD", "80.00", "WYMIANA W KANTORZE - OBCIĄŻENIE")
+        val validDebit = leg("USD", "-80.00", "WYMIANA W KANTORZE - OBCIĄŻENIE")
+        val mislabeledCredit = validCredit.copy(signedAmount = BigDecimal("-100.00"))
+
+        val positiveDebit = BankExchangeOperationProjector.project(
+            listOf(validCredit, mislabeledDebit)
+        )
+        val negativeCredit = BankExchangeOperationProjector.project(
+            listOf(mislabeledCredit, validDebit)
+        )
+
+        assertEquals(ExchangeOperationStatus.REVIEW_REQUIRED, positiveDebit.single().status)
+        assertEquals(ExchangeOperationStatus.REVIEW_REQUIRED, negativeCredit.single().status)
+    }
 }
