@@ -63,8 +63,10 @@ internal fun validateOriginalAttachmentPayload(mime: String, bytes: ByteArray) {
             "Nieprawidłowa sygnatura WebP."
         }
         "text/plain", "text/csv", "application/xml" -> {
-            val sample = String(bytes, 0, minOf(bytes.size, 4096), Charsets.UTF_8)
-            require(!sample.contains("<!DOCTYPE", true) && !sample.contains("<!ENTITY", true)) {
+            // Scan the complete payload: declarations beyond a short prefix must
+            // not bypass the DTD/ENTITY rejection rule.
+            val content = String(bytes, Charsets.UTF_8)
+            require(!content.contains("<!DOCTYPE", true) && !content.contains("<!ENTITY", true)) {
                 "Plik zawiera niedozwoloną deklarację DTD/ENTITY."
             }
         }
