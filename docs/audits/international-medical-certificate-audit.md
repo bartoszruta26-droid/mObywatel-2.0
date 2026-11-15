@@ -325,3 +325,30 @@ Powyższe zmiany stanowią **etap katalogowo-modelowy**, a nie kompletny działa
 - [ ] Testy urządzeniowe i APK — nie uzyskano jeszcze pozytywnego wyniku.
 
 **Status:** katalog, model danych i pierwszy ekran formularza są dodane. Nie uznaje się jeszcze za gotowe tłumaczeń, obrazowania, podpisów, PDF, druku ani wydania APK. PR #69 pozostaje otwarty jako WIP.
+
+
+---
+
+## 14. Aktualizacja kontroli repozytorium — 2026-11-15
+
+### Dodatkowa korekta bezpieczeństwa danych
+- [x] Zmieniono inicjalizację formularza tak, aby odczyt magazynu używał `loadStrict` i zachowywał informację o błędzie odszyfrowania.
+- [x] Przy błędzie odczytu formularz wyświetla ostrzeżenie i blokuje zapis. Chroni to istniejący zaszyfrowany plik przed przypadkowym zastąpieniem pustymi danymi po błędzie klucza lub integralności.
+- [x] Potwierdzono, że zapis nadal wykorzystuje osobny klucz AES-GCM z Android Keystore.
+
+### Zgodność REUSE
+- [x] Kontrola REUSE wykazała brak metadanych SPDX w niniejszym audycie oraz w istniejącym audycie rachunków płatniczych.
+- [x] Dodano nagłówki SPDX do obu plików Markdown.
+- [x] Workflow `Repository compliance (alfa)` zakończył się powodzeniem dla SHA `3a210afbd5c650ff2506f2f6d856611f2a66b4e3`.
+
+### Wyniki Android CI
+- [x] Workflow `Android prototype build` zakończył się powodzeniem dla SHA `3a57c34992d8590641341f5778c7ff3a7695beee`: testy JVM przeszły, a `assembleDebug` i przesłanie artefaktu APK zakończyły się powodzeniem.
+- [x] Workflow `Android GUI validation` wykonał testy jednostkowe z wynikiem pozytywnym dla SHA `3a57c34992d8590641341f5778c7ff3a7695beee`.
+- [ ] Testy Compose na emulatorze nie mają jeszcze wyniku pozytywnego — wykonanie zostało anulowane przy nowszym uruchomieniu CI.
+- [ ] Po korekcie zabezpieczenia odczytu uruchomiono nowe workflow dla SHA `3a210afbd5c650ff2506f2f6d856611f2a66b4e3`; build Android i testy GUI są w toku. Zmiana zabezpieczenia z commitu `5f8d36f` wymaga osobnego potwierdzenia w CI.
+- [ ] APK z SHA `3a57c349` jest wynikiem wcześniejszego, pozytywnego buildu; nie należy utożsamiać go z artefaktem najnowszego commitu.
+
+### Ograniczenia funkcjonalne — bez zmian
+Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpisów i pieczęci, automatycznego tłumaczenia, wielostronicowego PDF ani wydruku. Model domenowy badań obrazowych istnieje, ale interfejs do dodawania i zarządzania badaniami oraz załącznikami nie jest jeszcze ukończony.
+
+**Status iteracji:** formularz bazowy i szyfrowany zapis są zbudowane; kontrola REUSE przeszła; testy JVM i APK przeszły na poprzednim commicie; końcowy wynik testów GUI i ponowny build po ostatniej korekcie nadal oczekiwane. PR #69 pozostaje otwarty jako WIP.
