@@ -78,8 +78,16 @@ private object OriginalAttachmentStore {
         }
     }.getOrDefault(emptyList())
 
-    fun add(context: Context, documentId: String, name: String, mime: String, bytes: ByteArray) {
+    fun add(
+        context: Context,
+        documentId: String,
+        name: String,
+        mime: String,
+        bytes: ByteArray,
+        attachmentId: String = UUID.randomUUID().toString()
+    ) {
         require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu." }
+        require(attachmentId.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
         require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) { "Plik musi mieć od 1 bajta do 25 MB." }
         val safeMime = mime.substringBefore(';').trim().lowercase()
         require(safeMime == "application/pdf" || safeMime.startsWith("image/") ||
@@ -95,11 +103,13 @@ private object OriginalAttachmentStore {
                 "Plik zawiera niedozwoloną deklarację DTD/ENTITY."
             }
         }
-        val id = UUID.randomUUID().toString()
-        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
-        File(directory, "$id.enc").writeBytes(crypt(bytes, true))
         val updated = list(context, documentId).toMutableList()
-        updated.add(OriginalAttachment(id, name.take(180).ifBlank { "Oryginał dokumentu" }, safeMime))
+        require(updated.none { it.id == attachmentId }) { "Załącznik o tym identyfikatorze już istnieje." }
+        val directory = File(context.noBackupFilesDir, "original-document-attachments").apply { mkdirs() }
+        val target = File(directory, "$attachmentId.enc")
+        require(!target.exists()) { "Plik załącznika o tym identyfikatorze już istnieje." }
+        target.writeBytes(crypt(bytes, true))
+        updated.add(OriginalAttachment(attachmentId, name.take(180).ifBlank { "Oryginał dokumentu" }, safeMime))
         val json = JSONArray()
         updated.forEach { item ->
             json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime))
@@ -179,6 +189,7 @@ private object OriginalAttachmentStore {
                 require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) { "Załącznik przekracza limit 25 MB lub jest pusty." }
                 entries.put(JSONObject()
                     .put("documentId", documentId)
+                    .put("id", id)
                     .put("name", item.getString("name"))
                     .put("mime", item.getString("mime"))
                     .put("dataBase64", android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)))
@@ -196,15 +207,25 @@ private object OriginalAttachmentStore {
             val item = entries.getJSONObject(index)
             val documentId = item.getString("documentId")
             require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu." }
+            val id = item.getString("id")
+            require(id.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
             val name = item.getString("name")
             val mime = item.getString("mime")
             val encoded = item.getString("dataBase64")
             val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
             require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) { "Załącznik przekracza limit 25 MB lub jest pusty." }
-            Triple(documentId, Pair(name, mime), bytes)
+            Triple(documentId, id, Triple(name, mime, bytes))
         }
-        decoded.forEach { (documentId, metadata, bytes) ->
-            add(context, documentId, metadata.first, metadata.second, bytes)
+        decoded.forEach { (documentId, id, metadata) ->
+            val existing = list(context, documentId).firstOrNull { it.id == id }
+            if (existing == null) {
+                add(context, documentId, metadata.first, metadata.second, metadata.third, id)
+            } else {
+                val encryptedFile = File(File(context.noBackupFilesDir, "original-document-attachments"), "$id.enc")
+                require(encryptedFile.isFile && crypt(encryptedFile.readBytes(), false).contentEquals(metadata.third)) {
+                    "Załącznik o identyfikatorze $id już istnieje z inną zawartością."
+                }
+            }
         }
     }
 }
