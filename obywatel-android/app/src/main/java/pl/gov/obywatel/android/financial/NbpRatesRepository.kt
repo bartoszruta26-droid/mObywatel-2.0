@@ -179,7 +179,9 @@ class NbpRatesRepository(
                 val item: JSONObject = json.getJSONObject(index)
                 NbpGoldPrice(
                     date = LocalDate.parse(item.getString("data")),
-                    pricePerGramPln = BigDecimal(item.getString("cena"))
+                    pricePerGramPln = BigDecimal(item.get("cena").toString()).also {
+                        require(it > BigDecimal.ZERO) { "Cena złota musi być większa od zera." }
+                    }
                 )
             }
     }
