@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import android.content.Intent
 import android.net.Uri
 import pl.gov.obywatel.android.DonationAttachment
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +65,7 @@ import java.io.InputStream
 /** Ekran rejestru odczytuje dane z SQLite przez repozytorium pracujące na IO. */
 @Composable
 fun PaymentLedgerScreen(onBack: () -> Unit) {
-    val context = LocalContext.current.applicationContext
+    val context = LocalContext.current
     val repository = remember(context) { PaymentLedgerRepository(context) }
     val scope = rememberCoroutineScope()
     var entries by remember { mutableStateOf<List<BankStatementEntry>>(emptyList()) }
@@ -802,6 +803,23 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text("${attachment.fileName} • ${attachment.sizeBytes} B • ${attachment.mimeType}", style = MaterialTheme.typography.bodySmall)
                                     Text("SHA-256: ${attachment.sha256}", style = MaterialTheme.typography.labelSmall)
+                                    Button(onClick = {
+                                        scope.launch {
+                                            try {
+                                                val uri = repository.getDonationAttachmentUri(attachment.id)
+                                                val viewIntent = Intent(Intent.ACTION_VIEW)
+                                                    .setDataAndType(uri, attachment.mimeType)
+                                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                context.startActivity(
+                                                    Intent.createChooser(viewIntent, "Otwórz załącznik")
+                                                )
+                                                message = "Przekazano bezpieczny podgląd załącznika do wybranej aplikacji."
+                                                error = null
+                                            } catch (exception: Exception) {
+                                                error = exception.message ?: "Nie udało się otworzyć załącznika."
+                                            }
+                                        }
+                                    }) { Text("Otwórz") }
                                     Button(onClick = {
                                         scope.launch {
                                             try {
