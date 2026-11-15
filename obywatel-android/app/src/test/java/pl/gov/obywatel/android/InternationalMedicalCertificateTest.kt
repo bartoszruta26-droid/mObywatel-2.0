@@ -289,6 +289,36 @@ class InternationalMedicalCertificateTest {
     }
 
     @Test
+    fun attachmentRemovalRequiresExclusiveOwnershipByRequestedDocument() {
+        validateOriginalAttachmentIdsOwnedByDocument(
+            listOf("attachment-1", "attachment-2"),
+            "document-a",
+            mapOf("attachment-1" to "document-a", "attachment-2" to "document-a")
+        )
+        assertTrue(runCatching {
+            validateOriginalAttachmentIdsOwnedByDocument(
+                listOf("attachment-1"),
+                "document-b",
+                mapOf("attachment-1" to "document-a")
+            )
+        }.isFailure)
+        assertTrue(runCatching {
+            validateOriginalAttachmentIdsOwnedByDocument(
+                listOf("missing"),
+                "document-a",
+                emptyMap()
+            )
+        }.isFailure)
+        assertTrue(runCatching {
+            validateOriginalAttachmentIdsOwnedByDocument(
+                listOf("attachment-1", "foreign"),
+                "document-a",
+                mapOf("attachment-1" to "document-a", "foreign" to "document-b")
+            )
+        }.isFailure)
+    }
+
+    @Test
     fun attachmentOwnershipValidationRejectsCrossDocumentReuseAndAllowsSameDocumentRetry() {
         val owners = mapOf("attachment-1" to "medical-certificate-1")
         validateOriginalAttachmentIdOwner("attachment-1", "medical-certificate-1", owners)
