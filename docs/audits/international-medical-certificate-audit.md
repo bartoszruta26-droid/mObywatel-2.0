@@ -1022,3 +1022,26 @@ Formularz nie obsługuje jeszcze rzeczywistego importu obrazów, skanów podpis�
 - [x] Zastąpiono identyfikator oparty na milisekundowym znaczniku czasu identyfikatorem UUID, eliminując ryzyko kolizji przy szybkim dodawaniu kolejnych badań.
 - [x] Dodano testy regresyjne dla uszkodzonych zapisanych rekordów badań.
 - [x] Dodatkowe zmiany zapisano w commitach `07e7b3008291a0a1572363565e2d286996b5902a` i `c96f276a91b544c8fcfd5563086c2ada662716ad`.
+
+
+---
+
+## 39. Naprawa inicjalizacji pustego formularza badań obrazowych — 2026-11-15
+
+### Wykryta usterka
+- [x] Przy pierwszym uruchomieniu formularza pole `imc_imaging_studies` nie istnieje w magazynie.
+- [x] Inicjalizacja przekazywała brak wartości jako pusty tekst do `JSONArray`, co powodowało wyjątek parsowania.
+- [x] Wyjątek był interpretowany jako błąd odczytu danych, przez co przycisk zapisu pozostawał zablokowany dla nowego zaświadczenia.
+
+### Wykonana poprawka
+- [x] Dodano `loadMedicalImagingStudies()`: brak pola, pusty tekst i tekst zawierający wyłącznie białe znaki oznaczają pustą listę badań.
+- [x] Niepusty, nieprawidłowy JSON nadal jest odrzucany; mechanizm ochrony przed nadpisaniem uszkodzonych danych pozostaje aktywny.
+- [x] Formularz korzysta z nowej funkcji podczas inicjalizacji.
+
+### Testy regresyjne
+- [x] Dodano test dla wartości `null`, pustego tekstu i białych znaków.
+- [x] Dodano test potwierdzający odrzucanie nieprawidłowego, niepustego JSON.
+
+### Weryfikacja
+- [x] Zmiana została przygotowana na gałęzi `zaswaidczenie`.
+- [ ] Wynik JVM, testów Compose UI, instrumentacji i kompilacji APK dla nowego SHA wymaga potwierdzenia przez GitHub Actions.
