@@ -24,6 +24,15 @@ class BankStatementCsvParserTest {
     }
 
     @Test
+    fun detectsWindows1250WhenUtf8DecodingFails() {
+        val text = "data;waluta;kwota;typ;opis\\n15.11.2026;PLN;10,00;PRZELEW;Wpłata za książki\\n"
+        val bytes = text.toByteArray(java.nio.charset.Charset.forName("windows-1250"))
+        val entry = BankStatementCsvParser.parse(bytes, "konto-1").single()
+        assertEquals("PLN", entry.currencyCode)
+        assertEquals(true, entry.description.startsWith("CSV-OP-"))
+    }
+
+    @Test
     fun parsesCommaDelimitedEnglishHeadersAndGroupedDecimal() {
         val csv = "booking_date,currency,amount,operation_type,reference,description\n" +
             "2026-11-15,USD,\"1,234.56\",CREDIT,REF-3,\"transfer, incoming\"\n"
