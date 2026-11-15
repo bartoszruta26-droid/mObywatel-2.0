@@ -153,6 +153,18 @@ internal fun validateOriginalAttachmentIdOwner(
     }
 }
 
+internal fun validateOriginalAttachmentIdsOwnedByDocument(
+    attachmentIds: Collection<String>,
+    requestedDocumentId: String,
+    existingOwners: Map<String, String>
+) {
+    attachmentIds.forEach { attachmentId ->
+        require(existingOwners[attachmentId] == requestedDocumentId) {
+            "Identyfikator załącznika nie należy wyłącznie do dokumentu: $attachmentId"
+        }
+    }
+}
+
 internal fun findOrphanedOriginalAttachmentIds(referencedIds: Set<String>, storedIds: Set<String>): Set<String> =
     storedIds - referencedIds
 
@@ -364,6 +376,25 @@ private object OriginalAttachmentStore {
     fun remove(context: Context, documentId: String, id: String) {
         val current = list(context, documentId)
         if (current.none { it.id == id }) return
+        val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val existingOwners = mutableMapOf<String, String>()
+        preferences.all.forEach { (ownerDocumentId, value) ->
+            require(ownerDocumentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
+                "Nieprawidłowy identyfikator dokumentu w magazynie."
+            }
+            val rawMetadata = value as? String
+                ?: error("Nieprawidłowy rejestr załączników: $ownerDocumentId")
+            validateOriginalAttachmentMetadata(rawMetadata)
+            val metadata = JSONArray(rawMetadata)
+            for (index in 0 until metadata.length()) {
+                val existingId = metadata.getJSONObject(index).getString("id")
+                val previousOwner = existingOwners.put(existingId, ownerDocumentId)
+                require(previousOwner == null) {
+                    "Identyfikator załącznika jest przypisany do więcej niż jednego dokumentu: $existingId"
+                }
+            }
+        }
+        validateOriginalAttachmentIdsOwnedByDocument(listOf(id), documentId, existingOwners)
         val updated = current.filterNot { it.id == id }
         val json = JSONArray()
         updated.forEach { item -> json.put(JSONObject().put("id", item.id).put("name", item.name).put("mime", item.mime)) }
@@ -383,13 +414,28 @@ private object OriginalAttachmentStore {
         val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val raw = preferences.getString(documentId, null) ?: return
         val items = JSONArray(raw)
+        validateOriginalAttachmentMetadata(raw)
         val ids = (0 until items.length()).map { index ->
-            items.getJSONObject(index).getString("id").also { id ->
-                require(id.matches(Regex("[A-Za-z0-9-]{1,64}"))) {
-                    "Nieprawidłowy identyfikator załącznika."
+            items.getJSONObject(index).getString("id")
+        }
+        val existingOwners = mutableMapOf<String, String>()
+        preferences.all.forEach { (ownerDocumentId, value) ->
+            require(ownerDocumentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) {
+                "Nieprawidłowy identyfikator dokumentu w magazynie."
+            }
+            val rawMetadata = value as? String
+                ?: error("Nieprawidłowy rejestr załączników: $ownerDocumentId")
+            validateOriginalAttachmentMetadata(rawMetadata)
+            val metadata = JSONArray(rawMetadata)
+            for (index in 0 until metadata.length()) {
+                val existingId = metadata.getJSONObject(index).getString("id")
+                val previousOwner = existingOwners.put(existingId, ownerDocumentId)
+                require(previousOwner == null) {
+                    "Identyfikator załącznika jest przypisany do więcej niż jednego dokumentu: $existingId"
                 }
             }
         }
+        validateOriginalAttachmentIdsOwnedByDocument(ids, documentId, existingOwners)
         check(preferences.edit().remove(documentId).commit()) {
             "Nie udało się usunąć rejestru załączników."
         }
