@@ -33,6 +33,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.ParsePosition
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 private const val IMC_SOURCE_LANGUAGE_KEY = "imc_source_language"
 private const val IMC_OTHER_LANGUAGE_KEY = "imc_other_source_language"
@@ -197,7 +200,10 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                     }
                 }
                 OutlinedTextField(value = imagingBodyRegion, onValueChange = { imagingBodyRegion = it }, label = { Text("Body Region") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = imagingDate, onValueChange = { imagingDate = it }, label = { Text("Examination Date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = imagingDate, onValueChange = { imagingDate = it }, label = { Text("Examination Date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth(), isError = imagingDate.isNotBlank() && !isValidMedicalStudyDate(imagingDate))
+                if (imagingDate.isNotBlank() && !isValidMedicalStudyDate(imagingDate)) {
+                    Text("Enter a real date in YYYY-MM-DD format.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
                 OutlinedTextField(value = imagingFacility, onValueChange = { imagingFacility = it }, label = { Text("Imaging Facility") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = imagingIndication, onValueChange = { imagingIndication = it }, label = { Text("Clinical Indication") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
                 OutlinedTextField(value = imagingFindings, onValueChange = { imagingFindings = it }, label = { Text("Findings") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
@@ -206,7 +212,7 @@ internal fun InternationalMedicalCertificateEditorScreen(onBack: () -> Unit) {
                 OutlinedTextField(value = imagingContrast, onValueChange = { imagingContrast = it }, label = { Text("Contrast") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = imagingRadiologist, onValueChange = { imagingRadiologist = it }, label = { Text("Radiologist Name") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = imagingReportNumber, onValueChange = { imagingReportNumber = it }, label = { Text("Report Number") }, modifier = Modifier.fillMaxWidth())
-                Button(onClick = {
+                Button(enabled = imagingDate.isBlank() || isValidMedicalStudyDate(imagingDate), onClick = {
                     imagingStudies.add(MedicalImagingStudy(
                         id = "imaging-" + System.currentTimeMillis().toString(),
                         modality = imagingModality,
@@ -331,4 +337,18 @@ private fun decodeMedicalImagingStudies(serialized: String): List<MedicalImaging
             }.orEmpty()
         )
     }
+}
+
+
+/** Accepts an optional ISO date; rejects impossible calendar dates and trailing text. */
+internal fun isValidMedicalStudyDate(value: String): Boolean {
+    if (value.isBlank()) return true
+    if (!value.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) return false
+    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).apply {
+        isLenient = false
+        timeZone = java.util.TimeZone.getTimeZone("UTC")
+    }
+    val position = ParsePosition(0)
+    val parsed = formatter.parse(value, position)
+    return parsed != null && position.index == value.length
 }
