@@ -234,7 +234,8 @@ private object OriginalAttachmentStore {
             val item = entries.getJSONObject(index)
             val documentId = item.getString("documentId")
             require(documentId.matches(Regex("[A-Za-z0-9_.:-]{1,128}"))) { "Nieprawidłowy identyfikator dokumentu." }
-            val id = item.getString("id")
+            val archivedId = item.optString("id")
+            val id = archivedId.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
             require(id.matches(Regex("[A-Za-z0-9-]{1,64}"))) { "Nieprawidłowy identyfikator załącznika." }
             val name = item.getString("name")
             val mime = item.getString("mime")
@@ -249,8 +250,13 @@ private object OriginalAttachmentStore {
                 add(context, documentId, metadata.first, metadata.second, metadata.third, id)
             } else {
                 val encryptedFile = File(File(context.noBackupFilesDir, "original-document-attachments"), "$id.enc")
-                require(encryptedFile.isFile && crypt(encryptedFile.readBytes(), false).contentEquals(metadata.third)) {
-                    "Załącznik o identyfikatorze $id już istnieje z inną zawartością."
+                require(
+                    existing.name == metadata.first.take(180).ifBlank { "Oryginał dokumentu" } &&
+                        existing.mime == metadata.second.substringBefore(';').trim().lowercase() &&
+                        encryptedFile.isFile &&
+                        crypt(encryptedFile.readBytes(), false).contentEquals(metadata.third)
+                ) {
+                    "Załącznik o identyfikatorze $id już istnieje z inną zawartością lub metadanymi."
                 }
             }
         }
