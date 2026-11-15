@@ -534,6 +534,11 @@ private object OriginalAttachmentStore {
     }
 }
 
+internal fun reconcileOriginalAttachments(context: Context) = OriginalAttachmentStore.reconcile(context)
+
+internal fun listOriginalAttachmentIds(context: Context, documentId: String): List<String> =
+    OriginalAttachmentStore.list(context, documentId).map { it.id }
+
 internal fun exportOriginalAttachmentArchive(context: Context): String = OriginalAttachmentStore.exportArchive(context)
 
 internal fun importOriginalAttachmentArchive(context: Context, raw: String) = OriginalAttachmentStore.importArchive(context, raw)
