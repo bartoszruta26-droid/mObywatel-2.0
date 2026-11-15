@@ -149,6 +149,6 @@ private fun DoctorDirectoryRecordDialog(initial:MedicalDoctorRecord,onDismiss:()
   }
  },confirmButton={TextButton(onClick={onSave(initial.copy(name=name.trim(),specialty=specialty.trim(),country=country.trim(),city=city.trim(),
   practice=practice.trim(),address=address.trim(),phone=phone.trim(),website=website.trim(),register=register.trim(),license=license.trim(),
-  source=source.trim(),verifiedAt=date.trim(),polishDeclared=polish,evidence=if(polish)DoctorPolishEvidence.DECLARED_LANGUAGE else evidence,
+  source=source.trim(),verifiedAt=date.trim(),polishDeclared=polish,evidence=if(polish)DoctorPolishEvidence.DECLARED_LANGUAGE else evidence,consent=consent,
   signerEnabled=false))}){Text("Zapisz")}},dismissButton={TextButton(onClick=onDismiss){Text("Anuluj")}})
 }
