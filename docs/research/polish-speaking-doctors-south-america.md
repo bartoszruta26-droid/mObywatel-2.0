@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+
 # Kwerenda lekarzy w miastach polonijnych Ameryki Południowej
 
 **Data kwerendy:** 2026-11-15  
