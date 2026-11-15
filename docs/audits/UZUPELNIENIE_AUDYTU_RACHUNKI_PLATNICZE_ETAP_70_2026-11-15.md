@@ -188,3 +188,19 @@ Commit: `2762cf82543334797475fc15de6f03244f6d77e5`.
 **Status etapu 76:** poprawka selektorów zapisana; oczekuje na pełny CI dla końcowego SHA po aktualizacji niniejszego audytu. Nie oznaczać kalendarza ani APK jako zaliczonych do czasu przejścia wszystkich 101 testów emulatorowych i końcowych kroków workflow.
 
 Etap XLS/BIFF pozostaje wstrzymany do czasu zielonego GUI validation, build i compliance na tym samym SHA. PR #68 pozostaje otwarty i niescalony.
+
+
+## 77. Uzupełnienie: wynik CI i ryzyko pseudonimizacji CSV — 15 listopada 2026 r.
+
+Dla SHA `5603e2f40fe0645fc4daac07d1f61119f15da4a2`:
+- Android prototype build `43732131848` — **success**, debug APK zbudowany i opublikowany jako artefakt `obywatel-android-debug` (ID `14169042276`);
+- Repository compliance `43732131873` — **success**;
+- Android GUI validation `43732131926` — **failure**.
+
+Raport instrumentacyjny ID `14169097632` wykazał 101 testów, 99 zaliczonych i 2 błędy. Testy `selectingDifferentStartDateUpdatesOnlyStartBoundary` i `selectingDifferentEndDateUpdatesOnlyEndBoundary` nie znajdują tekstowych węzłów dni `10` i `25`; `performClick()` kończy się `Failed to inject touch input`. Użycie `useUnmergedTree = true` nie rozwiązało problemu. Etap 76 pozostaje **niezaliczony**; nie wolno traktować zmiany selektorów jako poprawnej. GUI workflow pominął budowę i publikację APK po błędzie emulatora.
+
+Ponowny przegląd parsera CSV potwierdził zapis deterministycznego SHA-256 opisu jako `CSV-OP-`. Jest to pseudonimizacja podatna na atak słownikowy i korelację, a nie anonimizacja. Należy przeanalizować `accountingEntryId()`, deduplikację, migracje i zgodność archiwów JSON przed zmianą strategii identyfikacji. Nie utrwalać skrótu opisu jako docelowego identyfikatora.
+
+Szczegółowa diagnoza, ograniczenia i kryteria następnych prac znajdują się w sekcji 77 głównego audytu: `docs/audits/AUDYT_RACHUNKI_PLATNICZE_TRANSAKCJE_WALUTOWE_I_KRUSZCOWE_2026-11-14.md`.
+
+**Status:** etap 77 — diagnoza i dokumentacja wykonane; poprawki kodu i ponowny zielony CI pozostają otwarte. PR #68 nadal otwarty i niescalony.
