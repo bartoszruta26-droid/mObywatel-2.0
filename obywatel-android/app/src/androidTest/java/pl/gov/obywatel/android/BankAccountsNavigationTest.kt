@@ -48,6 +48,20 @@ class BankAccountsNavigationTest {
         composeRule.waitForIdle()
     }
 
+    private fun assertTextCanBeScrolledIntoView(text: String) {
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            try {
+                composeRule.onNodeWithText(text, substring = true)
+                    .performScrollTo()
+                    .assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                composeRule.waitForIdle()
+                false
+            }
+        }
+    }
+
     private fun enterDemoMode() {
         // Plansza z godłem jest wyświetlana przez 1,5 s przed ekranem powitalnym.
         composeRule.waitUntil(timeoutMillis = 5_000) {
@@ -204,10 +218,10 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText("Wspólny wygląd legitymacji").performScrollTo().performClick()
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("Skala godła", substring = true).performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Obrót godła", substring = true).performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Skala flagi", substring = true).performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Obrót flagi", substring = true).performScrollTo().assertIsDisplayed()
+        assertTextCanBeScrolledIntoView("Skala godła")
+        assertTextCanBeScrolledIntoView("Obrót godła")
+        assertTextCanBeScrolledIntoView("Skala flagi")
+        assertTextCanBeScrolledIntoView("Obrót flagi")
     }
 
     @Test

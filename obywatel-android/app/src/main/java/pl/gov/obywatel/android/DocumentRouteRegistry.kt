@@ -47,6 +47,7 @@ object DocumentRouteRegistry {
         specialized("vaccines", "vaccines"),
         specialized("signed_pdf", "signed_pdf"),
         specialized("receipts", "receipts"),
+        specialized("payment_transactions", "payment_transactions"),
         specialized("imported", "imported"),
         specialized("children", "children"),
         specialized("branding", "branding"),
