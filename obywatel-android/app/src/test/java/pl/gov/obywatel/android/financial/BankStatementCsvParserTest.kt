@@ -53,7 +53,7 @@ class BankStatementCsvParserTest {
     @Test
     fun rejectsMissingRequiredColumnsMalformedQuotesAndWrongColumnCount() {
         assertThrows(IllegalArgumentException::class.java) {
-            BankStatementCsvParser.parse("data;kwota;typ\n15.11.2026;10;PRZELEW\n", "konto-1")
+            BankStatementCsvParser.parse("data;waluta;kwota;typ\n15.11.2026;PLN;10;PRZE\"LEW\n", "konto-1")
         }
         assertThrows(IllegalArgumentException::class.java) {
             BankStatementCsvParser.parse("data;waluta;kwota;typ\n15.11.2026;PLN;10;\"PRZELEW\n", "konto-1")
