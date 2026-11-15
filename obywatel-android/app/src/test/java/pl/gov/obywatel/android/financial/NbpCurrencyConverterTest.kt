@@ -34,7 +34,7 @@ class NbpCurrencyConverterTest {
     @Test
     fun convertsBetweenTwoForeignCurrenciesThroughPln() {
         assertEquals(
-            BigDecimal("107.50"),
+            BigDecimal("93.02"),
             NbpCurrencyConverter.convert(BigDecimal("100"), "USD", "EUR", rates)
         )
     }
@@ -42,7 +42,7 @@ class NbpCurrencyConverterTest {
     @Test
     fun appliesIsoCurrencyPrecision() {
         assertEquals(
-            BigDecimal("3703"),
+            BigDecimal("15926"),
             NbpCurrencyConverter.convert(BigDecimal("100"), "EUR", "JPY", rates)
         )
         assertEquals(0, CurrencyPrecision.scale("JPY"))
