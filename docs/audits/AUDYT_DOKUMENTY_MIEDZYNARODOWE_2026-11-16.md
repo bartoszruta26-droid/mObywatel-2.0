@@ -558,3 +558,36 @@ Wszystkie pozycje otrzymały wspólne pola jurysdykcji, wystawcy, organu wydają
 
 - Dodano test instrumentacyjny wykrywający i renderujący flagę watykańską w bibliotece zasobów.\n- Do wykonania: testy JVM katalogu i workflow dla 54 pozycji, testy edytorów i routingu, testy regresji vCard/PDF oraz CI Android.
 - Dla dokumentów kościelnych wymagane jest ustalenie właściwej parafii/diecezji/ordynariusza i lokalnych reguł wydawania. Nie istnieje jeden uniwersalny formularz watykański dla wszystkich dokumentów parafialnych.
+
+
+## 17. Uzupełnienie istniejących schematów dokumentów i naprawa kompilacji (2026-11-16)
+
+### 17.1. Zakres zmian
+
+Kontynuowano uzupełnianie istniejących 54 pozycji katalogu, bez dodawania nowej grupy i bez zmiany identyfikatorów:
+- pola wspólne workflow otrzymały polskie etykiety, zachowując dotychczasowe stabilne klucze archiwum;
+- formularze czterech rodzajów paszportów Państwa Watykańskiego / Stolicy Apostolskiej zawierają teraz wspólne dane ewidencyjne (posiadacz, wystawca, numer, daty, jurysdykcja, język i źródło wzoru) oraz pola specjalistyczne;
+- pole kodu paszportu uwzględnia aktualne kody PP, PD, PO i PT oraz kody poprzednie PV i PS;
+- zaświadczenie o obywatelstwie Państwa Watykańskiego otrzymało pola statusu, podstawy i dat nabycia/ustania, właściwej służby i referencji rejestru;
+- dokumenty stanu kanonicznego, święceń, nuncjatury i ksiąg sakramentalnych zachowują pola właściwe dla tych dokumentów, uzupełnione wspólnymi polami ewidencyjnymi.
+
+### 17.2. Źródło kodów paszportowych
+
+Oficjalna broszura „Holy See and Vatican City State Passports” wskazuje:
+- Państwo Watykańskie wydaje paszporty zwykłe: nowy kod PP, poprzedni PV;
+- Stolica Apostolska wydaje paszporty dyplomatyczne: PD;
+- Stolica Apostolska wydaje paszporty służbowe: nowy kod PO, poprzedni PS;
+- tymczasowy paszport służbowy: PT.
+Nowe kody PP i PO są stosowane w dokumentach wydawanych od 18 grudnia 2025 r. Źródło: https://epass.vatican.va/Brochure_2025_WEB_SERV_rev.pdf
+
+### 17.3. Kontrola techniczna
+
+W CI dla poprzedniego commitu wykryto błąd kompilacji Kotlin w pliku DocumentEditorSchemas.kt: gałęzie when zwracały niejednorodny typ listy (Triple i DocumentEditorFieldDefinition). Schemat poprawiono przez jawne łączenie wspólnego zestawu pól ewidencyjnych z polami specyficznymi, z zachowaniem kolejności i unikalności kluczy.
+
+Dodano asercje regresyjne dla:
+- kodów nowych i poprzednich paszportów;
+- pól obywatelstwa watykańskiego;
+- pól stanu kanonicznego;
+- pól dokumentu nuncjatury.
+
+Wynik CI dla commitu poprzedzającego poprawkę: REUSE compliance — sukces; kompilacja Kotlin i testy JVM — niepowodzenie na wskazanym błędzie typów; testy emulatora i APK nie zostały uruchomione. Nowa poprawka wymaga ponownego uruchomienia całego CI. PR pozostaje draftem i nie może zostać scalony przed pozytywnym wynikiem testów.
