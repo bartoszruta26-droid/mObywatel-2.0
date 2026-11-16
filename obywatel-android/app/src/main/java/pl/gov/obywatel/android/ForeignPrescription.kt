@@ -255,6 +255,8 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
                 doctorName = values["fpr_prescriberName"].orEmpty(),
                 doctorPractice = values["fpr_prescriberAddress"].orEmpty(),
                 doctorAddress = values["fpr_prescriberCountry"].orEmpty(),
+                doctorRegister = values["fpr_prescriberRegister"].orEmpty(),
+                doctorContact = values["fpr_prescriberContact"].orEmpty(),
                 documentTitle = "FOREIGN PRESCRIPTION / RECEPTA ZAGRANICZNA",
                 issuerHeading = "PRESCRIBER / WYSTAWCA RECEPTY",
                 signatureCaption = "Prescriber's handwritten signature (sign after printing)",
