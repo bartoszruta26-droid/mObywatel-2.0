@@ -171,8 +171,9 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
                 (lower.contains("cc by") || lower.contains("cc-by") ||
                     (lower.contains("creative commons") && lower.contains("attribution"))) &&
                     !lower.contains("noncommercial") && !lower.contains("non-commercial") &&
-                    !lower.contains(" nc") && !lower.contains("no derivatives") &&
-                    !lower.contains("no-derivatives") && !lower.contains(" nd")
+                    !lower.contains("by-nc") && !lower.contains("by nc") &&
+                    !lower.contains("by-nd") && !lower.contains("by nd") &&
+                    !lower.contains("no derivatives") && !lower.contains("no-derivatives")
             val permissiveOpen = lower.contains("cc0") || lower.contains("public domain") ||
                 lower.contains("public-domain") || lower.contains("gfdl") ||
                 lower.contains("free art license") || lower.contains("lgpl") || lower.contains("gpl")
@@ -226,6 +227,18 @@ private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
 private const val COMMONS_DOWNLOAD_LIST_FILE = "commons-svg-download-list.json"
 private const val COMMONS_DOWNLOAD_REPORT_FILE = "commons-svg-download-report.json"
 
+private fun writeCommonsJson(context: Context, fileName: String, value: String) {
+    val atomic = android.util.AtomicFile(context.getFileStreamPath(fileName))
+    val output = atomic.startWrite()
+    try {
+        output.write(value.toByteArray(Charsets.UTF_8))
+        atomic.finishWrite(output)
+    } catch (failure: Exception) {
+        atomic.failWrite(output)
+        throw failure
+    }
+}
+
 internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
     found >= 100 && available.coerceAtLeast(0) * 2 < found
 
@@ -263,9 +276,7 @@ private fun saveCommonsReport(
         .put("attempts", attempts)
         .put("current", current)
         .put("errors", JSONArray(errors))
-    context.openFileOutput(COMMONS_DOWNLOAD_REPORT_FILE, Context.MODE_PRIVATE).use {
-        it.write(report.toString(2).toByteArray(Charsets.UTF_8))
-    }
+    writeCommonsJson(context, COMMONS_DOWNLOAD_REPORT_FILE, report.toString(2))
 }
 
 private fun loadCommonsReportSummary(context: Context): String = runCatching {
@@ -307,9 +318,7 @@ private fun persistCommonsCandidateStatus(
             break
         }
     }
-    context.openFileOutput(COMMONS_DOWNLOAD_LIST_FILE, Context.MODE_PRIVATE).use {
-        it.write(array.toString(2).toByteArray(Charsets.UTF_8))
-    }
+    writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, array.toString(2))
 }
 
 private fun downloadCommonsSvgWithRetry(
@@ -338,6 +347,10 @@ private fun processCommonsCandidates(
     var failed = 0
     var attempts = 0
     val errors = mutableListOf<String>()
+    if (candidates.isEmpty()) {
+        saveCommonsReport(context, 0, 0, 0, 0, 0, "", emptyList())
+        return CommonsDownloadSummary(0, 0, 0, 0, 0)
+    }
     candidates.forEachIndexed { index, candidate ->
         val assetId = commonsAssetId(candidate.title)
         if (DocumentBrandStore.list(context).any { it.id == assetId }) {
@@ -441,9 +454,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                     .put("status", "pending")
                                     .put("attempts", 0))
                             }
-                            context.openFileOutput(COMMONS_DOWNLOAD_LIST_FILE, Context.MODE_PRIVATE).use {
-                                it.write(manifest.toString(2).toByteArray(Charsets.UTF_8))
-                            }
+                            writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
                             processCommonsCandidates(context, candidates) { progress ->
                                 kotlinx.coroutines.runBlocking(Dispatchers.Main) { status = progress }
                             }
