@@ -3,6 +3,8 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -18,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class ForeignPrescriptionScreenTest {
@@ -33,7 +36,9 @@ class ForeignPrescriptionScreenTest {
 
     @Test
     fun polishPrescriptionLabelsCoverAllFieldsAndPrescriberSummary() {
-        assertTrue(foreignPrescriptionPolishLabel("patientName") == "Imię i nazwisko pacjenta")
+        assertTrue(foreignPrescriptionPolishLabel("patientName") == "Pełne imię i nazwisko pacjenta")
+        assertTrue(foreignPrescriptionPolishLabel("prescriberName") == "Pełne imię i nazwisko osoby przepisującej")
+        assertTrue(foreignPrescriptionPolishLabel("medicineStrength") == "Dawka")
         assertTrue(foreignPrescriptionPolishLabel("medicineDosage") == "Dawkowanie i sposób stosowania")
         assertTrue(foreignPrescriptionPolishLabel("prescriberQualifications") == "Tytuł zawodowy / kwalifikacje")
         assertTrue(foreignPrescriptionPolishLabel("prescriberRegister") == "Numer prawa wykonywania zawodu / numer w rejestrze")
@@ -88,6 +93,37 @@ class ForeignPrescriptionScreenTest {
         )
         assertTrue(bytes.size > 500)
         assertTrue(String(bytes.copyOfRange(0, 5), Charsets.US_ASCII) == "%PDF-")
+    }
+
+    @Test
+    fun multipageBilingualPdfRepeatsPatientHeaderAndCreatesAllPages() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val fields = mutableListOf(
+            MedicalCertificatePdfField("Patient full name", "Jan Kowalski", "Pełne imię i nazwisko pacjenta", "Jan Kowalski"),
+            MedicalCertificatePdfField("Patient address", "Main Street 1, Warsaw", "Adres pacjenta", "ul. Główna 1, Warszawa")
+        )
+        repeat(55) { index ->
+            fields += MedicalCertificatePdfField(
+                "Clinical information $index",
+                "Source text for clinical information item $index",
+                "Informacja kliniczna $index",
+                "Tekst tłumaczenia informacji klinicznej $index"
+            )
+        }
+        val bytes = createBilingualMedicalCertificatePdf(
+            sourceLanguage = "en",
+            targetLanguage = "pl",
+            fields = fields,
+            sideBySideFields = true,
+            documentTitle = "INTERNATIONAL MEDICAL CERTIFICATE"
+        )
+        val file = File(context.cacheDir, "multipage-medical-certificate-test.pdf")
+        file.writeBytes(bytes)
+        val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+        PdfRenderer(descriptor).use { renderer ->
+            assertTrue("Expected more than one PDF page", renderer.pageCount > 1)
+        }
+        file.delete()
     }
 
     @Test
