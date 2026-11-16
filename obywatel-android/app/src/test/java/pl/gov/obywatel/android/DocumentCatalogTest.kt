@@ -139,6 +139,13 @@ class DocumentCatalogTest {
             assertTrue("Brak pól ewidencyjnych dla $id", schema.isNotEmpty())
             assertEquals("Powtórzone klucze pól dla $id", schema.size, schema.map { it.key }.toSet().size)
             assertTrue("Metadane wewnętrzne trafiły do wydruku dla $id", schema.none { it.key in setOf("verificationStatus", "originalFileReference", "notes") })
+            val workflowKeys = setOf(
+                "issuerName", "issuerPosition", "issuingAuthority", "verificationAuthority",
+                "procedureName", "jurisdiction", "sourceLanguage", "translationLanguage",
+                "templateSourceReference", "templateVersion"
+            )
+            assertTrue("Brak pól wystawcy, organu, procedury lub wzoru dla $id",
+                schema.map { it.key }.containsAll(workflowKeys))
         }
         assertEquals(13, existingGroups.size)
     }
