@@ -11,7 +11,7 @@ class ForeignPrescriptionTest {
     @Test
     fun medicineNameMayBeInternationalNameOrTradeName() {
         val complete = foreignPrescriptionRequiredFieldKeys.associate { "fpr_$it" to "value" } +
-            mapOf("fpr_issueDate" to "2026-11-16", "fpr_medicineBrand" to "Example brand")
+            mapOf("fpr_issueDate" to "2026-11-16", "fpr_medicineBrand" to "Example brand", "fpr_prescriberContact" to "+55 11 3812-1157")
         assertTrue(missingForeignPrescriptionFields(complete).isEmpty())
 
         val withoutEitherName = complete - "fpr_medicineBrand"
@@ -33,12 +33,21 @@ class ForeignPrescriptionTest {
     @Test
     fun prescriberContactIsRequiredButPracticeAddressIsOptional() {
         val complete = foreignPrescriptionRequiredFieldKeys.associate { "fpr_$it" to "value" } +
-            mapOf("fpr_issueDate" to "2026-11-16", "fpr_medicineInn" to "Example INN")
+            mapOf("fpr_issueDate" to "2026-11-16", "fpr_medicineInn" to "Example INN", "fpr_prescriberContact" to "doctor@example.org")
         assertTrue(missingForeignPrescriptionFields(complete).isEmpty())
 
         val withoutContact = complete - "fpr_prescriberContact"
         assertTrue(missingForeignPrescriptionFields(withoutContact).contains("prescriberContact"))
         assertFalse(missingForeignPrescriptionFields(complete - "fpr_prescriberAddress").contains("prescriberAddress"))
+    }
+
+    @Test
+    fun prescriberContactMustBeAnEmailOrInternationalPhoneNumber() {
+        assertTrue(isValidForeignPrescriptionContact("doctor@example.org"))
+        assertTrue(isValidForeignPrescriptionContact("+55 11 3812-1157"))
+        assertFalse(isValidForeignPrescriptionContact("3812-1157"))
+        assertFalse(isValidForeignPrescriptionContact("doctor@"))
+        assertFalse(isValidForeignPrescriptionContact(""))
     }
 
     @Test
