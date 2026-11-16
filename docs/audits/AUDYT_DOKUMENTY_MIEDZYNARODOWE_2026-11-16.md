@@ -335,24 +335,19 @@ Każdy dokument ma mieć stabilny identyfikator i definicję:
 - `canIssueOfficial` (domyślnie false), `requiresHumanVerification`, `lastLegalReviewAt`, `reviewStatus`.
 Dane osobowe i medyczne muszą być przechowywane w istniejącym szyfrowanym magazynie, nie w jawnych preferencjach aplikacji. Dokumenty urzędowe przechowywać jako oryginalne pliki, a nie rekonstrukcję pól, jeżeli nie jest to konieczne.
 
-## 10. Grupy i lista pozycji do katalogu
+## 10. Lista pozycji według istniejących grup aplikacji
 
-| Grupa | Dokumenty do dodania / obsługi | Tryb |
-|---|---|---|
-| Medyczne i zdrowotne | Międzynarodowe zaświadczenie lekarskie; karta informacji medycznej; Fit to Travel; Fit to Fly | P1/I1 |
-| Szczepienia i profilaktyka | ICVP / Międzynarodowa Książeczka Szczepień; karta historii szczepień | O1/I1 |
-| Recepty i farmaceutyczne | Recepta zagraniczna; recepta transgraniczna; karta leków; karta alergii | P1/I1/O2 |
-| Ubezpieczenia zdrowotnego | EKUZ; PRC; S1; S2/E112; DA1/E123; wniosek o refundację | O1/O2/W1 |
-| Rehabilitacyjne | Raport rehabilitacyjny; raport funkcjonalny | P1/I1 |
-| Niepełnosprawności | Opinia funkcjonalna; ewidencja orzeczenia; europejska karta parkingowa (archiwum/checklista) | P1/I1/O1 |
-| Zawodowe i kwalifikacyjne | EPC; Good Standing; zaświadczenie o prawie wykonywania zawodu; uznanie specjalizacji | O1/E1 |
-| Edukacyjne | Dyplom; świadectwo; suplement do dyplomu; potwierdzenie przebiegu kształcenia | E1/O1 |
-| Stanu cywilnego | Odpis urodzenia, małżeństwa, zgonu; zdolność do zawarcia małżeństwa; status cywilny; pozostawanie przy życiu | O1 |
-| Sądowe i urzędowe | Zaświadczenie o niekaralności; rozwód/separacja; adopcja; pochodzenie dziecka; obywatelstwo; pobyt/zamieszkanie | O1 |
-| Ubezpieczeniowe i socjalne | A1; U1; U2; DA1/E123 (referencja); wnioski o świadczenia | O1/O2/W1 |
-| Podróży i tożsamości | Międzynarodowe prawo jazdy; paszport/dokument podróży/karta pobytu (archiwum); dokumenty podróży | O1/archiwum |
+Poniższa tabela jest docelową strukturą nawigacji. Nie dodaje nowych grup ani podgrup.
 
-Uwaga: pozycje „archiwum/checklista” oznaczają rejestrację i przechowywanie oryginału, a nie generowanie dokumentu przez aplikację.
+| Istniejąca grupa | Dokumenty |
+|---|---|
+| **Służba zdrowotna** | Międzynarodowe zaświadczenie lekarskie; recepta zagraniczna; recepta transgraniczna; ICVP / Międzynarodowa Książeczka Szczepień; karta informacji medycznej; karta alergii; karta leków; Fit to Travel; Fit to Fly; raport rehabilitacyjny; raport funkcjonalny; opinia funkcjonalna o niepełnosprawności; europejska karta parkingowa; EKUZ; PRC; S1; S2/E112; S3; DA1/E123; wniosek o refundację kosztów leczenia |
+| **Służba finansowa** | A1; U1; U2 |
+| **Służba zawodowa** | EPC; Good Standing; zaświadczenie o statusie zawodowym; uznanie kwalifikacji/specjalizacji; dyplom; świadectwo; suplement do dyplomu |
+| **Służba cywilna** | Zagraniczny akt/odpis urodzenia; akt/odpis małżeństwa; akt/odpis zgonu; zaświadczenie o stanie cywilnym; zdolność do zawarcia małżeństwa; zaświadczenie o miejscu zamieszkania/pobycie; obywatelstwo; pozostawanie przy życiu; zaświadczenie o niekaralności; orzeczenie rozwodowe/separacyjne; dokument adopcyjny; dokument dotyczący pochodzenia dziecka |
+| **Służba osobista** | Międzynarodowe prawo jazdy; dokument podróży; karta pobytu; paszport/dokument tożsamości |
+
+Pozycje już obecne w aplikacji (EKUZ, karta szczepień, recepta zagraniczna i międzynarodowe zaświadczenie lekarskie) pozostają w swoich dotychczasowych grupach. Nie tworzyć ich duplikatów — należy rozszerzać istniejące pozycje lub dodać warianty i języki w ramach istniejącego identyfikatora, jeżeli to ten sam typ dokumentu.
 
 ## 11. Źródła urzędowe i prawne
 
