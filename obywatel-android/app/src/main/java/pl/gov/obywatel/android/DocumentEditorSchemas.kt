@@ -20,7 +20,7 @@ private fun internationalDocumentFieldSet(documentId: String, specific: List<Doc
 
 internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEditorFieldDefinition> {
     val specific = when (documentId) {
-        in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") -> listOf(
+        in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") -> internationalDocumentFieldSet(documentId, fields(
             Triple("passportTypeCode", "Kod rodzaju paszportu ICAO", "PP / PD / PO / PT"),
             Triple("passportTypeDescription", "Rodzaj paszportu", "zwykły / dyplomatyczny / służbowy / tymczasowy służbowy"),
             Triple("issuingEntity", "Podmiot wydający", "Państwo Watykańskie / Stolica Apostolska"),
@@ -28,7 +28,7 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             Triple("passportAuthorityReference", "Organ wydający / referencja sprawy", ""),
             Triple("passportOriginalFile", "Odniesienie do oryginalnego dokumentu", "")
         ))
-        in setOf("ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate", "ecclesiastical_death_certificate") -> listOf(
+        in setOf("ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate", "ecclesiastical_death_certificate") -> internationalDocumentFieldSet(documentId, fields(
             Triple("sacramentalRegisterType", "Rodzaj księgi parafialnej", "chrztów / małżeństw / zmarłych"),
             Triple("parishName", "Parafia / kościół", ""),
             Triple("dioceseName", "Diecezja / jurysdykcja kościelna", ""),
@@ -38,14 +38,14 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             Triple("ministerName", "Duchowny / osoba dokonująca wpisu", ""),
             Triple("certificatePurpose", "Cel wydania odpisu / zaświadczenia", "")
         ))
-        "canonical_status_certificate" -> listOf(
+        "canonical_status_certificate" -> internationalDocumentFieldSet(documentId, fields(
             Triple("canonicalStatus", "Stwierdzony status kanoniczny", ""),
             Triple("competentOrdinary", "Ordynariusz / przełożony kompetentny", ""),
             Triple("dioceseOrInstitute", "Diecezja / instytut / wspólnota", ""),
             Triple("canonicalRestrictions", "Ograniczenia lub adnotacje kanoniczne", ""),
             Triple("verificationDate", "Data weryfikacji statusu", "RRRR-MM-DD")
         ))
-        "clerical_ordination_certificate" -> listOf(
+        "clerical_ordination_certificate" -> internationalDocumentFieldSet(documentId, fields(
             Triple("ordinationRank", "Stopień święceń", "diakonat / prezbiterat / episkopat"),
             Triple("ordinationDate", "Data święceń", "RRRR-MM-DD"),
             Triple("ordinationPlace", "Miejsce święceń", ""),
@@ -53,7 +53,7 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             Triple("ordinandName", "Imię i nazwisko osoby wyświęconej", ""),
             Triple("ordinationRegisterReference", "Księga / numer wpisu", "")
         ))
-        "apostolic_nunciature_credential" -> listOf(
+        "apostolic_nunciature_credential" -> internationalDocumentFieldSet(documentId, fields(
             Triple("nunciatureCountry", "Państwo / placówka nuncjatury", ""),
             Triple("credentialHolder", "Osoba, której dotyczy poświadczenie", ""),
             Triple("diplomaticCapacity", "Funkcja / status dyplomatyczny", ""),
