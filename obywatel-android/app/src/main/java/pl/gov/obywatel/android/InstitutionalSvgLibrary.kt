@@ -100,13 +100,21 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
     val titles=linkedSetOf<String>()
     for(term in terms) {
         val query=java.net.URLEncoder.encode("$term filemime:svg","UTF-8")
-        val response=commonsRequest("action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50&format=json")
-        val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
-        for(i in 0 until results.length()) {
-            val title=results.optJSONObject(i)?.optString("title").orEmpty()
-            if(title.startsWith("File:") && title.endsWith(".svg",true)) titles.add(title)
+        var offset:String?=null
+        var finished=false
+        repeat(4) {
+            if(finished || titles.size>=limit*5) return@repeat
+            val offsetArg=offset?.let { "&sroffset="+java.net.URLEncoder.encode(it,"UTF-8") }.orEmpty()
+            val response=commonsRequest("action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
+            val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
+            for(i in 0 until results.length()) {
+                val title=results.optJSONObject(i)?.optString("title").orEmpty()
+                if(title.startsWith("File:") && title.endsWith(".svg",true)) titles.add(title)
+            }
+            offset=response.optJSONObject("continue")?.optString("sroffset")
+            if(offset.isNullOrBlank()) finished=true
         }
-        if(titles.size>=limit*3) break
+        if(titles.size>=limit*5) break
     }
     val candidates=mutableListOf<CommonsSvgCandidate>()
     for(batch in titles.toList().chunked(40)) {
@@ -196,6 +204,12 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                         val output=context.contentResolver.openOutputStream(uri) ?: error("Nie można utworzyć ZIP.")
                         ZipOutputStream(output).use { zip ->
                             zip.putNextEntry(ZipEntry("manifest.json")); zip.write(manifest.toString(2).toByteArray(Charsets.UTF_8)); zip.closeEntry()
+                            val downloadList=context.getFileStreamPath("commons-svg-download-list.json")
+                            if(downloadList.exists()) {
+                                zip.putNextEntry(ZipEntry("download-list.json"))
+                                context.openFileInput("commons-svg-download-list.json").use { it.copyTo(zip) }
+                                zip.closeEntry()
+                            }
                             files.forEach { (asset,bytes) ->
                                 val safe=asset.id.replace(Regex("[^A-Za-z0-9_-]"),"_")
                                 zip.putNextEntry(ZipEntry("svg/$safe.svg")); zip.write(bytes); zip.closeEntry()
@@ -226,6 +240,21 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                     val result=withContext(Dispatchers.IO) {
                         runCatching {
                             val candidates=discoverCommonsOpenSvgs(200)
+                            val candidateManifest=JSONArray()
+                            candidates.forEach { item ->
+                                candidateManifest.put(JSONObject()
+                                    .put("file",item.title)
+                                    .put("downloadUrl",item.url)
+                                    .put("sourcePage",item.page)
+                                    .put("license",item.license)
+                                    .put("licenseUrl",item.licenseUrl)
+                                    .put("author",item.artist)
+                                    .put("restrictions",item.restrictions)
+                                    .put("source","Wikimedia Commons"))
+                            }
+                            context.openFileOutput("commons-svg-download-list.json",Context.MODE_PRIVATE).use {
+                                it.write(candidateManifest.toString(2).toByteArray(Charsets.UTF_8))
+                            }
                             require(candidates.size >= 100) {
                                 "Wyszukiwarka znalazła tylko ${candidates.size} plików z rozpoznaną otwartą licencją. Minimalny wymagany katalog to 100; pobieranie nie zostanie przedstawione jako kompletne."
                             }
