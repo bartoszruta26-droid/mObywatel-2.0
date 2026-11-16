@@ -29,7 +29,8 @@ class InternationalDocumentWorkflowTest {
             "divorce_decree", "adoption_certificate", "parentage_certificate"
         )
         authorityIds.forEach { id ->
-            val workflow = assertNotNull(InternationalDocumentWorkflowCatalog.find(id))
+            val workflow = InternationalDocumentWorkflowCatalog.find(id)
+                ?: throw AssertionError("Missing workflow for $id")
             assertTrue(workflow.authorityIssuesOriginal)
             assertFalse(workflow.mode == InternationalDocumentMode.PROFESSIONAL_CERTIFICATE)
         }
