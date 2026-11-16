@@ -591,3 +591,42 @@ Dodano asercje regresyjne dla:
 - pól dokumentu nuncjatury.
 
 Wynik CI dla commitu poprzedzającego poprawkę: REUSE compliance — sukces; kompilacja Kotlin i testy JVM — niepowodzenie na wskazanym błędzie typów; testy emulatora i APK nie zostały uruchomione. Nowa poprawka wymaga ponownego uruchomienia całego CI. PR pozostaje draftem i nie może zostać scalony przed pozytywnym wynikiem testów.
+
+
+## 18. Zasoby heraldyczne Państwa Watykańskiego, Stolicy Apostolskiej i papiestwa (2026-11-16)
+
+### 18.1. Nowe pliki SVG
+
+Dodano do `obywatel-android/app/src/main/assets/institutions/` cztery autorskie ilustracje wektorowe:
+- `vatican-city-state-coat-of-arms-2023.svg` — schemat herbu Państwa Watykańskiego oparty na opisie i załączniku B ustawy zasadniczej z 2023 r.;
+- `holy-see-emblem-heraldic-reference.svg` — schemat emblematu Stolicy Apostolskiej z tiarą i skrzyżowanymi kluczami;
+- `pope-leo-xiv-coat-of-arms-reference.svg` — uproszczona ilustracja herbu papieża Leona XIV na podstawie oficjalnego blazonu z 14 maja 2025 r.;
+- `banner-holy-roman-church-historical.svg` — autorska rekonstrukcja historycznej chorągwi Kościoła Rzymskiego, oparta na opisie Governatoratu Państwa Watykańskiego.
+
+Każdy plik ma nagłówek SPDX CC0 dla autorskiej warstwy ilustracyjnej. CC0 nie znosi praw ani ograniczeń dotyczących samych znaków instytucjonalnych i nie jest zgodą na ich urzędowe użycie.
+
+### 18.2. Źródła i identyfikacja
+
+1. Sekretariat Stanu Stolicy Apostolskiej — oficjalny opis flagi, herbu Stolicy Apostolskiej, herbu Państwa Watykańskiego i pieczęci: https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html
+2. Governatorat Państwa Watykańskiego — opis flagi, historycznych barw oraz chorągwi Kościoła Rzymskiego: https://www.vaticanstate.va/en/state-and-government/general-informations/flag.html
+3. Biuro Prasowe Stolicy Apostolskiej — oficjalny blazon i objaśnienie herbu papieża Leona XIV, 14.05.2025: https://press.vatican.va/content/salastampa/en/bollettino/pubblico/2025/05/14/250514b.html
+4. Reprodukcja herbu Państwa Watykańskiego 2023 w Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Coat_of_arms_of_Vatican_City_(2023%E2%80%93present).svg — opis wskazuje załącznik B ustawy zasadniczej oraz status domeny publicznej pliku wektorowego autora Goran tek-en.
+
+### 18.3. Zakres użycia i blokady
+
+- Wszystkie cztery ilustracje dodano do `DocumentBrandStore.builtInAssets` z właścicielem/dysponentem, źródłem HTTPS, opisem praw, referencją, weryfikatorem i wersją.
+- Wartość `permittedKinds` pozostaje pusta dla wszystkich czterech nowych pozycji. Zasoby są widoczne w bibliotece i mogą służyć do podglądu/referencji, lecz polityka autoryzacji nie pozwala generatorowi PDF użyć ich jako urzędowego herbu, godła ani flagi.
+- Oficjalna strona Stolicy Apostolskiej informuje, że jej emblemat został zgłoszony do WIPO w 1996 r. oraz wskazuje autorstwo części reprodukcji. Nie dodano oficjalnego pliku emblematycznego jako zasobu dopuszczonego do dokumentów.
+- Ilustracja herbu papieża Leona XIV jest opracowaniem według blazonu, nie oficjalnym plikiem wzorcowym. Jej użycie w dokumentach wymaga odrębnej zgody / potwierdzenia warunków.
+- Historyczna chorągiew jest rekonstrukcją ikonograficzną, a nie faksymile archiwalnym ani aktualną flagą państwową.
+- W bibliotece pozostaje wcześniejsza flaga Państwa Watykańskiego; razem z nową chorągwią historyczną stanowi zestaw dwóch zasobów flagowych o odmiennym statusie i okresie historycznym.
+
+### 18.4. Testy
+
+Dodano `VaticanHeraldicAssetsTest.kt` w testach instrumentacyjnych:
+- sprawdza indeksowanie czterech nowych zasobów;
+- sprawdza dostępność bajtów i format SVG;
+- sprawdza renderowanie podglądu SVG;
+- sprawdza, że zasoby referencyjne nie są renderowane jako znaki instytucjonalne bez jawnego zakresu `permittedKinds`.
+
+Wynik testów i kompilacji dla tego commitu pozostaje do potwierdzenia przez GitHub Actions. Nie oznaczać PR jako gotowego do scalenia, dopóki aktualny CI nie zakończy się powodzeniem.
