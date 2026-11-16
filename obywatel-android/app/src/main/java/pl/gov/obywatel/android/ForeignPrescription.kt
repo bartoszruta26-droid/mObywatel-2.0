@@ -148,7 +148,8 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
                             // Do not infer a regulated professional title from the "Dr" display name.
                             // The issuer must confirm and enter the exact qualification shown on the source.
                             values["fpr_prescriberContact"] = doctor.phone
-                            values["fpr_prescriberPractice"] = doctor.practice\n                            values["fpr_prescriberAddress"] = doctor.address
+                            values["fpr_prescriberPractice"] = doctor.practice
+                            values["fpr_prescriberAddress"] = doctor.address
                             values["fpr_prescriberCountry"] = doctor.country
                             values["fpr_prescriberRegister"] = listOf(doctor.register, doctor.license).filter { it.isNotBlank() }.joinToString(" — ")
                             doctorMenu = false
@@ -255,10 +256,13 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
                 targetLanguage = targetLanguage,
                 fields = pdfFields,
                 doctorName = values["fpr_prescriberName"].orEmpty(),
-                doctorPractice = values["fpr_prescriberAddress"].orEmpty(),
-                doctorAddress = values["fpr_prescriberCountry"].orEmpty(),
+                doctorPractice = values["fpr_prescriberPractice"].orEmpty(),
+                doctorAddress = listOf(values["fpr_prescriberAddress"].orEmpty(), values["fpr_prescriberCountry"].orEmpty()).filter { it.isNotBlank() }.joinToString(", "),
                 doctorRegister = values["fpr_prescriberRegister"].orEmpty(),
                 doctorContact = values["fpr_prescriberContact"].orEmpty(),
+                doctorQualifications = values["fpr_prescriberQualifications"].orEmpty(),
+                doctorSpecialty = values["fpr_prescriberSpecialty"].orEmpty(),
+                sideBySideFields = true,
                 documentTitle = "FOREIGN PRESCRIPTION / RECEPTA ZAGRANICZNA",
                 issuerHeading = "PRESCRIBER / WYSTAWCA RECEPTY",
                 signatureCaption = "Prescriber's handwritten signature (sign after printing)",
