@@ -271,55 +271,39 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 otherLanguage = ""
                 selectedTargets.clear()
                 selectedTargets["pl"] = true
-                // Keep every  field as a comma-separated key/value pair.
+                // Keep every field as a comma-separated key/value pair.
                 val sample = mapOf(
                     "documentNumber" to "IMC-2026-001",
                     "issueDate" to "2026-11-15",
-                    "purpose" to "Clinical summary for continuity of care and specialist assessment.  SAMPLE — NOT FOR CLINICAL USE.",
-                    "issuingCountry" to "United Kingdom ( example)",
-                    "destinationCountry" to "Poland ( example)",
+                    "purpose" to "Clinical summary for continuity of care and specialist assessment.",
+                    "issuingCountry" to "United Kingdom",
+                    "destinationCountry" to "Poland",
                     "sourceLanguage" to "English",
                     "targetLanguages" to "Polish",
-                    "patientGivenName" to "Alex",
-                    "patientFamilyName" to "Morgan",
-                    "patientDateOfBirth" to "1968-03-12",
-                    "patientNationality" to " example",
-                    "patientAddress" to "Example Street 10, London, United Kingdom ( address)",
-                    "identityDocument" to "Passport:  ()",
-                    "insuranceIdentifier" to " ()",
-                    "patientConsent" to " example: patient has consented to the preparation and sharing of this clinical summary for continuity of care.",
-                    "clinicianName" to "Dr Taylor Example ( clinician)",
+                    "patientGivenName" to "",
+                    "patientFamilyName" to "",
+                    "patientDateOfBirth" to "",
+                    "patientNationality" to "",
+                    "patientAddress" to "",
+                    "identityDocument" to "",
+                    "insuranceIdentifier" to "",
+                    "patientConsent" to "",
+                    "clinicianName" to "",
                     "clinicianProfession" to "Medical doctor",
-                    "clinicianSpecialty" to "General practice; referral for neurology and oncology assessment",
-                    "clinicianLicense" to "Not supplied in this ",
-                    "facilityName" to "Example Medical Centre ()",
-                    "facilityAddress" to "Example Road 1, London, United Kingdom ()",
-                    "chiefComplaint" to "Acute severe low-back pain radiating from the lumbar region through the right buttock and posterior-lateral thigh into the calf and foot, consistent with right-sided sciatica. Pain worsens with prolonged sitting, forward flexion, coughing and walking. Paraesthesia is reported in the right lower leg. Symptoms substantially limit mobility and sleep.",
-                    "medicalHistory" to " case. Previously documented multilevel degenerative intervertebral disc disease. Current episode of acute right-sided lumbar radicular pain. Patient is undergoing diagnostic evaluation prompted by clinical concerns; an oncological diagnosis has NOT been established. Relevant prior illnesses, operations and family history require confirmation from the actual medical record.",
-                    "occupationalHistory" to " example: predominantly sedentary work with prolonged sitting; currently unable to tolerate sustained sitting or usual work duties.",
-                    "allergies" to "Not documented in this  example — verify directly with the patient before prescribing.",
-                    "currentMedication" to " medication history for  only — not a prescription: (1) Dipyrone/metamizole (dipirona) 500 mg orally, one tablet up to every 8 hours as needed for pain; (2) diclofenac 50 mg orally twice daily after food, short course as previously prescribed; (3) omeprazole 20 mg orally once daily while using the NSAID; (4) pregabalin 75 mg orally at night, reportedly started recently by a clinician for neuropathic pain. These are plausible medicines encountered in Brazilian/Latin American practice, not a recommended regimen. Verify actual packages, doses, duration, adherence, allergies, renal/hepatic function, gastrointestinal/cardiovascular risks, anticoagulants and planned biopsy/procedures. Do not combine NSAIDs. Pregabalin is not routinely recommended for sciatica in NICE guidance; review indication and adverse effects.",
-                    "diagnosis" to "Acute right-sided lumbosacral radicular pain (sciatica), clinical syndrome: ICD-10 M54.4 (lumbago with sciatica). Multilevel intervertebral disc degeneration/discopathy, level-specific imaging correlation required: ICD-10 M51.3 (other specified intervertebral disc degeneration). Oncological diagnostic work-up in progress; malignancy is unconfirmed and must not be recorded as an established diagnosis.",
-                    "symptomsOnset" to "2026-11-10 ( example)",
-                    "examinationDate" to "2026-11-15",
+                    "clinicianSpecialty" to "General practice",
+                    "clinicianLicense" to "",
+                    "facilityName" to "",
+                    "facilityAddress" to "",
                     "height" to "",
-                    "weight" to "Not measured — obtain actual measurement",
+                    "weight" to "",
                     "bloodPressure" to "",
-                    "pulse" to "Not measured — record actual value",
-                    "temperature" to "Not measured — record actual value",
-                    "oxygenSaturation" to "Not measured — record actual value",
-                    "physicalExamination" to "STRUCTURAL STATUS ( ): lumbar lordosis mildly flattened; lumbar paraspinal muscles guarded, more on the right, with tenderness in the right lumbosacral and gluteal region. Active lumbar flexion and extension reduced by pain; no deformity or step-off assumed. MRI example describes multilevel disc desiccation/height loss, L4-L5 right paracentral protrusion and L5-S1 right foraminal disc component, with facet arthropathy and mild endplate changes. FUNCTIONAL / NEUROLOGICAL STATUS ( ): right straight-leg raise reproduces familiar radicular pain at 40 degrees; left test negative. Right ankle dorsiflexion and great-toe extension 4+/5 (MRC), remaining tested lower-limb myotomes 5/5; light-touch sensation mildly reduced over right dorsum of foot/first web space; patellar reflexes 2+ bilaterally, right Achilles 1+, left Achilles 2+. Antalgic gait with reduced right stance time; heel walking mildly difficult on right, toe walking preserved. Findings are , not real measurements; repeat and document an actual standardized neurological examination before clinical use.",
-                    "systemsReview" to "STRUCTURAL SYSTEM REVIEW (): no additional musculoskeletal deformity or peripheral joint swelling reported. Cardiopulmonary and abdominal review not assessed in this  entry. FUNCTIONAL / RED-FLAG REVIEW (): patient reports disturbed sleep and reduced walking/sitting tolerance. In this sample, denies saddle anaesthesia, new urinary retention/incontinence and bowel incontinence; these must be asked directly and verified. Because oncological investigations are ongoing, specifically document prior malignancy, unexplained weight loss, persistent night/rest pain, fever, immunosuppression and progressive neurological deficit. Any positive or evolving red flag requires prompt clinical escalation; this sample does not establish their absence in a real patient.",
-                    "functionalLimitations" to "FUNCTIONAL STATUS (): independent in basic self-care but slower and guarded when dressing lower body, putting on shoes, transferring sit-to-stand and getting into/out of bed. Walking tolerance approximately 100–150 metres before pain requires a pause; sitting tolerance approximately 10–15 minutes; standing tolerance approximately 10 minutes. Avoids lifting from floor, repeated trunk flexion/rotation and carrying loads. Sleep interrupted by pain. Mobility is antalgic; no assistive device specified. These distances and times are invented example values and must be replaced by measured patient-reported and observed performance.",
-                    "workCapacity" to "FUNCTIONAL WORK CAPACITY (): currently unable to sustain usual full-time sedentary duties because sitting tolerance is approximately 10–15 minutes and position changes are frequent. Temporary modified duties may include alternating positions and short activity periods, with no heavy lifting or repetitive loaded flexion/rotation. A treating clinician must determine actual fitness for work, restrictions and duration after examination; these sample limits are not a certificate of incapacity.",
-                    "hospitalizations" to "No hospitalization information supplied in this  example; verify history.",
-                    "treatmentAndRehabilitation" to "STRUCTURAL / FUNCTIONAL MANAGEMENT ( example): prompt review of neurological status and MRI images/report; reassess motor power, sensation, reflexes, gait and sphincter symptoms. Maintain tolerable daily activity and use graded walking; avoid prolonged bed rest and temporarily modify painful lifting/flexion/rotation. Physiotherapy, if clinically appropriate, should begin with education, pacing, symptom-guided mobility and progressive trunk/hip conditioning, then functional restoration; avoid forceful manipulation pending clarification of red flags and oncological assessment. Medication reconciliation and prescribing require an actual clinician's review of renal/hepatic function, gastrointestinal/cardiovascular risk, interactions and planned biopsy/procedures. Coordinate, and do not delay, the ongoing oncological diagnostic pathway.",
-                    "prognosis" to "Cannot be determined from this sample. Depends on neurological findings, imaging-clinical correlation, response to treatment and results of the ongoing diagnostic work-up. No oncological diagnosis is confirmed.",
-                    "recommendations" to "Urgent medical reassessment for progressive motor weakness, new saddle anaesthesia, urinary retention or incontinence, bowel dysfunction, bilateral symptoms, fever or rapidly worsening pain. Expedite review of the oncological work-up and communicate relevant history to the responsible specialist. Review MRI images/report and correlate with examination; consider neurology/spine specialist input. Complete all patient-specific fields from verified records before signing.",
-                    "clinicianDeclaration" to "This is a   record containing  wording only. It is not a real medical assessment, diagnosis, prescription, fitness certificate or referral. A treating clinician must independently verify every fact, amend the clinical content and sign/stamp the printed document.",
-                    "clinicianSignRef" to "Leave blank — handwritten signature on the printed document",
-                    "patientSignRef" to "Leave blank — patient signature only if required",
-                    "medicalSealReference" to "Leave blank — clinician's physical stamp on the printed document"
+                    "pulse" to "",
+                    "temperature" to "",
+                    "oxygenSaturation" to "",
+                    "clinicianDeclaration" to "",
+                    "clinicianSignRef" to "",
+                    "patientSignRef" to "",
+                    "medicalSealReference" to ""
                 )
                 definitions.forEach { definition ->
                     sample[definition.key]?.let { values[fieldKey(definition.key)] = it }
@@ -327,20 +311,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 val selectedClinicalCase = MedicalCertificateClinicalCases.find(selectedClinicalCaseId)
                 selectedClinicalCase?.fields?.forEach { (key, value) -> values[fieldKey(key)] = value }
                 imagingStudies.clear()
-                imagingStudies.add(selectedClinicalCase?.imagingStudy ?: MedicalImagingStudy(
-                    id = "case-sciatica-mri",
-                    modality = MedicalImagingModality.MRI,
-                    bodyRegion = "Lumbar spine",
-                    studyDate = "2026-11-12",
-                    facility = "Example Imaging Centre ()",
-                    indication = "Acute right-sided sciatica; known/suspected multilevel disc disease. Oncological diagnostic work-up ongoing.",
-                    technique = " placeholder only — replace with the exact sequence/technique from the original radiology report.",
-                    contrast = "Not specified — verify original report; do not infer contrast administration.",
-                    findings = " MRI REPORT —  only, not a real scan. MRI lumbar spine (sequence protocol and contrast administration not specified in this  example; verify against the original DICOM study): mild straightening of lumbar lordosis. L2-L3: shallow circumferential disc bulge without significant canal stenosis. L3-L4: broad-based disc bulge with mild facet arthropathy and mild bilateral foraminal narrowing; no definite nerve-root compression. L4-L5: disc desiccation and height loss with broad-based posterior disc bulge and right subarticular/paracentral protrusion; right lateral-recess narrowing with contact and mild displacement of the traversing right L5 nerve root; mild central canal narrowing; mild bilateral facet arthropathy. L5-S1: disc desiccation and height loss with broad-based bulge and right foraminal component causing moderate right and mild left foraminal narrowing, contacting the exiting right L5 root; no high-grade central canal stenosis. Small endplate osteophytes and Modic type II endplate changes at L5-S1. Conus terminates normally; cauda equina roots are not clumped. No acute compression fracture. No focal destructive osseous lesion identified in the imaged lumbar vertebrae on this  report; this limited lumbar examination does not exclude malignancy or metastatic disease elsewhere and must not replace the planned oncological work-up.",
-                    impression = " IMPRESSION: multilevel lumbar spondylosis/discopathy, most pronounced at L4-L5 and L5-S1. Right L4-L5 subarticular protrusion contacts/displaces the traversing right L5 root; right L5-S1 foraminal narrowing contacts the exiting right L5 root. Mild central canal narrowing at L4-L5, without high-grade canal stenosis or cauda equina compression in this  scenario. No focal destructive lumbar bone lesion described in this  report; lumbar MRI cannot rule out an underlying malignancy or distant metastases. Correlate clinically and continue oncological diagnostics.",
-                    radiologistName = "Not supplied",
-                    reportNumber = "MRI-LS-2026-001"
-                ))
+                selectedClinicalCase?.imagingStudy?.let { imagingStudies.add(it) }
                 imagingModality = selectedClinicalCase?.imagingStudy?.modality ?: MedicalImagingModality.MRI
                 imagingBodyRegion = selectedClinicalCase?.imagingStudy?.bodyRegion.orEmpty()
                 imagingDate = selectedClinicalCase?.imagingStudy?.studyDate.orEmpty()
@@ -352,12 +323,12 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 imagingContrast = selectedClinicalCase?.imagingStudy?.contrast.orEmpty()
                 imagingRadiologist = selectedClinicalCase?.imagingStudy?.radiologistName.orEmpty()
                 imagingReportNumber = selectedClinicalCase?.imagingStudy?.reportNumber.orEmpty()
-                saveMessage = " sample loaded. It is not a real patient record. Verify and replace every field before clinical use or signing."
+                saveMessage = "Historia kliniczna została wczytana. Uzupełnij dane identyfikacyjne i sprawdź ustalenia z dokumentacją źródłową."
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Load  sample — acute sciatica and multilevel discopathy") }
+        ) { Text("Wczytaj historię kliniczną") }
         Text(
-            "The sample is entirely . It does not establish an oncological diagnosis or replace source reports; loading it overwrites the currently displayed field values.",
+            "Wczytanie historii zastępuje bieżące wartości pól formularza.",
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodySmall
         )
