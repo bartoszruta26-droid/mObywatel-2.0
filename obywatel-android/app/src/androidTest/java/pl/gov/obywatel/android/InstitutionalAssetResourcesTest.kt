@@ -44,7 +44,8 @@ class InstitutionalAssetResourcesTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         listOf(
             "institutions/poland-national-flag.svg",
-            "institutions/european-union-flag.svg"
+            "institutions/european-union-flag.svg",
+            "institutions/vatican-city-flag.svg"
         ).forEach { path ->
             context.assets.open(path).use { stream ->
                 assertTrue("Empty bundled SVG: $path", stream.readBytes().isNotEmpty())
