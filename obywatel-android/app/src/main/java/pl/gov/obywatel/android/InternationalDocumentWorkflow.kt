@@ -158,3 +158,45 @@ internal object InstitutionalAssetPolicy {
         return authorization?.isCompleteFor() == true
     }
 }
+
+/**
+ * A source-controlled template record. No official template is usable until
+ * the exact jurisdictional source and permission/effective-date metadata exist.
+ */
+internal data class InstitutionalTemplateApproval(
+    val documentId: String,
+    val jurisdiction: String,
+    val issuingAuthority: String,
+    val sourceUrl: String,
+    val sourceTitle: String,
+    val sourceVersion: String,
+    val rightsBasis: String,
+    val approvalReference: String,
+    val checkedBy: String,
+    val effectiveFrom: LocalDate,
+    val effectiveUntil: LocalDate? = null
+) {
+    fun isUsableFor(date: LocalDate = LocalDate.now()): Boolean =
+        documentId in InternationalDocumentWorkflowCatalog.all &&
+            jurisdiction.isNotBlank() &&
+            issuingAuthority.isNotBlank() &&
+            sourceUrl.startsWith("https://", ignoreCase = true) &&
+            sourceTitle.isNotBlank() &&
+            sourceVersion.isNotBlank() &&
+            rightsBasis.isNotBlank() &&
+            approvalReference.isNotBlank() &&
+            checkedBy.isNotBlank() &&
+            !date.isBefore(effectiveFrom) &&
+            (effectiveUntil == null || !date.isAfter(effectiveUntil))
+}
+
+internal object InstitutionalTemplateCatalog {
+    /**
+     * Empty by default: adding an entry requires a verified official source
+     * and documented permission or an applicable public-use basis.
+     */
+    val approved: Map<String, InstitutionalTemplateApproval> = emptyMap()
+
+    fun findUsable(documentId: String, date: LocalDate = LocalDate.now()): InstitutionalTemplateApproval? =
+        approved[documentId]?.takeIf { it.isUsableFor(date) }
+}
