@@ -630,3 +630,18 @@ Dodano `VaticanHeraldicAssetsTest.kt` w testach instrumentacyjnych:
 - sprawdza, że zasoby referencyjne nie są renderowane jako znaki instytucjonalne bez jawnego zakresu `permittedKinds`.
 
 Wynik testów i kompilacji dla tego commitu pozostaje do potwierdzenia przez GitHub Actions. Nie oznaczać PR jako gotowego do scalenia, dopóki aktualny CI nie zakończy się powodzeniem.
+
+
+## 19. Naprawa testu długości kluczy pól edytora (2026-11-16)
+
+### 19.1. Ustalenie z CI
+
+Najnowsze przebiegi Android GUI validation i Android prototype build zatrzymały się na jednym teście JVM: `DocumentGroupCatalogTest.documentEditorFieldKeysAreStableAndUniqueAcrossCatalog`. Kompilacja Kotlin zakończyła się, a testy `pades-validator` przeszły. W katalogu są teraz dłuższe, jawnie namespacowane klucze `doc_<identyfikator dokumentu>_<klucz pola>`; limit 64 znaków w asercji nie odpowiadał długości tych kluczy i nie wynikał z ograniczenia mechanizmu archiwizacji.
+
+### 19.2. Zmiana
+
+Podniesiono wyłącznie limit kontrolny długości klucza z 64 do 96 znaków. Zachowano wymaganie niepustego prefiksu `doc_`, unikalność kluczy oraz dozwolony zestaw znaków ASCII `[A-Za-z0-9_-]`. Nie zmieniano identyfikatorów dokumentów, nazw pól, formatu archiwum ani danych użytkownika.
+
+### 19.3. Status
+
+Zmiana została zapisana na gałęzi PR. Wymagane jest ponowne uruchomienie pełnego CI; dopiero po sukcesie testów JVM, testów na emulatorze i budowania APK można opublikować nowy artefakt i zweryfikować odnośnik instalacyjny. Nie wolno używać poprzedniego APK jako zastępstwa.
