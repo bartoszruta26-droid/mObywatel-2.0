@@ -453,6 +453,36 @@ internal object DocumentBrandStore {
                     ?: image(context, owner, kind)
             } else image(context, owner, kind)
     }
+    private fun authorizationFor(asset: BrandAsset): InstitutionalAssetAuthorization? = runCatching {
+        val metadata = JSONObject(asset.rights)
+        InstitutionalAssetAuthorization(
+            owner = metadata.optString("owner", asset.owner),
+            sourceUrl = metadata.getString("sourceUrl"),
+            rightsBasis = metadata.getString("rightsBasis"),
+            authorizationReference = metadata.getString("authorizationReference"),
+            verifiedBy = metadata.getString("verifiedBy"),
+            version = metadata.optString("version", asset.version.toString()),
+            effectiveFrom = java.time.LocalDate.parse(metadata.getString("effectiveFrom")),
+            effectiveUntil = metadata.optString("effectiveUntil").takeIf { it.isNotBlank() }?.let(java.time.LocalDate::parse)
+        )
+    }.getOrNull()
+
+    /**
+     * Institutional and document-template graphics are rendered only when
+     * their provenance/permission record is complete and currently effective.
+     * Stamps, handwritten signatures and security holograms are always excluded.
+     */
+    fun authorizedImageForDocument(context: Context, documentType: String, owner: String, kind: String): android.graphics.Bitmap? {
+        if (kind in setOf("Pieczęć", "Wzór podpisu odręcznego", "Grafika hologramu / zabezpieczenia")) return null
+        val assigned = assignmentKeys(documentType, owner).asSequence()
+            .flatMap { key -> assignments(context).asSequence().filter { it.documentType == key && it.kind == kind } }
+            .lastOrNull()
+        val asset = assigned?.assetId?.let { id -> list(context).firstOrNull { it.id == id } }
+            ?: list(context).lastOrNull { it.owner.equals(owner, ignoreCase = true) && it.kind == kind }
+            ?: return null
+        if (!InstitutionalAssetPolicy.mayRender(kind, authorizationFor(asset))) return null
+        return imageById(context, asset.id)
+    }
     fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
     fun fileBytes(context: Context, assetId: String): ByteArray? = runCatching {
         val asset = list(context).firstOrNull { it.id == assetId } ?: return null
@@ -1404,13 +1434,12 @@ private object DocumentPdfRenderer {
         val heading=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(20,45,78); textSize=19f; typeface=Typeface.create("sans-serif",Typeface.BOLD) }
         val small=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(95,108,120); textSize=8f }
         val line=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(210,220,230); strokeWidth=0.7f }
-        val flag=DocumentBrandStore.imageForDocument(context,documentType,owner,"Flaga")
-        val logo=DocumentBrandStore.imageForDocument(context,documentType,owner,"Logo")
-        val crest=DocumentBrandStore.imageForDocument(context,documentType,owner,"Herb") ?: DocumentBrandStore.imageForDocument(context,documentType,owner,"Godło")
-        val seal=DocumentBrandStore.image(context,owner,"Pieczęć")
-        val signature=DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
-        val background=DocumentBrandStore.image(context,owner,"Tło dokumentu")
-        val watermark=DocumentBrandStore.image(context,owner,"Znak wodny") ?: DocumentBrandStore.image(context,owner,"Grafika hologramu / zabezpieczenia")
+        val flag=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Flaga")
+        val logo=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Logo")
+        val crest=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Herb")
+            ?: DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Godło")
+        val background=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Tło dokumentu")
+        val watermark=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Znak wodny")
         var pageNo=0; var y=0f; var page: PdfDocument.Page?=null
         fun startPage() {
             pageNo++
@@ -1432,12 +1461,14 @@ private object DocumentPdfRenderer {
         }
         fun finishPage() {
             val c=page!!.canvas
-            val sealElement = PdfBrandLayout.elements.first { it.id == "seal" }
-            val signatureElement = PdfBrandLayout.elements.first { it.id == "signature" }
-            seal?.let { drawPdfBrandImage(c,it,sealElement,Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=220 }) }
-            signature?.let { drawPdfBrandImage(c,it,signatureElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
+            // The PDF contains blank attestation areas only. The issuer must apply
+            // the actual signature and, where required, the seal after review.
             c.drawLine(margin,pageH-145f,pageW-margin,pageH-145f,line)
-            c.drawText("Miejsce na podpis / podpis elektroniczny · strona "+pageNo,margin,pageH-35f,small)
+            c.drawText("Podpis osoby uprawnionej:",margin,pageH-115f,small)
+            c.drawLine(margin,pageH-95f,250f,pageH-95f,line)
+            c.drawText("Pieczęć — jeżeli wymagana:",300f,pageH-115f,small)
+            c.drawRect(300f,pageH-105f,445f,pageH-55f,line)
+            c.drawText("Strona "+pageNo,margin,pageH-35f,small)
             pdf.finishPage(page!!)
         }
         startPage()
