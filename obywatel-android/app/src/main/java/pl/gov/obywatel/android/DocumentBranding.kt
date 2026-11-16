@@ -348,6 +348,12 @@ internal object DocumentBrandStore {
             "builtin:institutions/european-union-flag.svg",
             rights = """{"owner":"Unia Europejska","sourceUrl":"https://european-union.europa.eu/principles-countries-history/symbols/european-flag_en","rightsBasis":"Oficjalna reprodukcja flagi UE i geometria opublikowana na portalu Unii Europejskiej; nie jest to logo Komisji Europejskiej ani znak programu finansowania.","authorizationReference":"Oficjalna strona EU Flag — sekcja Download the European flag; SVG opublikowany 9 kwietnia 2026 r.","verifiedBy":"Weryfikacja źródła urzędowego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":["Flaga"]}"""
         ),
+        BrandAsset(
+            "builtin_flag_vatican_city_specification", "Zasoby aplikacji", "Flaga",
+            "Flaga Państwa Watykańskiego — układ i symbole według opisu urzędowego",
+            "builtin:institutions/vatican-city-flag.svg",
+            rights = """{"owner":"Państwo Watykańskie","sourceUrl":"https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html","rightsBasis":"Autorska, uproszczona ilustracja wektorowa oparta na oficjalnym opisie flagi Państwa Watykańskiego; nie jest oficjalnym plikiem master ani odwzorowaniem urzędowej pieczęci.","authorizationReference":"Oficjalna dokumentacja Sekretariatu Stanu — Flag, Coat of Arms and Seal; przed użyciem w dokumencie organu należy zastąpić zatwierdzonym plikiem źródłowym.","verifiedBy":"Weryfikacja opisu urzędowego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":["Flaga"]}"""
+        ),
         BrandAsset("builtin_hologram_mandala", "Zasoby aplikacji", "Animowany hologram", "Mandala holograficzna — animowana", "builtin:mandala_hologram.gif.b64", rights = "Grafika autorska wygenerowana dla aplikacji"),
         BrandAsset("builtin_polish_emblem", "Zasoby aplikacji", "Godło", "Godło Polski — grafika zasobów aplikacji", "resource:institutions_eagle_emblem"),
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
