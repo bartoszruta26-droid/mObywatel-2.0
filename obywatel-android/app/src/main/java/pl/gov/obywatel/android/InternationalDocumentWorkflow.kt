@@ -141,7 +141,9 @@ internal data class InstitutionalAssetAuthorization(
     val verifiedBy: String,
     val version: String,
     val effectiveFrom: LocalDate,
-    val effectiveUntil: LocalDate? = null
+    val effectiveUntil: LocalDate? = null,
+    /** Exact asset types explicitly covered by the permission / official publication terms. */
+    val permittedKinds: Set<String> = emptySet()
 ) {
     fun isCompleteFor(date: LocalDate = LocalDate.now()): Boolean =
         owner.isNotBlank() &&
@@ -155,11 +157,11 @@ internal data class InstitutionalAssetAuthorization(
 }
 
 internal object InstitutionalAssetPolicy {
-    private val neverRenderAsImage = setOf("Pieczęć", "Wzór podpisu odręcznego", "Grafika hologramu / zabezpieczenia")
+    private val neverRenderAsImage = setOf("Wzór podpisu odręcznego", "Grafika hologramu / zabezpieczenia")
 
     fun mayRender(kind: String, authorization: InstitutionalAssetAuthorization?): Boolean {
         if (kind in neverRenderAsImage) return false
-        return authorization?.isCompleteFor() == true
+        return authorization?.let { it.isCompleteFor() && kind in it.permittedKinds } == true
     }
 }
 
