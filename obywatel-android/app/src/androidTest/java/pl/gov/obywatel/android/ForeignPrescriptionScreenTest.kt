@@ -68,7 +68,7 @@ class ForeignPrescriptionScreenTest {
             doctorPractice = "Example practice",
             doctorAddress = "São Paulo, Brazil",
             doctorRegister = "CRM-SP 101458; RQE 45010",
-            doctorContact = "+55 11 3812-1157",
+            doctorContact = "doctor@example.test",\n            doctorQualifications = "Medical Doctor",\n            doctorSpecialty = "Family Medicine",\n            sideBySideFields = true,
             documentTitle = "FOREIGN PRESCRIPTION / RECEPTA ZAGRANICZNA",
             issuerHeading = "PRESCRIBER / WYSTAWCA RECEPTY",
             signatureCaption = "Prescriber's handwritten signature (sign after printing)",
