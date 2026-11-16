@@ -17,6 +17,46 @@ private fun fields(vararg definitions: Triple<String, String, String>) =
 
 internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEditorFieldDefinition> {
     val specific = when (documentId) {
+        in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") -> listOf(
+            Triple("passportTypeCode", "Kod rodzaju paszportu ICAO", "PP / PD / PO / PT"),
+            Triple("passportTypeDescription", "Rodzaj paszportu", "zwykły / dyplomatyczny / służbowy / tymczasowy służbowy"),
+            Triple("issuingEntity", "Podmiot wydający", "Państwo Watykańskie / Stolica Apostolska"),
+            Triple("passportHolderCapacity", "Status / funkcja uzasadniająca wydanie", ""),
+            Triple("passportAuthorityReference", "Organ wydający / referencja sprawy", ""),
+            Triple("passportOriginalFile", "Odniesienie do oryginalnego dokumentu", "")
+        )
+        in setOf("ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate", "ecclesiastical_death_certificate") -> listOf(
+            Triple("sacramentalRegisterType", "Rodzaj księgi parafialnej", "chrztów / małżeństw / zmarłych"),
+            Triple("parishName", "Parafia / kościół", ""),
+            Triple("dioceseName", "Diecezja / jurysdykcja kościelna", ""),
+            Triple("registerVolume", "Księga / tom", ""),
+            Triple("registerEntryNumber", "Numer wpisu / aktu", ""),
+            Triple("sacramentalEventDate", "Data udzielenia sakramentu / zdarzenia", "RRRR-MM-DD"),
+            Triple("ministerName", "Duchowny / osoba dokonująca wpisu", ""),
+            Triple("certificatePurpose", "Cel wydania odpisu / zaświadczenia", "")
+        )
+        "canonical_status_certificate" -> listOf(
+            Triple("canonicalStatus", "Stwierdzony status kanoniczny", ""),
+            Triple("competentOrdinary", "Ordynariusz / przełożony kompetentny", ""),
+            Triple("dioceseOrInstitute", "Diecezja / instytut / wspólnota", ""),
+            Triple("canonicalRestrictions", "Ograniczenia lub adnotacje kanoniczne", ""),
+            Triple("verificationDate", "Data weryfikacji statusu", "RRRR-MM-DD")
+        )
+        "clerical_ordination_certificate" -> listOf(
+            Triple("ordinationRank", "Stopień święceń", "diakonat / prezbiterat / episkopat"),
+            Triple("ordinationDate", "Data święceń", "RRRR-MM-DD"),
+            Triple("ordinationPlace", "Miejsce święceń", ""),
+            Triple("ordainingBishop", "Biskup udzielający święceń", ""),
+            Triple("ordinandName", "Imię i nazwisko osoby wyświęconej", ""),
+            Triple("ordinationRegisterReference", "Księga / numer wpisu", "")
+        )
+        "apostolic_nunciature_credential" -> listOf(
+            Triple("nunciatureCountry", "Państwo / placówka nuncjatury", ""),
+            Triple("credentialHolder", "Osoba, której dotyczy poświadczenie", ""),
+            Triple("diplomaticCapacity", "Funkcja / status dyplomatyczny", ""),
+            Triple("accreditingAuthority", "Organ akredytujący / wystawiający", ""),
+            Triple("hostStateProtocolReference", "Numer / referencja protokołu państwa przyjmującego", "")
+        )
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
