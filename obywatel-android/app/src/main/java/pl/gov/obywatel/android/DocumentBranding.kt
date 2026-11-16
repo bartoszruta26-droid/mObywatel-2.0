@@ -1444,7 +1444,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Fit,
                                         colorFilter = if (whiteTintedIcon)
-                                            androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
+                                            androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.inverseOnSurface)
                                         else null
                                     )
                                 }
