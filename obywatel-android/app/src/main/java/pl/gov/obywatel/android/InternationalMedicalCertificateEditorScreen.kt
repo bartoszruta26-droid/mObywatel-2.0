@@ -180,12 +180,22 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         })
                         doctorDirectory.forEach { doctor ->
                             DropdownMenuItem(text = { Text(doctor.name + " — " + doctor.city) }, onClick = {
-                                selectedDoctorId = doctor.id; doctorMenuExpanded = false
+                                selectedDoctorId = doctor.id
+                                // Copy the selected directory record into editable certificate fields.
+                                // The certificate remains editable after this prefill.
+                                values[fieldKey("clinicianName")] = doctor.name
+                                values[fieldKey("clinicianProfession")] = "Medical doctor"
+                                values[fieldKey("clinicianSpecialty")] = doctor.specialty
+                                values[fieldKey("clinicianLicense")] = listOf(doctor.register, doctor.license)
+                                    .filter { it.isNotBlank() }.joinToString(" — ")
+                                values[fieldKey("facilityName")] = doctor.practice
+                                values[fieldKey("facilityAddress")] = doctor.address
+                                doctorMenuExpanded = false
                             })
                         }
                     }
                 }
-                Text("Dane lekarza zostaną umieszczone na wydruku. Lekarz składa własnoręczny podpis i pieczątkę na papierowym dokumencie.",
+                Text("Wybranie lekarza uzupełnia odpowiednie pola formularza. Wszystkie dane pozostają edytowalne. Standardowo zaświadczenie drukuje się, a lekarz składa na papierze własnoręczny podpis i pieczątkę.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -581,9 +591,9 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         sourceLanguage,
                         targets.joinToString(", ") { target -> languages.firstOrNull { it.code == target }?.englishName ?: target },
                         fields,
-                        doctorName = selectedDoctor?.name.orEmpty(),
-                        doctorPractice = selectedDoctor?.practice.orEmpty(),
-                        doctorAddress = selectedDoctor?.address.orEmpty()
+                        doctorName = values[fieldKey("clinicianName")].orEmpty(),
+                        doctorPractice = values[fieldKey("facilityName")].orEmpty(),
+                        doctorAddress = values[fieldKey("facilityAddress")].orEmpty()
                     )
                 }.getOrElse { saveMessage = "PDF generation failed: " + (it.message ?: "unknown error"); null }
                 if (pendingPdfBytes != null) pdfLauncher.launch("international-medical-certificate-bilingual.pdf")
