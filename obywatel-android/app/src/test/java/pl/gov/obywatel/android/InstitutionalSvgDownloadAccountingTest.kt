@@ -2,11 +2,24 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class InstitutionalSvgDownloadAccountingTest {
+    @Test
+    fun progressLabelShowsExactCountOutOfDiscoveredSvgFiles() {
+        assertEquals("Postęp: 0/200 plików SVG", commonsDownloadProgressLabel(0, 200))
+        assertEquals("Postęp: 1/200 plików SVG", commonsDownloadProgressLabel(1, 200))
+        assertEquals("Postęp: 200/200 plików SVG", commonsDownloadProgressLabel(200, 200))
+    }
+
+    @Test
+    fun progressLabelClampsCompletedCountToValidRange() {
+        assertEquals("Postęp: 0/200 plików SVG", commonsDownloadProgressLabel(-5, 200))
+        assertEquals("Postęp: 200/200 plików SVG", commonsDownloadProgressLabel(250, 200))
+    }
     @Test
     fun detectsHundredsOfResultsWithOnlySmallFractionSaved() {
         assertTrue(isSvgDownloadDropOff(found = 200, available = 24))
