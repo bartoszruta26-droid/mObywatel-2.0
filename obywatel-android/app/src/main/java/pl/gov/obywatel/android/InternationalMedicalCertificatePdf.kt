@@ -106,7 +106,7 @@ internal fun createBilingualMedicalCertificatePdf(
             y += 10f
         }
         if (fields.isEmpty()) drawWrapped("No certificate fields have been completed.", bodyPaint)
-        if (y > pageHeight - margin - 170f) {
+        if (y > pageHeight - margin - 300f) {
             finishPage()
             startPage()
         }
