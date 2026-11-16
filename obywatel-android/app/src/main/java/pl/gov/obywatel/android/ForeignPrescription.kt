@@ -41,6 +41,27 @@ import org.json.JSONObject
 internal const val FOREIGN_PRESCRIPTION_ID = "foreign_prescription"
 private const val FPR_RECORD_ID = "foreign-prescription-single"
 
+/** Stable Polish labels for the prescription PDF. */
+internal fun foreignPrescriptionPolishLabel(key: String): String? = mapOf(
+    "patientName" to "Imię i nazwisko pacjenta",
+    "patientAddress" to "Adres pacjenta",
+    "medicineInn" to "Nazwa powszechnie stosowana (INN)",
+    "medicineBrand" to "Nazwa handlowa (jeżeli przepisano)",
+    "medicineForm" to "Postać farmaceutyczna",
+    "medicineStrength" to "Moc",
+    "medicineQuantity" to "Ilość",
+    "medicineDosage" to "Dawkowanie i sposób stosowania",
+    "issueDate" to "Data wystawienia",
+    "prescriberName" to "Imię i nazwisko wystawcy",
+    "prescriberQualifications" to "Tytuł zawodowy / kwalifikacje",
+    "prescriberSpecialty" to "Specjalizacja",
+    "prescriberPractice" to "Nazwa praktyki / placówki",
+    "prescriberContact" to "Dane kontaktowe wystawcy",
+    "prescriberAddress" to "Adres wystawcy / praktyki",
+    "prescriberCountry" to "Państwo wystawienia",
+    "prescriberRegister" to "Numer prawa wykonywania zawodu / numer w rejestrze"
+)[key]
+
 private val foreignPrescriptionFields = listOf(
     Triple("patientName", "Patient full name", "Full name as shown on identity document"),
     Triple("patientAddress", "Patient address", "Street, house number, postal code, city, country"),
@@ -248,7 +269,8 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
         Button(enabled = missing.isEmpty() && validDate && !busy, onClick = {
             val pdfFields = foreignPrescriptionFields.map { (key, label, _) ->
                 MedicalCertificatePdfField(label, values["fpr_$key"].orEmpty(),
-                    translations["$targetLanguage|label:$key"] ?: label,
+                    translations["$targetLanguage|label:$key"]?.takeIf { it.isNotBlank() }
+                        ?: if (targetLanguage.equals("pl", ignoreCase = true)) foreignPrescriptionPolishLabel(key) ?: label else label,
                     translations["$targetLanguage|$key"].orEmpty())
             }
             pendingPdf = createBilingualMedicalCertificatePdf(
@@ -258,10 +280,13 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
                 doctorName = values["fpr_prescriberName"].orEmpty(),
                 doctorPractice = values["fpr_prescriberPractice"].orEmpty(),
                 doctorAddress = listOf(values["fpr_prescriberAddress"].orEmpty(), values["fpr_prescriberCountry"].orEmpty()).filter { it.isNotBlank() }.joinToString(", "),
-                doctorRegister = values["fpr_prescriberRegister"].orEmpty(),
+                doctorRegister = translations["$targetLanguage|prescriberRegister"]?.takeIf { it.isNotBlank() }
+                    ?: values["fpr_prescriberRegister"].orEmpty(),
                 doctorContact = values["fpr_prescriberContact"].orEmpty(),
-                doctorQualifications = values["fpr_prescriberQualifications"].orEmpty(),
-                doctorSpecialty = values["fpr_prescriberSpecialty"].orEmpty(),
+                doctorQualifications = translations["$targetLanguage|prescriberQualifications"]?.takeIf { it.isNotBlank() }
+                    ?: values["fpr_prescriberQualifications"].orEmpty(),
+                doctorSpecialty = translations["$targetLanguage|prescriberSpecialty"]?.takeIf { it.isNotBlank() }
+                    ?: values["fpr_prescriberSpecialty"].orEmpty(),
                 sideBySideFields = true,
                 documentTitle = "FOREIGN PRESCRIPTION / RECEPTA ZAGRANICZNA",
                 issuerHeading = "PRESCRIBER / WYSTAWCA RECEPTY",
