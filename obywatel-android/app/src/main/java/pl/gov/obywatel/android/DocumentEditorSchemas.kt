@@ -15,6 +15,9 @@ internal data class DocumentEditorFieldDefinition(
 private fun fields(vararg definitions: Triple<String, String, String>) =
     definitions.map { DocumentEditorFieldDefinition(it.first, it.second, it.third) }
 
+private fun internationalDocumentFieldSet(documentId: String, specific: List<DocumentEditorFieldDefinition>): List<DocumentEditorFieldDefinition> =
+    internationalDocumentEditorFields(documentId) + specific
+
 internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEditorFieldDefinition> {
     val specific = when (documentId) {
         in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") -> listOf(
@@ -24,7 +27,7 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             Triple("passportHolderCapacity", "Status / funkcja uzasadniająca wydanie", ""),
             Triple("passportAuthorityReference", "Organ wydający / referencja sprawy", ""),
             Triple("passportOriginalFile", "Odniesienie do oryginalnego dokumentu", "")
-        )
+        ))
         in setOf("ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate", "ecclesiastical_death_certificate") -> listOf(
             Triple("sacramentalRegisterType", "Rodzaj księgi parafialnej", "chrztów / małżeństw / zmarłych"),
             Triple("parishName", "Parafia / kościół", ""),
@@ -34,14 +37,14 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             Triple("sacramentalEventDate", "Data udzielenia sakramentu / zdarzenia", "RRRR-MM-DD"),
             Triple("ministerName", "Duchowny / osoba dokonująca wpisu", ""),
             Triple("certificatePurpose", "Cel wydania odpisu / zaświadczenia", "")
-        )
+        ))
         "canonical_status_certificate" -> listOf(
             Triple("canonicalStatus", "Stwierdzony status kanoniczny", ""),
             Triple("competentOrdinary", "Ordynariusz / przełożony kompetentny", ""),
             Triple("dioceseOrInstitute", "Diecezja / instytut / wspólnota", ""),
             Triple("canonicalRestrictions", "Ograniczenia lub adnotacje kanoniczne", ""),
             Triple("verificationDate", "Data weryfikacji statusu", "RRRR-MM-DD")
-        )
+        ))
         "clerical_ordination_certificate" -> listOf(
             Triple("ordinationRank", "Stopień święceń", "diakonat / prezbiterat / episkopat"),
             Triple("ordinationDate", "Data święceń", "RRRR-MM-DD"),
@@ -49,14 +52,14 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             Triple("ordainingBishop", "Biskup udzielający święceń", ""),
             Triple("ordinandName", "Imię i nazwisko osoby wyświęconej", ""),
             Triple("ordinationRegisterReference", "Księga / numer wpisu", "")
-        )
+        ))
         "apostolic_nunciature_credential" -> listOf(
             Triple("nunciatureCountry", "Państwo / placówka nuncjatury", ""),
             Triple("credentialHolder", "Osoba, której dotyczy poświadczenie", ""),
             Triple("diplomaticCapacity", "Funkcja / status dyplomatyczny", ""),
             Triple("accreditingAuthority", "Organ akredytujący / wystawiający", ""),
             Triple("hostStateProtocolReference", "Numer / referencja protokołu państwa przyjmującego", "")
-        )
+        ))
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
@@ -69,16 +72,16 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
         }
     }
     val workflow = if (documentId in internationalDocumentCatalogIds) fields(
-        Triple("issuerName", "Name of professional issuer / issuing institution", ""),
-        Triple("issuerPosition", "Professional title / position of the issuer", ""),
-        Triple("issuingAuthority", "Competent issuing authority", ""),
-        Triple("verificationAuthority", "Authority responsible for verification", ""),
-        Triple("procedureName", "Applicable procedure / application route", ""),
-        Triple("jurisdiction", "Country / jurisdiction", ""),
-        Triple("sourceLanguage", "Language of the source document", ""),
-        Triple("translationLanguage", "Language of the translation", ""),
-        Triple("templateSourceReference", "Official template source / reference", ""),
-        Triple("templateVersion", "Template version / effective date", "")
+        Triple("issuerName", "Nazwa wystawcy / instytucji wydającej", ""),
+        Triple("issuerPosition", "Tytuł zawodowy / stanowisko wystawcy", ""),
+        Triple("issuingAuthority", "Właściwy organ wydający", ""),
+        Triple("verificationAuthority", "Organ / podmiot właściwy do weryfikacji", ""),
+        Triple("procedureName", "Właściwa procedura / tryb wniosku", ""),
+        Triple("jurisdiction", "Państwo / jurysdykcja", ""),
+        Triple("sourceLanguage", "Język dokumentu źródłowego", ""),
+        Triple("translationLanguage", "Język tłumaczenia", ""),
+        Triple("templateSourceReference", "Źródło / referencja wzoru urzędowego", ""),
+        Triple("templateVersion", "Wersja wzoru / data obowiązywania", "")
     ) else emptyList()
     // Keep existing stable field keys and append shared workflow fields once.
     return (specific + workflow).distinctBy { it.key }
