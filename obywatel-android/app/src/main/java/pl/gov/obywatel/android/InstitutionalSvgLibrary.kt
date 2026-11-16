@@ -81,6 +81,94 @@ private fun validateSvg(bytes:ByteArray) {
     require(root) { "Brak elementu SVG." }
 }
 
+
+private data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String)
+
+private fun commonsRequest(params:String):JSONObject {
+    val connection=URL("https://commons.wikimedia.org/w/api.php?$params").openConnection() as HttpURLConnection
+    connection.connectTimeout=20000
+    connection.readTimeout=30000
+    connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.0 (open SVG asset catalog)")
+    return try {
+        require(connection.responseCode in 200..299) { "Wikimedia Commons: HTTP \${connection.responseCode}" }
+        JSONObject(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
+    } finally { connection.disconnect() }
+}
+
+private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
+    val terms=listOf("coat of arms","heraldry","flag","emblem","seal","logo international organization","municipal coat of arms","government emblem","university coat of arms","hospital logo","church coat of arms","province coat of arms")
+    val titles=linkedSetOf<String>()
+    for(term in terms) {
+        val query=java.net.URLEncoder.encode("$term filemime:svg","UTF-8")
+        val response=commonsRequest("action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50&format=json")
+        val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
+        for(i in 0 until results.length()) {
+            val title=results.optJSONObject(i)?.optString("title").orEmpty()
+            if(title.startsWith("File:") && title.endsWith(".svg",true)) titles.add(title)
+        }
+        if(titles.size>=limit*3) break
+    }
+    val candidates=mutableListOf<CommonsSvgCandidate>()
+    for(batch in titles.toList().chunked(40)) {
+        if(candidates.size>=limit) break
+        val encoded=java.net.URLEncoder.encode(batch.joinToString("|"),"UTF-8")
+        val response=commonsRequest("action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
+        val pages=response.optJSONObject("query")?.optJSONObject("pages") ?: continue
+        val keys=pages.keys()
+        while(keys.hasNext() && candidates.size<limit) {
+            val page=pages.optJSONObject(keys.next()) ?: continue
+            val title=page.optString("title")
+            val info=page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
+            if(info.optString("mime")!="image/svg+xml") continue
+            val meta=info.optJSONObject("extmetadata") ?: JSONObject()
+            fun value(key:String)=meta.optJSONObject(key)?.optString("value").orEmpty().replace(Regex("<[^>]*>")," ").replace("&nbsp;"," ").trim()
+            val license=value("LicenseShortName")
+            val lower=license.lowercase(java.util.Locale.ROOT)
+            if(listOf("cc0","cc by","cc-by","public domain","gfdl","free art license","lgpl","gpl").none { lower.contains(it) }) continue
+            val url=info.optString("url")
+            if(!url.startsWith("https://upload.wikimedia.org/")) continue
+            val pageUrl="https://commons.wikimedia.org/wiki/"+java.net.URLEncoder.encode(title.replace(' ','_'),"UTF-8")
+            candidates.add(CommonsSvgCandidate(title,url,pageUrl,license,value("LicenseUrl"),value("Artist"),value("Restrictions")))
+        }
+    }
+    return candidates.distinctBy { it.title }.take(limit)
+}
+
+private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
+    val connection=URL(item.url).openConnection() as HttpURLConnection
+    connection.instanceFollowRedirects=true
+    connection.connectTimeout=15000
+    connection.readTimeout=25000
+    connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.0")
+    val bytes=try {
+        require(connection.responseCode in 200..299) { "HTTP \${connection.responseCode}" }
+        connection.inputStream.use { input ->
+            val output=ByteArrayOutputStream()
+            val buffer=ByteArray(8192)
+            var total=0
+            while(true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=12*1024*1024) { "Plik przekracza limit 12 MB." }; output.write(buffer,0,n) }
+            output.toByteArray()
+        }
+    } finally { connection.disconnect() }
+    validateSvg(bytes)
+    val id="commons_"+MessageDigest.getInstance("SHA-256").digest(item.title.toByteArray(Charsets.UTF_8)).take(16).joinToString("") { "%02x".format(it) }
+    val sha=MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+    val rights=JSONObject().put("source","Wikimedia Commons").put("sourcePage",item.page).put("downloadUrl",item.url)
+        .put("license",item.license).put("licenseUrl",item.licenseUrl).put("author",item.artist)
+        .put("restrictions",item.restrictions).put("sha256",sha)
+        .put("verificationStatus","open-license-metadata-found; trademark-and-use-review-required")
+        .put("permittedKinds",JSONArray()).toString()
+    val title=item.title.removePrefix("File:")
+    val kind=when {
+        title.contains("flag",true)->"Flaga"
+        title.contains("coat of arms",true)||title.contains("herald",true)->"Herb"
+        title.contains("seal",true)->"Pieczęć"
+        title.contains("emblem",true)->"Godło"
+        else->"Logo"
+    }
+    DocumentBrandStore.importBytes(context,"Wikimedia Commons",kind,title.take(180),bytes,rights=rights,mimeType="image/svg+xml",assetId=id)
+}
+
 @Composable
 internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     val scope= rememberCoroutineScope()
@@ -126,7 +214,39 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        Text("Wybierz pojedynczy plik albo pobierz cały katalog. Pobrane pliki są zapisywane w szyfrowanej bibliotece aplikacji; licencja i aktualność pozostają do potwierdzenia.",style=MaterialTheme.typography.bodySmall)
+        Text("Katalog zawiera pozycje kuratorowane oraz wyszukiwanie plików SVG z otwartą licencją w Wikimedia Commons. Zachowywane są autorstwo, licencja, źródło i ograniczenia.",style=MaterialTheme.typography.bodySmall)
+        OutlinedButton(
+            enabled=busy==null,
+            onClick={
+                busy="commons"
+                status="Wyszukiwanie otwartych plików SVG w Wikimedia Commons…"
+                scope.launch {
+                    val result=withContext(Dispatchers.IO) {
+                        runCatching {
+                            val candidates=discoverCommonsOpenSvgs(200)
+                            require(candidates.isNotEmpty()) { "Nie znaleziono plików SVG z rozpoznaną otwartą licencją." }
+                            var saved=0
+                            var failed=0
+                            val errors=mutableListOf<String>()
+                            candidates.forEachIndexed { index,candidate ->
+                                withContext(Dispatchers.Main) { status="Pobieranie SVG \${index+1}/\${candidates.size}: \${candidate.title}" }
+                                runCatching { downloadCommonsSvg(context,candidate) }
+                                    .onSuccess { saved++ }
+                                    .onFailure { failed++; if(errors.size<8) errors.add("\${candidate.title}: \${it.message ?: "błąd"}") }
+                            }
+                            Triple(candidates.size,saved,Pair(failed,errors))
+                        }
+                    }
+                    status=result.fold(
+                        { "Commons: znaleziono \${it.first}, zapisano \${it.second}, błędy \${it.third.first}." + if(it.third.second.isEmpty()) "" else " "+it.third.second.joinToString(" | ") },
+                        { "Błąd wyszukiwania Commons: \${it.message ?: "nieznany błąd"}" }
+                    )
+                    busy=null
+                    if((result.getOrNull()?.second ?: 0)>0) onSaved()
+                }
+            },
+            modifier=Modifier.fillMaxWidth()
+        ) { Text(if(busy=="commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 otwartych SVG z Commons") }
         OutlinedButton(
             enabled = busy == null,
             onClick = {
