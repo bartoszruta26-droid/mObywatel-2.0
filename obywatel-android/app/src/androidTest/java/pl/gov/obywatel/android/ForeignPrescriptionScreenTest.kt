@@ -5,10 +5,10 @@ package pl.gov.obywatel.android
 import android.content.Context
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Before
@@ -39,14 +39,14 @@ class ForeignPrescriptionScreenTest {
 
         composeRule.onNodeWithText("Recepta zagraniczna").assertIsDisplayed()
         composeRule.onNodeWithText("Dane lekarza").assertIsDisplayed()
-        composeRule.onNodeWithText("Dane pacjenta, produktu leczniczego i wystawcy").assertExists()
-        composeRule.onNodeWithText("Patient full name").assertExists()
-        composeRule.onNodeWithText("Patient address").assertExists()
-        composeRule.onNodeWithText("International nonproprietary name (INN)").assertExists()
-        composeRule.onNodeWithText("Prescriber's email or phone with international prefix").assertExists()
-        composeRule.onNodeWithText("Przetłumacz automatycznie").assertExists()
-        composeRule.onNodeWithText("Zapisz receptę").assertExists()
-        composeRule.onNodeWithText("Eksportuj PDF dwujęzyczny").assertExists()
+        composeRule.onNodeWithText("Dane pacjenta, produktu leczniczego i wystawcy").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Patient full name").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Patient address").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("International nonproprietary name (INN)").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Prescriber's email or phone with international prefix").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Przetłumacz automatycznie").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Zapisz receptę").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Eksportuj PDF dwujęzyczny").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -83,7 +83,7 @@ class ForeignPrescriptionScreenTest {
         }
 
         composeRule.onNodeWithText("Wybierz lekarza z katalogu").performClick()
-        composeRule.onNodeWithText("Dr Gustavo Polacow Korn — São Paulo").assertExists().performClick()
+        composeRule.onNodeWithText("Dr Gustavo Polacow Korn — São Paulo").performClick()
         composeRule.onNodeWithText("Dr Gustavo Polacow Korn").assertIsDisplayed()
     }
 }
