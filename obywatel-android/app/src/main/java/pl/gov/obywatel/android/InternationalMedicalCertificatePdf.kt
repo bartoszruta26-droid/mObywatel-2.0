@@ -27,7 +27,7 @@ internal fun createBilingualMedicalCertificatePdf(
     documentTitle: String = "INTERNATIONAL MEDICAL CERTIFICATE",
     issuerHeading: String = "ATTENDING PHYSICIAN",
     signatureCaption: String = "Physician's handwritten signature (sign after printing)",
-    stampCaption: String = "Medical stamp",
+    stampCaption: String = "Physician identification / stamp details",
     patientSignatureCaption: String = "Patient's handwritten signature (if required)",
     dateAndPlaceCaption: String = "Date and place"
 ): ByteArray {
