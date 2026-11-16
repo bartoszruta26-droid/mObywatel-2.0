@@ -20,7 +20,7 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
-        "professional" -> emptyList()
+        "professional", "foreign_prescription" -> emptyList()
         else -> when {
             churchGraphicDocumentTargets().any { it.first == documentId } ||
                 familyEntityGraphicDocumentTargets().any { it.first == documentId } ||
