@@ -551,10 +551,10 @@ Wszystkie pozycje otrzymały wspólne pola jurysdykcji, wystawcy, organu wydają
 
 - Zarejestrowano oficjalne źródła flagi, herbu Stolicy Apostolskiej, herbu Państwa Watykańskiego i pieczęci Państwa Watykańskiego.
 - Nie dodano syntetycznej pieczęci ani imitacji herbu. Oficjalna strona wskazuje autorstwo/atrybucję niektórych reprodukcji; przed osadzeniem pliku należy zachować wskazane prawa i warunki.
-- Nie dodano logo ani pieczęci jako gotowego wbudowanego assetu bez pozyskania właściwego pliku i potwierdzenia zakresu użycia.
+- Dodano do biblioteki wektorową ilustrację flagi Państwa Watykańskiego opartą na oficjalnym opisie: `obywatel-android/app/src/main/assets/institutions/vatican-city-flag.svg`. Jest to autorska, uproszczona ilustracja, nie oficjalny plik master. Metadane ograniczają jej użycie do typu `Flaga`; przed użyciem w dokumencie wystawianym przez organ należy zastąpić ją zatwierdzonym plikiem źródłowym.\n- Nie dodano logo ani pieczęci jako gotowego wbudowanego assetu bez pozyskania właściwego pliku i potwierdzenia zakresu użycia.
 - Paszporty są dokumentami wydawanymi przez właściwe organy. Aplikacja może przechowywać dane/oryginał i obsługiwać wniosek, ale nie może generować paszportu ani jego strony danych.
 
 ### 16.5. Weryfikacja
 
-- Do wykonania: testy JVM katalogu i workflow dla 54 pozycji, testy edytorów i routingu, testy regresji vCard/PDF oraz CI Android.
+- Dodano test instrumentacyjny wykrywający i renderujący flagę watykańską w bibliotece zasobów.\n- Do wykonania: testy JVM katalogu i workflow dla 54 pozycji, testy edytorów i routingu, testy regresji vCard/PDF oraz CI Android.
 - Dla dokumentów kościelnych wymagane jest ustalenie właściwej parafii/diecezji/ordynariusza i lokalnych reguł wydawania. Nie istnieje jeden uniwersalny formularz watykański dla wszystkich dokumentów parafialnych.
