@@ -99,7 +99,11 @@ internal fun createBilingualMedicalCertificatePdf(
         }
         val patientHeaderLines = fields.filter { field ->
             val label = field.sourceLabel.lowercase(java.util.Locale.ROOT)
-            label.contains("patient") && (label.contains("name") || label.contains("address"))
+            label.contains("patient") ||
+                label.contains("date of birth") ||
+                label.contains("nationality") ||
+                label.contains("identity document") ||
+                label.contains("insurance identifier")
         }.map { field ->
             val source = field.sourceValue.ifBlank { "—" }
             val translated = field.targetValue.ifBlank { "—" }
