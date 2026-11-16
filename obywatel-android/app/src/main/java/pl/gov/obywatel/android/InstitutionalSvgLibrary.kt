@@ -246,6 +246,12 @@ private fun readCommonsJson(context: Context, fileName: String): String =
 internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
     found >= 100 && available.coerceAtLeast(0) * 2 < found
 
+internal fun commonsDownloadProgressLabel(completed: Int, total: Int): String {
+    val safeTotal = total.coerceAtLeast(0)
+    val safeCompleted = completed.coerceIn(0, safeTotal)
+    return "Postęp: $safeCompleted/$safeTotal plików SVG"
+}
+
 private data class CommonsDownloadSummary(
     val found: Int,
     val downloaded: Int,
@@ -345,7 +351,7 @@ private suspend fun downloadCommonsSvgWithRetry(
 private suspend fun processCommonsCandidates(
     context: Context,
     candidates: List<CommonsSvgCandidate>,
-    onProgress: suspend (String) -> Unit
+    onProgress: suspend (completed: Int, total: Int, currentTitle: String) -> Unit
 ): CommonsDownloadSummary {
     var downloaded = 0
     var alreadyPresent = 0
@@ -357,12 +363,12 @@ private suspend fun processCommonsCandidates(
         return CommonsDownloadSummary(0, 0, 0, 0, 0)
     }
     candidates.forEachIndexed { index, candidate ->
+        onProgress(index, candidates.size, candidate.title)
         val assetId = commonsAssetId(candidate.title)
         if (DocumentBrandStore.list(context).any { it.id == assetId }) {
             alreadyPresent++
             persistCommonsCandidateStatus(context, candidate.title, "saved", 0, null)
         } else {
-            onProgress("Pobieranie SVG ${index + 1}/${candidates.size}: ${candidate.title}")
             val result = downloadCommonsSvgWithRetry(context, candidate)
             attempts += result.first
             if (result.second == null) {
@@ -377,6 +383,7 @@ private suspend fun processCommonsCandidates(
         }
         saveCommonsReport(context, candidates.size, downloaded, alreadyPresent, failed,
             attempts, candidate.title, errors)
+        onProgress(index + 1, candidates.size, candidate.title)
     }
     return CommonsDownloadSummary(candidates.size, downloaded, alreadyPresent, failed, attempts)
 }
@@ -386,6 +393,8 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     val scope= rememberCoroutineScope()
     var busy by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf("") }
+    var progressCurrent by remember { mutableIntStateOf(0) }
+    var progressTotal by remember { mutableIntStateOf(0) }
     var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
     val zipLauncher=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if(uri!=null) {
@@ -442,11 +451,25 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
         Text("Katalog zawiera pozycje kuratorowane oraz wyszukiwanie plików SVG z otwartą licencją w Wikimedia Commons. Zachowywane są autorstwo, licencja, źródło i ograniczenia.",style=MaterialTheme.typography.bodySmall)
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
+        if (busy == "commons" || busy == "resume") {
+            if (progressTotal > 0) {
+                Text(commonsDownloadProgressLabel(progressCurrent, progressTotal), style = MaterialTheme.typography.labelMedium)
+                LinearProgressIndicator(
+                    progress = (progressCurrent.toFloat() / progressTotal.toFloat()).coerceIn(0f, 1f),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Text("Wyszukiwanie plików SVG…", style = MaterialTheme.typography.labelMedium)
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+        }
         OutlinedButton(
             enabled = busy == null,
             onClick = {
                 busy = "commons"
-                status = "Wyszukiwanie otwartych plików SVG w Wikimedia Commons…"
+                progressCurrent = 0
+                progressTotal = 0
+                status = "Wyszukiwanie do 200 otwartych plików SVG w Wikimedia Commons…"
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
@@ -466,8 +489,16 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                     .put("attempts", 0))
                             }
                             writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
-                            processCommonsCandidates(context, candidates) { progress ->
-                                withContext(Dispatchers.Main) { status = progress }
+                            processCommonsCandidates(context, candidates) { completed, total, title ->
+                                withContext(Dispatchers.Main) {
+                                    progressCurrent = completed
+                                    progressTotal = total
+                                    status = if (completed < total) {
+                                        "Pobieranie SVG ${completed + 1}/$total: $title"
+                                    } else {
+                                        "Zakończono pobieranie SVG $total/$total"
+                                    }
+                                }
                             }
                         }
                     }
@@ -486,13 +517,23 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             enabled = busy == null && readCommonsCandidates(context).isNotEmpty(),
             onClick = {
                 busy = "resume"
+                progressCurrent = 0
+                progressTotal = 0
                 status = "Wznawianie pobierania niezapisanych grafik…"
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
                             val candidates = readCommonsCandidates(context)
-                            processCommonsCandidates(context, candidates) { progress ->
-                                withContext(Dispatchers.Main) { status = progress }
+                            processCommonsCandidates(context, candidates) { completed, total, title ->
+                                withContext(Dispatchers.Main) {
+                                    progressCurrent = completed
+                                    progressTotal = total
+                                    status = if (completed < total) {
+                                        "Wznawianie SVG ${completed + 1}/$total: $title"
+                                    } else {
+                                        "Zakończono wznowienie SVG $total/$total"
+                                    }
+                                }
                             }
                         }
                     }
