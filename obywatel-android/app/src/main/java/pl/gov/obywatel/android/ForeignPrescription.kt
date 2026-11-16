@@ -66,12 +66,21 @@ internal val foreignPrescriptionRequiredFieldKeys = listOf(
 
 internal fun missingForeignPrescriptionFields(values: Map<String, String>): List<String> = buildList {
     foreignPrescriptionRequiredFieldKeys.forEach { key ->
-        if (values["fpr_$key"].isNullOrBlank()) add(key)
+        val value = values["fpr_$key"].orEmpty()
+        if (if (key == "prescriberContact") !isValidForeignPrescriptionContact(value) else value.isBlank()) add(key)
     }
     // § 15 accepts the common (international) name OR the trade name.
     if (values["fpr_medicineInn"].isNullOrBlank() && values["fpr_medicineBrand"].isNullOrBlank()) {
         add("medicineInn")
     }
+}
+
+internal fun isValidForeignPrescriptionContact(value: String): Boolean {
+    val contact = value.trim()
+    if (contact.isBlank()) return false
+    if (Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(contact)) return true
+    val normalizedPhone = contact.replace(Regex("[\\s().-]"), "")
+    return Regex("^\\+[1-9]\\d{6,14}$").matches(normalizedPhone)
 }
 
 internal fun isValidForeignPrescriptionIssueDate(value: String): Boolean = runCatching {
@@ -217,6 +226,9 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
             if (key == "medicineInn") "medicineInn lub medicineBrand" else key
         }, color = MaterialTheme.colorScheme.error)
         if (!validDate) Text("Data wystawienia musi mieć prawidłowy format RRRR-MM-DD.", color = MaterialTheme.colorScheme.error)
+        if (!isValidForeignPrescriptionContact(values["fpr_prescriberContact"].orEmpty())) {
+            Text("Kontakt wystawcy musi być adresem e-mail lub numerem telefonu z prefiksem międzynarodowym.", color = MaterialTheme.colorScheme.error)
+        }
         Text("Recepta zagraniczna spoza UE/EFTA jest realizowana w Polsce za pełną odpłatnością. Wydanie leku zależy również od polskich ograniczeń dotyczących danego produktu i oceny farmaceuty.", style = MaterialTheme.typography.bodySmall)
         Button(enabled = missing.isEmpty() && validDate && !busy, onClick = {
             val data = values.toMutableMap().apply {
