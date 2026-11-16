@@ -31,6 +31,17 @@ class ForeignPrescriptionTest {
     }
 
     @Test
+    fun prescriberContactIsRequiredButPracticeAddressIsOptional() {
+        val complete = foreignPrescriptionRequiredFieldKeys.associate { "fpr_$it" to "value" } +
+            mapOf("fpr_issueDate" to "2026-11-16", "fpr_medicineInn" to "Example INN")
+        assertTrue(missingForeignPrescriptionFields(complete).isEmpty())
+
+        val withoutContact = complete - "fpr_prescriberContact"
+        assertTrue(missingForeignPrescriptionFields(withoutContact).contains("prescriberContact"))
+        assertFalse(missingForeignPrescriptionFields(complete - "fpr_prescriberAddress").contains("prescriberAddress"))
+    }
+
+    @Test
     fun issueDateMustBeARealIsoCalendarDate() {
         assertTrue(isValidForeignPrescriptionIssueDate("2024-02-29"))
         assertTrue(isValidForeignPrescriptionIssueDate("2026-11-16"))
