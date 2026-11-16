@@ -16,7 +16,7 @@ private fun fields(vararg definitions: Triple<String, String, String>) =
     definitions.map { DocumentEditorFieldDefinition(it.first, it.second, it.third) }
 
 internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEditorFieldDefinition> {
-    return when (documentId) {
+    val specific = when (documentId) {
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
@@ -28,6 +28,20 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             else -> documentEditorFieldDefinitionsForCatalog(documentId)
         }
     }
+    val workflow = if (documentId in internationalDocumentCatalogIds) fields(
+        Triple("issuerName", "Name of professional issuer / issuing institution", ""),
+        Triple("issuerPosition", "Professional title / position of the issuer", ""),
+        Triple("issuingAuthority", "Competent issuing authority", ""),
+        Triple("verificationAuthority", "Authority responsible for verification", ""),
+        Triple("procedureName", "Applicable procedure / application route", ""),
+        Triple("jurisdiction", "Country / jurisdiction", ""),
+        Triple("sourceLanguage", "Language of the source document", ""),
+        Triple("translationLanguage", "Language of the translation", ""),
+        Triple("templateSourceReference", "Official template source / reference", ""),
+        Triple("templateVersion", "Template version / effective date", "")
+    ) else emptyList()
+    // Keep existing stable field keys and append shared workflow fields once.
+    return (specific + workflow).distinctBy { it.key }
 }
 
 private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<DocumentEditorFieldDefinition> = when (documentId) {
