@@ -142,4 +142,20 @@ class DocumentCatalogTest {
         assertEquals(13, existingGroups.size)
     }
 
+
+    @Test
+    fun preexistingInternationalDocumentsRemainInHealthGroup() {
+        val ids = setOf(
+            "ehic",
+            "vaccines",
+            "foreign_prescription",
+            INTERNATIONAL_MEDICAL_CERTIFICATE_ID
+        )
+        ids.forEach { id ->
+            assertTrue("Brak istniejącego dokumentu $id", documentDisplayOptions.any { it.first == id })
+            assertEquals("Służba zdrowotna", documentVisibilityGroup(id))
+            assertTrue("Brak trasy dla $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
 }
