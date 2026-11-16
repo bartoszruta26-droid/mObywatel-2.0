@@ -126,7 +126,18 @@ class DocumentCatalogTest {
             "international_driving_permit" to "Służba osobista",
             "travel_document" to "Służba osobista",
             "residence_card" to "Służba osobista",
-            "passport_record" to "Służba osobista"
+            "passport_record" to "Służba osobista",
+            "vatican_passport_ordinary" to "Służba osobista",
+            "holy_see_passport_diplomatic" to "Służba osobista",
+            "holy_see_passport_service" to "Służba osobista",
+            "holy_see_passport_temporary_service" to "Służba osobista",
+            "vatican_citizenship_certificate" to "Służba cywilna",
+            "ecclesiastical_baptism_certificate" to "Służba kościelna",
+            "ecclesiastical_marriage_certificate" to "Służba kościelna",
+            "ecclesiastical_death_certificate" to "Służba kościelna",
+            "canonical_status_certificate" to "Służba kościelna",
+            "clerical_ordination_certificate" to "Służba kościelna",
+            "apostolic_nunciature_credential" to "Służba kościelna"
         )
         assertEquals(43, expectedGroups.size)
         val existingGroups = documentVisibilityGroupOrder.toSet()
