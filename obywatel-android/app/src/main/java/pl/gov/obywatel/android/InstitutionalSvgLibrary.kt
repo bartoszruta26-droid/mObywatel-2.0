@@ -65,7 +65,9 @@ private fun waitForCommonsRequestSlot() {
 
 private fun retryAfterMillis(connection: HttpURLConnection): Long? {
     val value = connection.getHeaderField("Retry-After")?.trim() ?: return null
-    value.toLongOrNull()?.let { return (it.coerceAtLeast(0L) * 1000L).coerceAtMost(180000L) }
+    value.toLongOrNull()?.let { seconds ->
+        return if (seconds <= 0L) 0L else if (seconds >= 180L) 180000L else seconds * 1000L
+    }
     return runCatching {
         val date = java.time.ZonedDateTime.parse(value, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli()
         (date - System.currentTimeMillis()).coerceAtLeast(0L).coerceAtMost(180000L)
