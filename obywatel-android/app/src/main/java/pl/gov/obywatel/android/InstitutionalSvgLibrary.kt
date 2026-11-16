@@ -131,13 +131,13 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             enabled = busy == null,
             onClick = {
                 busy = "all"
-                status = "Rozpoczynam pobieranie \${svgSources.size} pozycji…"
+                status = "Rozpoczynam pobieranie ${svgSources.size} pozycji…"
                 scope.launch {
                     var downloaded = 0
                     var failed = 0
                     val errors = mutableListOf<String>()
                     svgSources.forEachIndexed { index, source ->
-                        status = "Pobieranie \${index + 1}/\${svgSources.size}: \${source.label}"
+                        status = "Pobieranie ${index + 1}/${svgSources.size}: ${source.label}"
                         val result = withContext(Dispatchers.IO) {
                             runCatching {
                                 val connection = URL(source.url).openConnection() as HttpURLConnection
@@ -146,7 +146,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                 connection.readTimeout = 25000
                                 connection.setRequestProperty("User-Agent", "mObywatelska-2.0 SVG library")
                                 val bytes = try {
-                                    require(connection.responseCode in 200..299) { "HTTP \${connection.responseCode}" }
+                                    require(connection.responseCode in 200..299) { "HTTP ${connection.responseCode}" }
                                     connection.inputStream.use { input ->
                                         val out = ByteArrayOutputStream()
                                         val buffer = ByteArray(8192)
@@ -184,18 +184,18 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                         }
                         if (result.isSuccess) downloaded++ else {
                             failed++
-                            errors += "\${source.label}: \${result.exceptionOrNull()?.message ?: "błąd"}"
+                            errors += "${source.label}: ${result.exceptionOrNull()?.message ?: "błąd"}"
                         }
                     }
-                    status = "Zakończono katalog: pobrano $downloaded/\${svgSources.size}, błędy: $failed. " +
+                    status = "Zakończono katalog: pobrano $downloaded/${svgSources.size}, błędy: $failed. " +
                         if (errors.isEmpty()) "Wszystkie pozycje zostały zapisane." else errors.take(4).joinToString(" | ") +
-                            if (errors.size > 4) " | oraz \${errors.size - 4} dalszych błędów." else ""
+                            if (errors.size > 4) " | oraz ${errors.size - 4} dalszych błędów." else ""
                     busy = null
                     if (downloaded > 0) onSaved()
                 }
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "all") "Pobieranie całego katalogu…" else "Pobierz wszystkie \${svgSources.size} pliki SVG") }
+        ) { Text(if (busy == "all") "Pobieranie całego katalogu…" else "Pobierz wszystkie ${svgSources.size} pliki SVG") }
         svgSources.forEach { source ->
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
