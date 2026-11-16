@@ -354,6 +354,30 @@ internal object DocumentBrandStore {
             "builtin:institutions/vatican-city-flag.svg",
             rights = """{"owner":"Państwo Watykańskie","sourceUrl":"https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html","rightsBasis":"Autorska, uproszczona ilustracja wektorowa oparta na oficjalnym opisie flagi Państwa Watykańskiego; nie jest oficjalnym plikiem master ani odwzorowaniem urzędowej pieczęci.","authorizationReference":"Oficjalna dokumentacja Sekretariatu Stanu — Flag, Coat of Arms and Seal; przed użyciem w dokumencie organu należy zastąpić zatwierdzonym plikiem źródłowym.","verifiedBy":"Weryfikacja opisu urzędowego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":["Flaga"]}"""
         ),
+        BrandAsset(
+            "builtin_vatican_state_coat_of_arms_2023", "Państwo Watykańskie", "Herb",
+            "Herb Państwa Watykańskiego — wzór według ustawy zasadniczej 2023",
+            "builtin:institutions/vatican-city-state-coat-of-arms-2023.svg",
+            rights = """{"owner":"Państwo Watykańskie","sourceUrl":"https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html","rightsBasis":"Autorska uproszczona ilustracja wektorowa oparta na opisie heraldycznym i wzorze herbu Państwa Watykańskiego; oficjalny wzór prawny znajduje się w załączniku B ustawy zasadniczej. Plik nie jest urzędowym masterem.","authorizationReference":"Ustawa zasadnicza Państwa Watykańskiego 2023, art. 23 ust. 2 i załącznik B; ilustracja referencyjna: https://commons.wikimedia.org/wiki/File:Coat_of_arms_of_Vatican_City_(2023%E2%80%93present).svg","verifiedBy":"Weryfikacja opisu i źródeł w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":[]}"""
+        ),
+        BrandAsset(
+            "builtin_holy_see_emblem_reference", "Stolica Apostolska", "Godło",
+            "Emblemat Stolicy Apostolskiej — referencja heraldyczna",
+            "builtin:institutions/holy-see-emblem-heraldic-reference.svg",
+            rights = """{"owner":"Stolica Apostolska","sourceUrl":"https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html","rightsBasis":"Autorski schemat heraldyczny oparty na opisie urzędowym. Oficjalny emblemat jest zgłoszony do WIPO; ten plik nie jest oficjalną reprodukcją i nie jest dopuszczony do użycia w dokumentach.","authorizationReference":"Oficjalna strona Sekretariatu Stanu — informacja o zgłoszeniu emblematu do WIPO w 1996 r.","verifiedBy":"Weryfikacja źródła urzędowego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":[]}"""
+        ),
+        BrandAsset(
+            "builtin_pope_leo_xiv_coat_of_arms_reference", "Papież Leon XIV", "Herb",
+            "Herb papieża Leona XIV — schemat według oficjalnego blazonu",
+            "builtin:institutions/pope-leo-xiv-coat-of-arms-reference.svg",
+            rights = """{"owner":"Papież Leon XIV","sourceUrl":"https://press.vatican.va/content/salastampa/en/bollettino/pubblico/2025/05/14/250514b.html","rightsBasis":"Autorska uproszczona ilustracja heraldyczna opracowana na podstawie oficjalnego opisu herbu opublikowanego przez Biuro Prasowe Stolicy Apostolskiej. Nie jest oficjalnym plikiem wzorcowym ani znakiem do użycia bez zgody.","authorizationReference":"Biuro Prasowe Stolicy Apostolskiej, The coat of arms of Pope Leo XIV: Explanation, 14.05.2025","verifiedBy":"Porównanie elementów z oficjalnym blazonem w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":[]}"""
+        ),
+        BrandAsset(
+            "builtin_holy_roman_church_historical_banner", "Kościół Rzymski — symbol historyczny", "Flaga",
+            "Chorągiew Kościoła Rzymskiego — rekonstrukcja historyczna",
+            "builtin:institutions/banner-holy-roman-church-historical.svg",
+            rights = """{"owner":"Dziedzictwo historyczne Kościoła Rzymskiego","sourceUrl":"https://www.vaticanstate.va/en/state-and-government/general-informations/flag.html","rightsBasis":"Autorska rekonstrukcja historyczna na podstawie opisu chorągwi w oficjalnym serwisie Państwa Watykańskiego: karmazynowe pole, gwiazdy, skrzyżowane klucze i pawilon. Nie jest faksymile archiwalnym ani współczesną flagą państwową.","authorizationReference":"Oficjalny opis historyczny chorągwi Kościoła Rzymskiego, pontyfikat Bonifacego VIII","verifiedBy":"Weryfikacja opisu historycznego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":[]}"""
+        ),
         BrandAsset("builtin_hologram_mandala", "Zasoby aplikacji", "Animowany hologram", "Mandala holograficzna — animowana", "builtin:mandala_hologram.gif.b64", rights = "Grafika autorska wygenerowana dla aplikacji"),
         BrandAsset("builtin_polish_emblem", "Zasoby aplikacji", "Godło", "Godło Polski — grafika zasobów aplikacji", "resource:institutions_eagle_emblem"),
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
