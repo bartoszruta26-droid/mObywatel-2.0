@@ -87,4 +87,28 @@ class InternationalDocumentWorkflowTest {
         assertNotNull(InternationalDocumentWorkflowCatalog.find("icvp"))
         assertNotNull(InternationalDocumentWorkflowCatalog.find("passport_record"))
     }
+
+    @Test
+    fun officialTemplateMustHaveCurrentJurisdictionalSourceAndPermissionMetadata() {
+        val approved = InstitutionalTemplateApproval(
+            documentId = "s1",
+            jurisdiction = "PL",
+            issuingAuthority = "Właściwa instytucja ubezpieczenia zdrowotnego",
+            sourceUrl = "https://example.org/forms/s1",
+            sourceTitle = "S1 official form",
+            sourceVersion = "2026-01",
+            rightsBasis = "Official publication terms",
+            approvalReference = "PUBLICATION-TERMS-2026",
+            checkedBy = "Compliance reviewer",
+            effectiveFrom = LocalDate.of(2026, 1, 1),
+            effectiveUntil = LocalDate.of(2026, 12, 31)
+        )
+        assertTrue(approved.isUsableFor(LocalDate.of(2026, 11, 16)))
+        assertFalse(approved.copy(sourceUrl = "http://example.org/s1").isUsableFor(LocalDate.of(2026, 11, 16)))
+        assertFalse(approved.copy(approvalReference = "").isUsableFor(LocalDate.of(2026, 11, 16)))
+        assertFalse(approved.copy(documentId = "unknown_document").isUsableFor(LocalDate.of(2026, 11, 16)))
+        assertFalse(approved.isUsableFor(LocalDate.of(2027, 1, 1)))
+        assertTrue(InstitutionalTemplateCatalog.approved.isEmpty())
+        assertEquals(null, InstitutionalTemplateCatalog.findUsable("s1"))
+    }
 }
