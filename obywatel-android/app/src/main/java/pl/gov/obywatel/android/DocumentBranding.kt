@@ -1279,6 +1279,10 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             "Centralna biblioteka zasobów dla wszystkich edytorów. Katalog obejmuje ikony wektorowe i rastrowe, tła, herby, godła, logotypy, pieczęcie, wzory podpisów, certyfikaty, flagi, załączniki tekstowe i pliki dodatkowe. Zasoby są przechowywane lokalnie i szyfrowane.",
             style = MaterialTheme.typography.bodySmall
         )
+        if (fixedTarget == null && !readOnly) {
+            InstitutionalSvgLibraryPanel(context) { assets = DocumentBrandStore.list(context) }
+            HorizontalDivider()
+        }
         if (fixedTarget != null && !readOnly) {
             Text("Dokument", fontWeight = FontWeight.SemiBold)
             Text(documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget,
