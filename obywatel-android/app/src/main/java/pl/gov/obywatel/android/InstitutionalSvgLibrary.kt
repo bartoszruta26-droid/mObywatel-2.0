@@ -115,7 +115,23 @@ private fun commonsRequest(params:String):JSONObject {
 }
 
 private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
-    val terms=listOf("coat of arms","heraldry","flag","emblem","seal","logo international organization","municipal coat of arms","government emblem","university coat of arms","hospital logo","church coat of arms","province coat of arms","city coat of arms","country coat of arms","state coat of arms","county coat of arms","national flag","city flag","province flag","municipal flag","organization logo","government logo","university logo","military insignia","heraldic crest","civic emblem","royal coat of arms","regional coat of arms","public institution logo")
+    val terms = listOf(
+        "coat of arms", "heraldry", "heraldic arms", "blazon", "escutcheon",
+        "flag", "national flag", "city flag", "province flag", "municipal flag",
+        "emblem", "national emblem", "state emblem", "civic emblem", "institutional emblem",
+        "seal", "official seal", "university seal", "government seal",
+        "logo", "organization logo", "government logo", "public institution logo",
+        "municipal logo", "ministry logo", "police emblem", "fire service emblem",
+        "university coat of arms", "hospital logo", "hospital emblem", "church coat of arms",
+        "diocesan coat of arms", "province coat of arms", "city coat of arms",
+        "municipal coat of arms", "county coat of arms", "country coat of arms",
+        "state coat of arms", "royal coat of arms", "regional coat of arms",
+        "military insignia", "heraldic crest", "government emblem",
+        "herb miasta", "herb gminy", "herb powiatu", "herb województwa",
+        "herb państwa", "godło państwowe", "pieczęć urzędowa", "flaga państwowa",
+        "flaga miasta", "logo ministerstwa", "logo urzędu", "znak instytucji",
+        "insygnia wojskowe", "herb diecezji", "herb uniwersytetu"
+    )
     val titles=linkedSetOf<String>()
     for(term in terms) {
         val query=java.net.URLEncoder.encode("$term filemime:svg","UTF-8")
@@ -151,10 +167,16 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
             fun value(key:String)=meta.optJSONObject(key)?.optString("value").orEmpty().replace(Regex("<[^>]*>")," ").replace("&nbsp;"," ").trim()
             val license=value("LicenseShortName")
             val lower=license.lowercase(java.util.Locale.ROOT)
-            val ccOpen=(lower.contains("cc by") || lower.contains("cc-by")) && !lower.contains("nc") && !lower.contains("nd")
-            val permissiveOpen=lower.contains("cc0") || lower.contains("public domain") ||
-                lower.contains("gfdl") || lower.contains("free art license") ||
-                lower.contains("lgpl") || lower.contains("gpl")
+            val attributionLicense =
+                (lower.contains("cc by") || lower.contains("cc-by") ||
+                    (lower.contains("creative commons") && lower.contains("attribution"))) &&
+                    !lower.contains("noncommercial") && !lower.contains("non-commercial") &&
+                    !lower.contains(" nc") && !lower.contains("no derivatives") &&
+                    !lower.contains("no-derivatives") && !lower.contains(" nd")
+            val permissiveOpen = lower.contains("cc0") || lower.contains("public domain") ||
+                lower.contains("public-domain") || lower.contains("gfdl") ||
+                lower.contains("free art license") || lower.contains("lgpl") || lower.contains("gpl")
+            val ccOpen = attributionLicense
             if(!ccOpen && !permissiveOpen) continue
             val url=info.optString("url")
             if(!url.startsWith("https://upload.wikimedia.org/")) continue
@@ -204,6 +226,9 @@ private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
 private const val COMMONS_DOWNLOAD_LIST_FILE = "commons-svg-download-list.json"
 private const val COMMONS_DOWNLOAD_REPORT_FILE = "commons-svg-download-report.json"
 
+internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
+    found >= 100 && available.coerceAtLeast(0) * 2 < found
+
 private data class CommonsDownloadSummary(
     val found: Int,
     val downloaded: Int,
@@ -234,6 +259,7 @@ private fun saveCommonsReport(
         .put("alreadyPresent", alreadyPresent)
         .put("savedInLibrary", DocumentBrandStore.list(context).count { it.id.startsWith("commons_") })
         .put("failed", failed)
+        .put("severeDropOff", isSvgDownloadDropOff(found, downloaded + alreadyPresent))
         .put("attempts", attempts)
         .put("current", current)
         .put("errors", JSONArray(errors))
