@@ -82,8 +82,18 @@ internal fun createBilingualMedicalCertificatePdf(
         ).filter { it.isNotBlank() }
         if (headerLines.isNotEmpty()) {
             headerLines.forEach { line ->
-                canvas!!.drawText(line.take(105), margin, y, mutedPaint)
-                y += 10f
+                var remaining = line
+                while (remaining.isNotEmpty()) {
+                    val count = mutedPaint.breakText(remaining, true, contentWidth, null).coerceAtLeast(1)
+                    var end = count
+                    if (count < remaining.length) {
+                        val space = remaining.lastIndexOf(' ', count - 1)
+                        if (space > 0) end = space
+                    }
+                    canvas!!.drawText(remaining.substring(0, end).trimEnd(), margin, y, mutedPaint)
+                    remaining = remaining.substring(end).trimStart()
+                    y += 10f
+                }
             }
             y += 4f
             canvas!!.drawLine(margin, y, margin + contentWidth, y, borderPaint)
