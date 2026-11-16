@@ -27,61 +27,6 @@ import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-private data class SvgSource(val id:String,val organization:String,val label:String,val kind:String,val page:String,val url:String,val rights:String="Licencja do sprawdzenia na stronie konkretnego pliku.")
-
-private val svgSources = listOf(
-SvgSource("nfz_logo","Narodowy Fundusz Zdrowia (NFZ)","Logo Narodowego Funduszu Zdrowia","Logo","https://commons.wikimedia.org/wiki/File:NFZ_logo.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/NFZ_logo.svg","Domena publiczna wskazana na stronie pliku jako polski znak urzędowy; sprawdzić aktualność wzoru i zasady użycia znaku. Oficjalne pliki NFZ: https://www.nfz.gov.pl/dla-mediow/logo-nfz/."),
-SvgSource("zus_logo","Zakład Ubezpieczeń Społecznych (ZUS)","Logo Zakładu Ubezpieczeń Społecznych","Logo","https://commons.wikimedia.org/wiki/File:ZUS_logo.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/ZUS_logo.svg","Domena publiczna wskazana na stronie pliku jako polski znak urzędowy; strona pliku wskazuje również możliwe ograniczenia znaku towarowego. Zweryfikować aktualność z identyfikacją ZUS."),
-SvgSource("senate_emblem","Senat Rzeczypospolitej Polskiej","Emblemat Senatu RP","Logo","https://commons.wikimedia.org/wiki/File:Emblem_of_the_Senate_of_Poland.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Emblem%20of%20the%20Senate%20of%20Poland.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("gus_logo","Główny Urząd Statystyczny (GUS)","Logo Głównego Urzędu Statystycznego","Logo","https://commons.wikimedia.org/wiki/File:G%C5%82%C3%B3wny_Urz%C4%85d_Statystyczny_logo_2017.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/G%C5%82%C3%B3wny%20Urz%C4%85d%20Statystyczny%20logo%202017.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("kprm_logo","Kancelaria Prezesa Rady Ministrów (KPRM)","Logo Kancelarii Prezesa Rady Ministrów","Logo","https://commons.wikimedia.org/wiki/File:Kancelaria_Prezesa_Rady_Ministr%C3%B3w_logo_2022.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Kancelaria%20Prezesa%20Rady%20Ministr%C3%B3w%20logo%202022.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("abw_logo","Agencja Bezpieczeństwa Wewnętrznego (ABW)","Logo Agencji Bezpieczeństwa Wewnętrznego","Logo","https://commons.wikimedia.org/wiki/File:Logo_ABW.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20ABW.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("gum_logo","Główny Urząd Miar (GUM)","Logo Głównego Urzędu Miar","Logo","https://commons.wikimedia.org/wiki/File:Logo_GUM_2018.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20GUM%202018.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("mnisw_logo","Ministerstwo Nauki i Szkolnictwa Wyższego","Logo Ministerstwa Nauki i Szkolnictwa Wyższego (2024)","Logo","https://commons.wikimedia.org/wiki/File:Logo_Ministerstwo_Nauki_i_Szkolnictwa_Wy%C5%BCszego_2024.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20Ministerstwo%20Nauki%20i%20Szkolnictwa%20Wy%C5%BCszego%202024.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("mz_logo","Ministerstwo Zdrowia","Logo Ministerstwa Zdrowia","Logo","https://commons.wikimedia.org/wiki/File:Logo_Ministerstwa_Zdrowia.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20Ministerstwa%20Zdrowia.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("mon_logo","Ministerstwo Obrony Narodowej","Logo Ministerstwa Obrony Narodowej","Logo","https://commons.wikimedia.org/wiki/File:Logo_MON.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20MON.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("nik_logo","Najwyższa Izba Kontroli (NIK)","Logo Najwyższej Izby Kontroli","Logo","https://commons.wikimedia.org/wiki/File:Logo_Najwy%C5%BCszej_Izby_Kontroli.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20Najwy%C5%BCszej%20Izby%20Kontroli.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("polsa_logo","Polska Agencja Kosmiczna (POLSA)","Logo Polskiej Agencji Kosmicznej","Logo","https://commons.wikimedia.org/wiki/File:Logo_POLSA.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20POLSA.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("mi_logo","Ministerstwo Infrastruktury","Logo Ministerstwa Infrastruktury (2022)","Logo","https://commons.wikimedia.org/wiki/File:Ministerstwo_Infrastruktury_logo_2022.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Ministerstwo%20Infrastruktury%20logo%202022.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("mks_logo","Ministerstwo Klimatu i Środowiska","Logo Ministerstwa Klimatu i Środowiska (2022)","Logo","https://commons.wikimedia.org/wiki/File:Ministerstwo_Klimatu_i_%C5%9Arodowiska_logo_2022.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Ministerstwo%20Klimatu%20i%20%C5%9Arodowiska%20logo%202022.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("mkidn_logo","Ministerstwo Kultury i Dziedzictwa Narodowego","Logo Ministerstwa Kultury i Dziedzictwa Narodowego","Logo","https://commons.wikimedia.org/wiki/File:Ministerstwo_Kultury_i_Dziedzictwa_Narodowego_logo_2022.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Ministerstwo%20Kultury%20i%20Dziedzictwa%20Narodowego%20logo%202022.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("mrit_logo","Ministerstwo Rozwoju i Technologii","Logo Ministerstwa Rozwoju i Technologii (2022)","Logo","https://commons.wikimedia.org/wiki/File:Ministerstwo_Rozwoju_i_Technologii_logo_2022.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Ministerstwo%20Rozwoju%20i%20Technologii%20logo%202022.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("sejm_logo","Sejm Rzeczypospolitej Polskiej","Logo Sejmu RP","Logo","https://commons.wikimedia.org/wiki/File:Sejm_RP_logo.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Sejm%20RP%20logo.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("police_logo","Policja","Logo Policji","Logo","https://commons.wikimedia.org/wiki/File:Polish_police_logo.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Polish%20police%20logo.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("psp_logo","Państwowa Straż Pożarna (PSP)","Logo Państwowej Straży Pożarnej","Logo","https://commons.wikimedia.org/wiki/File:Logo_PSP.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20PSP.svg","Źródło: Wikimedia Commons; przed użyciem zweryfikować indywidualną licencję, aktualność wzoru oraz ewentualną ochronę znaku."),
-SvgSource("vatican_state_coa_2023","Państwo Watykańskie","Herb Państwa Watykańskiego (2023)","Herb","https://commons.wikimedia.org/wiki/File:Coat_of_arms_of_Vatican_City_(2023%E2%80%93present).svg","https://upload.wikimedia.org/wikipedia/commons/3/3a/Coat_of_arms_of_Vatican_City_%282023%E2%80%93present%29.svg","Domena publiczna wskazana na stronie pliku; załącznik B ustawy zasadniczej 2023."),
-SvgSource("holy_see_emblem_vatican_va","Stolica Apostolska","Emblemat Stolicy Apostolskiej (Vatican.va)","Godło","https://commons.wikimedia.org/wiki/File:Emblem_of_the_Holy_See_(vatican.va).svg","https://upload.wikimedia.org/wikipedia/commons/d/d4/Emblem_of_the_Holy_See_%28vatican.va%29.svg","CC0 wskazane na stronie pliku; emblemat publikowany przez Vatican.va."),
-SvgSource("un_flag","ONZ","Flaga ONZ","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_United_Nations.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_United_Nations.svg"),
-SvgSource("who_flag","WHO","Flaga WHO","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_WHO.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_WHO.svg"),
-SvgSource("unesco_flag","UNESCO","Flaga UNESCO","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_UNESCO.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_UNESCO.svg"),
-SvgSource("unicef_flag","UNICEF","Flaga UNICEF","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_UNICEF.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_UNICEF.svg"),
-SvgSource("wfp_flag","WFP","Flaga WFP","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_World_Food_Programme.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_World_Food_Programme.svg"),
-SvgSource("unido_flag","UNIDO","Flaga UNIDO","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_UNIDO.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_UNIDO.svg"),
-SvgSource("unfccc_flag","UNFCCC","Flaga UNFCCC","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_UNFCCC.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_UNFCCC.svg"),
-SvgSource("upu_flag","UPU","Flaga UPU","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_UPU.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_UPU.svg"),
-SvgSource("icao_flag","ICAO","Flaga ICAO","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_ICAO.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_ICAO.svg"),
-SvgSource("ilo_flag","ILO","Flaga ILO","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_ILO.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_ILO.svg"),
-SvgSource("imo_flag","IMO","Flaga IMO","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_International_Maritime_Organization.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_International_Maritime_Organization.svg"),
-SvgSource("itu_flag","ITU","Flaga ITU","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_International_Telecommunication_Union.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_International_Telecommunication_Union.svg"),
-SvgSource("nato_flag","NATO","Flaga NATO","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_NATO.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_NATO.svg"),
-SvgSource("eu_flag","Unia Europejska","Flaga Unii Europejskiej","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_Europe.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_Europe.svg"),
-SvgSource("coe_flag","Rada Europy","Flaga Rady Europy","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_Council_of_Europe_(internet_RGB_colours).svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_Council_of_Europe_(internet_RGB_colours).svg"),
-SvgSource("opec_flag","OPEC","Flaga OPEC","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_OPEC.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_OPEC.svg"),
-SvgSource("oas_flag","OAS","Flaga OAS","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_Organization_of_American_States.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_Organization_of_American_States.svg"),
-SvgSource("osce_flag","OBWE","Flaga OBWE","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_Organization_for_Security_and_Co-operation_in_Europe.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_Organization_for_Security_and_Co-operation_in_Europe.svg"),
-SvgSource("asean_flag_1984","ASEAN","Flaga ASEAN — wariant 1984 (historyczny)","Flaga","https://commons.wikimedia.org/wiki/File:ASEAN_Flag_(1984).svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/ASEAN_Flag_(1984).svg"),
-SvgSource("arab_league_flag","Liga Państw Arabskich","Flaga Ligi Państw Arabskich","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_Arab_League.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_Arab_League.svg"),
-SvgSource("caricom_flag","CARICOM","Flaga CARICOM","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_CARICOM.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_CARICOM.svg"),
-SvgSource("sadc_flag","SADC","Flaga SADC","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_SADC.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_SADC.svg"),
-SvgSource("eaeu_flag","Eurazjatycka Unia Gospodarcza","Flaga EAEU","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_Eurasian_Economic_Union.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_Eurasian_Economic_Union.svg"),
-SvgSource("mercosur_flag","Mercosur","Flaga Mercosur","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_Mercosur.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_Mercosur.svg"),
-SvgSource("nordic_council_flag","Rada Nordycka","Flaga Rady Nordyckiej","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_Nordic_Council.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_Nordic_Council.svg"),
-SvgSource("oic_emblem","Organizacja Współpracy Islamskiej","Emblemat OIC","Logo","https://commons.wikimedia.org/wiki/File:OIC_Logo_since_2011.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/OIC_Logo_since_2011.svg"),
-SvgSource("turkic_states_flag","Organizacja Państw Turkijskich","Flaga Organizacji Państw Turkijskich","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_Organization_of_Turkic_States.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_Organization_of_Turkic_States.svg"),
-SvgSource("iaea_flag","IAEA","Flaga IAEA","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_IAEA.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_IAEA.svg"),
-SvgSource("icc_flag","Międzynarodowy Trybunał Karny","Flaga MTK","Flaga","https://commons.wikimedia.org/wiki/File:Flag_of_the_International_Criminal_Court.svg","https://commons.wikimedia.org/wiki/Special:Redirect/file/Flag_of_the_International_Criminal_Court.svg")
-)
-
 private fun validateSvg(bytes:ByteArray) {
     require(bytes.isNotEmpty() && bytes.size <= 12*1024*1024) { "Plik pusty lub przekracza 12 MB." }
     val raw=String(bytes,Charsets.UTF_8)
@@ -483,7 +428,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        Text("Katalog zawiera pozycje kuratorowane oraz wyszukiwanie plików SVG z otwartą licencją w Wikimedia Commons. Zachowywane są autorstwo, licencja, źródło i ograniczenia.",style=MaterialTheme.typography.bodySmall)
+        Text("Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons. Pobrane grafiki są automatycznie zapisywane w zasobach aplikacji wraz z informacją o źródle, autorstwie, licencji i ograniczeniach.",style=MaterialTheme.typography.bodySmall)
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         if (busy == "commons" || busy == "resume") {
@@ -583,116 +528,6 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             },
             modifier = Modifier.fillMaxWidth()
         ) { Text(if (busy == "resume") "Wznawianie…" else "Wznów nieudane / brakujące pobrania") }
-        OutlinedButton(
-            enabled = busy == null,
-            onClick = {
-                busy = "all"
-                status = "Rozpoczynam pobieranie ${svgSources.size} pozycji…"
-                scope.launch {
-                    var downloaded = 0
-                    var failed = 0
-                    val errors = mutableListOf<String>()
-                    svgSources.forEachIndexed { index, source ->
-                        status = "Pobieranie ${index + 1}/${svgSources.size}: ${source.label}"
-                        val result = withContext(Dispatchers.IO) {
-                            runCatching {
-                                val connection = URL(source.url).openConnection() as HttpURLConnection
-                                connection.instanceFollowRedirects = true
-                                connection.connectTimeout = 15000
-                                connection.readTimeout = 25000
-                                connection.setRequestProperty("User-Agent", "mObywatelska-2.0 SVG library")
-                                val bytes = try {
-                                    require(connection.responseCode in 200..299) { "HTTP ${connection.responseCode}" }
-                                    connection.inputStream.use { input ->
-                                        val out = ByteArrayOutputStream()
-                                        val buffer = ByteArray(8192)
-                                        var total = 0
-                                        while (true) {
-                                            val n = input.read(buffer)
-                                            if (n < 0) break
-                                            total += n
-                                            require(total <= 12 * 1024 * 1024) { "Plik przekracza 12 MB." }
-                                            out.write(buffer, 0, n)
-                                        }
-                                        out.toByteArray()
-                                    }
-                                } finally {
-                                    connection.disconnect()
-                                }
-                                validateSvg(bytes)
-                                val sha = MessageDigest.getInstance("SHA-256").digest(bytes)
-                                    .joinToString("") { "%02x".format(it) }
-                                val rights = JSONObject()
-                                    .put("owner", source.organization)
-                                    .put("sourceUrl", source.page)
-                                    .put("downloadUrl", source.url)
-                                    .put("rightsBasis", source.rights)
-                                    .put("sha256", sha)
-                                    .put("verificationStatus", "pending")
-                                    .put("permittedKinds", JSONArray())
-                                    .put("verifiedBy", "Automatyczne pobranie; kontrola prawna wymagana")
-                                    .toString()
-                                DocumentBrandStore.importBytes(
-                                    context, source.organization, source.kind, source.label, bytes,
-                                    rights = rights, mimeType = "image/svg+xml", assetId = source.id
-                                )
-                            }
-                        }
-                        if (result.isSuccess) downloaded++ else {
-                            failed++
-                            errors += "${source.label}: ${result.exceptionOrNull()?.message ?: "błąd"}"
-                        }
-                    }
-                    status = "Zakończono katalog: pobrano $downloaded/${svgSources.size}, błędy: $failed. " +
-                        if (errors.isEmpty()) "Wszystkie pozycje zostały zapisane." else errors.take(4).joinToString(" | ") +
-                            if (errors.size > 4) " | oraz ${errors.size - 4} dalszych błędów." else ""
-                    busy = null
-                    if (downloaded > 0) onSaved()
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "all") "Pobieranie całego katalogu…" else "Pobierz wszystkie ${svgSources.size} pliki SVG") }
-        svgSources.forEach { source ->
-            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(source.label,fontWeight=FontWeight.Medium)
-                    Text(source.organization+" · "+source.kind,style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                TextButton(enabled=busy==null,onClick={
-                    busy=source.id; status=""
-                    scope.launch {
-                        val result=withContext(Dispatchers.IO) {
-                            runCatching {
-                                val connection=URL(source.url).openConnection() as HttpURLConnection
-                                connection.instanceFollowRedirects=true
-                                connection.connectTimeout=15000; connection.readTimeout=25000
-                                connection.setRequestProperty("User-Agent","mObywatelska-2.0 SVG library")
-                                val bytes=try {
-                                    require(connection.responseCode in 200..299) { "HTTP ${connection.responseCode}" }
-                                    connection.inputStream.use { input ->
-                                        val out=ByteArrayOutputStream(); val buffer=ByteArray(8192); var total=0
-                                        while(true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=12*1024*1024) { "Plik przekracza 12 MB." }; out.write(buffer,0,n) }
-                                        out.toByteArray()
-                                    }
-                                } finally { connection.disconnect() }
-                                validateSvg(bytes)
-                                val sha=MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
-                                val rights=JSONObject().put("owner",source.organization).put("sourceUrl",source.page)
-                                    .put("downloadUrl",source.url).put("rightsBasis",source.rights).put("sha256",sha)
-                                    .put("verificationStatus","pending").put("permittedKinds",JSONArray())
-                                    .put("verifiedBy","Automatyczne pobranie; kontrola prawna wymagana").toString()
-                                DocumentBrandStore.importBytes(context,source.organization,source.kind,source.label,bytes,
-                                    rights=rights,mimeType="image/svg+xml",assetId=source.id)
-                            }
-                        }
-                        status=result.fold({ "Pobrano ${source.label}. Licencja oczekuje na weryfikację." },{ "Nie pobrano ${source.label}: ${it.message ?: "błąd"}" })
-                        if(result.isSuccess) onSaved()
-                        busy=null
-                    }
-                }) { Text(if(busy==source.id) "Pobieranie…" else "Pobierz SVG") }
-            }
-            HorizontalDivider()
-        }
         OutlinedButton(enabled=busy==null && DocumentBrandStore.list(context).any { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
             onClick={ zipLauncher.launch("institutional-svg-assets.zip") },modifier=Modifier.fillMaxWidth()) {
             Text(if(busy=="zip") "Tworzenie ZIP…" else "Spakuj pobrane SVG do ZIP")
