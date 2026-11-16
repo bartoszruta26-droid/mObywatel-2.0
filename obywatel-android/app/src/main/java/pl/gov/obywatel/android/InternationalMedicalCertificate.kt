@@ -180,3 +180,16 @@ internal interface MedicalTranslationProvider {
         targetLanguage: String
     ): String
 }
+
+/**
+ * Rejects a translated value that is empty or is actually the field caption.
+ * This guards against accidentally putting a translated label into clinical data.
+ */
+internal fun isValidMedicalCertificateValueTranslation(
+    sourceValue: String,
+    translatedValue: String,
+    fieldLabel: String
+): Boolean =
+    sourceValue.isNotBlank() &&
+        translatedValue.isNotBlank() &&
+        !translatedValue.trim().equals(fieldLabel.trim(), ignoreCase = true)

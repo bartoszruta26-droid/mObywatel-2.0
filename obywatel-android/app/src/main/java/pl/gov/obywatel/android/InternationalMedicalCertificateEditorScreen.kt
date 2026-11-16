@@ -107,6 +107,8 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
     }
     var sourceLanguageExpanded by remember { mutableStateOf(false) }
     var targetLanguagesExpanded by remember { mutableStateOf(false) }
+    var clinicalCaseMenuExpanded by remember { mutableStateOf(false) }
+    var selectedClinicalCaseId by remember { mutableStateOf("sciatica_oncology") }
     var translating by remember { mutableStateOf(false) }
     val translationValues = remember { mutableStateMapOf<String, String>().apply {
         runCatching { JSONObject(values["imc_translations"].orEmpty()) }.getOrNull()?.let { root ->
@@ -178,12 +180,22 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         })
                         doctorDirectory.forEach { doctor ->
                             DropdownMenuItem(text = { Text(doctor.name + " — " + doctor.city) }, onClick = {
-                                selectedDoctorId = doctor.id; doctorMenuExpanded = false
+                                selectedDoctorId = doctor.id
+                                // Copy the selected directory record into editable certificate fields.
+                                // The certificate remains editable after this prefill.
+                                values[fieldKey("clinicianName")] = doctor.name
+                                values[fieldKey("clinicianProfession")] = "Medical doctor"
+                                values[fieldKey("clinicianSpecialty")] = doctor.specialty
+                                values[fieldKey("clinicianLicense")] = listOf(doctor.register, doctor.license)
+                                    .filter { it.isNotBlank() }.joinToString(" — ")
+                                values[fieldKey("facilityName")] = doctor.practice
+                                values[fieldKey("facilityAddress")] = doctor.address
+                                doctorMenuExpanded = false
                             })
                         }
                     }
                 }
-                Text("Dane lekarza zostaną umieszczone na wydruku. Lekarz składa własnoręczny podpis i pieczątkę na papierowym dokumencie.",
+                Text("Wybranie lekarza uzupełnia odpowiednie pola formularza. Wszystkie dane pozostają edytowalne. Standardowo zaświadczenie drukuje się, a lekarz składa na papierze własnoręczny podpis i pieczątkę.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -242,98 +254,96 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
             }
         }
 
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Historie kliniczne", fontWeight = FontWeight.SemiBold)
+            Box {
+                OutlinedButton(onClick = { clinicalCaseMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(MedicalCertificateClinicalCases.find(selectedClinicalCaseId)?.title ?: "Wybierz historię kliniczną")
+                }
+                DropdownMenu(expanded = clinicalCaseMenuExpanded, onDismissRequest = { clinicalCaseMenuExpanded = false }) {
+                    MedicalCertificateClinicalCases.all.forEach { clinicalCase ->
+                        DropdownMenuItem(
+                            text = { Text(clinicalCase.title) },
+                            onClick = {
+                                selectedClinicalCaseId = clinicalCase.id
+                                clinicalCaseMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+            Text("Wybierz przebieg kliniczny do wypełnienia formularza. Treść można edytować i dostosować do dokumentacji pacjenta.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         Button(
             onClick = {
                 sourceLanguage = "en"
                 otherLanguage = ""
                 selectedTargets.clear()
                 selectedTargets["pl"] = true
-                // Keep every demonstration field as a comma-separated key/value pair.
+                // Remove prior patient data and translations so values from another case cannot leak into this one.
+                definitions.forEach { values[fieldKey(it.key)] = "" }
+                translationValues.clear()
+                values.remove("imc_translations")
+                // Keep every field as a comma-separated key/value pair.
                 val sample = mapOf(
-                    "documentNumber" to "SAMPLE-IMC-2026-001",
+                    "documentNumber" to "IMC-2026-001",
                     "issueDate" to "2026-11-15",
-                    "purpose" to "Clinical summary for continuity of care and specialist assessment. FICTIONAL SAMPLE — NOT FOR CLINICAL USE.",
-                    "issuingCountry" to "United Kingdom (fictional example)",
-                    "destinationCountry" to "Poland (fictional example)",
+                    "purpose" to "Clinical summary for continuity of care and specialist assessment.",
+                    "issuingCountry" to "United Kingdom",
+                    "destinationCountry" to "Poland",
                     "sourceLanguage" to "English",
                     "targetLanguages" to "Polish",
-                    "patientGivenName" to "Alex",
-                    "patientFamilyName" to "Morgan",
-                    "patientDateOfBirth" to "1968-03-12",
-                    "patientNationality" to "Fictional example",
-                    "patientAddress" to "Example Street 10, London, United Kingdom (fictional address)",
-                    "identityDocument" to "Passport: SAMPLE-PASSPORT-001 (fictional)",
-                    "insuranceIdentifier" to "SAMPLE-INS-001 (fictional)",
-                    "patientConsent" to "Fictional example: patient has consented to the preparation and sharing of this clinical summary for continuity of care.",
-                    "clinicianName" to "Dr Taylor Example (fictional clinician)",
+                    "patientGivenName" to "",
+                    "patientFamilyName" to "",
+                    "patientDateOfBirth" to "",
+                    "patientNationality" to "",
+                    "patientAddress" to "",
+                    "identityDocument" to "",
+                    "insuranceIdentifier" to "",
+                    "patientConsent" to "",
+                    "clinicianName" to "",
                     "clinicianProfession" to "Medical doctor",
-                    "clinicianSpecialty" to "General practice; referral for neurology and oncology assessment",
-                    "clinicianLicense" to "Not supplied in this demonstration",
-                    "facilityName" to "Example Medical Centre (fictional)",
-                    "facilityAddress" to "Example Road 1, London, United Kingdom (fictional)",
-                    "chiefComplaint" to "Acute severe low-back pain radiating from the lumbar region through the right buttock and posterior-lateral thigh into the calf and foot, consistent with right-sided sciatica. Pain worsens with prolonged sitting, forward flexion, coughing and walking. Paraesthesia is reported in the right lower leg. Symptoms substantially limit mobility and sleep.",
-                    "medicalHistory" to "Fictional case. Previously documented multilevel degenerative intervertebral disc disease. Current episode of acute right-sided lumbar radicular pain. Patient is undergoing diagnostic evaluation prompted by clinical concerns; an oncological diagnosis has NOT been established. Relevant prior illnesses, operations and family history require confirmation from the actual medical record.",
-                    "occupationalHistory" to "Fictional example: predominantly sedentary work with prolonged sitting; currently unable to tolerate sustained sitting or usual work duties.",
-                    "allergies" to "Not documented in this fictional example — verify directly with the patient before prescribing.",
-                    "currentMedication" to "FICTIONAL medication history for demonstration only — not a prescription: (1) Dipyrone/metamizole (dipirona) 500 mg orally, one tablet up to every 8 hours as needed for pain; (2) diclofenac 50 mg orally twice daily after food, short course as previously prescribed; (3) omeprazole 20 mg orally once daily while using the NSAID; (4) pregabalin 75 mg orally at night, reportedly started recently by a clinician for neuropathic pain. These are plausible medicines encountered in Brazilian/Latin American practice, not a recommended regimen. Verify actual packages, doses, duration, adherence, allergies, renal/hepatic function, gastrointestinal/cardiovascular risks, anticoagulants and planned biopsy/procedures. Do not combine NSAIDs. Pregabalin is not routinely recommended for sciatica in NICE guidance; review indication and adverse effects.",
-                    "diagnosis" to "Acute right-sided lumbosacral radicular pain (sciatica), clinical syndrome: ICD-10 M54.4 (lumbago with sciatica). Multilevel intervertebral disc degeneration/discopathy, level-specific imaging correlation required: ICD-10 M51.3 (other specified intervertebral disc degeneration). Oncological diagnostic work-up in progress; malignancy is unconfirmed and must not be recorded as an established diagnosis.",
-                    "symptomsOnset" to "2026-11-10 (fictional example)",
-                    "examinationDate" to "2026-11-15",
-                    "height" to "Not measured — obtain actual measurement",
-                    "weight" to "Not measured — obtain actual measurement",
-                    "bloodPressure" to "Not measured — record actual value",
-                    "pulse" to "Not measured — record actual value",
-                    "temperature" to "Not measured — record actual value",
-                    "oxygenSaturation" to "Not measured — record actual value",
-                    "physicalExamination" to "STRUCTURAL STATUS (fictional demonstration): lumbar lordosis mildly flattened; lumbar paraspinal muscles guarded, more on the right, with tenderness in the right lumbosacral and gluteal region. Active lumbar flexion and extension reduced by pain; no deformity or step-off assumed. MRI example describes multilevel disc desiccation/height loss, L4-L5 right paracentral protrusion and L5-S1 right foraminal disc component, with facet arthropathy and mild endplate changes. FUNCTIONAL / NEUROLOGICAL STATUS (fictional demonstration): right straight-leg raise reproduces familiar radicular pain at 40 degrees; left test negative. Right ankle dorsiflexion and great-toe extension 4+/5 (MRC), remaining tested lower-limb myotomes 5/5; light-touch sensation mildly reduced over right dorsum of foot/first web space; patellar reflexes 2+ bilaterally, right Achilles 1+, left Achilles 2+. Antalgic gait with reduced right stance time; heel walking mildly difficult on right, toe walking preserved. Findings are illustrative, not real measurements; repeat and document an actual standardized neurological examination before clinical use.",
-                    "systemsReview" to "STRUCTURAL SYSTEM REVIEW (fictional): no additional musculoskeletal deformity or peripheral joint swelling reported. Cardiopulmonary and abdominal review not assessed in this illustrative entry. FUNCTIONAL / RED-FLAG REVIEW (fictional): patient reports disturbed sleep and reduced walking/sitting tolerance. In this sample, denies saddle anaesthesia, new urinary retention/incontinence and bowel incontinence; these must be asked directly and verified. Because oncological investigations are ongoing, specifically document prior malignancy, unexplained weight loss, persistent night/rest pain, fever, immunosuppression and progressive neurological deficit. Any positive or evolving red flag requires prompt clinical escalation; this sample does not establish their absence in a real patient.",
-                    "functionalLimitations" to "FUNCTIONAL STATUS (fictional): independent in basic self-care but slower and guarded when dressing lower body, putting on shoes, transferring sit-to-stand and getting into/out of bed. Walking tolerance approximately 100–150 metres before pain requires a pause; sitting tolerance approximately 10–15 minutes; standing tolerance approximately 10 minutes. Avoids lifting from floor, repeated trunk flexion/rotation and carrying loads. Sleep interrupted by pain. Mobility is antalgic; no assistive device specified. These distances and times are invented example values and must be replaced by measured patient-reported and observed performance.",
-                    "workCapacity" to "FUNCTIONAL WORK CAPACITY (fictional): currently unable to sustain usual full-time sedentary duties because sitting tolerance is approximately 10–15 minutes and position changes are frequent. Temporary modified duties may include alternating positions and short activity periods, with no heavy lifting or repetitive loaded flexion/rotation. A treating clinician must determine actual fitness for work, restrictions and duration after examination; these sample limits are not a certificate of incapacity.",
-                    "hospitalizations" to "No hospitalization information supplied in this fictional example; verify history.",
-                    "treatmentAndRehabilitation" to "STRUCTURAL / FUNCTIONAL MANAGEMENT (fictional example): prompt review of neurological status and MRI images/report; reassess motor power, sensation, reflexes, gait and sphincter symptoms. Maintain tolerable daily activity and use graded walking; avoid prolonged bed rest and temporarily modify painful lifting/flexion/rotation. Physiotherapy, if clinically appropriate, should begin with education, pacing, symptom-guided mobility and progressive trunk/hip conditioning, then functional restoration; avoid forceful manipulation pending clarification of red flags and oncological assessment. Medication reconciliation and prescribing require an actual clinician's review of renal/hepatic function, gastrointestinal/cardiovascular risk, interactions and planned biopsy/procedures. Coordinate, and do not delay, the ongoing oncological diagnostic pathway.",
-                    "prognosis" to "Cannot be determined from this sample. Depends on neurological findings, imaging-clinical correlation, response to treatment and results of the ongoing diagnostic work-up. No oncological diagnosis is confirmed.",
-                    "recommendations" to "Urgent medical reassessment for progressive motor weakness, new saddle anaesthesia, urinary retention or incontinence, bowel dysfunction, bilateral symptoms, fever or rapidly worsening pain. Expedite review of the oncological work-up and communicate relevant history to the responsible specialist. Review MRI images/report and correlate with examination; consider neurology/spine specialist input. Complete all patient-specific fields from verified records before signing.",
-                    "clinicianDeclaration" to "This is a fictional demonstration record containing illustrative wording only. It is not a real medical assessment, diagnosis, prescription, fitness certificate or referral. A treating clinician must independently verify every fact, amend the clinical content and sign/stamp the printed document.",
-                    "clinicianSignRef" to "Leave blank — handwritten signature on the printed document",
-                    "patientSignRef" to "Leave blank — patient signature only if required",
-                    "medicalSealReference" to "Leave blank — clinician's physical stamp on the printed document"
+                    "clinicianSpecialty" to "General practice",
+                    "clinicianLicense" to "",
+                    "facilityName" to "",
+                    "facilityAddress" to "",
+                    "height" to "",
+                    "weight" to "",
+                    "bloodPressure" to "",
+                    "pulse" to "",
+                    "temperature" to "",
+                    "oxygenSaturation" to "",
+                    "clinicianDeclaration" to "",
+                    "clinicianSignRef" to "",
+                    "patientSignRef" to "",
+                    "medicalSealReference" to ""
                 )
                 definitions.forEach { definition ->
                     sample[definition.key]?.let { values[fieldKey(definition.key)] = it }
                 }
+                val selectedClinicalCase = MedicalCertificateClinicalCases.find(selectedClinicalCaseId)
+                selectedClinicalCase?.fields?.forEach { (key, value) -> values[fieldKey(key)] = value }
                 imagingStudies.clear()
-                imagingStudies.add(MedicalImagingStudy(
-                    id = "sample-lumbar-mri-2026",
-                    modality = MedicalImagingModality.MRI,
-                    bodyRegion = "Lumbar spine",
-                    studyDate = "2026-11-12",
-                    facility = "Example Imaging Centre (fictional)",
-                    indication = "Acute right-sided sciatica; known/suspected multilevel disc disease. Oncological diagnostic work-up ongoing.",
-                    technique = "Illustrative placeholder only — replace with the exact sequence/technique from the original radiology report.",
-                    contrast = "Not specified — verify original report; do not infer contrast administration.",
-                    findings = "FICTIONAL MRI REPORT — illustrative only, not a real scan. MRI lumbar spine (sequence protocol and contrast administration not specified in this fictional example; verify against the original DICOM study): mild straightening of lumbar lordosis. L2-L3: shallow circumferential disc bulge without significant canal stenosis. L3-L4: broad-based disc bulge with mild facet arthropathy and mild bilateral foraminal narrowing; no definite nerve-root compression. L4-L5: disc desiccation and height loss with broad-based posterior disc bulge and right subarticular/paracentral protrusion; right lateral-recess narrowing with contact and mild displacement of the traversing right L5 nerve root; mild central canal narrowing; mild bilateral facet arthropathy. L5-S1: disc desiccation and height loss with broad-based bulge and right foraminal component causing moderate right and mild left foraminal narrowing, contacting the exiting right L5 root; no high-grade central canal stenosis. Small endplate osteophytes and Modic type II endplate changes at L5-S1. Conus terminates normally; cauda equina roots are not clumped. No acute compression fracture. No focal destructive osseous lesion identified in the imaged lumbar vertebrae on this illustrative report; this limited lumbar examination does not exclude malignancy or metastatic disease elsewhere and must not replace the planned oncological work-up.",
-                    impression = "FICTIONAL IMPRESSION: multilevel lumbar spondylosis/discopathy, most pronounced at L4-L5 and L5-S1. Right L4-L5 subarticular protrusion contacts/displaces the traversing right L5 root; right L5-S1 foraminal narrowing contacts the exiting right L5 root. Mild central canal narrowing at L4-L5, without high-grade canal stenosis or cauda equina compression in this illustrative scenario. No focal destructive lumbar bone lesion described in this fictional report; lumbar MRI cannot rule out an underlying malignancy or distant metastases. Correlate clinically and continue oncological diagnostics.",
-                    radiologistName = "Not supplied",
-                    reportNumber = "SAMPLE-MRI-2026-001"
-                ))
-                imagingModality = MedicalImagingModality.MRI
-                imagingBodyRegion = "Lumbar spine"
-                imagingDate = "2026-11-12"
-                imagingFacility = "Example Imaging Centre (fictional)"
-                imagingIndication = "Acute right-sided sciatica; multilevel disc disease; oncological work-up ongoing."
-                imagingFindings = "FICTIONAL MRI: L3-L4 shallow broad bulge, mild bilateral foraminal narrowing; L4-L5 broad bulge with right paracentral/subarticular protrusion contacting and mildly displacing traversing right L5 root, mild canal narrowing; L5-S1 disc height loss and right foraminal component with moderate right foraminal narrowing contacting exiting right L5 root. No high-grade canal stenosis, cauda equina compression, acute fracture or focal destructive lumbar bone lesion described in this illustrative report. This does not exclude malignancy or metastases elsewhere."
-                imagingImpression = "FICTIONAL: multilevel lumbar discopathy, greatest at L4-L5 and L5-S1, with right L5 nerve-root contact at both levels; mild L4-L5 canal narrowing. Not a real radiology conclusion and not an oncological exclusion."
-                imagingTechnique = "Replace with the actual MRI protocol."
-                imagingContrast = "Verify from original report."
-                imagingRadiologist = "Not supplied"
-                imagingReportNumber = "SAMPLE-MRI-2026-001"
-                saveMessage = "Fictional sample loaded. It is not a real patient record. Verify and replace every field before clinical use or signing."
+                selectedClinicalCase?.imagingStudy?.let { imagingStudies.add(it) }
+                imagingModality = selectedClinicalCase?.imagingStudy?.modality ?: MedicalImagingModality.MRI
+                imagingBodyRegion = selectedClinicalCase?.imagingStudy?.bodyRegion.orEmpty()
+                imagingDate = selectedClinicalCase?.imagingStudy?.studyDate.orEmpty()
+                imagingFacility = selectedClinicalCase?.imagingStudy?.facility.orEmpty()
+                imagingIndication = selectedClinicalCase?.imagingStudy?.indication.orEmpty()
+                imagingFindings = selectedClinicalCase?.imagingStudy?.findings.orEmpty()
+                imagingImpression = selectedClinicalCase?.imagingStudy?.impression.orEmpty()
+                imagingTechnique = selectedClinicalCase?.imagingStudy?.technique.orEmpty()
+                imagingContrast = selectedClinicalCase?.imagingStudy?.contrast.orEmpty()
+                imagingRadiologist = selectedClinicalCase?.imagingStudy?.radiologistName.orEmpty()
+                imagingReportNumber = selectedClinicalCase?.imagingStudy?.reportNumber.orEmpty()
+                saveMessage = "Historia kliniczna została wczytana. Uzupełnij dane identyfikacyjne i sprawdź ustalenia z dokumentacją źródłową."
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Load fictional sample — acute sciatica and multilevel discopathy") }
+        ) { Text("Wczytaj historię kliniczną") }
         Text(
-            "The sample is entirely fictional. It does not establish an oncological diagnosis or replace source reports; loading it overwrites the currently displayed field values.",
-            color = MaterialTheme.colorScheme.error,
+            "Wczytanie historii zastępuje bieżące wartości pól formularza.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall
         )
 
@@ -452,15 +462,38 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                             if (target.substringBefore('-') == sourceLanguage.substringBefore('-')) return@forEach
                             eligible.forEach { definition ->
                                 val key = definition.key
-                                if (isMedicalCertificateTranslatableField(key)) {
-                                    val result = runCatching { provider.translate(values[fieldKey(key)].orEmpty(), sourceLanguage, target) }
-                                    result.onSuccess { translationValues["$target|$key"] = it; completed++ }.onFailure { failed++ }
+                                // Capture the clinical value before any translation request. Labels and
+                                // values use separate keys and separate provider calls so a translated
+                                // caption can never be stored as the medical content.
+                                val sourceValue = values[fieldKey(key)].orEmpty()
+                                if (isMedicalCertificateTranslatableField(key) && sourceValue.isNotBlank()) {
+                                    val valueResult = runCatching {
+                                        provider.translate(sourceValue, sourceLanguage, target).trim()
+                                            .also { translated ->
+                                                check(isValidMedicalCertificateValueTranslation(sourceValue, translated, definition.label)) {
+                                                    "The provider returned an empty value or the field label instead of its medical content."
+                                                }
+                                            }
+                                    }
+                                    valueResult.onSuccess { translatedValue ->
+                                        translationValues["$target|$key"] = translatedValue
+                                        completed++
+                                    }.onFailure { failed++ }
                                 }
-                                val labelResult = if (target == "en") Result.success(definition.label) else runCatching { provider.translate(definition.label, "en", target) }
-                                labelResult.onSuccess { translationValues["$target|label:$key"] = it }.onFailure { failed++ }
+                                val labelResult = if (target == "en") Result.success(definition.label)
+                                    else runCatching { provider.translate(definition.label, "en", target).trim() }
+                                labelResult.onSuccess { translatedLabel ->
+                                    if (translatedLabel.isNotBlank()) translationValues["$target|label:$key"] = translatedLabel
+                                    else failed++
+                                }.onFailure { failed++ }
                                 if (sourceLanguage != "en") {
-                                    val sourceLabelResult = runCatching { provider.translate(definition.label, "en", sourceLanguage) }
-                                    sourceLabelResult.onSuccess { translationValues["$sourceLanguage|label:$key"] = it }.onFailure { failed++ }
+                                    val sourceLabelResult = runCatching {
+                                        provider.translate(definition.label, "en", sourceLanguage).trim()
+                                    }
+                                    sourceLabelResult.onSuccess { translatedLabel ->
+                                        if (translatedLabel.isNotBlank()) translationValues["$sourceLanguage|label:$key"] = translatedLabel
+                                        else failed++
+                                    }.onFailure { failed++ }
                                 }
                             }
                         }
@@ -479,14 +512,23 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Translation — ${languages.firstOrNull { it.code == target }?.englishName ?: target}", fontWeight = FontWeight.SemiBold)
                         Text("Edit translated field names and values. Source text remains separately preserved.", style = MaterialTheme.typography.bodySmall)
-                        Button(onClick = {
+                        val canSwapTranslation = definitions
+                            .filter { values[fieldKey(it.key)].orEmpty().isNotBlank() && isMedicalCertificateTranslatableField(it.key) }
+                            .all { definition -> translationValues["$target|${definition.key}"].orEmpty().isNotBlank() }
+                        Button(enabled = canSwapTranslation, onClick = {
                             val previousSource = sourceLanguage
                             definitions.forEach { definition ->
                                 val key = definition.key
-                                val translatedValue = translationValues["$target|$key"] ?: values[fieldKey(key)].orEmpty()
-                                translationValues["$previousSource|$key"] = values[fieldKey(key)].orEmpty()
-                                values[fieldKey(key)] = translatedValue
-                                if (!translationValues.containsKey("$previousSource|label:$key")) translationValues["$previousSource|label:$key"] = definition.label
+                                val sourceValue = values[fieldKey(key)].orEmpty()
+                                val translatedValue = translationValues["$target|$key"]
+                                if (sourceValue.isNotBlank() && isMedicalCertificateTranslatableField(key)) {
+                                    check(!translatedValue.isNullOrBlank()) { "Cannot swap while a medical field translation is missing." }
+                                    translationValues["$previousSource|$key"] = sourceValue
+                                    values[fieldKey(key)] = translatedValue
+                                }
+                                if (!translationValues.containsKey("$previousSource|label:$key")) {
+                                    translationValues["$previousSource|label:$key"] = definition.label
+                                }
                             }
                             sourceLanguage = target
                             selectedTargets.clear()
@@ -495,11 +537,18 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         }, modifier = Modifier.fillMaxWidth()) { Text("Swap original and translation") }
                         translatedFields.forEach { definition ->
                             val translationKey = "$target|" + definition.key
-                            OutlinedTextField(value = translationValues["$target|label:" + definition.key] ?: definition.label,
-                                onValueChange = { translationValues["$target|label:" + definition.key] = it },
-                                label = { Text("Translated field name") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                            OutlinedTextField(value = translationValues[translationKey].orEmpty(), onValueChange = { translationValues[translationKey] = it },
-                                label = { Text("Translated value") }, modifier = Modifier.fillMaxWidth(),
+                            val translatedLabelKey = "$target|label:" + definition.key
+                            val translatedLabel = translationValues[translatedLabelKey].orEmpty()
+                            OutlinedTextField(value = translatedLabel,
+                                onValueChange = { translationValues[translatedLabelKey] = it },
+                                label = { Text("Nazwa pola w tłumaczeniu") },
+                                placeholder = { Text("Etykieta nie została przetłumaczona — ponów tłumaczenie") },
+                                modifier = Modifier.fillMaxWidth(), singleLine = true)
+                            OutlinedTextField(value = translationValues[translationKey].orEmpty(),
+                                onValueChange = { translationValues[translationKey] = it },
+                                label = { Text(translatedLabel.ifBlank { "Treść medyczna — brak tłumaczenia etykiety" }) },
+                                placeholder = { Text("Brak tłumaczenia treści medycznej — ponów tłumaczenie") },
+                                modifier = Modifier.fillMaxWidth(),
                                 minLines = if (definition.key in setOf("chiefComplaint", "medicalHistory", "diagnosis", "physicalExamination", "systemsReview", "functionalLimitations", "prognosis", "recommendations")) 3 else 1)
                         }
                     }
@@ -528,8 +577,12 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                             MedicalCertificatePdfField(
                                 sourceLabel = translationValues["$sourceLanguage|label:" + definition.key] ?: definition.label,
                                 sourceValue = sourceValue,
-                                targetLabel = languageName + " — " + (translationValues["$target|label:" + definition.key] ?: definition.label),
-                                targetValue = translationValues["$target|" + definition.key] ?: if (isMedicalCertificateTranslatableField(definition.key)) "[Translation missing]" else sourceValue
+                                targetLabel = languageName + " — " + (
+                                    translationValues["$target|label:" + definition.key]
+                                        ?: if (target == "en") definition.label else "[Etykieta nieprzetłumaczona]"
+                                ),
+                                targetValue = translationValues["$target|" + definition.key]
+                                    ?: if (isMedicalCertificateTranslatableField(definition.key)) "[Brak tłumaczenia treści medycznej]" else sourceValue
                             )
                         }
                     }
@@ -538,9 +591,9 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         sourceLanguage,
                         targets.joinToString(", ") { target -> languages.firstOrNull { it.code == target }?.englishName ?: target },
                         fields,
-                        doctorName = selectedDoctor?.name.orEmpty(),
-                        doctorPractice = selectedDoctor?.practice.orEmpty(),
-                        doctorAddress = selectedDoctor?.address.orEmpty()
+                        doctorName = values[fieldKey("clinicianName")].orEmpty(),
+                        doctorPractice = values[fieldKey("facilityName")].orEmpty(),
+                        doctorAddress = values[fieldKey("facilityAddress")].orEmpty()
                     )
                 }.getOrElse { saveMessage = "PDF generation failed: " + (it.message ?: "unknown error"); null }
                 if (pendingPdfBytes != null) pdfLauncher.launch("international-medical-certificate-bilingual.pdf")

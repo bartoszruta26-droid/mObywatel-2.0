@@ -111,11 +111,14 @@ internal fun createBilingualMedicalCertificatePdf(
         canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
         canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
         y += 13f
-        canvas!!.drawText("Physician's handwritten signature", margin, y, mutedPaint)
-        canvas!!.drawText("Stamp", margin + 250f, y, mutedPaint)
+        canvas!!.drawText("Physician's handwritten signature (sign after printing)", margin, y, mutedPaint)
+        canvas!!.drawText("Medical stamp", margin + 250f, y, mutedPaint)
         y += 26f
         canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
-        canvas!!.drawText("Date and place", margin, y + 13f, mutedPaint)
+        canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
+        y += 13f
+        canvas!!.drawText("Patient's handwritten signature (if required)", margin, y, mutedPaint)
+        canvas!!.drawText("Date and place", margin + 250f, y, mutedPaint)
         finishPage()
         document.writeTo(output)
         return output.toByteArray()
