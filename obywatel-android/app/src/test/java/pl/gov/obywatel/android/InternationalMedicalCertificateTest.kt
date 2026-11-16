@@ -519,4 +519,17 @@ class InternationalMedicalCertificateTest {
         assertTrue(shouldDeleteInstalledAttachmentsAfterImportFailure(metadataCommitAttempted = false))
         assertFalse(shouldDeleteInstalledAttachmentsAfterImportFailure(metadataCommitAttempted = true))
     }
+
+    @Test
+    fun medicalValueTranslationMustContainClinicalContentRatherThanFieldLabel() {
+        assertTrue(isValidMedicalCertificateValueTranslation(
+            "Acute lumbar radicular pain", "Ostry ból korzeniowy odcinka lędźwiowego", "Diagnosis"
+        ))
+        assertFalse(isValidMedicalCertificateValueTranslation(
+            "Acute lumbar radicular pain", "Rozpoznanie", "Rozpoznanie"
+        ))
+        assertFalse(isValidMedicalCertificateValueTranslation("Clinical findings", "", "Findings"))
+        assertFalse(isValidMedicalCertificateValueTranslation("", "Ustalenia kliniczne", "Findings"))
+    }
+
 }
