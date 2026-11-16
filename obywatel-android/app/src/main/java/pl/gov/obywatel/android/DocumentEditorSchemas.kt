@@ -31,6 +31,7 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
 }
 
 private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<DocumentEditorFieldDefinition> = when (documentId) {
+        in internationalDocumentCatalogIds -> internationalDocumentEditorFields(documentId)
         "international_medical_certificate" -> fields(
             Triple("documentNumber", "Document Number", ""),
             Triple("issueDate", "Issue Date", "YYYY-MM-DD"),
@@ -627,6 +628,112 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
         else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
         }
 }
+
+private val internationalDocumentCatalogIds = setOf("icvp", "medical_summary", "allergy_card", "medication_card", "fit_to_travel", "fit_to_fly", "rehabilitation_report", "functional_report", "disability_opinion", "eu_parking_card", "prc", "s1", "s2", "s3", "da1", "cross_border_prescription", "refund_claim", "a1", "u1", "u2", "epc", "good_standing", "professional_status", "qualification_recognition", "diploma", "education_certificate", "diploma_supplement", "birth_certificate", "marriage_certificate", "death_certificate", "marital_status", "capacity_to_marry", "residence_certificate", "citizenship_certificate", "life_certificate", "criminal_record_foreign", "divorce_decree", "adoption_certificate", "parentage_certificate", "international_driving_permit", "travel_document", "residence_card", "passport_record")
+
+private fun internationalDocumentEditorFields(documentId: String): List<DocumentEditorFieldDefinition> {
+    val common = listOf(
+        Triple("sourceCountry", "Państwo wydające / pochodzenia", ""),
+        Triple("documentNumber", "Numer dokumentu / sprawy", ""),
+        Triple("issueDate", "Data wydania", "RRRR-MM-DD"),
+        Triple("validFrom", "Ważny od", "RRRR-MM-DD"),
+        Triple("validUntil", "Ważny do", "RRRR-MM-DD"),
+        Triple("holderName", "Imię i nazwisko osoby, której dotyczy", ""),
+        Triple("holderDateOfBirth", "Data urodzenia", "RRRR-MM-DD"),
+        Triple("issuerName", "Wystawca / właściwa instytucja", ""),
+        Triple("verifyingAuthority", "Organ / podmiot potwierdzający", ""),
+        Triple("sourceReference", "Źródło urzędowe / podstawa prawna", ""),
+        Triple("originalFileReference", "Oryginalny plik dokumentu", ""),
+        Triple("verificationStatus", "Status weryfikacji oryginału", "niezweryfikowany / zweryfikowany / odmowa"),
+        Triple("notes", "Uwagi i ograniczenia", "")
+    )
+    val specific = when (documentId) {
+        in setOf("icvp", "medical_summary", "fit_to_travel", "fit_to_fly", "rehabilitation_report", "functional_report", "disability_opinion") -> listOf(
+            Triple("clinicalPurpose", "Cel medyczny / podróży", ""),
+            Triple("diagnosis", "Rozpoznanie i kod ICD", ""),
+            Triple("clinicalFindings", "Wyniki badania / informacje kliniczne", ""),
+            Triple("allergies", "Alergie i reakcje", ""),
+            Triple("medications", "Leki, substancje czynne i dawkowanie", ""),
+            Triple("functionalStatus", "Funkcjonowanie i ograniczenia", ""),
+            Triple("clinicianName", "Lekarz / profesjonalista sporządzający", ""),
+            Triple("professionalNumber", "Numer prawa wykonywania zawodu / rejestru", ""),
+            Triple("signatureStatus", "Status podpisu wystawcy", "do podpisu / podpisano / zweryfikowano")
+        )
+        in setOf("allergy_card", "medication_card", "cross_border_prescription") -> listOf(
+            Triple("activeSubstance", "Substancja czynna / alergen", ""),
+            Triple("strengthAndForm", "Moc i postać", ""),
+            Triple("doseAndFrequency", "Dawka, droga i częstość", ""),
+            Triple("reactionOrIndication", "Reakcja alergiczna / wskazanie", ""),
+            Triple("prescriberOrVerifier", "Osoba wystawiająca / weryfikująca", ""),
+            Triple("prescriberRegister", "Numer rejestru / uprawnień", ""),
+            Triple("patientWarnings", "Ostrzeżenia i plan postępowania", "")
+        )
+        in setOf("prc", "s1", "s2", "s3", "da1", "refund_claim") -> listOf(
+            Triple("competentInstitution", "Instytucja właściwa / ubezpieczyciel", ""),
+            Triple("insuredPerson", "Osoba ubezpieczona", ""),
+            Triple("destinationState", "Państwo leczenia / zamieszkania", ""),
+            Triple("entitlementScope", "Zakres uprawnienia / zgody", ""),
+            Triple("entitlementPeriod", "Okres uprawnienia", ""),
+            Triple("registrationInstitution", "Instytucja rejestrująca", ""),
+            Triple("registrationDate", "Data rejestracji / poświadczenia", "RRRR-MM-DD")
+        )
+        in setOf("eu_parking_card") -> listOf(
+            Triple("disabilityDecisionNumber", "Numer orzeczenia", ""),
+            Triple("issuingCounty", "Organ wydający kartę", ""),
+            Triple("cardHolderPhotoReference", "Fotografia posiadacza — odwołanie do oryginału", ""),
+            Triple("disabilityValidity", "Okres ważności uprawnienia", "")
+        )
+        in setOf("epc", "good_standing", "professional_status", "qualification_recognition") -> listOf(
+            Triple("profession", "Zawód / specjalność", ""),
+            Triple("professionalRegister", "Rejestr zawodowy i numer wpisu", ""),
+            Triple("qualification", "Kwalifikacja / dyplom / specjalizacja", ""),
+            Triple("goodStandingStatus", "Status zawodowy / ograniczenia", ""),
+            Triple("competentRegulator", "Właściwy regulator / izba", ""),
+            Triple("destinationCountry", "Państwo uznania kwalifikacji", "")
+        )
+        in setOf("diploma", "education_certificate", "diploma_supplement") -> listOf(
+            Triple("educationInstitution", "Szkoła / uczelnia / instytucja", ""),
+            Triple("studyProgram", "Kierunek / program kształcenia", ""),
+            Triple("qualificationLevel", "Poziom kwalifikacji", ""),
+            Triple("learningOutcomes", "Efekty uczenia się / zakres", ""),
+            Triple("creditsAndDuration", "Punkty ECTS / czas kształcenia", ""),
+            Triple("awardingAuthority", "Organ nadający kwalifikację", "")
+        )
+        in setOf("birth_certificate", "marriage_certificate", "death_certificate", "marital_status", "capacity_to_marry", "life_certificate", "parentage_certificate", "adoption_certificate") -> listOf(
+            Triple("civilEventType", "Rodzaj zdarzenia / faktu urzędowego", ""),
+            Triple("eventDate", "Data zdarzenia", "RRRR-MM-DD"),
+            Triple("eventPlace", "Miejsce zdarzenia", ""),
+            Triple("otherPartyDetails", "Dane drugiej osoby / stron", ""),
+            Triple("civilRegistryOffice", "Urząd stanu cywilnego / rejestr", ""),
+            Triple("actNumber", "Numer aktu / wpisu", ""),
+            Triple("marginalAnnotations", "Wzmianki dodatkowe", "")
+        )
+        in setOf("residence_certificate", "citizenship_certificate", "criminal_record_foreign", "divorce_decree") -> listOf(
+            Triple("authorityType", "Rodzaj organu", ""),
+            Triple("caseNumber", "Sygnatura / numer sprawy", ""),
+            Triple("confirmedFact", "Fakt / treść potwierdzenia", ""),
+            Triple("legalEffect", "Zakres skutków prawnych", ""),
+            Triple("appealInformation", "Tryb odwoławczy / weryfikacji", "")
+        )
+        in setOf("a1", "u1", "u2") -> listOf(
+            Triple("employerOrPayer", "Pracodawca / płatnik", ""),
+            Triple("workOrBenefitPeriod", "Okres pracy / świadczenia", ""),
+            Triple("competentState", "Państwo właściwe", ""),
+            Triple("employmentOrInsurancePeriods", "Okresy ubezpieczenia / zatrudnienia", ""),
+            Triple("employmentOffice", "Urząd zatrudnienia / instytucja", "")
+        )
+        in setOf("international_driving_permit", "travel_document", "residence_card", "passport_record") -> listOf(
+            Triple("nationalDocumentNumber", "Numer krajowego dokumentu źródłowego", ""),
+            Triple("issuingOffice", "Organ wydający", ""),
+            Triple("conventionOrLegalBasis", "Konwencja / podstawa prawna", ""),
+            Triple("travelDestination", "Państwo / państwa docelowe", ""),
+            Triple("identityDocumentType", "Rodzaj dokumentu tożsamości", "")
+        )
+        else -> emptyList()
+    }
+    return fields(*(common + specific).toTypedArray())
+}
+
 
 internal fun documentUsesDedicatedEditor(documentId: String): Boolean =
     documentId in setOf(
