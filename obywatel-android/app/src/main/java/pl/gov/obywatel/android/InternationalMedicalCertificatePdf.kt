@@ -32,7 +32,8 @@ internal fun createBilingualMedicalCertificatePdf(
     signatureCaption: String = "Physician's handwritten signature (sign after printing)",
     stampCaption: String = "Physician identification / stamp details",
     patientSignatureCaption: String = "Patient's handwritten signature (if required)",
-    dateAndPlaceCaption: String = "Date and place"
+    dateAndPlaceCaption: String = "Date and place",
+    pageCountOverride: Int? = null
 ): ByteArray {
     val document = PdfDocument()
     val output = ByteArrayOutputStream()
@@ -64,6 +65,18 @@ internal fun createBilingualMedicalCertificatePdf(
     var y = 0f
 
     fun finishPage() {
+        if (pageCountOverride != null && canvas != null) {
+            val footerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textSize = 8f
+                textAlign = Paint.Align.RIGHT
+            }
+            canvas!!.drawText(
+                if (polish) "Strona $pageNumber z $pageCountOverride" else "Page $pageNumber of $pageCountOverride",
+                pageWidth - margin,
+                pageHeight - 16f,
+                footerPaint
+            )
+        }
         page?.let(document::finishPage)
         page = null
         canvas = null
@@ -84,21 +97,29 @@ internal fun createBilingualMedicalCertificatePdf(
             if (doctorAddress.isNotBlank()) add((if (polish) "Adres: " else "Address: ") + doctorAddress)
             if (doctorContact.isNotBlank()) add((if (polish) "Kontakt: " else "Contact: ") + doctorContact)
         }
-        if (headerLines.isNotEmpty()) {
-            headerLines.forEach { line ->
-                var remaining = line
-                while (remaining.isNotEmpty()) {
-                    val count = mutedPaint.breakText(remaining, true, contentWidth, null).coerceAtLeast(1)
-                    var end = count
-                    if (count < remaining.length) {
-                        val space = remaining.lastIndexOf(' ', count - 1)
-                        if (space > 0) end = space
-                    }
-                    canvas!!.drawText(remaining.substring(0, end).trimEnd(), margin, y, mutedPaint)
-                    remaining = remaining.substring(end).trimStart()
-                    y += 10f
+        val patientHeaderLines = fields.filter { field ->
+            val label = field.sourceLabel.lowercase(java.util.Locale.ROOT)
+            label.contains("patient") && (label.contains("name") || label.contains("address"))
+        }.map { field ->
+            val source = field.sourceValue.ifBlank { "—" }
+            val translated = field.targetValue.ifBlank { "—" }
+            "${field.sourceLabel}: $source  |  ${field.targetLabel}: $translated"
+        }
+        (headerLines + patientHeaderLines).forEach { line ->
+            var remaining = line
+            while (remaining.isNotEmpty()) {
+                val count = mutedPaint.breakText(remaining, true, contentWidth, null).coerceAtLeast(1)
+                var end = count
+                if (count < remaining.length) {
+                    val space = remaining.lastIndexOf(' ', count - 1)
+                    if (space > 0) end = space
                 }
+                canvas!!.drawText(remaining.substring(0, end).trimEnd(), margin, y, mutedPaint)
+                remaining = remaining.substring(end).trimStart()
+                y += 10f
             }
+        }
+        if (headerLines.isNotEmpty() || patientHeaderLines.isNotEmpty()) {
             y += 4f
             canvas!!.drawLine(margin, y, margin + contentWidth, y, borderPaint)
             y += 12f
@@ -225,6 +246,30 @@ internal fun createBilingualMedicalCertificatePdf(
         canvas!!.drawText(if (polish && patientSignatureCaption.startsWith("Patient's handwritten signature")) "Własnoręczny podpis pacjenta (jeżeli wymagany)" else patientSignatureCaption, margin, y, mutedPaint)
         canvas!!.drawText(if (polish && dateAndPlaceCaption == "Date and place") "Data i miejsce" else dateAndPlaceCaption, panelLeft, y, mutedPaint)
         finishPage()
+        // Render twice: the first pass determines the final page count; the second
+        // writes consistent "page X of Y" footers on every page.
+        if (pageCountOverride == null) {
+            return createBilingualMedicalCertificatePdf(
+                sourceLanguage = sourceLanguage,
+                targetLanguage = targetLanguage,
+                fields = fields,
+                doctorName = doctorName,
+                doctorPractice = doctorPractice,
+                doctorAddress = doctorAddress,
+                doctorRegister = doctorRegister,
+                doctorContact = doctorContact,
+                doctorQualifications = doctorQualifications,
+                doctorSpecialty = doctorSpecialty,
+                sideBySideFields = sideBySideFields,
+                documentTitle = documentTitle,
+                issuerHeading = issuerHeading,
+                signatureCaption = signatureCaption,
+                stampCaption = stampCaption,
+                patientSignatureCaption = patientSignatureCaption,
+                dateAndPlaceCaption = dateAndPlaceCaption,
+                pageCountOverride = pageNumber
+            )
+        }
         document.writeTo(output)
         return output.toByteArray()
     } finally {
