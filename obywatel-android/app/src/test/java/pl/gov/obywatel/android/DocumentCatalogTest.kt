@@ -138,6 +138,7 @@ class DocumentCatalogTest {
             val schema = documentEditorFieldDefinitions(id)
             assertTrue("Brak pól ewidencyjnych dla $id", schema.isNotEmpty())
             assertEquals("Powtórzone klucze pól dla $id", schema.size, schema.map { it.key }.toSet().size)
+            assertTrue("Metadane wewnętrzne trafiły do wydruku dla $id", schema.none { it.key in setOf("verificationStatus", "originalFileReference", "notes") })
         }
         assertEquals(13, existingGroups.size)
     }
