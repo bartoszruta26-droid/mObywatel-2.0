@@ -55,7 +55,8 @@ class InternationalDocumentWorkflowTest {
             verifiedBy = "Compliance reviewer",
             version = "2.1",
             effectiveFrom = LocalDate.of(2026, 1, 1),
-            effectiveUntil = LocalDate.of(2026, 12, 31)
+            effectiveUntil = LocalDate.of(2026, 12, 31),
+            permittedKinds = setOf("Logo", "Pieczęć", "Znak wodny", "Herb", "Godło", "Flaga", "Tło dokumentu")
         )
         assertTrue(valid.isCompleteFor(LocalDate.of(2026, 11, 16)))
         assertFalse(valid.copy(sourceUrl = "http://example.org/brand").isCompleteFor(LocalDate.of(2026, 11, 16)))
@@ -72,12 +73,14 @@ class InternationalDocumentWorkflowTest {
             authorizationReference = "PERMISSION-2026-01",
             verifiedBy = "Compliance reviewer",
             version = "2.1",
-            effectiveFrom = LocalDate.of(2026, 1, 1)
+            effectiveFrom = LocalDate.of(2026, 1, 1),
+            permittedKinds = setOf("Logo", "Pieczęć", "Znak wodny")
         )
-        assertFalse(InstitutionalAssetPolicy.mayRender("Pieczęć", valid))
+        assertTrue(InstitutionalAssetPolicy.mayRender("Pieczęć", valid))
         assertFalse(InstitutionalAssetPolicy.mayRender("Wzór podpisu odręcznego", valid))
         assertFalse(InstitutionalAssetPolicy.mayRender("Grafika hologramu / zabezpieczenia", valid))
         assertTrue(InstitutionalAssetPolicy.mayRender("Logo", valid))
+        assertFalse(InstitutionalAssetPolicy.mayRender("Godło", valid))
         assertFalse(InstitutionalAssetPolicy.mayRender("Logo", null))
     }
 
