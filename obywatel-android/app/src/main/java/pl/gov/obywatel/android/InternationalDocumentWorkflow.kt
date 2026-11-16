@@ -124,6 +124,10 @@ internal object InternationalDocumentWorkflowCatalog {
     fun find(documentId: String): InternationalDocumentWorkflow? = all[documentId]
 }
 
+internal fun pdfDocumentDisplayTitle(documentId: String, title: String): String =
+    if (InternationalDocumentWorkflowCatalog.find(documentId)?.authorityIssuesOriginal == true)
+        "Dane / wniosek dotyczący: $title" else title
+
 /**
  * Evidence record for an institution's graphic asset. This is a provenance
  * gate, not a legal determination: approval must be checked against the
