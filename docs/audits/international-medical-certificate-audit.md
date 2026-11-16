@@ -1432,3 +1432,301 @@ Wcześniejszy test równoległego importu dwóch różnych załączników do teg
 - [ ] Ponowna kompilacja testów instrumentacyjnych, wykonanie testów emulatora, budowa APK i REUSE dla nowego SHA — oczekują na GitHub Actions.
 
 **Status:** poprawiono konkretny błąd kompilacji wykryty w CI. PR pozostaje otwarty; scalanie nastąpi dopiero po zielonej weryfikacji nowego SHA.
+
+---
+
+## 54. Rozszerzenie modułu — zarządzanie zapisanymi zaświadczeniami, wybór języków i tłumaczenia
+
+Data: 2026-11-15. Gałąź: `feature/medical-certificate-management-translation`.
+
+### Zakres zmian wprowadzonych w kodzie
+- [x] Pole `Original Language` zastąpiono zwijaną listą rozwijaną; po wyborze lista zamyka się.
+- [x] Pole `Target Languages` zastąpiono zwijaną listą rozwijaną z wielokrotnym wyborem.
+- [x] Dodano ekran zarządzania zapisanymi zaświadczeniami: lista, otwarcie/edycja oraz usunięcie z potwierdzeniem.
+- [x] Rozszerzono istniejący szyfrowany magazyn AES-GCM o wiele rekordów. Indeks i treść każdego zaświadczenia pozostają w tym samym magazynie chronionym kluczem Android Keystore.
+- [x] Dodano migrację dotychczasowego pojedynczego zaświadczenia do rekordu `legacy`, bez utraty istniejących pól.
+- [x] Kafelek jest już wpisany do wspólnego katalogu widoczności, a domyślna konfiguracja `defaultDocumentPlacements` przypisuje nowe dokumenty do `hidden`; dodano test potwierdzający tę regułę dla zaświadczenia.
+- [x] Dodano automatyczne tłumaczenie lokalne z użyciem ML Kit Translation. Modele językowe są pobierane w razie potrzeby; tekst kliniczny jest przekazywany do translatora działającego na urządzeniu.
+- [x] Dodano pola ręcznej korekty tłumaczenia. Oryginalne wartości są zachowane osobno, a przekład zapisywany jest jako osobny zestaw danych.
+- [x] Dodano test instrumentalny cyklu życia rekordów: utworzenie, odczyt, lista, aktualizacja i usunięcie.
+
+### Ograniczenia i kontrola jakości
+- Warianty regionalne języka niderlandzkiego, francuskiego i niemieckiego są mapowane na odpowiednie podstawowe modele ML Kit; sam model nie gwarantuje lokalnej odmiany terminologicznej.
+- Pozycja `Other` może być zapisana jako język źródłowy, ale nie jest obsługiwana przez automatyczny translator ML Kit; przycisk tłumaczenia pozostaje wtedy nieaktywny.
+- Tłumaczenie maszynowe wymaga przeglądu człowieka. Przed wykorzystaniem zaświadczenia w postępowaniu medycznym lub urzędowym należy sprawdzić terminologię, liczby, jednostki, daty i nazwy własne.
+- Status CI, kompilacji i testów emulatora dla tej gałęzi: **oczekuje na uruchomienie i weryfikację**. Nie oznaczać etapu jako zakończonego przed przejściem wszystkich wymaganych kontroli.
+- Nie publikować nowego APK przed pomyślnym przejściem testów JVM, testów UI/instrumentacyjnych na emulatorze i kompilacji.
+
+### Kryteria odbioru dla tego rozszerzenia
+1. Lista języka źródłowego rozwija się i zwija po wyborze.
+2. Lista języków docelowych pozwala zaznaczyć kilka języków i zachowuje wybór po zapisaniu.
+3. Użytkownik może utworzyć wiele niezależnych zaświadczeń, otwierać je, edytować i usuwać.
+4. Usunięcie wymaga potwierdzenia i nie narusza pozostałych rekordów.
+5. Kafelek pozostaje ukryty przy pierwszym uruchomieniu; można go włączyć w `Ustawienia → Widoczność dokumentów`.
+6. Ukrycie kafelka nie usuwa zapisanych zaświadczeń.
+7. Tłumaczenie tworzy osobną treść docelową; zmiana przekładu ręcznego nie nadpisuje oryginału.
+8. Błąd pobierania modelu lub tłumaczenia nie może usunąć danych źródłowych.
+
+
+## 55. Eksport dwujęzyczny PDF i odwracanie kierunku tłumaczenia — 2026-11-15
+
+### Wykonane zmiany
+- [x] Dodano generator PDF oparty na Android PdfDocument. Plik zawiera oryginalne wartości oraz odpowiadające im wartości docelowe; przy wielu językach docelowych każda wartość jest zestawiona z nazwą języka.
+- [x] Eksport obejmuje również etykiety pól. Etykiety docelowe są tłumaczone tym samym lokalnym modelem ML Kit i można je ręcznie poprawić.
+- [x] Etykiety pól mają kanoniczne brzmienie angielskie w definicjach formularza; przy eksporcie tłumaczone są osobno z angielskiego na język źródłowy i każdy język docelowy, dzięki czemu opis pól w PDF odpowiada wskazanym językom dokumentu.
+- [x] Dla pól chronionych przed automatycznym tłumaczeniem (np. identyfikatory, daty, numery, dane kontaktowe) PDF zachowuje oryginalną wartość także w kolumnie języka docelowego zamiast wstawiać pusty tekst lub pozorny przekład.
+- [x] Dodano systemowy wybór lokalizacji zapisu PDF przez Android CreateDocument.
+- [x] Dodano przycisk „Swap original and translation”. Zamienia on język źródłowy z wybranym docelowym oraz treści pól; dotychczasowy oryginał jest zachowywany jako treść w poprzednim języku.
+- [x] Dodano test instrumentalny sprawdzający wygenerowanie poprawnego pliku PDF i nagłówek formatu.
+- [x] Tłumaczenie pozostaje lokalne (Google ML Kit Translation), bez przekazywania treści klinicznych do Google Translate lub innego zdalnego punktu końcowego.
+
+### Uwagi bezpieczeństwa i ograniczenia
+- Google ML Kit Translation jest biblioteką Google do tłumaczenia na urządzeniu; nie jest to serwis Google Translate ani otwartoźródłowy silnik. Modele są pobierane z infrastruktury Google, natomiast treść pacjenta jest przekazywana do lokalnego modelu.
+- Tłumaczenie maszynowe nie stanowi tłumaczenia przysięgłego ani zatwierdzonego przekładu medycznego. Wymaga weryfikacji przez kompetentnego człowieka.
+- PDF oznacza brakujący przekład pola tekstowego jako „Translation missing”; wartości chronione (np. identyfikatory, daty, numery i dane kontaktowe) zachowują wartość źródłową w kolumnie docelowej. Etykiety pól docelowych używają tłumaczenia, jeśli zostało wygenerowane i zapisane; w przeciwnym razie stosują etykietę źródłową.
+- Test PDF jest dodany do zestawu instrumentacyjnego; wynik kompilacji i testu emulatora musi zostać potwierdzony przez GitHub Actions dla końcowego SHA.
+
+### Kryteria odbioru
+1. PDF zawiera źródłowy i docelowy język, nazwy pól oraz wartości.
+2. Przy wielu językach docelowych PDF zawiera osobny zestaw docelowy dla każdego wybranego języka.
+3. Ręczna korekta etykiety lub wartości przekładu jest widoczna w następnym eksporcie.
+4. Zamiana języków miejscami nie usuwa pierwotnej treści i po zapisaniu jest odtwarzalna.
+5. Błąd generowania lub zapisu PDF nie zmienia zaszyfrowanych danych zaświadczenia.
+
+**Status:** kod i test dodane; oczekują na kompilację, testy JVM, testy emulatora i przegląd zmian.
+
+
+---
+
+## 56. Panel zarządzania modelami tłumaczeniowymi — 2026-11-15
+
+### Wykonane zmiany
+- [x] Dodano ekran „Języki i tłumaczenia” dostępny z menu Więcej → Ustawienia.
+- [x] Dodano listę modeli językowych obsługiwanych przez bieżący zestaw języków zaświadczenia.
+- [x] Dodano ręczne pobieranie i usuwanie modeli przez publiczne API Google ML Kit RemoteModelManager.
+- [x] Dodano przełącznik automatycznego pobierania brakujących modeli; wyłączenie blokuje automatyczne pobieranie podczas tłumaczenia.
+- [x] Dodano ograniczenie pobierania do Wi-Fi; warunek jest przekazywany do ML Kit przy pobieraniu.
+- [x] Dodano status „Gotowy” / „Brak modelu”, status operacji oraz odświeżanie listy po pobraniu i usunięciu.
+- [x] Ustawienia są zapisywane lokalnie w SharedPreferences.
+- [ ] Dokładny rozmiar pojedynczego modelu i łączny rozmiar modeli: publiczne API ML Kit RemoteModelManager nie udostępnia rozmiaru plików modelu. Ekran wyświetla to ograniczenie jawnie zamiast podawać niezweryfikowane wartości.
+- [ ] Weryfikacja kompilacji, testów JVM i UI/instrumentacyjnych na emulatorze dla końcowego SHA.
+
+### Kryteria odbioru
+1. Ustawienia dostępne pod Więcej → Ustawienia → Języki i tłumaczenia.
+2. Ręczne pobranie modelu zmienia jego status na „Gotowy”.
+3. Usunięcie modelu zmienia status na „Brak modelu”.
+4. Wyłączenie automatycznego pobierania uniemożliwia pobranie brakującego modelu podczas tłumaczenia i wskazuje użytkownikowi panel zarządzania.
+5. Włączenie „Tylko przez Wi-Fi” stosuje warunek requireWifi() podczas ręcznego i automatycznego pobierania.
+6. Brak publicznego odczytu rozmiaru modeli jest komunikowany użytkownikowi bez prezentowania fikcyjnych danych.
+
+**Status:** implementacja dodana do PR #71; oczekuje na pełną weryfikację CI i emulatora.
+
+
+---
+
+## 57. Kontynuacja audytu — panel modeli i katalog lekarzy — 2026-11-15
+
+### Ponowna kontrola PR i CI
+- [x] PR #71 pozostaje otwarty; gałąź: `feature/medical-certificate-management-translation`.
+- [x] Dla aktualnego punktu kontrolnego `ee7086b2436900947293aebf6c9b423e92bab4cb` testy jednostkowe Androida zakończyły się powodzeniem.
+- [x] Kontrola REUSE zakończyła się powodzeniem.
+- [ ] Testy Compose na emulatorze pozostają w toku w chwili sporządzenia wpisu.
+- [ ] Archiwizacja raportów instrumentacyjnych, budowa APK, suma kontrolna i publikacja APK są krokami oczekującymi; nie uznawać ich za wykonane.
+
+### Ponowna inspekcja panelu modeli
+- [x] Potwierdzono użycie `RemoteModelManager` do pobierania, listowania i usuwania modeli ML Kit.
+- [x] Potwierdzono zapis przełączników automatycznego pobierania i Wi-Fi w lokalnych preferencjach.
+- [x] Potwierdzono, że provider tłumaczenia sprawdza obecność modelu źródłowego i docelowego przed tłumaczeniem.
+- [ ] Dodać testy jednostkowe logiki ustawień: wartości domyślne, trwałość przełączników oraz zachowanie po wyłączeniu automatycznego pobierania.
+- [ ] Dodać testy instrumentacyjne ścieżek pobierania i usuwania modelu, z kontrolą błędu sieci, braku Wi-Fi oraz ponownego odświeżenia statusu.
+- [ ] Wprowadzić jawny stan błędu odczytu listy modeli. Aktualny ekran ustawia komunikat błędu, ale lista nadal może prezentować modele jako „Brak modelu”; należy odróżnić błąd odczytu od rzeczywistego braku modelu.
+- [ ] Uzupełnić statusy operacji o anulowanie/niepowodzenie i zapewnić blokadę powtórnego uruchomienia tej samej operacji.
+- [ ] Rozmiar: ML Kit Translation używa dynamicznego pobierania modeli. Publiczny `RemoteModelManager` nie udostępnia rozmiaru modelu; nie pokazywać wartości szacunkowych jako faktycznych. Ewentualny pomiar zajętości katalogu aplikacji wymaga osobnego, wspieranego i testowalnego rozwiązania, bez zakładania niepublicznych ścieżek Usług Google Play.
+
+### Katalog lekarzy i podpis dokumentu — wymagania bezpieczeństwa
+- [x] Dodano specyfikację w komentarzu PR: dane lekarza są oddzielone od procesu podpisu.
+- [ ] Nie dodawać prawdziwych osób znalezionych w internecie do produkcyjnego katalogu bez udokumentowanej zgody, potwierdzenia aktualnych uprawnień i prawa do użycia danych.
+- [ ] Nie generować podpisu ani nie ustawiać statusu „podpisany” po samym wyborze lekarza.
+- [ ] Katalog ma być zarządzany przez upoważnioną placówkę/użytkownika; pola: imię, nazwisko, tytuł zawodowy, stopień/tytuł naukowy (opcjonalnie), specjalizacja, kraj/jurysdykcja, miejsce praktyki, publiczne dane kontaktowe, identyfikator rejestracyjny, źródło i data weryfikacji.
+- [ ] Weryfikować osobno prawo wykonywania zawodu w kraju praktyki oraz ewentualne uprawnienia do wystawiania dokumentów w kraju, w którym dokument będzie używany.
+- [ ] Podpis ma być oddzielnym, audytowalnym krokiem (np. podpis kwalifikowany lub inny prawnie właściwy mechanizm), z zachowaniem danych walidacyjnych.
+- [ ] Do testów używać wyłącznie jawnie fikcyjnych rekordów oznaczonych „DANE TESTOWE — NIEPRAWIDŁOWE DO PODPISU”.
+
+### Ważne rozróżnienie dotyczące ML Kit
+Dokumentacja Google opisuje tłumaczenie ML Kit jako funkcję z modelami pobieranymi dynamicznie; zarządzanie nimi obejmuje pobieranie, aktualizowanie i usuwanie. Dane kliniczne pozostają przetwarzane lokalnie po pobraniu modelu, natomiast same modele są dostarczane z infrastruktury Google. Źródło: https://developers.google.com/ml-kit/tips/installation-paths?hl=pl
+
+### Status etapu
+**Audyt zaktualizowany.** Kod panelu istnieje, ale nie jest jeszcze odbierany jako kompletny: potrzebne są testy ustawień i operacji modelu, jawny stan błędu odczytu oraz zakończony CI. Katalog lekarzy pozostaje specyfikacją — nie dodano żadnych rzeczywistych osób ani podpisów.
+
+
+---
+
+## 58. Kwerenda lekarzy polskojęzycznych — Ameryka Południowa — 2026-11-15
+
+- [x] Sprawdzono publiczne źródła dla Buenos Aires i São Paulo oraz tropy z innych miast regionu.
+- [x] Zapisano wyniki i źródła w `docs/research/polish-speaking-doctors-south-america.md`.
+- [x] Zidentyfikowano trzy publiczne profile lekarzy/praktyk jako tropy do dalszej weryfikacji.
+- [ ] Nie potwierdzono jawnej deklaracji znajomości języka polskiego dla tych osób; nie wolno opisywać ich jako polskojęzycznych.
+- [ ] Nie dodano tych osób do produkcyjnego katalogu wystawców ani podpisujących.
+- [ ] Przed wpisem produkcyjnym uzyskać potwierdzenie języka polskiego, aktualnej licencji, praktyki oraz zgody lekarza na publikację danych.
+
+**Status:** kwerenda zapisana; brak wystarczających dowodów do dodania kilku rzeczywistych lekarzy polskojęzycznych. Nie zastępować brakujących dowodów domysłami na podstawie nazwiska lub polonijnego miasta.
+
+
+---
+
+## 59. Naprawa stanów modeli, ustawień i anulowania — 2026-11-15
+
+### Zmiany wprowadzone w kodzie
+- [x] Dodano jawny model stanu inwentarza: `Loading`, `Available`, `ReadError`.
+- [x] Status „Brak modelu” jest prezentowany wyłącznie po udanym odczycie listy, gdy modelu faktycznie nie ma.
+- [x] Błąd odczytu pokazuje osobny status „Błąd odczytu”, komunikat wyjaśniający i możliwość ponowienia odczytu.
+- [x] Usunięto z repozytorium modeli metodę, która przechwytywała dowolny błąd odczytu i zwracała `false`, co fałszywie oznaczało brak modelu.
+- [x] Dodano anulowanie trwającego pobierania/usuwania i blokadę równoległego uruchomienia kolejnej operacji.
+- [x] Po zakończeniu, błędzie lub anulowaniu operacji wykonywane jest odświeżenie stanu w sekcji nieanulowalnej; błąd odświeżenia pozostaje jawnie widoczny.
+- [x] Dodano testy JVM dla rozróżnienia błędu odczytu, pustego poprawnego wyniku, stanu ładowania i wariantu regionalnego.
+- [x] Dodano testy instrumentacyjne ustawień: wartości domyślne, trwałość automatycznego pobierania, trwałość ograniczenia Wi-Fi i niezależność przełączników.
+- [x] Naprawiono brak metadanych SPDX w pliku kwerendy lekarzy, który był przyczyną niepowodzenia kontroli REUSE w uruchomieniu dla wcześniejszego SHA.
+
+### Weryfikacja
+- [ ] Nowe testy JVM i instrumentacyjne wymagają wykonania w CI na najnowszym SHA.
+- [ ] Wymagane pełne zadania kompilacji debug/release, testy emulatora, kontrola REUSE oraz inspekcja APK.
+- [ ] Poprzedni wynik REUSE dla SHA `5ff9e7b50957cbe41d3dc678e723daa1f429c5d0` wskazał wyłącznie brak SPDX w `docs/research/polish-speaking-doctors-south-america.md`; metadane zostały dodane w kolejnym commicie.
+- [ ] Nie przenosić wyników wcześniejszego CI na nowe commity.
+
+### Katalog lekarzy i podpis
+- [ ] Katalog produkcyjny nie może zawierać niezweryfikowanych osób ani sugerować ich zgody na użycie danych.
+- [ ] Następny krok implementacyjny: katalog zarządzany przez uprawnionego administratora, z walidacją pól, krajem/jurysdykcją, identyfikatorem rejestracyjnym, źródłem, datą weryfikacji i statusem zgody.
+- [ ] Podpis musi być osobnym procesem z potwierdzeniem tożsamości i uprawnień, podpisem kryptograficznym oraz walidacją certyfikatu i znacznika czasu. Samo zapisanie nazwiska lekarza lub podpis odręczny na ekranie nie stanowi bezpiecznego podpisu elektronicznego.
+- [ ] Nie włączać statusu „Podpisano” ani nie generować pozornego podpisu bez skonfigurowanego dostawcy zaufanej usługi podpisu i uzgodnionych jurysdykcji.
+
+**Status:** poprawki stanów modeli, anulowania i testów zostały zapisane w gałęzi PR. Katalog lekarzy i rzeczywisty mechanizm podpisu pozostają nieukończone; wymagają osobnego wdrożenia. PR pozostaje otwarty.
+
+
+---
+
+## 60. Katalog lekarzy — rekordy, kryteria i wybór w zaświadczeniu — 2026-11-15
+
+### Zrealizowane
+- [x] Dodano lokalny katalog lekarzy z inicjalnymi rekordami trzech lekarzy przyjmujących w Ameryce Południowej.
+- [x] Kryterium wpisu obejmuje jawnie deklarowaną znajomość polskiego albo polsko brzmiące nazwisko / potwierdzone polskie pochodzenie oraz publicznie potwierdzoną praktykę.
+- [x] Wpisy rozróżniają deklarację znajomości języka od kryterium nazwiskowego. Żaden z trzech profili nie deklarował polskiego w opublikowanej liście języków; nie oznaczono ich jako polskojęzycznych.
+- [x] Zapisano publiczne dane praktyk, źródła, datę weryfikacji, kraj, miasto, identyfikator rejestru i status weryfikacji licencji.
+- [x] Zgoda jest oznaczona jako ustna i zgłoszona przez administratora; nie jest przedstawiana jako niezależnie zweryfikowana przez aplikację.
+- [x] Dodano lokalne operacje dodawania, edycji i usuwania rekordów.
+- [x] Dodano dostęp do katalogu z ekranu zarządzania zaświadczeniami.
+- [x] Dodano możliwość wybrania lekarza w edytorze zaświadczenia; dane wyboru są zapisywane razem z dokumentem.
+- [x] Katalog nie nadaje uprawnień do podpisywania. Pole `signerEnabled` pozostaje wymuszone na `false`.
+- [x] Dodano testy instrumentacyjne inicjalnych rekordów oraz cyklu aktualizacji i usuwania.
+
+### Rekordy początkowe i ograniczenia weryfikacji
+1. **Dr Gustavo Polacow Korn**, São Paulo, Brazylia — otorynolaryngologia; CRM-SP 101458, RQE 45010 według profilu; publiczny gabinet przy Av. Brig. Faria Lima 1811. Publiczny katalog CNES/DATASUS wskazuje placówki w kompetencji sierpień 2026, ale aktywny status licencji należy potwierdzić bezpośrednio w CFM/CREMESP.
+2. **Dr Sergio Czerwonko**, Buenos Aires, Argentyna — geriatria; profil wymienia również psychiatrię; gabinet przy Blanco Encalada 1451; profil podaje matrícula 77456 i telefon +54 11 4781-2958. Numer i aktualny status należy sprawdzić w REFEPS.
+3. **Dr Pietra Stanicki, MD**, Buenos Aires, Argentyna — podstawowa opieka; profil CARE THERE podaje wizyty osobiste i wideo; FAQ usługi informuje o licencjonowaniu personelu, lecz indywidualny numer nie był widoczny w sprawdzonym profilu. Weryfikacja indywidualnej licencji pozostaje oczekująca.
+
+### Granice funkcjonalne i bezpieczeństwo
+- Katalog przechowuje publiczne dane praktyk i deklarację administratora o ustnej zgodzie. Przed szerszą publikacją należy uzyskać bezpośrednie, możliwe do udokumentowania potwierdzenie zgody każdego lekarza.
+- Praktyka potwierdzona publicznym profilem nie oznacza automatycznie aktywnego prawa wykonywania zawodu ani uprawnienia do wystawienia konkretnego zaświadczenia.
+- Wybór lekarza w formularzu jest wyłącznie informacyjny. Nie potwierdza tożsamości osoby, jej uprawnień, obecności przy badaniu ani podpisu.
+- Zarządzanie katalogiem jest obecnie lokalne; nie wdrożono jeszcze uwierzytelniania ról administratora ani synchronizacji z rejestrami.
+- Mechanizm podpisu kryptograficznego / kwalifikowanego pozostaje niezaimplementowany. Nie wolno ustawiać statusu „Podpisano”.
+
+### CI
+- [ ] Uruchomić nowe testy instrumentacyjne katalogu na emulatorze.
+- [ ] Zweryfikować kompilację debug i release, testy JVM, testy GUI, REUSE oraz APK na najnowszym SHA.
+- [ ] PR pozostaje otwarty do czasu zielonego CI i inspekcji APK.
+
+
+---
+
+## 61. Zmiana zakresu katalogu i papierowego podpisu — 2026-11-15
+
+Niniejsza sekcja zastępuje wcześniejsze wymagania dotyczące podpisu elektronicznego i weryfikacji uprawnień lekarza.
+
+### Uzgodniony sposób wystawiania
+- [x] Zaświadczenie jest generowane jako PDF przeznaczony do wydruku.
+- [x] Lekarz składa własnoręczny podpis na wydrukowanym dokumencie.
+- [x] PDF otrzymuje wydzielone miejsce na podpis lekarza, pieczątkę oraz datę i miejsce wystawienia.
+- [x] Dane wybranego lekarza (nazwisko, praktyka, adres) są przekazywane do sekcji lekarza w PDF.
+- [x] Nie wdraża się podpisu kryptograficznego, kwalifikowanego ani innego podpisu elektronicznego.
+- [x] Nie wdraża się sprawdzania prawa wykonywania zawodu ani statusu licencji w rejestrach.
+- [x] Numer rejestracyjny i nazwa rejestru są polami opcjonalnymi, wyłącznie informacyjnymi.
+
+### Zmiany kodu
+- [x] Usunięto z interfejsu katalogu komunikaty sugerujące konieczność weryfikacji licencji i uprawnień.
+- [x] Pola rejestru i numeru rejestracyjnego są opcjonalne.
+- [x] Walidacja rekordu wymaga danych potrzebnych do identyfikacji lekarza i praktyki, a nie numeru licencji, źródła rejestrowego ani daty weryfikacji.
+- [x] Dodano sekcję lekarza oraz pola odręcznego podpisu, pieczątki i daty/miejsca w generatorze PDF.
+- [x] Dodano migrację katalogu z klucza records_v1 do records_v2, aby zachować istniejące wpisy po zmianie schematu.
+- [x] Rozszerzono test CRUD o zapis rekordu bez danych rejestrowych.
+
+### Ograniczenia
+- Katalog jest narzędziem do wstępnego uzupełnienia danych, a nie urzędowym rejestrem.
+- Wybór lekarza nie składa podpisu i nie oznacza, że lekarz już zaakceptował treść zaświadczenia.
+- Wydruk musi zostać sprawdzony przez lekarza, uzupełniony i podpisany przez niego na papierze.
+- Pozostaje do wykonania pełna weryfikacja CI na nowym SHA oraz inspekcja artefaktu APK. PR #71 pozostaje otwarty i nie jest scalany.
+
+
+---
+
+## 62. Przykładowy przypadek kliniczny — anatomia, funkcja i diagnostyka — 2026-11-15
+
+### Zrealizowane w danych demonstracyjnych
+- [x] Język oryginału ustawiany jest na angielski, a język docelowy na polski.
+- [x] Dodano przykładowy opis MRI odcinka lędźwiowego z poziomami L2-L3, L3-L4, L4-L5 i L5-S1, zmianami zwyrodnieniowo-dyskopatycznymi oraz korelacją z prawym korzeniem L5.
+- [x] Opisano stan struktur: krążki międzykręgowe, wysokość i sygnał dysków, stawy międzywyrostkowe, kanał kręgowy, zachyłki boczne, otwory międzykręgowe, blaszki graniczne i struktury nerwowe.
+- [x] Rozszerzono badanie przedmiotowe o przykładowe zakresy ruchu, test SLR, siłę mięśniową w skali MRC, czucie, odruchy, chód oraz chód na piętach i palcach.
+- [x] Rozszerzono opis funkcji: tolerancja siedzenia, stania i chodzenia, transfery, samoobsługa, ubieranie, sen i ograniczenia zawodowe.
+- [x] Uwzględniono ocenę objawów alarmowych, w tym zaburzeń zwieraczy, znieczulenia siodłowego, postępującego niedowładu, gorączki, utraty masy ciała i bólu nocnego.
+- [x] Dodano przykładową listę leków spotykanych w praktyce Ameryki Południowej (dipirona/metamizol, diklofenak, omeprazol, pregabalina) z jednoznacznym oznaczeniem, że to fikcyjna historia farmakoterapii, a nie zalecenie leczenia.
+- [x] W części onkologicznej wyraźnie wskazano, że diagnostyka trwa, a rozpoznanie nowotworu nie jest potwierdzone.
+
+### Ograniczenia i bezpieczeństwo kliniczne
+- Wszystkie dane pacjenta, pomiary, objawy neurologiczne, wartości funkcjonalne, opis MRI i historia lekowa są fikcyjnym materiałem demonstracyjnym.
+- Nie należy przedstawiać wymyślonego opisu MRI jako rzeczywistego wyniku radiologicznego ani fikcyjnych pomiarów jako wyniku badania pacjenta.
+- Wpisane poziomy, stopień zwężenia i kontakt korzenia nerwowego wymagają w realnym przypadku potwierdzenia w oryginalnym badaniu DICOM i opisie radiologa.
+- Brak opisanego ogniska destrukcyjnego w ograniczonym przykładzie MRI nie wyklucza nowotworu ani przerzutów poza badanym obszarem.
+- Leki, dawki, czas stosowania, przeciwwskazania, alergie, interakcje i bezpieczeństwo w kontekście diagnostyki onkologicznej muszą być zweryfikowane przez lekarza prowadzącego. Przykładowa lista nie jest receptą.
+- Przed użyciem dokumentu klinicznego lekarz musi zastąpić wszystkie przykładowe dane faktami z badania i dokumentacji oraz samodzielnie zatwierdzić treść.
+
+### Weryfikacja techniczna
+- Commit z rozszerzeniem opisu strukturalnego i funkcjonalnego: `186f9ecae77cbcdc8827f571cfbfa95230e71524`.
+- Kolejne uruchomienie CI musi dotyczyć dokładnie najnowszego SHA; wcześniejsze zielone wyniki nie potwierdzają tego commitu.
+- [ ] Testy JVM i kompilacja debug.
+- [ ] Testy GUI na emulatorze.
+- [ ] Kontrola artefaktów i sumy kontrolnej APK.
+- [ ] Weryfikacja, że publiczny link instalacyjny wskazuje na APK z najnowszego przetestowanego SHA.
+- [ ] Dopiero po spełnieniu powyższych warunków rozważyć scalenie PR.
+
+## 63. Korekta składni mapy danych demonstracyjnych — 2026-11-15
+
+- Weryfikacja logów CI dla commitu `d78b1a183c89d76f442c169e2c485c585bc36e61` ujawniła błąd kompilacji Kotlin w `InternationalMedicalCertificateEditorScreen.kt`: pięć wpisów mapy `sample` nie miało przecinków oddzielających pary klucz–wartość.
+- Brakujące separatory dotyczyły pól `physicalExamination`, `systemsReview`, `functionalLimitations`, `workCapacity` oraz `treatmentAndRehabilitation`.
+- Przyczynę poprawiono przez dodanie przecinków po pięciu wartościach. Zmiana zapisana w commicie `3429ae7479a06af857db196a575486bd7dd99fb1`.
+- Poprzednia deklaracja, że poprawka kompilacji została już potwierdzona, była przedwczesna: CI wykazało, że poprzedni commit nadal zawierał błąd składni. Nowy commit wymaga pełnego ponownego uruchomienia kompilacji, testów jednostkowych i testów na emulatorze.
+- Status: naprawa źródła zapisana; wynik walidacji pozostaje oczekujący. Nie scalać PR i nie publikować APK przed pomyślnym zakończeniem wszystkich wymaganych testów na dokładnie tym commicie.
+
+
+
+---
+
+## Aktualizacja po testach emulatorowych — 2026-11-16
+
+### Wynik przebiegu CI
+- Commit testowany: `fcc0fd368ba7e0d9c1741272b170ee451641d9bc` (merge ref PR: `9c04efd47ed4f6cad2639cf1752c37aad4ac915f`).
+- Testy JVM: zaliczone.
+- Kontrola REUSE: zaliczona.
+- Testy instrumentacyjne na emulatorze: **niezaliczone** — 68 testów, 1 niepowodzenie.
+- Niepowodzenie: `MedicalDoctorDirectoryTest.legacyDirectoryRecordsAreMigratedWithoutLoss`, linia 68; oczekiwało zapisania rekordu w `records_v2`.
+- Przyczyna: implementacja wskazywała `records_v1` jako jednocześnie klucz bieżącego magazynu i klucz danych legacy. W konsekwencji ścieżka migracji nie była wykonywana, a rekord nie był zapisywany do `records_v2`.
+- Naprawa: zmieniono klucz bieżącego magazynu na `records_v2`; `records_v1` pozostaje źródłem migracji. Dzięki temu odczyt legacy wykonuje dekodowanie i zapisuje dane w nowym kluczu. Zmiana zapisana w commicie `e444e878c962813ad87ee44a0e9882d1124ba916`.
+
+### Weryfikacja po poprawce
+- [ ] Ponownie uruchomić testy JVM.
+- [ ] Ponownie uruchomić pełny zestaw testów instrumentacyjnych na emulatorze.
+- [ ] Potwierdzić brak regresji migracji, zapisu, edycji i usuwania katalogu lekarzy.
+- [ ] Po zaliczeniu testów zbudować APK w tym samym przebiegu i zachować raport oraz sumę SHA-256.
+- [ ] Dopiero po pełnym sukcesie scalić PR; następnie zweryfikować, że tag `debug-latest` wskazuje commit wdrożony na `main`, a zasób APK ma zgodny commit i sumę kontrolną.
+
+### Status
+Poprawka przyczyny pojedynczego niepowodzenia została zapisana. Testy emulatorowe dla nowego commitu jeszcze nie zostały wykonane; PR pozostaje otwarty, a APK nie jest publikowane.

@@ -133,3 +133,79 @@ internal object InternationalMedicalCertificateStore {
         return generator.generateKey()
     }
 }
+
+
+/** Multiple certificates share the encrypted Keystore-protected file without exposing clinical data. */
+internal object InternationalMedicalCertificateRecords {
+    private const val INDEX_KEY = "imc_record_index"
+    private const val RECORD_PREFIX = "imc_record_"
+
+    fun list(context: Context): List<Pair<String, Map<String, String>>> {
+        val all = InternationalMedicalCertificateStore.loadStrict(context)
+        val ids = all[INDEX_KEY].orEmpty().split(',').filter { it.matches(Regex("[A-Za-z0-9_-]{1,64}")) }
+        if (ids.isNotEmpty()) return ids.mapNotNull { id -> decodeRecord(id, all[RECORD_PREFIX + id]) }
+        // One-time, lossless migration of the original single-certificate format.
+        val legacy = all.filterKeys { it.startsWith("doc_international_medical_certificate_") || it.startsWith("imc_") }
+        return if (legacy.isEmpty()) emptyList() else listOf("legacy" to legacy)
+    }
+
+    fun load(context: Context, id: String): Map<String, String> {
+        require(id.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Invalid certificate identifier." }
+        val all = InternationalMedicalCertificateStore.loadStrict(context)
+        if (id == "legacy" && all[RECORD_PREFIX + id] == null) {
+            return all.filterKeys { it.startsWith("doc_international_medical_certificate_") || it.startsWith("imc_") }
+        }
+        return decodeRecord(id, all[RECORD_PREFIX + id])?.second.orEmpty()
+    }
+
+    fun save(context: Context, id: String, values: Map<String, String>) {
+        require(id.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Invalid certificate identifier." }
+        val all = InternationalMedicalCertificateStore.loadStrict(context).toMutableMap()
+        val ids = all[INDEX_KEY].orEmpty().split(',').filter { it.matches(Regex("[A-Za-z0-9_-]{1,64}")) }.toMutableSet()
+        if (ids.isEmpty()) {
+            val legacy = all.filterKeys { it.startsWith("doc_international_medical_certificate_") || it.startsWith("imc_") }
+            if (legacy.isNotEmpty() && id != "legacy") {
+                val json = JSONObject()
+                legacy.forEach { (key, value) -> json.put(key, value) }
+                all[RECORD_PREFIX + "legacy"] = json.toString()
+                ids.add("legacy")
+                legacy.keys.forEach(all::remove)
+            }
+        }
+        val json = JSONObject()
+        values.forEach { (key, value) ->
+            require(key.matches(Regex("[A-Za-z0-9_-]{1,64}")))
+            json.put(key, value)
+        }
+        all[RECORD_PREFIX + id] = json.toString()
+        ids.add(id)
+        all[INDEX_KEY] = ids.sorted().joinToString(",")
+        InternationalMedicalCertificateStore.save(context, all)
+    }
+
+    fun delete(context: Context, id: String) {
+        require(id.matches(Regex("[A-Za-z0-9_-]{1,64}"))) { "Invalid certificate identifier." }
+        val all = InternationalMedicalCertificateStore.loadStrict(context).toMutableMap()
+        val ids = all[INDEX_KEY].orEmpty().split(',').filter { it.isNotBlank() && it != id }
+        all.remove(RECORD_PREFIX + id)
+        all[INDEX_KEY] = ids.joinToString(",")
+        if (id == "legacy") {
+            all.keys.filter { it.startsWith("doc_international_medical_certificate_") || it.startsWith("imc_") }
+                .toList().forEach(all::remove)
+        }
+        InternationalMedicalCertificateStore.save(context, all)
+    }
+
+    private fun decodeRecord(id: String, serialized: String?): Pair<String, Map<String, String>>? {
+        if (serialized.isNullOrBlank()) return null
+        val json = JSONObject(serialized)
+        val values = linkedMapOf<String, String>()
+        val keys = json.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            require(key.matches(Regex("[A-Za-z0-9_-]{1,64}")) && !json.isNull(key))
+            values[key] = json.getString(key)
+        }
+        return id to values
+    }
+}
