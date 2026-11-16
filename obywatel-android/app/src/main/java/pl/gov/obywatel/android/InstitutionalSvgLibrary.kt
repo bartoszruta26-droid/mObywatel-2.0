@@ -48,10 +48,34 @@ private fun validateSvg(bytes:ByteArray) {
 
 private data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String)
 
-private const val COMMONS_API_MIN_INTERVAL_MS = 1200L
-private const val COMMONS_API_MAX_ATTEMPTS = 5
+// Commons rate limiting: keep every API and file request sequential and deliberately slow.
+private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 4000L
+private const val COMMONS_API_MAX_ATTEMPTS = 6
+private const val COMMONS_DOWNLOAD_MAX_ATTEMPTS = 5
 private val commonsApiThrottleLock = Any()
 @Volatile private var commonsApiLastRequestAt = 0L
+
+private fun waitForCommonsRequestSlot() {
+    synchronized(commonsApiThrottleLock) {
+        val waitMs = COMMONS_MIN_REQUEST_INTERVAL_MS - (System.currentTimeMillis() - commonsApiLastRequestAt)
+        if (waitMs > 0) Thread.sleep(waitMs)
+        commonsApiLastRequestAt = System.currentTimeMillis()
+    }
+}
+
+private fun retryAfterMillis(connection: HttpURLConnection): Long? {
+    val value = connection.getHeaderField("Retry-After")?.trim() ?: return null
+    value.toLongOrNull()?.let { return (it.coerceAtLeast(0L) * 1000L).coerceAtMost(180000L) }
+    return runCatching {
+        val date = java.time.ZonedDateTime.parse(value, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli()
+        (date - System.currentTimeMillis()).coerceAtLeast(0L).coerceAtMost(180000L)
+    }.getOrNull()
+}
+
+private class CommonsHttpException(
+    val httpCode: Int,
+    val retryDelayMs: Long?,
+) : java.io.IOException("Wikimedia Commons: HTTP $httpCode")
 
 internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null): Long {
     // Cap before multiplication so an untrusted Retry-After value cannot overflow Long.
@@ -59,18 +83,14 @@ internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null):
         if (seconds >= 60L) 60000L else seconds * 1000L
     }
     val exponentialDelay = 1000L * (1L shl attempt.coerceIn(0, 6))
-    return (serverDelay ?: exponentialDelay).coerceIn(1000L, 60000L)
+    return maxOf(serverDelay ?: exponentialDelay, exponentialDelay).coerceIn(4000L, 180000L)
 }
 
 private fun commonsRequest(params:String):JSONObject {
     var lastFailure: Exception? = null
     repeat(COMMONS_API_MAX_ATTEMPTS) { attempt ->
-        // Wikimedia asks API clients to make requests at a measured rate.
-        synchronized(commonsApiThrottleLock) {
-            val waitMs = COMMONS_API_MIN_INTERVAL_MS - (System.currentTimeMillis() - commonsApiLastRequestAt)
-            if (waitMs > 0) Thread.sleep(waitMs)
-            commonsApiLastRequestAt = System.currentTimeMillis()
-        }
+        // One global queue prevents bursts across API searches and file downloads.
+        waitForCommonsRequestSlot()
         val connection=URL("https://commons.wikimedia.org/w/api.php?$params&maxlag=5").openConnection() as HttpURLConnection
         connection.connectTimeout=20000
         connection.readTimeout=30000
@@ -80,13 +100,11 @@ private fun commonsRequest(params:String):JSONObject {
             if (code in 200..299) {
                 return JSONObject(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
             }
-            val retryAfter = connection.getHeaderField("Retry-After")?.trim()?.toLongOrNull()
+            val retryAfterMs = retryAfterMillis(connection)
             val retryable = code == 429 || code == 503 || code == 502 || code == 504
-            val message = "Wikimedia Commons: HTTP $code" +
-                if (retryAfter != null) " (Retry-After: ${retryAfter}s)" else ""
-            lastFailure = java.io.IOException(message)
+            lastFailure = CommonsHttpException(code, retryAfterMs)
             if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
-            Thread.sleep(commonsRetryDelayMs(attempt, retryAfter))
+            Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2), retryAfterMs ?: 0L))
         } finally {
             connection.disconnect()
         }
@@ -169,13 +187,19 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
 }
 
 private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
+    waitForCommonsRequestSlot()
     val connection=URL(item.url).openConnection() as HttpURLConnection
     connection.instanceFollowRedirects=true
     connection.connectTimeout=15000
     connection.readTimeout=25000
     connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.0")
     val bytes=try {
-        require(connection.responseCode in 200..299) { "HTTP ${connection.responseCode}" }
+        val code = connection.responseCode
+        if (code !in 200..299) {
+            val retryable = code == 429 || code == 503 || code == 502 || code == 504
+            if (retryable) throw CommonsHttpException(code, retryAfterMillis(connection))
+            throw java.io.IOException("HTTP $code")
+        }
         connection.inputStream.use { input ->
             val output=ByteArrayOutputStream()
             val buffer=ByteArray(8192)
@@ -311,7 +335,7 @@ private fun persistCommonsCandidateStatus(
 }
 
 private suspend fun downloadCommonsSvgWithRetry(
-    context: Context, item: CommonsSvgCandidate, maxAttempts: Int = 3
+    context: Context, item: CommonsSvgCandidate, maxAttempts: Int = COMMONS_DOWNLOAD_MAX_ATTEMPTS
 ): Pair<Int, String?> {
     var lastError = "Nieznany błąd pobierania."
     repeat(maxAttempts) { index ->
@@ -322,7 +346,11 @@ private suspend fun downloadCommonsSvgWithRetry(
             throw cancelled
         } catch (failure: Exception) {
             lastError = failure.message ?: failure.javaClass.simpleName
-            if (index + 1 < maxAttempts) kotlinx.coroutines.delay(750L * (index + 1))
+            if (index + 1 < maxAttempts) {
+                val serverDelay = (failure as? CommonsHttpException)?.retryDelayMs ?: 0L
+                val backoff = (10000L * (1L shl index.coerceIn(0, 4))).coerceAtMost(180000L)
+                kotlinx.coroutines.delay(maxOf(backoff, serverDelay))
+            }
         }
     }
     return maxAttempts to lastError
