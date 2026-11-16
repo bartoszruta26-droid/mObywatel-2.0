@@ -554,7 +554,7 @@ internal object DocumentBrandStore {
             val file = "$id$extension"
             File(dir(context), file).writeBytes(crypt(bytes, true))
             restored[id] = BrandAsset(id, item.optString("owner").take(120), kind,
-                item.optString("label").take(180), file, item.optString("rights").take(500),
+                item.optString("label").take(180), file, item.optString("rights").take(2048),
                 item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()),
                 item.optString("mimeType").take(120))
         }
@@ -614,7 +614,7 @@ internal object DocumentBrandStore {
         val file = assetId + extension
         File(dir(context), file).writeBytes(crypt(bytes, true))
         val asset = BrandAsset(assetId, owner.trim(), kind, label.trim().ifBlank { kind }, file,
-            rights.take(500), version.coerceAtLeast(1), createdAt, mimeType.take(120))
+            rights.take(2048), version.coerceAtLeast(1), createdAt, mimeType.take(120))
         save(context, list(context).filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
             .filterNot { it.id == assetId } + asset)
         return asset
