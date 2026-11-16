@@ -134,6 +134,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -608,7 +609,7 @@ private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bit
 
 @Composable
 private fun ApplicationEntryFlow(onAppearanceChange: (ApplicationAppearance) -> Unit) {
-    var stage by remember { mutableIntStateOf(0) }
+    var stage by rememberSaveable { mutableIntStateOf(0) }
     // The welcome screen is the first in-app screen; do not show a separate
     // timed emblem-only intro before it.
     when (stage) {
