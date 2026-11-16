@@ -480,3 +480,31 @@ Nie wolno zastępować autentycznych materiałów grafiką odtworzoną na podobi
 - Dane są zapisywane w metadanych zasobu i wykorzystywane przez kontrolę renderowania PDF.
 - Rozszerzono limit przechowywanych metadanych upoważnienia do 2048 znaków, aby kompletna referencja nie była obcinana przy zapisie lub imporcie.
 - Brak kompletnych danych pozostawia zasób w bibliotece, ale blokuje jego automatyczne użycie w wydruku.
+
+
+## 15. Zasoby graficzne instytucjonalne — pierwsze zasoby wbudowane (2026-11-16)
+
+### 15.1. Dodane pliki
+
+- `obywatel-android/app/src/main/assets/institutions/poland-national-flag.svg` — wektorowy układ flagi państwowej RP, zgodny z proporcją 8:5 i podziałem na dwa równe poziome pasy. Czerwień w pliku SVG jest przybliżeniem sRGB; w razie dostarczenia zatwierdzonego pliku master należy go podmienić.
+- `obywatel-android/app/src/main/assets/institutions/european-union-flag.svg` — wektorowa reprodukcja flagi UE z 12 złotymi gwiazdami na niebieskim polu, zgodna z oficjalną geometrią i barwami flagi. Nie jest to zmodyfikowane logo Komisji Europejskiej ani znak programu finansowania.
+- Oba zasoby dodano do `DocumentBrandStore.builtInAssets`, z metadanymi źródła, podstawy użycia, referencji, daty, wersji i zakresu `permittedKinds=["Flaga"]`. Są dostępne w bibliotece zasobów aplikacji i mogą być przypisywane do odpowiednich dokumentów.
+
+### 15.2. Źródła i podstawa
+
+1. Polska flaga: Dziennik Ustaw 2025 poz. 299 — tekst jednolity ustawy o godle, barwach i hymnie RP oraz o pieczęciach państwowych, art. 4–6 i załącznik nr 3. Art. 5 ust. 2 przewiduje prawo używania barw RP z zachowaniem szacunku. Źródło: https://dziennikustaw.gov.pl/D2025000029901.pdf
+2. Flaga UE: oficjalna strona Unii Europejskiej, sekcja „Download the European flag”, wskazująca oficjalne reprodukcje w tym pliki SVG. Źródło: https://european-union.europa.eu/principles-countries-history/symbols/european-flag_en
+
+### 15.3. Granice biblioteki i następne zasoby
+
+- Flagi państwowe i flaga UE mogą być wbudowywane jako wzory graficzne zgodne z oficjalną geometrią i źródłami.
+- Godło RP należy opierać na wzorze z załącznika nr 1 do ustawy i używać z poszanowaniem ograniczeń podmiotowych z art. 2a oraz ochrony symboli państwowych. Istniejący zasób graficzny wymaga porównania z urzędowym wzorem przed oznaczeniem go jako zgodnego.
+- Pieczęcie urzędowe poszczególnych organów nie będą tworzone na podstawie domysłów ani syntetycznych imitacji. Biblioteka ma przyjmować autentyczne pliki źródłowe i pozwalać na ich podmianę po otrzymaniu materiałów; sam obraz pieczęci nie zastępuje podpisu ani pieczęci elektronicznej.
+- Logo WHO wymaga wyraźnej pisemnej zgody WHO; logo Komisji Europejskiej wymaga uprzedniego uzyskania zgody i nie może być mylone z samą flagą UE. Wpisanie zezwolenia ministra na prace nad aplikacją nie jest automatycznie zgodą każdej odrębnej organizacji międzynarodowej na używanie jej logo.
+- Dla każdego kolejnego zasobu zachowujemy oddzielny zakres użycia. Zasób może być w bibliotece, ale nie może być automatycznie renderowany w dokumencie, jeśli jego upoważnienie nie obejmuje konkretnego rodzaju użycia.
+
+### 15.4. Kontrola techniczna
+
+- Dodano pliki SVG w katalogu assets aplikacji.
+- Dodano rekordy wbudowane z `permittedKinds` i metadanymi źródła.
+- Do wykonania: test kompilacji i test renderowania SVG na Androidzie, test obecności zasobów w bibliotece oraz kontrola przypisań do dokumentów.
