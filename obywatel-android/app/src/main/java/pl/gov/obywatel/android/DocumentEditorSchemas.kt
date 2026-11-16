@@ -633,7 +633,7 @@ internal fun documentUsesDedicatedEditor(documentId: String): Boolean =
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
-        "professional"
+        "professional", "foreign_prescription"
     ) || churchGraphicDocumentTargets().any { it.first == documentId } ||
         familyEntityGraphicDocumentTargets().any { it.first == documentId } ||
         officialGraphicDocumentTargets().any { it.first == documentId }
