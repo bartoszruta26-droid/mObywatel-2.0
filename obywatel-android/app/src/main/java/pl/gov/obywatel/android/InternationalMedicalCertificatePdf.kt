@@ -22,6 +22,8 @@ internal fun createBilingualMedicalCertificatePdf(
     doctorName: String = "",
     doctorPractice: String = "",
     doctorAddress: String = "",
+    doctorRegister: String = "",
+    doctorContact: String = "",
     documentTitle: String = "INTERNATIONAL MEDICAL CERTIFICATE",
     issuerHeading: String = "ATTENDING PHYSICIAN",
     signatureCaption: String = "Physician's handwritten signature (sign after printing)",
@@ -113,18 +115,57 @@ internal fun createBilingualMedicalCertificatePdf(
         if (doctorName.isNotBlank()) drawWrapped(doctorName, bodyPaint)
         if (doctorPractice.isNotBlank()) drawWrapped(doctorPractice, bodyPaint)
         if (doctorAddress.isNotBlank()) drawWrapped(doctorAddress, bodyPaint)
-        y += 34f
-        canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
-        canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
-        y += 13f
+        if (doctorRegister.isNotBlank()) drawWrapped(doctorRegister, bodyPaint)
+        if (doctorContact.isNotBlank()) drawWrapped(doctorContact, bodyPaint)
+        y += 18f
+
+        // Replace the empty stamp placeholder with a prefilled issuer-identification panel.
+        // Missing registration data is stated explicitly; the PDF never invents a number.
+        val stampLeft = margin + 250f
+        val stampWidth = contentWidth - 250f
+        val stampTop = y - 8f
+        val stampHeight = 88f
+        val stampPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 7.2f }
+        val stampHeadingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            textSize = 8f
+        }
+        canvas!!.drawRect(stampLeft, stampTop, stampLeft + stampWidth, stampTop + stampHeight, bodyPaint)
+        var stampY = stampTop + 12f
+        canvas!!.drawText(stampCaption, stampLeft + 6f, stampY, stampHeadingPaint)
+        stampY += 12f
+        val stampLines = listOf(
+            doctorName.ifBlank { "Name: not provided" },
+            doctorRegister.ifBlank { "Professional register / licence number: not provided in source record" },
+            doctorPractice,
+            doctorAddress,
+            doctorContact
+        ).filter { it.isNotBlank() }
+        stampLines.forEach { value ->
+            var remaining = value
+            while (remaining.isNotEmpty() && stampY < stampTop + stampHeight - 4f) {
+                val count = stampPaint.breakText(remaining, true, stampWidth - 12f, null).coerceAtLeast(1)
+                var lineEnd = count
+                if (count < remaining.length) {
+                    val lastSpace = remaining.lastIndexOf(' ', count - 1)
+                    if (lastSpace > 0) lineEnd = lastSpace
+                }
+                canvas!!.drawText(remaining.substring(0, lineEnd).trimEnd(), stampLeft + 6f, stampY, stampPaint)
+                remaining = remaining.substring(lineEnd).trimStart()
+                stampY += stampPaint.textSize + 2f
+            }
+        }
+
+        val signatureY = stampTop + stampHeight - 10f
+        canvas!!.drawLine(margin, signatureY, margin + 220f, signatureY, bodyPaint)
+        y = stampTop + stampHeight + 13f
         canvas!!.drawText(signatureCaption, margin, y, mutedPaint)
-        canvas!!.drawText(stampCaption, margin + 250f, y, mutedPaint)
         y += 26f
         canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
-        canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
+        canvas!!.drawLine(stampLeft, y, stampLeft + stampWidth, y, bodyPaint)
         y += 13f
         canvas!!.drawText(patientSignatureCaption, margin, y, mutedPaint)
-        canvas!!.drawText(dateAndPlaceCaption, margin + 250f, y, mutedPaint)
+        canvas!!.drawText(dateAndPlaceCaption, stampLeft, y, mutedPaint)
         finishPage()
         document.writeTo(output)
         return output.toByteArray()
