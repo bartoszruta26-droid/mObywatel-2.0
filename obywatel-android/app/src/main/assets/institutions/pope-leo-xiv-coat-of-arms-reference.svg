@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<!-- Original simplified heraldic illustration based on the official blazon published 14 May 2025.
+     It is not the official master artwork and is not approved for institutional endorsement.
+     Source: https://press.vatican.va/content/salastampa/en/bollettino/pubblico/2025/05/14/250514b.html -->
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="780" viewBox="0 0 640 780">
+ <defs><linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe6a0"/><stop offset="1" stop-color="#b8872d"/></linearGradient></defs>
+ <path d="M120 260 Q320 180 520 260 L500 510 Q480 660 320 720 Q160 660 140 510Z" fill="#fff" stroke="#b49a60" stroke-width="14"/>
+ <path d="M140 260 Q230 225 320 245 V690 Q170 635 150 500Z" fill="#1e4e91"/>
+ <path d="M320 245 Q410 225 500 260 L490 500 Q470 635 320 690Z" fill="#f7f4e9"/>
+ <g fill="#e8e8e8" stroke="#b8b8b8" stroke-width="8">
+  <path d="M220 360 C175 315 145 360 195 400 C235 435 275 400 290 360 C255 385 235 385 220 360Z"/>
+  <path d="M190 340 L240 290 L255 355Z"/>
+ </g>
+ <g transform="translate(400 465)">
+  <path d="M-72 18 Q-50 -70 5 -75 Q50 -68 75 5 Q20 -18 -12 32 Q-42 55 -72 18Z" fill="#c51d35" stroke="#851729" stroke-width="8"/>
+  <path d="M-10 -45 L12 58" stroke="#f0c24d" stroke-width="10"/>
+  <path d="M-105 70 L110 70 L92 95 L-90 95Z" fill="#a77a39" stroke="#705125" stroke-width="7"/>
+  <path d="M-85 70 L-65 5 L0 38 L65 5 L85 70Z" fill="#f0e5c9" stroke="#8b6c37" stroke-width="7"/>
+ </g>
+ <g transform="translate(320 205)" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M-115 5 Q-130 -65 -75 -100 Q0 -145 75 -100 Q130 -65 115 5 L85 25 Q0 55 -85 25Z" fill="#d8dce2" stroke="#a18a55" stroke-width="8"/>
+  <path d="M-95 -55 H95 M-105 -15 H105 M-85 22 H85" stroke="#d5ae43" stroke-width="13"/>
+  <path d="M-15 -110 L0 -155 L15 -110" fill="#d7dce3" stroke="#a18a55" stroke-width="8"/>
+  <path d="M-150 45 L150 45" stroke="#d0a33c" stroke-width="18"/>
+  <path d="M-140 42 L140 42" stroke="#b9c0c8" stroke-width="10"/>
+ </g>
+ <text x="320" y="765" text-anchor="middle" font-family="serif" font-size="24" fill="#6c542b">IN ILLO UNO UNUM</text>
+</svg>
