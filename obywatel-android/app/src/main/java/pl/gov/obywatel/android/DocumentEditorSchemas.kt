@@ -642,10 +642,7 @@ private fun internationalDocumentEditorFields(documentId: String): List<Document
         Triple("holderDateOfBirth", "Data urodzenia", "RRRR-MM-DD"),
         Triple("issuerName", "Wystawca / właściwa instytucja", ""),
         Triple("verifyingAuthority", "Organ / podmiot potwierdzający", ""),
-        Triple("sourceReference", "Źródło urzędowe / podstawa prawna", ""),
-        Triple("originalFileReference", "Oryginalny plik dokumentu", ""),
-        Triple("verificationStatus", "Status weryfikacji oryginału", "niezweryfikowany / zweryfikowany / odmowa"),
-        Triple("notes", "Uwagi i ograniczenia", "")
+        Triple("issuerName", "Wystawca / właściwa instytucja", "")
     )
     val specific = when (documentId) {
         in setOf("icvp", "medical_summary", "fit_to_travel", "fit_to_fly", "rehabilitation_report", "functional_report", "disability_opinion") -> listOf(
