@@ -86,9 +86,12 @@ class InternationalDocumentWorkflowTest {
 
     @Test
     fun everyCatalogueIdResolvesToOneWorkflowEntry() {
-        assertEquals(43, InternationalDocumentWorkflowCatalog.all.keys.toSet().size)
+        assertEquals(54, InternationalDocumentWorkflowCatalog.all.keys.toSet().size)
         assertNotNull(InternationalDocumentWorkflowCatalog.find("icvp"))
         assertNotNull(InternationalDocumentWorkflowCatalog.find("passport_record"))
+        assertNotNull(InternationalDocumentWorkflowCatalog.find("vatican_passport_ordinary"))
+        assertNotNull(InternationalDocumentWorkflowCatalog.find("holy_see_passport_diplomatic"))
+        assertNotNull(InternationalDocumentWorkflowCatalog.find("ecclesiastical_baptism_certificate"))
     }
 
     @Test
