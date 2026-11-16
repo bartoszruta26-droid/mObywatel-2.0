@@ -200,6 +200,141 @@ private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
     DocumentBrandStore.importBytes(context,"Wikimedia Commons",kind,title.take(180),bytes,rights=rights,mimeType="image/svg+xml",assetId=id)
 }
 
+
+private const val COMMONS_DOWNLOAD_LIST_FILE = "commons-svg-download-list.json"
+private const val COMMONS_DOWNLOAD_REPORT_FILE = "commons-svg-download-report.json"
+
+private data class CommonsDownloadSummary(
+    val found: Int,
+    val downloaded: Int,
+    val alreadyPresent: Int,
+    val failed: Int,
+    val attempts: Int
+)
+
+private fun commonsAssetId(title: String): String =
+    "commons_" + MessageDigest.getInstance("SHA-256")
+        .digest(title.toByteArray(Charsets.UTF_8)).take(16)
+        .joinToString("") { "%02x".format(it) }
+
+private fun saveCommonsReport(
+    context: Context,
+    found: Int,
+    downloaded: Int,
+    alreadyPresent: Int,
+    failed: Int,
+    attempts: Int,
+    current: String,
+    errors: List<String>
+) {
+    val report = JSONObject()
+        .put("updatedAt", System.currentTimeMillis())
+        .put("found", found)
+        .put("downloadedThisRun", downloaded)
+        .put("alreadyPresent", alreadyPresent)
+        .put("savedInLibrary", DocumentBrandStore.list(context).count { it.id.startsWith("commons_") })
+        .put("failed", failed)
+        .put("attempts", attempts)
+        .put("current", current)
+        .put("errors", JSONArray(errors))
+    context.openFileOutput(COMMONS_DOWNLOAD_REPORT_FILE, Context.MODE_PRIVATE).use {
+        it.write(report.toString(2).toByteArray(Charsets.UTF_8))
+    }
+}
+
+private fun loadCommonsReportSummary(context: Context): String = runCatching {
+    val file = context.getFileStreamPath(COMMONS_DOWNLOAD_REPORT_FILE)
+    if (!file.exists()) return@runCatching ""
+    val report = JSONObject(file.readText(Charsets.UTF_8))
+    "Ostatni raport Commons: znaleziono ${report.optInt("found")}, zapisano w tej sesji ${report.optInt("downloadedThisRun")}, już w bibliotece ${report.optInt("alreadyPresent")}, łącznie w bibliotece ${report.optInt("savedInLibrary")}, błędy ${report.optInt("failed")}. Aktualizacja: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(report.optLong("updatedAt")))}."
+}.getOrDefault("")
+
+private fun readCommonsCandidates(context: Context): List<CommonsSvgCandidate> = runCatching {
+    val file = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
+    if (!file.exists()) return@runCatching emptyList()
+    val array = JSONArray(file.readText(Charsets.UTF_8))
+    (0 until array.length()).mapNotNull { index ->
+        val item = array.optJSONObject(index) ?: return@mapNotNull null
+        CommonsSvgCandidate(
+            item.optString("file"), item.optString("downloadUrl"), item.optString("sourcePage"),
+            item.optString("license"), item.optString("licenseUrl"), item.optString("author"),
+            item.optString("restrictions")
+        )
+    }.filter { it.title.startsWith("File:") && it.url.startsWith("https://upload.wikimedia.org/") }
+}.getOrDefault(emptyList())
+
+private fun persistCommonsCandidateStatus(
+    context: Context, title: String, status: String, attempts: Int, error: String?
+) {
+    val file = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
+    if (!file.exists()) return
+    val array = JSONArray(file.readText(Charsets.UTF_8))
+    for (index in 0 until array.length()) {
+        val item = array.optJSONObject(index) ?: continue
+        if (item.optString("file") == title) {
+            item.put("status", status)
+                .put("attempts", attempts)
+                .put("lastError", error.orEmpty())
+                .put("updatedAt", System.currentTimeMillis())
+            break
+        }
+    }
+    context.openFileOutput(COMMONS_DOWNLOAD_LIST_FILE, Context.MODE_PRIVATE).use {
+        it.write(array.toString(2).toByteArray(Charsets.UTF_8))
+    }
+}
+
+private fun downloadCommonsSvgWithRetry(
+    context: Context, item: CommonsSvgCandidate, maxAttempts: Int = 3
+): Pair<Int, String?> {
+    var lastError = "Nieznany błąd pobierania."
+    repeat(maxAttempts) { index ->
+        try {
+            downloadCommonsSvg(context, item)
+            return (index + 1) to null
+        } catch (failure: Exception) {
+            lastError = failure.message ?: failure.javaClass.simpleName
+            if (index + 1 < maxAttempts) Thread.sleep(750L * (index + 1))
+        }
+    }
+    return maxAttempts to lastError
+}
+
+private fun processCommonsCandidates(
+    context: Context,
+    candidates: List<CommonsSvgCandidate>,
+    onProgress: (String) -> Unit
+): CommonsDownloadSummary {
+    var downloaded = 0
+    var alreadyPresent = 0
+    var failed = 0
+    var attempts = 0
+    val errors = mutableListOf<String>()
+    candidates.forEachIndexed { index, candidate ->
+        val assetId = commonsAssetId(candidate.title)
+        if (DocumentBrandStore.list(context).any { it.id == assetId }) {
+            alreadyPresent++
+            persistCommonsCandidateStatus(context, candidate.title, "saved", 0, null)
+        } else {
+            onProgress("Pobieranie SVG ${index + 1}/${candidates.size}: ${candidate.title}")
+            val result = downloadCommonsSvgWithRetry(context, candidate)
+            attempts += result.first
+            if (result.second == null) {
+                downloaded++
+                persistCommonsCandidateStatus(context, candidate.title, "saved", result.first, null)
+            } else {
+                failed++
+                val message = result.second ?: "Błąd pobierania."
+                persistCommonsCandidateStatus(context, candidate.title, "failed", result.first, message)
+                if (errors.size < 100) errors.add("${candidate.title}: $message")
+            }
+        }
+        saveCommonsReport(context, candidates.size, downloaded, alreadyPresent, failed,
+            attempts, candidate.title, errors)
+    }
+    return CommonsDownloadSummary(candidates.size, downloaded, alreadyPresent, failed, attempts)
+}
+
 @Composable
 internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     val scope= rememberCoroutineScope()
