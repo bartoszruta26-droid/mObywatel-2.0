@@ -185,6 +185,7 @@ internal fun createBilingualMedicalCertificatePdf(
         y += 5f
     }
 
+    var calculatedPageCount = pageCountOverride
     try {
         startPage()
         if (sideBySideFields) {
@@ -246,35 +247,35 @@ internal fun createBilingualMedicalCertificatePdf(
         canvas!!.drawText(if (polish && patientSignatureCaption.startsWith("Patient's handwritten signature")) "Własnoręczny podpis pacjenta (jeżeli wymagany)" else patientSignatureCaption, margin, y, mutedPaint)
         canvas!!.drawText(if (polish && dateAndPlaceCaption == "Date and place") "Data i miejsce" else dateAndPlaceCaption, panelLeft, y, mutedPaint)
         finishPage()
-        // Render twice: the first pass determines the final page count; the second
-        // writes consistent "page X of Y" footers on every page.
-        if (pageCountOverride == null) {
-            return createBilingualMedicalCertificatePdf(
-                sourceLanguage = sourceLanguage,
-                targetLanguage = targetLanguage,
-                fields = fields,
-                doctorName = doctorName,
-                doctorPractice = doctorPractice,
-                doctorAddress = doctorAddress,
-                doctorRegister = doctorRegister,
-                doctorContact = doctorContact,
-                doctorQualifications = doctorQualifications,
-                doctorSpecialty = doctorSpecialty,
-                sideBySideFields = sideBySideFields,
-                documentTitle = documentTitle,
-                issuerHeading = issuerHeading,
-                signatureCaption = signatureCaption,
-                stampCaption = stampCaption,
-                patientSignatureCaption = patientSignatureCaption,
-                dateAndPlaceCaption = dateAndPlaceCaption,
-                pageCountOverride = pageNumber
-            )
-        }
-        document.writeTo(output)
-        return output.toByteArray()
+        // Render twice: first determine the page count, then render with footers.
+        if (pageCountOverride == null) calculatedPageCount = pageNumber
+        else document.writeTo(output)
     } finally {
         page?.let { runCatching { document.finishPage(it) } }
         document.close()
         output.close()
     }
+    if (pageCountOverride == null) {
+        return createBilingualMedicalCertificatePdf(
+            sourceLanguage = sourceLanguage,
+            targetLanguage = targetLanguage,
+            fields = fields,
+            doctorName = doctorName,
+            doctorPractice = doctorPractice,
+            doctorAddress = doctorAddress,
+            doctorRegister = doctorRegister,
+            doctorContact = doctorContact,
+            doctorQualifications = doctorQualifications,
+            doctorSpecialty = doctorSpecialty,
+            sideBySideFields = sideBySideFields,
+            documentTitle = documentTitle,
+            issuerHeading = issuerHeading,
+            signatureCaption = signatureCaption,
+            stampCaption = stampCaption,
+            patientSignatureCaption = patientSignatureCaption,
+            dateAndPlaceCaption = dateAndPlaceCaption,
+            pageCountOverride = calculatedPageCount
+        )
+    }
+    return output.toByteArray()
 }
