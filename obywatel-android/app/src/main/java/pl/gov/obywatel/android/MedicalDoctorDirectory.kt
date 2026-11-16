@@ -30,23 +30,47 @@ internal data class MedicalDoctorRecord(
 internal object MedicalDoctorDirectory {
  private const val PREFS="medical_doctor_directory"
  private const val KEY="records_v2"
+ private const val SEED_VERSION=2
  private fun seeds()=listOf(
   MedicalDoctorRecord("doctor-gustavo-polacow-korn","Dr Gustavo Polacow Korn","Otorynolaryngologia","Brazylia","São Paulo",
    "Consultório Médico Dr. Gustavo Polacow Korn","Av. Brig. Faria Lima 1811, cj. 907–908, Jardim Paulistano, São Paulo/SP, CEP 01452-001, Brazylia",
-   "+55 11 3812-1157","https://medbook.com.br/gustavokorn","CRM-SP","101458; RQE 45010 (według profilu)",
+   "+55 11 3812-1157","https://medbook.com.br/gustavokorn","CRM-SP","101458; RQE 45010 (RQE według profilu; aktywny status CRM niepotwierdzony)",
    DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.NUMBER_REPORTED_NOT_CHECKED,DoctorConsentStatus.USER_REPORTED_ORAL,
-   "https://www.doctoralia.com.br/perfil/gustavo-polacow-korn | https://bula.com.br/estabelecimento/cons-medico-gustavo-polakow-korn-3666441 | https://crm.com.br/medico/sp/101458-gustavo-polacow-korn/","2026-11-15"),
+   "https://www.doctoralia.com.br/perfil/gustavo-polacow-korn | https://www.bula.com.br/medico/gustavo-polacow-korn-crm-sp-101458 | https://portal.cfm.org.br/busca-medicos","2026-11-16"),
   MedicalDoctorRecord("doctor-sergio-czerwonko","Dr Sergio Czerwonko","Geriatria; profil wymienia również psychiatrię","Argentyna","Buenos Aires",
    "Consultorio privado","Blanco Encalada 1451, Belgrano, C1428, Buenos Aires, Argentyna","+54 11 4781-2958",
-   "https://www.medicoargentina.com/dr/sergio-czerwonko-11040660","Matrícula profesional — Argentyna","77456 (numer z profilu; status do sprawdzenia)",
+   "https://www.medicoargentina.com/dr/sergio-czerwonko-11040660","Matrícula profesional — Argentyna","77456 (numer z profilu; status do potwierdzenia w REFEPS)",
    DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.NUMBER_REPORTED_NOT_CHECKED,DoctorConsentStatus.USER_REPORTED_ORAL,
-   "https://www.medicoargentina.com/dr/sergio-czerwonko-11040660 | https://www.doctoraliar.com/perfil/sergio-czerwonko | https://www.argentina.gob.ar/salud/buscador-nacional-de-profesionales-de-la-salud","2026-11-15"),
-  MedicalDoctorRecord("doctor-pietra-stanicki","Dr Pietra Stanicki, MD","Podstawowa opieka zdrowotna","Argentyna","Buenos Aires",
-   "CARE THERE — wizyty domowe i telemedycyna","Buenos Aires, Argentyna; wizyty domowe i konsultacje wideo","",
-   "https://stanicki.doctorsa.com/","Argentyński rejestr REFEPS","Numer indywidualny nieopublikowany w sprawdzonym profilu",
+   "https://www.medicoargentina.com/dr/sergio-czerwonko-11040660 | https://www.doctoraliar.com/perfil/sergio-czerwonko | https://www.argentina.gob.ar/salud/buscador-nacional-de-profesionales-de-la-salud","2026-11-16"),
+  MedicalDoctorRecord("doctor-pietra-stanicki","Dr Pietra Stanicki, MD, MSc","Choroby zakaźne; medycyna tropikalna; medycyna podróży","Argentyna","Buenos Aires",
+   "CARE THERE — wizyty domowe i telemedycyna","Buenos Aires, Argentyna; konsultacje domowe i wideo; brak publicznego adresu gabinetu",
+   "+54 9 11 2405-3898","https://www.carethere.health/en/providers/dr-stanicki","REFEPS (Argentyna); CRM (Brazylia)","Numer indywidualny nieopublikowany w sprawdzonych źródłach",
    DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.PENDING,DoctorConsentStatus.USER_REPORTED_ORAL,
-   "https://stanicki.doctorsa.com/ | https://www.carethere.health/en/faq | https://www.argentina.gob.ar/salud/buscador-nacional-de-profesionales-de-la-salud","2026-11-15")
+   "https://www.carethere.health/en/providers/dr-stanicki | https://www.carethere.health/en/faq | https://www.argentina.gob.ar/salud/buscador-nacional-de-profesionales-de-la-salud | https://portal.cfm.org.br/busca-medicos","2026-11-16"),
+  MedicalDoctorRecord("doctor-robert-john-kowalski-jr","Dr Robert John Kowalski Jr, MD","Neurochirurgia (profil AMA)","USA","Tampa, Florida",
+   "Praktyka lekarska — adres główny według Florida Department of Health","3404 W. Hawthorne Rd., Tampa, FL 33611, USA",
+   "","https://mqa-internet.doh.state.fl.us/MQASearchServices/HealthcareProviders/Details?LicInd=93156&ProCde=1501","Florida Department of Health — Medical Doctor","ME95396 — Clear/Active; ważność do 2028-01-31",
+   DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.VERIFIED_OFFICIAL_REGISTER,DoctorConsentStatus.USER_REPORTED_ORAL,
+   "https://mqa-internet.doh.state.fl.us/MQASearchServices/HealthcareProviders/Details?LicInd=93156&ProCde=1501 | https://find-doctor.ama-assn.org/doctor/robert-john-kowalski-jr-md/2745219","2026-11-16"),
+  MedicalDoctorRecord("doctor-andrzej-wlodzimierz-nowicki","Dr Andrzej Włodzimierz Nowicki, MD","Lekarz (MD); specjalizacja nieustalona w profilu rejestrowym","USA","Gainesville, Florida",
+   "Praktyka lekarska — adres główny według Florida Department of Health","4600 W. Newberry Rd., Gainesville, FL 32607, USA",
+   "","https://mqa-internet.doh.state.fl.us/MQASearchServices/healthcareproviders/Details?LicInd=77310&ProCde=1501","Florida Department of Health — Medical Doctor","ME81698 — Clear/Active; ważność do 2028-01-31",
+   DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.VERIFIED_OFFICIAL_REGISTER,DoctorConsentStatus.USER_REPORTED_ORAL,
+   "https://mqa-internet.doh.state.fl.us/MQASearchServices/healthcareproviders/Details?LicInd=77310&ProCde=1501","2026-11-16"),
+  MedicalDoctorRecord("doctor-evelyn-ann-zielinski","Dr Evelyn Ann Zielinski, MD","Położnictwo i ginekologia","Kanada","Toronto, Ontario",
+   "Sunnybrook Health Sciences Centre — Bayview Campus","2075 Bayview Avenue, Toronto, ON M4N 3M5, Kanada",
+   "+1 416-480-6100","https://register.cpso.on.ca/physician-info/?cpsonum=156000","College of Physicians and Surgeons of Ontario (CPSO)","156000 — Independent Practice Certificate od 2026-06-12; warunki praktyki w rejestrze",
+   DoctorPolishEvidence.POLISH_ORIGIN_SURNAME,false,DoctorLicenseVerification.VERIFIED_OFFICIAL_REGISTER,DoctorConsentStatus.USER_REPORTED_ORAL,
+   "https://register.cpso.on.ca/physician-info/?cpsonum=156000 | https://sunnybrook.ca/locations/","2026-11-16")
  )
+ private fun mergeSeedRecords(existing:List<MedicalDoctorRecord>):List<MedicalDoctorRecord>{
+  val merged=existing.toMutableList()
+  seeds().forEach { seed ->
+   val index=merged.indexOfFirst { it.id==seed.id }
+   if(index>=0) merged[index]=seed else merged.add(seed)
+  }
+  return merged
+ }
  private fun encode(rs:List<MedicalDoctorRecord>)=JSONArray().apply { rs.forEach { d->put(JSONObject().apply {
   put("id",d.id);put("name",d.name);put("specialty",d.specialty);put("country",d.country);put("city",d.city)
   put("practice",d.practice);put("address",d.address);put("phone",d.phone);put("website",d.website)
@@ -65,15 +89,24 @@ internal object MedicalDoctorDirectory {
  fun list(c:Context):List<MedicalDoctorRecord>{
   val p=c.getSharedPreferences(PREFS,Context.MODE_PRIVATE)
   val current=p.getString(KEY,null)
-  if(current!=null)return decode(current)
+  if(current!=null){
+   val records=decode(current)
+   val storedVersion=p.getInt("seed_version",0)
+   if(storedVersion<SEED_VERSION){
+    val updated=mergeSeedRecords(records)
+    check(p.edit().putString(KEY,encode(updated)).putInt("seed_version",SEED_VERSION).commit())
+    return updated
+   }
+   return records
+  }
   val legacy=p.getString("records_v1",null)
   if(legacy!=null){
-   val migrated=decode(legacy)
-   check(p.edit().putString(KEY,encode(migrated)).commit())
+   val migrated=mergeSeedRecords(decode(legacy))
+   check(p.edit().putString(KEY,encode(migrated)).putInt("seed_version",SEED_VERSION).commit())
    return migrated
   }
   val initial=seeds()
-  check(p.edit().putString(KEY,encode(initial)).commit())
+  check(p.edit().putString(KEY,encode(initial)).putInt("seed_version",SEED_VERSION).commit())
   return initial
  }
  fun save(c:Context,d:MedicalDoctorRecord){

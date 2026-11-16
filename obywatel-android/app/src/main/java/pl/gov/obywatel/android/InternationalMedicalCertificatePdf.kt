@@ -14,7 +14,7 @@ internal data class MedicalCertificatePdfField(
     val targetValue: String
 )
 
-/** Creates a printable bilingual PDF; source and target text are never silently substituted. */
+/** Creates a printable bilingual PDF with aligned source/translation columns when requested. */
 internal fun createBilingualMedicalCertificatePdf(
     sourceLanguage: String,
     targetLanguage: String,
@@ -22,10 +22,15 @@ internal fun createBilingualMedicalCertificatePdf(
     doctorName: String = "",
     doctorPractice: String = "",
     doctorAddress: String = "",
+    doctorRegister: String = "",
+    doctorContact: String = "",
+    doctorQualifications: String = "",
+    doctorSpecialty: String = "",
+    sideBySideFields: Boolean = false,
     documentTitle: String = "INTERNATIONAL MEDICAL CERTIFICATE",
     issuerHeading: String = "ATTENDING PHYSICIAN",
     signatureCaption: String = "Physician's handwritten signature (sign after printing)",
-    stampCaption: String = "Medical stamp",
+    stampCaption: String = "Physician identification / stamp details",
     patientSignatureCaption: String = "Patient's handwritten signature (if required)",
     dateAndPlaceCaption: String = "Date and place"
 ): ByteArray {
@@ -33,33 +38,26 @@ internal fun createBilingualMedicalCertificatePdf(
     val output = ByteArrayOutputStream()
     val pageWidth = 595
     val pageHeight = 842
-    val margin = 42f
+    val margin = 36f
     val contentWidth = pageWidth - margin * 2
     val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = Typeface.create("sans-serif", Typeface.BOLD)
-        textSize = 17f
+        textSize = 16f
     }
     val headingPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = Typeface.create("sans-serif", Typeface.BOLD)
-        textSize = 11f
+        textSize = 9.2f
     }
-    val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 9.5f }
-    val mutedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 8f }
+    val bodyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 8.5f }
+    val mutedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 7.4f }
+    val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 0.7f
+    }
     var pageNumber = 0
     var page: PdfDocument.Page? = null
     var canvas: android.graphics.Canvas? = null
     var y = 0f
-
-    fun startPage() {
-        pageNumber++
-        page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
-        canvas = page!!.canvas
-        y = margin
-        canvas!!.drawText(documentTitle, margin, y, titlePaint)
-        y += 22f
-        canvas!!.drawText("Original: $sourceLanguage    |    Translation: $targetLanguage", margin, y, mutedPaint)
-        y += 24f
-    }
 
     fun finishPage() {
         page?.let(document::finishPage)
@@ -67,64 +65,156 @@ internal fun createBilingualMedicalCertificatePdf(
         canvas = null
     }
 
-    fun drawWrapped(text: String, paint: Paint, indent: Float = 0f) {
+    fun startPage() {
+        pageNumber++
+        page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
+        canvas = page!!.canvas
+        y = margin
+        canvas!!.drawText(documentTitle, margin, y, titlePaint)
+        y += 19f
+        canvas!!.drawText("ORIGINAL / ${sourceLanguage.uppercase()}     |     TRANSLATION / ${targetLanguage.uppercase()}", margin, y, mutedPaint)
+        y += 17f
+        // Practice identity and contact information belong in the document header, not in the stamp panel.
+        val headerLines = listOf(
+            doctorPractice,
+            doctorAddress,
+            doctorContact
+        ).filter { it.isNotBlank() }
+        if (headerLines.isNotEmpty()) {
+            headerLines.forEach { line ->
+                var remaining = line
+                while (remaining.isNotEmpty()) {
+                    val count = mutedPaint.breakText(remaining, true, contentWidth, null).coerceAtLeast(1)
+                    var end = count
+                    if (count < remaining.length) {
+                        val space = remaining.lastIndexOf(' ', count - 1)
+                        if (space > 0) end = space
+                    }
+                    canvas!!.drawText(remaining.substring(0, end).trimEnd(), margin, y, mutedPaint)
+                    remaining = remaining.substring(end).trimStart()
+                    y += 10f
+                }
+            }
+            y += 4f
+            canvas!!.drawLine(margin, y, margin + contentWidth, y, borderPaint)
+            y += 12f
+        }
+    }
+
+    fun wrapLines(text: String, paint: Paint, width: Float): List<String> {
         val value = text.ifBlank { "—" }
+        val lines = mutableListOf<String>()
         var remaining = value
-        val maxWidth = contentWidth - indent
         while (remaining.isNotEmpty()) {
-            if (y > pageHeight - margin - 24f) {
+            val count = paint.breakText(remaining, true, width, null).coerceAtLeast(1)
+            var end = count
+            if (count < remaining.length) {
+                val space = remaining.lastIndexOf(' ', count - 1)
+                if (space > 0) end = space
+            }
+            lines += remaining.substring(0, end).trimEnd()
+            remaining = remaining.substring(end).trimStart()
+        }
+        return lines
+    }
+
+    fun drawWrapped(text: String, paint: Paint, indent: Float = 0f) {
+        wrapLines(text, paint, contentWidth - indent).forEach { line ->
+            if (y > pageHeight - margin - 22f) {
                 finishPage()
                 startPage()
             }
-            val count = paint.breakText(remaining, true, maxWidth, null).coerceAtLeast(1)
-            var lineEnd = count
-            if (count < remaining.length) {
-                val lastSpace = remaining.lastIndexOf(' ', count - 1)
-                if (lastSpace > 0) lineEnd = lastSpace
-            }
-            val line = remaining.substring(0, lineEnd).trimEnd()
             canvas!!.drawText(line, margin + indent, y, paint)
-            y += paint.textSize + 4f
-            remaining = remaining.substring(lineEnd).trimStart()
+            y += paint.textSize + 3f
         }
+    }
+
+    fun drawSideBySideField(field: MedicalCertificatePdfField) {
+        val gap = 14f
+        val columnWidth = (contentWidth - gap) / 2f
+        val left = wrapLines(field.sourceLabel, headingPaint, columnWidth) +
+            wrapLines(field.sourceValue, bodyPaint, columnWidth)
+        val right = wrapLines(field.targetLabel, headingPaint, columnWidth) +
+            wrapLines(field.targetValue, bodyPaint, columnWidth)
+        val rowHeight = maxOf(left.size, right.size) * (bodyPaint.textSize + 3f) + 10f
+        if (y + rowHeight > pageHeight - margin - 24f) {
+            finishPage()
+            startPage()
+        }
+        canvas!!.drawLine(margin + columnWidth + gap / 2f, y - 7f, margin + columnWidth + gap / 2f, y + rowHeight - 4f, borderPaint)
+        var leftY = y
+        left.forEachIndexed { index, line ->
+            val paint = if (index < wrapLines(field.sourceLabel, headingPaint, columnWidth).size) headingPaint else bodyPaint
+            canvas!!.drawText(line, margin, leftY, paint)
+            leftY += bodyPaint.textSize + 3f
+        }
+        var rightY = y
+        val rightLabelLines = wrapLines(field.targetLabel, headingPaint, columnWidth).size
+        right.forEachIndexed { index, line ->
+            val paint = if (index < rightLabelLines) headingPaint else bodyPaint
+            canvas!!.drawText(line, margin + columnWidth + gap, rightY, paint)
+            rightY += bodyPaint.textSize + 3f
+        }
+        y += rowHeight
+        canvas!!.drawLine(margin, y - 3f, margin + contentWidth, y - 3f, borderPaint)
+        y += 5f
     }
 
     try {
         startPage()
-        fields.forEach { field ->
-            if (y > pageHeight - margin - 90f) {
-                finishPage()
-                startPage()
+        if (sideBySideFields) {
+            fields.forEach(::drawSideBySideField)
+        } else {
+            fields.forEach { field ->
+                val sourceLabelLines = wrapLines(field.sourceLabel, headingPaint, contentWidth)
+                drawWrapped(field.sourceLabel, headingPaint)
+                drawWrapped(field.sourceValue, bodyPaint, 8f)
+                drawWrapped(field.targetLabel, headingPaint)
+                drawWrapped(field.targetValue, bodyPaint, 8f)
+                y += 7f
             }
-            drawWrapped(field.sourceLabel, headingPaint)
-            drawWrapped(field.sourceValue, bodyPaint, 8f)
-            y += 3f
-            drawWrapped(field.targetLabel, headingPaint)
-            drawWrapped(field.targetValue, bodyPaint, 8f)
-            y += 10f
         }
-        if (fields.isEmpty()) drawWrapped("No certificate fields have been completed.", bodyPaint)
-        if (y > pageHeight - margin - 170f) {
+        if (fields.isEmpty()) drawWrapped("No document fields have been completed.", bodyPaint)
+
+        val stampLines = listOf(
+            "Name: " + doctorName.ifBlank { "not provided" },
+            "Professional title: " + doctorQualifications.ifBlank { "not provided" },
+            "Specialty: " + doctorSpecialty.ifBlank { "not provided" },
+            "Professional licence / register number: " + doctorRegister.ifBlank { "not provided" }
+        )
+        val panelHeight = 78f
+        if (y + panelHeight + 85f > pageHeight - margin) {
             finishPage()
             startPage()
         }
-        y += 14f
+        y += 12f
         drawWrapped(issuerHeading, headingPaint)
-        if (doctorName.isNotBlank()) drawWrapped(doctorName, bodyPaint)
-        if (doctorPractice.isNotBlank()) drawWrapped(doctorPractice, bodyPaint)
-        if (doctorAddress.isNotBlank()) drawWrapped(doctorAddress, bodyPaint)
-        y += 34f
-        canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
-        canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
-        y += 13f
+        y += 4f
+        val panelTop = y
+        val panelLeft = margin + 220f
+        val panelWidth = contentWidth - 220f
+        canvas!!.drawRect(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight, borderPaint)
+        var panelY = panelTop + 12f
+        canvas!!.drawText(stampCaption, panelLeft + 6f, panelY, headingPaint)
+        panelY += 13f
+        stampLines.forEach { line ->
+            wrapLines(line, mutedPaint, panelWidth - 12f).forEach { wrapped ->
+                if (panelY < panelTop + panelHeight - 3f) {
+                    canvas!!.drawText(wrapped, panelLeft + 6f, panelY, mutedPaint)
+                    panelY += 9f
+                }
+            }
+        }
+        val signatureY = panelTop + panelHeight - 8f
+        canvas!!.drawLine(margin, signatureY, margin + 195f, signatureY, bodyPaint)
+        y = panelTop + panelHeight + 14f
         canvas!!.drawText(signatureCaption, margin, y, mutedPaint)
-        canvas!!.drawText(stampCaption, margin + 250f, y, mutedPaint)
-        y += 26f
-        canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
-        canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
-        y += 13f
+        y += 23f
+        canvas!!.drawLine(margin, y, margin + 195f, y, bodyPaint)
+        canvas!!.drawLine(panelLeft, y, panelLeft + panelWidth, y, bodyPaint)
+        y += 12f
         canvas!!.drawText(patientSignatureCaption, margin, y, mutedPaint)
-        canvas!!.drawText(dateAndPlaceCaption, margin + 250f, y, mutedPaint)
+        canvas!!.drawText(dateAndPlaceCaption, panelLeft, y, mutedPaint)
         finishPage()
         document.writeTo(output)
         return output.toByteArray()

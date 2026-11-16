@@ -26,7 +26,11 @@ class InternationalMedicalCertificateStoreTest {
                     targetLabel = "English — Diagnosis",
                     targetValue = "Spinal pain"
                 )
-            )
+            ),
+            doctorName = "Dr Test Physician",
+            doctorPractice = "Test Medical Practice",
+            doctorAddress = "123 Test Street, Toronto, Canada",
+            doctorRegister = "CPSO 156000"
         )
         assertTrue(bytes.size > 500)
         assertTrue(String(bytes.copyOfRange(0, 5), Charsets.US_ASCII) == "%PDF-")
