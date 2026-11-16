@@ -126,7 +126,76 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        Text("Wybierz plik, aby pobrać go do szyfrowanej biblioteki. Licencja i aktualność pozostają do potwierdzenia; do tego czasu zasób ma pustą listę dozwolonych zastosowań.",style=MaterialTheme.typography.bodySmall)
+        Text("Wybierz pojedynczy plik albo pobierz cały katalog. Pobrane pliki są zapisywane w szyfrowanej bibliotece aplikacji; licencja i aktualność pozostają do potwierdzenia.",style=MaterialTheme.typography.bodySmall)
+        OutlinedButton(
+            enabled = busy == null,
+            onClick = {
+                busy = "all"
+                status = "Rozpoczynam pobieranie \${svgSources.size} pozycji…"
+                scope.launch {
+                    var downloaded = 0
+                    var failed = 0
+                    val errors = mutableListOf<String>()
+                    svgSources.forEachIndexed { index, source ->
+                        status = "Pobieranie \${index + 1}/\${svgSources.size}: \${source.label}"
+                        val result = withContext(Dispatchers.IO) {
+                            runCatching {
+                                val connection = URL(source.url).openConnection() as HttpURLConnection
+                                connection.instanceFollowRedirects = true
+                                connection.connectTimeout = 15000
+                                connection.readTimeout = 25000
+                                connection.setRequestProperty("User-Agent", "mObywatelska-2.0 SVG library")
+                                val bytes = try {
+                                    require(connection.responseCode in 200..299) { "HTTP \${connection.responseCode}" }
+                                    connection.inputStream.use { input ->
+                                        val out = ByteArrayOutputStream()
+                                        val buffer = ByteArray(8192)
+                                        var total = 0
+                                        while (true) {
+                                            val n = input.read(buffer)
+                                            if (n < 0) break
+                                            total += n
+                                            require(total <= 12 * 1024 * 1024) { "Plik przekracza 12 MB." }
+                                            out.write(buffer, 0, n)
+                                        }
+                                        out.toByteArray()
+                                    }
+                                } finally {
+                                    connection.disconnect()
+                                }
+                                validateSvg(bytes)
+                                val sha = MessageDigest.getInstance("SHA-256").digest(bytes)
+                                    .joinToString("") { "%02x".format(it) }
+                                val rights = JSONObject()
+                                    .put("owner", source.organization)
+                                    .put("sourceUrl", source.page)
+                                    .put("downloadUrl", source.url)
+                                    .put("rightsBasis", source.rights)
+                                    .put("sha256", sha)
+                                    .put("verificationStatus", "pending")
+                                    .put("permittedKinds", JSONArray())
+                                    .put("verifiedBy", "Automatyczne pobranie; kontrola prawna wymagana")
+                                    .toString()
+                                DocumentBrandStore.importBytes(
+                                    context, source.organization, source.kind, source.label, bytes,
+                                    rights = rights, mimeType = "image/svg+xml", assetId = source.id
+                                )
+                            }
+                        }
+                        if (result.isSuccess) downloaded++ else {
+                            failed++
+                            errors += "\${source.label}: \${result.exceptionOrNull()?.message ?: "błąd"}"
+                        }
+                    }
+                    status = "Zakończono katalog: pobrano $downloaded/\${svgSources.size}, błędy: $failed. " +
+                        if (errors.isEmpty()) "Wszystkie pozycje zostały zapisane." else errors.take(4).joinToString(" | ") +
+                            if (errors.size > 4) " | oraz \${errors.size - 4} dalszych błędów." else ""
+                    busy = null
+                    if (downloaded > 0) onSaved()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(if (busy == "all") "Pobieranie całego katalogu…" else "Pobierz wszystkie \${svgSources.size} pliki SVG") }
         svgSources.forEach { source ->
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
