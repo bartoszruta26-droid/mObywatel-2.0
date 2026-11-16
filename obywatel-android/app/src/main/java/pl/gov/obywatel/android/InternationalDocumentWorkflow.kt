@@ -118,7 +118,19 @@ internal object InternationalDocumentWorkflowCatalog {
         spec("international_driving_permit", InternationalIssuerKind.TRANSPORT_AUTHORITY, "Organ lub upoważniona organizacja państwa wydającego", InternationalDocumentMode.AUTHORITY_APPLICATION, false, true),
         spec("travel_document", InternationalIssuerKind.IMMIGRATION_AUTHORITY, "Właściwy organ państwa wydającego", InternationalDocumentMode.AUTHORITY_APPLICATION, false, true),
         spec("residence_card", InternationalIssuerKind.IMMIGRATION_AUTHORITY, "Właściwy organ ds. cudzoziemców", InternationalDocumentMode.AUTHORITY_APPLICATION, false, true),
-        spec("passport_record", InternationalIssuerKind.DOCUMENT_HOLDER, "Organ wydający wskazany na oryginalnym dokumencie", InternationalDocumentMode.HOLDER_MAINTAINED_RECORD)
+        spec("passport_record", InternationalIssuerKind.DOCUMENT_HOLDER, "Organ wydający wskazany na oryginalnym dokumencie", InternationalDocumentMode.HOLDER_MAINTAINED_RECORD),
+
+        spec("vatican_passport_ordinary", InternationalIssuerKind.IMMIGRATION_AUTHORITY, "Governorate Państwa Watykańskiego — właściwy urząd paszportowy", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("holy_see_passport_diplomatic", InternationalIssuerKind.PROFESSIONAL_AUTHORITY, "Sekretariat Stanu Stolicy Apostolskiej — właściwa służba", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("holy_see_passport_service", InternationalIssuerKind.PROFESSIONAL_AUTHORITY, "Sekretariat Stanu Stolicy Apostolskiej — właściwa służba", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("holy_see_passport_temporary_service", InternationalIssuerKind.PROFESSIONAL_AUTHORITY, "Sekretariat Stanu Stolicy Apostolskiej — właściwa służba", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("vatican_citizenship_certificate", InternationalIssuerKind.IMMIGRATION_AUTHORITY, "Governorate Państwa Watykańskiego — właściwa służba obywatelstwa", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("ecclesiastical_baptism_certificate", InternationalIssuerKind.EDUCATION_INSTITUTION, "Parafia lub diecezja prowadząca księgę chrztów", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("ecclesiastical_marriage_certificate", InternationalIssuerKind.EDUCATION_INSTITUTION, "Parafia lub diecezja prowadząca księgę małżeństw", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("ecclesiastical_death_certificate", InternationalIssuerKind.EDUCATION_INSTITUTION, "Parafia lub diecezja prowadząca właściwą księgę", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("canonical_status_certificate", InternationalIssuerKind.PROFESSIONAL_AUTHORITY, "Właściwa kuria / ordynariusz / przełożony kompetentny według prawa kanonicznego", InternationalDocumentMode.PROFESSIONAL_CERTIFICATE, true, false),
+        spec("clerical_ordination_certificate", InternationalIssuerKind.PROFESSIONAL_AUTHORITY, "Diecezja lub instytut życia konsekrowanego właściwy dla święceń", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("apostolic_nunciature_credential", InternationalIssuerKind.PROFESSIONAL_AUTHORITY, "Właściwa nuncjatura apostolska lub Sekretariat Stanu", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD)
     ).associateBy { it.documentId }
 
     fun find(documentId: String): InternationalDocumentWorkflow? = all[documentId]
