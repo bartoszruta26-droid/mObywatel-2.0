@@ -508,3 +508,53 @@ Nie wolno zastępować autentycznych materiałów grafiką odtworzoną na podobi
 - Dodano pliki SVG w katalogu assets aplikacji.
 - Dodano rekordy wbudowane z `permittedKinds` i metadanymi źródła.
 - Do wykonania: test kompilacji i test renderowania SVG na Androidzie, test obecności zasobów w bibliotece oraz kontrola przypisań do dokumentów.
+
+
+## 16. Dokumenty Stolicy Apostolskiej i Państwa Watykańskiego — katalog międzynarodowy (2026-11-16)
+
+### 16.1. Rozdzielenie podmiotów i jurysdykcji
+
+Stolica Apostolska i Państwo Watykańskie są odrębnymi podmiotami prawa międzynarodowego. Nie wolno łączyć ich dokumentów, organów wydających ani oznaczeń:
+- paszport zwykły — Państwo Watykańskie (Governorate);
+- paszport dyplomatyczny, służbowy i tymczasowy służbowy — Stolica Apostolska (Sekretariat Stanu);
+- zaświadczenie o obywatelstwie — właściwa służba Państwa Watykańskiego;
+- dokumenty chrztu, małżeństwa i zgonu — parafia/diecezja prowadząca właściwą księgę;
+- zaświadczenie o stanie kanonicznym, dokument święceń i dokument nuncjatury — wyłącznie właściwa władza kościelna.
+
+### 16.2. Dodane pozycje (11)
+
+| Identyfikator | Dokument | Istniejąca grupa |
+|---|---|---|
+| `vatican_passport_ordinary` | Paszport zwykły Państwa Watykańskiego | Służba osobista |
+| `holy_see_passport_diplomatic` | Paszport dyplomatyczny Stolicy Apostolskiej | Służba osobista |
+| `holy_see_passport_service` | Paszport służbowy Stolicy Apostolskiej | Służba osobista |
+| `holy_see_passport_temporary_service` | Tymczasowy paszport służbowy Stolicy Apostolskiej | Służba osobista |
+| `vatican_citizenship_certificate` | Zaświadczenie o obywatelstwie watykańskim | Służba cywilna |
+| `ecclesiastical_baptism_certificate` | Kościelny dokument chrztu — parafia / diecezja | Służba kościelna |
+| `ecclesiastical_marriage_certificate` | Kościelny dokument małżeństwa — parafia / diecezja | Służba kościelna |
+| `ecclesiastical_death_certificate` | Kościelny dokument zgonu — parafia / diecezja | Służba kościelna |
+| `canonical_status_certificate` | Zaświadczenie o stanie kanonicznym | Służba kościelna |
+| `clerical_ordination_certificate` | Dokument święceń / ordynacji — właściwa diecezja | Służba kościelna |
+| `apostolic_nunciature_credential` | Dokument akredytacji / poświadczenia nuncjatury apostolskiej | Służba kościelna |
+
+Wszystkie pozycje otrzymały wspólne pola jurysdykcji, wystawcy, organu wydającego, weryfikacji, procedury, języka źródłowego/tłumaczenia i źródła wzoru. Workflow rozróżnia dokumenty wydawane przez właściwy organ od zaświadczeń profesjonalnych.
+
+### 16.3. Źródła urzędowe
+
+1. Sekretariat Stanu Stolicy Apostolskiej — oficjalna dokumentacja flagi, herbów i pieczęci Państwa Watykańskiego oraz herbu Stolicy Apostolskiej: https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html
+2. Państwo Watykańskie — opis flagi i jej historii: https://www.vaticanstate.va/en/state-and-government/general-informations/flag.html
+3. Broszura urzędowa „Holy See and Vatican City State Passports” (2025): https://epass.vatican.va/Brochure_2025_WEB_SERV_rev.pdf. Potwierdza rozdzielenie dwóch podmiotów, organów wydających oraz rodzajów paszportów; od 18 grudnia 2025 r. wskazuje nowe kody PP (zwykły) i PO (służbowy), przy zachowaniu PD i PT.
+4. Oficjalny wykaz dokumentów papieskich: https://www.vatican.va/offices/papal_docs_list.html
+5. Archiwum Stolicy Apostolskiej — oficjalne akty, kodeksy prawa kanonicznego i dokumenty: https://www.vatican.va/archive/index.htm
+
+### 16.4. Zasoby graficzne i ograniczenia
+
+- Zarejestrowano oficjalne źródła flagi, herbu Stolicy Apostolskiej, herbu Państwa Watykańskiego i pieczęci Państwa Watykańskiego.
+- Nie dodano syntetycznej pieczęci ani imitacji herbu. Oficjalna strona wskazuje autorstwo/atrybucję niektórych reprodukcji; przed osadzeniem pliku należy zachować wskazane prawa i warunki.
+- Nie dodano logo ani pieczęci jako gotowego wbudowanego assetu bez pozyskania właściwego pliku i potwierdzenia zakresu użycia.
+- Paszporty są dokumentami wydawanymi przez właściwe organy. Aplikacja może przechowywać dane/oryginał i obsługiwać wniosek, ale nie może generować paszportu ani jego strony danych.
+
+### 16.5. Weryfikacja
+
+- Do wykonania: testy JVM katalogu i workflow dla 54 pozycji, testy edytorów i routingu, testy regresji vCard/PDF oraz CI Android.
+- Dla dokumentów kościelnych wymagane jest ustalenie właściwej parafii/diecezji/ordynariusza i lokalnych reguł wydawania. Nie istnieje jeden uniwersalny formularz watykański dla wszystkich dokumentów parafialnych.
