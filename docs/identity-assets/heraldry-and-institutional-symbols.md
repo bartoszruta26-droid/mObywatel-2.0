@@ -59,6 +59,14 @@ Wpisy w CSV oznaczone verify-per-file wymagają sprawdzenia strony konkretnego p
 
 assetId, label, organization, symbolType, validityPeriod, sourcePageUrl, downloadUrl, author, license, licenseUrl, sourceRevision, downloadedAt, sha256, mimeType, byteSize, verificationStatus, permittedKinds, notes.
 
-## Status
+## Status implementacji (2026-11-16)
 
-Ten katalog opisuje źródła i proces kwalifikacji. Nie oznacza, że pliki binarne zostały już pobrane lub że wszystkie pozycje mają potwierdzone licencje. Aplikacja ma oznaczać zasób jako pobrany i zweryfikowany dopiero po udanym pobraniu oraz kontroli.
+- W bibliotece zasobów aplikacji dodano panel katalogu i pobierania wybranych plików SVG.
+- Pobranie zapisuje SVG w istniejącym szyfrowanym magazynie aplikacji oraz metadane źródła, notę licencyjną, SHA-256 i status `pending`.
+- Dodano eksport do ZIP przez systemowy selektor zapisu Androida. Archiwum zawiera oryginalne SVG, `manifest.json` i `README.md`; można je następnie ręcznie rozpakować i dodać do repozytorium.
+- Walidacja odrzuca pliki z DTD/encjami, skryptami, `foreignObject`, zewnętrznymi/aktywnymi odwołaniami oraz pliki większe niż 12 MB.
+- Emblemat Stolicy Apostolskiej przeniesiono do `assets/institutions/holy-see-emblem-vatican-va.svg` i zarejestrowano jako zasób wbudowany.
+- Wszystkie pobrane symbole z katalogu pozostają z pustym `permittedKinds`, dopóki licencja i uprawnienie do konkretnego zastosowania nie zostaną zatwierdzone.
+- Adresy źródłowe wymagają testu odpowiedzi serwera; plik niedostępny lub niezgodny z SVG zostanie odrzucony. Rejestr nie jest gwarancją dostępności każdego historycznego URL.
+
+Status kompilacji i testów należy odczytać z PR #80; nie uznawać implementacji za gotową do scalenia, dopóki Android build i walidacja GUI nie zakończą się powodzeniem.
