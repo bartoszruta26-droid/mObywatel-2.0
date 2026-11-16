@@ -96,7 +96,7 @@ private fun commonsRequest(params:String):JSONObject {
 }
 
 private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
-    val terms=listOf("coat of arms","heraldry","flag","emblem","seal","logo international organization","municipal coat of arms","government emblem","university coat of arms","hospital logo","church coat of arms","province coat of arms")
+    val terms=listOf("coat of arms","heraldry","flag","emblem","seal","logo international organization","municipal coat of arms","government emblem","university coat of arms","hospital logo","church coat of arms","province coat of arms","city coat of arms","country coat of arms","state coat of arms","county coat of arms","national flag","city flag","province flag","municipal flag","organization logo","government logo","university logo","military insignia","heraldic crest","civic emblem","royal coat of arms","regional coat of arms","public institution logo")
     val titles=linkedSetOf<String>()
     for(term in terms) {
         val query=java.net.URLEncoder.encode("$term filemime:svg","UTF-8")
@@ -215,6 +215,8 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
         Text("Katalog zawiera pozycje kuratorowane oraz wyszukiwanie plików SVG z otwartą licencją w Wikimedia Commons. Zachowywane są autorstwo, licencja, źródło i ograniczenia.",style=MaterialTheme.typography.bodySmall)
+        val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
+        Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         OutlinedButton(
             enabled=busy==null,
             onClick={
