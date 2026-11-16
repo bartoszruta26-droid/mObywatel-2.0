@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+# SPDX-License-Identifier: CC0-1.0
 asset_id,organization,symbol_type,label,source_page_url,download_url,license_status,usage_status,notes
 vatican_state_coa_2023,Państwo Watykańskie,herb,Herb Państwa Watykańskiego 2023,https://commons.wikimedia.org/wiki/File:Coat_of_arms_of_Vatican_City_(2023%E2%80%93present).svg,https://upload.wikimedia.org/wikipedia/commons/3/3a/Coat_of_arms_of_Vatican_City_%282023%E2%80%93present%29.svg,Public domain stated on file page,priority-review,Annex B Fundamental Law 2023; preserve original SVG
 holy_see_emblem_vatican_va,Stolica Apostolska,emblem,Emblemat Stolicy Apostolskiej Vatican.va,https://commons.wikimedia.org/wiki/File:Emblem_of_the_Holy_See_(vatican.va).svg,https://upload.wikimedia.org/wikipedia/commons/d/d4/Emblem_of_the_Holy_See_%28vatican.va%29.svg,CC0 stated on file page,priority-review,Distinct from Vatican City State coat of arms
