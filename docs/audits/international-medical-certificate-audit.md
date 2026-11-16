@@ -1730,3 +1730,37 @@ Niniejsza sekcja zastępuje wcześniejsze wymagania dotyczące podpisu elektroni
 
 ### Status
 Poprawka przyczyny pojedynczego niepowodzenia została zapisana. Testy emulatorowe dla nowego commitu jeszcze nie zostały wykonane; PR pozostaje otwarty, a APK nie jest publikowane.
+
+
+---
+
+## 64. Weryfikacja danych praktyk i identyfikatorów lekarzy — 2026-11-16
+
+### Kwerenda publiczna
+- [x] Florida DOH: Robert John Kowalski Jr., ME95396, Clear/Active do 2028-01-31, 3404 W. Hawthorne Rd., Tampa, FL 33611.
+- [x] Florida DOH: Andrzej Włodzimierz Nowicki, ME81698, Clear/Active do 2028-01-31, 4600 W. Newberry Rd., Gainesville, FL 32607.
+- [x] CPSO 156000: Evelyn Ann Zielinski, położnictwo i ginekologia, Independent Practice Certificate od 2026-06-12; lokalizacja Sunnybrook Health Sciences Centre, Bayview Avenue, Toronto.
+- [x] Oficjalny adres Sunnybrook Bayview Campus: 2075 Bayview Avenue, Toronto, ON M4N 3M5.
+- [x] Gustavo Polacow Korn: publicznie wskazane CRM-SP 101458 i adres Av. Brig. Faria Lima 1811, cj. 907–908; aktywny status CRM niepotwierdzony bezpośrednio w CFM/CREMESP.
+- [x] Sergio Czerwonko: profile publiczne podają matrícula 77456 i adres Blanco Encalada 1451; status REFEPS do sprawdzenia.
+- [x] Pietra Stanicki: profil CARE THERE potwierdza działalność w Argentynie/Brazylii; indywidualnego numeru i pełnego adresu praktyki nie znaleziono.
+
+### Zmiany kodu na gałęzi feature/verified-doctor-directory-data
+- [x] Rozszerzono katalog z trzech do sześciu rekordów.
+- [x] Uzupełniono trzy rekordy o dane z oficjalnych rejestrów USA/Kanady.
+- [x] Zaktualizowano źródła, datę sprawdzenia, nazwę rejestru i status weryfikacji.
+- [x] Nie przypisano numerów ani adresów, których nie potwierdzono.
+- [x] Numery rejestracyjne zachowują jurysdykcję i nie są przedstawiane jako polskie PWZ.
+- [x] Wszystkie rekordy mają signerEnabled=false; zgoda pozostaje statusem ustna — zgłoszona przez administratora.
+- [x] Dodano wersjonowaną aktualizację rekordów początkowych (seed_version=2): aktualizuje rekordy wbudowane i dodaje nowe na istniejących instalacjach, zachowując własne rekordy administratora.
+- [x] Rozszerzono test instrumentacyjny o oczekiwane identyfikatory, statusy i migrację danych użytkownika.
+
+### Kontrole pozostałe
+- [ ] Potwierdzić bezpośrednio w CFM/CREMESP aktualny status CRM-SP 101458.
+- [ ] Potwierdzić matrícula 77456 w REFEPS.
+- [ ] Uzyskać indywidualny numer Pietry Stanicki z REFEPS/CFM; nie zastępować go identyfikatorem CareThere.
+- [ ] Potwierdzić z lekarzami aktualność adresów i ich zgodę na publikowanie tych lokalizacji jako miejsc praktyki.
+- [ ] Uruchomić testy JVM, instrumentacyjne na emulatorze, kompilację debug i kontrolę REUSE dla końcowego SHA.
+- [ ] Po zielonym CI otworzyć PR do przeglądu; nie scalać i nie publikować APK przed zakończeniem walidacji.
+
+**Status:** trzy identyfikatory potwierdzono w oficjalnych rejestrach. Pozostałe trzy rekordy mają jawny status ograniczonej weryfikacji. Zmiany zapisano na gałęzi roboczej; testy CI oczekują.
