@@ -84,7 +84,7 @@ internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null):
     val serverDelay = retryAfterSeconds?.takeIf { it >= 0 }?.let { seconds ->
         if (seconds >= 60L) 60000L else seconds * 1000L
     }
-    val exponentialDelay = 1000L * (1L shl attempt.coerceIn(0, 6))
+    val exponentialDelay = 4000L * (1L shl (attempt - 1).coerceIn(0, 6))
     return maxOf(serverDelay ?: exponentialDelay, exponentialDelay).coerceIn(4000L, 180000L)
 }
 
