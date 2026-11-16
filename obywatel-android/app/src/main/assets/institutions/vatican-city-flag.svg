@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<!-- Original simplified vector drawing based on the official description of the Vatican City State flag.
+     Source specification: https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html
+     This is not an official master artwork or a seal. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
+  <rect width="200" height="200" fill="#FFE000"/>
+  <rect x="200" width="200" height="200" fill="#FFFFFF"/>
+  <g transform="translate(300 105)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-48 42 L42 -42 M-42 42 L48 -42" stroke="#C7A34B" stroke-width="8" fill="none"/>
+    <path d="M-48 42 L-56 50 M-48 42 L-40 50 M42 -42 L34 -50 M42 -42 L50 -34" stroke="#C7A34B" stroke-width="5" fill="none"/>
+    <path d="M-42 42 L-50 34 M-42 42 L-34 50 M48 -42 L40 -50 M48 -42 L56 -34" stroke="#8A8A8A" stroke-width="4" fill="none"/>
+    <path d="M-55 48 Q-62 59 -52 65 Q-42 59 -49 48 M36 -48 Q29 -59 39 -65 Q49 -59 42 -48" fill="#D8D8D8" stroke="#8A8A8A" stroke-width="2"/>
+    <path d="M-26 -12 L-20 -42 L0 -30 L20 -42 L26 -12 Z" fill="#F5D76E" stroke="#A47B25" stroke-width="3"/>
+    <path d="M-26 -12 Q0 -2 26 -12 L22 0 Q0 9 -22 0 Z" fill="#E8C85A" stroke="#A47B25" stroke-width="3"/>
+    <path d="M-8 -42 L0 -55 L8 -42" fill="#F5D76E" stroke="#A47B25" stroke-width="3"/>
+    <path d="M-18 -25 L18 -25 M-14 -12 L14 -12" stroke="#A47B25" stroke-width="2"/>
+    <path d="M0 8 L0 22 M-8 22 L8 22" stroke="#A47B25" stroke-width="3"/>
+  </g>
+</svg>
