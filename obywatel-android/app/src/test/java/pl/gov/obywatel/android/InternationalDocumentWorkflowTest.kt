@@ -89,6 +89,12 @@ class InternationalDocumentWorkflowTest {
     }
 
     @Test
+    fun authorityIssuedDocumentsPrintAsDataOrApplicationSheetsNotAsIssuedOriginals() {
+        assertEquals("Dane / wniosek dotyczący: Dokument S1", pdfDocumentDisplayTitle("s1", "Dokument S1"))
+        assertEquals("Zaświadczenie Fit to Fly", pdfDocumentDisplayTitle("fit_to_fly", "Zaświadczenie Fit to Fly"))
+    }
+
+    @Test
     fun officialTemplateMustHaveCurrentJurisdictionalSourceAndPermissionMetadata() {
         val approved = InstitutionalTemplateApproval(
             documentId = "s1",
