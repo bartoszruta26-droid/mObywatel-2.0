@@ -260,7 +260,7 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
                 documentTitle = "FOREIGN PRESCRIPTION / RECEPTA ZAGRANICZNA",
                 issuerHeading = "PRESCRIBER / WYSTAWCA RECEPTY",
                 signatureCaption = "Prescriber's handwritten signature (sign after printing)",
-                stampCaption = "Prescriber's stamp"
+                stampCaption = "Prescriber identification / stamp details"
             )
             pdfLauncher.launch("recepta-zagraniczna.pdf")
         }, modifier = Modifier.fillMaxWidth()) { Text("Eksportuj PDF dwujęzyczny") }
