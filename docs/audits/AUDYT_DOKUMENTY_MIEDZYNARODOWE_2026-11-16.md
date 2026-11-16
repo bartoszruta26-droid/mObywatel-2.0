@@ -472,3 +472,11 @@ Nie wolno zastępować autentycznych materiałów grafiką odtworzoną na podobi
 5. Dla każdego wzoru zachowuje się kraj, instytucję, procedurę, język, wersję i datę obowiązywania.
 6. Testy katalogu, grup, PDF, vCard, emulatora i kompilacji APK muszą przejść przed scaleniem PR.
 
+
+
+### 14.6. Formularz biblioteki zasobów
+
+- Ekran biblioteki zasobów otrzymał pola do wprowadzania źródła HTTPS, podstawy wykorzystania, numeru zgody / referencji publikacji, osoby weryfikującej, wersji, dat obowiązywania oraz listy dozwolonych typów zasobów.
+- Dane są zapisywane w metadanych zasobu i wykorzystywane przez kontrolę renderowania PDF.
+- Rozszerzono limit przechowywanych metadanych upoważnienia do 2048 znaków, aby kompletna referencja nie była obcinana przy zapisie lub imporcie.
+- Brak kompletnych danych pozostawia zasób w bibliotece, ale blokuje jego automatyczne użycie w wydruku.
