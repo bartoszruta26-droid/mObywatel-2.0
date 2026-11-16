@@ -239,6 +239,10 @@ private fun writeCommonsJson(context: Context, fileName: String, value: String) 
     }
 }
 
+private fun readCommonsJson(context: Context, fileName: String): String =
+    android.util.AtomicFile(context.getFileStreamPath(fileName)).openRead()
+        .bufferedReader(Charsets.UTF_8).use { it.readText() }
+
 internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
     found >= 100 && available.coerceAtLeast(0) * 2 < found
 
@@ -282,7 +286,7 @@ private fun saveCommonsReport(
 private fun loadCommonsReportSummary(context: Context): String = runCatching {
     val file = context.getFileStreamPath(COMMONS_DOWNLOAD_REPORT_FILE)
     if (!file.exists()) return@runCatching ""
-    val report = JSONObject(file.readText(Charsets.UTF_8))
+    val report = JSONObject(readCommonsJson(context, COMMONS_DOWNLOAD_REPORT_FILE))
     "Ostatni raport Commons: znaleziono ${report.optInt("found")}, zapisano w tej sesji ${report.optInt("downloadedThisRun")}, już w bibliotece ${report.optInt("alreadyPresent")}, łącznie w bibliotece ${report.optInt("savedInLibrary")}, błędy ${report.optInt("failed")}." +
         (if (report.optBoolean("severeDropOff")) " UWAGA: wykryto duży ubytek — zapisano mniej niż połowę znalezionych pozycji." else "") +
         " Aktualizacja: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(report.optLong("updatedAt")))}."
@@ -290,8 +294,8 @@ private fun loadCommonsReportSummary(context: Context): String = runCatching {
 
 private fun readCommonsCandidates(context: Context): List<CommonsSvgCandidate> = runCatching {
     val file = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
-    if (!file.exists()) return@runCatching emptyList()
-    val array = JSONArray(file.readText(Charsets.UTF_8))
+    if (!file.exists()) return@runCatching emptyList<CommonsSvgCandidate>()
+    val array = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
     (0 until array.length()).mapNotNull { index ->
         val item = array.optJSONObject(index) ?: return@mapNotNull null
         CommonsSvgCandidate(
