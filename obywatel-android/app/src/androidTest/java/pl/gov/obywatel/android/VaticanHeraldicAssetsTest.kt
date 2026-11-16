@@ -31,6 +31,9 @@ class VaticanHeraldicAssetsTest {
             assertNotNull("Brak danych pliku $file", bytes)
             assertTrue("Pusty plik $file", bytes!!.isNotEmpty())
             assertTrue("Nie jest to SVG: $file", String(bytes, Charsets.UTF_8).contains("<svg"))
+            val preview = DocumentBrandStore.preview(context, id)
+            assertNotNull("Nie można wyrenderować podglądu SVG: $file", preview)
+            preview!!.recycle()
         }
     }
 
@@ -55,5 +58,6 @@ class VaticanHeraldicAssetsTest {
         assertNull(DocumentBrandStore.authorizedImageForDocument(context, "church", "Państwo Watykańskie", "Herb"))
         assertNull(DocumentBrandStore.authorizedImageForDocument(context, "church", "Stolica Apostolska", "Godło"))
         assertNull(DocumentBrandStore.authorizedImageForDocument(context, "church", "Papież Leon XIV", "Herb"))
+        assertNull(DocumentBrandStore.authorizedImageForDocument(context, "church", "Kościół Rzymski — symbol historyczny", "Flaga"))
     }
 }
