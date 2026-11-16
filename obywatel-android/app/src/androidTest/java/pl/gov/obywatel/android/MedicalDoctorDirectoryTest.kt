@@ -65,7 +65,11 @@ class MedicalDoctorDirectoryTest {
             assertEquals(1, migrated.size)
             assertEquals("Dr Legacy", migrated.single().name)
             assertEquals("Legacy clinic", migrated.single().practice)
+            assertEquals("Argentina", migrated.single().country)
+            assertEquals("Buenos Aires", migrated.single().city)
+            assertEquals("https://example.org", migrated.single().website)
             assertTrue(prefs.contains("records_v2"))
+            assertTrue(prefs.contains("records_v1"))
         } finally {
             val edit = prefs.edit().clear()
             if (previous != null) edit.putString("records_v2", previous)
