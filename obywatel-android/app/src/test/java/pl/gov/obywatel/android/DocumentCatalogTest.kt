@@ -80,4 +80,66 @@ class DocumentCatalogTest {
         assertTrue(documentEditorFieldDefinitions(item.first).all { it.label.all { ch -> ch.code < 128 } })
     }
 
+
+    @Test
+    fun internationalDocumentsUseExistingGroupsAndHaveRoutesAndSchemas() {
+        val expectedGroups = mapOf(
+            "icvp" to "Służba zdrowotna",
+            "medical_summary" to "Służba zdrowotna",
+            "allergy_card" to "Służba zdrowotna",
+            "medication_card" to "Służba zdrowotna",
+            "fit_to_travel" to "Służba zdrowotna",
+            "fit_to_fly" to "Służba zdrowotna",
+            "rehabilitation_report" to "Służba zdrowotna",
+            "functional_report" to "Służba zdrowotna",
+            "disability_opinion" to "Służba zdrowotna",
+            "eu_parking_card" to "Służba zdrowotna",
+            "prc" to "Służba zdrowotna",
+            "s1" to "Służba zdrowotna",
+            "s2" to "Służba zdrowotna",
+            "s3" to "Służba zdrowotna",
+            "da1" to "Służba zdrowotna",
+            "cross_border_prescription" to "Służba zdrowotna",
+            "refund_claim" to "Służba zdrowotna",
+            "a1" to "Służba finansowa",
+            "u1" to "Służba finansowa",
+            "u2" to "Służba finansowa",
+            "epc" to "Służba zawodowa",
+            "good_standing" to "Służba zawodowa",
+            "professional_status" to "Służba zawodowa",
+            "qualification_recognition" to "Służba zawodowa",
+            "diploma" to "Służba zawodowa",
+            "education_certificate" to "Służba zawodowa",
+            "diploma_supplement" to "Służba zawodowa",
+            "birth_certificate" to "Służba cywilna",
+            "marriage_certificate" to "Służba cywilna",
+            "death_certificate" to "Służba cywilna",
+            "marital_status" to "Służba cywilna",
+            "capacity_to_marry" to "Służba cywilna",
+            "residence_certificate" to "Służba cywilna",
+            "citizenship_certificate" to "Służba cywilna",
+            "life_certificate" to "Służba cywilna",
+            "criminal_record_foreign" to "Służba cywilna",
+            "divorce_decree" to "Służba cywilna",
+            "adoption_certificate" to "Służba cywilna",
+            "parentage_certificate" to "Służba cywilna",
+            "international_driving_permit" to "Służba osobista",
+            "travel_document" to "Służba osobista",
+            "residence_card" to "Służba osobista",
+            "passport_record" to "Służba osobista"
+        )
+        assertEquals(43, expectedGroups.size)
+        val existingGroups = documentVisibilityGroupOrder.toSet()
+        expectedGroups.forEach { (id, group) ->
+            assertTrue("Brak kafelka $id", documentDisplayOptions.any { it.first == id })
+            assertTrue("Dodano nową grupę dla $id", group in existingGroups)
+            assertEquals("Nieprawidłowa grupa dla $id", group, documentVisibilityGroup(id))
+            assertTrue("Brak trasy dla $id", DocumentRouteRegistry.find(id) != null)
+            val schema = documentEditorFieldDefinitions(id)
+            assertTrue("Brak pól ewidencyjnych dla $id", schema.isNotEmpty())
+            assertEquals("Powtórzone klucze pól dla $id", schema.size, schema.map { it.key }.toSet().size)
+        }
+        assertEquals(13, existingGroups.size)
+    }
+
 }
