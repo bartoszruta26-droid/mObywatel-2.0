@@ -337,6 +337,12 @@ internal object DocumentBrandStore {
     }
     private val builtInAssets = listOf(
         BrandAsset(
+            "builtin_holy_see_emblem_vatican_va", "Stolica Apostolska", "Godło",
+            "Emblemat Stolicy Apostolskiej — grafika publikowana przez Vatican.va",
+            "builtin:institutions/holy-see-emblem-vatican-va.svg",
+            rights = """{"owner":"Stolica Apostolska","sourceUrl":"https://commons.wikimedia.org/wiki/File:Emblem_of_the_Holy_See_(vatican.va).svg","rightsBasis":"Wikimedia Commons wskazuje CC0-1.0; plik opublikowany na Vatican.va. Odrębny znak od herbu Państwa Watykańskiego.","verifiedBy":"Metadane źródła i licencji zapisane w katalogu zasobów 2026-11-16","permittedKinds":[]}"""
+        ),
+        BrandAsset(
             "builtin_flag_poland_official_layout", "Zasoby aplikacji", "Flaga",
             "Flaga państwowa Rzeczypospolitej Polskiej — układ ustawowy",
             "builtin:institutions/poland-national-flag.svg",
@@ -1279,6 +1285,10 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             "Centralna biblioteka zasobów dla wszystkich edytorów. Katalog obejmuje ikony wektorowe i rastrowe, tła, herby, godła, logotypy, pieczęcie, wzory podpisów, certyfikaty, flagi, załączniki tekstowe i pliki dodatkowe. Zasoby są przechowywane lokalnie i szyfrowane.",
             style = MaterialTheme.typography.bodySmall
         )
+        if (fixedTarget == null && !readOnly) {
+            InstitutionalSvgLibraryPanel(context) { assets = DocumentBrandStore.list(context) }
+            HorizontalDivider()
+        }
         if (fixedTarget != null && !readOnly) {
             Text("Dokument", fontWeight = FontWeight.SemiBold)
             Text(documentBrandTargets.firstOrNull { it.first == fixedTarget }?.second ?: fixedTarget,
