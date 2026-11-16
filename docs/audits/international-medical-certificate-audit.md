@@ -1706,3 +1706,27 @@ Niniejsza sekcja zastępuje wcześniejsze wymagania dotyczące podpisu elektroni
 - Poprzednia deklaracja, że poprawka kompilacji została już potwierdzona, była przedwczesna: CI wykazało, że poprzedni commit nadal zawierał błąd składni. Nowy commit wymaga pełnego ponownego uruchomienia kompilacji, testów jednostkowych i testów na emulatorze.
 - Status: naprawa źródła zapisana; wynik walidacji pozostaje oczekujący. Nie scalać PR i nie publikować APK przed pomyślnym zakończeniem wszystkich wymaganych testów na dokładnie tym commicie.
 
+
+
+---
+
+## Aktualizacja po testach emulatorowych — 2026-11-16
+
+### Wynik przebiegu CI
+- Commit testowany: `fcc0fd368ba7e0d9c1741272b170ee451641d9bc` (merge ref PR: `9c04efd47ed4f6cad2639cf1752c37aad4ac915f`).
+- Testy JVM: zaliczone.
+- Kontrola REUSE: zaliczona.
+- Testy instrumentacyjne na emulatorze: **niezaliczone** — 68 testów, 1 niepowodzenie.
+- Niepowodzenie: `MedicalDoctorDirectoryTest.legacyDirectoryRecordsAreMigratedWithoutLoss`, linia 68; oczekiwało zapisania rekordu w `records_v2`.
+- Przyczyna: implementacja wskazywała `records_v1` jako jednocześnie klucz bieżącego magazynu i klucz danych legacy. W konsekwencji ścieżka migracji nie była wykonywana, a rekord nie był zapisywany do `records_v2`.
+- Naprawa: zmieniono klucz bieżącego magazynu na `records_v2`; `records_v1` pozostaje źródłem migracji. Dzięki temu odczyt legacy wykonuje dekodowanie i zapisuje dane w nowym kluczu. Zmiana zapisana w commicie `e444e878c962813ad87ee44a0e9882d1124ba916`.
+
+### Weryfikacja po poprawce
+- [ ] Ponownie uruchomić testy JVM.
+- [ ] Ponownie uruchomić pełny zestaw testów instrumentacyjnych na emulatorze.
+- [ ] Potwierdzić brak regresji migracji, zapisu, edycji i usuwania katalogu lekarzy.
+- [ ] Po zaliczeniu testów zbudować APK w tym samym przebiegu i zachować raport oraz sumę SHA-256.
+- [ ] Dopiero po pełnym sukcesie scalić PR; następnie zweryfikować, że tag `debug-latest` wskazuje commit wdrożony na `main`, a zasób APK ma zgodny commit i sumę kontrolną.
+
+### Status
+Poprawka przyczyny pojedynczego niepowodzenia została zapisana. Testy emulatorowe dla nowego commitu jeszcze nie zostały wykonane; PR pozostaje otwarty, a APK nie jest publikowane.
