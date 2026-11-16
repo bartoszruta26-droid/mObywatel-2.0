@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<!-- Original simplified vector rendition of the coat of arms described in Annex B of the 2023 Fundamental Law.
+     Official specification: https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html
+     This is not the official master artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="760" viewBox="0 0 640 760">
+ <defs><linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe79a"/><stop offset="1" stop-color="#b78627"/></linearGradient><linearGradient id="silver" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#9da5ad"/></linearGradient></defs>
+ <path d="M320 170 C250 170 175 190 120 220 L145 500 Q170 650 320 710 Q470 650 495 500 L520 220 C465 190 390 170 320 170Z" fill="#c8102e" stroke="#8c1026" stroke-width="18"/>
+ <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M205 495 L435 265" stroke="url(#gold)" stroke-width="32"/><path d="M435 495 L205 265" stroke="url(#silver)" stroke-width="32"/>
+  <path d="M190 510 L160 540 M190 510 L220 540 M450 250 L480 220 M450 250 L420 220" stroke="#c9a33a" stroke-width="18"/>
+  <path d="M450 510 L480 540 M450 510 L420 540 M190 250 L160 220 M190 250 L220 220" stroke="#c5cbd1" stroke-width="16"/>
+  <path d="M205 495 Q165 540 210 570 Q250 550 225 510 M435 265 Q475 220 430 190 Q390 210 415 250" stroke="#c8102e" stroke-width="12"/>
+ </g>
+ <g transform="translate(320 190)">
+  <path d="M-100 10 L-78 -75 L0 -45 L78 -75 L100 10 Q0 48 -100 10Z" fill="url(#silver)" stroke="#8b6b25" stroke-width="10"/>
+  <path d="M-100 10 Q0 65 100 10 L84 52 Q0 100 -84 52Z" fill="url(#gold)" stroke="#8b6b25" stroke-width="10"/>
+  <path d="M-75 -55 L-45 -105 L0 -72 L45 -105 L75 -55" fill="none" stroke="#d6b04b" stroke-width="16"/>
+  <path d="M-88 -8 H88 M-65 30 H65" stroke="#9a782d" stroke-width="8"/>
+  <path d="M0 -112 V-145 M-22 -145 H22" stroke="#d7b24c" stroke-width="10"/>
+ </g>
+</svg>

@@ -80,4 +80,116 @@ class DocumentCatalogTest {
         assertTrue(documentEditorFieldDefinitions(item.first).all { it.label.all { ch -> ch.code < 128 } })
     }
 
+
+    @Test
+    fun internationalDocumentsUseExistingGroupsAndHaveRoutesAndSchemas() {
+        val expectedGroups = mapOf(
+            "icvp" to "Służba zdrowotna",
+            "medical_summary" to "Służba zdrowotna",
+            "allergy_card" to "Służba zdrowotna",
+            "medication_card" to "Służba zdrowotna",
+            "fit_to_travel" to "Służba zdrowotna",
+            "fit_to_fly" to "Służba zdrowotna",
+            "rehabilitation_report" to "Służba zdrowotna",
+            "functional_report" to "Służba zdrowotna",
+            "disability_opinion" to "Służba zdrowotna",
+            "eu_parking_card" to "Służba zdrowotna",
+            "prc" to "Służba zdrowotna",
+            "s1" to "Służba zdrowotna",
+            "s2" to "Służba zdrowotna",
+            "s3" to "Służba zdrowotna",
+            "da1" to "Służba zdrowotna",
+            "cross_border_prescription" to "Służba zdrowotna",
+            "refund_claim" to "Służba zdrowotna",
+            "a1" to "Służba finansowa",
+            "u1" to "Służba finansowa",
+            "u2" to "Służba finansowa",
+            "epc" to "Służba zawodowa",
+            "good_standing" to "Służba zawodowa",
+            "professional_status" to "Służba zawodowa",
+            "qualification_recognition" to "Służba zawodowa",
+            "diploma" to "Służba zawodowa",
+            "education_certificate" to "Służba zawodowa",
+            "diploma_supplement" to "Służba zawodowa",
+            "birth_certificate" to "Służba cywilna",
+            "marriage_certificate" to "Służba cywilna",
+            "death_certificate" to "Służba cywilna",
+            "marital_status" to "Służba cywilna",
+            "capacity_to_marry" to "Służba cywilna",
+            "residence_certificate" to "Służba cywilna",
+            "citizenship_certificate" to "Służba cywilna",
+            "life_certificate" to "Służba cywilna",
+            "criminal_record_foreign" to "Służba cywilna",
+            "divorce_decree" to "Służba cywilna",
+            "adoption_certificate" to "Służba cywilna",
+            "parentage_certificate" to "Służba cywilna",
+            "international_driving_permit" to "Służba osobista",
+            "travel_document" to "Służba osobista",
+            "residence_card" to "Służba osobista",
+            "passport_record" to "Służba osobista",
+            "vatican_passport_ordinary" to "Służba osobista",
+            "holy_see_passport_diplomatic" to "Służba osobista",
+            "holy_see_passport_service" to "Służba osobista",
+            "holy_see_passport_temporary_service" to "Służba osobista",
+            "vatican_citizenship_certificate" to "Służba cywilna",
+            "ecclesiastical_baptism_certificate" to "Służba kościelna",
+            "ecclesiastical_marriage_certificate" to "Służba kościelna",
+            "ecclesiastical_death_certificate" to "Służba kościelna",
+            "canonical_status_certificate" to "Służba kościelna",
+            "clerical_ordination_certificate" to "Służba kościelna",
+            "apostolic_nunciature_credential" to "Służba kościelna"
+        )
+        assertEquals(54, expectedGroups.size)
+        val existingGroups = documentVisibilityGroupOrder.toSet()
+        expectedGroups.forEach { (id, group) ->
+            assertTrue("Brak kafelka $id", documentDisplayOptions.any { it.first == id })
+            assertTrue("Dodano nową grupę dla $id", group in existingGroups)
+            assertEquals("Nieprawidłowa grupa dla $id", group, documentVisibilityGroup(id))
+            assertTrue("Brak trasy dla $id", DocumentRouteRegistry.find(id) != null)
+            val schema = documentEditorFieldDefinitions(id)
+            assertTrue("Brak pól ewidencyjnych dla $id", schema.isNotEmpty())
+            assertEquals("Powtórzone klucze pól dla $id", schema.size, schema.map { it.key }.toSet().size)
+            assertTrue("Metadane wewnętrzne trafiły do wydruku dla $id", schema.none { it.key in setOf("verificationStatus", "originalFileReference", "notes") })
+            val workflowKeys = setOf(
+                "issuerName", "issuerPosition", "issuingAuthority", "verificationAuthority",
+                "procedureName", "jurisdiction", "sourceLanguage", "translationLanguage",
+                "templateSourceReference", "templateVersion"
+            )
+            assertTrue("Brak pól wystawcy, organu, procedury lub wzoru dla $id",
+                schema.map { it.key }.containsAll(workflowKeys))
+        }
+        assertEquals(13, existingGroups.size)
+        val passportFields = documentEditorFieldDefinitions("holy_see_passport_service").map { it.key }.toSet()
+        assertTrue(passportFields.containsAll(setOf("passportTypeCode", "passportTypeDescription", "issuingEntity")))
+        val passportCodes = documentEditorFieldDefinitions("vatican_passport_ordinary").associate { it.key to it.placeholder }
+        assertTrue(passportCodes["passportTypeCode"].orEmpty().contains("PP"))
+        assertTrue(passportCodes["passportTypeCode"].orEmpty().contains("PV"))
+        val citizenshipFields = documentEditorFieldDefinitions("vatican_citizenship_certificate").map { it.key }.toSet()
+        assertTrue(citizenshipFields.containsAll(setOf("citizenshipStatus", "citizenshipAcquisitionBasis", "citizenshipEffectiveDate", "competentVaticanOffice")))
+        val canonicalFields = documentEditorFieldDefinitions("canonical_status_certificate").map { it.key }.toSet()
+        assertTrue(canonicalFields.containsAll(setOf("canonicalStatus", "competentOrdinary", "dioceseOrInstitute", "verificationDate")))
+        val nunciatureFields = documentEditorFieldDefinitions("apostolic_nunciature_credential").map { it.key }.toSet()
+        assertTrue(nunciatureFields.containsAll(setOf("nunciatureCountry", "credentialHolder", "diplomaticCapacity", "accreditingAuthority")))
+        val sacramentalFields = documentEditorFieldDefinitions("ecclesiastical_baptism_certificate").map { it.key }.toSet()
+        assertTrue(sacramentalFields.containsAll(setOf("parishName", "dioceseName", "registerEntryNumber", "sacramentalEventDate")))
+        val ordinationFields = documentEditorFieldDefinitions("clerical_ordination_certificate").map { it.key }.toSet()
+        assertTrue(ordinationFields.containsAll(setOf("ordinationRank", "ordinationDate", "ordainingBishop")))
+    }
+
+
+    @Test
+    fun preexistingInternationalDocumentsRemainInHealthGroup() {
+        val ids = setOf(
+            "ehic",
+            "vaccines",
+            "foreign_prescription",
+            INTERNATIONAL_MEDICAL_CERTIFICATE_ID
+        )
+        ids.forEach { id ->
+            assertTrue("Brak istniejącego dokumentu $id", documentDisplayOptions.any { it.first == id })
+            assertEquals("Służba zdrowotna", documentVisibilityGroup(id))
+            assertTrue("Brak trasy dla $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
 }

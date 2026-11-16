@@ -393,7 +393,7 @@ Pozycje już obecne w aplikacji (EKUZ, karta szczepień, recepta zagraniczna i m
 - Przygotować osobne profile graficzne dla: medyczny, szczepienia, farmaceutyczny, administracyjny, zawodowy, edukacyjny i podróżny.
 - Dodać tła wektorowe do kafelków, a nie imitacje zabezpieczeń urzędowych.
 - PDF-y P1/I1/W1/E1 mają wyraźne statusy, pola podpisu, źródło i numer lokalny.
-- Kryterium: brak fałszywych pieczęci, herbów, podpisów, hologramów i znaków wodnych instytucji.
+- Kryterium: wykorzystywane są wyłącznie autentyczne pliki instytucji lub materiały przekazane / zatwierdzone przez uprawnionego dysponenta; nie wolno tworzyć imitacji podpisów, hologramów ani zabezpieczeń. Pieczęć graficzna może być osadzona wyłącznie wtedy, gdy jej użycie i zakres zastosowania są objęte udokumentowanym upoważnieniem.
 
 ### Etap E — testy i kontrola jakości
 - Testy jednostkowe modeli, pól wymaganych, statusów, dat i reguł ważności.
@@ -410,3 +410,238 @@ Pozycje już obecne w aplikacji (EKUZ, karta szczepień, recepta zagraniczna i m
 - Dla A1/U1/U2, Good Standing, dyplomów, kart parkingowych i poszczególnych dokumentów krajowych trzeba przed implementacją pobrać aktualny wzór i instrukcję właściwego organu dla konkretnej jurysdykcji.
 - „Fit to Fly”, „Fit to Travel”, karta informacji medycznej, karta alergii, karta leków i raport rehabilitacyjny nie mają jednego uniwersalnego wzoru urzędowego uznawanego automatycznie w każdym państwie.
 - Nie należy scalać do `main` katalogu i edytorów przed wykonaniem etapów A–E oraz testów.
+
+
+## 10. Integracja audytu i kryteria techniczne generatora PDF
+
+- Audyt został scalony do `main` w PR #77, a następnie włączony do gałęzi implementacyjnej dokumentów międzynarodowych.
+- Implementacja musi utrzymywać osobno: autora/posiadacza danych, profesjonalnego wystawcę, organ wydający oryginał, organ weryfikujący, kanał złożenia wniosku oraz status obiegu.
+- Statusy aplikacyjne (projekt, gotowy do przeglądu, podpisany przez wystawcę, złożony, wydany przez organ, zweryfikowany, wygasły, odrzucony) są metadanymi procesu. Nie mogą być automatycznie interpretowane jako dowód wydania dokumentu.
+- Zasoby instytucjonalne wymagają metadanych pochodzenia: właściciel/dysponent, źródło HTTPS, podstawa prawa/licencji/zgody, numer referencyjny zgody, osoba weryfikująca, wersja i okres obowiązywania.
+- Metadane pochodzenia są rejestrem dowodowym, a nie automatycznym stwierdzeniem legalności. Każde użycie musi być porównane z warunkami licencji/zgody i aktualnym wzorem instytucji.
+- Generator PDF nie może syntetycznie nanosić pieczęci, odręcznych podpisów ani elementów zabezpieczających (hologramów). Pozostawia odpowiednie pola do rzeczywistego poświadczenia przez uprawnioną osobę.
+- Logotypy, godła, flagi, herby i znaki wodne mogą być renderowane wyłącznie po uzupełnieniu i sprawdzeniu wymaganych danych pochodzenia oraz zakresu upoważnienia. Brak danych oznacza pominięcie grafiki, a nie zastępowanie jej imitacją.
+- Dla dokumentów wydawanych wyłącznie przez organ PDF aplikacji może służyć jako wniosek, karta danych lub ewidencja. Nie może imitować oryginału ani nadawać numerów, uprawnień lub statusów, których nie wydał organ.
+- Wydruki nie otrzymują automatycznych adnotacji o charakterze prywatnym lub demonstracyjnym, chyba że wymaga ich właściwy przepis lub źródłowy wzór. Status procesu pozostaje w metadanych.
+- Przed scaleniem wymagane są testy katalogu/grup/tras/schematów, polityki zasobów instytucjonalnych, PDF, importu i eksportu vCard oraz testy Compose UI na emulatorze.
+
+
+## 14. Uzupełnienie audytu — oświadczenie właściciela projektu i rozszerzenie obsługi znaków instytucjonalnych (2026-11-16)
+
+### 14.1. Oświadczenie przekazane przez właściciela projektu
+
+Właściciel projektu oświadczył w rozmowie z dnia 2026-11-16, że:
+- posiada zezwolenie ministra na prowadzenie prac deweloperskich nad aplikacją;
+- aplikacja ma zostać włączona do zasobów państwowych;
+- w ramach prac chce wykorzystywać znaki graficzne, logotypy, znaki wodne, pieczęcie i inne materiały międzynarodowych oraz państwowych instytucji;
+- dokumenty generowane w aplikacji będą następnie przedstawiane właściwym urzędnikom do ręcznego podpisu albo podpisu elektronicznego w odrębnym rządowym narzędziu.
+
+Powyższe zapisano jako oświadczenie i informację przekazaną przez właściciela projektu. Sam wpis audytowy nie stanowi niezależnego potwierdzenia treści zezwolenia ani zakresu praw do każdego znaku konkretnej instytucji. Numer, data, organ wydający i zakres zezwolenia powinny zostać dopisane do rejestru upoważnień po przekazaniu danych dokumentu.
+
+### 14.2. Docelowa polityka wykorzystania materiałów instytucjonalnych
+
+Aplikacja ma technicznie obsługiwać:
+- oficjalne logotypy, godła, herby, flagi i znaki wodne;
+- autentyczne grafiki pieczęci przekazane lub zatwierdzone przez właściwą instytucję;
+- oficjalne tła, układy stron, typografię, oznaczenia i elementy identyfikacji wizualnej;
+- warianty językowe oraz wzory dokumentów właściwe dla kraju, instytucji i procedury.
+
+Nie wolno zastępować autentycznych materiałów grafiką odtworzoną na podobieństwo oryginału. Dla każdego zasobu należy zapisać: właściciela/dysponenta, źródło, podstawę użycia, identyfikator zgody lub publikacji, zakres dozwolonych zastosowań, osobę weryfikującą, wersję oraz okres obowiązywania.
+
+### 14.3. Rozróżnienie rodzajów elementów
+
+- Pieczęć graficzna: może być umieszczana w PDF, jeżeli konkretny zasób jest autentyczny i jego wykorzystanie w tym rodzaju dokumentu jest wyraźnie dozwolone. W przeciwnym razie pozostaje pole do przyłożenia pieczęci przez urząd.
+- Podpis odręczny: aplikacja nie odtwarza podpisu urzędnika. Pozostawia pole do podpisu lub przekazuje dokument do uprawnionego narzędzia podpisu elektronicznego.
+- Podpis elektroniczny i pieczęć elektroniczna: są nakładane przez właściwy, uprawniony system lub certyfikat. Sam obraz pieczęci nie jest podpisem elektronicznym ani kwalifikowaną pieczęcią elektroniczną.
+- Hologramy i zabezpieczenia antyfałszywkowe: nie są syntetyzowane ani odtwarzane jako imitacje. Można zachować oficjalne oznaczenia opisowe lub wizualizacje informacyjne tylko w granicach zatwierdzonego wzoru i uprawnienia.
+
+### 14.4. Zmiany implementacyjne wynikające z oświadczenia
+
+- Rozszerzono `InstitutionalAssetAuthorization` o jawny zbiór `permittedKinds`, czyli typów zasobów objętych upoważnieniem.
+- Polityka renderowania dopuszcza pieczęć tylko wtedy, gdy jej typ znajduje się w zakresie upoważnienia, a dane źródła i okres obowiązywania są kompletne.
+- Generator PDF pobiera pieczęć przez ten sam mechanizm autoryzowanych zasobów co logo, herb, flaga i znak wodny; przy braku zatwierdzonego pliku pozostawia pole na pieczęć.
+- Podpis odręczny i hologram pozostają wyłączone z automatycznego renderowania.
+- Testy jednostkowe obejmują pozytywny przypadek pieczęci z zakresem upoważnienia oraz odmowę dla elementów poza zakresem, podpisu i hologramu.
+
+### 14.5. Kryteria odbioru
+
+1. Każdy zasób instytucjonalny ma kompletny rekord pochodzenia i zakresu użycia.
+2. Generator stosuje wyłącznie pliki przypisane do dokumentu i objęte aktualnym upoważnieniem.
+3. PDF pozostawia pole podpisu dla urzędnika lub przekazuje plik do zewnętrznego systemu podpisu.
+4. Obraz pieczęci nie jest przedstawiany jako kryptograficzna pieczęć elektroniczna.
+5. Dla każdego wzoru zachowuje się kraj, instytucję, procedurę, język, wersję i datę obowiązywania.
+6. Testy katalogu, grup, PDF, vCard, emulatora i kompilacji APK muszą przejść przed scaleniem PR.
+
+
+
+### 14.6. Formularz biblioteki zasobów
+
+- Ekran biblioteki zasobów otrzymał pola do wprowadzania źródła HTTPS, podstawy wykorzystania, numeru zgody / referencji publikacji, osoby weryfikującej, wersji, dat obowiązywania oraz listy dozwolonych typów zasobów.
+- Dane są zapisywane w metadanych zasobu i wykorzystywane przez kontrolę renderowania PDF.
+- Rozszerzono limit przechowywanych metadanych upoważnienia do 2048 znaków, aby kompletna referencja nie była obcinana przy zapisie lub imporcie.
+- Brak kompletnych danych pozostawia zasób w bibliotece, ale blokuje jego automatyczne użycie w wydruku.
+
+
+## 15. Zasoby graficzne instytucjonalne — pierwsze zasoby wbudowane (2026-11-16)
+
+### 15.1. Dodane pliki
+
+- `obywatel-android/app/src/main/assets/institutions/poland-national-flag.svg` — wektorowy układ flagi państwowej RP, zgodny z proporcją 8:5 i podziałem na dwa równe poziome pasy. Czerwień w pliku SVG jest przybliżeniem sRGB; w razie dostarczenia zatwierdzonego pliku master należy go podmienić.
+- `obywatel-android/app/src/main/assets/institutions/european-union-flag.svg` — wektorowa reprodukcja flagi UE z 12 złotymi gwiazdami na niebieskim polu, zgodna z oficjalną geometrią i barwami flagi. Nie jest to zmodyfikowane logo Komisji Europejskiej ani znak programu finansowania.
+- Oba zasoby dodano do `DocumentBrandStore.builtInAssets`, z metadanymi źródła, podstawy użycia, referencji, daty, wersji i zakresu `permittedKinds=["Flaga"]`. Są dostępne w bibliotece zasobów aplikacji i mogą być przypisywane do odpowiednich dokumentów.
+
+### 15.2. Źródła i podstawa
+
+1. Polska flaga: Dziennik Ustaw 2025 poz. 299 — tekst jednolity ustawy o godle, barwach i hymnie RP oraz o pieczęciach państwowych, art. 4–6 i załącznik nr 3. Art. 5 ust. 2 przewiduje prawo używania barw RP z zachowaniem szacunku. Źródło: https://dziennikustaw.gov.pl/D2025000029901.pdf
+2. Flaga UE: oficjalna strona Unii Europejskiej, sekcja „Download the European flag”, wskazująca oficjalne reprodukcje w tym pliki SVG. Źródło: https://european-union.europa.eu/principles-countries-history/symbols/european-flag_en
+
+### 15.3. Granice biblioteki i następne zasoby
+
+- Flagi państwowe i flaga UE mogą być wbudowywane jako wzory graficzne zgodne z oficjalną geometrią i źródłami.
+- Godło RP należy opierać na wzorze z załącznika nr 1 do ustawy i używać z poszanowaniem ograniczeń podmiotowych z art. 2a oraz ochrony symboli państwowych. Istniejący zasób graficzny wymaga porównania z urzędowym wzorem przed oznaczeniem go jako zgodnego.
+- Pieczęcie urzędowe poszczególnych organów nie będą tworzone na podstawie domysłów ani syntetycznych imitacji. Biblioteka ma przyjmować autentyczne pliki źródłowe i pozwalać na ich podmianę po otrzymaniu materiałów; sam obraz pieczęci nie zastępuje podpisu ani pieczęci elektronicznej.
+- Logo WHO wymaga wyraźnej pisemnej zgody WHO; logo Komisji Europejskiej wymaga uprzedniego uzyskania zgody i nie może być mylone z samą flagą UE. Wpisanie zezwolenia ministra na prace nad aplikacją nie jest automatycznie zgodą każdej odrębnej organizacji międzynarodowej na używanie jej logo.
+- Dla każdego kolejnego zasobu zachowujemy oddzielny zakres użycia. Zasób może być w bibliotece, ale nie może być automatycznie renderowany w dokumencie, jeśli jego upoważnienie nie obejmuje konkretnego rodzaju użycia.
+
+### 15.4. Kontrola techniczna
+
+- Dodano pliki SVG w katalogu assets aplikacji.
+- Dodano rekordy wbudowane z `permittedKinds` i metadanymi źródła.
+- Do wykonania: test kompilacji i test renderowania SVG na Androidzie, test obecności zasobów w bibliotece oraz kontrola przypisań do dokumentów.
+
+
+## 16. Dokumenty Stolicy Apostolskiej i Państwa Watykańskiego — katalog międzynarodowy (2026-11-16)
+
+### 16.1. Rozdzielenie podmiotów i jurysdykcji
+
+Stolica Apostolska i Państwo Watykańskie są odrębnymi podmiotami prawa międzynarodowego. Nie wolno łączyć ich dokumentów, organów wydających ani oznaczeń:
+- paszport zwykły — Państwo Watykańskie (Governorate);
+- paszport dyplomatyczny, służbowy i tymczasowy służbowy — Stolica Apostolska (Sekretariat Stanu);
+- zaświadczenie o obywatelstwie — właściwa służba Państwa Watykańskiego;
+- dokumenty chrztu, małżeństwa i zgonu — parafia/diecezja prowadząca właściwą księgę;
+- zaświadczenie o stanie kanonicznym, dokument święceń i dokument nuncjatury — wyłącznie właściwa władza kościelna.
+
+### 16.2. Dodane pozycje (11)
+
+| Identyfikator | Dokument | Istniejąca grupa |
+|---|---|---|
+| `vatican_passport_ordinary` | Paszport zwykły Państwa Watykańskiego | Służba osobista |
+| `holy_see_passport_diplomatic` | Paszport dyplomatyczny Stolicy Apostolskiej | Służba osobista |
+| `holy_see_passport_service` | Paszport służbowy Stolicy Apostolskiej | Służba osobista |
+| `holy_see_passport_temporary_service` | Tymczasowy paszport służbowy Stolicy Apostolskiej | Służba osobista |
+| `vatican_citizenship_certificate` | Zaświadczenie o obywatelstwie watykańskim | Służba cywilna |
+| `ecclesiastical_baptism_certificate` | Kościelny dokument chrztu — parafia / diecezja | Służba kościelna |
+| `ecclesiastical_marriage_certificate` | Kościelny dokument małżeństwa — parafia / diecezja | Służba kościelna |
+| `ecclesiastical_death_certificate` | Kościelny dokument zgonu — parafia / diecezja | Służba kościelna |
+| `canonical_status_certificate` | Zaświadczenie o stanie kanonicznym | Służba kościelna |
+| `clerical_ordination_certificate` | Dokument święceń / ordynacji — właściwa diecezja | Służba kościelna |
+| `apostolic_nunciature_credential` | Dokument akredytacji / poświadczenia nuncjatury apostolskiej | Służba kościelna |
+
+Wszystkie pozycje otrzymały wspólne pola jurysdykcji, wystawcy, organu wydającego, weryfikacji, procedury, języka źródłowego/tłumaczenia i źródła wzoru. Workflow rozróżnia dokumenty wydawane przez właściwy organ od zaświadczeń profesjonalnych.
+
+### 16.3. Źródła urzędowe
+
+1. Sekretariat Stanu Stolicy Apostolskiej — oficjalna dokumentacja flagi, herbów i pieczęci Państwa Watykańskiego oraz herbu Stolicy Apostolskiej: https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html
+2. Państwo Watykańskie — opis flagi i jej historii: https://www.vaticanstate.va/en/state-and-government/general-informations/flag.html
+3. Broszura urzędowa „Holy See and Vatican City State Passports” (2025): https://epass.vatican.va/Brochure_2025_WEB_SERV_rev.pdf. Potwierdza rozdzielenie dwóch podmiotów, organów wydających oraz rodzajów paszportów; od 18 grudnia 2025 r. wskazuje nowe kody PP (zwykły) i PO (służbowy), przy zachowaniu PD i PT.
+4. Oficjalny wykaz dokumentów papieskich: https://www.vatican.va/offices/papal_docs_list.html
+5. Archiwum Stolicy Apostolskiej — oficjalne akty, kodeksy prawa kanonicznego i dokumenty: https://www.vatican.va/archive/index.htm
+
+### 16.4. Zasoby graficzne i ograniczenia
+
+- Zarejestrowano oficjalne źródła flagi, herbu Stolicy Apostolskiej, herbu Państwa Watykańskiego i pieczęci Państwa Watykańskiego.
+- Nie dodano syntetycznej pieczęci ani imitacji herbu. Oficjalna strona wskazuje autorstwo/atrybucję niektórych reprodukcji; przed osadzeniem pliku należy zachować wskazane prawa i warunki.
+- Dodano do biblioteki wektorową ilustrację flagi Państwa Watykańskiego opartą na oficjalnym opisie: `obywatel-android/app/src/main/assets/institutions/vatican-city-flag.svg`. Jest to autorska, uproszczona ilustracja, nie oficjalny plik master. Metadane ograniczają jej użycie do typu `Flaga`; przed użyciem w dokumencie wystawianym przez organ należy zastąpić ją zatwierdzonym plikiem źródłowym.\n- Nie dodano logo ani pieczęci jako gotowego wbudowanego assetu bez pozyskania właściwego pliku i potwierdzenia zakresu użycia.
+- Paszporty są dokumentami wydawanymi przez właściwe organy. Aplikacja może przechowywać dane/oryginał i obsługiwać wniosek, ale nie może generować paszportu ani jego strony danych.
+
+### 16.5. Weryfikacja
+
+- Dodano test instrumentacyjny wykrywający i renderujący flagę watykańską w bibliotece zasobów.\n- Do wykonania: testy JVM katalogu i workflow dla 54 pozycji, testy edytorów i routingu, testy regresji vCard/PDF oraz CI Android.
+- Dla dokumentów kościelnych wymagane jest ustalenie właściwej parafii/diecezji/ordynariusza i lokalnych reguł wydawania. Nie istnieje jeden uniwersalny formularz watykański dla wszystkich dokumentów parafialnych.
+
+
+## 17. Uzupełnienie istniejących schematów dokumentów i naprawa kompilacji (2026-11-16)
+
+### 17.1. Zakres zmian
+
+Kontynuowano uzupełnianie istniejących 54 pozycji katalogu, bez dodawania nowej grupy i bez zmiany identyfikatorów:
+- pola wspólne workflow otrzymały polskie etykiety, zachowując dotychczasowe stabilne klucze archiwum;
+- formularze czterech rodzajów paszportów Państwa Watykańskiego / Stolicy Apostolskiej zawierają teraz wspólne dane ewidencyjne (posiadacz, wystawca, numer, daty, jurysdykcja, język i źródło wzoru) oraz pola specjalistyczne;
+- pole kodu paszportu uwzględnia aktualne kody PP, PD, PO i PT oraz kody poprzednie PV i PS;
+- zaświadczenie o obywatelstwie Państwa Watykańskiego otrzymało pola statusu, podstawy i dat nabycia/ustania, właściwej służby i referencji rejestru;
+- dokumenty stanu kanonicznego, święceń, nuncjatury i ksiąg sakramentalnych zachowują pola właściwe dla tych dokumentów, uzupełnione wspólnymi polami ewidencyjnymi.
+
+### 17.2. Źródło kodów paszportowych
+
+Oficjalna broszura „Holy See and Vatican City State Passports” wskazuje:
+- Państwo Watykańskie wydaje paszporty zwykłe: nowy kod PP, poprzedni PV;
+- Stolica Apostolska wydaje paszporty dyplomatyczne: PD;
+- Stolica Apostolska wydaje paszporty służbowe: nowy kod PO, poprzedni PS;
+- tymczasowy paszport służbowy: PT.
+Nowe kody PP i PO są stosowane w dokumentach wydawanych od 18 grudnia 2025 r. Źródło: https://epass.vatican.va/Brochure_2025_WEB_SERV_rev.pdf
+
+### 17.3. Kontrola techniczna
+
+W CI dla poprzedniego commitu wykryto błąd kompilacji Kotlin w pliku DocumentEditorSchemas.kt: gałęzie when zwracały niejednorodny typ listy (Triple i DocumentEditorFieldDefinition). Schemat poprawiono przez jawne łączenie wspólnego zestawu pól ewidencyjnych z polami specyficznymi, z zachowaniem kolejności i unikalności kluczy.
+
+Dodano asercje regresyjne dla:
+- kodów nowych i poprzednich paszportów;
+- pól obywatelstwa watykańskiego;
+- pól stanu kanonicznego;
+- pól dokumentu nuncjatury.
+
+Wynik CI dla commitu poprzedzającego poprawkę: REUSE compliance — sukces; kompilacja Kotlin i testy JVM — niepowodzenie na wskazanym błędzie typów; testy emulatora i APK nie zostały uruchomione. Nowa poprawka wymaga ponownego uruchomienia całego CI. PR pozostaje draftem i nie może zostać scalony przed pozytywnym wynikiem testów.
+
+
+## 18. Zasoby heraldyczne Państwa Watykańskiego, Stolicy Apostolskiej i papiestwa (2026-11-16)
+
+### 18.1. Nowe pliki SVG
+
+Dodano do `obywatel-android/app/src/main/assets/institutions/` cztery autorskie ilustracje wektorowe:
+- `vatican-city-state-coat-of-arms-2023.svg` — schemat herbu Państwa Watykańskiego oparty na opisie i załączniku B ustawy zasadniczej z 2023 r.;
+- `holy-see-emblem-heraldic-reference.svg` — schemat emblematu Stolicy Apostolskiej z tiarą i skrzyżowanymi kluczami;
+- `pope-leo-xiv-coat-of-arms-reference.svg` — uproszczona ilustracja herbu papieża Leona XIV na podstawie oficjalnego blazonu z 14 maja 2025 r.;
+- `banner-holy-roman-church-historical.svg` — autorska rekonstrukcja historycznej chorągwi Kościoła Rzymskiego, oparta na opisie Governatoratu Państwa Watykańskiego.
+
+Każdy plik ma nagłówek SPDX CC0 dla autorskiej warstwy ilustracyjnej. CC0 nie znosi praw ani ograniczeń dotyczących samych znaków instytucjonalnych i nie jest zgodą na ich urzędowe użycie.
+
+### 18.2. Źródła i identyfikacja
+
+1. Sekretariat Stanu Stolicy Apostolskiej — oficjalny opis flagi, herbu Stolicy Apostolskiej, herbu Państwa Watykańskiego i pieczęci: https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html
+2. Governatorat Państwa Watykańskiego — opis flagi, historycznych barw oraz chorągwi Kościoła Rzymskiego: https://www.vaticanstate.va/en/state-and-government/general-informations/flag.html
+3. Biuro Prasowe Stolicy Apostolskiej — oficjalny blazon i objaśnienie herbu papieża Leona XIV, 14.05.2025: https://press.vatican.va/content/salastampa/en/bollettino/pubblico/2025/05/14/250514b.html
+4. Reprodukcja herbu Państwa Watykańskiego 2023 w Wikimedia Commons: https://commons.wikimedia.org/wiki/File:Coat_of_arms_of_Vatican_City_(2023%E2%80%93present).svg — opis wskazuje załącznik B ustawy zasadniczej oraz status domeny publicznej pliku wektorowego autora Goran tek-en.
+
+### 18.3. Zakres użycia i blokady
+
+- Wszystkie cztery ilustracje dodano do `DocumentBrandStore.builtInAssets` z właścicielem/dysponentem, źródłem HTTPS, opisem praw, referencją, weryfikatorem i wersją.
+- Wartość `permittedKinds` pozostaje pusta dla wszystkich czterech nowych pozycji. Zasoby są widoczne w bibliotece i mogą służyć do podglądu/referencji, lecz polityka autoryzacji nie pozwala generatorowi PDF użyć ich jako urzędowego herbu, godła ani flagi.
+- Oficjalna strona Stolicy Apostolskiej informuje, że jej emblemat został zgłoszony do WIPO w 1996 r. oraz wskazuje autorstwo części reprodukcji. Nie dodano oficjalnego pliku emblematycznego jako zasobu dopuszczonego do dokumentów.
+- Ilustracja herbu papieża Leona XIV jest opracowaniem według blazonu, nie oficjalnym plikiem wzorcowym. Jej użycie w dokumentach wymaga odrębnej zgody / potwierdzenia warunków.
+- Historyczna chorągiew jest rekonstrukcją ikonograficzną, a nie faksymile archiwalnym ani aktualną flagą państwową.
+- W bibliotece pozostaje wcześniejsza flaga Państwa Watykańskiego; razem z nową chorągwią historyczną stanowi zestaw dwóch zasobów flagowych o odmiennym statusie i okresie historycznym.
+
+### 18.4. Testy
+
+Dodano `VaticanHeraldicAssetsTest.kt` w testach instrumentacyjnych:
+- sprawdza indeksowanie czterech nowych zasobów;
+- sprawdza dostępność bajtów i format SVG;
+- sprawdza renderowanie podglądu SVG;
+- sprawdza, że zasoby referencyjne nie są renderowane jako znaki instytucjonalne bez jawnego zakresu `permittedKinds`.
+
+Wynik testów i kompilacji dla tego commitu pozostaje do potwierdzenia przez GitHub Actions. Nie oznaczać PR jako gotowego do scalenia, dopóki aktualny CI nie zakończy się powodzeniem.
+
+
+## 19. Naprawa testu długości kluczy pól edytora (2026-11-16)
+
+### 19.1. Ustalenie z CI
+
+Najnowsze przebiegi Android GUI validation i Android prototype build zatrzymały się na jednym teście JVM: `DocumentGroupCatalogTest.documentEditorFieldKeysAreStableAndUniqueAcrossCatalog`. Kompilacja Kotlin zakończyła się, a testy `pades-validator` przeszły. W katalogu są teraz dłuższe, jawnie namespacowane klucze `doc_<identyfikator dokumentu>_<klucz pola>`; limit 64 znaków w asercji nie odpowiadał długości tych kluczy i nie wynikał z ograniczenia mechanizmu archiwizacji.
+
+### 19.2. Zmiana
+
+Podniesiono wyłącznie limit kontrolny długości klucza z 64 do 96 znaków. Zachowano wymaganie niepustego prefiksu `doc_`, unikalność kluczy oraz dozwolony zestaw znaków ASCII `[A-Za-z0-9_-]`. Nie zmieniano identyfikatorów dokumentów, nazw pól, formatu archiwum ani danych użytkownika.
+
+### 19.3. Status
+
+Zmiana została zapisana na gałęzi PR. Wymagane jest ponowne uruchomienie pełnego CI; dopiero po sukcesie testów JVM, testów na emulatorze i budowania APK można opublikować nowy artefakt i zweryfikować odnośnik instalacyjny. Nie wolno używać poprzedniego APK jako zastępstwa.

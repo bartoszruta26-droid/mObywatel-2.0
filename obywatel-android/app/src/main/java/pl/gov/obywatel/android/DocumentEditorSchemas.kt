@@ -15,8 +15,45 @@ internal data class DocumentEditorFieldDefinition(
 private fun fields(vararg definitions: Triple<String, String, String>) =
     definitions.map { DocumentEditorFieldDefinition(it.first, it.second, it.third) }
 
+private fun internationalDocumentFieldSet(documentId: String, specific: List<DocumentEditorFieldDefinition>): List<DocumentEditorFieldDefinition> =
+    internationalDocumentEditorFields(documentId) + specific
+
 internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEditorFieldDefinition> {
-    return when (documentId) {
+    val specific = when (documentId) {
+        in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") ->
+            internationalDocumentEditorFields(documentId)
+        in setOf("ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate", "ecclesiastical_death_certificate") -> internationalDocumentFieldSet(documentId, fields(
+            Triple("sacramentalRegisterType", "Rodzaj księgi parafialnej", "chrztów / małżeństw / zmarłych"),
+            Triple("parishName", "Parafia / kościół", ""),
+            Triple("dioceseName", "Diecezja / jurysdykcja kościelna", ""),
+            Triple("registerVolume", "Księga / tom", ""),
+            Triple("registerEntryNumber", "Numer wpisu / aktu", ""),
+            Triple("sacramentalEventDate", "Data udzielenia sakramentu / zdarzenia", "RRRR-MM-DD"),
+            Triple("ministerName", "Duchowny / osoba dokonująca wpisu", ""),
+            Triple("certificatePurpose", "Cel wydania odpisu / zaświadczenia", "")
+        ))
+        "canonical_status_certificate" -> internationalDocumentFieldSet(documentId, fields(
+            Triple("canonicalStatus", "Stwierdzony status kanoniczny", ""),
+            Triple("competentOrdinary", "Ordynariusz / przełożony kompetentny", ""),
+            Triple("dioceseOrInstitute", "Diecezja / instytut / wspólnota", ""),
+            Triple("canonicalRestrictions", "Ograniczenia lub adnotacje kanoniczne", ""),
+            Triple("verificationDate", "Data weryfikacji statusu", "RRRR-MM-DD")
+        ))
+        "clerical_ordination_certificate" -> internationalDocumentFieldSet(documentId, fields(
+            Triple("ordinationRank", "Stopień święceń", "diakonat / prezbiterat / episkopat"),
+            Triple("ordinationDate", "Data święceń", "RRRR-MM-DD"),
+            Triple("ordinationPlace", "Miejsce święceń", ""),
+            Triple("ordainingBishop", "Biskup udzielający święceń", ""),
+            Triple("ordinandName", "Imię i nazwisko osoby wyświęconej", ""),
+            Triple("ordinationRegisterReference", "Księga / numer wpisu", "")
+        ))
+        "apostolic_nunciature_credential" -> internationalDocumentFieldSet(documentId, fields(
+            Triple("nunciatureCountry", "Państwo / placówka nuncjatury", ""),
+            Triple("credentialHolder", "Osoba, której dotyczy poświadczenie", ""),
+            Triple("diplomaticCapacity", "Funkcja / status dyplomatyczny", ""),
+            Triple("accreditingAuthority", "Organ akredytujący / wystawiający", ""),
+            Triple("hostStateProtocolReference", "Numer / referencja protokołu państwa przyjmującego", "")
+        ))
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
@@ -28,9 +65,24 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
             else -> documentEditorFieldDefinitionsForCatalog(documentId)
         }
     }
+    val workflow = if (documentId in internationalDocumentCatalogIds) fields(
+        Triple("issuerName", "Nazwa wystawcy / instytucji wydającej", ""),
+        Triple("issuerPosition", "Tytuł zawodowy / stanowisko wystawcy", ""),
+        Triple("issuingAuthority", "Właściwy organ wydający", ""),
+        Triple("verificationAuthority", "Organ / podmiot właściwy do weryfikacji", ""),
+        Triple("procedureName", "Właściwa procedura / tryb wniosku", ""),
+        Triple("jurisdiction", "Państwo / jurysdykcja", ""),
+        Triple("sourceLanguage", "Język dokumentu źródłowego", ""),
+        Triple("translationLanguage", "Język tłumaczenia", ""),
+        Triple("templateSourceReference", "Źródło / referencja wzoru urzędowego", ""),
+        Triple("templateVersion", "Wersja wzoru / data obowiązywania", "")
+    ) else emptyList()
+    // Keep existing stable field keys and append shared workflow fields once.
+    return (specific + workflow).distinctBy { it.key }
 }
 
 private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<DocumentEditorFieldDefinition> = when (documentId) {
+        in internationalDocumentCatalogIds -> internationalDocumentEditorFields(documentId)
         "international_medical_certificate" -> fields(
             Triple("documentNumber", "Document Number", ""),
             Triple("issueDate", "Issue Date", "YYYY-MM-DD"),
@@ -627,6 +679,125 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
         else -> throw IllegalArgumentException("Brak indywidualnego schematu pól dla dokumentu: $documentId")
         }
 }
+
+private val internationalDocumentCatalogIds = setOf("icvp", "medical_summary", "allergy_card", "medication_card", "fit_to_travel", "fit_to_fly", "rehabilitation_report", "functional_report", "disability_opinion", "eu_parking_card", "prc", "s1", "s2", "s3", "da1", "cross_border_prescription", "refund_claim", "a1", "u1", "u2", "epc", "good_standing", "professional_status", "qualification_recognition", "diploma", "education_certificate", "diploma_supplement", "birth_certificate", "marriage_certificate", "death_certificate", "marital_status", "capacity_to_marry", "residence_certificate", "citizenship_certificate", "life_certificate", "criminal_record_foreign", "divorce_decree", "adoption_certificate", "parentage_certificate", "international_driving_permit", "travel_document", "residence_card", "passport_record", "vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service", "vatican_citizenship_certificate", "ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate", "ecclesiastical_death_certificate", "canonical_status_certificate", "clerical_ordination_certificate", "apostolic_nunciature_credential")
+
+private fun internationalDocumentEditorFields(documentId: String): List<DocumentEditorFieldDefinition> {
+    val common = listOf(
+        Triple("sourceCountry", "Państwo wydające / pochodzenia", ""),
+        Triple("documentNumber", "Numer dokumentu / sprawy", ""),
+        Triple("issueDate", "Data wydania", "RRRR-MM-DD"),
+        Triple("validFrom", "Ważny od", "RRRR-MM-DD"),
+        Triple("validUntil", "Ważny do", "RRRR-MM-DD"),
+        Triple("holderName", "Imię i nazwisko osoby, której dotyczy", ""),
+        Triple("holderDateOfBirth", "Data urodzenia", "RRRR-MM-DD"),
+        Triple("issuerName", "Wystawca / właściwa instytucja", ""),
+        Triple("verifyingAuthority", "Organ / podmiot potwierdzający", "")
+    )
+    val specific = when (documentId) {
+        in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") -> listOf(
+            Triple("passportTypeCode", "Kod rodzaju paszportu ICAO", "PP (dawniej PV) / PD / PO (dawniej PS) / PT"),
+            Triple("passportTypeDescription", "Rodzaj paszportu", "zwykły / dyplomatyczny / służbowy / tymczasowy służbowy"),
+            Triple("issuingEntity", "Podmiot wydający", "Państwo Watykańskie / Stolica Apostolska"),
+            Triple("passportHolderCapacity", "Status / funkcja uzasadniająca wydanie", ""),
+            Triple("passportDocumentFormat", "Rodzaj dokumentu / nośnika", "e-paszport / dokument maszynowo odczytywalny"),
+            Triple("passportAuthorityReference", "Organ wydający / referencja sprawy", ""),
+            Triple("passportOriginalFile", "Odniesienie do oryginalnego dokumentu", "")
+        )
+        "vatican_citizenship_certificate" -> listOf(
+            Triple("citizenshipStatus", "Potwierdzony status obywatelstwa", ""),
+            Triple("citizenshipAcquisitionBasis", "Podstawa nabycia obywatelstwa", ""),
+            Triple("citizenshipEffectiveDate", "Data nabycia / początku obywatelstwa", "RRRR-MM-DD"),
+            Triple("citizenshipTerminationDate", "Data utraty / ustania obywatelstwa", "RRRR-MM-DD"),
+            Triple("competentVaticanOffice", "Właściwa służba Państwa Watykańskiego", ""),
+            Triple("citizenshipRegisterReference", "Numer / referencja rejestru obywatelstwa", "")
+        )
+        in setOf("icvp", "medical_summary", "fit_to_travel", "fit_to_fly", "rehabilitation_report", "functional_report", "disability_opinion") -> listOf(
+            Triple("clinicalPurpose", "Cel medyczny / podróży", ""),
+            Triple("diagnosis", "Rozpoznanie i kod ICD", ""),
+            Triple("clinicalFindings", "Wyniki badania / informacje kliniczne", ""),
+            Triple("allergies", "Alergie i reakcje", ""),
+            Triple("medications", "Leki, substancje czynne i dawkowanie", ""),
+            Triple("functionalStatus", "Funkcjonowanie i ograniczenia", ""),
+            Triple("clinicianName", "Lekarz / profesjonalista sporządzający", ""),
+            Triple("professionalNumber", "Numer prawa wykonywania zawodu / rejestru", ""),
+            Triple("signatureStatus", "Status podpisu wystawcy", "do podpisu / podpisano / zweryfikowano")
+        )
+        in setOf("allergy_card", "medication_card", "cross_border_prescription") -> listOf(
+            Triple("activeSubstance", "Substancja czynna / alergen", ""),
+            Triple("strengthAndForm", "Moc i postać", ""),
+            Triple("doseAndFrequency", "Dawka, droga i częstość", ""),
+            Triple("reactionOrIndication", "Reakcja alergiczna / wskazanie", ""),
+            Triple("prescriberOrVerifier", "Osoba wystawiająca / weryfikująca", ""),
+            Triple("prescriberRegister", "Numer rejestru / uprawnień", ""),
+            Triple("patientWarnings", "Ostrzeżenia i plan postępowania", "")
+        )
+        in setOf("prc", "s1", "s2", "s3", "da1", "refund_claim") -> listOf(
+            Triple("competentInstitution", "Instytucja właściwa / ubezpieczyciel", ""),
+            Triple("insuredPerson", "Osoba ubezpieczona", ""),
+            Triple("destinationState", "Państwo leczenia / zamieszkania", ""),
+            Triple("entitlementScope", "Zakres uprawnienia / zgody", ""),
+            Triple("entitlementPeriod", "Okres uprawnienia", ""),
+            Triple("registrationInstitution", "Instytucja rejestrująca", ""),
+            Triple("registrationDate", "Data rejestracji / poświadczenia", "RRRR-MM-DD")
+        )
+        in setOf("eu_parking_card") -> listOf(
+            Triple("disabilityDecisionNumber", "Numer orzeczenia", ""),
+            Triple("issuingCounty", "Organ wydający kartę", ""),
+            Triple("cardHolderPhotoReference", "Fotografia posiadacza — odwołanie do oryginału", ""),
+            Triple("disabilityValidity", "Okres ważności uprawnienia", "")
+        )
+        in setOf("epc", "good_standing", "professional_status", "qualification_recognition") -> listOf(
+            Triple("profession", "Zawód / specjalność", ""),
+            Triple("professionalRegister", "Rejestr zawodowy i numer wpisu", ""),
+            Triple("qualification", "Kwalifikacja / dyplom / specjalizacja", ""),
+            Triple("goodStandingStatus", "Status zawodowy / ograniczenia", ""),
+            Triple("competentRegulator", "Właściwy regulator / izba", ""),
+            Triple("destinationCountry", "Państwo uznania kwalifikacji", "")
+        )
+        in setOf("diploma", "education_certificate", "diploma_supplement") -> listOf(
+            Triple("educationInstitution", "Szkoła / uczelnia / instytucja", ""),
+            Triple("studyProgram", "Kierunek / program kształcenia", ""),
+            Triple("qualificationLevel", "Poziom kwalifikacji", ""),
+            Triple("learningOutcomes", "Efekty uczenia się / zakres", ""),
+            Triple("creditsAndDuration", "Punkty ECTS / czas kształcenia", ""),
+            Triple("awardingAuthority", "Organ nadający kwalifikację", "")
+        )
+        in setOf("birth_certificate", "marriage_certificate", "death_certificate", "marital_status", "capacity_to_marry", "life_certificate", "parentage_certificate", "adoption_certificate") -> listOf(
+            Triple("civilEventType", "Rodzaj zdarzenia / faktu urzędowego", ""),
+            Triple("eventDate", "Data zdarzenia", "RRRR-MM-DD"),
+            Triple("eventPlace", "Miejsce zdarzenia", ""),
+            Triple("otherPartyDetails", "Dane drugiej osoby / stron", ""),
+            Triple("civilRegistryOffice", "Urząd stanu cywilnego / rejestr", ""),
+            Triple("actNumber", "Numer aktu / wpisu", ""),
+            Triple("marginalAnnotations", "Wzmianki dodatkowe", "")
+        )
+        in setOf("residence_certificate", "citizenship_certificate", "criminal_record_foreign", "divorce_decree") -> listOf(
+            Triple("authorityType", "Rodzaj organu", ""),
+            Triple("caseNumber", "Sygnatura / numer sprawy", ""),
+            Triple("confirmedFact", "Fakt / treść potwierdzenia", ""),
+            Triple("legalEffect", "Zakres skutków prawnych", ""),
+            Triple("appealInformation", "Tryb odwoławczy / weryfikacji", "")
+        )
+        in setOf("a1", "u1", "u2") -> listOf(
+            Triple("employerOrPayer", "Pracodawca / płatnik", ""),
+            Triple("workOrBenefitPeriod", "Okres pracy / świadczenia", ""),
+            Triple("competentState", "Państwo właściwe", ""),
+            Triple("employmentOrInsurancePeriods", "Okresy ubezpieczenia / zatrudnienia", ""),
+            Triple("employmentOffice", "Urząd zatrudnienia / instytucja", "")
+        )
+        in setOf("international_driving_permit", "travel_document", "residence_card", "passport_record") -> listOf(
+            Triple("nationalDocumentNumber", "Numer krajowego dokumentu źródłowego", ""),
+            Triple("issuingOffice", "Organ wydający", ""),
+            Triple("conventionOrLegalBasis", "Konwencja / podstawa prawna", ""),
+            Triple("travelDestination", "Państwo / państwa docelowe", ""),
+            Triple("identityDocumentType", "Rodzaj dokumentu tożsamości", "")
+        )
+        else -> emptyList()
+    }
+    return fields(*(common + specific).toTypedArray())
+}
+
 
 internal fun documentUsesDedicatedEditor(documentId: String): Boolean =
     documentId in setOf(

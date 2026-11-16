@@ -118,7 +118,61 @@ internal val documentBrandTargets = (listOf(
     "defense_training" to "Dokument szkolenia obronnego",
     "historical_reenactment" to "Legitymacja rekonstruktora historycznego",
     "reenactment_qualification" to "Certyfikat kwalifikacji rekonstruktora",
-    "reenactment_event" to "Karta uczestnictwa w wydarzeniu historycznym"
+    "reenactment_event" to "Karta uczestnictwa w wydarzeniu historycznym",
+    "vatican_passport_ordinary" to "Paszport zwykły Państwa Watykańskiego",
+    "holy_see_passport_diplomatic" to "Paszport dyplomatyczny Stolicy Apostolskiej",
+    "holy_see_passport_service" to "Paszport służbowy Stolicy Apostolskiej",
+    "holy_see_passport_temporary_service" to "Tymczasowy paszport służbowy Stolicy Apostolskiej",
+    "vatican_citizenship_certificate" to "Zaświadczenie o obywatelstwie watykańskim",
+    "ecclesiastical_baptism_certificate" to "Kościelny dokument chrztu — parafia / diecezja",
+    "ecclesiastical_marriage_certificate" to "Kościelny dokument małżeństwa — parafia / diecezja",
+    "ecclesiastical_death_certificate" to "Kościelny dokument zgonu — parafia / diecezja",
+    "canonical_status_certificate" to "Zaświadczenie o stanie kanonicznym",
+    "clerical_ordination_certificate" to "Dokument święceń / ordynacji — właściwa diecezja",
+    "apostolic_nunciature_credential" to "Dokument akredytacji / poświadczenia nuncjatury apostolskiej",
+    "icvp" to "Międzynarodowa Książeczka Szczepień — ICVP",
+    "medical_summary" to "Międzynarodowa karta informacji medycznej",
+    "allergy_card" to "Międzynarodowa karta alergii",
+    "medication_card" to "Międzynarodowa karta leków",
+    "fit_to_travel" to "Zaświadczenie Fit to Travel",
+    "fit_to_fly" to "Zaświadczenie Fit to Fly",
+    "rehabilitation_report" to "Międzynarodowy raport rehabilitacyjny",
+    "functional_report" to "Międzynarodowy raport funkcjonalny",
+    "disability_opinion" to "Opinia medyczna o niepełnosprawności",
+    "eu_parking_card" to "Europejska karta parkingowa — ewidencja",
+    "prc" to "Certyfikat tymczasowo zastępujący EKUZ",
+    "s1" to "Dokument S1 — ewidencja",
+    "s2" to "Dokument S2 / E112 — ewidencja",
+    "s3" to "Dokument S3 — ewidencja",
+    "da1" to "Dokument DA1 / E123 — ewidencja",
+    "cross_border_prescription" to "Recepta transgraniczna",
+    "refund_claim" to "Wniosek o refundację kosztów leczenia za granicą",
+    "a1" to "Dokument A1 — ewidencja",
+    "u1" to "Dokument U1 — ewidencja",
+    "u2" to "Dokument U2 — ewidencja",
+    "epc" to "Europejska Legitymacja Zawodowa — EPC",
+    "good_standing" to "Zaświadczenie Good Standing",
+    "professional_status" to "Zaświadczenie o statusie zawodowym",
+    "qualification_recognition" to "Uznanie kwalifikacji / specjalizacji",
+    "diploma" to "Dyplom / kwalifikacja — ewidencja",
+    "education_certificate" to "Świadectwo / potwierdzenie wykształcenia",
+    "diploma_supplement" to "Suplement do dyplomu — ewidencja",
+    "birth_certificate" to "Zagraniczny akt / odpis urodzenia",
+    "marriage_certificate" to "Zagraniczny akt / odpis małżeństwa",
+    "death_certificate" to "Zagraniczny akt / odpis zgonu",
+    "marital_status" to "Zaświadczenie o stanie cywilnym",
+    "capacity_to_marry" to "Zaświadczenie o zdolności do zawarcia małżeństwa",
+    "residence_certificate" to "Zaświadczenie o miejscu zamieszkania / pobytu",
+    "citizenship_certificate" to "Zaświadczenie o obywatelstwie",
+    "life_certificate" to "Zaświadczenie o pozostawaniu przy życiu",
+    "criminal_record_foreign" to "Zagraniczne zaświadczenie o niekaralności",
+    "divorce_decree" to "Orzeczenie rozwodowe / separacyjne — ewidencja",
+    "adoption_certificate" to "Dokument adopcyjny — ewidencja",
+    "parentage_certificate" to "Dokument dotyczący pochodzenia dziecka — ewidencja",
+    "international_driving_permit" to "Międzynarodowe prawo jazdy — ewidencja",
+    "travel_document" to "Dokument podróży — ewidencja",
+    "residence_card" to "Karta pobytu — ewidencja",
+    "passport_record" to "Paszport / dokument tożsamości — ewidencja"
 ) + churchGraphicDocumentTargets() + familyEntityGraphicDocumentTargets() +
     officialGraphicDocumentTargets()).distinctBy { it.first }
 
@@ -282,6 +336,48 @@ internal object DocumentBrandStore {
         }
     }
     private val builtInAssets = listOf(
+        BrandAsset(
+            "builtin_flag_poland_official_layout", "Zasoby aplikacji", "Flaga",
+            "Flaga państwowa Rzeczypospolitej Polskiej — układ ustawowy",
+            "builtin:institutions/poland-national-flag.svg",
+            rights = """{"owner":"Rzeczpospolita Polska","sourceUrl":"https://dziennikustaw.gov.pl/D2025000029901.pdf","rightsBasis":"Ustawa z 31 stycznia 1980 r. o godle, barwach i hymnie RP oraz o pieczęciach państwowych, tekst jednolity Dz.U. 2025 poz. 299, art. 4–6 i załącznik nr 3; art. 5 ust. 2 dopuszcza używanie barw RP z zachowaniem szacunku.","authorizationReference":"Dz.U. 2025 poz. 299 — załącznik nr 3; cyfrowa wersja wektorowa układu flagi, czerwony sRGB jest przybliżeniem","verifiedBy":"Weryfikacja źródła prawnego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":["Flaga"]}"""
+        ),
+        BrandAsset(
+            "builtin_flag_european_union_official_layout", "Zasoby aplikacji", "Flaga",
+            "Flaga Unii Europejskiej — oficjalny układ 12 gwiazd",
+            "builtin:institutions/european-union-flag.svg",
+            rights = """{"owner":"Unia Europejska","sourceUrl":"https://european-union.europa.eu/principles-countries-history/symbols/european-flag_en","rightsBasis":"Oficjalna reprodukcja flagi UE i geometria opublikowana na portalu Unii Europejskiej; nie jest to logo Komisji Europejskiej ani znak programu finansowania.","authorizationReference":"Oficjalna strona EU Flag — sekcja Download the European flag; SVG opublikowany 9 kwietnia 2026 r.","verifiedBy":"Weryfikacja źródła urzędowego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":["Flaga"]}"""
+        ),
+        BrandAsset(
+            "builtin_flag_vatican_city_specification", "Zasoby aplikacji", "Flaga",
+            "Flaga Państwa Watykańskiego — układ i symbole według opisu urzędowego",
+            "builtin:institutions/vatican-city-flag.svg",
+            rights = """{"owner":"Państwo Watykańskie","sourceUrl":"https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html","rightsBasis":"Autorska, uproszczona ilustracja wektorowa oparta na oficjalnym opisie flagi Państwa Watykańskiego; nie jest oficjalnym plikiem master ani odwzorowaniem urzędowej pieczęci.","authorizationReference":"Oficjalna dokumentacja Sekretariatu Stanu — Flag, Coat of Arms and Seal; przed użyciem w dokumencie organu należy zastąpić zatwierdzonym plikiem źródłowym.","verifiedBy":"Weryfikacja opisu urzędowego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":["Flaga"]}"""
+        ),
+        BrandAsset(
+            "builtin_vatican_state_coat_of_arms_2023", "Państwo Watykańskie", "Herb",
+            "Herb Państwa Watykańskiego — wzór według ustawy zasadniczej 2023",
+            "builtin:institutions/vatican-city-state-coat-of-arms-2023.svg",
+            rights = """{"owner":"Państwo Watykańskie","sourceUrl":"https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html","rightsBasis":"Autorska uproszczona ilustracja wektorowa oparta na opisie heraldycznym i wzorze herbu Państwa Watykańskiego; oficjalny wzór prawny znajduje się w załączniku B ustawy zasadniczej. Plik nie jest urzędowym masterem.","authorizationReference":"Ustawa zasadnicza Państwa Watykańskiego 2023, art. 23 ust. 2 i załącznik B; ilustracja referencyjna: https://commons.wikimedia.org/wiki/File:Coat_of_arms_of_Vatican_City_(2023%E2%80%93present).svg","verifiedBy":"Weryfikacja opisu i źródeł w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":[]}"""
+        ),
+        BrandAsset(
+            "builtin_holy_see_emblem_reference", "Stolica Apostolska", "Godło",
+            "Emblemat Stolicy Apostolskiej — referencja heraldyczna",
+            "builtin:institutions/holy-see-emblem-heraldic-reference.svg",
+            rights = """{"owner":"Stolica Apostolska","sourceUrl":"https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html","rightsBasis":"Autorski schemat heraldyczny oparty na opisie urzędowym. Oficjalny emblemat jest zgłoszony do WIPO; ten plik nie jest oficjalną reprodukcją i nie jest dopuszczony do użycia w dokumentach.","authorizationReference":"Oficjalna strona Sekretariatu Stanu — informacja o zgłoszeniu emblematu do WIPO w 1996 r.","verifiedBy":"Weryfikacja źródła urzędowego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":[]}"""
+        ),
+        BrandAsset(
+            "builtin_pope_leo_xiv_coat_of_arms_reference", "Papież Leon XIV", "Herb",
+            "Herb papieża Leona XIV — schemat według oficjalnego blazonu",
+            "builtin:institutions/pope-leo-xiv-coat-of-arms-reference.svg",
+            rights = """{"owner":"Papież Leon XIV","sourceUrl":"https://press.vatican.va/content/salastampa/en/bollettino/pubblico/2025/05/14/250514b.html","rightsBasis":"Autorska uproszczona ilustracja heraldyczna opracowana na podstawie oficjalnego opisu herbu opublikowanego przez Biuro Prasowe Stolicy Apostolskiej. Nie jest oficjalnym plikiem wzorcowym ani znakiem do użycia bez zgody.","authorizationReference":"Biuro Prasowe Stolicy Apostolskiej, The coat of arms of Pope Leo XIV: Explanation, 14.05.2025","verifiedBy":"Porównanie elementów z oficjalnym blazonem w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":[]}"""
+        ),
+        BrandAsset(
+            "builtin_holy_roman_church_historical_banner", "Kościół Rzymski — symbol historyczny", "Flaga",
+            "Chorągiew Kościoła Rzymskiego — rekonstrukcja historyczna",
+            "builtin:institutions/banner-holy-roman-church-historical.svg",
+            rights = """{"owner":"Dziedzictwo historyczne Kościoła Rzymskiego","sourceUrl":"https://www.vaticanstate.va/en/state-and-government/general-informations/flag.html","rightsBasis":"Autorska rekonstrukcja historyczna na podstawie opisu chorągwi w oficjalnym serwisie Państwa Watykańskiego: karmazynowe pole, gwiazdy, skrzyżowane klucze i pawilon. Nie jest faksymile archiwalnym ani współczesną flagą państwową.","authorizationReference":"Oficjalny opis historyczny chorągwi Kościoła Rzymskiego, pontyfikat Bonifacego VIII","verifiedBy":"Weryfikacja opisu historycznego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":[]}"""
+        ),
         BrandAsset("builtin_hologram_mandala", "Zasoby aplikacji", "Animowany hologram", "Mandala holograficzna — animowana", "builtin:mandala_hologram.gif.b64", rights = "Grafika autorska wygenerowana dla aplikacji"),
         BrandAsset("builtin_polish_emblem", "Zasoby aplikacji", "Godło", "Godło Polski — grafika zasobów aplikacji", "resource:institutions_eagle_emblem"),
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
@@ -410,6 +506,39 @@ internal object DocumentBrandStore {
                     ?: image(context, owner, kind)
             } else image(context, owner, kind)
     }
+    private fun authorizationFor(asset: BrandAsset): InstitutionalAssetAuthorization? = runCatching {
+        val metadata = JSONObject(asset.rights)
+        InstitutionalAssetAuthorization(
+            owner = metadata.optString("owner", asset.owner),
+            sourceUrl = metadata.getString("sourceUrl"),
+            rightsBasis = metadata.getString("rightsBasis"),
+            authorizationReference = metadata.getString("authorizationReference"),
+            verifiedBy = metadata.getString("verifiedBy"),
+            version = metadata.optString("version", asset.version.toString()),
+            effectiveFrom = java.time.LocalDate.parse(metadata.getString("effectiveFrom")),
+            effectiveUntil = metadata.optString("effectiveUntil").takeIf { it.isNotBlank() }?.let(java.time.LocalDate::parse),
+            permittedKinds = metadata.optJSONArray("permittedKinds")?.let { kinds ->
+                buildSet { for (index in 0 until kinds.length()) add(kinds.optString(index)) }
+            } ?: emptySet()
+        )
+    }.getOrNull()
+
+    /**
+     * Institution-supplied graphics are rendered only for asset types explicitly
+     * covered by a current provenance/permission record. Handwritten signatures
+     * and security holograms are never synthesized or reproduced as artwork.
+     */
+    fun authorizedImageForDocument(context: Context, documentType: String, owner: String, kind: String): android.graphics.Bitmap? {
+        if (kind in setOf("Wzór podpisu odręcznego", "Grafika hologramu / zabezpieczenia")) return null
+        val assigned = assignmentKeys(documentType, owner).asSequence()
+            .flatMap { key -> assignments(context).asSequence().filter { it.documentType == key && it.kind == kind } }
+            .lastOrNull()
+        val asset = assigned?.assetId?.let { id -> list(context).firstOrNull { it.id == id } }
+            ?: list(context).lastOrNull { it.owner.equals(owner, ignoreCase = true) && it.kind == kind }
+            ?: return null
+        if (!InstitutionalAssetPolicy.mayRender(kind, authorizationFor(asset))) return null
+        return imageById(context, asset.id)
+    }
     fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
     fun fileBytes(context: Context, assetId: String): ByteArray? = runCatching {
         val asset = list(context).firstOrNull { it.id == assetId } ?: return null
@@ -478,7 +607,7 @@ internal object DocumentBrandStore {
             val file = "$id$extension"
             File(dir(context), file).writeBytes(crypt(bytes, true))
             restored[id] = BrandAsset(id, item.optString("owner").take(120), kind,
-                item.optString("label").take(180), file, item.optString("rights").take(500),
+                item.optString("label").take(180), file, item.optString("rights").take(2048),
                 item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()),
                 item.optString("mimeType").take(120))
         }
@@ -538,13 +667,13 @@ internal object DocumentBrandStore {
         val file = assetId + extension
         File(dir(context), file).writeBytes(crypt(bytes, true))
         val asset = BrandAsset(assetId, owner.trim(), kind, label.trim().ifBlank { kind }, file,
-            rights.take(500), version.coerceAtLeast(1), createdAt, mimeType.take(120))
+            rights.take(2048), version.coerceAtLeast(1), createdAt, mimeType.take(120))
         save(context, list(context).filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
             .filterNot { it.id == assetId } + asset)
         return asset
     }
 
-    @Synchronized fun import(context: Context, uri: Uri, owner: String, kind: String, label: String) {
+    @Synchronized fun import(context: Context, uri: Uri, owner: String, kind: String, label: String, rights: String = "") {
         val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
             val out = java.io.ByteArrayOutputStream(); val buffer = ByteArray(8192); var total = 0
             while (true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=MAX_IMAGE) { "Plik przekracza limit 12 MB." }; out.write(buffer,0,n) }
@@ -552,7 +681,7 @@ internal object DocumentBrandStore {
         } ?: error("Nie można odczytać pliku.")
         require(bytes.isNotEmpty()) { "Wybrany zasób jest pusty." }
         val mime = context.contentResolver.getType(uri).orEmpty()
-        importBytes(context, owner, kind, label, bytes, mimeType = mime)
+        importBytes(context, owner, kind, label, bytes, rights = rights, mimeType = mime)
     }
     fun image(context: Context, owner: String, kind: String) : android.graphics.Bitmap? = runCatching {
         val asset=list(context).lastOrNull { it.owner.equals(owner,true) && it.kind==kind } ?: return null
@@ -1080,6 +1209,14 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     }
     var kind by remember { mutableStateOf("Fotografia") }
     var label by remember { mutableStateOf("") }
+    var assetSourceUrl by remember { mutableStateOf("") }
+    var assetRightsBasis by remember { mutableStateOf("") }
+    var assetAuthorizationReference by remember { mutableStateOf("") }
+    var assetVerifiedBy by remember { mutableStateOf("") }
+    var assetVersion by remember { mutableStateOf("1") }
+    var assetEffectiveFrom by remember { mutableStateOf("") }
+    var assetEffectiveUntil by remember { mutableStateOf("") }
+    var assetPermittedKinds by remember { mutableStateOf("") }
     var assets by remember { mutableStateOf(DocumentBrandStore.list(context)) }
     var status by remember { mutableStateOf("") }
     var assetRevision by remember { mutableIntStateOf(0) }
@@ -1099,7 +1236,20 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
             val targetOwner = owner.trim().ifBlank { "Biblioteka użytkownika" }
-            DocumentBrandStore.import(context, uri, targetOwner, kind, label)
+            val rightsRecord = if (listOf(assetSourceUrl, assetRightsBasis, assetAuthorizationReference, assetVerifiedBy, assetEffectiveFrom, assetPermittedKinds).all { it.isBlank() }) "" else {
+                JSONObject()
+                    .put("owner", targetOwner)
+                    .put("sourceUrl", assetSourceUrl.trim())
+                    .put("rightsBasis", assetRightsBasis.trim())
+                    .put("authorizationReference", assetAuthorizationReference.trim())
+                    .put("verifiedBy", assetVerifiedBy.trim())
+                    .put("version", assetVersion.trim())
+                    .put("effectiveFrom", assetEffectiveFrom.trim())
+                    .put("effectiveUntil", assetEffectiveUntil.trim())
+                    .put("permittedKinds", JSONArray(assetPermittedKinds.split(",").map { it.trim() }.filter { it.isNotBlank() }))
+                    .toString()
+            }
+            DocumentBrandStore.import(context, uri, targetOwner, kind, label, rightsRecord)
             assets = DocumentBrandStore.list(context)
             val imported = assets.lastOrNull { it.owner == targetOwner && it.kind == kind }
             if (fixedTarget != null && imported != null) {
@@ -1164,6 +1314,16 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+        Text("Pochodzenie i upoważnienie instytucjonalne", fontWeight = FontWeight.SemiBold)
+        Text("Uzupełnij na podstawie dokumentu zgody, oficjalnej publikacji lub warunków wykorzystania. Zakres użycia wpisz jako nazwy typów oddzielone przecinkami, np. Logo, Pieczęć, Znak wodny. Bez kompletnych danych zasób nie zostanie użyty w PDF.", style = MaterialTheme.typography.bodySmall)
+        OutlinedTextField(value = assetSourceUrl, onValueChange = { assetSourceUrl = it }, label = { Text("Oficjalne źródło HTTPS") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetRightsBasis, onValueChange = { assetRightsBasis = it }, label = { Text("Podstawa użycia / licencja / zgoda") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = assetAuthorizationReference, onValueChange = { assetAuthorizationReference = it }, label = { Text("Numer zgody / referencja publikacji") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetVerifiedBy, onValueChange = { assetVerifiedBy = it }, label = { Text("Osoba weryfikująca") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetVersion, onValueChange = { assetVersion = it }, label = { Text("Wersja zasobu") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetEffectiveFrom, onValueChange = { assetEffectiveFrom = it }, label = { Text("Obowiązuje od (RRRR-MM-DD)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetEffectiveUntil, onValueChange = { assetEffectiveUntil = it }, label = { Text("Obowiązuje do (opcjonalnie, RRRR-MM-DD)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetPermittedKinds, onValueChange = { assetPermittedKinds = it }, label = { Text("Dozwolone typy zasobów (oddziel przecinkami)") }, modifier = Modifier.fillMaxWidth())
         Button(
             onClick = { picker.launch(arrayOf("image/*", "text/*", "application/pdf", "application/x-pkcs12", "application/pkix-cert", "application/octet-stream")) },
             modifier = Modifier.fillMaxWidth()
@@ -1356,18 +1516,20 @@ private fun drawPdfBrandImage(canvas:android.graphics.Canvas,bitmap:Bitmap,eleme
 private object DocumentPdfRenderer {
     fun write(context: Context, uri: Uri, title: String, owner: String, documentType: String, values: Map<String,String>) {
         val pdf=PdfDocument()
+        // Authority-issued originals are never reproduced by the app.
+        val renderedTitle = pdfDocumentDisplayTitle(documentType, title)
         val pageW=595; val pageH=842; val margin=48f
         val body=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(35,48,60); textSize=10.5f; typeface=Typeface.create("sans-serif",Typeface.NORMAL) }
         val heading=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(20,45,78); textSize=19f; typeface=Typeface.create("sans-serif",Typeface.BOLD) }
         val small=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(95,108,120); textSize=8f }
         val line=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(210,220,230); strokeWidth=0.7f }
-        val flag=DocumentBrandStore.imageForDocument(context,documentType,owner,"Flaga")
-        val logo=DocumentBrandStore.imageForDocument(context,documentType,owner,"Logo")
-        val crest=DocumentBrandStore.imageForDocument(context,documentType,owner,"Herb") ?: DocumentBrandStore.imageForDocument(context,documentType,owner,"Godło")
-        val seal=DocumentBrandStore.image(context,owner,"Pieczęć")
-        val signature=DocumentBrandStore.image(context,owner,"Wzór podpisu odręcznego")
-        val background=DocumentBrandStore.image(context,owner,"Tło dokumentu")
-        val watermark=DocumentBrandStore.image(context,owner,"Znak wodny") ?: DocumentBrandStore.image(context,owner,"Grafika hologramu / zabezpieczenia")
+        val flag=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Flaga")
+        val logo=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Logo")
+        val crest=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Herb")
+            ?: DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Godło")
+        val background=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Tło dokumentu")
+        val watermark=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Znak wodny")
+        val seal=DocumentBrandStore.authorizedImageForDocument(context,documentType,owner,"Pieczęć")
         var pageNo=0; var y=0f; var page: PdfDocument.Page?=null
         fun startPage() {
             pageNo++
@@ -1383,18 +1545,24 @@ private object DocumentPdfRenderer {
             crest?.let { drawPdfBrandImage(canvas,it,crestElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
             logo?.let { drawPdfBrandImage(canvas,it,logoElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
             canvas.drawText(owner.ifBlank { "Dokument" },header.x,header.y+70f,small)
-            canvas.drawText(title,header.x,header.y+95f,heading)
+            canvas.drawText(renderedTitle,header.x,header.y+95f,heading)
             canvas.drawLine(header.x,header.y+105f,header.x+header.width,header.y+105f,line)
             y=header.y+128f
         }
         fun finishPage() {
             val c=page!!.canvas
-            val sealElement = PdfBrandLayout.elements.first { it.id == "seal" }
-            val signatureElement = PdfBrandLayout.elements.first { it.id == "signature" }
-            seal?.let { drawPdfBrandImage(c,it,sealElement,Paint(Paint.ANTI_ALIAS_FLAG).apply { alpha=220 }) }
-            signature?.let { drawPdfBrandImage(c,it,signatureElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
+            // The PDF contains blank attestation areas only. The issuer must apply
+            // the actual signature and, where required, the seal after review.
             c.drawLine(margin,pageH-145f,pageW-margin,pageH-145f,line)
-            c.drawText("Miejsce na podpis / podpis elektroniczny · strona "+pageNo,margin,pageH-35f,small)
+            c.drawText("Podpis osoby uprawnionej:",margin,pageH-115f,small)
+            c.drawLine(margin,pageH-95f,250f,pageH-95f,line)
+            c.drawText("Pieczęć — jeżeli wymagana:",300f,pageH-115f,small)
+            if (seal != null) {
+                c.drawBitmap(seal, null, Rect(300, pageH-110, 445, pageH-55), Paint(Paint.ANTI_ALIAS_FLAG))
+            } else {
+                c.drawRect(300f,pageH-105f,445f,pageH-55f,line)
+            }
+            c.drawText("Strona "+pageNo,margin,pageH-35f,small)
             pdf.finishPage(page!!)
         }
         startPage()
