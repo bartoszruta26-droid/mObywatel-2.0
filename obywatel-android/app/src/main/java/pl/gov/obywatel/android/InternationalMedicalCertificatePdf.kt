@@ -130,7 +130,11 @@ internal fun createBilingualMedicalCertificatePdf(
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
             textSize = 8f
         }
-        canvas!!.drawRect(stampLeft, stampTop, stampLeft + stampWidth, stampTop + stampHeight, bodyPaint)
+        val stampBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 0.8f
+        }
+        canvas!!.drawRect(stampLeft, stampTop, stampLeft + stampWidth, stampTop + stampHeight, stampBorderPaint)
         var stampY = stampTop + 12f
         canvas!!.drawText(stampCaption, stampLeft + 6f, stampY, stampHeadingPaint)
         stampY += 12f
