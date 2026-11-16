@@ -593,7 +593,8 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         fields,
                         doctorName = values[fieldKey("clinicianName")].orEmpty(),
                         doctorPractice = values[fieldKey("facilityName")].orEmpty(),
-                        doctorAddress = values[fieldKey("facilityAddress")].orEmpty()
+                        doctorAddress = values[fieldKey("facilityAddress")].orEmpty(),
+                        doctorRegister = values[fieldKey("clinicianLicense")].orEmpty()
                     )
                 }.getOrElse { saveMessage = "PDF generation failed: " + (it.message ?: "unknown error"); null }
                 if (pendingPdfBytes != null) pdfLauncher.launch("international-medical-certificate-bilingual.pdf")
