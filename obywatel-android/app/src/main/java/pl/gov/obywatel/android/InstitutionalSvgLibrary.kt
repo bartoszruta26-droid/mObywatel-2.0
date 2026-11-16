@@ -284,8 +284,6 @@ private fun saveCommonsReport(
 }
 
 private fun loadCommonsReportSummary(context: Context): String = runCatching {
-    val file = context.getFileStreamPath(COMMONS_DOWNLOAD_REPORT_FILE)
-    if (!file.exists()) return@runCatching ""
     val report = JSONObject(readCommonsJson(context, COMMONS_DOWNLOAD_REPORT_FILE))
     val errors = report.optJSONArray("errors") ?: JSONArray()
     val errorDetails = (0 until minOf(errors.length(), 5)).joinToString(" | ") { errors.optString(it) }
@@ -296,8 +294,6 @@ private fun loadCommonsReportSummary(context: Context): String = runCatching {
 }.getOrDefault("")
 
 private fun readCommonsCandidates(context: Context): List<CommonsSvgCandidate> = runCatching {
-    val file = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
-    if (!file.exists()) return@runCatching emptyList<CommonsSvgCandidate>()
     val array = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
     (0 until array.length()).mapNotNull { index ->
         val item = array.optJSONObject(index) ?: return@mapNotNull null
