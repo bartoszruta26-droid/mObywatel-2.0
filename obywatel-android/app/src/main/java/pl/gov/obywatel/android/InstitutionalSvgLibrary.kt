@@ -287,8 +287,11 @@ private fun loadCommonsReportSummary(context: Context): String = runCatching {
     val file = context.getFileStreamPath(COMMONS_DOWNLOAD_REPORT_FILE)
     if (!file.exists()) return@runCatching ""
     val report = JSONObject(readCommonsJson(context, COMMONS_DOWNLOAD_REPORT_FILE))
+    val errors = report.optJSONArray("errors") ?: JSONArray()
+    val errorDetails = (0 until minOf(errors.length(), 5)).joinToString(" | ") { errors.optString(it) }
     "Ostatni raport Commons: znaleziono ${report.optInt("found")}, zapisano w tej sesji ${report.optInt("downloadedThisRun")}, już w bibliotece ${report.optInt("alreadyPresent")}, łącznie w bibliotece ${report.optInt("savedInLibrary")}, błędy ${report.optInt("failed")}." +
         (if (report.optBoolean("severeDropOff")) " UWAGA: wykryto duży ubytek — zapisano mniej niż połowę znalezionych pozycji." else "") +
+        (if (errorDetails.isNotBlank()) " Przykładowe błędy: $errorDetails." else "") +
         " Aktualizacja: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(report.optLong("updatedAt")))}."
 }.getOrDefault("")
 
@@ -325,7 +328,7 @@ private fun persistCommonsCandidateStatus(
     writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, array.toString(2))
 }
 
-private fun downloadCommonsSvgWithRetry(
+private suspend fun downloadCommonsSvgWithRetry(
     context: Context, item: CommonsSvgCandidate, maxAttempts: Int = 3
 ): Pair<Int, String?> {
     var lastError = "Nieznany błąd pobierania."
@@ -335,16 +338,16 @@ private fun downloadCommonsSvgWithRetry(
             return (index + 1) to null
         } catch (failure: Exception) {
             lastError = failure.message ?: failure.javaClass.simpleName
-            if (index + 1 < maxAttempts) Thread.sleep(750L * (index + 1))
+            if (index + 1 < maxAttempts) kotlinx.coroutines.delay(750L * (index + 1))
         }
     }
     return maxAttempts to lastError
 }
 
-private fun processCommonsCandidates(
+private suspend fun processCommonsCandidates(
     context: Context,
     candidates: List<CommonsSvgCandidate>,
-    onProgress: (String) -> Unit
+    onProgress: suspend (String) -> Unit
 ): CommonsDownloadSummary {
     var downloaded = 0
     var alreadyPresent = 0
@@ -460,7 +463,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                             }
                             writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
                             processCommonsCandidates(context, candidates) { progress ->
-                                kotlinx.coroutines.runBlocking(Dispatchers.Main) { status = progress }
+                                withContext(Dispatchers.Main) { status = progress }
                             }
                         }
                     }
