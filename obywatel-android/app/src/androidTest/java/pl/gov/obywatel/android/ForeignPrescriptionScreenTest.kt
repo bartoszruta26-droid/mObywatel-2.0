@@ -32,6 +32,15 @@ class ForeignPrescriptionScreenTest {
     }
 
     @Test
+    fun polishPrescriptionLabelsCoverAllFieldsAndPrescriberSummary() {
+        assertTrue(foreignPrescriptionPolishLabel("patientName") == "Imię i nazwisko pacjenta")
+        assertTrue(foreignPrescriptionPolishLabel("medicineDosage") == "Dawkowanie i sposób stosowania")
+        assertTrue(foreignPrescriptionPolishLabel("prescriberQualifications") == "Tytuł zawodowy / kwalifikacje")
+        assertTrue(foreignPrescriptionPolishLabel("prescriberRegister") == "Numer prawa wykonywania zawodu / numer w rejestrze")
+        assertTrue(foreignPrescriptionPolishLabel("prescriberContact") == "Dane kontaktowe wystawcy")
+    }
+
+    @Test
     fun editorRendersPrescriptionFieldsAndActions() {
         composeRule.setContent {
             MaterialTheme {
