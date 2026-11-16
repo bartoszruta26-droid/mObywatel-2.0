@@ -532,4 +532,24 @@ class InternationalMedicalCertificateTest {
         assertFalse(isValidMedicalCertificateValueTranslation("", "Ustalenia kliniczne", "Findings"))
     }
 
+
+    @Test
+    fun clinicalHistoryPickerOffersAllRequestedPatientScenarios() {
+        val cases = MedicalCertificateClinicalCases.all.associateBy { it.id }
+        assertTrue(cases.keys.containsAll(setOf(
+            "sciatica_oncology", "severe_depression", "tibia_fracture", "acute_pancreatitis"
+        )))
+        assertTrue(cases.getValue("sciatica_oncology").fields.getValue("diagnosis").contains("M54.4"))
+        assertTrue(cases.getValue("severe_depression").fields.getValue("diagnosis").contains("F32.2"))
+        assertTrue(cases.getValue("tibia_fracture").fields.getValue("diagnosis").contains("S82.2"))
+        assertTrue(cases.getValue("acute_pancreatitis").fields.getValue("diagnosis").contains("K85"))
+        cases.values.forEach { clinicalCase ->
+            assertTrue(clinicalCase.fields.getValue("chiefComplaint").isNotBlank())
+            assertTrue(clinicalCase.fields.getValue("medicalHistory").isNotBlank())
+            assertTrue(clinicalCase.fields.getValue("physicalExamination").isNotBlank())
+            assertTrue(clinicalCase.fields.getValue("treatmentAndRehabilitation").isNotBlank())
+            assertTrue(clinicalCase.imagingStudy.id.isNotBlank())
+        }
+    }
+
 }
