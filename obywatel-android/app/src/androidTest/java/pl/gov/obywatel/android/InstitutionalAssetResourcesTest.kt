@@ -18,7 +18,8 @@ import org.junit.runner.RunWith
 class InstitutionalAssetResourcesTest {
     private val assets = listOf(
         "builtin_flag_poland_official_layout" to "Flaga państwowa Rzeczypospolitej Polskiej — układ ustawowy",
-        "builtin_flag_european_union_official_layout" to "Flaga Unii Europejskiej — oficjalny układ 12 gwiazd"
+        "builtin_flag_european_union_official_layout" to "Flaga Unii Europejskiej — oficjalny układ 12 gwiazd",
+        "builtin_flag_vatican_city_specification" to "Flaga Państwa Watykańskiego — układ i symbole według opisu urzędowego"
     )
 
     @Test
