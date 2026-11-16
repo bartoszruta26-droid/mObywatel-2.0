@@ -2129,7 +2129,7 @@ internal fun isIsoDateField(fieldKey: String, label: String, placeholder: String
     val hint = placeholder.trim().lowercase()
     return hint.startsWith("yyyy-mm-dd") || hint.startsWith("dd-mm-rrrr") ||
         caption.contains("data ") || caption.startsWith("data") ||
-        caption.contains(" date") || caption.endsWith("date") ||
+        caption.startsWith("date ") || caption.contains(" date") || caption.endsWith("date") ||
         key.contains("date") || key.contains("birth") || key.contains("expiry") ||
         key.contains("validto") || key.contains("validuntil") ||
         key.contains("issuedate") || key.contains("startdate") || key.contains("enddate")
