@@ -488,7 +488,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                         runCatching {
                             val candidates = readCommonsCandidates(context)
                             processCommonsCandidates(context, candidates) { progress ->
-                                kotlinx.coroutines.runBlocking(Dispatchers.Main) { status = progress }
+                                withContext(Dispatchers.Main) { status = progress }
                             }
                         }
                     }
