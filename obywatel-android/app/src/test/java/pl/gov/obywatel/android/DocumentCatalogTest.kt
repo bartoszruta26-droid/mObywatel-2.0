@@ -80,4 +80,64 @@ class DocumentCatalogTest {
         assertTrue(documentEditorFieldDefinitions(item.first).all { it.label.all { ch -> ch.code < 128 } })
     }
 
+
+    @Test
+    fun internationalDocumentCatalogHasDedicatedGroupsRoutesAndSchemas() {
+        val expectedGroups = mapOf(
+            "icvp" to "Dokumenty międzynarodowe — szczepienia",
+            "medical_summary" to "Dokumenty międzynarodowe — medyczne",
+            "allergy_card" to "Dokumenty międzynarodowe — farmaceutyczne",
+            "medication_card" to "Dokumenty międzynarodowe — farmaceutyczne",
+            "fit_to_travel" to "Dokumenty międzynarodowe — medyczne",
+            "fit_to_fly" to "Dokumenty międzynarodowe — medyczne",
+            "rehabilitation_report" to "Dokumenty międzynarodowe — medyczne",
+            "functional_report" to "Dokumenty międzynarodowe — medyczne",
+            "disability_opinion" to "Dokumenty międzynarodowe — medyczne",
+            "eu_parking_card" to "Dokumenty międzynarodowe — niepełnosprawność",
+            "prc" to "Dokumenty międzynarodowe — ubezpieczenie zdrowotne",
+            "s1" to "Dokumenty międzynarodowe — ubezpieczenie zdrowotne",
+            "s2" to "Dokumenty międzynarodowe — ubezpieczenie zdrowotne",
+            "s3" to "Dokumenty międzynarodowe — ubezpieczenie zdrowotne",
+            "da1" to "Dokumenty międzynarodowe — ubezpieczenie zdrowotne",
+            "cross_border_prescription" to "Dokumenty międzynarodowe — farmaceutyczne",
+            "refund_claim" to "Dokumenty międzynarodowe — ubezpieczenie zdrowotne",
+            "a1" to "Dokumenty międzynarodowe — ubezpieczenia i socjalne",
+            "u1" to "Dokumenty międzynarodowe — ubezpieczenia i socjalne",
+            "u2" to "Dokumenty międzynarodowe — ubezpieczenia i socjalne",
+            "epc" to "Dokumenty międzynarodowe — zawodowe",
+            "good_standing" to "Dokumenty międzynarodowe — zawodowe",
+            "professional_status" to "Dokumenty międzynarodowe — zawodowe",
+            "qualification_recognition" to "Dokumenty międzynarodowe — zawodowe",
+            "diploma" to "Dokumenty międzynarodowe — edukacja",
+            "education_certificate" to "Dokumenty międzynarodowe — edukacja",
+            "diploma_supplement" to "Dokumenty międzynarodowe — edukacja",
+            "birth_certificate" to "Dokumenty międzynarodowe — stan cywilny",
+            "marriage_certificate" to "Dokumenty międzynarodowe — stan cywilny",
+            "death_certificate" to "Dokumenty międzynarodowe — stan cywilny",
+            "marital_status" to "Dokumenty międzynarodowe — stan cywilny",
+            "capacity_to_marry" to "Dokumenty międzynarodowe — stan cywilny",
+            "residence_certificate" to "Dokumenty międzynarodowe — urzędowe",
+            "citizenship_certificate" to "Dokumenty międzynarodowe — urzędowe",
+            "life_certificate" to "Dokumenty międzynarodowe — stan cywilny",
+            "criminal_record_foreign" to "Dokumenty międzynarodowe — urzędowe",
+            "divorce_decree" to "Dokumenty międzynarodowe — urzędowe",
+            "adoption_certificate" to "Dokumenty międzynarodowe — stan cywilny",
+            "parentage_certificate" to "Dokumenty międzynarodowe — stan cywilny",
+            "international_driving_permit" to "Dokumenty międzynarodowe — podróż i tożsamość",
+            "travel_document" to "Dokumenty międzynarodowe — podróż i tożsamość",
+            "residence_card" to "Dokumenty międzynarodowe — podróż i tożsamość",
+            "passport_record" to "Dokumenty międzynarodowe — podróż i tożsamość"
+        )
+        assertEquals(43, expectedGroups.size)
+        expectedGroups.forEach { (id, group) ->
+            assertTrue("Brak kafelka $id", documentDisplayOptions.any { it.first == id })
+            assertEquals("Nieprawidłowa grupa dla $id", group, documentVisibilityGroup(id))
+            assertTrue("Brak trasy dla $id", DocumentRouteRegistry.find(id) != null)
+            val schema = documentEditorFieldDefinitions(id)
+            assertTrue("Brak pól ewidencyjnych dla $id", schema.isNotEmpty())
+            assertEquals("Powtórzone klucze pól dla $id", schema.size, schema.map { it.key }.toSet().size)
+        }
+        assertTrue(expectedGroups.values.all { it in documentVisibilityGroupOrder })
+    }
+
 }
