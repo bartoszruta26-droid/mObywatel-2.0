@@ -21,7 +21,13 @@ internal fun createBilingualMedicalCertificatePdf(
     fields: List<MedicalCertificatePdfField>,
     doctorName: String = "",
     doctorPractice: String = "",
-    doctorAddress: String = ""
+    doctorAddress: String = "",
+    documentTitle: String = "INTERNATIONAL MEDICAL CERTIFICATE",
+    issuerHeading: String = "ATTENDING PHYSICIAN",
+    signatureCaption: String = "Physician's handwritten signature (sign after printing)",
+    stampCaption: String = "Medical stamp",
+    patientSignatureCaption: String = "Patient's handwritten signature (if required)",
+    dateAndPlaceCaption: String = "Date and place"
 ): ByteArray {
     val document = PdfDocument()
     val output = ByteArrayOutputStream()
@@ -49,7 +55,7 @@ internal fun createBilingualMedicalCertificatePdf(
         page = document.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
         canvas = page!!.canvas
         y = margin
-        canvas!!.drawText("INTERNATIONAL MEDICAL CERTIFICATE", margin, y, titlePaint)
+        canvas!!.drawText(documentTitle, margin, y, titlePaint)
         y += 22f
         canvas!!.drawText("Original: $sourceLanguage    |    Translation: $targetLanguage", margin, y, mutedPaint)
         y += 24f
@@ -103,7 +109,7 @@ internal fun createBilingualMedicalCertificatePdf(
             startPage()
         }
         y += 14f
-        drawWrapped("ATTENDING PHYSICIAN", headingPaint)
+        drawWrapped(issuerHeading, headingPaint)
         if (doctorName.isNotBlank()) drawWrapped(doctorName, bodyPaint)
         if (doctorPractice.isNotBlank()) drawWrapped(doctorPractice, bodyPaint)
         if (doctorAddress.isNotBlank()) drawWrapped(doctorAddress, bodyPaint)
@@ -111,14 +117,14 @@ internal fun createBilingualMedicalCertificatePdf(
         canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
         canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
         y += 13f
-        canvas!!.drawText("Physician's handwritten signature (sign after printing)", margin, y, mutedPaint)
-        canvas!!.drawText("Medical stamp", margin + 250f, y, mutedPaint)
+        canvas!!.drawText(signatureCaption, margin, y, mutedPaint)
+        canvas!!.drawText(stampCaption, margin + 250f, y, mutedPaint)
         y += 26f
         canvas!!.drawLine(margin, y, margin + 220f, y, bodyPaint)
         canvas!!.drawLine(margin + 250f, y, margin + contentWidth, y, bodyPaint)
         y += 13f
-        canvas!!.drawText("Patient's handwritten signature (if required)", margin, y, mutedPaint)
-        canvas!!.drawText("Date and place", margin + 250f, y, mutedPaint)
+        canvas!!.drawText(patientSignatureCaption, margin, y, mutedPaint)
+        canvas!!.drawText(dateAndPlaceCaption, margin + 250f, y, mutedPaint)
         finishPage()
         document.writeTo(output)
         return output.toByteArray()

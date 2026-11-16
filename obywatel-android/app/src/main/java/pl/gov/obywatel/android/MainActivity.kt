@@ -942,6 +942,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("blood_donor", "Legitymacja Honorowego Dawcy Krwi", R.drawable.lib_ic_medical_record),
     Triple("disability_card", "Legitymacja osoby z niepełnosprawnością", R.drawable.documents_medical_certificates),
     Triple("international_medical_certificate", "International Medical Certificate", R.drawable.documents_medical_certificates),
+    Triple("foreign_prescription", "Recepta zagraniczna", R.drawable.documents_medical_certificates),
     Triple("vehicle_registration", "Dowód rejestracyjny pojazdu", R.drawable.mob_transport),
     Triple("insurance_vehicle", "Ubezpieczenie OC pojazdu", R.drawable.lib_ic_document),
     Triple("insurance_professional", "Ubezpieczenie OC zawodowe", R.drawable.lib_ic_document),
@@ -1031,7 +1032,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
         id.startsWith("entity_") || id.startsWith("organization_") -> "Służba gospodarcza"
     id == "professional" || id.startsWith("professional_") ||
         id in setOf("training", "student", "eu_education") -> "Służba zawodowa"
-    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children", "international_medical_certificate") -> "Służba zdrowotna"
+    id in setOf("disability", "disability_card", "blood_donor", "ehic", "vaccines", "children", "international_medical_certificate", "foreign_prescription") -> "Służba zdrowotna"
     id == "civil" || id in setOf(
         "birth_extract", "marriage_extract", "death_extract", "criminal_record",
         "vehicle_registration", "official"
@@ -1065,7 +1066,7 @@ private val armedServiceDocumentIds = setOf(
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to if (id == "identity" || id == "receipts") "dashboard" else "hidden"
+    id to if (id in setOf("identity", "receipts", "foreign_prescription")) "dashboard" else "hidden"
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
@@ -1435,6 +1436,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 "children" -> openSettingsDocumentEditor("children")
                 "bank_accounts" -> showBankAccounts = true
                 "vaccines" -> openSettingsDocumentEditor("vaccines")
+                "foreign_prescription" -> selectedDocumentId = route.documentId
                 "signed_pdf" -> openSettingsDocumentEditor("signed_pdf")
                 "receipts" -> showReceipts = true
                 "imported" -> openSettingsDocumentEditor("imported")
@@ -1674,6 +1676,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         },
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
                         importStatus = importStatus
+                    )
+                    selectedDocumentId == FOREIGN_PRESCRIPTION_ID -> ForeignPrescriptionEditorScreen(
+                        onBack = { selectedDocumentId = null }
                     )
                     selectedDocumentId == INTERNATIONAL_MEDICAL_CERTIFICATE_ID && selectedMedicalCertificateRecordId != null ->
                         InternationalMedicalCertificateEditorScreen(
