@@ -109,7 +109,10 @@ private val commonsApiThrottleLock = Any()
 @Volatile private var commonsApiLastRequestAt = 0L
 
 internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null): Long {
-    val serverDelay = retryAfterSeconds?.takeIf { it >= 0 }?.times(1000L)
+    // Cap before multiplication so an untrusted Retry-After value cannot overflow Long.
+    val serverDelay = retryAfterSeconds?.takeIf { it >= 0 }?.let { seconds ->
+        if (seconds >= 60L) 60000L else seconds * 1000L
+    }
     val exponentialDelay = 1000L * (1L shl attempt.coerceIn(0, 6))
     return (serverDelay ?: exponentialDelay).coerceIn(1000L, 60000L)
 }
