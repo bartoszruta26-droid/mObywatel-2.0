@@ -3,11 +3,20 @@
 package pl.gov.obywatel.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DocumentGraphicCatalogTest {
+    @Test
+    fun whiteTintedTileIconsAreRecognizedForContrastingPreviewSurface() {
+        assertTrue(isWhiteTintedIconAssetKind("Ikona wektorowa kafelka"))
+        assertTrue(isWhiteTintedIconAssetKind("Ikona wektorowa"))
+        assertTrue(isWhiteTintedIconAssetKind("Piktogram"))
+        assertFalse(isWhiteTintedIconAssetKind("Grafika wektorowa tła kafelków"))
+        assertFalse(isWhiteTintedIconAssetKind("Herb"))
+    }
     @Test
     fun graphicAssetLibraryHasDedicatedVectorTileAndHologramGroups() {
         val kinds = DocumentBrandStore.assetKinds()
