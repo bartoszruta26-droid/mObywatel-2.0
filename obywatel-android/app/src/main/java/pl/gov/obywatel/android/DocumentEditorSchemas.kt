@@ -701,6 +701,23 @@ private fun internationalDocumentEditorFields(documentId: String): List<Document
         Triple("verifyingAuthority", "Organ / podmiot potwierdzający", "")
     )
     val specific = when (documentId) {
+        in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") -> listOf(
+            Triple("passportTypeCode", "Kod rodzaju paszportu ICAO", "PP (dawniej PV) / PD / PO (dawniej PS) / PT"),
+            Triple("passportTypeDescription", "Rodzaj paszportu", "zwykły / dyplomatyczny / służbowy / tymczasowy służbowy"),
+            Triple("issuingEntity", "Podmiot wydający", "Państwo Watykańskie / Stolica Apostolska"),
+            Triple("passportHolderCapacity", "Status / funkcja uzasadniająca wydanie", ""),
+            Triple("passportDocumentFormat", "Rodzaj dokumentu / nośnika", "e-paszport / dokument maszynowo odczytywalny"),
+            Triple("passportAuthorityReference", "Organ wydający / referencja sprawy", ""),
+            Triple("passportOriginalFile", "Odniesienie do oryginalnego dokumentu", "")
+        )
+        "vatican_citizenship_certificate" -> listOf(
+            Triple("citizenshipStatus", "Potwierdzony status obywatelstwa", ""),
+            Triple("citizenshipAcquisitionBasis", "Podstawa nabycia obywatelstwa", ""),
+            Triple("citizenshipEffectiveDate", "Data nabycia / początku obywatelstwa", "RRRR-MM-DD"),
+            Triple("citizenshipTerminationDate", "Data utraty / ustania obywatelstwa", "RRRR-MM-DD"),
+            Triple("competentVaticanOffice", "Właściwa służba Państwa Watykańskiego", ""),
+            Triple("citizenshipRegisterReference", "Numer / referencja rejestru obywatelstwa", "")
+        )
         in setOf("icvp", "medical_summary", "fit_to_travel", "fit_to_fly", "rehabilitation_report", "functional_report", "disability_opinion") -> listOf(
             Triple("clinicalPurpose", "Cel medyczny / podróży", ""),
             Triple("diagnosis", "Rozpoznanie i kod ICD", ""),
