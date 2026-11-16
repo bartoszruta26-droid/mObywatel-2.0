@@ -271,6 +271,10 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 otherLanguage = ""
                 selectedTargets.clear()
                 selectedTargets["pl"] = true
+                // Remove prior patient data and translations so values from another case cannot leak into this one.
+                definitions.forEach { values[fieldKey(it.key)] = "" }
+                translationValues.clear()
+                values.remove("imc_translations")
                 // Keep every field as a comma-separated key/value pair.
                 val sample = mapOf(
                     "documentNumber" to "IMC-2026-001",
