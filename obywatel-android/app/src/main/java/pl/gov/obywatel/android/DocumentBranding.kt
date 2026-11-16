@@ -1429,6 +1429,11 @@ private fun drawPdfBrandImage(canvas:android.graphics.Canvas,bitmap:Bitmap,eleme
 private object DocumentPdfRenderer {
     fun write(context: Context, uri: Uri, title: String, owner: String, documentType: String, values: Map<String,String>) {
         val pdf=PdfDocument()
+        val workflow = InternationalDocumentWorkflowCatalog.find(documentType)
+        // Authority-issued originals are never reproduced by the app. The PDF
+        // is clearly a data sheet / application for the competent authority.
+        val renderedTitle = if (workflow?.authorityIssuesOriginal == true)
+            "Dane / wniosek dotyczący: $title" else title
         val pageW=595; val pageH=842; val margin=48f
         val body=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(35,48,60); textSize=10.5f; typeface=Typeface.create("sans-serif",Typeface.NORMAL) }
         val heading=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=android.graphics.Color.rgb(20,45,78); textSize=19f; typeface=Typeface.create("sans-serif",Typeface.BOLD) }
@@ -1455,7 +1460,7 @@ private object DocumentPdfRenderer {
             crest?.let { drawPdfBrandImage(canvas,it,crestElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
             logo?.let { drawPdfBrandImage(canvas,it,logoElement,Paint(Paint.ANTI_ALIAS_FLAG)) }
             canvas.drawText(owner.ifBlank { "Dokument" },header.x,header.y+70f,small)
-            canvas.drawText(title,header.x,header.y+95f,heading)
+            canvas.drawText(renderedTitle,header.x,header.y+95f,heading)
             canvas.drawLine(header.x,header.y+105f,header.x+header.width,header.y+105f,line)
             y=header.y+128f
         }
