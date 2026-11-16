@@ -132,7 +132,11 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
             fun value(key:String)=meta.optJSONObject(key)?.optString("value").orEmpty().replace(Regex("<[^>]*>")," ").replace("&nbsp;"," ").trim()
             val license=value("LicenseShortName")
             val lower=license.lowercase(java.util.Locale.ROOT)
-            if(listOf("cc0","cc by","cc-by","public domain","gfdl","free art license","lgpl","gpl").none { lower.contains(it) }) continue
+            val ccOpen=(lower.contains("cc by") || lower.contains("cc-by")) && !lower.contains("nc") && !lower.contains("nd")
+            val permissiveOpen=lower.contains("cc0") || lower.contains("public domain") ||
+                lower.contains("gfdl") || lower.contains("free art license") ||
+                lower.contains("lgpl") || lower.contains("gpl")
+            if(!ccOpen && !permissiveOpen) continue
             val url=info.optString("url")
             if(!url.startsWith("https://upload.wikimedia.org/")) continue
             val pageUrl="https://commons.wikimedia.org/wiki/"+java.net.URLEncoder.encode(title.replace(' ','_'),"UTF-8")
