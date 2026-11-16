@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<!-- Original schematic heraldic reference based on the official description; not the registered official artwork.
+     Official source notes WIPO registration: https://press.vatican.va/roman_curia/secretariat_state/documents/insigne/sp_ss_scv_stemma-bandiera-sigillo_en.html -->
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">
+ <defs><linearGradient id="g" x2="0" y2="1"><stop stop-color="#f8df8a"/><stop offset="1" stop-color="#b68a32"/></linearGradient><linearGradient id="s" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#9da5ad"/></linearGradient></defs>
+ <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M170 440 L475 155" stroke="url(#g)" stroke-width="34"/><path d="M470 440 L165 155" stroke="url(#s)" stroke-width="34"/>
+  <path d="M155 455 L115 495 M155 455 L195 495 M485 140 L525 100 M485 140 L445 100" stroke="#b68a32" stroke-width="17"/>
+  <path d="M485 455 L525 495 M485 455 L445 495 M155 140 L115 100 M155 140 L195 100" stroke="#aeb5bc" stroke-width="17"/>
+  <path d="M150 450 Q105 500 160 535 Q210 500 175 455 M490 145 Q535 95 480 60 Q430 95 465 140" stroke="#a72b31" stroke-width="12"/>
+ </g>
+ <g transform="translate(320 165)">
+  <path d="M-118 30 L-90 -70 L-35 -42 L0 -92 L35 -42 L90 -70 L118 30 Q0 70 -118 30Z" fill="url(#s)" stroke="#9b792d" stroke-width="10"/>
+  <path d="M-118 30 Q0 90 118 30 L105 72 Q0 125 -105 72Z" fill="url(#g)" stroke="#9b792d" stroke-width="10"/>
+  <path d="M-90 -45 H90 M-78 -8 H78 M-55 28 H55" stroke="#9b792d" stroke-width="8"/>
+  <path d="M0 -95 V-145 M-25 -145 H25" stroke="#c49a3d" stroke-width="12"/>
+ </g>
+</svg>
