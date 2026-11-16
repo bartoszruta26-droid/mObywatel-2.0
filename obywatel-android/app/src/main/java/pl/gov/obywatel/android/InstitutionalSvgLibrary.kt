@@ -336,6 +336,8 @@ private suspend fun downloadCommonsSvgWithRetry(
         try {
             downloadCommonsSvg(context, item)
             return (index + 1) to null
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
         } catch (failure: Exception) {
             lastError = failure.message ?: failure.javaClass.simpleName
             if (index + 1 < maxAttempts) kotlinx.coroutines.delay(750L * (index + 1))
@@ -411,10 +413,16 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                         val output=context.contentResolver.openOutputStream(uri) ?: error("Nie można utworzyć ZIP.")
                         ZipOutputStream(output).use { zip ->
                             zip.putNextEntry(ZipEntry("manifest.json")); zip.write(manifest.toString(2).toByteArray(Charsets.UTF_8)); zip.closeEntry()
-                            val downloadList=context.getFileStreamPath("commons-svg-download-list.json")
-                            if(downloadList.exists()) {
+                            val downloadList=context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
+                            if (downloadList.exists()) {
                                 zip.putNextEntry(ZipEntry("download-list.json"))
-                                context.openFileInput("commons-svg-download-list.json").use { it.copyTo(zip) }
+                                context.openFileInput(COMMONS_DOWNLOAD_LIST_FILE).use { it.copyTo(zip) }
+                                zip.closeEntry()
+                            }
+                            val downloadReport=context.getFileStreamPath(COMMONS_DOWNLOAD_REPORT_FILE)
+                            if (downloadReport.exists()) {
+                                zip.putNextEntry(ZipEntry("download-report.json"))
+                                android.util.AtomicFile(downloadReport).openRead().use { it.copyTo(zip) }
                                 zip.closeEntry()
                             }
                             files.forEach { (asset,bytes) ->
