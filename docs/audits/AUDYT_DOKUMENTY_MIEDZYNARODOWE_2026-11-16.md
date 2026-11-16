@@ -410,3 +410,17 @@ Pozycje już obecne w aplikacji (EKUZ, karta szczepień, recepta zagraniczna i m
 - Dla A1/U1/U2, Good Standing, dyplomów, kart parkingowych i poszczególnych dokumentów krajowych trzeba przed implementacją pobrać aktualny wzór i instrukcję właściwego organu dla konkretnej jurysdykcji.
 - „Fit to Fly”, „Fit to Travel”, karta informacji medycznej, karta alergii, karta leków i raport rehabilitacyjny nie mają jednego uniwersalnego wzoru urzędowego uznawanego automatycznie w każdym państwie.
 - Nie należy scalać do `main` katalogu i edytorów przed wykonaniem etapów A–E oraz testów.
+
+
+## 10. Integracja audytu i kryteria techniczne generatora PDF
+
+- Audyt został scalony do `main` w PR #77, a następnie włączony do gałęzi implementacyjnej dokumentów międzynarodowych.
+- Implementacja musi utrzymywać osobno: autora/posiadacza danych, profesjonalnego wystawcę, organ wydający oryginał, organ weryfikujący, kanał złożenia wniosku oraz status obiegu.
+- Statusy aplikacyjne (projekt, gotowy do przeglądu, podpisany przez wystawcę, złożony, wydany przez organ, zweryfikowany, wygasły, odrzucony) są metadanymi procesu. Nie mogą być automatycznie interpretowane jako dowód wydania dokumentu.
+- Zasoby instytucjonalne wymagają metadanych pochodzenia: właściciel/dysponent, źródło HTTPS, podstawa prawa/licencji/zgody, numer referencyjny zgody, osoba weryfikująca, wersja i okres obowiązywania.
+- Metadane pochodzenia są rejestrem dowodowym, a nie automatycznym stwierdzeniem legalności. Każde użycie musi być porównane z warunkami licencji/zgody i aktualnym wzorem instytucji.
+- Generator PDF nie może syntetycznie nanosić pieczęci, odręcznych podpisów ani elementów zabezpieczających (hologramów). Pozostawia odpowiednie pola do rzeczywistego poświadczenia przez uprawnioną osobę.
+- Logotypy, godła, flagi, herby i znaki wodne mogą być renderowane wyłącznie po uzupełnieniu i sprawdzeniu wymaganych danych pochodzenia oraz zakresu upoważnienia. Brak danych oznacza pominięcie grafiki, a nie zastępowanie jej imitacją.
+- Dla dokumentów wydawanych wyłącznie przez organ PDF aplikacji może służyć jako wniosek, karta danych lub ewidencja. Nie może imitować oryginału ani nadawać numerów, uprawnień lub statusów, których nie wydał organ.
+- Wydruki nie otrzymują automatycznych adnotacji o charakterze prywatnym lub demonstracyjnym, chyba że wymaga ich właściwy przepis lub źródłowy wzór. Status procesu pozostaje w metadanych.
+- Przed scaleniem wymagane są testy katalogu/grup/tras/schematów, polityki zasobów instytucjonalnych, PDF, importu i eksportu vCard oraz testy Compose UI na emulatorze.
