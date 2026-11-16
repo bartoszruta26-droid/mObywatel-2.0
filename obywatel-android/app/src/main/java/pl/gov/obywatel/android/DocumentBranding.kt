@@ -325,6 +325,18 @@ internal object DocumentBrandStore {
         }
     }
     private val builtInAssets = listOf(
+        BrandAsset(
+            "builtin_flag_poland_official_layout", "Zasoby aplikacji", "Flaga",
+            "Flaga państwowa Rzeczypospolitej Polskiej — układ ustawowy",
+            "builtin:institutions/poland-national-flag.svg",
+            rights = """{"owner":"Rzeczpospolita Polska","sourceUrl":"https://dziennikustaw.gov.pl/D2025000029901.pdf","rightsBasis":"Ustawa z 31 stycznia 1980 r. o godle, barwach i hymnie RP oraz o pieczęciach państwowych, tekst jednolity Dz.U. 2025 poz. 299, art. 4–6 i załącznik nr 3; art. 5 ust. 2 dopuszcza używanie barw RP z zachowaniem szacunku.","authorizationReference":"Dz.U. 2025 poz. 299 — załącznik nr 3; cyfrowa wersja wektorowa układu flagi, czerwony sRGB jest przybliżeniem","verifiedBy":"Weryfikacja źródła prawnego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":["Flaga"]}"""
+        ),
+        BrandAsset(
+            "builtin_flag_european_union_official_layout", "Zasoby aplikacji", "Flaga",
+            "Flaga Unii Europejskiej — oficjalny układ 12 gwiazd",
+            "builtin:institutions/european-union-flag.svg",
+            rights = """{"owner":"Unia Europejska","sourceUrl":"https://european-union.europa.eu/principles-countries-history/symbols/european-flag_en","rightsBasis":"Oficjalna reprodukcja flagi UE i geometria opublikowana na portalu Unii Europejskiej; nie jest to logo Komisji Europejskiej ani znak programu finansowania.","authorizationReference":"Oficjalna strona EU Flag — sekcja Download the European flag; SVG opublikowany 9 kwietnia 2026 r.","verifiedBy":"Weryfikacja źródła urzędowego w audycie projektu 2026-11-16","version":"1","effectiveFrom":"2026-11-16","permittedKinds":["Flaga"]}"""
+        ),
         BrandAsset("builtin_hologram_mandala", "Zasoby aplikacji", "Animowany hologram", "Mandala holograficzna — animowana", "builtin:mandala_hologram.gif.b64", rights = "Grafika autorska wygenerowana dla aplikacji"),
         BrandAsset("builtin_polish_emblem", "Zasoby aplikacji", "Godło", "Godło Polski — grafika zasobów aplikacji", "resource:institutions_eagle_emblem"),
         BrandAsset("builtin_ciechomscy", "Katalog heraldyczny", "Herb", "Ciechomscy — wąż i jabłko", "builtin:heraldry/ciechomscy-wez-jablko.svg"),
