@@ -269,8 +269,8 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
         Button(enabled = missing.isEmpty() && validDate && !busy, onClick = {
             val pdfFields = foreignPrescriptionFields.map { (key, label, _) ->
                 MedicalCertificatePdfField(label, values["fpr_$key"].orEmpty(),
-                    translations["$targetLanguage|label:$key"]?.takeIf { it.isNotBlank() }
-                        ?: if (targetLanguage.equals("pl", ignoreCase = true)) foreignPrescriptionPolishLabel(key) ?: label else label,
+                    if (targetLanguage.equals("pl", ignoreCase = true)) foreignPrescriptionPolishLabel(key) ?: label
+                    else translations["$targetLanguage|label:$key"]?.takeIf { it.isNotBlank() } ?: label,
                     translations["$targetLanguage|$key"].orEmpty())
             }
             pendingPdf = createBilingualMedicalCertificatePdf(
