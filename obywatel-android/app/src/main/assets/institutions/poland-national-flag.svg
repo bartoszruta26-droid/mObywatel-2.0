@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Digital rendering of the Polish national flag layout.
+     Legal basis: Act of 31 January 1980, consolidated text Dz.U. 2025 poz. 299, Annex 3.
+     Red is an sRGB approximation; replace with the institution's approved master file if exact color management is required. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <rect width="800" height="250" fill="#FFFFFF"/>
+  <rect y="250" width="800" height="250" fill="#D4213D"/>
+</svg>
