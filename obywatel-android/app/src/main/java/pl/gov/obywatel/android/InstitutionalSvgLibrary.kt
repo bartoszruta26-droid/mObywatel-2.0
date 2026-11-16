@@ -246,6 +246,12 @@ private fun readCommonsJson(context: Context, fileName: String): String =
 internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
     found >= 100 && available.coerceAtLeast(0) * 2 < found
 
+internal fun commonsDownloadProgressLabel(completed: Int, total: Int): String {
+    val safeTotal = total.coerceAtLeast(0)
+    val safeCompleted = completed.coerceIn(0, safeTotal)
+    return "Postęp: $safeCompleted/$safeTotal plików SVG"
+}
+
 private data class CommonsDownloadSummary(
     val found: Int,
     val downloaded: Int,
@@ -447,7 +453,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         if (busy == "commons" || busy == "resume") {
             if (progressTotal > 0) {
-                Text("Postęp: $progressCurrent/$progressTotal plików SVG", style = MaterialTheme.typography.labelMedium)
+                Text(commonsDownloadProgressLabel(progressCurrent, progressTotal), style = MaterialTheme.typography.labelMedium)
                 LinearProgressIndicator(
                     progress = (progressCurrent.toFloat() / progressTotal.toFloat()).coerceIn(0f, 1f),
                     modifier = Modifier.fillMaxWidth()
