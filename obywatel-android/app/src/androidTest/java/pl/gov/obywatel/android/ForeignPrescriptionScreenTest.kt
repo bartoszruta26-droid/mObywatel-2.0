@@ -4,8 +4,10 @@ package pl.gov.obywatel.android
 
 import android.content.Context
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -84,6 +86,6 @@ class ForeignPrescriptionScreenTest {
 
         composeRule.onNodeWithText("Wybierz lekarza z katalogu").performClick()
         composeRule.onNodeWithText("Dr Gustavo Polacow Korn — São Paulo").performClick()
-        composeRule.onNodeWithText("Dr Gustavo Polacow Korn").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Dr Gustavo Polacow Korn").assertCountEquals(2)
     }
 }
