@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<!-- Original historical reconstruction from the Governorate of Vatican City State description.
+     Not an official archival facsimile. Source: https://www.vaticanstate.va/en/state-and-government/general-informations/flag.html -->
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420">
+ <rect width="640" height="420" fill="#8d1028"/>
+ <g fill="#e2bd64" stroke="#9c782f" stroke-width="3">
+  <path d="M100 75 l10 20 22 3 -16 15 4 22 -20 -11 -20 11 4 -22 -16 -15 22 -3Z"/>
+  <path d="M220 75 l10 20 22 3 -16 15 4 22 -20 -11 -20 11 4 -22 -16 -15 22 -3Z"/>
+  <path d="M420 75 l10 20 22 3 -16 15 4 22 -20 -11 -20 11 4 -22 -16 -15 22 -3Z"/>
+  <path d="M540 75 l10 20 22 3 -16 15 4 22 -20 -11 -20 11 4 -22 -16 -15 22 -3Z"/>
+  <path d="M100 315 l10 20 22 3 -16 15 4 22 -20 -11 -20 11 4 -22 -16 -15 22 -3Z"/>
+  <path d="M220 315 l10 20 22 3 -16 15 4 22 -20 -11 -20 11 4 -22 -16 -15 22 -3Z"/>
+  <path d="M420 315 l10 20 22 3 -16 15 4 22 -20 -11 -20 11 4 -22 -16 -15 22 -3Z"/>
+  <path d="M540 315 l10 20 22 3 -16 15 4 22 -20 -11 -20 11 4 -22 -16 -15 22 -3Z"/>
+ </g>
+ <g transform="translate(320 210)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M-95 70 L95 -70 M95 70 L-95 -70" stroke="#e6c15f" stroke-width="22"/>
+  <path d="M-105 80 L-125 100 M-105 80 L-85 100 M105 -80 L125 -100 M105 -80 L85 -100" stroke="#e6c15f" stroke-width="12"/>
+  <path d="M0 -135 L-65 -105 L-50 -65 L50 -65 L65 -105Z" fill="#f4e6c6" stroke="#d5b65e" stroke-width="9"/>
+  <path d="M-65 -65 Q0 -35 65 -65 L50 -35 Q0 -8 -50 -35Z" fill="#d4ae51" stroke="#a37a2d" stroke-width="8"/>
+  <path d="M0 -140 V-165" stroke="#f1d47b" stroke-width="8"/>
+ </g>
+</svg>
