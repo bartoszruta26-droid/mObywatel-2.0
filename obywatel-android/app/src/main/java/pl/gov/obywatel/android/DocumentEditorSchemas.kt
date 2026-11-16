@@ -641,8 +641,7 @@ private fun internationalDocumentEditorFields(documentId: String): List<Document
         Triple("holderName", "Imię i nazwisko osoby, której dotyczy", ""),
         Triple("holderDateOfBirth", "Data urodzenia", "RRRR-MM-DD"),
         Triple("issuerName", "Wystawca / właściwa instytucja", ""),
-        Triple("verifyingAuthority", "Organ / podmiot potwierdzający", ""),
-        Triple("issuerName", "Wystawca / właściwa instytucja", "")
+        Triple("verifyingAuthority", "Organ / podmiot potwierdzający", "")
     )
     val specific = when (documentId) {
         in setOf("icvp", "medical_summary", "fit_to_travel", "fit_to_fly", "rehabilitation_report", "functional_report", "disability_opinion") -> listOf(
