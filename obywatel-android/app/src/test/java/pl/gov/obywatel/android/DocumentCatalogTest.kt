@@ -159,6 +159,12 @@ class DocumentCatalogTest {
                 schema.map { it.key }.containsAll(workflowKeys))
         }
         assertEquals(13, existingGroups.size)
+        val passportFields = documentEditorFieldDefinitions("holy_see_passport_service").map { it.key }.toSet()
+        assertTrue(passportFields.containsAll(setOf("passportTypeCode", "passportTypeDescription", "issuingEntity")))
+        val sacramentalFields = documentEditorFieldDefinitions("ecclesiastical_baptism_certificate").map { it.key }.toSet()
+        assertTrue(sacramentalFields.containsAll(setOf("parishName", "dioceseName", "registerEntryNumber", "sacramentalEventDate")))
+        val ordinationFields = documentEditorFieldDefinitions("clerical_ordination_certificate").map { it.key }.toSet()
+        assertTrue(ordinationFields.containsAll(setOf("ordinationRank", "ordinationDate", "ordainingBishop")))
     }
 
 
