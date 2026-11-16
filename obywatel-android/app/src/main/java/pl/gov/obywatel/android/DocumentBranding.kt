@@ -1428,15 +1428,26 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (assetPreview != null) {
-                                Image(
-                                    assetPreview.asImageBitmap(),
-                                    contentDescription = asset.label,
-                                    modifier = Modifier.size(64.dp),
-                                    contentScale = ContentScale.Fit,
-                                    colorFilter = if (isWhiteTintedIconAssetKind(asset.kind))
-                                        androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
-                                    else null
-                                )
+                                val whiteTintedIcon = isWhiteTintedIconAssetKind(asset.kind)
+                                Box(
+                                    modifier = Modifier.size(64.dp).then(
+                                        if (whiteTintedIcon) Modifier.background(
+                                            MaterialTheme.colorScheme.inverseSurface,
+                                            RoundedCornerShape(8.dp)
+                                        ) else Modifier
+                                    ).padding(if (whiteTintedIcon) 5.dp else 0.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Image(
+                                        assetPreview.asImageBitmap(),
+                                        contentDescription = asset.label,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Fit,
+                                        colorFilter = if (whiteTintedIcon)
+                                            androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
+                                        else null
+                                    )
+                                }
                             } else {
                                 Box(Modifier.size(64.dp).background(MaterialTheme.colorScheme.surfaceVariant),
                                     contentAlignment = Alignment.Center) {
