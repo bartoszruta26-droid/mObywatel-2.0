@@ -37,4 +37,18 @@ class InstitutionalSvgDownloadAccountingTest {
     fun clampsNegativeSavedCountBeforeAccounting() {
         assertTrue(isSvgDownloadDropOff(found = 100, available = -1))
     }
+    @Test
+    fun retryAfterDelayIsCappedBeforeMultiplicationAndCannotOverflow() {
+        assertEquals(59000L, commonsRetryDelayMs(0, 59L))
+        assertEquals(60000L, commonsRetryDelayMs(0, 60L))
+        assertEquals(60000L, commonsRetryDelayMs(0, Long.MAX_VALUE))
+    }
+
+    @Test
+    fun invalidRetryAfterUsesBoundedExponentialBackoff() {
+        assertEquals(1000L, commonsRetryDelayMs(0, -1L))
+        assertEquals(2000L, commonsRetryDelayMs(1, null))
+        assertEquals(60000L, commonsRetryDelayMs(99, null))
+    }
+
 }
