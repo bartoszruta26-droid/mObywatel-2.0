@@ -333,7 +333,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
         ) { Text("Wczytaj historię kliniczną") }
         Text(
             "Wczytanie historii zastępuje bieżące wartości pól formularza.",
-            color = MaterialTheme.colorScheme.error,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall
         )
 
