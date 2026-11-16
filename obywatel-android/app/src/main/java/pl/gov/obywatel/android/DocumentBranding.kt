@@ -337,6 +337,12 @@ internal object DocumentBrandStore {
     }
     private val builtInAssets = listOf(
         BrandAsset(
+            "builtin_holy_see_emblem_vatican_va", "Stolica Apostolska", "Godło",
+            "Emblemat Stolicy Apostolskiej — grafika publikowana przez Vatican.va",
+            "builtin:institutions/holy-see-emblem-vatican-va.svg",
+            rights = """{"owner":"Stolica Apostolska","sourceUrl":"https://commons.wikimedia.org/wiki/File:Emblem_of_the_Holy_See_(vatican.va).svg","rightsBasis":"Wikimedia Commons wskazuje CC0-1.0; plik opublikowany na Vatican.va. Odrębny znak od herbu Państwa Watykańskiego.","verifiedBy":"Metadane źródła i licencji zapisane w katalogu zasobów 2026-11-16","permittedKinds":[]}"""
+        ),
+        BrandAsset(
             "builtin_flag_poland_official_layout", "Zasoby aplikacji", "Flaga",
             "Flaga państwowa Rzeczypospolitej Polskiej — układ ustawowy",
             "builtin:institutions/poland-national-flag.svg",
