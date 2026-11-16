@@ -226,7 +226,9 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                     val result=withContext(Dispatchers.IO) {
                         runCatching {
                             val candidates=discoverCommonsOpenSvgs(200)
-                            require(candidates.isNotEmpty()) { "Nie znaleziono plików SVG z rozpoznaną otwartą licencją." }
+                            require(candidates.size >= 100) {
+                                "Wyszukiwarka znalazła tylko ${candidates.size} plików z rozpoznaną otwartą licencją. Minimalny wymagany katalog to 100; pobieranie nie zostanie przedstawione jako kompletne."
+                            }
                             var saved=0
                             var failed=0
                             val errors=mutableListOf<String>()
