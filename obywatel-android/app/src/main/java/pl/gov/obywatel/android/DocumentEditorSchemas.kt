@@ -20,14 +20,8 @@ private fun internationalDocumentFieldSet(documentId: String, specific: List<Doc
 
 internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEditorFieldDefinition> {
     val specific = when (documentId) {
-        in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") -> internationalDocumentFieldSet(documentId, fields(
-            Triple("passportTypeCode", "Kod rodzaju paszportu ICAO", "PP / PD / PO / PT"),
-            Triple("passportTypeDescription", "Rodzaj paszportu", "zwykły / dyplomatyczny / służbowy / tymczasowy służbowy"),
-            Triple("issuingEntity", "Podmiot wydający", "Państwo Watykańskie / Stolica Apostolska"),
-            Triple("passportHolderCapacity", "Status / funkcja uzasadniająca wydanie", ""),
-            Triple("passportAuthorityReference", "Organ wydający / referencja sprawy", ""),
-            Triple("passportOriginalFile", "Odniesienie do oryginalnego dokumentu", "")
-        ))
+        in setOf("vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service", "holy_see_passport_temporary_service") ->
+            internationalDocumentEditorFields(documentId)
         in setOf("ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate", "ecclesiastical_death_certificate") -> internationalDocumentFieldSet(documentId, fields(
             Triple("sacramentalRegisterType", "Rodzaj księgi parafialnej", "chrztów / małżeństw / zmarłych"),
             Triple("parishName", "Parafia / kościół", ""),
