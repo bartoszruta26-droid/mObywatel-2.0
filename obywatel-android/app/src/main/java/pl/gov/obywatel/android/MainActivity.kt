@@ -1012,6 +1012,49 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    id == "icvp" -> "Dokumenty międzynarodowe — szczepienia"
+    id == "medical_summary" -> "Dokumenty międzynarodowe — medyczne"
+    id == "allergy_card" -> "Dokumenty międzynarodowe — farmaceutyczne"
+    id == "medication_card" -> "Dokumenty międzynarodowe — farmaceutyczne"
+    id == "fit_to_travel" -> "Dokumenty międzynarodowe — medyczne"
+    id == "fit_to_fly" -> "Dokumenty międzynarodowe — medyczne"
+    id == "rehabilitation_report" -> "Dokumenty międzynarodowe — medyczne"
+    id == "functional_report" -> "Dokumenty międzynarodowe — medyczne"
+    id == "disability_opinion" -> "Dokumenty międzynarodowe — medyczne"
+    id == "eu_parking_card" -> "Dokumenty międzynarodowe — niepełnosprawność"
+    id == "prc" -> "Dokumenty międzynarodowe — ubezpieczenie zdrowotne"
+    id == "s1" -> "Dokumenty międzynarodowe — ubezpieczenie zdrowotne"
+    id == "s2" -> "Dokumenty międzynarodowe — ubezpieczenie zdrowotne"
+    id == "s3" -> "Dokumenty międzynarodowe — ubezpieczenie zdrowotne"
+    id == "da1" -> "Dokumenty międzynarodowe — ubezpieczenie zdrowotne"
+    id == "cross_border_prescription" -> "Dokumenty międzynarodowe — farmaceutyczne"
+    id == "refund_claim" -> "Dokumenty międzynarodowe — ubezpieczenie zdrowotne"
+    id == "a1" -> "Dokumenty międzynarodowe — ubezpieczenia i socjalne"
+    id == "u1" -> "Dokumenty międzynarodowe — ubezpieczenia i socjalne"
+    id == "u2" -> "Dokumenty międzynarodowe — ubezpieczenia i socjalne"
+    id == "epc" -> "Dokumenty międzynarodowe — zawodowe"
+    id == "good_standing" -> "Dokumenty międzynarodowe — zawodowe"
+    id == "professional_status" -> "Dokumenty międzynarodowe — zawodowe"
+    id == "qualification_recognition" -> "Dokumenty międzynarodowe — zawodowe"
+    id == "diploma" -> "Dokumenty międzynarodowe — edukacja"
+    id == "education_certificate" -> "Dokumenty międzynarodowe — edukacja"
+    id == "diploma_supplement" -> "Dokumenty międzynarodowe — edukacja"
+    id == "birth_certificate" -> "Dokumenty międzynarodowe — stan cywilny"
+    id == "marriage_certificate" -> "Dokumenty międzynarodowe — stan cywilny"
+    id == "death_certificate" -> "Dokumenty międzynarodowe — stan cywilny"
+    id == "marital_status" -> "Dokumenty międzynarodowe — stan cywilny"
+    id == "capacity_to_marry" -> "Dokumenty międzynarodowe — stan cywilny"
+    id == "residence_certificate" -> "Dokumenty międzynarodowe — urzędowe"
+    id == "citizenship_certificate" -> "Dokumenty międzynarodowe — urzędowe"
+    id == "life_certificate" -> "Dokumenty międzynarodowe — stan cywilny"
+    id == "criminal_record_foreign" -> "Dokumenty międzynarodowe — urzędowe"
+    id == "divorce_decree" -> "Dokumenty międzynarodowe — urzędowe"
+    id == "adoption_certificate" -> "Dokumenty międzynarodowe — stan cywilny"
+    id == "parentage_certificate" -> "Dokumenty międzynarodowe — stan cywilny"
+    id == "international_driving_permit" -> "Dokumenty międzynarodowe — podróż i tożsamość"
+    id == "travel_document" -> "Dokumenty międzynarodowe — podróż i tożsamość"
+    id == "residence_card" -> "Dokumenty międzynarodowe — podróż i tożsamość"
+    id == "passport_record" -> "Dokumenty międzynarodowe — podróż i tożsamość"
     id in armedServiceDocumentIds -> "Służba zbrojna"
     id in setOf("profile", "identity", "passport") -> "Służba osobista"
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
@@ -1045,7 +1088,18 @@ internal val documentVisibilityGroupOrder = listOf(
     "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
     "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
     "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa",
-    "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
+    "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne",
+    "Dokumenty międzynarodowe — medyczne",
+    "Dokumenty międzynarodowe — szczepienia",
+    "Dokumenty międzynarodowe — farmaceutyczne",
+    "Dokumenty międzynarodowe — ubezpieczenie zdrowotne",
+    "Dokumenty międzynarodowe — niepełnosprawność",
+    "Dokumenty międzynarodowe — zawodowe",
+    "Dokumenty międzynarodowe — edukacja",
+    "Dokumenty międzynarodowe — stan cywilny",
+    "Dokumenty międzynarodowe — urzędowe",
+    "Dokumenty międzynarodowe — ubezpieczenia i socjalne",
+    "Dokumenty międzynarodowe — podróż i tożsamość"
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
     "Służba osobista" -> R.drawable.lib_ic_account
