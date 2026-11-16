@@ -177,10 +177,10 @@ internal fun createBilingualMedicalCertificatePdf(
         if (fields.isEmpty()) drawWrapped("No document fields have been completed.", bodyPaint)
 
         val stampLines = listOf(
-            doctorName.ifBlank { "Name: not provided" },
-            doctorQualifications.ifBlank { "Professional title: not provided" },
-            doctorSpecialty.ifBlank { "Specialty: not provided" },
-            doctorRegister.ifBlank { "Professional licence / register number: not provided" }
+            "Name: " + doctorName.ifBlank { "not provided" },
+            "Professional title: " + doctorQualifications.ifBlank { "not provided" },
+            "Specialty: " + doctorSpecialty.ifBlank { "not provided" },
+            "Professional licence / register number: " + doctorRegister.ifBlank { "not provided" }
         )
         val panelHeight = 78f
         if (y + panelHeight + 85f > pageHeight - margin) {
