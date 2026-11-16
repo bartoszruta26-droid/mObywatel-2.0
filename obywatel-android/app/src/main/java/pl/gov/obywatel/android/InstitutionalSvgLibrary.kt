@@ -103,15 +103,47 @@ private fun validateSvg(bytes:ByteArray) {
 
 private data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String)
 
+private const val COMMONS_API_MIN_INTERVAL_MS = 1200L
+private const val COMMONS_API_MAX_ATTEMPTS = 5
+private val commonsApiThrottleLock = Any()
+@Volatile private var commonsApiLastRequestAt = 0L
+
+internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null): Long {
+    val serverDelay = retryAfterSeconds?.takeIf { it >= 0 }?.times(1000L)
+    val exponentialDelay = 1000L * (1L shl attempt.coerceIn(0, 6))
+    return (serverDelay ?: exponentialDelay).coerceIn(1000L, 60000L)
+}
+
 private fun commonsRequest(params:String):JSONObject {
-    val connection=URL("https://commons.wikimedia.org/w/api.php?$params").openConnection() as HttpURLConnection
-    connection.connectTimeout=20000
-    connection.readTimeout=30000
-    connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.0 (open SVG asset catalog)")
-    return try {
-        require(connection.responseCode in 200..299) { "Wikimedia Commons: HTTP ${connection.responseCode}" }
-        JSONObject(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
-    } finally { connection.disconnect() }
+    var lastFailure: Exception? = null
+    repeat(COMMONS_API_MAX_ATTEMPTS) { attempt ->
+        // Wikimedia asks API clients to make requests at a measured rate.
+        synchronized(commonsApiThrottleLock) {
+            val waitMs = COMMONS_API_MIN_INTERVAL_MS - (System.currentTimeMillis() - commonsApiLastRequestAt)
+            if (waitMs > 0) Thread.sleep(waitMs)
+            commonsApiLastRequestAt = System.currentTimeMillis()
+        }
+        val connection=URL("https://commons.wikimedia.org/w/api.php?$params&maxlag=5").openConnection() as HttpURLConnection
+        connection.connectTimeout=20000
+        connection.readTimeout=30000
+        connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.1 (Wikimedia Commons SVG asset catalog)")
+        try {
+            val code = connection.responseCode
+            if (code in 200..299) {
+                return JSONObject(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
+            }
+            val retryAfter = connection.getHeaderField("Retry-After")?.trim()?.toLongOrNull()
+            val retryable = code == 429 || code == 503 || code == 502 || code == 504
+            val message = "Wikimedia Commons: HTTP $code" +
+                if (retryAfter != null) " (Retry-After: ${retryAfter}s)" else ""
+            lastFailure = java.io.IOException(message)
+            if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
+            Thread.sleep(commonsRetryDelayMs(attempt, retryAfter))
+        } finally {
+            connection.disconnect()
+        }
+    }
+    throw lastFailure ?: java.io.IOException("Wikimedia Commons: nie udało się wykonać żądania API.")
 }
 
 private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
