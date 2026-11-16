@@ -115,7 +115,23 @@ private fun commonsRequest(params:String):JSONObject {
 }
 
 private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
-    val terms=listOf("coat of arms","heraldry","flag","emblem","seal","logo international organization","municipal coat of arms","government emblem","university coat of arms","hospital logo","church coat of arms","province coat of arms","city coat of arms","country coat of arms","state coat of arms","county coat of arms","national flag","city flag","province flag","municipal flag","organization logo","government logo","university logo","military insignia","heraldic crest","civic emblem","royal coat of arms","regional coat of arms","public institution logo")
+    val terms = listOf(
+        "coat of arms", "heraldry", "heraldic arms", "blazon", "escutcheon",
+        "flag", "national flag", "city flag", "province flag", "municipal flag",
+        "emblem", "national emblem", "state emblem", "civic emblem", "institutional emblem",
+        "seal", "official seal", "university seal", "government seal",
+        "logo", "organization logo", "government logo", "public institution logo",
+        "municipal logo", "ministry logo", "police emblem", "fire service emblem",
+        "university coat of arms", "hospital logo", "hospital emblem", "church coat of arms",
+        "diocesan coat of arms", "province coat of arms", "city coat of arms",
+        "municipal coat of arms", "county coat of arms", "country coat of arms",
+        "state coat of arms", "royal coat of arms", "regional coat of arms",
+        "military insignia", "heraldic crest", "government emblem",
+        "herb miasta", "herb gminy", "herb powiatu", "herb województwa",
+        "herb państwa", "godło państwowe", "pieczęć urzędowa", "flaga państwowa",
+        "flaga miasta", "logo ministerstwa", "logo urzędu", "znak instytucji",
+        "insygnia wojskowe", "herb diecezji", "herb uniwersytetu"
+    )
     val titles=linkedSetOf<String>()
     for(term in terms) {
         val query=java.net.URLEncoder.encode("$term filemime:svg","UTF-8")
@@ -151,10 +167,17 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
             fun value(key:String)=meta.optJSONObject(key)?.optString("value").orEmpty().replace(Regex("<[^>]*>")," ").replace("&nbsp;"," ").trim()
             val license=value("LicenseShortName")
             val lower=license.lowercase(java.util.Locale.ROOT)
-            val ccOpen=(lower.contains("cc by") || lower.contains("cc-by")) && !lower.contains("nc") && !lower.contains("nd")
-            val permissiveOpen=lower.contains("cc0") || lower.contains("public domain") ||
-                lower.contains("gfdl") || lower.contains("free art license") ||
-                lower.contains("lgpl") || lower.contains("gpl")
+            val attributionLicense =
+                (lower.contains("cc by") || lower.contains("cc-by") ||
+                    (lower.contains("creative commons") && lower.contains("attribution"))) &&
+                    !lower.contains("noncommercial") && !lower.contains("non-commercial") &&
+                    !lower.contains("by-nc") && !lower.contains("by nc") &&
+                    !lower.contains("by-nd") && !lower.contains("by nd") &&
+                    !lower.contains("no derivatives") && !lower.contains("no-derivatives")
+            val permissiveOpen = lower.contains("cc0") || lower.contains("public domain") ||
+                lower.contains("public-domain") || lower.contains("gfdl") ||
+                lower.contains("free art license") || lower.contains("lgpl") || lower.contains("gpl")
+            val ccOpen = attributionLicense
             if(!ccOpen && !permissiveOpen) continue
             val url=info.optString("url")
             if(!url.startsWith("https://upload.wikimedia.org/")) continue
@@ -200,11 +223,170 @@ private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
     DocumentBrandStore.importBytes(context,"Wikimedia Commons",kind,title.take(180),bytes,rights=rights,mimeType="image/svg+xml",assetId=id)
 }
 
+
+private const val COMMONS_DOWNLOAD_LIST_FILE = "commons-svg-download-list.json"
+private const val COMMONS_DOWNLOAD_REPORT_FILE = "commons-svg-download-report.json"
+
+private fun writeCommonsJson(context: Context, fileName: String, value: String) {
+    val atomic = android.util.AtomicFile(context.getFileStreamPath(fileName))
+    val output = atomic.startWrite()
+    try {
+        output.write(value.toByteArray(Charsets.UTF_8))
+        atomic.finishWrite(output)
+    } catch (failure: Exception) {
+        atomic.failWrite(output)
+        throw failure
+    }
+}
+
+private fun readCommonsJson(context: Context, fileName: String): String =
+    android.util.AtomicFile(context.getFileStreamPath(fileName)).openRead()
+        .bufferedReader(Charsets.UTF_8).use { it.readText() }
+
+internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
+    found >= 100 && available.coerceAtLeast(0) * 2 < found
+
+private data class CommonsDownloadSummary(
+    val found: Int,
+    val downloaded: Int,
+    val alreadyPresent: Int,
+    val failed: Int,
+    val attempts: Int
+)
+
+private fun commonsAssetId(title: String): String =
+    "commons_" + MessageDigest.getInstance("SHA-256")
+        .digest(title.toByteArray(Charsets.UTF_8)).take(16)
+        .joinToString("") { "%02x".format(it) }
+
+private fun saveCommonsReport(
+    context: Context,
+    found: Int,
+    downloaded: Int,
+    alreadyPresent: Int,
+    failed: Int,
+    attempts: Int,
+    current: String,
+    errors: List<String>
+) {
+    val report = JSONObject()
+        .put("updatedAt", System.currentTimeMillis())
+        .put("found", found)
+        .put("downloadedThisRun", downloaded)
+        .put("alreadyPresent", alreadyPresent)
+        .put("savedInLibrary", DocumentBrandStore.list(context).count { it.id.startsWith("commons_") })
+        .put("failed", failed)
+        .put("severeDropOff", isSvgDownloadDropOff(found, downloaded + alreadyPresent))
+        .put("attempts", attempts)
+        .put("current", current)
+        .put("errors", JSONArray(errors))
+    writeCommonsJson(context, COMMONS_DOWNLOAD_REPORT_FILE, report.toString(2))
+}
+
+private fun loadCommonsReportSummary(context: Context): String = runCatching {
+    val report = JSONObject(readCommonsJson(context, COMMONS_DOWNLOAD_REPORT_FILE))
+    val errors = report.optJSONArray("errors") ?: JSONArray()
+    val errorDetails = (0 until minOf(errors.length(), 5)).joinToString(" | ") { errors.optString(it) }
+    "Ostatni raport Commons: znaleziono ${report.optInt("found")}, zapisano w tej sesji ${report.optInt("downloadedThisRun")}, już w bibliotece ${report.optInt("alreadyPresent")}, łącznie w bibliotece ${report.optInt("savedInLibrary")}, błędy ${report.optInt("failed")}." +
+        (if (report.optBoolean("severeDropOff")) " UWAGA: wykryto duży ubytek — zapisano mniej niż połowę znalezionych pozycji." else "") +
+        (if (errorDetails.isNotBlank()) " Przykładowe błędy: $errorDetails." else "") +
+        " Aktualizacja: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(report.optLong("updatedAt")))}."
+}.getOrDefault("")
+
+private fun readCommonsCandidates(context: Context): List<CommonsSvgCandidate> = runCatching {
+    val array = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
+    (0 until array.length()).mapNotNull { index ->
+        val item = array.optJSONObject(index) ?: return@mapNotNull null
+        CommonsSvgCandidate(
+            item.optString("file"), item.optString("downloadUrl"), item.optString("sourcePage"),
+            item.optString("license"), item.optString("licenseUrl"), item.optString("author"),
+            item.optString("restrictions")
+        )
+    }.filter { it.title.startsWith("File:") && it.url.startsWith("https://upload.wikimedia.org/") }
+}.getOrDefault(emptyList())
+
+private fun persistCommonsCandidateStatus(
+    context: Context, title: String, status: String, attempts: Int, error: String?
+) {
+    val file = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
+    if (!file.exists()) return
+    val array = JSONArray(file.readText(Charsets.UTF_8))
+    for (index in 0 until array.length()) {
+        val item = array.optJSONObject(index) ?: continue
+        if (item.optString("file") == title) {
+            item.put("status", status)
+                .put("attempts", attempts)
+                .put("lastError", error.orEmpty())
+                .put("updatedAt", System.currentTimeMillis())
+            break
+        }
+    }
+    writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, array.toString(2))
+}
+
+private suspend fun downloadCommonsSvgWithRetry(
+    context: Context, item: CommonsSvgCandidate, maxAttempts: Int = 3
+): Pair<Int, String?> {
+    var lastError = "Nieznany błąd pobierania."
+    repeat(maxAttempts) { index ->
+        try {
+            downloadCommonsSvg(context, item)
+            return (index + 1) to null
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (failure: Exception) {
+            lastError = failure.message ?: failure.javaClass.simpleName
+            if (index + 1 < maxAttempts) kotlinx.coroutines.delay(750L * (index + 1))
+        }
+    }
+    return maxAttempts to lastError
+}
+
+private suspend fun processCommonsCandidates(
+    context: Context,
+    candidates: List<CommonsSvgCandidate>,
+    onProgress: suspend (String) -> Unit
+): CommonsDownloadSummary {
+    var downloaded = 0
+    var alreadyPresent = 0
+    var failed = 0
+    var attempts = 0
+    val errors = mutableListOf<String>()
+    if (candidates.isEmpty()) {
+        saveCommonsReport(context, 0, 0, 0, 0, 0, "", emptyList())
+        return CommonsDownloadSummary(0, 0, 0, 0, 0)
+    }
+    candidates.forEachIndexed { index, candidate ->
+        val assetId = commonsAssetId(candidate.title)
+        if (DocumentBrandStore.list(context).any { it.id == assetId }) {
+            alreadyPresent++
+            persistCommonsCandidateStatus(context, candidate.title, "saved", 0, null)
+        } else {
+            onProgress("Pobieranie SVG ${index + 1}/${candidates.size}: ${candidate.title}")
+            val result = downloadCommonsSvgWithRetry(context, candidate)
+            attempts += result.first
+            if (result.second == null) {
+                downloaded++
+                persistCommonsCandidateStatus(context, candidate.title, "saved", result.first, null)
+            } else {
+                failed++
+                val message = result.second ?: "Błąd pobierania."
+                persistCommonsCandidateStatus(context, candidate.title, "failed", result.first, message)
+                if (errors.size < 100) errors.add("${candidate.title}: $message")
+            }
+        }
+        saveCommonsReport(context, candidates.size, downloaded, alreadyPresent, failed,
+            attempts, candidate.title, errors)
+    }
+    return CommonsDownloadSummary(candidates.size, downloaded, alreadyPresent, failed, attempts)
+}
+
 @Composable
 internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     val scope= rememberCoroutineScope()
     var busy by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf("") }
+    var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
     val zipLauncher=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if(uri!=null) {
             busy="zip"
@@ -227,10 +409,16 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                         val output=context.contentResolver.openOutputStream(uri) ?: error("Nie można utworzyć ZIP.")
                         ZipOutputStream(output).use { zip ->
                             zip.putNextEntry(ZipEntry("manifest.json")); zip.write(manifest.toString(2).toByteArray(Charsets.UTF_8)); zip.closeEntry()
-                            val downloadList=context.getFileStreamPath("commons-svg-download-list.json")
-                            if(downloadList.exists()) {
+                            val downloadList=context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
+                            if (downloadList.exists()) {
                                 zip.putNextEntry(ZipEntry("download-list.json"))
-                                context.openFileInput("commons-svg-download-list.json").use { it.copyTo(zip) }
+                                context.openFileInput(COMMONS_DOWNLOAD_LIST_FILE).use { it.copyTo(zip) }
+                                zip.closeEntry()
+                            }
+                            val downloadReport=context.getFileStreamPath(COMMONS_DOWNLOAD_REPORT_FILE)
+                            if (downloadReport.exists()) {
+                                zip.putNextEntry(ZipEntry("download-report.json"))
+                                android.util.AtomicFile(downloadReport).openRead().use { it.copyTo(zip) }
                                 zip.closeEntry()
                             }
                             files.forEach { (asset,bytes) ->
@@ -255,54 +443,70 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         OutlinedButton(
-            enabled=busy==null,
-            onClick={
-                busy="commons"
-                status="Wyszukiwanie otwartych plików SVG w Wikimedia Commons…"
+            enabled = busy == null,
+            onClick = {
+                busy = "commons"
+                status = "Wyszukiwanie otwartych plików SVG w Wikimedia Commons…"
                 scope.launch {
-                    val result=withContext(Dispatchers.IO) {
+                    val result = withContext(Dispatchers.IO) {
                         runCatching {
-                            val candidates=discoverCommonsOpenSvgs(200)
-                            val candidateManifest=JSONArray()
+                            val candidates = discoverCommonsOpenSvgs(200)
+                            val manifest = JSONArray()
                             candidates.forEach { item ->
-                                candidateManifest.put(JSONObject()
-                                    .put("file",item.title)
-                                    .put("downloadUrl",item.url)
-                                    .put("sourcePage",item.page)
-                                    .put("license",item.license)
-                                    .put("licenseUrl",item.licenseUrl)
-                                    .put("author",item.artist)
-                                    .put("restrictions",item.restrictions)
-                                    .put("source","Wikimedia Commons"))
+                                manifest.put(JSONObject()
+                                    .put("file", item.title)
+                                    .put("downloadUrl", item.url)
+                                    .put("sourcePage", item.page)
+                                    .put("license", item.license)
+                                    .put("licenseUrl", item.licenseUrl)
+                                    .put("author", item.artist)
+                                    .put("restrictions", item.restrictions)
+                                    .put("source", "Wikimedia Commons")
+                                    .put("status", "pending")
+                                    .put("attempts", 0))
                             }
-                            context.openFileOutput("commons-svg-download-list.json",Context.MODE_PRIVATE).use {
-                                it.write(candidateManifest.toString(2).toByteArray(Charsets.UTF_8))
+                            writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
+                            processCommonsCandidates(context, candidates) { progress ->
+                                withContext(Dispatchers.Main) { status = progress }
                             }
-                            require(candidates.size >= 100) {
-                                "Wyszukiwarka znalazła tylko ${candidates.size} plików z rozpoznaną otwartą licencją. Minimalny wymagany katalog to 100; pobieranie nie zostanie przedstawione jako kompletne."
-                            }
-                            var saved=0
-                            var failed=0
-                            val errors=mutableListOf<String>()
-                            candidates.forEachIndexed { index,candidate ->
-                                withContext(Dispatchers.Main) { status="Pobieranie SVG ${index+1}/${candidates.size}: ${candidate.title}" }
-                                runCatching { downloadCommonsSvg(context,candidate) }
-                                    .onSuccess { saved++ }
-                                    .onFailure { failed++; if(errors.size<8) errors.add("${candidate.title}: ${it.message ?: "błąd"}") }
-                            }
-                            Triple(candidates.size,saved,Pair(failed,errors))
                         }
                     }
-                    status=result.fold(
-                        { "Commons: znaleziono ${it.first}, zapisano ${it.second}, błędy ${it.third.first}." + if(it.third.second.isEmpty()) "" else " "+it.third.second.joinToString(" | ") },
+                    status = result.fold(
+                        { "Commons: znaleziono ${it.found}, pobrano ${it.downloaded}, już było ${it.alreadyPresent}, błędy ${it.failed}; prób pobrania ${it.attempts}." },
                         { "Błąd wyszukiwania Commons: ${it.message ?: "nieznany błąd"}" }
                     )
-                    busy=null
-                    if((result.getOrNull()?.second ?: 0)>0) onSaved()
+                    reportSummary = loadCommonsReportSummary(context)
+                    busy = null
+                    if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
                 }
             },
-            modifier=Modifier.fillMaxWidth()
-        ) { Text(if(busy=="commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 otwartych SVG z Commons") }
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(if (busy == "commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 otwartych SVG z Commons") }
+        OutlinedButton(
+            enabled = busy == null && readCommonsCandidates(context).isNotEmpty(),
+            onClick = {
+                busy = "resume"
+                status = "Wznawianie pobierania niezapisanych grafik…"
+                scope.launch {
+                    val result = withContext(Dispatchers.IO) {
+                        runCatching {
+                            val candidates = readCommonsCandidates(context)
+                            processCommonsCandidates(context, candidates) { progress ->
+                                withContext(Dispatchers.Main) { status = progress }
+                            }
+                        }
+                    }
+                    status = result.fold(
+                        { "Wznowienie: znaleziono ${it.found}, pobrano ${it.downloaded}, już było ${it.alreadyPresent}, błędy ${it.failed}; prób ${it.attempts}." },
+                        { "Błąd wznowienia: ${it.message ?: "nieznany błąd"}" }
+                    )
+                    reportSummary = loadCommonsReportSummary(context)
+                    busy = null
+                    if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(if (busy == "resume") "Wznawianie…" else "Wznów nieudane / brakujące pobrania") }
         OutlinedButton(
             enabled = busy == null,
             onClick = {
@@ -417,6 +621,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             onClick={ zipLauncher.launch("institutional-svg-assets.zip") },modifier=Modifier.fillMaxWidth()) {
             Text(if(busy=="zip") "Tworzenie ZIP…" else "Spakuj pobrane SVG do ZIP")
         }
-        if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)
+        if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+        if (reportSummary.isNotBlank()) Text(reportSummary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
