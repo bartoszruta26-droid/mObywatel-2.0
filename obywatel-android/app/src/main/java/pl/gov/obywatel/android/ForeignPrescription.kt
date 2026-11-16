@@ -106,6 +106,16 @@ internal fun isValidForeignPrescriptionContact(value: String): Boolean {
     return Regex("^\\+[1-9]\\d{6,14}$").matches(normalizedPhone)
 }
 
+/** Formats a partially entered ISO date as YYYY-MM-DD without inventing missing digits. */
+internal fun formatIsoDateInput(raw: String): String {
+    val digits = raw.filter(Char::isDigit).take(8)
+    return when {
+        digits.length <= 4 -> digits
+        digits.length <= 6 -> digits.substring(0, 4) + "-" + digits.substring(4)
+        else -> digits.substring(0, 4) + "-" + digits.substring(4, 6) + "-" + digits.substring(6)
+    }
+}
+
 internal fun isValidForeignPrescriptionIssueDate(value: String): Boolean = runCatching {
     val format = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.ROOT).apply { isLenient = false }
     val parsed = format.parse(value)
@@ -205,7 +215,7 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
         foreignPrescriptionFields.forEach { (key, label, hint) ->
             OutlinedTextField(
                 value = values["fpr_$key"].orEmpty(),
-                onValueChange = { values["fpr_$key"] = it; translations.remove("$targetLanguage|$key") },
+                onValueChange = { values["fpr_$key"] = if (key == "issueDate") formatIsoDateInput(it) else it; translations.remove("$targetLanguage|$key") },
                 label = { Text(label) }, placeholder = { if (hint.isNotBlank()) Text(hint) },
                 modifier = Modifier.fillMaxWidth(), minLines = if (key == "medicineDosage") 2 else 1
             )
