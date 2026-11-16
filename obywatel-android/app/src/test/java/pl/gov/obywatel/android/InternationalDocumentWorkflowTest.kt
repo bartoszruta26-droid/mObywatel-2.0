@@ -11,7 +11,7 @@ import org.junit.Test
 
 class InternationalDocumentWorkflowTest {
     @Test
-    fun allFortyThreeInternationalDocumentsHaveIssuerAndWorkflowMetadata() {
+    fun allFiftyFourInternationalDocumentsHaveIssuerAndWorkflowMetadata() {
         assertEquals(54, InternationalDocumentWorkflowCatalog.all.size)
         InternationalDocumentWorkflowCatalog.all.forEach { (id, workflow) ->
             assertEquals(id, workflow.documentId)
@@ -26,7 +26,11 @@ class InternationalDocumentWorkflowTest {
         val authorityIds = setOf(
             "prc", "s1", "s2", "s3", "da1", "a1", "u1", "u2",
             "birth_certificate", "marriage_certificate", "death_certificate",
-            "divorce_decree", "adoption_certificate", "parentage_certificate"
+            "divorce_decree", "adoption_certificate", "parentage_certificate",
+            "vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service",
+            "holy_see_passport_temporary_service", "vatican_citizenship_certificate",
+            "ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate",
+            "ecclesiastical_death_certificate", "clerical_ordination_certificate"
         )
         authorityIds.forEach { id ->
             val workflow = InternationalDocumentWorkflowCatalog.find(id)
@@ -85,7 +89,7 @@ class InternationalDocumentWorkflowTest {
     }
 
     @Test
-    fun everyCatalogueIdResolvesToOneWorkflowEntry() {
+    fun everyInternationalCatalogueIdResolvesToOneWorkflowEntry() {
         assertEquals(54, InternationalDocumentWorkflowCatalog.all.keys.toSet().size)
         assertNotNull(InternationalDocumentWorkflowCatalog.find("icvp"))
         assertNotNull(InternationalDocumentWorkflowCatalog.find("passport_record"))
