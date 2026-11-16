@@ -340,6 +340,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     val scope= rememberCoroutineScope()
     var busy by remember { mutableStateOf<String?>(null) }
     var status by remember { mutableStateOf("") }
+    var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
     val zipLauncher=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if(uri!=null) {
             busy="zip"
@@ -390,54 +391,72 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         OutlinedButton(
-            enabled=busy==null,
-            onClick={
-                busy="commons"
-                status="Wyszukiwanie otwartych plików SVG w Wikimedia Commons…"
+            enabled = busy == null,
+            onClick = {
+                busy = "commons"
+                status = "Wyszukiwanie otwartych plików SVG w Wikimedia Commons…"
                 scope.launch {
-                    val result=withContext(Dispatchers.IO) {
+                    val result = withContext(Dispatchers.IO) {
                         runCatching {
-                            val candidates=discoverCommonsOpenSvgs(200)
-                            val candidateManifest=JSONArray()
+                            val candidates = discoverCommonsOpenSvgs(200)
+                            val manifest = JSONArray()
                             candidates.forEach { item ->
-                                candidateManifest.put(JSONObject()
-                                    .put("file",item.title)
-                                    .put("downloadUrl",item.url)
-                                    .put("sourcePage",item.page)
-                                    .put("license",item.license)
-                                    .put("licenseUrl",item.licenseUrl)
-                                    .put("author",item.artist)
-                                    .put("restrictions",item.restrictions)
-                                    .put("source","Wikimedia Commons"))
+                                manifest.put(JSONObject()
+                                    .put("file", item.title)
+                                    .put("downloadUrl", item.url)
+                                    .put("sourcePage", item.page)
+                                    .put("license", item.license)
+                                    .put("licenseUrl", item.licenseUrl)
+                                    .put("author", item.artist)
+                                    .put("restrictions", item.restrictions)
+                                    .put("source", "Wikimedia Commons")
+                                    .put("status", "pending")
+                                    .put("attempts", 0))
                             }
-                            context.openFileOutput("commons-svg-download-list.json",Context.MODE_PRIVATE).use {
-                                it.write(candidateManifest.toString(2).toByteArray(Charsets.UTF_8))
+                            context.openFileOutput(COMMONS_DOWNLOAD_LIST_FILE, Context.MODE_PRIVATE).use {
+                                it.write(manifest.toString(2).toByteArray(Charsets.UTF_8))
                             }
-                            require(candidates.size >= 100) {
-                                "Wyszukiwarka znalazła tylko ${candidates.size} plików z rozpoznaną otwartą licencją. Minimalny wymagany katalog to 100; pobieranie nie zostanie przedstawione jako kompletne."
+                            processCommonsCandidates(context, candidates) { progress ->
+                                kotlinx.coroutines.runBlocking(Dispatchers.Main) { status = progress }
                             }
-                            var saved=0
-                            var failed=0
-                            val errors=mutableListOf<String>()
-                            candidates.forEachIndexed { index,candidate ->
-                                withContext(Dispatchers.Main) { status="Pobieranie SVG ${index+1}/${candidates.size}: ${candidate.title}" }
-                                runCatching { downloadCommonsSvg(context,candidate) }
-                                    .onSuccess { saved++ }
-                                    .onFailure { failed++; if(errors.size<8) errors.add("${candidate.title}: ${it.message ?: "błąd"}") }
-                            }
-                            Triple(candidates.size,saved,Pair(failed,errors))
                         }
                     }
-                    status=result.fold(
-                        { "Commons: znaleziono ${it.first}, zapisano ${it.second}, błędy ${it.third.first}." + if(it.third.second.isEmpty()) "" else " "+it.third.second.joinToString(" | ") },
+                    status = result.fold(
+                        { "Commons: znaleziono ${it.found}, pobrano ${it.downloaded}, już było ${it.alreadyPresent}, błędy ${it.failed}; prób pobrania ${it.attempts}." },
                         { "Błąd wyszukiwania Commons: ${it.message ?: "nieznany błąd"}" }
                     )
-                    busy=null
-                    if((result.getOrNull()?.second ?: 0)>0) onSaved()
+                    reportSummary = loadCommonsReportSummary(context)
+                    busy = null
+                    if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
                 }
             },
-            modifier=Modifier.fillMaxWidth()
-        ) { Text(if(busy=="commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 otwartych SVG z Commons") }
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(if (busy == "commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 otwartych SVG z Commons") }
+        OutlinedButton(
+            enabled = busy == null && readCommonsCandidates(context).isNotEmpty(),
+            onClick = {
+                busy = "resume"
+                status = "Wznawianie pobierania niezapisanych grafik…"
+                scope.launch {
+                    val result = withContext(Dispatchers.IO) {
+                        runCatching {
+                            val candidates = readCommonsCandidates(context)
+                            processCommonsCandidates(context, candidates) { progress ->
+                                kotlinx.coroutines.runBlocking(Dispatchers.Main) { status = progress }
+                            }
+                        }
+                    }
+                    status = result.fold(
+                        { "Wznowienie: znaleziono ${it.found}, pobrano ${it.downloaded}, już było ${it.alreadyPresent}, błędy ${it.failed}; prób ${it.attempts}." },
+                        { "Błąd wznowienia: ${it.message ?: "nieznany błąd"}" }
+                    )
+                    reportSummary = loadCommonsReportSummary(context)
+                    busy = null
+                    if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(if (busy == "resume") "Wznawianie…" else "Wznów nieudane / brakujące pobrania") }
         OutlinedButton(
             enabled = busy == null,
             onClick = {
@@ -552,6 +571,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             onClick={ zipLauncher.launch("institutional-svg-assets.zip") },modifier=Modifier.fillMaxWidth()) {
             Text(if(busy=="zip") "Tworzenie ZIP…" else "Spakuj pobrane SVG do ZIP")
         }
-        if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)
+        if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+        if (reportSummary.isNotBlank()) Text(reportSummary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
