@@ -12,7 +12,7 @@ import org.junit.Test
 class InternationalDocumentWorkflowTest {
     @Test
     fun allFortyThreeInternationalDocumentsHaveIssuerAndWorkflowMetadata() {
-        assertEquals(43, InternationalDocumentWorkflowCatalog.all.size)
+        assertEquals(54, InternationalDocumentWorkflowCatalog.all.size)
         InternationalDocumentWorkflowCatalog.all.forEach { (id, workflow) ->
             assertEquals(id, workflow.documentId)
             assertTrue(workflow.authorityLabel.isNotBlank())
