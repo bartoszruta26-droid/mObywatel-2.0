@@ -452,15 +452,38 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                             if (target.substringBefore('-') == sourceLanguage.substringBefore('-')) return@forEach
                             eligible.forEach { definition ->
                                 val key = definition.key
-                                if (isMedicalCertificateTranslatableField(key)) {
-                                    val result = runCatching { provider.translate(values[fieldKey(key)].orEmpty(), sourceLanguage, target) }
-                                    result.onSuccess { translationValues["$target|$key"] = it; completed++ }.onFailure { failed++ }
+                                // Capture the clinical value before any translation request. Labels and
+                                // values use separate keys and separate provider calls so a translated
+                                // caption can never be stored as the medical content.
+                                val sourceValue = values[fieldKey(key)].orEmpty()
+                                if (isMedicalCertificateTranslatableField(key) && sourceValue.isNotBlank()) {
+                                    val valueResult = runCatching {
+                                        provider.translate(sourceValue, sourceLanguage, target).trim()
+                                            .also { translated ->
+                                                check(isValidMedicalCertificateValueTranslation(sourceValue, translated, definition.label)) {
+                                                    "The provider returned an empty value or the field label instead of its medical content."
+                                                }
+                                            }
+                                    }
+                                    valueResult.onSuccess { translatedValue ->
+                                        translationValues["$target|$key"] = translatedValue
+                                        completed++
+                                    }.onFailure { failed++ }
                                 }
-                                val labelResult = if (target == "en") Result.success(definition.label) else runCatching { provider.translate(definition.label, "en", target) }
-                                labelResult.onSuccess { translationValues["$target|label:$key"] = it }.onFailure { failed++ }
+                                val labelResult = if (target == "en") Result.success(definition.label)
+                                    else runCatching { provider.translate(definition.label, "en", target).trim() }
+                                labelResult.onSuccess { translatedLabel ->
+                                    if (translatedLabel.isNotBlank()) translationValues["$target|label:$key"] = translatedLabel
+                                    else failed++
+                                }.onFailure { failed++ }
                                 if (sourceLanguage != "en") {
-                                    val sourceLabelResult = runCatching { provider.translate(definition.label, "en", sourceLanguage) }
-                                    sourceLabelResult.onSuccess { translationValues["$sourceLanguage|label:$key"] = it }.onFailure { failed++ }
+                                    val sourceLabelResult = runCatching {
+                                        provider.translate(definition.label, "en", sourceLanguage).trim()
+                                    }
+                                    sourceLabelResult.onSuccess { translatedLabel ->
+                                        if (translatedLabel.isNotBlank()) translationValues["$sourceLanguage|label:$key"] = translatedLabel
+                                        else failed++
+                                    }.onFailure { failed++ }
                                 }
                             }
                         }
@@ -479,14 +502,23 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Translation — ${languages.firstOrNull { it.code == target }?.englishName ?: target}", fontWeight = FontWeight.SemiBold)
                         Text("Edit translated field names and values. Source text remains separately preserved.", style = MaterialTheme.typography.bodySmall)
-                        Button(onClick = {
+                        val canSwapTranslation = definitions
+                            .filter { values[fieldKey(it.key)].orEmpty().isNotBlank() && isMedicalCertificateTranslatableField(it.key) }
+                            .all { definition -> translationValues["$target|${definition.key}"].orEmpty().isNotBlank() }
+                        Button(enabled = canSwapTranslation, onClick = {
                             val previousSource = sourceLanguage
                             definitions.forEach { definition ->
                                 val key = definition.key
-                                val translatedValue = translationValues["$target|$key"] ?: values[fieldKey(key)].orEmpty()
-                                translationValues["$previousSource|$key"] = values[fieldKey(key)].orEmpty()
-                                values[fieldKey(key)] = translatedValue
-                                if (!translationValues.containsKey("$previousSource|label:$key")) translationValues["$previousSource|label:$key"] = definition.label
+                                val sourceValue = values[fieldKey(key)].orEmpty()
+                                val translatedValue = translationValues["$target|$key"]
+                                if (sourceValue.isNotBlank() && isMedicalCertificateTranslatableField(key)) {
+                                    check(!translatedValue.isNullOrBlank()) { "Cannot swap while a medical field translation is missing." }
+                                    translationValues["$previousSource|$key"] = sourceValue
+                                    values[fieldKey(key)] = translatedValue
+                                }
+                                if (!translationValues.containsKey("$previousSource|label:$key")) {
+                                    translationValues["$previousSource|label:$key"] = definition.label
+                                }
                             }
                             sourceLanguage = target
                             selectedTargets.clear()
@@ -495,11 +527,18 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                         }, modifier = Modifier.fillMaxWidth()) { Text("Swap original and translation") }
                         translatedFields.forEach { definition ->
                             val translationKey = "$target|" + definition.key
-                            OutlinedTextField(value = translationValues["$target|label:" + definition.key] ?: definition.label,
-                                onValueChange = { translationValues["$target|label:" + definition.key] = it },
-                                label = { Text("Translated field name") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                            OutlinedTextField(value = translationValues[translationKey].orEmpty(), onValueChange = { translationValues[translationKey] = it },
-                                label = { Text("Translated value") }, modifier = Modifier.fillMaxWidth(),
+                            val translatedLabelKey = "$target|label:" + definition.key
+                            val translatedLabel = translationValues[translatedLabelKey].orEmpty()
+                            OutlinedTextField(value = translatedLabel,
+                                onValueChange = { translationValues[translatedLabelKey] = it },
+                                label = { Text("Nazwa pola w tłumaczeniu") },
+                                placeholder = { Text("Etykieta nie została przetłumaczona — ponów tłumaczenie") },
+                                modifier = Modifier.fillMaxWidth(), singleLine = true)
+                            OutlinedTextField(value = translationValues[translationKey].orEmpty(),
+                                onValueChange = { translationValues[translationKey] = it },
+                                label = { Text(translatedLabel.ifBlank { "Treść medyczna — brak tłumaczenia etykiety" }) },
+                                placeholder = { Text("Brak tłumaczenia treści medycznej — ponów tłumaczenie") },
+                                modifier = Modifier.fillMaxWidth(),
                                 minLines = if (definition.key in setOf("chiefComplaint", "medicalHistory", "diagnosis", "physicalExamination", "systemsReview", "functionalLimitations", "prognosis", "recommendations")) 3 else 1)
                         }
                     }
@@ -528,8 +567,12 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                             MedicalCertificatePdfField(
                                 sourceLabel = translationValues["$sourceLanguage|label:" + definition.key] ?: definition.label,
                                 sourceValue = sourceValue,
-                                targetLabel = languageName + " — " + (translationValues["$target|label:" + definition.key] ?: definition.label),
-                                targetValue = translationValues["$target|" + definition.key] ?: if (isMedicalCertificateTranslatableField(definition.key)) "[Translation missing]" else sourceValue
+                                targetLabel = languageName + " — " + (
+                                    translationValues["$target|label:" + definition.key]
+                                        ?: if (target == "en") definition.label else "[Etykieta nieprzetłumaczona]"
+                                ),
+                                targetValue = translationValues["$target|" + definition.key]
+                                    ?: if (isMedicalCertificateTranslatableField(definition.key)) "[Brak tłumaczenia treści medycznej]" else sourceValue
                             )
                         }
                     }
