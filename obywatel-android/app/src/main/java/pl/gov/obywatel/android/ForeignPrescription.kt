@@ -52,7 +52,9 @@ private val foreignPrescriptionFields = listOf(
     Triple("medicineDosage", "Dosage and directions", "Dose, route, frequency and duration"),
     Triple("issueDate", "Date of issue", "YYYY-MM-DD"),
     Triple("prescriberName", "Prescriber's full name", ""),
-    Triple("prescriberQualifications", "Professional qualifications / title", "e.g. medical doctor"),
+    Triple("prescriberQualifications", "Professional title / qualifications", "e.g. medical doctor"),
+    Triple("prescriberSpecialty", "Medical specialty", "Specialty as stated in the professional register"),
+    Triple("prescriberPractice", "Practice / institution name", "Name of the clinic or medical institution"),
     Triple("prescriberContact", "Prescriber's email or phone with international prefix", ""),
     Triple("prescriberAddress", "Prescriber / practice address (optional)", "Optional full postal address"),
     Triple("prescriberCountry", "Country of issue", ""),
@@ -146,7 +148,7 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
                             // Do not infer a regulated professional title from the "Dr" display name.
                             // The issuer must confirm and enter the exact qualification shown on the source.
                             values["fpr_prescriberContact"] = doctor.phone
-                            values["fpr_prescriberAddress"] = listOf(doctor.practice, doctor.address).filter { it.isNotBlank() }.joinToString(", ")
+                            values["fpr_prescriberPractice"] = doctor.practice\n                            values["fpr_prescriberAddress"] = doctor.address
                             values["fpr_prescriberCountry"] = doctor.country
                             values["fpr_prescriberRegister"] = listOf(doctor.register, doctor.license).filter { it.isNotBlank() }.joinToString(" — ")
                             doctorMenu = false
