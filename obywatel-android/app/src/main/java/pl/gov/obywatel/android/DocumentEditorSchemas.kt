@@ -76,9 +76,9 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("prognosis", "Prognosis", ""),
             Triple("recommendations", "Recommendations and Follow-up", ""),
             Triple("clinicianDeclaration", "Clinician Declaration", ""),
-            Triple("clinicianSignRef", "Clinician Signature — to be handwritten after printing", ""),
-            Triple("patientSignRef", "Patient Signature — to be handwritten after printing", ""),
-            Triple("medicalSealReference", "Medical Stamp — applied to the printed document", "")
+            Triple("clinicianSignRef", "Clinician Signature - to be handwritten after printing", ""),
+            Triple("patientSignRef", "Patient Signature - to be handwritten after printing", ""),
+            Triple("medicalSealReference", "Medical Stamp - applied to the printed document", "")
         )
         "birth_extract" -> fields(
             Triple("childName", "Imię i nazwisko dziecka", ""),
