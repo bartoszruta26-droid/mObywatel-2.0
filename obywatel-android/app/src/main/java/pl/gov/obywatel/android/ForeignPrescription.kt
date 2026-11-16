@@ -43,16 +43,16 @@ private const val FPR_RECORD_ID = "foreign-prescription-single"
 
 /** Stable Polish labels for the prescription PDF. */
 internal fun foreignPrescriptionPolishLabel(key: String): String? = mapOf(
-    "patientName" to "Imię i nazwisko pacjenta",
+    "patientName" to "Pełne imię i nazwisko pacjenta",
     "patientAddress" to "Adres pacjenta",
     "medicineInn" to "Nazwa powszechnie stosowana (INN)",
     "medicineBrand" to "Nazwa handlowa (jeżeli przepisano)",
     "medicineForm" to "Postać farmaceutyczna",
-    "medicineStrength" to "Moc",
+    "medicineStrength" to "Dawka",
     "medicineQuantity" to "Ilość",
     "medicineDosage" to "Dawkowanie i sposób stosowania",
     "issueDate" to "Data wystawienia",
-    "prescriberName" to "Imię i nazwisko wystawcy",
+    "prescriberName" to "Pełne imię i nazwisko osoby przepisującej",
     "prescriberQualifications" to "Tytuł zawodowy / kwalifikacje",
     "prescriberSpecialty" to "Specjalizacja",
     "prescriberPractice" to "Nazwa praktyki / placówki",
@@ -63,16 +63,16 @@ internal fun foreignPrescriptionPolishLabel(key: String): String? = mapOf(
 )[key]
 
 private val foreignPrescriptionFields = listOf(
-    Triple("patientName", "Patient full name", "Full name as shown on identity document"),
+    Triple("patientName", "Patient’s full name", "Full name as shown on identity document"),
     Triple("patientAddress", "Patient address", "Street, house number, postal code, city, country"),
     Triple("medicineInn", "International nonproprietary name (INN)", "Active substance"),
     Triple("medicineBrand", "Brand name (if prescribed)", "Optional trade name"),
     Triple("medicineForm", "Pharmaceutical form", "e.g. tablet, capsule, solution"),
-    Triple("medicineStrength", "Strength", "e.g. 500 mg"),
+    Triple("medicineStrength", "Dose (amount of active ingredient per unit)", "e.g. 500 mg per tablet"),
     Triple("medicineQuantity", "Quantity", "Number of units / packages"),
     Triple("medicineDosage", "Dosage and directions", "Dose, route, frequency and duration"),
     Triple("issueDate", "Date of issue", "YYYY-MM-DD"),
-    Triple("prescriberName", "Prescriber's full name", ""),
+    Triple("prescriberName", "Prescriber’s full name (person prescribing the medicine)", ""),
     Triple("prescriberQualifications", "Professional title / qualifications", "e.g. medical doctor"),
     Triple("prescriberSpecialty", "Medical specialty", "Specialty as stated in the professional register"),
     Triple("prescriberPractice", "Practice / institution name", "Name of the clinic or medical institution"),
