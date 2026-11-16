@@ -46,9 +46,9 @@ class InstitutionalSvgDownloadAccountingTest {
 
     @Test
     fun invalidRetryAfterUsesBoundedExponentialBackoff() {
-        assertEquals(1000L, commonsRetryDelayMs(0, -1L))
-        assertEquals(2000L, commonsRetryDelayMs(1, null))
-        assertEquals(60000L, commonsRetryDelayMs(99, null))
+        assertEquals(4000L, commonsRetryDelayMs(0, -1L))
+        assertEquals(4000L, commonsRetryDelayMs(1, null))
+        assertEquals(180000L, commonsRetryDelayMs(99, null))
     }
 
 }
