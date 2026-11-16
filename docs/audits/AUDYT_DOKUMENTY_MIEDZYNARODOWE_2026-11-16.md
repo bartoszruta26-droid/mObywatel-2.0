@@ -393,7 +393,7 @@ Pozycje już obecne w aplikacji (EKUZ, karta szczepień, recepta zagraniczna i m
 - Przygotować osobne profile graficzne dla: medyczny, szczepienia, farmaceutyczny, administracyjny, zawodowy, edukacyjny i podróżny.
 - Dodać tła wektorowe do kafelków, a nie imitacje zabezpieczeń urzędowych.
 - PDF-y P1/I1/W1/E1 mają wyraźne statusy, pola podpisu, źródło i numer lokalny.
-- Kryterium: brak fałszywych pieczęci, herbów, podpisów, hologramów i znaków wodnych instytucji.
+- Kryterium: wykorzystywane są wyłącznie autentyczne pliki instytucji lub materiały przekazane / zatwierdzone przez uprawnionego dysponenta; nie wolno tworzyć imitacji podpisów, hologramów ani zabezpieczeń. Pieczęć graficzna może być osadzona wyłącznie wtedy, gdy jej użycie i zakres zastosowania są objęte udokumentowanym upoważnieniem.
 
 ### Etap E — testy i kontrola jakości
 - Testy jednostkowe modeli, pól wymaganych, statusów, dat i reguł ważności.
@@ -424,3 +424,51 @@ Pozycje już obecne w aplikacji (EKUZ, karta szczepień, recepta zagraniczna i m
 - Dla dokumentów wydawanych wyłącznie przez organ PDF aplikacji może służyć jako wniosek, karta danych lub ewidencja. Nie może imitować oryginału ani nadawać numerów, uprawnień lub statusów, których nie wydał organ.
 - Wydruki nie otrzymują automatycznych adnotacji o charakterze prywatnym lub demonstracyjnym, chyba że wymaga ich właściwy przepis lub źródłowy wzór. Status procesu pozostaje w metadanych.
 - Przed scaleniem wymagane są testy katalogu/grup/tras/schematów, polityki zasobów instytucjonalnych, PDF, importu i eksportu vCard oraz testy Compose UI na emulatorze.
+
+
+## 14. Uzupełnienie audytu — oświadczenie właściciela projektu i rozszerzenie obsługi znaków instytucjonalnych (2026-11-16)
+
+### 14.1. Oświadczenie przekazane przez właściciela projektu
+
+Właściciel projektu oświadczył w rozmowie z dnia 2026-11-16, że:
+- posiada zezwolenie ministra na prowadzenie prac deweloperskich nad aplikacją;
+- aplikacja ma zostać włączona do zasobów państwowych;
+- w ramach prac chce wykorzystywać znaki graficzne, logotypy, znaki wodne, pieczęcie i inne materiały międzynarodowych oraz państwowych instytucji;
+- dokumenty generowane w aplikacji będą następnie przedstawiane właściwym urzędnikom do ręcznego podpisu albo podpisu elektronicznego w odrębnym rządowym narzędziu.
+
+Powyższe zapisano jako oświadczenie i informację przekazaną przez właściciela projektu. Sam wpis audytowy nie stanowi niezależnego potwierdzenia treści zezwolenia ani zakresu praw do każdego znaku konkretnej instytucji. Numer, data, organ wydający i zakres zezwolenia powinny zostać dopisane do rejestru upoważnień po przekazaniu danych dokumentu.
+
+### 14.2. Docelowa polityka wykorzystania materiałów instytucjonalnych
+
+Aplikacja ma technicznie obsługiwać:
+- oficjalne logotypy, godła, herby, flagi i znaki wodne;
+- autentyczne grafiki pieczęci przekazane lub zatwierdzone przez właściwą instytucję;
+- oficjalne tła, układy stron, typografię, oznaczenia i elementy identyfikacji wizualnej;
+- warianty językowe oraz wzory dokumentów właściwe dla kraju, instytucji i procedury.
+
+Nie wolno zastępować autentycznych materiałów grafiką odtworzoną na podobieństwo oryginału. Dla każdego zasobu należy zapisać: właściciela/dysponenta, źródło, podstawę użycia, identyfikator zgody lub publikacji, zakres dozwolonych zastosowań, osobę weryfikującą, wersję oraz okres obowiązywania.
+
+### 14.3. Rozróżnienie rodzajów elementów
+
+- Pieczęć graficzna: może być umieszczana w PDF, jeżeli konkretny zasób jest autentyczny i jego wykorzystanie w tym rodzaju dokumentu jest wyraźnie dozwolone. W przeciwnym razie pozostaje pole do przyłożenia pieczęci przez urząd.
+- Podpis odręczny: aplikacja nie odtwarza podpisu urzędnika. Pozostawia pole do podpisu lub przekazuje dokument do uprawnionego narzędzia podpisu elektronicznego.
+- Podpis elektroniczny i pieczęć elektroniczna: są nakładane przez właściwy, uprawniony system lub certyfikat. Sam obraz pieczęci nie jest podpisem elektronicznym ani kwalifikowaną pieczęcią elektroniczną.
+- Hologramy i zabezpieczenia antyfałszywkowe: nie są syntetyzowane ani odtwarzane jako imitacje. Można zachować oficjalne oznaczenia opisowe lub wizualizacje informacyjne tylko w granicach zatwierdzonego wzoru i uprawnienia.
+
+### 14.4. Zmiany implementacyjne wynikające z oświadczenia
+
+- Rozszerzono `InstitutionalAssetAuthorization` o jawny zbiór `permittedKinds`, czyli typów zasobów objętych upoważnieniem.
+- Polityka renderowania dopuszcza pieczęć tylko wtedy, gdy jej typ znajduje się w zakresie upoważnienia, a dane źródła i okres obowiązywania są kompletne.
+- Generator PDF pobiera pieczęć przez ten sam mechanizm autoryzowanych zasobów co logo, herb, flaga i znak wodny; przy braku zatwierdzonego pliku pozostawia pole na pieczęć.
+- Podpis odręczny i hologram pozostają wyłączone z automatycznego renderowania.
+- Testy jednostkowe obejmują pozytywny przypadek pieczęci z zakresem upoważnienia oraz odmowę dla elementów poza zakresem, podpisu i hologramu.
+
+### 14.5. Kryteria odbioru
+
+1. Każdy zasób instytucjonalny ma kompletny rekord pochodzenia i zakresu użycia.
+2. Generator stosuje wyłącznie pliki przypisane do dokumentu i objęte aktualnym upoważnieniem.
+3. PDF pozostawia pole podpisu dla urzędnika lub przekazuje plik do zewnętrznego systemu podpisu.
+4. Obraz pieczęci nie jest przedstawiany jako kryptograficzna pieczęć elektroniczna.
+5. Dla każdego wzoru zachowuje się kraj, instytucję, procedurę, język, wersję i datę obowiązywania.
+6. Testy katalogu, grup, PDF, vCard, emulatora i kompilacji APK muszą przejść przed scaleniem PR.
+
