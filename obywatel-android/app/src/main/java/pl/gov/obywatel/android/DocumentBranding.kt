@@ -620,7 +620,7 @@ internal object DocumentBrandStore {
         return asset
     }
 
-    @Synchronized fun import(context: Context, uri: Uri, owner: String, kind: String, label: String) {
+    @Synchronized fun import(context: Context, uri: Uri, owner: String, kind: String, label: String, rights: String = "") {
         val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
             val out = java.io.ByteArrayOutputStream(); val buffer = ByteArray(8192); var total = 0
             while (true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=MAX_IMAGE) { "Plik przekracza limit 12 MB." }; out.write(buffer,0,n) }
@@ -628,7 +628,7 @@ internal object DocumentBrandStore {
         } ?: error("Nie można odczytać pliku.")
         require(bytes.isNotEmpty()) { "Wybrany zasób jest pusty." }
         val mime = context.contentResolver.getType(uri).orEmpty()
-        importBytes(context, owner, kind, label, bytes, mimeType = mime)
+        importBytes(context, owner, kind, label, bytes, rights = rights, mimeType = mime)
     }
     fun image(context: Context, owner: String, kind: String) : android.graphics.Bitmap? = runCatching {
         val asset=list(context).lastOrNull { it.owner.equals(owner,true) && it.kind==kind } ?: return null
@@ -1156,6 +1156,14 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     }
     var kind by remember { mutableStateOf("Fotografia") }
     var label by remember { mutableStateOf("") }
+    var assetSourceUrl by remember { mutableStateOf("") }
+    var assetRightsBasis by remember { mutableStateOf("") }
+    var assetAuthorizationReference by remember { mutableStateOf("") }
+    var assetVerifiedBy by remember { mutableStateOf("") }
+    var assetVersion by remember { mutableStateOf("1") }
+    var assetEffectiveFrom by remember { mutableStateOf("") }
+    var assetEffectiveUntil by remember { mutableStateOf("") }
+    var assetPermittedKinds by remember { mutableStateOf("") }
     var assets by remember { mutableStateOf(DocumentBrandStore.list(context)) }
     var status by remember { mutableStateOf("") }
     var assetRevision by remember { mutableIntStateOf(0) }
@@ -1175,7 +1183,20 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
             val targetOwner = owner.trim().ifBlank { "Biblioteka użytkownika" }
-            DocumentBrandStore.import(context, uri, targetOwner, kind, label)
+            val rightsRecord = if (listOf(assetSourceUrl, assetRightsBasis, assetAuthorizationReference, assetVerifiedBy, assetEffectiveFrom, assetPermittedKinds).all { it.isBlank() }) "" else {
+                JSONObject()
+                    .put("owner", targetOwner)
+                    .put("sourceUrl", assetSourceUrl.trim())
+                    .put("rightsBasis", assetRightsBasis.trim())
+                    .put("authorizationReference", assetAuthorizationReference.trim())
+                    .put("verifiedBy", assetVerifiedBy.trim())
+                    .put("version", assetVersion.trim())
+                    .put("effectiveFrom", assetEffectiveFrom.trim())
+                    .put("effectiveUntil", assetEffectiveUntil.trim())
+                    .put("permittedKinds", JSONArray(assetPermittedKinds.split(",").map { it.trim() }.filter { it.isNotBlank() }))
+                    .toString()
+            }
+            DocumentBrandStore.import(context, uri, targetOwner, kind, label, rightsRecord)
             assets = DocumentBrandStore.list(context)
             val imported = assets.lastOrNull { it.owner == targetOwner && it.kind == kind }
             if (fixedTarget != null && imported != null) {
@@ -1240,6 +1261,16 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+        Text("Pochodzenie i upoważnienie instytucjonalne", fontWeight = FontWeight.SemiBold)
+        Text("Uzupełnij na podstawie dokumentu zgody, oficjalnej publikacji lub warunków wykorzystania. Zakres użycia wpisz jako nazwy typów oddzielone przecinkami, np. Logo, Pieczęć, Znak wodny. Bez kompletnych danych zasób nie zostanie użyty w PDF.", style = MaterialTheme.typography.bodySmall)
+        OutlinedTextField(value = assetSourceUrl, onValueChange = { assetSourceUrl = it }, label = { Text("Oficjalne źródło HTTPS") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetRightsBasis, onValueChange = { assetRightsBasis = it }, label = { Text("Podstawa użycia / licencja / zgoda") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = assetAuthorizationReference, onValueChange = { assetAuthorizationReference = it }, label = { Text("Numer zgody / referencja publikacji") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetVerifiedBy, onValueChange = { assetVerifiedBy = it }, label = { Text("Osoba weryfikująca") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetVersion, onValueChange = { assetVersion = it }, label = { Text("Wersja zasobu") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetEffectiveFrom, onValueChange = { assetEffectiveFrom = it }, label = { Text("Obowiązuje od (RRRR-MM-DD)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetEffectiveUntil, onValueChange = { assetEffectiveUntil = it }, label = { Text("Obowiązuje do (opcjonalnie, RRRR-MM-DD)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(value = assetPermittedKinds, onValueChange = { assetPermittedKinds = it }, label = { Text("Dozwolone typy zasobów (oddziel przecinkami)") }, modifier = Modifier.fillMaxWidth())
         Button(
             onClick = { picker.launch(arrayOf("image/*", "text/*", "application/pdf", "application/x-pkcs12", "application/pkix-cert", "application/octet-stream")) },
             modifier = Modifier.fillMaxWidth()
