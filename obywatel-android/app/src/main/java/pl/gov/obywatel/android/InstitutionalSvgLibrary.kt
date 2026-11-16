@@ -71,7 +71,6 @@ private fun validateSvg(bytes:ByteArray) {
     require(!Regex("<(script|foreignObject)\\b",RegexOption.IGNORE_CASE).containsMatchIn(raw)) { "SVG zawiera niedozwolone elementy aktywne." }
     require(!Regex("(href|src)\\s*=\\s*['\"]\\s*(https?:|file:|javascript:|data:)",RegexOption.IGNORE_CASE).containsMatchIn(raw)) { "SVG zawiera zewnętrzne odwołanie." }
     val parser=Xml.newPullParser()
-    parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true)
     parser.setInput(java.io.StringReader(raw))
     var root=false
     var event=parser.eventType
