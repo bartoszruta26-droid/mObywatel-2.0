@@ -5,7 +5,7 @@ package pl.gov.obywatel.android
 import java.time.LocalDate
 
 /**
- * Workflow metadata for the 43 international catalogue entries.
+ * Workflow metadata for the international document catalogue.
  *
  * This metadata distinguishes an authority-issued original from a professional
  * certificate, a user-maintained record and an application. It deliberately
@@ -124,13 +124,13 @@ internal object InternationalDocumentWorkflowCatalog {
         spec("residence_card", InternationalIssuerKind.IMMIGRATION_AUTHORITY, "Właściwy organ ds. cudzoziemców", InternationalDocumentMode.AUTHORITY_APPLICATION, false, true),
         spec("passport_record", InternationalIssuerKind.DOCUMENT_HOLDER, "Organ wydający wskazany na oryginalnym dokumencie", InternationalDocumentMode.HOLDER_MAINTAINED_RECORD),
 
-        spec("vatican_passport_ordinary", InternationalIssuerKind.IMMIGRATION_AUTHORITY, "Governorate Państwa Watykańskiego — właściwy urząd paszportowy", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("vatican_passport_ordinary", InternationalIssuerKind.VATICAN_CITY_STATE_AUTHORITY, "Governorate Państwa Watykańskiego — właściwy urząd paszportowy", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
         spec("holy_see_passport_diplomatic", InternationalIssuerKind.HOLY_SEE_AUTHORITY, "Sekretariat Stanu Stolicy Apostolskiej — właściwa służba", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
-        spec("holy_see_passport_service", InternationalIssuerKind.PROFESSIONAL_AUTHORITY, "Sekretariat Stanu Stolicy Apostolskiej — właściwa służba", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
-        spec("holy_see_passport_temporary_service", InternationalIssuerKind.PROFESSIONAL_AUTHORITY, "Sekretariat Stanu Stolicy Apostolskiej — właściwa służba", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("holy_see_passport_service", InternationalIssuerKind.HOLY_SEE_AUTHORITY, "Sekretariat Stanu Stolicy Apostolskiej — właściwa służba", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("holy_see_passport_temporary_service", InternationalIssuerKind.HOLY_SEE_AUTHORITY, "Sekretariat Stanu Stolicy Apostolskiej — właściwa służba", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
         spec("vatican_citizenship_certificate", InternationalIssuerKind.VATICAN_CITY_STATE_AUTHORITY, "Governorate Państwa Watykańskiego — właściwa służba obywatelstwa", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
         spec("ecclesiastical_baptism_certificate", InternationalIssuerKind.ECCLESIASTICAL_AUTHORITY, "Parafia lub diecezja prowadząca księgę chrztów", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
-        spec("ecclesiastical_marriage_certificate", InternationalIssuerKind.EDUCATION_INSTITUTION, "Parafia lub diecezja prowadząca księgę małżeństw", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec("ecclesiastical_marriage_certificate", InternationalIssuerKind.ECCLESIASTICAL_AUTHORITY, "Parafia lub diecezja prowadząca księgę małżeństw", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
         spec("ecclesiastical_death_certificate", InternationalIssuerKind.ECCLESIASTICAL_AUTHORITY, "Parafia lub diecezja prowadząca właściwą księgę", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
         spec("canonical_status_certificate", InternationalIssuerKind.ECCLESIASTICAL_AUTHORITY, "Właściwa kuria / ordynariusz / przełożony kompetentny według prawa kanonicznego", InternationalDocumentMode.PROFESSIONAL_CERTIFICATE, true, false),
         spec("clerical_ordination_certificate", InternationalIssuerKind.ECCLESIASTICAL_AUTHORITY, "Diecezja lub instytut życia konsekrowanego właściwy dla święceń", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
