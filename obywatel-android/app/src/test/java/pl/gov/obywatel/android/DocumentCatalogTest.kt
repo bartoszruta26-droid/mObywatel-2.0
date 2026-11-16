@@ -139,7 +139,7 @@ class DocumentCatalogTest {
             "clerical_ordination_certificate" to "Służba kościelna",
             "apostolic_nunciature_credential" to "Służba kościelna"
         )
-        assertEquals(43, expectedGroups.size)
+        assertEquals(54, expectedGroups.size)
         val existingGroups = documentVisibilityGroupOrder.toSet()
         expectedGroups.forEach { (id, group) ->
             assertTrue("Brak kafelka $id", documentDisplayOptions.any { it.first == id })
