@@ -90,7 +90,7 @@ private fun commonsRequest(params:String):JSONObject {
     connection.readTimeout=30000
     connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.0 (open SVG asset catalog)")
     return try {
-        require(connection.responseCode in 200..299) { "Wikimedia Commons: HTTP \${connection.responseCode}" }
+        require(connection.responseCode in 200..299) { "Wikimedia Commons: HTTP ${connection.responseCode}" }
         JSONObject(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
     } finally { connection.disconnect() }
 }
@@ -141,7 +141,7 @@ private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
     connection.readTimeout=25000
     connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.0")
     val bytes=try {
-        require(connection.responseCode in 200..299) { "HTTP \${connection.responseCode}" }
+        require(connection.responseCode in 200..299) { "HTTP ${connection.responseCode}" }
         connection.inputStream.use { input ->
             val output=ByteArrayOutputStream()
             val buffer=ByteArray(8192)
@@ -229,17 +229,17 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                             var failed=0
                             val errors=mutableListOf<String>()
                             candidates.forEachIndexed { index,candidate ->
-                                withContext(Dispatchers.Main) { status="Pobieranie SVG \${index+1}/\${candidates.size}: \${candidate.title}" }
+                                withContext(Dispatchers.Main) { status="Pobieranie SVG ${index+1}/${candidates.size}: ${candidate.title}" }
                                 runCatching { downloadCommonsSvg(context,candidate) }
                                     .onSuccess { saved++ }
-                                    .onFailure { failed++; if(errors.size<8) errors.add("\${candidate.title}: \${it.message ?: "błąd"}") }
+                                    .onFailure { failed++; if(errors.size<8) errors.add("${candidate.title}: ${it.message ?: "błąd"}") }
                             }
                             Triple(candidates.size,saved,Pair(failed,errors))
                         }
                     }
                     status=result.fold(
-                        { "Commons: znaleziono \${it.first}, zapisano \${it.second}, błędy \${it.third.first}." + if(it.third.second.isEmpty()) "" else " "+it.third.second.joinToString(" | ") },
-                        { "Błąd wyszukiwania Commons: \${it.message ?: "nieznany błąd"}" }
+                        { "Commons: znaleziono ${it.first}, zapisano ${it.second}, błędy ${it.third.first}." + if(it.third.second.isEmpty()) "" else " "+it.third.second.joinToString(" | ") },
+                        { "Błąd wyszukiwania Commons: ${it.message ?: "nieznany błąd"}" }
                     )
                     busy=null
                     if((result.getOrNull()?.second ?: 0)>0) onSaved()
