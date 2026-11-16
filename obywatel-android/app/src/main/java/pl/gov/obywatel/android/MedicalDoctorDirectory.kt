@@ -29,7 +29,7 @@ internal data class MedicalDoctorRecord(
 
 internal object MedicalDoctorDirectory {
  private const val PREFS="medical_doctor_directory"
- private const val KEY="records_v1"
+ private const val KEY="records_v2"
  private fun seeds()=listOf(
   MedicalDoctorRecord("doctor-gustavo-polacow-korn","Dr Gustavo Polacow Korn","Otorynolaryngologia","Brazylia","São Paulo",
    "Consultório Médico Dr. Gustavo Polacow Korn","Av. Brig. Faria Lima 1811, cj. 907–908, Jardim Paulistano, São Paulo/SP, CEP 01452-001, Brazylia",
