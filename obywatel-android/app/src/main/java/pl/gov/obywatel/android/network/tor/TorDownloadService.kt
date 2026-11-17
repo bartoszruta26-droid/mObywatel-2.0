@@ -51,7 +51,7 @@ class TorDownloadService(
 
     /**
      * Opens one resource through a verified Tor client. If a selected external SOCKS
-     * endpoint has stopped accepting Tor traffic, the next retry can select Guardian.
+     * endpoint has stopped accepting Tor traffic, this request is retried once through Guardian.
      * No direct-network fallback is implemented.
      */
     @Throws(IOException::class)
