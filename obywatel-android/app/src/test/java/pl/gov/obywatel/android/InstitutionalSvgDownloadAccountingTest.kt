@@ -51,4 +51,15 @@ class InstitutionalSvgDownloadAccountingTest {
         assertEquals(180000L, commonsRetryDelayMs(99, null))
     }
 
+    @Test
+    fun resumeSkipsOnlyAssetsWithMatchingSha256() {
+        val valid = "a".repeat(64)
+        assertTrue(commonsChecksumMatches(valid, valid))
+        assertTrue(commonsChecksumMatches(valid.uppercase(), valid))
+        assertFalse(commonsChecksumMatches(valid, "b".repeat(64)))
+        assertFalse(commonsChecksumMatches("", valid))
+        assertFalse(commonsChecksumMatches("not-a-checksum", valid))
+        assertFalse(commonsChecksumMatches(valid, null))
+    }
+
 }

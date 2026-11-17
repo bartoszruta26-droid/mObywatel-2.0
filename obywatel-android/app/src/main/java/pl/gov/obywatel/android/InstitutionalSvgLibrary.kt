@@ -46,7 +46,7 @@ private fun validateSvg(bytes:ByteArray) {
 }
 
 
-private data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String)
+private data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
 
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
 private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 4000L
@@ -188,7 +188,7 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
     return candidates.distinctBy { it.title }.take(limit)
 }
 
-private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
+private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate): String {
     waitForCommonsRequestSlot()
     val connection=URL(item.url).openConnection() as HttpURLConnection
     connection.instanceFollowRedirects=true
@@ -227,6 +227,7 @@ private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate) {
         else->"Logo"
     }
     DocumentBrandStore.importBytes(context,"Wikimedia Commons",kind,title.take(180),bytes,rights=rights,mimeType="image/svg+xml",assetId=id)
+    return sha
 }
 
 
@@ -251,6 +252,9 @@ private fun readCommonsJson(context: Context, fileName: String): String =
 
 internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
     found >= 100 && available.coerceAtLeast(0) * 2 < found
+
+internal fun commonsChecksumMatches(expectedSha256: String, actualSha256: String?): Boolean =
+    expectedSha256.matches(Regex("[a-fA-F0-9]{64}")) && actualSha256?.equals(expectedSha256, ignoreCase = true) == true
 
 internal fun commonsDownloadProgressLabel(completed: Int, total: Int): String {
     val safeTotal = total.coerceAtLeast(0)
@@ -312,17 +316,17 @@ private fun readCommonsCandidates(context: Context): List<CommonsSvgCandidate> =
         CommonsSvgCandidate(
             item.optString("file"), item.optString("downloadUrl"), item.optString("sourcePage"),
             item.optString("license"), item.optString("licenseUrl"), item.optString("author"),
-            item.optString("restrictions")
+            item.optString("restrictions"), item.optString("sha256")
         )
     }.filter { it.title.startsWith("File:") && it.url.startsWith("https://upload.wikimedia.org/") }
 }.getOrDefault(emptyList())
 
 private fun persistCommonsCandidateStatus(
-    context: Context, title: String, status: String, attempts: Int, error: String?
+    context: Context, title: String, status: String, attempts: Int, error: String?, sha256: String = ""
 ) {
     val file = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
     if (!file.exists()) return
-    val array = JSONArray(file.readText(Charsets.UTF_8))
+    val array = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
     for (index in 0 until array.length()) {
         val item = array.optJSONObject(index) ?: continue
         if (item.optString("file") == title) {
@@ -330,6 +334,7 @@ private fun persistCommonsCandidateStatus(
                 .put("attempts", attempts)
                 .put("lastError", error.orEmpty())
                 .put("updatedAt", System.currentTimeMillis())
+            if (sha256.isNotBlank()) item.put("sha256", sha256)
             break
         }
     }
@@ -338,12 +343,12 @@ private fun persistCommonsCandidateStatus(
 
 private suspend fun downloadCommonsSvgWithRetry(
     context: Context, item: CommonsSvgCandidate, maxAttempts: Int = COMMONS_DOWNLOAD_MAX_ATTEMPTS
-): Pair<Int, String?> {
+): Triple<Int, String?, String?> {
     var lastError = "Nieznany błąd pobierania."
     repeat(maxAttempts) { index ->
         try {
-            downloadCommonsSvg(context, item)
-            return (index + 1) to null
+            val sha256 = downloadCommonsSvg(context, item)
+            return Triple(index + 1, null, sha256)
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
@@ -355,7 +360,7 @@ private suspend fun downloadCommonsSvgWithRetry(
             }
         }
     }
-    return maxAttempts to lastError
+    return Triple(maxAttempts, lastError, null)
 }
 
 private suspend fun processCommonsCandidates(
@@ -368,6 +373,7 @@ private suspend fun processCommonsCandidates(
     var failed = 0
     var attempts = 0
     val errors = mutableListOf<String>()
+    val knownAssets = DocumentBrandStore.list(context).associateBy { it.id }
     if (candidates.isEmpty()) {
         saveCommonsReport(context, 0, 0, 0, 0, 0, "", emptyList())
         return CommonsDownloadSummary(0, 0, 0, 0, 0)
@@ -375,18 +381,24 @@ private suspend fun processCommonsCandidates(
     candidates.forEachIndexed { index, candidate ->
         onProgress(index, candidates.size, candidate.title)
         val assetId = commonsAssetId(candidate.title)
-        if (DocumentBrandStore.list(context).any { it.id == assetId }) {
+        val existingAsset = knownAssets[assetId]
+        val existingBytes = existingAsset?.let { DocumentBrandStore.fileBytes(context, assetId, it) }
+        val actualExistingSha = existingBytes?.let { MessageDigest.getInstance("SHA-256").digest(it).joinToString("") { byte -> "%02x".format(byte) } }
+        val recordedSha = candidate.sha256.ifBlank {
+            runCatching { JSONObject(existingAsset?.rights.orEmpty()).optString("sha256") }.getOrDefault("")
+        }
+        if (existingAsset != null && commonsChecksumMatches(recordedSha, actualExistingSha)) {
             alreadyPresent++
-            persistCommonsCandidateStatus(context, candidate.title, "saved", 0, null)
+            persistCommonsCandidateStatus(context, candidate.title, "saved", 0, null, actualExistingSha.orEmpty())
         } else {
             val result = downloadCommonsSvgWithRetry(context, candidate)
             attempts += result.first
-            if (result.second == null) {
+            if (result.second == null && !result.third.isNullOrBlank()) {
                 downloaded++
-                persistCommonsCandidateStatus(context, candidate.title, "saved", result.first, null)
+                persistCommonsCandidateStatus(context, candidate.title, "saved", result.first, null, result.third!!)
             } else {
                 failed++
-                val message = result.second ?: "Błąd pobierania."
+                val message = result.second ?: "Pobranie zakończone bez sumy kontrolnej."
                 persistCommonsCandidateStatus(context, candidate.title, "failed", result.first, message)
                 if (errors.size < 100) errors.add("${candidate.title}: $message")
             }
@@ -496,7 +508,8 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                     .put("restrictions", item.restrictions)
                                     .put("source", "Wikimedia Commons")
                                     .put("status", "pending")
-                                    .put("attempts", 0))
+                                    .put("attempts", 0)
+                                    .put("sha256", ""))
                             }
                             writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
                             processCommonsCandidates(context, candidates) { completed, total, title ->
