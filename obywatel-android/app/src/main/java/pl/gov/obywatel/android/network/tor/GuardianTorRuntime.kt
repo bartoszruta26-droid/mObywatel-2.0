@@ -181,23 +181,21 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     }
 
     private fun configureIsolatedSocksListeners() {
-        // Keep Guardian away from Orbot's common SOCKS5 port (9050). The primary
-        // listener uses a dedicated app-owned range; Orbot can keep its default port.
-        val primaryPort = (19040..19050).firstOrNull { candidate ->
-            runCatching { java.net.ServerSocket(candidate).use { true } }.getOrDefault(false)
-        } ?: throw java.io.IOException("No free primary Guardian SOCKS port is available.")
-        val isolatedPorts = (19051..19080).filter { candidate ->
+        // TorService chooses its primary SOCKS port dynamically. This is important
+        // when Orbot already owns 9050: Guardian must not try to bind the same port.
+        val availablePorts = (19051..19080).filter { candidate ->
             runCatching { java.net.ServerSocket(candidate).use { true } }.getOrDefault(false)
         }.take(4)
         val torrc = TorService.getTorrc(appContext)
         val existing = if (torrc.exists()) torrc.readText() else ""
         val filtered = existing.lineSequence().filterNot { line ->
-            line.trim().startsWith("SocksPort ") || line.trim().startsWith("MaxCircuitDirtiness ")
+            val port = Regex("""^\\s*SocksPort\\s+127[.]0[.]0[.]1:(\\d+)""").find(line)?.groupValues?.getOrNull(1)?.toIntOrNull()
+            (port != null && port in 19051..19080) || line.trim().startsWith("MaxCircuitDirtiness ")
         }.toList()
-        val listeners = listOf("SocksPort 127.0.0.1:$primaryPort") + isolatedPorts.map { port ->
+        val listeners = availablePorts.map { port ->
             "SocksPort 127.0.0.1:$port IsolateClientAddr IsolateDestAddr IsolateDestPort"
         }
-        torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\n", postfix = "\n"))
+        torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\\n", postfix = "\\n"))
     }
     private fun unregisterReceiverIfNeeded() {
         if (receiverRegistered) {
