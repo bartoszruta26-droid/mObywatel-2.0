@@ -545,9 +545,10 @@ internal object DocumentBrandStore {
         if (!InstitutionalAssetPolicy.mayRender(kind, authorizationFor(asset))) return null
         return imageById(context, asset.id)
     }
-    fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
-    fun fileBytes(context: Context, assetId: String): ByteArray? = runCatching {
-        val asset = list(context).firstOrNull { it.id == assetId } ?: return null
+    fun preview(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? =
+        imageById(context, assetId, knownAsset)
+    fun fileBytes(context: Context, assetId: String, knownAsset: BrandAsset? = null): ByteArray? = runCatching {
+        val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
         if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
             val id = context.resources.getIdentifier(name, "drawable", context.packageName)
