@@ -153,7 +153,14 @@ private suspend fun discoverCommonsOpenSvgs(
         repeat(1) {
             if(finished || titles.size>=limit*2) return@repeat
             val offsetArg=offset?.let { "&sroffset="+java.net.URLEncoder.encode(it,"UTF-8") }.orEmpty()
-            val response=commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
+            val response = try {
+                commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
+            } catch (failure: Exception) {
+                // One unavailable search term must not cancel every other category.
+                onSearchProgress(titles.size, "$term (pominięto: ${failure.message ?: "błąd API"})")
+                finished = true
+                return@repeat
+            }
             val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
             for(i in 0 until results.length()) {
                 val title=results.optJSONObject(i)?.optString("title").orEmpty()
@@ -171,7 +178,13 @@ private suspend fun discoverCommonsOpenSvgs(
     for(batch in titles.toList().chunked(40)) {
         if(candidates.size>=limit) break
         val encoded=java.net.URLEncoder.encode(batch.joinToString("|"),"UTF-8")
-        val response=commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
+        val response = try {
+            commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
+        } catch (failure: Exception) {
+            // Keep valid candidates from earlier batches; users can resume later.
+            onSearchProgress(titles.size, "Weryfikacja metadanych: pominięto partię (${failure.message ?: "błąd API"})")
+            continue
+        }
         val pages=response.optJSONObject("query")?.optJSONObject("pages") ?: continue
         val keys=pages.keys()
         while(keys.hasNext() && candidates.size<limit) {
