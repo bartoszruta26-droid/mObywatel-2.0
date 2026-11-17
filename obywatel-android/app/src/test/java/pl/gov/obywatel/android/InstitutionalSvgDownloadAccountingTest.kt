@@ -39,16 +39,16 @@ class InstitutionalSvgDownloadAccountingTest {
     }
     @Test
     fun retryAfterDelayIsCappedBeforeMultiplicationAndCannotOverflow() {
-        assertEquals(59000L, commonsRetryDelayMs(0, 59L))
-        assertEquals(60000L, commonsRetryDelayMs(0, 60L))
-        assertEquals(60000L, commonsRetryDelayMs(0, Long.MAX_VALUE))
+        assertEquals(30000L, commonsRetryDelayMs(0, 59L))
+        assertEquals(30000L, commonsRetryDelayMs(0, 60L))
+        assertEquals(30000L, commonsRetryDelayMs(0, Long.MAX_VALUE))
     }
 
     @Test
     fun invalidRetryAfterUsesBoundedExponentialBackoff() {
-        assertEquals(4000L, commonsRetryDelayMs(0, -1L))
-        assertEquals(4000L, commonsRetryDelayMs(1, null))
-        assertEquals(180000L, commonsRetryDelayMs(99, null))
+        assertEquals(2000L, commonsRetryDelayMs(0, -1L))
+        assertEquals(2000L, commonsRetryDelayMs(1, null))
+        assertEquals(30000L, commonsRetryDelayMs(99, null))
     }
 
     @Test

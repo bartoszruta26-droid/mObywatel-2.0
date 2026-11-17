@@ -53,7 +53,7 @@ internal data class CommonsSvgCandidate(val title:String,val url:String,val page
 
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
 private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 1000L
-private const val COMMONS_API_MAX_ATTEMPTS = 6
+private const val COMMONS_API_MAX_ATTEMPTS = 3
 private const val COMMONS_DOWNLOAD_MAX_ATTEMPTS = 5
 private val commonsApiThrottleLock = Any()
 @Volatile private var commonsApiLastRequestAt = 0L
@@ -87,8 +87,8 @@ internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null):
     val serverDelay = retryAfterSeconds?.takeIf { it >= 0 }?.let { seconds ->
         if (seconds >= 60L) 60000L else seconds * 1000L
     }
-    val exponentialDelay = 4000L * (1L shl (attempt - 1).coerceIn(0, 6))
-    return maxOf(serverDelay ?: exponentialDelay, exponentialDelay).coerceIn(4000L, 180000L)
+    val exponentialDelay = 2000L * (1L shl (attempt - 1).coerceIn(0, 4))
+    return maxOf(serverDelay ?: exponentialDelay, exponentialDelay).coerceIn(2000L, 30000L)
 }
 
 private fun commonsRequest(context: Context, params: String): JSONObject {
@@ -121,32 +121,46 @@ private suspend fun discoverCommonsOpenSvgs(
     limit: Int = 200,
     onSearchProgress: suspend (titlesFound: Int, term: String) -> Unit = { _, _ -> }
 ): List<CommonsSvgCandidate> {
+    // Keep discovery bounded. A single page per focused term is preferable to
+    // hundreds of serial requests; the download queue can be resumed separately.
     val terms = listOf(
-        "coat of arms", "heraldry", "heraldic arms", "blazon", "escutcheon",
-        "flag", "national flag", "city flag", "province flag", "municipal flag",
-        "emblem", "national emblem", "state emblem", "civic emblem", "institutional emblem",
-        "seal", "official seal", "university seal", "government seal",
-        "logo", "organization logo", "government logo", "public institution logo",
-        "municipal logo", "ministry logo", "police emblem", "fire service emblem",
-        "university coat of arms", "hospital logo", "hospital emblem", "church coat of arms",
-        "diocesan coat of arms", "province coat of arms", "city coat of arms",
-        "municipal coat of arms", "county coat of arms", "country coat of arms",
-        "state coat of arms", "royal coat of arms", "regional coat of arms",
-        "military insignia", "heraldic crest", "government emblem",
-        "herb miasta", "herb gminy", "herb powiatu", "herb województwa",
-        "herb państwa", "godło państwowe", "pieczęć urzędowa", "flaga państwowa",
-        "flaga miasta", "logo ministerstwa", "logo urzędu", "znak instytucji",
-        "insygnia wojskowe", "herb diecezji", "herb uniwersytetu"
+        // National, regional and institutional heraldry.
+        "coat of arms", "heraldry", "national emblem", "state emblem",
+        "national flag", "city flag", "institutional emblem", "official seal",
+        "government logo", "herb państwa", "godło państwowe", "herb miasta",
+        "herb gminy", "herb powiatu", "herb województwa", "flaga państwowa",
+        // Intergovernmental bodies and international institutions.
+        "United Nations logo", "World Health Organization logo",
+        "UNESCO logo", "UNICEF logo", "European Union emblem",
+        "Council of Europe logo", "NATO emblem",
+        // NGOs, humanitarian aid, civil society and international associations.
+        "international NGO logo", "humanitarian organization logo",
+        "human rights organization logo", "environmental organization logo",
+        "Amnesty International logo", "Greenpeace logo",
+        "Médecins Sans Frontières logo", "Save the Children logo",
+        "Oxfam logo", "World Wide Fund for Nature logo",
+        "Human Rights Watch logo", "Transparency International logo",
+        "International Rescue Committee logo", "CARE International logo",
+        "Caritas Internationalis logo", "World Vision logo",
+        "Plan International logo", "Habitat for Humanity logo",
+        "Rotary International logo", "Lions Clubs International logo"
     )
     val titles=linkedSetOf<String>()
     for(term in terms) {
         val query=java.net.URLEncoder.encode("$term filemime:svg","UTF-8")
         var offset:String?=null
         var finished=false
-        repeat(4) {
+        repeat(1) {
             if(finished || titles.size>=limit*2) return@repeat
             val offsetArg=offset?.let { "&sroffset="+java.net.URLEncoder.encode(it,"UTF-8") }.orEmpty()
-            val response=commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
+            val response = try {
+                commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
+            } catch (failure: Exception) {
+                // One unavailable search term must not cancel every other category.
+                onSearchProgress(titles.size, "$term (pominięto: ${failure.message ?: "błąd API"})")
+                finished = true
+                return@repeat
+            }
             val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
             for(i in 0 until results.length()) {
                 val title=results.optJSONObject(i)?.optString("title").orEmpty()
@@ -164,7 +178,13 @@ private suspend fun discoverCommonsOpenSvgs(
     for(batch in titles.toList().chunked(40)) {
         if(candidates.size>=limit) break
         val encoded=java.net.URLEncoder.encode(batch.joinToString("|"),"UTF-8")
-        val response=commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
+        val response = try {
+            commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
+        } catch (failure: Exception) {
+            // Keep valid candidates from earlier batches; users can resume later.
+            onSearchProgress(titles.size, "Weryfikacja metadanych: pominięto partię (${failure.message ?: "błąd API"})")
+            continue
+        }
         val pages=response.optJSONObject("query")?.optJSONObject("pages") ?: continue
         val keys=pages.keys()
         while(keys.hasNext() && candidates.size<limit) {
