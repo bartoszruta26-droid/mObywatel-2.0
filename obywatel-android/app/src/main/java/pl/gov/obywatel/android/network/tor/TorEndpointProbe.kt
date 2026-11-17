@@ -21,6 +21,10 @@ object TorEndpointProbe {
         context.packageManager.getPackageInfo("org.torproject.android", 0)
     }.isSuccess
 
+    fun markUnavailable(endpoint: TorProxyEndpoint) {
+        cache["${endpoint.host}:${endpoint.port}"] = Result(false, System.currentTimeMillis())
+    }
+
     fun isTor(endpoint: TorProxyEndpoint, force: Boolean = false): Boolean {
         val key = "${endpoint.host}:${endpoint.port}"
         val now = System.currentTimeMillis()
