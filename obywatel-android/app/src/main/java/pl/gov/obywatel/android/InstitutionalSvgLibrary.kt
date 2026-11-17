@@ -254,6 +254,10 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     } finally {
         response.close()
     }
+    val expectedLength = metadata.optLong("expectedTotal", -1L)
+    if (expectedLength > 0L && partFile.length() != expectedLength) {
+        throw java.io.IOException("Niepełny transfer SVG: rozmiar częściowy nie odpowiada długości serwera.")
+    }
     val bytes = partFile.readBytes()
     validateSvg(bytes)
     val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
