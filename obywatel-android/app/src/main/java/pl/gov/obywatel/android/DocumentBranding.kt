@@ -449,14 +449,32 @@ internal object DocumentBrandStore {
             BrandAssignment(documentType, kind, assetId)
         val a = JSONArray()
         next.forEach { x -> a.put(JSONObject().put("documentType", x.documentType).put("kind", x.kind).put("assetId", x.assetId)) }
-        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+        val target = File(dir(context), ASSIGNMENTS_INDEX)
+        val atomic = android.util.AtomicFile(target)
+        val output = atomic.startWrite()
+        try {
+            output.write(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+            atomic.finishWrite(output)
+        } catch (failure: Exception) {
+            atomic.failWrite(output)
+            throw failure
+        }
     }
     @Synchronized fun unassign(context: Context, documentType: String, kind: String) {
         val a = JSONArray()
         assignments(context).filterNot { it.documentType == documentType && it.kind == kind }.forEach { x ->
             a.put(JSONObject().put("documentType", x.documentType).put("kind", x.kind).put("assetId", x.assetId))
         }
-        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+        val target = File(dir(context), ASSIGNMENTS_INDEX)
+        val atomic = android.util.AtomicFile(target)
+        val output = atomic.startWrite()
+        try {
+            output.write(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+            atomic.finishWrite(output)
+        } catch (failure: Exception) {
+            atomic.failWrite(output)
+            throw failure
+        }
     }
     private fun imageById(context: Context, assetId: String): android.graphics.Bitmap? = runCatching {
         val asset = list(context).firstOrNull { it.id == assetId } ?: return null
@@ -654,7 +672,16 @@ internal object DocumentBrandStore {
         val array = JSONArray()
         next.values.forEach { item -> array.put(JSONObject().put("documentType", item.documentType)
             .put("kind", item.kind).put("assetId", item.assetId)) }
-        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(array.toString().toByteArray(Charsets.UTF_8), true))
+        val target = File(dir(context), ASSIGNMENTS_INDEX)
+        val atomic = android.util.AtomicFile(target)
+        val output = atomic.startWrite()
+        try {
+            output.write(crypt(array.toString().toByteArray(Charsets.UTF_8), true))
+            atomic.finishWrite(output)
+        } catch (failure: Exception) {
+            atomic.failWrite(output)
+            throw failure
+        }
     }
 
     private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
