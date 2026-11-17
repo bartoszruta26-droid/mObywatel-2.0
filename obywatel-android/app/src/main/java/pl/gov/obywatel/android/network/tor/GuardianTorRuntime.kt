@@ -27,12 +27,26 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     @Volatile private var bound = false
     @Volatile private var receiverRegistered = false
     @Volatile private var circuitEstablished = false
+    @Volatile private var lastFailureMessage: String? = null
 
     override val state: TorState
         get() = currentState
 
+    /** Detailed reason delivered by Guardian's ACTION_ERROR broadcast, if available. */
+    override fun failureMessage(): String? = lastFailureMessage
+
     private val statusReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == TorService.ACTION_ERROR) {
+                lastFailureMessage = intent.getStringExtra(Intent.EXTRA_TEXT)
+                    ?.trim()?.takeIf { it.isNotEmpty() }
+                    ?: "Guardian Tor zgłosił ACTION_ERROR bez opisu."
+                socksPort = -1
+                socksPorts = emptyList()
+                circuitEstablished = false
+                currentState = TorState.FAILED
+                return
+            }
             if (intent?.action != TorService.ACTION_STATUS) return
             when (intent.getStringExtra(TorService.EXTRA_STATUS)) {
                 TorService.STATUS_STARTING -> currentState = TorState.BOOTSTRAPPING
@@ -44,7 +58,13 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                     socksPort = -1
                     socksPorts = emptyList()
                     circuitEstablished = false
-                    if (currentState != TorState.STOPPING) currentState = TorState.FAILED
+                    if (currentState != TorState.STOPPING) {
+                        if (lastFailureMessage.isNullOrBlank()) {
+                            lastFailureMessage = "Guardian Tor zakończył pracę ze statusem " +
+                                intent.getStringExtra(TorService.EXTRA_STATUS) + "."
+                        }
+                        currentState = TorState.FAILED
+                    }
                 }
             }
         }
@@ -55,15 +75,13 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             val localBinder = binder as? TorService.LocalBinder
             val service = localBinder?.service
             if (service == null) {
+                lastFailureMessage = "Guardian Tor: binder usługi nie udostępnił TorService.LocalBinder."
                 currentState = TorState.FAILED
                 return
             }
             torService = service
             val bootstrap = runCatching { service.getInfo("status/bootstrap-phase") }.getOrNull().orEmpty()
             circuitEstablished = circuitEstablished || bootstrap.contains("PROGRESS=100") || bootstrap.contains("TAG=done")
-            // STATUS_ON is emitted after the first Tor circuit is established.
-            // If the status broadcast raced with binding, the port is still checked
-            // here; READY is published only when the service reports a valid SOCKS port.
             publishReady()
         }
 
@@ -71,6 +89,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             torService = null
             socksPort = -1
             socksPorts = emptyList()
+            lastFailureMessage = "Guardian Tor: połączenie z usługą zostało zerwane."
             currentState = TorState.FAILED
         }
 
@@ -78,12 +97,15 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             torService = null
             socksPort = -1
             socksPorts = emptyList()
+            lastFailureMessage = "Guardian Tor: powiązanie z usługą uległo awarii (onBindingDied)."
             currentState = TorState.FAILED
         }
 
         override fun onNullBinding(name: ComponentName?) {
             torService = null
             socksPort = -1
+            socksPorts = emptyList()
+            lastFailureMessage = "Guardian Tor: system zwrócił puste powiązanie usługi (onNullBinding)."
             currentState = TorState.FAILED
         }
     }
@@ -94,13 +116,18 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             currentState == TorState.BOOTSTRAPPING
         ) return
         currentState = TorState.STARTING
+        lastFailureMessage = null
         circuitEstablished = false
         try {
             configureIsolatedSocksListeners()
+            val filter = IntentFilter().apply {
+                addAction(TorService.ACTION_STATUS)
+                addAction(TorService.ACTION_ERROR)
+            }
             ContextCompat.registerReceiver(
                 appContext,
                 statusReceiver,
-                IntentFilter(TorService.ACTION_STATUS),
+                filter,
                 ContextCompat.RECEIVER_NOT_EXPORTED
             )
             receiverRegistered = true
@@ -110,10 +137,12 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 Context.BIND_AUTO_CREATE
             )
             if (!bound) {
+                lastFailureMessage = "Android odmówił powiązania z wbudowaną usługą Guardian Tor (bindService=false)."
                 currentState = TorState.FAILED
                 unregisterReceiverIfNeeded()
             }
         } catch (failure: Exception) {
+            lastFailureMessage = failure.message ?: failure.javaClass.simpleName
             currentState = TorState.FAILED
             unregisterReceiverIfNeeded()
             throw IllegalStateException("Unable to bind embedded Tor service.", failure)
@@ -197,6 +226,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         }
         torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\n", postfix = "\n"))
     }
+
     private fun unregisterReceiverIfNeeded() {
         if (receiverRegistered) {
             runCatching { appContext.unregisterReceiver(statusReceiver) }
