@@ -121,32 +121,43 @@ private suspend fun discoverCommonsOpenSvgs(
     limit: Int = 200,
     onSearchProgress: suspend (titlesFound: Int, term: String) -> Unit = { _, _ -> }
 ): List<CommonsSvgCandidate> {
+    // Keep the discovery phase bounded: each term performs at most two API
+    // searches. The former 50+ terms x 4 pages could leave the UI searching for
+    // several minutes before the first download began.
     val terms = listOf(
-        "coat of arms", "heraldry", "heraldic arms", "blazon", "escutcheon",
-        "flag", "national flag", "city flag", "province flag", "municipal flag",
-        "emblem", "national emblem", "state emblem", "civic emblem", "institutional emblem",
-        "seal", "official seal", "university seal", "government seal",
-        "logo", "organization logo", "government logo", "public institution logo",
-        "municipal logo", "ministry logo", "police emblem", "fire service emblem",
-        "university coat of arms", "hospital logo", "hospital emblem", "church coat of arms",
-        "diocesan coat of arms", "province coat of arms", "city coat of arms",
-        "municipal coat of arms", "county coat of arms", "country coat of arms",
-        "state coat of arms", "royal coat of arms", "regional coat of arms",
-        "military insignia", "heraldic crest", "government emblem",
-        "herb miasta", "herb gminy", "herb powiatu", "herb województwa",
-        "herb państwa", "godło państwowe", "pieczęć urzędowa", "flaga państwowa",
-        "flaga miasta", "logo ministerstwa", "logo urzędu", "znak instytucji",
-        "insygnia wojskowe", "herb diecezji", "herb uniwersytetu"
+        // National, regional and institutional heraldry.
+        "coat of arms", "heraldry", "national emblem", "state emblem",
+        "flag", "national flag", "city flag", "institutional emblem",
+        "official seal", "government logo", "university coat of arms",
+        "herb państwa", "godło państwowe", "herb miasta", "herb gminy",
+        "herb powiatu", "herb województwa", "flaga państwowa",
+        // International intergovernmental bodies.
+        "United Nations logo", "World Health Organization logo",
+        "UNESCO logo", "UNICEF logo", "European Union emblem",
+        "Council of Europe logo", "NATO emblem",
+        // International non-governmental and humanitarian organizations.
+        "international NGO logo", "non-governmental organization logo",
+        "humanitarian organization logo", "human rights organization logo",
+        "environmental organization logo", "Amnesty International logo",
+        "Greenpeace logo", "Médecins Sans Frontières logo",
+        "Doctors Without Borders logo", "Save the Children logo",
+        "Oxfam logo", "World Wide Fund for Nature logo",
+        "Human Rights Watch logo", "Transparency International logo",
+        "International Rescue Committee logo", "CARE International logo",
+        "Caritas Internationalis logo", "World Vision logo",
+        "Plan International logo", "Habitat for Humanity logo",
+        "Rotary International logo", "Lions Clubs International logo",
+        "SOS Children's Villages logo"
     )
     val titles=linkedSetOf<String>()
     for(term in terms) {
         val query=java.net.URLEncoder.encode("$term filemime:svg","UTF-8")
         var offset:String?=null
         var finished=false
-        repeat(4) {
+        repeat(2) {
             if(finished || titles.size>=limit*2) return@repeat
             val offsetArg=offset?.let { "&sroffset="+java.net.URLEncoder.encode(it,"UTF-8") }.orEmpty()
-            val response=commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
+            val response=commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=25$offsetArg&format=json")
             val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
             for(i in 0 until results.length()) {
                 val title=results.optJSONObject(i)?.optString("title").orEmpty()
