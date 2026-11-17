@@ -19,8 +19,11 @@ class TorDownloadService(
             val embedded = runtime.proxyEndpoints().mapIndexed { index, endpoint ->
                 TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — listener ${index + 1}", endpoint.host, endpoint.port)
             }
+            // Orbot is the only external client in this pool. Arbitrary SOCKS proxies
+            // and other user-added endpoints are deliberately not treated as Tor clients.
             val external = TorClientRegistry.load(context).filter { profile ->
-                profile.enabled && profile.id !in setOf("guardian-embedded", "guardian-isolated-1", "guardian-isolated-2", "guardian-isolated-3", "guardian-isolated-4")
+                profile.enabled && profile.id == "orbot-local" &&
+                    TorEndpointProbe.isOrbotInstalled(context)
             }
             val all = embedded + external
             val preferredId = TorClientRegistry.activeId(context)
