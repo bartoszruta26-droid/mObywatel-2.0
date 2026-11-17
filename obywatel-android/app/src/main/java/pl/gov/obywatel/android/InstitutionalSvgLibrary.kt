@@ -203,6 +203,12 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     if (offset > 12L * 1024L * 1024L) { partFile.delete(); offset = 0L }
     val validator = metadata.optString("etag").takeIf { it.isNotBlank() }
         ?: metadata.optString("lastModified").takeIf { it.isNotBlank() }
+    if (offset > 0L && validator == null) {
+        // Without a stable validator, never append bytes from a possibly changed remote file.
+        partFile.delete()
+        metadataFile.delete()
+        offset = 0L
+    }
     var response = try {
         tor.open(item.url, TorDownloadKind.SVG, offset, validator)
     } catch (failure: Exception) {
