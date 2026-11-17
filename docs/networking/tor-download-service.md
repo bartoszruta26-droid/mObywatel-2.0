@@ -61,3 +61,21 @@ Menu Ustawienia zawiera ekran „Klienci sieci Tor”. Rejestr profili jest prze
 Celowo dopuszczane są wyłącznie adresy loopback (`127.0.0.1`, `localhost`, `::1`). Nie ma obsługi dowolnego zdalnego publicznego SOCKS: operator takiego proxy może obserwować metadane połączeń, a sam endpoint nie dowodzi, że ruch trafia do sieci Tor. Publiczna sieć Tor jest osiągana przez uruchomionego klienta Tor, nie przez anonimowy, współdzielony adres SOCKS.
 
 **Stan integracji:** wbudowany klient Guardian Project pozostaje implementacją runtime w tej gałęzi. Ekran i rejestr profili są już dodane, ale wybór profilu zewnętrznego (Orbot) nie jest jeszcze podłączony do fabryki runtime/transportu. Włączenie profilu w ustawieniach nie oznacza jeszcze, że żądania są przez niego kierowane. Następny etap: adapter zewnętrznego SOCKS5 z kontrolą gotowości i testem braku wycieku DNS, następnie wybór runtime na podstawie aktywnego profilu.
+
+
+## Pula lokalnych portów SOCKS i rozdzielanie pobrań
+
+Wbudowany `GuardianTorRuntime` konfiguruje jeden proces Tor z dodatkowym zestawem lokalnych portów SOCKS5:
+- port podstawowy wybierany przez TorService (zwykle 9050);
+- `127.0.0.1:19051` do `127.0.0.1:19054` jako dodatkowe listenery;
+- dodatkowe listenery używają flag `IsolateClientAddr`, `IsolateDestAddr` i `IsolateDestPort`.
+
+TorService udostępnia listę aktywnych listenerów przez Control Protocol (`GETINFO net/listeners/socks`). Runtime odczytuje tę listę i publikuje wyłącznie porty, które rzeczywiście nasłuchują. Jeżeli dodatkowy port nie uruchomi się, nie trafia do puli. W razie braku gotowego portu usługa kończy żądanie błędem — bez połączenia bezpośredniego.
+
+`TorDownloadService` wybiera port dla każdego żądania w trybie round-robin. Klasyfikacja `TorDownloadKind` pozwala też wdrożyć jawne przypisania typu pliku do profilu przez `TorDownloadRouter` z polityką `PINNED_BY_KIND`. Przy przypisaniu niedostępnego profilu router odmawia pobrania zamiast po cichu użyć innego klienta.
+
+**Granica izolacji:** wiele portów SOCKS w tym rozwiązaniu oznacza wiele izolowanych grup strumieni jednego procesu/klienta Tor, a nie kilka niezależnych demonów Tor. Nie gwarantuje to różnych adresów wyjściowych dla każdego pliku. To rozwiązanie jest lżejsze i łatwiejsze do utrzymania niż uruchamianie wielu niezależnych procesów, które wymagałyby odrębnych katalogów danych, portów kontrolnych i cykli życia.
+
+Orbot może działać jako dodatkowy, zewnętrzny klient, jeśli zostanie skonfigurowany na innym lokalnym porcie SOCKS (np. 9150). Adapter Orbot i rzeczywiste kierowanie żądań przez niego pozostają osobnym etapem; sama pozycja w rejestrze nie jest dowodem gotowości.
+
+Publiczne przekaźniki Tor i mosty nie są publicznymi serwerami SOCKS. Przekaźniki/mosty konfiguruje się w kliencie Tor jako elementy drogi wejściowej do sieci, a nie jako proxy pobierania. Nieznane zdalne SOCKS pozostają odrzucane przez model bezpieczeństwa.
