@@ -155,12 +155,12 @@ private fun discoverCommonsOpenSvgs(context: Context, limit: Int = 200): List<Co
     }
     val candidates=mutableListOf<CommonsSvgCandidate>()
     for(batch in titles.toList().chunked(40)) {
-        if(uniqueCandidates.size>=limit) break
+        if(candidates.size>=limit) break
         val encoded=java.net.URLEncoder.encode(batch.joinToString("|"),"UTF-8")
         val response=commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         val pages=response.optJSONObject("query")?.optJSONObject("pages") ?: continue
         val keys=pages.keys()
-        while(keys.hasNext() && uniqueCandidates.size<limit) {
+        while(keys.hasNext() && candidates.size<limit) {
             val page=pages.optJSONObject(keys.next()) ?: continue
             val title=page.optString("title")
             val info=page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
