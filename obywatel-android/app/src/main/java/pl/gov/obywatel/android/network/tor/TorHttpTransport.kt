@@ -118,6 +118,14 @@ class TorHttpTransport(
     fun open(rawUrl: String): TorHttpResponse {
         if (runtime.state != TorState.READY) throw IOException("Tor runtime is not ready.")
         val endpoint = runtime.proxyEndpoint() ?: throw IOException("Tor SOCKS endpoint is unavailable.")
+        return open(rawUrl, endpoint)
+    }
+
+    /**
+     * Opens a request through a locally managed client selected by TorDownloadRouter.
+     * The caller is responsible for selecting only a runtime-confirmed READY Tor endpoint.
+     */
+    fun open(rawUrl: String, endpoint: TorProxyEndpoint): TorHttpResponse {
         var url = validateHttpsUrl(rawUrl)
         var redirects = 0
 
