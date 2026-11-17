@@ -33,7 +33,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         get() = currentState
 
     /** Detailed reason delivered by Guardian's ACTION_ERROR broadcast, if available. */
-    internal fun failureMessage(): String? = lastFailureMessage
+    override fun failureMessage(): String? = lastFailureMessage
 
     private val statusReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
