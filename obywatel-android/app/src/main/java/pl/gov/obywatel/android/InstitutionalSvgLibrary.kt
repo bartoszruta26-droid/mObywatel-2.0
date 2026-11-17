@@ -178,19 +178,9 @@ private suspend fun discoverCommonsOpenSvgs(
             val meta = info.optJSONObject("extmetadata") ?: JSONObject()
             fun value(key: String) = meta.optJSONObject(key)?.optString("value").orEmpty()
                 .replace(Regex("<[^>]*>"), " ").replace("&nbsp;", " ").trim()
+            // Na tym etapie nie filtrujemy ani nie oceniamy licencji.
+            // Zachowujemy metadane Commons w manifeście, ale pobieramy każdy poprawny SVG.
             val license = value("LicenseShortName")
-            val lower = license.lowercase(java.util.Locale.ROOT)
-            val attributionLicense =
-                (lower.contains("cc by") || lower.contains("cc-by") ||
-                    (lower.contains("creative commons") && lower.contains("attribution"))) &&
-                    !lower.contains("noncommercial") && !lower.contains("non-commercial") &&
-                    !lower.contains("by-nc") && !lower.contains("by nc") &&
-                    !lower.contains("by-nd") && !lower.contains("by nd") &&
-                    !lower.contains("no derivatives") && !lower.contains("no-derivatives")
-            val permissiveOpen = lower.contains("cc0") || lower.contains("public domain") ||
-                lower.contains("public-domain") || lower.contains("gfdl") ||
-                lower.contains("free art license") || lower.contains("lgpl") || lower.contains("gpl")
-            if (!attributionLicense && !permissiveOpen) continue
             val url = info.optString("url")
             if (!url.startsWith("https://upload.wikimedia.org/")) continue
             val pageUrl = "https://commons.wikimedia.org/wiki/" +
@@ -630,7 +620,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        Text("Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons. Pobrane grafiki są automatycznie zapisywane w zasobach aplikacji wraz z informacją o źródle, autorstwie, licencji i ograniczeniach.",style=MaterialTheme.typography.bodySmall)
+        Text("Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons. Pobrane grafiki są automatycznie zapisywane w zasobach aplikacji. Metadane źródła, autora i licencji są zachowywane, ale na tym etapie licencja nie filtruje pobierania.",style=MaterialTheme.typography.bodySmall)
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         if (busy == "commons" || busy == "resume") {
@@ -651,7 +641,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 busy = "commons"
                 progressCurrent = 0
                 progressTotal = 0
-                status = "Wyszukiwanie do 200 otwartych plików SVG w Wikimedia Commons…"
+                status = "Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons…"
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
@@ -715,7 +705,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                 progressCurrent = processed
                                 progressTotal = totalFound
                                 status = if (totalFound == 0) {
-                                    "Wyszukiwanie zakończone: brak plików z potwierdzoną otwartą licencją."
+                                    "Wyszukiwanie zakończone: brak plików SVG pasujących do wyszukiwanych haseł."
                                 } else {
                                     "Zakończono wyszukiwanie: $totalFound. Pobrano $totalDownloaded; błędy $totalFailed."
                                 }
@@ -733,7 +723,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 }
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 otwartych SVG z Commons") }
+        ) { Text(if (busy == "commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 plików SVG z Commons") }
         OutlinedButton(
             enabled = busy == null && readCommonsCandidates(context).isNotEmpty(),
             onClick = {
