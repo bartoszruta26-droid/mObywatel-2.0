@@ -60,7 +60,8 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 return
             }
             torService = service
-            circuitEstablished = TorService.STATUS_ON == TorService.currentStatus
+            val bootstrap = runCatching { service.getInfo("status/bootstrap-phase") }.getOrNull().orEmpty()
+            circuitEstablished = bootstrap.contains("PROGRESS=100") || bootstrap.contains("TAG=done")
             // STATUS_ON is emitted after the first Tor circuit is established.
             // If the status broadcast raced with binding, the port is still checked
             // here; READY is published only when the service reports a valid SOCKS port.
@@ -172,10 +173,15 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         // TorService creates its default SOCKSPort itself (normally 9050). Extra listeners
         // are supplied through its torrc file and use Tor's stream-isolation flags.
         val torrc = TorService.getTorrc(appContext)
-        val listeners = ADDITIONAL_SOCKS_PORTS.joinToString(separator = "\n") { port ->
+        val existing = if (torrc.exists()) torrc.readText() else ""
+        val filtered = existing.lineSequence().filterNot { line ->
+            ADDITIONAL_SOCKS_PORTS.any { port -> line.trim().startsWith("SocksPort 127.0.0.1:$port ") } ||
+                line.trim().startsWith("MaxCircuitDirtiness ")
+        }.toList()
+        val listeners = ADDITIONAL_SOCKS_PORTS.joinToString(separator = "\\n") { port ->
             "SocksPort 127.0.0.1:$port IsolateClientAddr IsolateDestAddr IsolateDestPort"
         }
-        torrc.writeText(listeners + "\n")
+        torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\\n", postfix = "\\n"))
     }
 
     private fun unregisterReceiverIfNeeded() {
