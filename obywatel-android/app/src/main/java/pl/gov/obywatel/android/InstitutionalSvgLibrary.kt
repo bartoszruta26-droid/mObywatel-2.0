@@ -49,7 +49,7 @@ private fun validateSvg(bytes:ByteArray) {
 }
 
 
-private data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
+internal data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
 
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
 private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 4000L
@@ -155,12 +155,12 @@ private fun discoverCommonsOpenSvgs(context: Context, limit: Int = 200): List<Co
     }
     val candidates=mutableListOf<CommonsSvgCandidate>()
     for(batch in titles.toList().chunked(40)) {
-        if(candidates.size>=limit) break
+        if(uniqueCandidates.size>=limit) break
         val encoded=java.net.URLEncoder.encode(batch.joinToString("|"),"UTF-8")
         val response=commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         val pages=response.optJSONObject("query")?.optJSONObject("pages") ?: continue
         val keys=pages.keys()
-        while(keys.hasNext() && candidates.size<limit) {
+        while(keys.hasNext() && uniqueCandidates.size<limit) {
             val page=pages.optJSONObject(keys.next()) ?: continue
             val title=page.optString("title")
             val info=page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
@@ -340,6 +340,26 @@ private fun commonsAssetId(title: String): String =
         .digest(title.toByteArray(Charsets.UTF_8)).take(16)
         .joinToString("") { "%02x".format(it) }
 
+/**
+ * One logical Commons asset must have one queue entry, regardless of how many
+ * search terms or pagination pages discovered it. Deduplicate by storage identity
+ * and canonical upload URL before dispatching work to any Tor route.
+ */
+internal fun distinctCommonsCandidates(
+    candidates: List<CommonsSvgCandidate>
+): List<CommonsSvgCandidate> {
+    val seenAssetIds = HashSet<String>()
+    val seenDownloadUrls = HashSet<String>()
+    return candidates.filter { candidate ->
+        val assetId = commonsAssetId(candidate.title)
+        val canonicalUrl = candidate.url.substringBefore('#').substringBefore('?')
+            .trimEnd('/').lowercase(java.util.Locale.ROOT)
+        canonicalUrl.isNotBlank() &&
+            seenAssetIds.add(assetId) &&
+            seenDownloadUrls.add(canonicalUrl)
+    }
+}
+
 private fun saveCommonsReport(
     context: Context,
     found: Int,
@@ -433,18 +453,20 @@ private suspend fun processCommonsCandidates(
     candidates: List<CommonsSvgCandidate>,
     onProgress: suspend (completed: Int, total: Int, currentTitle: String) -> Unit
 ): CommonsDownloadSummary {
+    // A unique queue is the single source of work for all Tor routes.
+    val uniqueCandidates = distinctCommonsCandidates(candidates)
     var downloaded = 0
     var alreadyPresent = 0
     var failed = 0
     var attempts = 0
     val errors = mutableListOf<String>()
     val knownAssets = DocumentBrandStore.list(context).associateBy { it.id }
-    if (candidates.isEmpty()) {
+    if (uniqueCandidates.isEmpty()) {
         saveCommonsReport(context, 0, 0, 0, 0, 0, "", emptyList())
         return CommonsDownloadSummary(0, 0, 0, 0, 0)
     }
-    candidates.forEachIndexed { index, candidate ->
-        onProgress(index, candidates.size, candidate.title)
+    uniqueCandidates.forEachIndexed { index, candidate ->
+        onProgress(index, uniqueCandidates.size, candidate.title)
         val assetId = commonsAssetId(candidate.title)
         val existingAsset = knownAssets[assetId]
         val existingBytes = existingAsset?.let { DocumentBrandStore.fileBytes(context, assetId, it) }
@@ -468,11 +490,11 @@ private suspend fun processCommonsCandidates(
                 if (errors.size < 100) errors.add("${candidate.title}: $message")
             }
         }
-        saveCommonsReport(context, candidates.size, downloaded, alreadyPresent, failed,
+        saveCommonsReport(context, uniqueCandidates.size, downloaded, alreadyPresent, failed,
             attempts, candidate.title, errors)
-        onProgress(index + 1, candidates.size, candidate.title)
+        onProgress(index + 1, uniqueCandidates.size, candidate.title)
     }
-    return CommonsDownloadSummary(candidates.size, downloaded, alreadyPresent, failed, attempts)
+    return CommonsDownloadSummary(uniqueCandidates.size, downloaded, alreadyPresent, failed, attempts)
 }
 
 @Composable
