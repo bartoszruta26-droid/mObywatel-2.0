@@ -223,13 +223,21 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
         val contentRange = response.header("Content-Range")
         val append = commonsCanAppendRange(offset, statusCode, contentRange)
         if (offset > 0L && statusCode == 206 && !append) {
-            throw java.io.IOException("Serwer zwrócił niezgodny Content-Range; wznowienie odrzucone.")
-        } else if (statusCode == 206) {
-            require(response.header("Content-Range").orEmpty().startsWith("bytes 0-")) { "Nieprawidłowy początek zakresu SVG." }
+            // The server returned a partial response for a different byte offset.
+            // Discard the stale part so the next retry starts from byte zero.
+            partFile.delete()
+            metadataFile.delete()
+            throw java.io.IOException("Serwer zwrócił niezgodny Content-Range; część pobrania usunięto.")
         }
-        val expectedTotal = if (append) {
+        if (statusCode == 206) {
+            val expectedStart = if (append) offset else 0L
+            require(response.header("Content-Range").orEmpty().startsWith("bytes $expectedStart-")) {
+                "Nieprawidłowy początek zakresu SVG."
+            }
+        }
+        val expectedTotal = if (statusCode == 206) {
             response.header("Content-Range")?.substringAfterLast('/')?.toLongOrNull()
-                ?: response.contentLength?.let { offset + it }
+                ?: response.contentLength?.let { if (append) offset + it else it }
         } else response.contentLength
         require(expectedTotal == null || expectedTotal <= 12L * 1024L * 1024L) { "Plik SVG przekracza limit 12 MB." }
         metadata.put("etag", response.header("ETag").orEmpty())
