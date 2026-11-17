@@ -389,7 +389,7 @@ private suspend fun processCommonsCandidates(
         }
         if (existingAsset != null && commonsChecksumMatches(recordedSha, actualExistingSha)) {
             alreadyPresent++
-            persistCommonsCandidateStatus(context, candidate.title, "saved", 0, null, actualExistingSha)
+            persistCommonsCandidateStatus(context, candidate.title, "saved", 0, null, actualExistingSha.orEmpty())
         } else {
             val result = downloadCommonsSvgWithRetry(context, candidate)
             attempts += result.first
