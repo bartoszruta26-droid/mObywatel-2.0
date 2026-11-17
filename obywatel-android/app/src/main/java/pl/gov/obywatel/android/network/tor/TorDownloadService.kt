@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.network.tor
 
-/**
- * Shared streaming download entry point. Requests are distributed across the embedded
- * Tor daemon's isolated SOCKS listeners; every listener belongs to the same Tor client.
- * The caller classifies each resource and closes the returned response with use { }.
- */
+import android.content.Context
+import java.io.IOException
+
+/** Shared Tor-only streaming download service for all app resources. */
 class TorDownloadService(
+    private val context: Context,
     private val runtime: TorRuntime,
     policy: TorRequestPolicy = TorRequestPolicy(),
     poolPolicy: () -> TorPoolPolicy = { TorPoolPolicy.ROUND_ROBIN },
@@ -16,26 +16,46 @@ class TorDownloadService(
     private val transport = TorHttpTransport(runtime, policy)
     private val router = TorDownloadRouter(
         profiles = {
-            runtime.proxyEndpoints().mapIndexed { index, endpoint ->
-                TorClientProfile(
-                    id = "embedded-tor-socks-${endpoint.port}",
-                    name = "Wbudowany Tor — obwód ${index + 1}",
-                    host = endpoint.host,
-                    port = endpoint.port
-                )
+            val embedded = runtime.proxyEndpoints().mapIndexed { index, endpoint ->
+                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — listener ${index + 1}", endpoint.host, endpoint.port)
             }
+            val external = TorClientRegistry.load(context).filter { profile ->
+                profile.enabled && profile.id !in setOf("guardian-embedded", "guardian-isolated-1", "guardian-isolated-2", "guardian-isolated-3", "guardian-isolated-4")
+            }
+            embedded + external
         },
         isReady = { profile ->
-            runtime.state == TorState.READY &&
-                runtime.proxyEndpoints().any { it.host == profile.host && it.port == profile.port }
+            val endpoint = runCatching { profile.endpoint() }.getOrNull()
+            if (endpoint == null) false
+            else if (profile.id.startsWith("guardian-embedded-")) {
+                runtime.state == TorState.READY && runtime.proxyEndpoints().contains(endpoint)
+            } else {
+                val orbotProfile = profile.id == "orbot-local"
+                (!orbotProfile || TorEndpointProbe.isOrbotInstalled(context)) && TorEndpointProbe.isTor(endpoint)
+            }
         },
         policy = poolPolicy,
         rules = routeRules
     )
 
-    fun open(url: String, kind: TorDownloadKind): TorHttpResponse {
-        if (runtime.state != TorState.READY) throw java.io.IOException("Tor runtime is not ready.")
-        val selected = router.select(kind)
-        return transport.open(url, selected.endpoint())
+    /**
+     * Opens one resource through a verified Tor client. If a selected external SOCKS
+     * endpoint has stopped accepting Tor traffic, the next retry can select Guardian.
+     * No direct-network fallback is implemented.
+     */
+    @Throws(IOException::class)
+    fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse {
+        if (runtime.state != TorState.READY) throw IOException("Guardian Tor runtime is not ready.")
+        var lastFailure: IOException? = null
+        repeat(2) {
+            val selected = router.select(kind)
+            try {
+                return transport.open(url, selected.endpoint(), rangeStart, ifRange)
+            } catch (failure: IOException) {
+                lastFailure = failure
+                if (selected.id.startsWith("guardian-embedded-")) throw failure
+            }
+        }
+        throw lastFailure ?: IOException("No verified Tor client could open the resource.")
     }
 }
