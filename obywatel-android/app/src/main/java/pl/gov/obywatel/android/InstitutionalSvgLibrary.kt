@@ -21,9 +21,12 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
+import java.io.File
+import java.io.FileOutputStream
 import java.security.MessageDigest
+import pl.gov.obywatel.android.network.tor.TorDownloadKind
+import pl.gov.obywatel.android.network.tor.TorDownloadServiceProvider
+import pl.gov.obywatel.android.network.tor.TorHttpException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -46,7 +49,7 @@ private fun validateSvg(bytes:ByteArray) {
 }
 
 
-private data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
+internal data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
 
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
 private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 4000L
@@ -63,13 +66,13 @@ private fun waitForCommonsRequestSlot() {
     }
 }
 
-private fun retryAfterMillis(connection: HttpURLConnection): Long? {
-    val value = connection.getHeaderField("Retry-After")?.trim() ?: return null
-    value.toLongOrNull()?.let { seconds ->
+private fun retryAfterMillis(value: String?): Long? {
+    val header = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+    header.toLongOrNull()?.let { seconds ->
         return if (seconds <= 0L) 0L else if (seconds >= 180L) 180000L else seconds * 1000L
     }
     return runCatching {
-        val date = java.time.ZonedDateTime.parse(value, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli()
+        val date = java.time.ZonedDateTime.parse(header, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli()
         (date - System.currentTimeMillis()).coerceAtLeast(0L).coerceAtMost(180000L)
     }.getOrNull()
 }
@@ -88,33 +91,32 @@ internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null):
     return maxOf(serverDelay ?: exponentialDelay, exponentialDelay).coerceIn(4000L, 180000L)
 }
 
-private fun commonsRequest(params:String):JSONObject {
+private fun commonsRequest(context: Context, params: String): JSONObject {
     var lastFailure: Exception? = null
+    val tor = TorDownloadServiceProvider.get(context)
     repeat(COMMONS_API_MAX_ATTEMPTS) { attempt ->
-        // One global queue prevents bursts across API searches and file downloads.
         waitForCommonsRequestSlot()
-        val connection=URL("https://commons.wikimedia.org/w/api.php?$params&maxlag=5").openConnection() as HttpURLConnection
-        connection.connectTimeout=20000
-        connection.readTimeout=30000
-        connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.1 (Wikimedia Commons SVG asset catalog)")
         try {
-            val code = connection.responseCode
-            if (code in 200..299) {
-                return JSONObject(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
+            val url = "https://commons.wikimedia.org/w/api.php?$params&maxlag=5"
+            return tor.open(url, TorDownloadKind.API).use { response ->
+                JSONObject(response.body.bufferedReader(Charsets.UTF_8).use { it.readText() })
             }
-            val retryAfterMs = retryAfterMillis(connection)
-            val retryable = code == 429 || code == 503 || code == 502 || code == 504
-            lastFailure = CommonsHttpException(code, retryAfterMs)
+        } catch (failure: TorHttpException) {
+            val retryAfterMs = retryAfterMillis(failure.retryAfter)
+            val retryable = failure.httpCode == 429 || failure.httpCode == 503 || failure.httpCode == 502 || failure.httpCode == 504
+            lastFailure = CommonsHttpException(failure.httpCode, retryAfterMs)
             if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
             Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2), retryAfterMs ?: 0L))
-        } finally {
-            connection.disconnect()
+        } catch (failure: Exception) {
+            lastFailure = failure
+            if (attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw failure
+            Thread.sleep(commonsRetryDelayMs(attempt + 2))
         }
     }
-    throw lastFailure ?: java.io.IOException("Wikimedia Commons: nie udało się wykonać żądania API.")
+    throw lastFailure ?: java.io.IOException("Wikimedia Commons: nie udało się wykonać żądania API przez Tor.")
 }
 
-private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
+private fun discoverCommonsOpenSvgs(context: Context, limit: Int = 200): List<CommonsSvgCandidate> {
     val terms = listOf(
         "coat of arms", "heraldry", "heraldic arms", "blazon", "escutcheon",
         "flag", "national flag", "city flag", "province flag", "municipal flag",
@@ -140,7 +142,7 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
         repeat(4) {
             if(finished || titles.size>=limit*5) return@repeat
             val offsetArg=offset?.let { "&sroffset="+java.net.URLEncoder.encode(it,"UTF-8") }.orEmpty()
-            val response=commonsRequest("action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
+            val response=commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
             val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
             for(i in 0 until results.length()) {
                 val title=results.optJSONObject(i)?.optString("title").orEmpty()
@@ -155,7 +157,7 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
     for(batch in titles.toList().chunked(40)) {
         if(candidates.size>=limit) break
         val encoded=java.net.URLEncoder.encode(batch.joinToString("|"),"UTF-8")
-        val response=commonsRequest("action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
+        val response=commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         val pages=response.optJSONObject("query")?.optJSONObject("pages") ?: continue
         val keys=pages.keys()
         while(keys.hasNext() && candidates.size<limit) {
@@ -188,45 +190,106 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
     return candidates.distinctBy { it.title }.take(limit)
 }
 
-private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate): String {
+private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): String {
     waitForCommonsRequestSlot()
-    val connection=URL(item.url).openConnection() as HttpURLConnection
-    connection.instanceFollowRedirects=true
-    connection.connectTimeout=15000
-    connection.readTimeout=25000
-    connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.0")
-    val bytes=try {
-        val code = connection.responseCode
-        if (code !in 200..299) {
-            val retryable = code == 429 || code == 503 || code == 502 || code == 504
-            if (retryable) throw CommonsHttpException(code, retryAfterMillis(connection))
-            throw java.io.IOException("HTTP $code")
-        }
-        connection.inputStream.use { input ->
-            val output=ByteArrayOutputStream()
-            val buffer=ByteArray(8192)
-            var total=0
-            while(true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=12*1024*1024) { "Plik przekracza limit 12 MB." }; output.write(buffer,0,n) }
-            output.toByteArray()
-        }
-    } finally { connection.disconnect() }
-    validateSvg(bytes)
-    val id="commons_"+MessageDigest.getInstance("SHA-256").digest(item.title.toByteArray(Charsets.UTF_8)).take(16).joinToString("") { "%02x".format(it) }
-    val sha=MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
-    val rights=JSONObject().put("source","Wikimedia Commons").put("sourcePage",item.page).put("downloadUrl",item.url)
-        .put("license",item.license).put("licenseUrl",item.licenseUrl).put("author",item.artist)
-        .put("restrictions",item.restrictions).put("sha256",sha)
-        .put("verificationStatus","open-license-metadata-found; trademark-and-use-review-required")
-        .put("permittedKinds",JSONArray()).toString()
-    val title=item.title.removePrefix("File:")
-    val kind=when {
-        title.contains("flag",true)->"Flaga"
-        title.contains("coat of arms",true)||title.contains("herald",true)->"Herb"
-        title.contains("seal",true)->"Pieczęć"
-        title.contains("emblem",true)->"Godło"
-        else->"Logo"
+    val tor = TorDownloadServiceProvider.get(context)
+    val assetId = commonsAssetId(item.title)
+    val tempDirectory = File(context.cacheDir, "tor-svg-downloads").apply { mkdirs() }
+    require(tempDirectory.isDirectory) { "Nie można utworzyć katalogu wznowienia pobierania." }
+    val partFile = File(tempDirectory, "$assetId.part")
+    val metadataFile = File(tempDirectory, "$assetId.json")
+    val metadata = runCatching { JSONObject(metadataFile.readText(Charsets.UTF_8)) }.getOrDefault(JSONObject())
+    var offset = partFile.takeIf { it.isFile }?.length() ?: 0L
+    if (offset > 12L * 1024L * 1024L) { partFile.delete(); offset = 0L }
+    val validator = metadata.optString("etag").takeIf { it.isNotBlank() }
+        ?: metadata.optString("lastModified").takeIf { it.isNotBlank() }
+    if (offset > 0L && validator == null) {
+        // Without a stable validator, never append bytes from a possibly changed remote file.
+        partFile.delete()
+        metadataFile.delete()
+        offset = 0L
     }
-    DocumentBrandStore.importBytes(context,"Wikimedia Commons",kind,title.take(180),bytes,rights=rights,mimeType="image/svg+xml",assetId=id)
+    var response = try {
+        tor.open(item.url, TorDownloadKind.SVG, offset, validator)
+    } catch (failure: Exception) {
+        if (offset <= 0L) throw failure
+        partFile.delete()
+        metadataFile.delete()
+        offset = 0L
+        tor.open(item.url, TorDownloadKind.SVG)
+    }
+    try {
+        val statusCode = response.statusCode
+        val contentRange = response.header("Content-Range")
+        val append = commonsCanAppendRange(offset, statusCode, contentRange)
+        if (offset > 0L && statusCode == 206 && !append) {
+            // The server returned a partial response for a different byte offset.
+            // Discard the stale part so the next retry starts from byte zero.
+            partFile.delete()
+            metadataFile.delete()
+            throw java.io.IOException("Serwer zwrócił niezgodny Content-Range; część pobrania usunięto.")
+        }
+        if (statusCode == 206) {
+            val expectedStart = if (append) offset else 0L
+            require(response.header("Content-Range").orEmpty().startsWith("bytes $expectedStart-")) {
+                "Nieprawidłowy początek zakresu SVG."
+            }
+        }
+        val expectedTotal = if (statusCode == 206) {
+            response.header("Content-Range")?.substringAfterLast('/')?.toLongOrNull()
+                ?: response.contentLength?.let { if (append) offset + it else it }
+        } else response.contentLength
+        require(expectedTotal == null || expectedTotal <= 12L * 1024L * 1024L) { "Plik SVG przekracza limit 12 MB." }
+        metadata.put("etag", response.header("ETag").orEmpty())
+            .put("lastModified", response.header("Last-Modified").orEmpty())
+            .put("expectedTotal", expectedTotal ?: -1L)
+            .put("updatedAt", System.currentTimeMillis())
+        metadataFile.writeText(metadata.toString(), Charsets.UTF_8)
+        FileOutputStream(partFile, append).use { output ->
+            response.body.use { input ->
+                val buffer = ByteArray(8192)
+                var total = if (append) offset else 0L
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    total += count
+                    require(total <= 12L * 1024L * 1024L) { "Plik SVG przekracza limit 12 MB." }
+                    output.write(buffer, 0, count)
+                }
+                output.fd.sync()
+            }
+        }
+    } finally {
+        response.close()
+    }
+    val expectedLength = metadata.optLong("expectedTotal", -1L)
+    if (expectedLength > 0L && partFile.length() != expectedLength) {
+        throw java.io.IOException("Niepełny transfer SVG: rozmiar częściowy nie odpowiada długości serwera.")
+    }
+    val bytes = partFile.readBytes()
+    validateSvg(bytes)
+    val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+    if (item.sha256.isNotBlank() && !commonsChecksumMatches(item.sha256, sha)) {
+        partFile.delete()
+        metadataFile.delete()
+        throw java.io.IOException("Suma SHA-256 pobranego SVG jest niezgodna z oczekiwaną sumą.")
+    }
+    val rights = JSONObject().put("source", "Wikimedia Commons").put("sourcePage", item.page).put("downloadUrl", item.url)
+        .put("license", item.license).put("licenseUrl", item.licenseUrl).put("author", item.artist)
+        .put("restrictions", item.restrictions).put("sha256", sha)
+        .put("verificationStatus", "open-license-metadata-found; trademark-and-use-review-required")
+        .put("permittedKinds", JSONArray()).toString()
+    val title = item.title.removePrefix("File:")
+    val kind = when {
+        title.contains("flag", true) -> "Flaga"
+        title.contains("coat of arms", true) || title.contains("herald", true) -> "Herb"
+        title.contains("seal", true) -> "Pieczęć"
+        title.contains("emblem", true) -> "Godło"
+        else -> "Logo"
+    }
+    DocumentBrandStore.importBytes(context, "Wikimedia Commons", kind, title.take(180), bytes, rights = rights, mimeType = "image/svg+xml", assetId = assetId)
+    partFile.delete()
+    metadataFile.delete()
     return sha
 }
 
@@ -253,6 +316,8 @@ private fun readCommonsJson(context: Context, fileName: String): String =
 internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
     found >= 100 && available.coerceAtLeast(0) * 2 < found
 
+internal fun commonsCanAppendRange(offset: Long, statusCode: Int, contentRange: String?): Boolean =
+    offset > 0L && statusCode == 206 && contentRange?.startsWith("bytes $offset-") == true
 internal fun commonsChecksumMatches(expectedSha256: String, actualSha256: String?): Boolean =
     expectedSha256.matches(Regex("[a-fA-F0-9]{64}")) && actualSha256?.equals(expectedSha256, ignoreCase = true) == true
 
@@ -274,6 +339,32 @@ private fun commonsAssetId(title: String): String =
     "commons_" + MessageDigest.getInstance("SHA-256")
         .digest(title.toByteArray(Charsets.UTF_8)).take(16)
         .joinToString("") { "%02x".format(it) }
+
+/**
+ * One logical Commons asset must have one queue entry, regardless of how many
+ * search terms or pagination pages discovered it. Deduplicate by storage identity
+ * and canonical upload URL before dispatching work to any Tor route.
+ */
+internal fun distinctCommonsCandidates(
+    candidates: List<CommonsSvgCandidate>
+): List<CommonsSvgCandidate> {
+    val seenAssetIds = HashSet<String>()
+    val seenDownloadUrls = HashSet<String>()
+    return candidates.filter { candidate ->
+        val assetId = commonsAssetId(candidate.title)
+        val canonicalUrl = candidate.url.substringBefore('#').substringBefore('?')
+            .trimEnd('/').lowercase(java.util.Locale.ROOT)
+        if (canonicalUrl.isBlank()) {
+            false
+        } else {
+            // Record both identities even when one already exists. Avoid short-circuiting:
+            // a skipped alias must still reserve its URL against a later differently named alias.
+            val newAsset = seenAssetIds.add(assetId)
+            val newUrl = seenDownloadUrls.add(canonicalUrl)
+            newAsset && newUrl
+        }
+    }
+}
 
 private fun saveCommonsReport(
     context: Context,
@@ -368,18 +459,20 @@ private suspend fun processCommonsCandidates(
     candidates: List<CommonsSvgCandidate>,
     onProgress: suspend (completed: Int, total: Int, currentTitle: String) -> Unit
 ): CommonsDownloadSummary {
+    // A unique queue is the single source of work for all Tor routes.
+    val uniqueCandidates = distinctCommonsCandidates(candidates)
     var downloaded = 0
     var alreadyPresent = 0
     var failed = 0
     var attempts = 0
     val errors = mutableListOf<String>()
     val knownAssets = DocumentBrandStore.list(context).associateBy { it.id }
-    if (candidates.isEmpty()) {
+    if (uniqueCandidates.isEmpty()) {
         saveCommonsReport(context, 0, 0, 0, 0, 0, "", emptyList())
         return CommonsDownloadSummary(0, 0, 0, 0, 0)
     }
-    candidates.forEachIndexed { index, candidate ->
-        onProgress(index, candidates.size, candidate.title)
+    uniqueCandidates.forEachIndexed { index, candidate ->
+        onProgress(index, uniqueCandidates.size, candidate.title)
         val assetId = commonsAssetId(candidate.title)
         val existingAsset = knownAssets[assetId]
         val existingBytes = existingAsset?.let { DocumentBrandStore.fileBytes(context, assetId, it) }
@@ -403,11 +496,11 @@ private suspend fun processCommonsCandidates(
                 if (errors.size < 100) errors.add("${candidate.title}: $message")
             }
         }
-        saveCommonsReport(context, candidates.size, downloaded, alreadyPresent, failed,
+        saveCommonsReport(context, uniqueCandidates.size, downloaded, alreadyPresent, failed,
             attempts, candidate.title, errors)
-        onProgress(index + 1, candidates.size, candidate.title)
+        onProgress(index + 1, uniqueCandidates.size, candidate.title)
     }
-    return CommonsDownloadSummary(candidates.size, downloaded, alreadyPresent, failed, attempts)
+    return CommonsDownloadSummary(uniqueCandidates.size, downloaded, alreadyPresent, failed, attempts)
 }
 
 @Composable
@@ -495,7 +588,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
-                            val candidates = discoverCommonsOpenSvgs(200)
+                            val candidates = discoverCommonsOpenSvgs(context, 200)
                             val manifest = JSONArray()
                             candidates.forEach { item ->
                                 manifest.put(JSONObject()

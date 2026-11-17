@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -23,7 +22,7 @@ val hasStableSigning = listOf(
 
 android {
     namespace = "pl.gov.obywatel.android"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "pl.gov.obywatel.android.prototype"
@@ -60,11 +59,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures { compose = true }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
 
 dependencies {
@@ -79,6 +80,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("com.squareup.okhttp3:okhttp:4.12.1")
+    implementation("info.guardianproject:tor-android:0.4.9.14")
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.caverock:androidsvg-aar:1.4")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")

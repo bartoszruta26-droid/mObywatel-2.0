@@ -52,6 +52,15 @@ class InstitutionalSvgDownloadAccountingTest {
     }
 
     @Test
+    fun rangeResumeRequires206AndExactStartingOffset() {
+        assertTrue(commonsCanAppendRange(1024L, 206, "bytes 1024-2047/4096"))
+        assertFalse(commonsCanAppendRange(1024L, 200, "bytes 1024-2047/4096"))
+        assertFalse(commonsCanAppendRange(1024L, 206, "bytes 0-1023/4096"))
+        assertFalse(commonsCanAppendRange(0L, 206, "bytes 0-1023/4096"))
+        assertFalse(commonsCanAppendRange(1024L, 206, null))
+    }
+
+    @Test
     fun resumeSkipsOnlyAssetsWithMatchingSha256() {
         val valid = "a".repeat(64)
         assertTrue(commonsChecksumMatches(valid, valid))
@@ -60,6 +69,61 @@ class InstitutionalSvgDownloadAccountingTest {
         assertFalse(commonsChecksumMatches("", valid))
         assertFalse(commonsChecksumMatches("not-a-checksum", valid))
         assertFalse(commonsChecksumMatches(valid, null))
+    }
+
+    @Test
+    fun duplicateCommonsTitlesAndUploadUrlsAreQueuedOnlyOnce() {
+        val original = CommonsSvgCandidate(
+            "File:crest.svg", "https://upload.wikimedia.org/a/crest.svg",
+            "https://commons.wikimedia.org/wiki/File:crest.svg", "CC0", "", "", ""
+        )
+        val sameTitleDifferentUrl = original.copy(url = "https://upload.wikimedia.org/a/other-copy.svg")
+        val sameUrlDifferentTitle = original.copy(title = "File:crest-copy.svg")
+        val another = original.copy(
+            title = "File:flag.svg",
+            url = "https://upload.wikimedia.org/a/flag.svg"
+        )
+
+        val queue = distinctCommonsCandidates(
+            listOf(original, sameTitleDifferentUrl, sameUrlDifferentTitle, another)
+        )
+
+        assertEquals(listOf("File:crest.svg", "File:flag.svg"), queue.map { it.title })
+    }
+
+    @Test
+    fun duplicateUploadUrlsIgnoreQueryAndFragment() {
+        val first = CommonsSvgCandidate(
+            "File:logo.svg", "https://upload.wikimedia.org/a/logo.svg?download=1",
+            "page", "CC0", "", "", ""
+        )
+        val duplicate = first.copy(
+            title = "File:logo-alias.svg",
+            url = "https://upload.wikimedia.org/a/logo.svg#fragment"
+        )
+
+        assertEquals(1, distinctCommonsCandidates(listOf(first, duplicate)).size)
+    }
+
+    @Test
+    fun duplicateAssetAliasUrlIsReservedEvenWhenAssetIdentityAlreadyExists() {
+        val first = CommonsSvgCandidate(
+            "File:crest.svg", "https://upload.wikimedia.org/a/crest.svg",
+            "page", "CC0", "", "", ""
+        )
+        val duplicateAssetAlias = first.copy(
+            url = "https://upload.wikimedia.org/a/crest-alias.svg"
+        )
+        val differentTitleSameAliasUrl = first.copy(
+            title = "File:other.svg",
+            url = "https://upload.wikimedia.org/a/crest-alias.svg"
+        )
+
+        val queue = distinctCommonsCandidates(
+            listOf(first, duplicateAssetAlias, differentTitleSameAliasUrl)
+        )
+
+        assertEquals(listOf("File:crest.svg"), queue.map { it.title })
     }
 
 }
