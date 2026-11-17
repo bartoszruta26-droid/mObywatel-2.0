@@ -380,7 +380,7 @@ private fun appendCommonsDiagnostic(context: Context, message: String) {
         FileOutputStream(context.getFileStreamPath(COMMONS_DIAGNOSTIC_LOG_FILE), true).use { stream ->
             java.io.OutputStreamWriter(stream, Charsets.UTF_8).buffered().use { writer ->
                 writer.append(stamp).append(" ").append(message.replace("\\n", " ").take(2000))
-                writer.append('\\n')
+                writer.append('\n')
             }
         }
     }
