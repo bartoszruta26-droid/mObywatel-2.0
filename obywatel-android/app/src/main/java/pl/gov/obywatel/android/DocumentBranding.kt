@@ -447,8 +447,8 @@ internal object DocumentBrandStore {
         }
         File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
-    private fun imageById(context: Context, assetId: String): android.graphics.Bitmap? = runCatching {
-        val asset = list(context).firstOrNull { it.id == assetId } ?: return null
+    private fun imageById(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? = runCatching {
+        val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
         if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
             val resourceId = context.resources.getIdentifier(name, "drawable", context.packageName)
@@ -1421,7 +1421,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                         Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (expanded) grouped.forEachIndexed { index, asset ->
-                        val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context, asset.id) }
+                        val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context, asset.id, asset) }
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
