@@ -48,3 +48,16 @@ and real-device behaviour still require instrumentation tests before release.
 3. Migrate Wikimedia Commons API and SVG downloads to an injected transport.
 4. Add a settings surface for AUTO / DIRECT / TOR only after runtime and fallback policy are fully tested.
    TOR mode must fail closed; AUTO fallback must be explicit and observable.
+
+
+## Klienci Tor i ustawienia aplikacji
+
+Menu Ustawienia zawiera ekran „Klienci sieci Tor”. Rejestr profili jest przechowywany w prywatnych preferencjach aplikacji i obejmuje:
+- wbudowany klient Guardian Project (domyślny);
+- profil lokalnego SOCKS5 Orbot (domyślnie `127.0.0.1:9050`);
+- profile własne z nazwą, adresem i portem;
+- wybór preferowanego profilu, aktywowanie/dezaktywowanie i usuwanie profili własnych.
+
+Celowo dopuszczane są wyłącznie adresy loopback (`127.0.0.1`, `localhost`, `::1`). Nie ma obsługi dowolnego zdalnego publicznego SOCKS: operator takiego proxy może obserwować metadane połączeń, a sam endpoint nie dowodzi, że ruch trafia do sieci Tor. Publiczna sieć Tor jest osiągana przez uruchomionego klienta Tor, nie przez anonimowy, współdzielony adres SOCKS.
+
+**Stan integracji:** wbudowany klient Guardian Project pozostaje implementacją runtime w tej gałęzi. Ekran i rejestr profili są już dodane, ale wybór profilu zewnętrznego (Orbot) nie jest jeszcze podłączony do fabryki runtime/transportu. Włączenie profilu w ustawieniach nie oznacza jeszcze, że żądania są przez niego kierowane. Następny etap: adapter zewnętrznego SOCKS5 z kontrolą gotowości i testem braku wycieku DNS, następnie wybór runtime na podstawie aktywnego profilu.
