@@ -9,7 +9,9 @@ package pl.gov.obywatel.android.network.tor
  */
 class TorDownloadService(
     private val runtime: TorRuntime,
-    policy: TorRequestPolicy = TorRequestPolicy()
+    policy: TorRequestPolicy = TorRequestPolicy(),
+    poolPolicy: () -> TorPoolPolicy = { TorPoolPolicy.ROUND_ROBIN },
+    routeRules: () -> Map<TorDownloadKind, String> = { emptyMap() }
 ) {
     private val transport = TorHttpTransport(runtime, policy)
     private val router = TorDownloadRouter(
@@ -26,7 +28,9 @@ class TorDownloadService(
         isReady = { profile ->
             runtime.state == TorState.READY &&
                 runtime.proxyEndpoints().any { it.host == profile.host && it.port == profile.port }
-        }
+        },
+        policy = poolPolicy,
+        rules = routeRules
     )
 
     fun open(url: String, kind: TorDownloadKind): TorHttpResponse {
