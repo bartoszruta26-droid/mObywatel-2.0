@@ -109,7 +109,8 @@ class TorDownloadService(
             }
         }
         if (runtime.state != TorState.READY) {
-            throw IOException("Guardian Tor nie osiągnął stanu READY; pobieranie pozostaje zablokowane." +\n                (runtime.failureMessage()?.let { " Przyczyna zgłoszona przez usługę: $it" } ?: " Brak komunikatu ACTION_ERROR z usługi Tor."))
+            throw IOException("Guardian Tor nie osiągnął stanu READY; pobieranie pozostaje zablokowane." +
+                (runtime.failureMessage()?.let { " Przyczyna zgłoszona przez usługę: $it" } ?: " Brak komunikatu ACTION_ERROR z usługi Tor."))
         }
         return runtime.proxyEndpoint()
             ?: throw IOException("Guardian Tor zgłosił READY, ale nie udostępnia działającego SOCKS5.")
