@@ -27,7 +27,7 @@ class TorDownloadRouter(
     fun select(kind: TorDownloadKind): TorClientProfile {
         val eligible = profiles().asSequence()
             .filter { it.enabled }
-            .distinctBy { "${it.host}:${it.port}" }
+            .distinctBy { "${if (it.host == "localhost" || it.host == "::1") "127.0.0.1" else it.host}:${it.port}" }
             .filter { runCatching { isReady(it) }.getOrDefault(false) }
             .toList()
 
