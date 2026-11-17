@@ -417,7 +417,20 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     var status by remember { mutableStateOf("") }
     var progressCurrent by remember { mutableIntStateOf(0) }
     var progressTotal by remember { mutableIntStateOf(0) }
-    var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
+    var reportSummary by remember { mutableStateOf("") }
+    var savedSvgCount by remember { mutableIntStateOf(0) }
+    var hasSvgAssets by remember { mutableStateOf(false) }
+    LaunchedEffect(context) {
+        val state = withContext(Dispatchers.IO) {
+            val assets = DocumentBrandStore.list(context)
+            Triple(assets.count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
+                assets.any { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
+                loadCommonsReportSummary(context))
+        }
+        savedSvgCount = state.first
+        hasSvgAssets = state.second
+        reportSummary = state.third
+    }
     val zipLauncher=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if(uri!=null) {
             busy="zip"
@@ -471,7 +484,6 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
         Text("Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons. Pobrane grafiki są automatycznie zapisywane w zasobach aplikacji wraz z informacją o źródle, autorstwie, licencji i ograniczeniach.",style=MaterialTheme.typography.bodySmall)
-        val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         if (busy == "commons" || busy == "resume") {
             if (progressTotal > 0) {
@@ -529,7 +541,15 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                         { "Commons: znaleziono ${it.found}, pobrano ${it.downloaded}, już było ${it.alreadyPresent}, błędy ${it.failed}; prób pobrania ${it.attempts}." },
                         { "Błąd wyszukiwania Commons: ${it.message ?: "nieznany błąd"}" }
                     )
-                    reportSummary = loadCommonsReportSummary(context)
+                    val refreshed = withContext(Dispatchers.IO) {
+                        val assets = DocumentBrandStore.list(context)
+                        Triple(assets.count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
+                            assets.any { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
+                            loadCommonsReportSummary(context))
+                    }
+                    savedSvgCount = refreshed.first
+                    hasSvgAssets = refreshed.second
+                    reportSummary = refreshed.third
                     busy = null
                     if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
                 }
@@ -564,14 +584,22 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                         { "Wznowienie: znaleziono ${it.found}, pobrano ${it.downloaded}, już było ${it.alreadyPresent}, błędy ${it.failed}; prób ${it.attempts}." },
                         { "Błąd wznowienia: ${it.message ?: "nieznany błąd"}" }
                     )
-                    reportSummary = loadCommonsReportSummary(context)
+                    val refreshed = withContext(Dispatchers.IO) {
+                        val assets = DocumentBrandStore.list(context)
+                        Triple(assets.count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
+                            assets.any { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
+                            loadCommonsReportSummary(context))
+                    }
+                    savedSvgCount = refreshed.first
+                    hasSvgAssets = refreshed.second
+                    reportSummary = refreshed.third
                     busy = null
                     if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) { Text(if (busy == "resume") "Wznawianie…" else "Wznów nieudane / brakujące pobrania") }
-        OutlinedButton(enabled=busy==null && DocumentBrandStore.list(context).any { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
+        OutlinedButton(enabled=busy==null && hasSvgAssets,
             onClick={ zipLauncher.launch("institutional-svg-assets.zip") },modifier=Modifier.fillMaxWidth()) {
             Text(if(busy=="zip") "Tworzenie ZIP…" else "Spakuj pobrane SVG do ZIP")
         }
