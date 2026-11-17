@@ -94,17 +94,17 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                         )
                         Column(Modifier.weight(1f)) {
                             Text(client.name, fontWeight = FontWeight.SemiBold)
-                            Text("SOCKS5 · ${client.host}:${client.port}", style = MaterialTheme.typography.bodySmall,
+                            Text(if (client.id == "guardian-embedded") "Guardian Project · do 4 izolowanych listenerów" else "SOCKS5 · ${client.host}:${client.port}", style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Switch(checked = client.enabled, onCheckedChange = { enabled ->
+                        Switch(checked = client.enabled, enabled = client.id != "guardian-embedded", onCheckedChange = { enabled ->
                             val index = clients.indexOfFirst { it.id == client.id }
                             if (index >= 0) clients[index] = client.copy(enabled = enabled)
                             persist()
                         })
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedButton(onClick = {
+                        if (client.id != "guardian-embedded") OutlinedButton(onClick = {
                             probeStatus[client.id] = "Sprawdzanie SOCKS i wyjścia Tor…"
                             scope.launch {
                                 val result = withContext(Dispatchers.IO) {
