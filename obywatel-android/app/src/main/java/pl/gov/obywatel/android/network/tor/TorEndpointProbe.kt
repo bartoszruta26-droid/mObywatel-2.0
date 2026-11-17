@@ -54,6 +54,9 @@ object TorDownloadServiceProvider {
     @Volatile private var runtime: GuardianTorRuntime? = null
     @Volatile private var service: TorDownloadService? = null
 
+    fun isEmbeddedEndpoint(endpoint: TorProxyEndpoint): Boolean =
+        runtime?.proxyEndpoints()?.contains(endpoint) == true
+
     @Synchronized
     fun get(context: Context): TorDownloadService {
         val app = context.applicationContext
