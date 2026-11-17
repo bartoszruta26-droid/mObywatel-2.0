@@ -14,6 +14,15 @@ class TorDownloadRouterTest {
         TorClientProfile("disabled", "Disabled", "127.0.0.1", 9250, false)
     )
 
+    @Test fun selectedInstalledOrbotDefersGuardianStartup() {
+        assertEquals(false, shouldStartGuardianForSelectedClient("orbot-local", true))
+    }
+
+    @Test fun GuardianStartsWhenItIsSelectedOrOrbotIsMissing() {
+        assertEquals(true, shouldStartGuardianForSelectedClient("guardian-embedded", true))
+        assertEquals(true, shouldStartGuardianForSelectedClient("orbot-local", false))
+    }
+
     @Test fun roundRobinDistributesAcrossReadyDistinctEndpoints() {
         val router = TorDownloadRouter({ clients }, { it.id != "disabled" })
         assertEquals("a", router.select(TorDownloadKind.SVG).id)
