@@ -3,6 +3,8 @@
 
 package pl.gov.obywatel.android
 
+import pl.gov.obywatel.android.network.tor.TorClientSettingsScreen
+
 import android.os.Bundle
 import android.content.Context
 import android.graphics.Canvas
@@ -1329,6 +1331,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showDocumentsEditor by remember { mutableStateOf(false) }
     var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
+    var showTorClientSettings by remember { mutableStateOf(false) }
     var showDocumentEditorCatalog by remember { mutableStateOf(false) }
     var showApplicationAppearanceSettings by remember { mutableStateOf(false) }
     var showTranslationLanguageSettings by remember { mutableStateOf(false) }
@@ -1417,6 +1420,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             credentialAppearanceTarget != null -> credentialAppearanceTarget = null
             showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
             showTranslationLanguageSettings -> { showTranslationLanguageSettings = false; showSettingsMenu = true }
+            showTorClientSettings -> { showTorClientSettings = false; showSettingsMenu = true }
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
@@ -1442,7 +1446,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showTorClientSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1520,6 +1524,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         }
                     })
                     showTranslationLanguageSettings -> MedicalTranslationLanguagesSettingsScreen(onBack = { showTranslationLanguageSettings = false; showSettingsMenu = true })
+                    showTorClientSettings -> TorClientSettingsScreen(onBack = { showTorClientSettings = false; showSettingsMenu = true })
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
                         onChange = onAppearanceChange,
@@ -1660,6 +1665,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showSettingsMenu = false },
                         onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
                         onManageTranslationLanguages = { showSettingsMenu = false; showTranslationLanguageSettings = true },
+                        onManageTorClients = { showSettingsMenu = false; showTorClientSettings = true },
                         onManageCredentialAppearance = { showSettingsMenu = false; showCredentialAppearanceEditor = true },
                         onManageDocumentEditing = { showSettingsMenu = false; showDocumentEditorCatalog = true },
                         onManageDocumentVisibility = { openDocumentVisibilityCatalog() },
@@ -3607,6 +3613,7 @@ private fun SettingsMenuScreen(
     documentPlacements: Map<String, String>,
     onManageApplicationAppearance: () -> Unit,
     onManageTranslationLanguages: () -> Unit,
+    onManageTorClients: () -> Unit,
     onManageCredentialAppearance: () -> Unit,
     onManageDocumentEditing: () -> Unit,
     onDocumentPlacementsChange: (Map<String, String>) -> Unit,
@@ -3650,6 +3657,12 @@ private fun SettingsMenuScreen(
             "Motyw kolorystyczny, godło oraz tła ekranów uruchamiania i logowania",
             Icons.Filled.Settings,
             onManageApplicationAppearance
+        )
+        ProfileActionCard(
+            "Klienci sieci Tor",
+            "Wybór i zarządzanie klientami Tor, w tym wbudowanym klientem oraz Orbotem",
+            Icons.Filled.Security,
+            onManageTorClients
         )
         ProfileActionCard(
             "Języki i tłumaczenia",
