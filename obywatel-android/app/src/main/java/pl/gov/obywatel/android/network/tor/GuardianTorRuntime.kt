@@ -43,6 +43,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 }
                 TorService.STATUS_STOPPING, TorService.STATUS_OFF -> {
                     socksPort = -1
+                    socksPorts = emptyList()
                     circuitEstablished = false
                     if (currentState != TorState.STOPPING) currentState = TorState.FAILED
                 }
@@ -76,6 +77,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         override fun onBindingDied(name: ComponentName?) {
             torService = null
             socksPort = -1
+            socksPorts = emptyList()
             currentState = TorState.FAILED
         }
 
