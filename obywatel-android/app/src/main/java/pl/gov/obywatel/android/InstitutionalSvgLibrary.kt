@@ -109,7 +109,7 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
             val payload = tor.open(url, TorDownloadKind.API).use { response ->
                 JSONObject(response.body.bufferedReader(Charsets.UTF_8).use { it.readText() })
             }
-            appendCommonsDiagnostic(context, "API_RESPONSE keys=${payload.keys().asSequence().toList()}")
+            appendCommonsDiagnostic(context, "API_RESPONSE keys=${payload.keys().asSequence().toList()} transport=${tor.diagnosticSnapshot()}")
             val apiError = payload.optJSONObject("error")
             if (apiError != null) {
                 val errorCode = apiError.optString("code", "unknown")
@@ -126,7 +126,7 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
             if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
             Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2), retryAfterMs ?: 0L))
         } catch (failure: Exception) {
-            appendCommonsDiagnostic(context, "API_EXCEPTION attempt=${attempt + 1} type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
+            appendCommonsDiagnostic(context, "API_EXCEPTION attempt=${attempt + 1} type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"} transport=${tor.diagnosticSnapshot()}")
             lastFailure = failure
             if (attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw failure
             Thread.sleep(commonsRetryDelayMs(attempt + 2))
@@ -160,6 +160,7 @@ private suspend fun discoverCommonsOpenSvgs(
     val seenTitles = linkedSetOf<String>()
     val deliveredTitles = hashSetOf<String>()
     val allCandidates = mutableListOf<CommonsSvgCandidate>()
+    val failedVerificationBatches = mutableListOf<List<String>>()
 
     suspend fun verifyAndDeliver(batch: List<String>) {
         if (batch.isEmpty() || allCandidates.size >= limit) return
@@ -168,8 +169,9 @@ private suspend fun discoverCommonsOpenSvgs(
         val response = try {
             commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         } catch (failure: Exception) {
-            appendCommonsDiagnostic(context, "VERIFY_BATCH_FAILED type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
-            onSearchProgress(seenTitles.size, "Weryfikacja metadanych: partia pominięta (" + (failure.message ?: "błąd API") + ")")
+            failedVerificationBatches.add(batch.toList())
+            appendCommonsDiagnostic(context, "VERIFY_BATCH_FAILED type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"} route=${TorDownloadServiceProvider.get(context).diagnosticSnapshot()} queuedForRetry=true")
+            onSearchProgress(seenTitles.size, "Weryfikacja metadanych: partia odłożona do ponownej próby (" + (failure.message ?: "błąd API") + ")")
             return
         }
         val pages = response.optJSONObject("query")?.optJSONObject("pages")
@@ -261,6 +263,18 @@ private suspend fun discoverCommonsOpenSvgs(
         }
     }
     if (pending.isNotEmpty() && allCandidates.size < limit) verifyAndDeliver(pending)
+    if (failedVerificationBatches.isNotEmpty() && allCandidates.size < limit) {
+        val retryBatches = failedVerificationBatches.toList()
+        failedVerificationBatches.clear()
+        appendCommonsDiagnostic(context, "VERIFY_RETRY_START batches=${retryBatches.size} titles=${retryBatches.sumOf { it.size }}")
+        retryBatches.forEachIndexed { index, batch ->
+            if (allCandidates.size < limit) {
+                appendCommonsDiagnostic(context, "VERIFY_RETRY_BATCH index=${index + 1} size=${batch.size}")
+                verifyAndDeliver(batch)
+            }
+        }
+        appendCommonsDiagnostic(context, "VERIFY_RETRY_COMPLETE remainingFailedBatches=${failedVerificationBatches.size} candidates=${allCandidates.size}")
+    }
     val finalCandidates = allCandidates.distinctBy { it.title }.take(limit)
     appendCommonsDiagnostic(context, "SEARCH_COMPLETE terms=${terms.size} uniqueSvgTitles=${seenTitles.size} candidates=${finalCandidates.size}")
     return finalCandidates
