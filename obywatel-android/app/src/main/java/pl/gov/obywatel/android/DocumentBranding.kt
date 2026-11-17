@@ -48,6 +48,8 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal data class BrandAsset(
     val id: String, val owner: String, val kind: String, val label: String, val file: String,
@@ -420,7 +422,16 @@ internal object DocumentBrandStore {
         val a = JSONArray()
         assets.filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
             .forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file); put("rights",x.rights); put("version",x.version); put("createdAt",x.createdAt); put("mimeType",x.mimeType) }) }
-        File(dir(context), INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+        val target = File(dir(context), INDEX)
+        val atomic = android.util.AtomicFile(target)
+        val output = atomic.startWrite()
+        try {
+            output.write(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+            atomic.finishWrite(output)
+        } catch (failure: Exception) {
+            atomic.failWrite(output)
+            throw failure
+        }
     }
     @Synchronized fun assignments(context: Context): List<BrandAssignment> = runCatching {
         val f = File(dir(context), ASSIGNMENTS_INDEX)
@@ -546,8 +557,8 @@ internal object DocumentBrandStore {
         return imageById(context, asset.id)
     }
     fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
-    fun fileBytes(context: Context, assetId: String): ByteArray? = runCatching {
-        val asset = list(context).firstOrNull { it.id == assetId } ?: return null
+    fun fileBytes(context: Context, assetId: String, knownAsset: BrandAsset? = null): ByteArray? = runCatching {
+        val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
         if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
             val id = context.resources.getIdentifier(name, "drawable", context.packageName)
@@ -611,7 +622,16 @@ internal object DocumentBrandStore {
                 else -> ".asset.enc"
             }
             val file = "$id$extension"
-            File(dir(context), file).writeBytes(crypt(bytes, true))
+            val target = File(dir(context), file)
+        val atomic = android.util.AtomicFile(target)
+        val output = atomic.startWrite()
+        try {
+            output.write(crypt(bytes, true))
+            atomic.finishWrite(output)
+        } catch (failure: Exception) {
+            atomic.failWrite(output)
+            throw failure
+        }
             restored[id] = BrandAsset(id, item.optString("owner").take(120), kind,
                 item.optString("label").take(180), file, item.optString("rights").take(2048),
                 item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()),
@@ -1209,7 +1229,7 @@ internal fun DocumentIdentityTemplate(
 @Composable
 internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null, readOnly: Boolean = false) {
     val context = LocalContext.current
-    var assignments by remember { mutableStateOf(DocumentBrandStore.assignments(context)) }
+    var assignments by remember { mutableStateOf(emptyList<BrandAssignment>()) }
     var owner by remember(fixedTarget) {
         mutableStateOf(if (fixedTarget == null) "Biblioteka użytkownika" else "legitymacja:$fixedTarget")
     }
@@ -1223,7 +1243,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     var assetEffectiveFrom by remember { mutableStateOf("") }
     var assetEffectiveUntil by remember { mutableStateOf("") }
     var assetPermittedKinds by remember { mutableStateOf("") }
-    var assets by remember { mutableStateOf(DocumentBrandStore.list(context)) }
+    var assets by remember { mutableStateOf(emptyList<BrandAsset>()) }
     var status by remember { mutableStateOf("") }
     var assetRevision by remember { mutableIntStateOf(0) }
     var search by remember { mutableStateOf("") }
@@ -1232,7 +1252,14 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     var uploadKindExpanded by remember { mutableStateOf(false) }
     val legitimacySettingsState = rememberLegitimacyPreviewSettings(fixedTarget ?: "asset-library")
     val availableKinds = DocumentBrandStore.assetKinds()
-    var expandedAssetKinds by remember { mutableStateOf(setOf("Godło", "Herb", "Tło dokumentu")) }
+    var expandedAssetKinds by remember { mutableStateOf(emptySet<String>()) }
+    LaunchedEffect(context) {
+        val initial = withContext(Dispatchers.IO) {
+            DocumentBrandStore.assignments(context) to DocumentBrandStore.list(context)
+        }
+        assignments = initial.first
+        assets = initial.second
+    }
     val filteredAssets = assets.filter { asset ->
         (kindFilter == "Wszystkie" || asset.kind == kindFilter) &&
             (search.isBlank() || listOf(asset.label, asset.owner, asset.kind, asset.file)
@@ -1421,7 +1448,11 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                         Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     if (expanded) grouped.forEachIndexed { index, asset ->
-                        val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context, asset.id) }
+                        val assetPreview by produceState<Bitmap?>(initialValue = null, asset.id, expanded) {
+                            value = if (expanded) withContext(Dispatchers.IO) {
+                                DocumentBrandStore.preview(context, asset.id)
+                            } else null
+                        }
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
