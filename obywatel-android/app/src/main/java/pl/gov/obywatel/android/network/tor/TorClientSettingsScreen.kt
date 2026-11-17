@@ -108,7 +108,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                             probeStatus[client.id] = "Sprawdzanie SOCKS i wyjścia Tor…"
                             scope.launch {
                                 val result = withContext(Dispatchers.IO) {
-                                    if (client.id == "orbot-local" && !TorEndpointProbe.isOrbotInstalled(context)) false
+                                    if (client.id.startsWith("orbot-") && (!TorEndpointProbe.isOrbotInstalled(context) || TorDownloadServiceProvider.isEmbeddedEndpoint(client.endpoint()))) false
                                     else TorEndpointProbe.isTor(client.endpoint(), force = true)
                                 }
                                 probeStatus[client.id] = if (result) "Połączenie działa — potwierdzono wyjście przez Tor."
