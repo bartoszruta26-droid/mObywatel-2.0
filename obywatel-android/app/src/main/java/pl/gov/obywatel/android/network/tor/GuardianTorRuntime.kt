@@ -145,6 +145,14 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         }.distinctBy { it.port }
     }
 
+    /**
+     * Extra listeners explicitly configured with Tor stream-isolation flags.
+     * The primary SOCKS listener remains available as a compatibility/fallback endpoint,
+     * but is excluded from round-robin when isolated listeners are active.
+     */
+    fun isolatedProxyEndpoints(): List<TorProxyEndpoint> =
+        proxyEndpoints().filter { it.port in 19051..19080 }
+
     @Synchronized
     private fun publishReady() {
         if (!circuitEstablished) return
