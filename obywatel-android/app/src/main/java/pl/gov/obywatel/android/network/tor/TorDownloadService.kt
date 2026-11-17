@@ -22,7 +22,13 @@ class TorDownloadService(
             val external = TorClientRegistry.load(context).filter { profile ->
                 profile.enabled && profile.id !in setOf("guardian-embedded", "guardian-isolated-1", "guardian-isolated-2", "guardian-isolated-3", "guardian-isolated-4")
             }
-            embedded + external
+            val all = embedded + external
+            val preferredId = TorClientRegistry.activeId(context)
+            val preferred = all.firstOrNull { profile ->
+                profile.id == preferredId ||
+                    (preferredId == "guardian-embedded" && profile.id.startsWith("guardian-embedded-"))
+            }
+            if (preferred == null) all else listOf(preferred) + all.filter { it.id != preferred.id }
         },
         isReady = { profile ->
             val endpoint = runCatching { profile.endpoint() }.getOrNull()
