@@ -67,7 +67,12 @@ object TorDownloadServiceProvider {
         val activeRuntime = runtime ?: GuardianTorRuntime(app).also { runtime = it }
         val activeClientId = TorClientRegistry.activeId(app)
         val orbotInstalled = TorEndpointProbe.isOrbotInstalled(app)
-        if (shouldStartGuardianForSelectedClient(activeClientId, orbotInstalled)) {
+        if (!shouldStartGuardianForSelectedClient(activeClientId, orbotInstalled)) {
+            // Release any Guardian listener before handing the standard local SOCKS
+            // port to Orbot. If Orbot is unavailable, TorDownloadService starts
+            // Guardian again only after the Orbot probe fails.
+            if (activeRuntime.state != TorState.STOPPED) activeRuntime.stop()
+        } else {
             if (activeRuntime.state == TorState.STOPPED || activeRuntime.state == TorState.FAILED) {
                 activeRuntime.start()
             }
