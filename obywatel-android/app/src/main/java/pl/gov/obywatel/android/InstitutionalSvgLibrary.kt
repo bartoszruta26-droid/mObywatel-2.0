@@ -354,9 +354,15 @@ internal fun distinctCommonsCandidates(
         val assetId = commonsAssetId(candidate.title)
         val canonicalUrl = candidate.url.substringBefore('#').substringBefore('?')
             .trimEnd('/').lowercase(java.util.Locale.ROOT)
-        canonicalUrl.isNotBlank() &&
-            seenAssetIds.add(assetId) &&
-            seenDownloadUrls.add(canonicalUrl)
+        if (canonicalUrl.isBlank()) {
+            false
+        } else {
+            // Record both identities even when one already exists. Avoid short-circuiting:
+            // a skipped alias must still reserve its URL against a later differently named alias.
+            val newAsset = seenAssetIds.add(assetId)
+            val newUrl = seenDownloadUrls.add(canonicalUrl)
+            newAsset && newUrl
+        }
     }
 }
 
