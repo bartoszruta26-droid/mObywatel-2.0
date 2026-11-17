@@ -66,7 +66,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Ważne — bezpieczeństwo połączenia", fontWeight = FontWeight.Bold)
-                Text("Lista przyjmuje wyłącznie lokalne adresy pętli zwrotnej (127.0.0.1, localhost, ::1). Nie dodawaj przypadkowych publicznych proxy SOCKS: sam adres proxy nie potwierdza, że operator korzysta z Tor ani że nie rejestruje ruchu. Wbudowany klient łączy się z publiczną siecią Tor.",
+                Text("Lista przyjmuje wyłącznie lokalne adresy pętli zwrotnej (127.0.0.1, localhost, ::1). Nie dodawaj przypadkowych publicznych proxy SOCKS: sam adres proxy nie potwierdza, że operator korzysta z Tor ani że nie rejestruje ruchu. Wbudowany klient Guardian Project jest otwartym klientem i łączy się z publiczną siecią Tor. Profile Orbot i własne profile są obecnie zapisywane jako konfiguracja do kolejnego etapu integracji.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -124,7 +124,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                 clients.add(profile)
                 name = ""
                 persist()
-                notice = "Dodano klienta. Wybierz go na liście, gdy usługa Tor będzie gotowa."
+                notice = "Dodano profil. Jego wybór zapisano; podłączenie go do transportu pobierania nastąpi w kolejnym etapie."
             }.onFailure { error = it.message ?: "Nie udało się dodać klienta." }
         }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj do listy") }
         Text("Orbot: po instalacji włącz tryb zaawansowany (Power User Mode), uruchom Tor i pozostaw lokalny port SOCKS5 9050. Aplikacja nie uruchamia ani nie konfiguruje Orbot automatycznie.",
