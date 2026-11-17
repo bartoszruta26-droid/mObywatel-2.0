@@ -189,13 +189,13 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         val torrc = TorService.getTorrc(appContext)
         val existing = if (torrc.exists()) torrc.readText() else ""
         val filtered = existing.lineSequence().filterNot { line ->
-            val port = Regex("""^\\s*SocksPort\\s+127[.]0[.]0[.]1:(\\d+)""").find(line)?.groupValues?.getOrNull(1)?.toIntOrNull()
+            val port = Regex("""^\s*SocksPort\s+127[.]0[.]0[.]1:(\d+)""").find(line)?.groupValues?.getOrNull(1)?.toIntOrNull()
             (port != null && port in 19051..19080) || line.trim().startsWith("MaxCircuitDirtiness ")
         }.toList()
         val listeners = availablePorts.map { port ->
             "SocksPort 127.0.0.1:$port IsolateClientAddr IsolateDestAddr IsolateDestPort"
         }
-        torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\\n", postfix = "\\n"))
+        torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\n", postfix = "\n"))
     }
     private fun unregisterReceiverIfNeeded() {
         if (receiverRegistered) {
