@@ -22,7 +22,7 @@ val hasStableSigning = listOf(
 
 android {
     namespace = "pl.gov.obywatel.android"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "pl.gov.obywatel.android.prototype"
