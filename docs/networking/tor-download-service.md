@@ -41,26 +41,18 @@ and real-device behaviour still require instrumentation tests before release.
 - Callers must close `TorHttpResponse` with `use { }`.
 - The service does not save files, use FIFO, or fall back to direct HTTP.
 
-## Follow-up integration
-
-1. Add instrumentation tests for TorService binding, bootstrap, stop/restart, and SOCKS availability.
-2. Add an end-to-end test proving observed egress is a Tor exit, without logging sensitive URLs.
-3. Migrate Wikimedia Commons API and SVG downloads to an injected transport.
-4. Add a settings surface for AUTO / DIRECT / TOR only after runtime and fallback policy are fully tested.
-   TOR mode must fail closed; AUTO fallback must be explicit and observable.
-
 
 ## Klienci Tor i ustawienia aplikacji
 
 Menu Ustawienia zawiera ekran „Klienci sieci Tor”. Rejestr profili jest przechowywany w prywatnych preferencjach aplikacji i obejmuje:
 - wbudowany klient Guardian Project (domyślny);
-- profil lokalnego SOCKS5 Orbot (domyślnie `127.0.0.1:9050`);
+- profil lokalnego SOCKS5 Orbot (domyślnie `127.0.0.1:9150`, aby nie kolidował z Guardian);
 - profile własne z nazwą, adresem i portem;
 - wybór preferowanego profilu, aktywowanie/dezaktywowanie i usuwanie profili własnych.
 
 Celowo dopuszczane są wyłącznie adresy loopback (`127.0.0.1`, `localhost`, `::1`). Nie ma obsługi dowolnego zdalnego publicznego SOCKS: operator takiego proxy może obserwować metadane połączeń, a sam endpoint nie dowodzi, że ruch trafia do sieci Tor. Publiczna sieć Tor jest osiągana przez uruchomionego klienta Tor, nie przez anonimowy, współdzielony adres SOCKS.
 
-**Stan integracji:** wbudowany klient Guardian Project pozostaje implementacją runtime w tej gałęzi. Ekran i rejestr profili są już dodane, ale wybór profilu zewnętrznego (Orbot) nie jest jeszcze podłączony do fabryki runtime/transportu. Włączenie profilu w ustawieniach nie oznacza jeszcze, że żądania są przez niego kierowane. Następny etap: adapter zewnętrznego SOCKS5 z kontrolą gotowości i testem braku wycieku DNS, następnie wybór runtime na podstawie aktywnego profilu.
+**Stan integracji:** Guardian Project jest klientem bazowym, a profile zewnętrzne są dopuszczane do puli dopiero po pozytywnym teście SOCKS5 i `IsTor=true` z `check.torproject.org`. Orbot dodatkowo wymaga zainstalowanego pakietu `org.torproject.android`. Wybór preferowanego profilu wpływa na kolejność wyboru; pula używa round-robin, a niedostępny Orbot jest pomijany. Wszystkie połączenia pozostają wymuszone przez lokalny SOCKS — brak przejścia na sieć bezpośrednią.
 
 
 ## Pula lokalnych portów SOCKS i rozdzielanie pobrań
@@ -78,7 +70,7 @@ Publiczne przekaźniki Tor i mosty nie są publicznymi serwerami SOCKS. Przekaź
 ## Integracja Orbot, test wyjścia i rotacja obwodów
 
 - Wbudowany Guardian Project Tor jest wymaganym klientem bazowym. Runtime czeka na status pierwszego zbudowanego obwodu i udostępnia wyłącznie aktywne lokalne porty SOCKS.
-- Orbot jest profilem zewnętrznym na loopback SOCKS5 (domyślny port SOCKS 9050; gdy Guardian zajmie ten port, użytkownik może skonfigurować Orbot na 9150). Samo otwarte gniazdo nie wystarcza: aplikacja wykonuje żądanie przez wskazany SOCKS do `https://check.torproject.org/api/ip` i wymaga `IsTor=true`. Profil Orbot jest pomijany, gdy pakiet `org.torproject.android` nie jest zainstalowany, port nie odpowiada albo test wyjścia nie potwierdza Tor.
+- Orbot jest profilem zewnętrznym na loopback SOCKS5 `127.0.0.1:9150`. Samo otwarte gniazdo nie wystarcza: aplikacja wykonuje żądanie przez wskazany SOCKS do `https://check.torproject.org/api/ip` i wymaga `IsTor=true`. Profil Orbot jest pomijany, gdy pakiet `org.torproject.android` nie jest zainstalowany, port nie odpowiada albo test wyjścia nie potwierdza Tor.
 - Gdy zewnętrzny SOCKS przestaje przyjmować połączenia, profil jest czasowo wyłączany z puli, a kolejne żądanie trafia do Guardian. Nie ma bezpośredniego połączenia awaryjnego. Błędy HTTP serwera docelowego nie są mylone z awarią Orbot.
 - Test Orbot jest dostępny w ekranie Ustawienia → Klienci sieci Tor. Najlepiej uruchomić Orbot przed pierwszym uruchomieniem wbudowanego Guardiana, aby Orbot zajął standardowy port 9050, a Guardian dobrał wolny port automatycznie. Jeżeli Guardian już zajmuje 9050, użytkownik może ustawić Orbot na 9150 i dodać drugi lokalny profil. Aplikacja nie próbuje uruchamiać chronionej usługi VPN Orbot z pominięciem uprawnień systemowych.
 - Wbudowany Guardian otrzymuje `MaxCircuitDirtiness 480`: po 8 minutach Tor nie przypina nowych strumieni do zbyt starego obwodu. Aktywne połączenie TCP pozostaje na dotychczasowym obwodzie do zakończenia. To celowe; nie przenosimy aktywnego strumienia między obwodami.
@@ -87,7 +79,7 @@ Publiczne przekaźniki Tor i mosty nie są publicznymi serwerami SOCKS. Przekaź
 
 ## Pobieranie SVG przez Tor i wznawianie
 
-- Zapytania API Commons i treść plików SVG przechodzą przez `TorDownloadService`; nie pozostał bezpośredni `HttpURLConnection` w ścieżce pobierania katalogu.
+- Zapytania API Commons i treść plików SVG przechodzą przez `TorDownloadService`; żądania katalogu i plików nie korzystają z bezpośredniego transportu HTTP.
 - Plik częściowy jest przechowywany tymczasowo w prywatnym katalogu cache aplikacji jako `.part`, wraz z ETag/Last-Modified. To umożliwia wznowienie po przerwaniu procesu; po zatwierdzeniu zasobu plik częściowy i metadane są usuwane.
 - Wznowienie używa `Range` i `If-Range`; dopisywanie bajtów następuje wyłącznie po otrzymaniu prawidłowego `206 Partial Content` i zgodnego `Content-Range`. Przy braku walidatora albo niezgodnej odpowiedzi pobieranie zaczyna się od początku.
 - Po pobraniu aplikacja sprawdza limit rozmiaru, strukturę XML/SVG, niedozwolone elementy i SHA-256. Suma jest zapisywana w metadanych zasobu, a istniejące zasoby są ponownie haszowane przed uznaniem ich za już pobrane.
