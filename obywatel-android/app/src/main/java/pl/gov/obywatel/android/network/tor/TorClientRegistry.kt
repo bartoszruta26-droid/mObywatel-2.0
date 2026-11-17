@@ -25,6 +25,7 @@ object TorClientRegistry {
     private const val PREFS = "tor_client_registry"
     private const val KEY_CLIENTS = "clients"
     private const val KEY_ACTIVE = "active_client_id"
+    private const val KEY_ORBOT_MIGRATION = "orbot_profile_migration_v1"
 
     fun load(context: Context): List<TorClientProfile> {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -41,7 +42,7 @@ object TorClientRegistry {
             save(context, defaults)
             return defaults
         }
-        return runCatching {
+        val loaded = runCatching {
             val array = JSONArray(raw)
             buildList {
                 for (index in 0 until array.length()) {
@@ -57,6 +58,17 @@ object TorClientRegistry {
                 }
             }
         }.getOrDefault(emptyList())
+        if (!prefs.getBoolean(KEY_ORBOT_MIGRATION, false)) {
+            val migrated = loaded.map { profile ->
+                if (profile.id == "orbot-local" && profile.name.startsWith("Orbot")) {
+                    profile.copy(port = if (profile.port == 9050) 9150 else profile.port, enabled = true)
+                } else profile
+            }
+            save(context, migrated)
+            prefs.edit().putBoolean(KEY_ORBOT_MIGRATION, true).apply()
+            return migrated
+        }
+        return loaded
     }
 
     fun save(context: Context, clients: List<TorClientProfile>) {
