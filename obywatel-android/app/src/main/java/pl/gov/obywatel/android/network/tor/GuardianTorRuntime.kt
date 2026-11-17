@@ -20,7 +20,6 @@ import org.torproject.jni.TorService
  */
 class GuardianTorRuntime(context: Context) : TorRuntime {
     private val appContext = context.applicationContext
-    private companion object { val ADDITIONAL_SOCKS_PORTS = listOf(19051, 19052, 19053, 19054) }
     @Volatile private var currentState: TorState = TorState.STOPPED
     @Volatile private var torService: TorService? = null
     @Volatile private var socksPort: Int = -1
@@ -170,20 +169,21 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     }
 
     private fun configureIsolatedSocksListeners() {
-        // TorService creates its default SOCKSPort itself (normally 9050). Extra listeners
-        // are supplied through its torrc file and use Tor's stream-isolation flags.
+        // Reserve a small deterministic range, but skip ports already used by other local services.
+        val availablePorts = (19051..19080).filter { candidate ->
+            runCatching { java.net.ServerSocket(candidate).use { true } }.getOrDefault(false)
+        }.take(4)
         val torrc = TorService.getTorrc(appContext)
         val existing = if (torrc.exists()) torrc.readText() else ""
         val filtered = existing.lineSequence().filterNot { line ->
-            ADDITIONAL_SOCKS_PORTS.any { port -> line.trim().startsWith("SocksPort 127.0.0.1:$port ") } ||
-                line.trim().startsWith("MaxCircuitDirtiness ")
+            val port = Regex("^\\s*SocksPort\\s+127\\.0\.0\.1:(\\d+)").find(line)?.groupValues?.getOrNull(1)?.toIntOrNull()
+            (port != null && port in 19051..19080) || line.trim().startsWith("MaxCircuitDirtiness ")
         }.toList()
-        val listeners = ADDITIONAL_SOCKS_PORTS.joinToString(separator = "\n") { port ->
+        val listeners = availablePorts.map { port ->
             "SocksPort 127.0.0.1:$port IsolateClientAddr IsolateDestAddr IsolateDestPort"
         }
         torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\n", postfix = "\n"))
     }
-
     private fun unregisterReceiverIfNeeded() {
         if (receiverRegistered) {
             runCatching { appContext.unregisterReceiver(statusReceiver) }
