@@ -61,7 +61,7 @@ Wbudowany `GuardianTorRuntime` uruchamia jeden proces Tor z portem podstawowym w
 
 Każdy dodatkowy listener używa flag `IsolateClientAddr`, `IsolateDestAddr` i `IsolateDestPort`. Tor domyślnie utrzymuje odrębne grupy sesji dla różnych portów SOCKS. Runtime odczytuje aktywne listenery przez `GETINFO net/listeners/socks` i publikuje wyłącznie porty, które faktycznie działają.
 
-`TorDownloadService` wybiera port dla każdego żądania w trybie round-robin, z uwzględnieniem preferowanego klienta z ustawień. Klasyfikacja `TorDownloadKind` umożliwia także jawne przypisania typu pliku do profilu przez `TorDownloadRouter` z polityką `PINNED_BY_KIND`.
+`TorDownloadService` wybiera w trybie round-robin przede wszystkim dodatkowe listenery Guardian skonfigurowane z flagami izolacji. Podstawowy port Guardian pozostaje ścieżką awaryjną, gdy żaden dodatkowy listener nie został uruchomiony. Wybór uwzględnia preferowanego klienta z ustawień. Klasyfikacja `TorDownloadKind` umożliwia także jawne przypisania typu pliku do profilu przez `TorDownloadRouter` z polityką `PINNED_BY_KIND`.
 
 **Granica izolacji:** dodatkowe porty Guardian są odizolowanymi grupami strumieni jednego procesu Tor, a nie osobnymi demonami z niezależnymi guardami. Nie gwarantują innego adresu wyjściowego dla każdego pliku. Orbot jest odrębnym procesem Tor i może wnosić niezależną ścieżkę, jeśli test wyjścia potwierdzi, że port rzeczywiście należy do Orbot.
 
