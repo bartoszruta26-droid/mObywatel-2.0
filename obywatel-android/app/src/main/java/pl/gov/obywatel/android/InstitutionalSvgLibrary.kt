@@ -105,23 +105,28 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
         waitForCommonsRequestSlot()
         try {
             val url = "https://commons.wikimedia.org/w/api.php?$params&maxlag=5"
+            appendCommonsDiagnostic(context, "API_REQUEST attempt=${attempt + 1} params=${params.take(900)}")
             val payload = tor.open(url, TorDownloadKind.API).use { response ->
                 JSONObject(response.body.bufferedReader(Charsets.UTF_8).use { it.readText() })
             }
+            appendCommonsDiagnostic(context, "API_RESPONSE keys=${payload.keys().asSequence().toList()}")
             val apiError = payload.optJSONObject("error")
             if (apiError != null) {
                 val errorCode = apiError.optString("code", "unknown")
                 val errorInfo = apiError.optString("info", "brak szczegółów")
+                appendCommonsDiagnostic(context, "API_ERROR code=$errorCode info=${errorInfo.take(700)}")
                 throw java.io.IOException("Wikimedia Commons API [$errorCode]: $errorInfo")
             }
             return payload
         } catch (failure: TorHttpException) {
             val retryAfterMs = retryAfterMillis(failure.retryAfter)
             val retryable = failure.httpCode == 429 || failure.httpCode == 503 || failure.httpCode == 502 || failure.httpCode == 504
+            appendCommonsDiagnostic(context, "API_HTTP_ERROR attempt=${attempt + 1} code=${failure.httpCode} retryAfterMs=$retryAfterMs")
             lastFailure = CommonsHttpException(failure.httpCode, retryAfterMs)
             if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
             Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2), retryAfterMs ?: 0L))
         } catch (failure: Exception) {
+            appendCommonsDiagnostic(context, "API_EXCEPTION attempt=${attempt + 1} type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
             lastFailure = failure
             if (attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw failure
             Thread.sleep(commonsRetryDelayMs(attempt + 2))
@@ -159,9 +164,11 @@ private suspend fun discoverCommonsOpenSvgs(
     suspend fun verifyAndDeliver(batch: List<String>) {
         if (batch.isEmpty() || allCandidates.size >= limit) return
         val encoded = java.net.URLEncoder.encode(batch.joinToString("|"), "UTF-8")
+        appendCommonsDiagnostic(context, "VERIFY_BATCH size=${batch.size} first=${batch.first()} last=${batch.last()}")
         val response = try {
             commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         } catch (failure: Exception) {
+            appendCommonsDiagnostic(context, "VERIFY_BATCH_FAILED type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
             onSearchProgress(seenTitles.size, "Weryfikacja metadanych: partia pominięta (" + (failure.message ?: "błąd API") + ")")
             return
         }
@@ -169,12 +176,18 @@ private suspend fun discoverCommonsOpenSvgs(
             ?: throw java.io.IOException("Wikimedia Commons nie zwróciło sekcji query.pages podczas weryfikacji SVG.")
         val candidates = mutableListOf<CommonsSvgCandidate>()
         val keys = pages.keys()
+        var pagesSeen = 0
+        var noImageInfo = 0
+        var nonSvgMime = 0
+        var invalidUrl = 0
         while (keys.hasNext() && allCandidates.size + candidates.size < limit) {
             val page = pages.optJSONObject(keys.next()) ?: continue
+            pagesSeen++
             val title = page.optString("title")
             if (!deliveredTitles.add(title)) continue
-            val info = page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
-            if (info.optString("mime") != "image/svg+xml") continue
+            val info = page.optJSONArray("imageinfo")?.optJSONObject(0)
+            if (info == null) { noImageInfo++; appendCommonsDiagnostic(context, "VERIFY_NO_IMAGEINFO title=$title"); continue }
+            if (info.optString("mime") != "image/svg+xml") { nonSvgMime++; appendCommonsDiagnostic(context, "VERIFY_NON_SVG title=$title mime=${info.optString("mime")}"); continue }
             val meta = info.optJSONObject("extmetadata") ?: JSONObject()
             fun value(key: String) = meta.optJSONObject(key)?.optString("value").orEmpty()
                 .replace(Regex("<[^>]*>"), " ").replace("&nbsp;", " ").trim()
@@ -182,13 +195,14 @@ private suspend fun discoverCommonsOpenSvgs(
             // Zachowujemy metadane Commons w manifeście, ale pobieramy każdy poprawny SVG.
             val license = value("LicenseShortName")
             val url = info.optString("url")
-            if (!url.startsWith("https://upload.wikimedia.org/")) continue
+            if (!url.startsWith("https://upload.wikimedia.org/")) { invalidUrl++; appendCommonsDiagnostic(context, "VERIFY_INVALID_URL title=$title url=${url.take(250)}"); continue }
             val pageUrl = "https://commons.wikimedia.org/wiki/" +
                 java.net.URLEncoder.encode(title.replace(' ', '_'), "UTF-8")
             candidates.add(CommonsSvgCandidate(
                 title, url, pageUrl, license, value("LicenseUrl"), value("Artist"), value("Restrictions")
             ))
         }
+        appendCommonsDiagnostic(context, "VERIFY_RESULT pages=$pagesSeen noImageInfo=$noImageInfo nonSvgMime=$nonSvgMime invalidUrl=$invalidUrl candidates=${candidates.size}")
         if (candidates.isNotEmpty()) {
             allCandidates.addAll(candidates)
             onSearchProgress(seenTitles.size, "Zweryfikowano " + allCandidates.size + "; przekazuję partię do pobierania")
@@ -212,11 +226,13 @@ private suspend fun discoverCommonsOpenSvgs(
                 )
                 val searchArray = response.optJSONObject("query")?.optJSONArray("search")
                     ?: throw java.io.IOException("Wikimedia Commons nie zwróciło listy wyników wyszukiwania.")
+                appendCommonsDiagnostic(context, "SEARCH term=$term expression=$expression results=${searchArray.length()}")
                 if (searchArray.length() > 0) {
                     results = searchArray
                     break
                 }
             } catch (failure: Exception) {
+                appendCommonsDiagnostic(context, "SEARCH_FAILED term=$term expression=$expression type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
                 lastSearchFailure = failure
             }
         }
@@ -236,6 +252,7 @@ private suspend fun discoverCommonsOpenSvgs(
                 }
             }
         }
+        appendCommonsDiagnostic(context, "TERM_SUMMARY term=$term uniqueSvgTitles=${seenTitles.size} pending=${pending.size} verified=${allCandidates.size}")
         onSearchProgress(seenTitles.size, term)
         // Verify and dispatch a first small batch while discovery is still running.
         if (pending.size >= 10) {
@@ -244,7 +261,9 @@ private suspend fun discoverCommonsOpenSvgs(
         }
     }
     if (pending.isNotEmpty() && allCandidates.size < limit) verifyAndDeliver(pending)
-    return allCandidates.distinctBy { it.title }.take(limit)
+    val finalCandidates = allCandidates.distinctBy { it.title }.take(limit)
+    appendCommonsDiagnostic(context, "SEARCH_COMPLETE terms=${terms.size} uniqueSvgTitles=${seenTitles.size} candidates=${finalCandidates.size}")
+    return finalCandidates
 }
 
 private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): String {
@@ -353,6 +372,21 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
 
 private const val COMMONS_DOWNLOAD_LIST_FILE = "commons-svg-download-list.json"
 private const val COMMONS_DOWNLOAD_REPORT_FILE = "commons-svg-download-report.json"
+private const val COMMONS_DIAGNOSTIC_LOG_FILE = "commons-svg-diagnostic.log"
+private val commonsDiagnosticLock = Any()
+private fun appendCommonsDiagnostic(context: Context, message: String) {
+    synchronized(commonsDiagnosticLock) {
+        val stamp = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", java.util.Locale.ROOT).format(java.util.Date())
+        FileOutputStream(context.getFileStreamPath(COMMONS_DIAGNOSTIC_LOG_FILE), true).bufferedWriter(Charsets.UTF_8).use {
+            it.append(stamp).append(" ").append(message.replace("\\n", " ").take(2000)).newLine()
+        }
+    }
+}
+private fun resetCommonsDiagnostic(context: Context) {
+    synchronized(commonsDiagnosticLock) {
+        context.getFileStreamPath(COMMONS_DIAGNOSTIC_LOG_FILE).writeText("Diagnostyka Wikimedia Commons SVG\\n", Charsets.UTF_8)
+    }
+}
 
 private fun writeCommonsJson(context: Context, fileName: String, value: String) {
     val atomic = android.util.AtomicFile(context.getFileStreamPath(fileName))
@@ -568,6 +602,22 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     var progressCurrent by remember { mutableIntStateOf(0) }
     var progressTotal by remember { mutableIntStateOf(0) }
     var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
+    val diagnosticLogLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        if (uri != null) {
+            busy = "diagnostic-export"
+            scope.launch {
+                val result = withContext(Dispatchers.IO) { runCatching {
+                    val logFile = context.getFileStreamPath(COMMONS_DIAGNOSTIC_LOG_FILE)
+                    require(logFile.isFile) { "Brak logu. Najpierw uruchom wyszukiwanie SVG." }
+                    context.contentResolver.openOutputStream(uri)?.use { output -> logFile.inputStream().use { it.copyTo(output) } }
+                        ?: error("Nie można zapisać pliku logu.")
+                    logFile.length()
+                } }
+                status = result.fold({ "Wyeksportowano log diagnostyczny (${it} B)." }, { "Błąd eksportu logu: ${it.message ?: "nieznany błąd"}" })
+                busy = null
+            }
+        }
+    }
     val zipLauncher=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if(uri!=null) {
             busy="zip"
@@ -651,6 +701,8 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                             var totalFailed = 0
                             var totalAttempts = 0
                             var processed = 0
+                            resetCommonsDiagnostic(context)
+                            appendCommonsDiagnostic(context, "SEARCH_START limit=200 transport=Tor")
                             writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, JSONArray().toString())
                             val candidates = discoverCommonsOpenSvgs(
                                 context,
@@ -701,6 +753,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                     )
                                 }
                             )
+                            appendCommonsDiagnostic(context, "DOWNLOAD_SUMMARY found=$totalFound downloaded=$totalDownloaded alreadyPresent=$totalAlreadyPresent failed=$totalFailed attempts=$totalAttempts")
                             withContext(Dispatchers.Main) {
                                 progressCurrent = processed
                                 progressTotal = totalFound
@@ -759,6 +812,9 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             },
             modifier = Modifier.fillMaxWidth()
         ) { Text(if (busy == "resume") "Wznawianie…" else "Wznów nieudane / brakujące pobrania") }
+        OutlinedButton(enabled = busy == null, onClick = { diagnosticLogLauncher.launch("commons-svg-diagnostic.log") }, modifier = Modifier.fillMaxWidth()) {
+            Text("Eksportuj log wyszukiwania SVG")
+        }
         OutlinedButton(enabled=busy==null && DocumentBrandStore.list(context).any { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
             onClick={ zipLauncher.launch("institutional-svg-assets.zip") },modifier=Modifier.fillMaxWidth()) {
             Text(if(busy=="zip") "Tworzenie ZIP…" else "Spakuj pobrane SVG do ZIP")
