@@ -37,7 +37,7 @@ object TorClientRegistry {
                 TorClientProfile("guardian-isolated-2", "Wbudowany Tor — port izolowany 2", "127.0.0.1", 19052),
                 TorClientProfile("guardian-isolated-3", "Wbudowany Tor — port izolowany 3", "127.0.0.1", 19053),
                 TorClientProfile("guardian-isolated-4", "Wbudowany Tor — port izolowany 4", "127.0.0.1", 19054),
-                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9150, true)
+                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9050, true)
             )
             save(context, defaults)
             return defaults
@@ -61,7 +61,7 @@ object TorClientRegistry {
         if (!prefs.getBoolean(KEY_ORBOT_MIGRATION, false)) {
             val migrated = loaded.map { profile ->
                 if (profile.id == "orbot-local" && profile.name.startsWith("Orbot")) {
-                    profile.copy(port = if (profile.port == 9050) 9150 else profile.port, enabled = true)
+                    profile.copy(enabled = true)
                 } else profile
             }
             save(context, migrated)
