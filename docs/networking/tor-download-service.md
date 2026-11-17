@@ -52,12 +52,12 @@ Menu Ustawienia zawiera ekran „Klienci sieci Tor”. Rejestr profili jest prze
 
 Celowo dopuszczane są wyłącznie adresy loopback (`127.0.0.1`, `localhost`, `::1`). Nie ma obsługi dowolnego zdalnego publicznego SOCKS: operator takiego proxy może obserwować metadane połączeń, a sam endpoint nie dowodzi, że ruch trafia do sieci Tor. Publiczna sieć Tor jest osiągana przez uruchomionego klienta Tor, nie przez anonimowy, współdzielony adres SOCKS.
 
-**Stan integracji:** Guardian Project jest klientem bazowym, a profile zewnętrzne są dopuszczane do puli dopiero po pozytywnym teście SOCKS5 i `IsTor=true` z `check.torproject.org`. Orbot dodatkowo wymaga zainstalowanego pakietu `org.torproject.android`. Wybór preferowanego profilu wpływa na kolejność wyboru; pula używa round-robin, a niedostępny Orbot jest pomijany. Wszystkie połączenia pozostają wymuszone przez lokalny SOCKS — brak przejścia na sieć bezpośrednią.
+**Stan integracji:** Guardian Project jest klientem zapasowym, a profile zewnętrzne są dopuszczane do puli dopiero po pozytywnym teście SOCKS5 i `IsTor=true` z `check.torproject.org`. Orbot dodatkowo wymaga zainstalowanego pakietu `org.torproject.android`. Wybór preferowanego profilu wpływa na kolejność wyboru; pula używa round-robin, a niedostępny Orbot jest pomijany. Wszystkie połączenia pozostają wymuszone przez lokalny SOCKS — brak przejścia na sieć bezpośrednią.
 
 
 ## Pula lokalnych portów SOCKS i rozdzielanie pobrań
 
-Wbudowany `GuardianTorRuntime` uruchamia jeden proces Tor z podstawowym portem wybieranym dynamicznie przez TorService oraz maksymalnie czterema dodatkowymi listenerami SOCKS5 z zakresu 19051–19080. Gdy wybrano Orbot, Guardian jest zatrzymywany przed użyciem jego lokalnego SOCKS; po awarii Orbot Guardian uruchamia się ponownie i TorService wybiera wolny port. Dodatkowe porty są wybierane z zakresu 19051–19080; zajęte porty są pomijane, aby nie blokować startu całego klienta.
+Wbudowany `GuardianTorRuntime` uruchamia jeden proces Tor z podstawowym portem wybieranym dynamicznie przez TorService oraz maksymalnie czterema dodatkowymi listenerami SOCKS5 z zakresu 19051–19080. Gdy wybrano Orbot, Guardian jest zatrzymywany przed użyciem jego lokalnego SOCKS; po awarii Orbot Guardian uruchamia się ponownie i TorService wybiera wolny port. Zajęte porty listenerów izolowanych są pomijane, aby nie blokować startu całego klienta.
 
 Każdy dodatkowy listener używa flag `IsolateClientAddr`, `IsolateDestAddr` i `IsolateDestPort`. Tor domyślnie utrzymuje odrębne grupy sesji dla różnych portów SOCKS. Runtime odczytuje aktywne listenery przez `GETINFO net/listeners/socks` i publikuje wyłącznie porty, które faktycznie działają.
 
@@ -69,7 +69,7 @@ Publiczne przekaźniki Tor i mosty nie są publicznymi serwerami SOCKS. Przekaź
 
 ## Integracja Orbot, test wyjścia i rotacja obwodów
 
-- Wbudowany Guardian Project Tor jest wymaganym klientem bazowym. Runtime czeka na status pierwszego zbudowanego obwodu i udostępnia wyłącznie porty SOCKS potwierdzone jako aktywne przez próbę połączenia TCP.
+- Wbudowany Guardian Project Tor jest klientem zapasowym. Runtime czeka na status pierwszego zbudowanego obwodu i udostępnia wyłącznie porty SOCKS potwierdzone jako aktywne przez próbę połączenia TCP.
 - Orbot jest profilem zewnętrznym na loopback SOCKS5 `127.0.0.1:9050` (domyślna konfiguracja Orbot). Samo otwarte gniazdo nie wystarcza: aplikacja wykonuje żądanie przez wskazany SOCKS do `https://check.torproject.org/api/ip` i wymaga `IsTor=true`. Profil Orbot jest pomijany, gdy pakiet `org.torproject.android` nie jest zainstalowany, port nie odpowiada albo test wyjścia nie potwierdza Tor.
 - Gdy zewnętrzny SOCKS przestaje przyjmować połączenia, profil jest czasowo wyłączany z puli, a Guardian jest uruchamiany na żądanie jako zapasowy klient. Nie ma bezpośredniego połączenia awaryjnego. Błędy HTTP serwera docelowego nie są mylone z awarią Orbot.
 - Test Orbot jest dostępny w ekranie Ustawienia → Klienci sieci Tor. Domyślny profil aplikacji wskazuje `127.0.0.1:9050`. Guardian jest zatrzymywany po wybraniu Orbot i uruchamiany ponownie dopiero wtedy, gdy Orbot jest niedostępny lub wybrano Guardian. Jeżeli użytkownik zmieni port SOCKS w Orbot, musi podać ten sam port w profilu aplikacji. Aplikacja nie próbuje uruchamiać chronionej usługi VPN Orbot z pominięciem uprawnień systemowych.
