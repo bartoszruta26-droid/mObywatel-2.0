@@ -31,8 +31,12 @@ object TorClientRegistry {
         val raw = prefs.getString(KEY_CLIENTS, null)
         if (raw.isNullOrBlank()) {
             val defaults = listOf(
-                TorClientProfile("guardian-embedded", "Wbudowany klient Tor (Guardian Project)", "127.0.0.1", 9050),
-                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9050, false)
+                TorClientProfile("guardian-embedded", "Wbudowany Tor — port podstawowy", "127.0.0.1", 9050),
+                TorClientProfile("guardian-isolated-1", "Wbudowany Tor — port izolowany 1", "127.0.0.1", 19051),
+                TorClientProfile("guardian-isolated-2", "Wbudowany Tor — port izolowany 2", "127.0.0.1", 19052),
+                TorClientProfile("guardian-isolated-3", "Wbudowany Tor — port izolowany 3", "127.0.0.1", 19053),
+                TorClientProfile("guardian-isolated-4", "Wbudowany Tor — port izolowany 4", "127.0.0.1", 19054),
+                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5 (ustaw port 9150)", "127.0.0.1", 9150, false)
             )
             save(context, defaults)
             return defaults
