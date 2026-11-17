@@ -14,6 +14,19 @@ class TorDownloadService(
     routeRules: () -> Map<TorDownloadKind, String> = { emptyMap() }
 ) {
     private val transport = TorHttpTransport(runtime, policy)
+    @Volatile private var lastSelectedRoute: String = "none"
+    @Volatile private var lastSelectionFailure: String? = null
+    @Volatile private var lastTransportFailure: String? = null
+
+    /** Snapshot for diagnostics; never contains request URLs or user data. */
+    fun diagnosticSnapshot(): String = buildString {
+        append("route=").append(lastSelectedRoute)
+        append(" runtime=").append(runtime.state)
+        lastSelectionFailure?.let { append(" selectionFailure=").append(it.replace(Regex("\\s+"), " ").take(300)) }
+        lastTransportFailure?.let { append(" transportFailure=").append(it.replace(Regex("\\s+"), " ").take(300)) }
+        runtime.failureMessage()?.let { append(" guardianFailure=").append(it.replace(Regex("\\s+"), " ").take(300)) }
+    }
+
     private val router = TorDownloadRouter(
         profiles = {
             val isolatedEndpoints = (runtime as? GuardianTorRuntime)?.isolatedProxyEndpoints().orEmpty()
@@ -59,15 +72,24 @@ class TorDownloadService(
     @Throws(IOException::class)
     fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse {
         val selected = try {
-            router.select(kind)
+            router.select(kind).also { profile ->
+                lastSelectedRoute = "${profile.id}@${profile.host}:${profile.port}"
+                lastSelectionFailure = null
+                lastTransportFailure = null
+            }
         } catch (selectionFailure: IOException) {
+            lastSelectionFailure = selectionFailure.message ?: selectionFailure.javaClass.simpleName
             // An unavailable Orbot must not strand the request: start Guardian as
             // the verified fallback, then ask the router to select again.
             ensureGuardianEndpoint()
             try {
-                router.select(kind)
+                router.select(kind).also { profile ->
+                    lastSelectedRoute = "${profile.id}@${profile.host}:${profile.port}"
+                    lastSelectionFailure = null
+                }
             } catch (retryFailure: IOException) {
                 retryFailure.addSuppressed(selectionFailure)
+                lastTransportFailure = retryFailure.message ?: retryFailure.javaClass.simpleName
                 throw retryFailure
             }
         }
@@ -75,13 +97,16 @@ class TorDownloadService(
         try {
             return transport.open(url, selected.endpoint(), rangeStart, ifRange)
         } catch (failure: IOException) {
+            lastTransportFailure = failure.message ?: failure.javaClass.simpleName
             if (failure is TorHttpException || selected.id.startsWith("guardian-embedded-")) throw failure
             TorEndpointProbe.markUnavailable(selected.endpoint())
             val guardian = ensureGuardianEndpoint()
             if (guardian == selected.endpoint()) throw failure
+            lastSelectedRoute = "guardian-fallback@${guardian.host}:${guardian.port}"
             return try {
-                transport.open(url, guardian, rangeStart, ifRange)
+                transport.open(url, guardian, rangeStart, ifRange).also { lastTransportFailure = null }
             } catch (fallbackFailure: IOException) {
+                lastTransportFailure = fallbackFailure.message ?: fallbackFailure.javaClass.simpleName
                 fallbackFailure.addSuppressed(failure)
                 throw fallbackFailure
             }
