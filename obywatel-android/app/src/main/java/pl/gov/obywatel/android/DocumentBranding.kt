@@ -409,7 +409,7 @@ internal object DocumentBrandStore {
         val stored = runCatching {
             val f = File(dir(context), INDEX)
             if (!f.exists()) emptyList() else {
-                val a = JSONArray(String(crypt(f.readBytes(), false), Charsets.UTF_8))
+                val a = JSONArray(String(crypt(android.util.AtomicFile(f).openRead().use { it.readBytes() }, false), Charsets.UTF_8))
                 (0 until a.length()).map { i -> a.getJSONObject(i).let { o ->
                     BrandAsset(o.getString("id"), o.getString("owner"), o.getString("kind"), o.getString("label"), o.getString("file"),
                         o.optString("rights"), o.optInt("version", 1), o.optLong("createdAt", 0L), o.optString("mimeType"))
@@ -436,7 +436,7 @@ internal object DocumentBrandStore {
     @Synchronized fun assignments(context: Context): List<BrandAssignment> = runCatching {
         val f = File(dir(context), ASSIGNMENTS_INDEX)
         if (!f.exists()) return emptyList()
-        val a = JSONArray(String(crypt(f.readBytes(), false), Charsets.UTF_8))
+        val a = JSONArray(String(crypt(android.util.AtomicFile(f).openRead().use { it.readBytes() }, false), Charsets.UTF_8))
         (0 until a.length()).map { i -> a.getJSONObject(i).let { o ->
             BrandAssignment(o.getString("documentType"), o.getString("kind"), o.getString("assetId"))
         } }
@@ -691,7 +691,16 @@ internal object DocumentBrandStore {
             else -> ".asset.enc"
         }
         val file = assetId + extension
-        File(dir(context), file).writeBytes(crypt(bytes, true))
+        val target = File(dir(context), file)
+        val atomic = android.util.AtomicFile(target)
+        val output = atomic.startWrite()
+        try {
+            output.write(crypt(bytes, true))
+            atomic.finishWrite(output)
+        } catch (failure: Exception) {
+            atomic.failWrite(output)
+            throw failure
+        }
         val asset = BrandAsset(assetId, owner.trim(), kind, label.trim().ifBlank { kind }, file,
             rights.take(2048), version.coerceAtLeast(1), createdAt, mimeType.take(120))
         save(context, list(context).filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
