@@ -79,3 +79,21 @@ TorService udostępnia listę aktywnych listenerów przez Control Protocol (`GET
 Orbot może działać jako dodatkowy, zewnętrzny klient, jeśli zostanie skonfigurowany na innym lokalnym porcie SOCKS (np. 9150). Adapter Orbot i rzeczywiste kierowanie żądań przez niego pozostają osobnym etapem; sama pozycja w rejestrze nie jest dowodem gotowości.
 
 Publiczne przekaźniki Tor i mosty nie są publicznymi serwerami SOCKS. Przekaźniki/mosty konfiguruje się w kliencie Tor jako elementy drogi wejściowej do sieci, a nie jako proxy pobierania. Nieznane zdalne SOCKS pozostają odrzucane przez model bezpieczeństwa.
+
+## Integracja Orbot, test wyjścia i rotacja obwodów
+
+- Wbudowany Guardian Project Tor jest wymaganym klientem bazowym. Runtime czeka na status pierwszego zbudowanego obwodu i udostępnia wyłącznie aktywne lokalne porty SOCKS.
+- Orbot jest profilem zewnętrznym na loopback SOCKS5 (domyślnie skonfigurowany port 9150, aby uniknąć konfliktu z typowym portem 9050). Samo otwarte gniazdo nie wystarcza: aplikacja wykonuje żądanie przez wskazany SOCKS do `https://check.torproject.org/api/ip` i wymaga `IsTor=true`. Profil Orbot jest pomijany, gdy pakiet `org.torproject.android` nie jest zainstalowany, port nie odpowiada albo test wyjścia nie potwierdza Tor.
+- Gdy zewnętrzny SOCKS przestaje przyjmować połączenia, profil jest czasowo wyłączany z puli, a kolejne żądanie trafia do Guardian. Nie ma bezpośredniego połączenia awaryjnego. Błędy HTTP serwera docelowego nie są mylone z awarią Orbot.
+- Test Orbot jest dostępny w ekranie Ustawienia → Klienci sieci Tor. Użytkownik musi uruchomić Orbot i ustawić w nim lokalny SOCKS5 na 9150 (albo wpisać rzeczywisty skonfigurowany port). Aplikacja nie próbuje uruchamiać chronionej usługi VPN Orbot z pominięciem uprawnień systemowych.
+- Wbudowany Guardian otrzymuje `MaxCircuitDirtiness 480`: po 8 minutach Tor nie przypina nowych strumieni do zbyt starego obwodu. Aktywne połączenie TCP pozostaje na dotychczasowym obwodzie do zakończenia. To celowe; nie przenosimy aktywnego strumienia między obwodami.
+- Orbot jako osobny proces zachowuje własną konfigurację Tor i domyślną politykę rotacji (zwykle 10 minut). Aplikacja nie zmienia tej konfiguracji, ponieważ zewnętrzny interfejs Orbot nie udostępnia bezpiecznego, wspieranego kontraktu do ustawiania `MaxCircuitDirtiness` dla obcego procesu.
+- Oddzielne porty SOCKS Guardian mają domyślnie odrębne grupy sesji, a flagi `IsolateClientAddr`, `IsolateDestAddr`, `IsolateDestPort` dodatkowo ograniczają współdzielenie obwodów. Rotacja 8-minutowa dotyczy nowych strumieni, nie przerywa już rozpoczętych pobrań.
+
+## Pobieranie SVG przez Tor i wznawianie
+
+- Zapytania API Commons i treść plików SVG przechodzą przez `TorDownloadService`; nie pozostał bezpośredni `HttpURLConnection` w ścieżce pobierania katalogu.
+- Plik częściowy jest przechowywany tymczasowo w prywatnym katalogu cache aplikacji jako `.part`, wraz z ETag/Last-Modified. To umożliwia wznowienie po przerwaniu procesu; po zatwierdzeniu zasobu plik częściowy i metadane są usuwane.
+- Wznowienie używa `Range` i `If-Range`; dopisywanie bajtów następuje wyłącznie po otrzymaniu prawidłowego `206 Partial Content` i zgodnego `Content-Range`. Przy braku walidatora albo niezgodnej odpowiedzi pobieranie zaczyna się od początku.
+- Po pobraniu aplikacja sprawdza limit rozmiaru, strukturę XML/SVG, niedozwolone elementy i SHA-256. Suma jest zapisywana w metadanych zasobu, a istniejące zasoby są ponownie haszowane przed uznaniem ich za już pobrane.
+- Ponieważ Wikimedia Commons nie dostarcza w tym przepływie zaufanej sumy SHA-256 dla pliku, pierwsza poprawna suma jest lokalnie obliczana i zapisywana; nie jest przedstawiana jako suma opublikowana przez Wikimedia.
