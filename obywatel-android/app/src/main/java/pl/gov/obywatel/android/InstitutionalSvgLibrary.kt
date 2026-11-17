@@ -220,10 +220,10 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     }
     try {
         val statusCode = response.statusCode
-        val append = offset > 0L && statusCode == 206
+        val contentRange = response.header("Content-Range")
+        val append = commonsCanAppendRange(offset, statusCode, contentRange)
         if (append) {
-            val contentRange = response.header("Content-Range").orEmpty()
-            require(contentRange.startsWith("bytes $offset-")) { "Serwer zwrócił niezgodny Content-Range; wznowienie odrzucone." }
+            throw java.io.IOException("Serwer zwrócił niezgodny Content-Range; wznowienie odrzucone.")
         } else if (statusCode == 206) {
             require(response.header("Content-Range").orEmpty().startsWith("bytes 0-")) { "Nieprawidłowy początek zakresu SVG." }
         }
@@ -304,6 +304,8 @@ private fun readCommonsJson(context: Context, fileName: String): String =
 internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
     found >= 100 && available.coerceAtLeast(0) * 2 < found
 
+internal fun commonsCanAppendRange(offset: Long, statusCode: Int, contentRange: String?): Boolean =
+    offset > 0L && statusCode == 206 && contentRange?.startsWith("bytes $offset-") == true
 internal fun commonsChecksumMatches(expectedSha256: String, actualSha256: String?): Boolean =
     expectedSha256.matches(Regex("[a-fA-F0-9]{64}")) && actualSha256?.equals(expectedSha256, ignoreCase = true) == true
 
