@@ -57,9 +57,11 @@ object TorClientRegistry {
         }.getOrDefault(emptyList())
         if (!prefs.getBoolean(KEY_ORBOT_MIGRATION, false)) {
             val migrated = loaded.filterNot { it.id.startsWith("guardian-isolated-") }.map { profile ->
-                if (profile.id == "orbot-local" && profile.name.startsWith("Orbot")) {
-                    profile.copy(enabled = true)
-                } else profile
+                when {
+                    profile.id == "guardian-embedded" -> profile.copy(enabled = true)
+                    profile.id == "orbot-local" && profile.name.startsWith("Orbot") -> profile.copy(enabled = true)
+                    else -> profile
+                }
             }
             save(context, migrated)
             prefs.edit().putBoolean(KEY_ORBOT_MIGRATION, true).apply()
