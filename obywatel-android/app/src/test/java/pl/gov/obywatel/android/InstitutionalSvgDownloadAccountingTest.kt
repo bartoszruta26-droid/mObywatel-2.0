@@ -71,4 +71,38 @@ class InstitutionalSvgDownloadAccountingTest {
         assertFalse(commonsChecksumMatches(valid, null))
     }
 
+    @Test
+    fun duplicateCommonsTitlesAndUploadUrlsAreQueuedOnlyOnce() {
+        val original = CommonsSvgCandidate(
+            "File:crest.svg", "https://upload.wikimedia.org/a/crest.svg",
+            "https://commons.wikimedia.org/wiki/File:crest.svg", "CC0", "", "", ""
+        )
+        val sameTitleDifferentUrl = original.copy(url = "https://upload.wikimedia.org/a/other-copy.svg")
+        val sameUrlDifferentTitle = original.copy(title = "File:crest-copy.svg")
+        val another = original.copy(
+            title = "File:flag.svg",
+            url = "https://upload.wikimedia.org/a/flag.svg"
+        )
+
+        val queue = distinctCommonsCandidates(
+            listOf(original, sameTitleDifferentUrl, sameUrlDifferentTitle, another)
+        )
+
+        assertEquals(listOf("File:crest.svg", "File:flag.svg"), queue.map { it.title })
+    }
+
+    @Test
+    fun duplicateUploadUrlsIgnoreQueryAndFragment() {
+        val first = CommonsSvgCandidate(
+            "File:logo.svg", "https://upload.wikimedia.org/a/logo.svg?download=1",
+            "page", "CC0", "", "", ""
+        )
+        val duplicate = first.copy(
+            title = "File:logo-alias.svg",
+            url = "https://upload.wikimedia.org/a/logo.svg#fragment"
+        )
+
+        assertEquals(1, distinctCommonsCandidates(listOf(first, duplicate)).size)
+    }
+
 }
