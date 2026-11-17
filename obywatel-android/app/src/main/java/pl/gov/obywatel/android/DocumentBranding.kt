@@ -585,7 +585,7 @@ internal object DocumentBrandStore {
         } else if (asset.file.startsWith("builtin:")) {
             val stored = context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
             if (asset.file.endsWith(".b64")) android.util.Base64.decode(String(stored, Charsets.US_ASCII), android.util.Base64.DEFAULT) else stored
-        } else crypt(File(dir(context), asset.file).readBytes(), false)
+        } else crypt(android.util.AtomicFile(File(dir(context), asset.file)).openRead().use { it.readBytes() }, false)
     }.getOrNull()
 
     /** Exports custom library files and their document assignments. Bundled resources remain app resources. */
