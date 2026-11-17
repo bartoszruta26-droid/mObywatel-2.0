@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -31,6 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun TorClientSettingsScreen(onBack: () -> Unit) {
@@ -41,9 +45,11 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
     var activeId by remember { mutableStateOf(TorClientRegistry.activeId(context)) }
     var name by remember { mutableStateOf("") }
     var host by remember { mutableStateOf("127.0.0.1") }
-    var port by remember { mutableStateOf("9050") }
+    var port by remember { mutableStateOf("9150") }
     var error by remember { mutableStateOf("") }
     var notice by remember { mutableStateOf("") }
+    val probeStatus = remember { mutableStateMapOf<String, String>() }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     fun persist() {
         TorClientRegistry.save(context, clients.toList())
@@ -66,7 +72,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Ważne — bezpieczeństwo połączenia", fontWeight = FontWeight.Bold)
-                Text("Lista przyjmuje wyłącznie lokalne adresy pętli zwrotnej (127.0.0.1, localhost, ::1). Nie dodawaj przypadkowych publicznych proxy SOCKS: sam adres proxy nie potwierdza, że operator korzysta z Tor ani że nie rejestruje ruchu. Wbudowany klient Guardian Project jest otwartym klientem i łączy się z publiczną siecią Tor. Profile Orbot i własne profile są obecnie zapisywane jako konfiguracja do kolejnego etapu integracji.",
+                Text("Aplikacja najpierw uruchamia wbudowany Guardian Project Tor. Orbot jest używany tylko wtedy, gdy aplikacja jest zainstalowana, port SOCKS odpowiada, a test check.torproject.org potwierdzi wyjście przez Tor. Domyślny port profilu Orbot to 9150 — jeśli w Orbot ustawiono inny port, zmień go poniżej. Gdy test Orbot się nie powiedzie, pobieranie pozostaje przy Guardian Tor. Nie dodawaj przypadkowych publicznych proxy SOCKS.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -97,12 +103,27 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                             persist()
                         })
                     }
-                    if (client.id !in setOf("guardian-embedded", "orbot-local")) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         OutlinedButton(onClick = {
-                            clients.removeAll { it.id == client.id }
-                            persist()
-                        }, modifier = Modifier.align(Alignment.End)) { Text("Usuń klienta") }
+                            probeStatus[client.id] = "Sprawdzanie SOCKS i wyjścia Tor…"
+                            scope.launch {
+                                val result = withContext(Dispatchers.IO) {
+                                    if (client.id == "orbot-local" && !TorEndpointProbe.isOrbotInstalled(context)) false
+                                    else TorEndpointProbe.isTor(client.endpoint(), force = true)
+                                }
+                                probeStatus[client.id] = if (result) "Połączenie działa — potwierdzono wyjście przez Tor."
+                                    else "Brak potwierdzonego połączenia Tor. Pobieranie użyje Guardian."
+                            }
+                        }) { Text("Testuj") }
+                        if (client.id !in setOf("guardian-embedded", "orbot-local")) {
+                            OutlinedButton(onClick = {
+                                clients.removeAll { it.id == client.id }
+                                persist()
+                            }) { Text("Usuń") }
+                        }
                     }
+                    probeStatus[client.id]?.let { Text(it, style = MaterialTheme.typography.bodySmall,
+                        color = if (it.startsWith("Połączenie działa")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
         }
@@ -127,7 +148,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                 notice = "Dodano profil. Jego wybór zapisano; podłączenie go do transportu pobierania nastąpi w kolejnym etapie."
             }.onFailure { error = it.message ?: "Nie udało się dodać klienta." }
         }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj do listy") }
-        Text("Orbot: po instalacji włącz tryb zaawansowany (Power User Mode), uruchom Tor i pozostaw lokalny port SOCKS5 9050. Aplikacja nie uruchamia ani nie konfiguruje Orbot automatycznie.",
+        Text("Orbot: zainstaluj oficjalną aplikację, uruchom Tor i ustaw lokalny port SOCKS5 na 9150. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność jego proxy i rzeczywiste wyjście przez sieć Tor.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
