@@ -27,6 +27,12 @@ class TorHttpTransportTest {
         }
     }
 
+    @Test fun loopbackAliasesAreAccepted() {
+        assertEquals("127.0.0.1", TorProxyEndpoint().host)
+        assertEquals("localhost", TorProxyEndpoint(host = "localhost").host)
+        assertEquals("::1", TorProxyEndpoint(host = "::1").host)
+    }
+
     @Test fun policyRejectsUnsafeLimits() {
         assertThrows(IllegalArgumentException::class.java) { TorRequestPolicy(maxRedirects = 11) }
         assertThrows(IllegalArgumentException::class.java) { TorRequestPolicy(maxBytes = 0) }
