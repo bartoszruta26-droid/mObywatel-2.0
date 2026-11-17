@@ -9,7 +9,6 @@ import org.junit.Before
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -208,10 +207,10 @@ class BankAccountsNavigationTest {
         // Kontrolki są renderowane w jednym przewijanym formularzu. Weryfikujemy
         // obecność czterech niezależnych parametrów bez przewijania do pierwszego
         // pola, które w emulatorze powodowało unieważnienie węzła semantyki.
-        composeRule.onNodeWithText("Skala godła", substring = true).assertExists()
-        composeRule.onNodeWithText("Obrót godła", substring = true).assertExists()
-        composeRule.onNodeWithText("Skala flagi", substring = true).assertExists()
-        composeRule.onNodeWithText("Obrót flagi", substring = true).assertExists()
+        assertTrue(composeRule.onAllNodesWithText("Skala godła", substring = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("Obrót godła", substring = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("Skala flagi", substring = true).fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("Obrót flagi", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
 
     @Test
