@@ -132,6 +132,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         if (currentState == TorState.READY || currentState == TorState.STARTING ||
             currentState == TorState.BOOTSTRAPPING
         ) return
+        val restartFailedService = currentState == TorState.FAILED
         currentState = TorState.STARTING
         lastFailureMessage = null
         circuitEstablished = false
@@ -139,7 +140,6 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             configureIsolatedSocksListeners()
             val filter = IntentFilter().apply {
                 addAction(TorService.ACTION_STATUS)
-                addAction(TorService.ACTION_ERROR)
             }
             if (!receiverRegistered) {
                 ContextCompat.registerReceiver(
@@ -157,7 +157,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 )
                 localErrorReceiverRegistered = true
             }
-            prepareFailedServiceForRestart()
+            prepareFailedServiceForRestart(restartFailedService)
             bound = appContext.bindService(
                 Intent(appContext, TorService::class.java),
                 connection,
@@ -272,8 +272,8 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
      * again. Release that binding and wait for the service's OFF lifecycle event
      * before creating a fresh service instance.
      */
-    private fun prepareFailedServiceForRestart() {
-        if (currentState != TorState.FAILED || !bound) return
+    private fun prepareFailedServiceForRestart(wasFailed: Boolean) {
+        if (!wasFailed || !bound) return
         val previousSequence = statusSequence
         runCatching { appContext.unbindService(connection) }
         bound = false
