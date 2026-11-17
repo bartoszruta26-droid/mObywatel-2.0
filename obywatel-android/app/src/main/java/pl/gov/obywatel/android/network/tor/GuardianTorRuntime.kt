@@ -57,6 +57,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 return
             }
             torService = service
+            circuitEstablished = TorService.STATUS_ON == TorService.currentStatus
             // STATUS_ON is emitted after the first Tor circuit is established.
             // If the status broadcast raced with binding, the port is still checked
             // here; READY is published only when the service reports a valid SOCKS port.
