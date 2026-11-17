@@ -52,7 +52,7 @@ private fun validateSvg(bytes:ByteArray) {
 internal data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
 
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
-private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 4000L
+private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 1000L
 private const val COMMONS_API_MAX_ATTEMPTS = 6
 private const val COMMONS_DOWNLOAD_MAX_ATTEMPTS = 5
 private val commonsApiThrottleLock = Any()
@@ -116,7 +116,11 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
     throw lastFailure ?: java.io.IOException("Wikimedia Commons: nie udało się wykonać żądania API przez Tor.")
 }
 
-private fun discoverCommonsOpenSvgs(context: Context, limit: Int = 200): List<CommonsSvgCandidate> {
+private suspend fun discoverCommonsOpenSvgs(
+    context: Context,
+    limit: Int = 200,
+    onSearchProgress: suspend (titlesFound: Int, term: String) -> Unit = { _, _ -> }
+): List<CommonsSvgCandidate> {
     val terms = listOf(
         "coat of arms", "heraldry", "heraldic arms", "blazon", "escutcheon",
         "flag", "national flag", "city flag", "province flag", "municipal flag",
@@ -140,7 +144,7 @@ private fun discoverCommonsOpenSvgs(context: Context, limit: Int = 200): List<Co
         var offset:String?=null
         var finished=false
         repeat(4) {
-            if(finished || titles.size>=limit*5) return@repeat
+            if(finished || titles.size>=limit*2) return@repeat
             val offsetArg=offset?.let { "&sroffset="+java.net.URLEncoder.encode(it,"UTF-8") }.orEmpty()
             val response=commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
             val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
@@ -151,7 +155,10 @@ private fun discoverCommonsOpenSvgs(context: Context, limit: Int = 200): List<Co
             offset=response.optJSONObject("continue")?.optString("sroffset")
             if(offset.isNullOrBlank()) finished=true
         }
-        if(titles.size>=limit*5) break
+        onSearchProgress(titles.size, term)
+        // Search only a bounded candidate pool. The previous 5x threshold caused
+        // dozens of slow API calls before the first actual SVG download could start.
+        if(titles.size>=limit*2) break
     }
     val candidates=mutableListOf<CommonsSvgCandidate>()
     for(batch in titles.toList().chunked(40)) {
@@ -588,7 +595,20 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
-                            val candidates = discoverCommonsOpenSvgs(context, 200)
+                            val candidates = discoverCommonsOpenSvgs(context, 200) { foundTitles, term ->
+                                withContext(Dispatchers.Main) {
+                                    status = "Wyszukiwanie Commons: $foundTitles plików SVG — $term"
+                                }
+                            }
+                            withContext(Dispatchers.Main) {
+                                progressCurrent = 0
+                                progressTotal = candidates.size
+                                status = if (candidates.isEmpty()) {
+                                    "Wyszukiwanie zakończone: brak plików z potwierdzoną otwartą licencją."
+                                } else {
+                                    "Znaleziono ${candidates.size} plików. Rozpoczynam pobieranie przez Tor…"
+                                }
+                            }
                             val manifest = JSONArray()
                             candidates.forEach { item ->
                                 manifest.put(JSONObject()

@@ -72,7 +72,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Ważne — bezpieczeństwo połączenia", fontWeight = FontWeight.Bold)
-                Text("Aplikacja uruchamia wbudowany Guardian Project Tor jako podstawowy i niezależny mechanizm. Orbot jest używany tylko wtedy, gdy jest zainstalowany, jego lokalny port SOCKS przyjmuje połączenia, a test check.torproject.org potwierdza wyjście przez sieć Tor. Wpis Orbot w aplikacji wskazuje 127.0.0.1:9150 — skonfiguruj Orbot na tym porcie, ponieważ Guardian zwykle zajmuje 9050. Jeśli używasz innego portu, dodaj profil lokalny. Gdy Orbot nie przejdzie testu, ruch pozostaje w Guardian Tor. Nie dodawaj przypadkowych publicznych proxy SOCKS.",
+                Text("Po wybraniu Orbot aplikacja najpierw korzysta z jego lokalnego SOCKS5, bez uruchamiania Guardian. Domyślny port Orbot to 9050. Wbudowany Guardian jest zatrzymywany, gdy wybierzesz Orbot, i uruchamia się dopiero jako klient zapasowy po nieudanym teście Orbotu. Dzięki temu oba procesy nie próbują zajmować tego samego portu SOCKS. Przed użyciem aplikacja sprawdza rzeczywiste wyjście przez Tor w check.torproject.org. Jeśli Orbot nie przejdzie testu, pobieranie może przejść na Guardian. Nie dodawaj przypadkowych publicznych proxy SOCKS.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -145,10 +145,10 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                 clients.add(profile)
                 name = ""
                 persist()
-                notice = "Dodano profil. Jego wybór zapisano; podłączenie go do transportu pobierania nastąpi w kolejnym etapie."
+                notice = "Dodano profil. Jego wybór zapisano; profil jest od razu uwzględniany przez usługę pobierania po pozytywnym teście Tor."
             }.onFailure { error = it.message ?: "Nie udało się dodać klienta." }
         }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj do listy") }
-        Text("Orbot: zainstaluj oficjalną aplikację, skonfiguruj lokalny SOCKS5 na 9150 i uruchom Tor. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność proxy i rzeczywiste wyjście przez sieć Tor. Inne dodane profile lokalne również są dopuszczane do puli wyłącznie po pozytywnym teście Tor.",
+        Text("Orbot: zainstaluj oficjalną aplikację i uruchom Tor. Domyślny profil aplikacji sprawdza lokalny SOCKS5 127.0.0.1:9050. Jeśli zmienisz port w Orbot, ustaw identyczny port w profilu. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność proxy i rzeczywiste wyjście przez sieć Tor. Inne dodane profile lokalne również są dopuszczane do puli wyłącznie po pozytywnym teście Tor.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

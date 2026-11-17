@@ -28,6 +28,7 @@ object TorClientRegistry {
     private const val KEY_ORBOT_MIGRATION = "orbot_profile_migration_v1"
     private const val KEY_LISTENER_PROFILE_MIGRATION = "listener_profile_migration_v2"
     private const val KEY_ORBOT_PORT_MIGRATION = "orbot_port_migration_v1"
+    private const val KEY_ORBOT_DEFAULT_PORT_MIGRATION = "orbot_default_port_migration_v2"
 
     fun load(context: Context): List<TorClientProfile> {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -35,7 +36,7 @@ object TorClientRegistry {
         if (raw.isNullOrBlank()) {
             val defaults = listOf(
                 TorClientProfile("guardian-embedded", "Wbudowany Tor — port podstawowy", "127.0.0.1", 9050),
-                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9150, true)
+                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9050, true)
             )
             save(context, defaults)
             return defaults
@@ -81,6 +82,17 @@ object TorClientRegistry {
             }
             save(context, normalized)
             prefs.edit().putBoolean(KEY_ORBOT_PORT_MIGRATION, true).apply()
+            return normalized
+        }
+        if (!prefs.getBoolean(KEY_ORBOT_DEFAULT_PORT_MIGRATION, false)) {
+            // Older app builds forced Orbot to 9150 to work around Guardian's
+            // 9050 listener. Guardian now owns a separate 19040+ range, so restore
+            // Orbot's standard local SOCKS5 port for existing default profiles.
+            val normalized = loaded.map { profile ->
+                if (profile.id == "orbot-local" && profile.port == 9150) profile.copy(port = 9050) else profile
+            }
+            save(context, normalized)
+            prefs.edit().putBoolean(KEY_ORBOT_DEFAULT_PORT_MIGRATION, true).apply()
             return normalized
         }
         return loaded

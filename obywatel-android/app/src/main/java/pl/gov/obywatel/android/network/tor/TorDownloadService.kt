@@ -16,15 +16,11 @@ class TorDownloadService(
     private val transport = TorHttpTransport(runtime, policy)
     private val router = TorDownloadRouter(
         profiles = {
-            // Prefer listeners explicitly configured for stream isolation. Keep the
-            // primary Guardian SOCKS endpoint as a fallback if no extra listener started.
             val isolatedEndpoints = (runtime as? GuardianTorRuntime)?.isolatedProxyEndpoints().orEmpty()
             val embeddedEndpoints = isolatedEndpoints.ifEmpty { listOfNotNull(runtime.proxyEndpoint()) }
             val embedded = embeddedEndpoints.mapIndexed { index, endpoint ->
-                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — isolated listener ${index + 1}", endpoint.host, endpoint.port)
+                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — listener ${index + 1}", endpoint.host, endpoint.port)
             }
-            // All external profiles are loopback-only and must pass a live Tor egress probe.
-            // Orbot additionally must be installed; unavailable or non-Tor SOCKS is excluded.
             val external = TorClientRegistry.load(context).filter { profile ->
                 profile.enabled && profile.id !in setOf(
                     "guardian-embedded", "guardian-isolated-1", "guardian-isolated-2",
@@ -46,7 +42,9 @@ class TorDownloadService(
                 runtime.state == TorState.READY && runtime.proxyEndpoints().contains(endpoint)
             } else {
                 val orbotProfile = profile.id.startsWith("orbot-")
-                !runtime.proxyEndpoints().contains(endpoint) && (!orbotProfile || TorEndpointProbe.isOrbotInstalled(context)) && TorEndpointProbe.isTor(endpoint)
+                !runtime.proxyEndpoints().contains(endpoint) &&
+                    (!orbotProfile || TorEndpointProbe.isOrbotInstalled(context)) &&
+                    TorEndpointProbe.isTor(endpoint)
             }
         },
         policy = poolPolicy,
@@ -54,23 +52,32 @@ class TorDownloadService(
     )
 
     /**
-     * Opens one resource through a verified Tor client. If a selected external SOCKS
-     * endpoint has stopped accepting Tor traffic, this request is retried once through Guardian.
-     * No direct-network fallback is implemented.
+     * The selected external client (Orbot) is used independently of the embedded
+     * Guardian runtime. Guardian starts lazily only when no selected client is ready
+     * or an external SOCKS connection fails. No direct-network fallback exists.
      */
     @Throws(IOException::class)
     fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse {
-        if (runtime.state != TorState.READY) throw IOException("Guardian Tor runtime is not ready.")
-        val selected = router.select(kind)
+        val selected = try {
+            router.select(kind)
+        } catch (selectionFailure: IOException) {
+            // An unavailable Orbot must not strand the request: start Guardian as
+            // the verified fallback, then ask the router to select again.
+            ensureGuardianEndpoint()
+            try {
+                router.select(kind)
+            } catch (retryFailure: IOException) {
+                retryFailure.addSuppressed(selectionFailure)
+                throw retryFailure
+            }
+        }
+
         try {
             return transport.open(url, selected.endpoint(), rangeStart, ifRange)
         } catch (failure: IOException) {
-            // HTTP errors come from the destination and must not be hidden by switching clients.
             if (failure is TorHttpException || selected.id.startsWith("guardian-embedded-")) throw failure
             TorEndpointProbe.markUnavailable(selected.endpoint())
-            // If Orbot or another external local Tor client drops, retry exactly once via Guardian.
-            val guardian = runtime.proxyEndpoint()
-                ?: throw IOException("External Tor client failed and Guardian SOCKS endpoint is unavailable.", failure)
+            val guardian = ensureGuardianEndpoint()
             if (guardian == selected.endpoint()) throw failure
             return try {
                 transport.open(url, guardian, rangeStart, ifRange)
@@ -79,5 +86,32 @@ class TorDownloadService(
                 throw fallbackFailure
             }
         }
+    }
+
+    @Throws(IOException::class)
+    private fun ensureGuardianEndpoint(): TorProxyEndpoint {
+        if (runtime.state == TorState.STOPPED || runtime.state == TorState.FAILED) {
+            try {
+                runtime.start()
+            } catch (failure: Exception) {
+                throw IOException("Nie udało się uruchomić zapasowego klienta Guardian Tor.", failure)
+            }
+        }
+        val deadline = System.currentTimeMillis() + 120_000L
+        while (runtime.state != TorState.READY && runtime.state != TorState.FAILED &&
+            System.currentTimeMillis() < deadline
+        ) {
+            try {
+                Thread.sleep(250L)
+            } catch (interrupted: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw IOException("Oczekiwanie na Guardian Tor zostało przerwane.", interrupted)
+            }
+        }
+        if (runtime.state != TorState.READY) {
+            throw IOException("Guardian Tor nie osiągnął stanu READY; pobieranie pozostaje zablokowane.")
+        }
+        return runtime.proxyEndpoint()
+            ?: throw IOException("Guardian Tor zgłosił READY, ale nie udostępnia działającego SOCKS5.")
     }
 }

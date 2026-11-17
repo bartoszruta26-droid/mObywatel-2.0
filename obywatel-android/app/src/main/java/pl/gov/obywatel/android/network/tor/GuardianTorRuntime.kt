@@ -164,20 +164,25 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 .mapNotNull { token -> token.trim().trim('"').substringAfterLast(':', "").toIntOrNull() }
                 .filter { it in 1..65535 }
             val candidates = (parsedPorts + port).distinct()
+            // GETINFO can race with listener startup. Never trust TorService.socksPort
+            // without proving that the corresponding loopback socket is accepting TCP.
             socksPorts = candidates.filter { candidate ->
-                candidate == port || runCatching {
+                runCatching {
                     java.net.Socket().use { socket ->
-                        socket.connect(java.net.InetSocketAddress("127.0.0.1", candidate), 250)
+                        socket.connect(java.net.InetSocketAddress("127.0.0.1", candidate), 500)
                         true
                     }
                 }.getOrDefault(false)
             }
+            val verifiedPrimary = socksPorts.firstOrNull() ?: return
+            socksPort = verifiedPrimary
             currentState = TorState.READY
         }
     }
 
     private fun configureIsolatedSocksListeners() {
-        // Reserve a small deterministic range, but skip ports already used by other local services.
+        // TorService chooses its primary SOCKS port dynamically. This is important
+        // when Orbot already owns 9050: Guardian must not try to bind the same port.
         val availablePorts = (19051..19080).filter { candidate ->
             runCatching { java.net.ServerSocket(candidate).use { true } }.getOrDefault(false)
         }.take(4)
