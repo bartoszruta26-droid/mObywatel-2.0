@@ -52,6 +52,15 @@ class InstitutionalSvgDownloadAccountingTest {
     }
 
     @Test
+    fun rangeResumeRequires206AndExactStartingOffset() {
+        assertTrue(commonsCanAppendRange(1024L, 206, "bytes 1024-2047/4096"))
+        assertFalse(commonsCanAppendRange(1024L, 200, "bytes 1024-2047/4096"))
+        assertFalse(commonsCanAppendRange(1024L, 206, "bytes 0-1023/4096"))
+        assertFalse(commonsCanAppendRange(0L, 206, "bytes 0-1023/4096"))
+        assertFalse(commonsCanAppendRange(1024L, 206, null))
+    }
+
+    @Test
     fun resumeSkipsOnlyAssetsWithMatchingSha256() {
         val valid = "a".repeat(64)
         assertTrue(commonsChecksumMatches(valid, valid))
