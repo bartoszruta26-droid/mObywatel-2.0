@@ -105,4 +105,25 @@ class InstitutionalSvgDownloadAccountingTest {
         assertEquals(1, distinctCommonsCandidates(listOf(first, duplicate)).size)
     }
 
+    @Test
+    fun duplicateAssetAliasUrlIsReservedEvenWhenAssetIdentityAlreadyExists() {
+        val first = CommonsSvgCandidate(
+            "File:crest.svg", "https://upload.wikimedia.org/a/crest.svg",
+            "page", "CC0", "", "", ""
+        )
+        val duplicateAssetAlias = first.copy(
+            url = "https://upload.wikimedia.org/a/crest-alias.svg"
+        )
+        val differentTitleSameAliasUrl = first.copy(
+            title = "File:other.svg",
+            url = "https://upload.wikimedia.org/a/crest-alias.svg"
+        )
+
+        val queue = distinctCommonsCandidates(
+            listOf(first, duplicateAssetAlias, differentTitleSameAliasUrl)
+        )
+
+        assertEquals(listOf("File:crest.svg"), queue.map { it.title })
+    }
+
 }
