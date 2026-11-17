@@ -86,9 +86,15 @@ object TorClientRegistry {
             .putString(KEY_CLIENTS, array.toString()).apply()
     }
 
-    fun activeId(context: Context): String =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getString(KEY_ACTIVE, "guardian-embedded") ?: "guardian-embedded"
+    fun activeId(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val id = prefs.getString(KEY_ACTIVE, "guardian-embedded") ?: "guardian-embedded"
+        if (id.startsWith("guardian-isolated-")) {
+            prefs.edit().putString(KEY_ACTIVE, "guardian-embedded").apply()
+            return "guardian-embedded"
+        }
+        return id
+    }
 
     fun setActive(context: Context, id: String) {
         require(load(context).any { it.id == id && it.enabled })
