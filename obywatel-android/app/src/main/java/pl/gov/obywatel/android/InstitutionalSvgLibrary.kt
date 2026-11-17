@@ -21,9 +21,13 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import pl.gov.obywatel.android.network.tor.TorDownloadKind
+import pl.gov.obywatel.android.network.tor.TorDownloadServiceProvider
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -188,45 +192,88 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
     return candidates.distinctBy { it.title }.take(limit)
 }
 
-private fun downloadCommonsSvg(context:Context,item:CommonsSvgCandidate): String {
+private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): String {
     waitForCommonsRequestSlot()
-    val connection=URL(item.url).openConnection() as HttpURLConnection
-    connection.instanceFollowRedirects=true
-    connection.connectTimeout=15000
-    connection.readTimeout=25000
-    connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.0")
-    val bytes=try {
-        val code = connection.responseCode
-        if (code !in 200..299) {
-            val retryable = code == 429 || code == 503 || code == 502 || code == 504
-            if (retryable) throw CommonsHttpException(code, retryAfterMillis(connection))
-            throw java.io.IOException("HTTP $code")
-        }
-        connection.inputStream.use { input ->
-            val output=ByteArrayOutputStream()
-            val buffer=ByteArray(8192)
-            var total=0
-            while(true) { val n=input.read(buffer); if(n<0) break; total+=n; require(total<=12*1024*1024) { "Plik przekracza limit 12 MB." }; output.write(buffer,0,n) }
-            output.toByteArray()
-        }
-    } finally { connection.disconnect() }
-    validateSvg(bytes)
-    val id="commons_"+MessageDigest.getInstance("SHA-256").digest(item.title.toByteArray(Charsets.UTF_8)).take(16).joinToString("") { "%02x".format(it) }
-    val sha=MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
-    val rights=JSONObject().put("source","Wikimedia Commons").put("sourcePage",item.page).put("downloadUrl",item.url)
-        .put("license",item.license).put("licenseUrl",item.licenseUrl).put("author",item.artist)
-        .put("restrictions",item.restrictions).put("sha256",sha)
-        .put("verificationStatus","open-license-metadata-found; trademark-and-use-review-required")
-        .put("permittedKinds",JSONArray()).toString()
-    val title=item.title.removePrefix("File:")
-    val kind=when {
-        title.contains("flag",true)->"Flaga"
-        title.contains("coat of arms",true)||title.contains("herald",true)->"Herb"
-        title.contains("seal",true)->"Pieczęć"
-        title.contains("emblem",true)->"Godło"
-        else->"Logo"
+    val tor = TorDownloadServiceProvider.get(context)
+    val assetId = commonsAssetId(item.title)
+    val tempDirectory = File(context.cacheDir, "tor-svg-downloads").apply { mkdirs() }
+    require(tempDirectory.isDirectory) { "Nie można utworzyć katalogu wznowienia pobierania." }
+    val partFile = File(tempDirectory, "$assetId.part")
+    val metadataFile = File(tempDirectory, "$assetId.json")
+    val metadata = runCatching { JSONObject(metadataFile.readText(Charsets.UTF_8)) }.getOrDefault(JSONObject())
+    var offset = partFile.takeIf { it.isFile }?.length() ?: 0L
+    if (offset > 12L * 1024L * 1024L) { partFile.delete(); offset = 0L }
+    val validator = metadata.optString("etag").takeIf { it.isNotBlank() }
+        ?: metadata.optString("lastModified").takeIf { it.isNotBlank() }
+    var response = try {
+        tor.open(item.url, TorDownloadKind.SVG, offset, validator)
+    } catch (failure: Exception) {
+        if (offset <= 0L) throw failure
+        partFile.delete()
+        metadataFile.delete()
+        offset = 0L
+        tor.open(item.url, TorDownloadKind.SVG)
     }
-    DocumentBrandStore.importBytes(context,"Wikimedia Commons",kind,title.take(180),bytes,rights=rights,mimeType="image/svg+xml",assetId=id)
+    try {
+        val statusCode = response.statusCode
+        val append = offset > 0L && statusCode == 206
+        if (append) {
+            val contentRange = response.header("Content-Range").orEmpty()
+            require(contentRange.startsWith("bytes $offset-")) { "Serwer zwrócił niezgodny Content-Range; wznowienie odrzucone." }
+        } else if (statusCode == 206) {
+            require(response.header("Content-Range").orEmpty().startsWith("bytes 0-")) { "Nieprawidłowy początek zakresu SVG." }
+        }
+        val expectedTotal = if (append) {
+            response.header("Content-Range")?.substringAfterLast('/')?.toLongOrNull()
+                ?: response.contentLength?.let { offset + it }
+        } else response.contentLength
+        require(expectedTotal == null || expectedTotal <= 12L * 1024L * 1024L) { "Plik SVG przekracza limit 12 MB." }
+        metadata.put("etag", response.header("ETag").orEmpty())
+            .put("lastModified", response.header("Last-Modified").orEmpty())
+            .put("expectedTotal", expectedTotal ?: -1L)
+            .put("updatedAt", System.currentTimeMillis())
+        metadataFile.writeText(metadata.toString(), Charsets.UTF_8)
+        FileOutputStream(partFile, append).use { output ->
+            response.body.use { input ->
+                val buffer = ByteArray(8192)
+                var total = if (append) offset else 0L
+                while (true) {
+                    val count = input.read(buffer)
+                    if (count < 0) break
+                    total += count
+                    require(total <= 12L * 1024L * 1024L) { "Plik SVG przekracza limit 12 MB." }
+                    output.write(buffer, 0, count)
+                }
+                output.fd.sync()
+            }
+        }
+    } finally {
+        response.close()
+    }
+    val bytes = partFile.readBytes()
+    validateSvg(bytes)
+    val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+    if (item.sha256.isNotBlank() && !commonsChecksumMatches(item.sha256, sha)) {
+        partFile.delete()
+        metadataFile.delete()
+        throw java.io.IOException("Suma SHA-256 pobranego SVG jest niezgodna z oczekiwaną sumą.")
+    }
+    val rights = JSONObject().put("source", "Wikimedia Commons").put("sourcePage", item.page).put("downloadUrl", item.url)
+        .put("license", item.license).put("licenseUrl", item.licenseUrl).put("author", item.artist)
+        .put("restrictions", item.restrictions).put("sha256", sha)
+        .put("verificationStatus", "open-license-metadata-found; trademark-and-use-review-required")
+        .put("permittedKinds", JSONArray()).toString()
+    val title = item.title.removePrefix("File:")
+    val kind = when {
+        title.contains("flag", true) -> "Flaga"
+        title.contains("coat of arms", true) || title.contains("herald", true) -> "Herb"
+        title.contains("seal", true) -> "Pieczęć"
+        title.contains("emblem", true) -> "Godło"
+        else -> "Logo"
+    }
+    DocumentBrandStore.importBytes(context, "Wikimedia Commons", kind, title.take(180), bytes, rights = rights, mimeType = "image/svg+xml", assetId = assetId)
+    partFile.delete()
+    metadataFile.delete()
     return sha
 }
 
