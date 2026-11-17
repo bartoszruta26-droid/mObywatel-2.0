@@ -20,9 +20,11 @@ import org.torproject.jni.TorService
  */
 class GuardianTorRuntime(context: Context) : TorRuntime {
     private val appContext = context.applicationContext
+    private companion object { val ADDITIONAL_SOCKS_PORTS = listOf(19051, 19052, 19053, 19054) }
     @Volatile private var currentState: TorState = TorState.STOPPED
     @Volatile private var torService: TorService? = null
     @Volatile private var socksPort: Int = -1
+    @Volatile private var socksPorts: List<Int> = emptyList()
     @Volatile private var bound = false
     @Volatile private var receiverRegistered = false
     @Volatile private var circuitEstablished = false
@@ -67,6 +69,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         override fun onServiceDisconnected(name: ComponentName?) {
             torService = null
             socksPort = -1
+            socksPorts = emptyList()
             currentState = TorState.FAILED
         }
 
@@ -91,6 +94,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         currentState = TorState.STARTING
         circuitEstablished = false
         try {
+            configureIsolatedSocksListeners()
             ContextCompat.registerReceiver(
                 appContext,
                 statusReceiver,
@@ -119,6 +123,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         if (currentState == TorState.STOPPED) return
         currentState = TorState.STOPPING
         socksPort = -1
+        socksPorts = emptyList()
         circuitEstablished = false
         torService = null
         if (bound) {
@@ -129,10 +134,13 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         currentState = TorState.STOPPED
     }
 
-    override fun proxyEndpoint(): TorProxyEndpoint? {
-        if (currentState != TorState.READY) return null
-        val port = socksPort
-        return if (port in 1..65535) TorProxyEndpoint("127.0.0.1", port) else null
+    override fun proxyEndpoint(): TorProxyEndpoint? = proxyEndpoints().firstOrNull()
+
+    override fun proxyEndpoints(): List<TorProxyEndpoint> {
+        if (currentState != TorState.READY) return emptyList()
+        return socksPorts.mapNotNull { port ->
+            runCatching { TorProxyEndpoint("127.0.0.1", port) }.getOrNull()
+        }.distinctBy { it.port }
     }
 
     @Synchronized
@@ -141,8 +149,31 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         val port = torService?.socksPort ?: return
         if (port in 1..65535 && currentState != TorState.STOPPING) {
             socksPort = port
+            val reported = runCatching { torService?.getInfo("net/listeners/socks") }.getOrNull()
+            val parsedPorts = reported.orEmpty().split(Regex("\\s+"))
+                .mapNotNull { token -> token.trim().trim('"').substringAfterLast(':', "").toIntOrNull() }
+                .filter { it in 1..65535 }
+            val candidates = (parsedPorts + port).distinct()
+            socksPorts = candidates.filter { candidate ->
+                candidate == port || runCatching {
+                    java.net.Socket().use { socket ->
+                        socket.connect(java.net.InetSocketAddress("127.0.0.1", candidate), 250)
+                        true
+                    }
+                }.getOrDefault(false)
+            }
             currentState = TorState.READY
         }
+    }
+
+    private fun configureIsolatedSocksListeners() {
+        // TorService creates its default SOCKSPort itself (normally 9050). Extra listeners
+        // are supplied through its torrc file and use Tor's stream-isolation flags.
+        val torrc = TorService.getTorrc(appContext)
+        val listeners = ADDITIONAL_SOCKS_PORTS.joinToString(separator = "\n") { port ->
+            "SocksPort 127.0.0.1:$port IsolateClientAddr IsolateDestAddr IsolateDestPort"
+        }
+        torrc.writeText(listeners + "\n")
     }
 
     private fun unregisterReceiverIfNeeded() {
