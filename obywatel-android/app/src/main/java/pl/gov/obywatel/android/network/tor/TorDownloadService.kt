@@ -30,8 +30,8 @@ class TorDownloadService(
             else if (profile.id.startsWith("guardian-embedded-")) {
                 runtime.state == TorState.READY && runtime.proxyEndpoints().contains(endpoint)
             } else {
-                val orbotProfile = profile.id == "orbot-local"
-                (!orbotProfile || TorEndpointProbe.isOrbotInstalled(context)) && TorEndpointProbe.isTor(endpoint)
+                val orbotProfile = profile.id.startsWith("orbot-")
+                !runtime.proxyEndpoints().contains(endpoint) && (!orbotProfile || TorEndpointProbe.isOrbotInstalled(context)) && TorEndpointProbe.isTor(endpoint)
             }
         },
         policy = poolPolicy,
