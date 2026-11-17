@@ -57,17 +57,23 @@ class TorDownloadService(
     @Throws(IOException::class)
     fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse {
         if (runtime.state != TorState.READY) throw IOException("Guardian Tor runtime is not ready.")
-        var lastFailure: IOException? = null
-        repeat(2) {
-            val selected = router.select(kind)
-            try {
-                return transport.open(url, selected.endpoint(), rangeStart, ifRange)
-            } catch (failure: IOException) {
-                lastFailure = failure
-                if (failure is TorHttpException || selected.id.startsWith("guardian-embedded-")) throw failure
-                TorEndpointProbe.markUnavailable(selected.endpoint())
+        val selected = router.select(kind)
+        try {
+            return transport.open(url, selected.endpoint(), rangeStart, ifRange)
+        } catch (failure: IOException) {
+            // HTTP errors come from the destination and must not be hidden by switching clients.
+            if (failure is TorHttpException || selected.id.startsWith("guardian-embedded-")) throw failure
+            TorEndpointProbe.markUnavailable(selected.endpoint())
+            // If Orbot or another external local Tor client drops, retry exactly once via Guardian.
+            val guardian = runtime.proxyEndpoint()
+                ?: throw IOException("External Tor client failed and Guardian SOCKS endpoint is unavailable.", failure)
+            if (guardian == selected.endpoint()) throw failure
+            return try {
+                transport.open(url, guardian, rangeStart, ifRange)
+            } catch (fallbackFailure: IOException) {
+                fallbackFailure.addSuppressed(failure)
+                throw fallbackFailure
             }
         }
-        throw lastFailure ?: IOException("No verified Tor client could open the resource.")
     }
 }
