@@ -2,13 +2,16 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.network.tor
 
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import java.io.Closeable
 import java.io.FilterInputStream
 import java.io.IOException
-import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URL
+import java.util.concurrent.TimeUnit
 
 /** Lifecycle/state contract. A Tor runtime implementation may be embedded or externally managed. */
 interface TorRuntime {
@@ -20,11 +23,8 @@ interface TorRuntime {
 
 enum class TorState { STOPPED, STARTING, BOOTSTRAPPING, READY, STOPPING, FAILED }
 
-/** A loopback-only SOCKS5 endpoint. Remote DNS is requested by using an unresolved target address. */
-data class TorProxyEndpoint(
-    val host: String = "127.0.0.1",
-    val port: Int = 9050
-) {
+/** A loopback-only SOCKS5 endpoint. */
+data class TorProxyEndpoint(val host: String = "127.0.0.1", val port: Int = 9050) {
     init {
         require(host == "127.0.0.1" || host == "::1" || host == "localhost") {
             "Tor SOCKS endpoint must be local."
@@ -52,13 +52,13 @@ data class TorRequestPolicy(
     }
 }
 
-/** Owns the connection and response stream. Closing it always disconnects the HTTP connection. */
+/** Owns the OkHttp response and stream. Closing it releases the response and socket. */
 class TorHttpResponse internal constructor(
     val statusCode: Int,
     val contentLength: Long?,
     val contentType: String?,
     val finalUrl: URL,
-    private val connection: HttpURLConnection,
+    private val response: Response,
     input: java.io.InputStream,
     private val maxBytes: Long
 ) : Closeable {
@@ -85,18 +85,35 @@ class TorHttpResponse internal constructor(
 
     override fun close() {
         runCatching { body.close() }
-        connection.disconnect()
+        response.close()
     }
 }
 
 /**
- * Reusable HTTPS-over-Tor transport. It does not persist response bytes and does not own storage.
- * The Tor runtime must already be READY and expose a loopback SOCKS5 endpoint.
+ * Reusable HTTPS-over-Tor transport. It streams response bytes and never persists them.
+ * SOCKS routing uses unresolved destination addresses in OkHttp, so destination DNS is
+ * resolved by the SOCKS proxy rather than the Android device.
  */
 class TorHttpTransport(
     private val runtime: TorRuntime,
     private val policy: TorRequestPolicy = TorRequestPolicy()
 ) {
+    private val clientCache = HashMap<TorProxyEndpoint, OkHttpClient>()
+
+    @Synchronized
+    private fun client(endpoint: TorProxyEndpoint): OkHttpClient =
+        clientCache.getOrPut(endpoint) {
+            OkHttpClient.Builder()
+                .proxy(endpoint.asJavaProxy())
+                .connectTimeout(policy.connectTimeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                .readTimeout(policy.readTimeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .retryOnConnectionFailure(false)
+                .cache(null)
+                .build()
+        }
+
     @Throws(IOException::class)
     fun open(rawUrl: String): TorHttpResponse {
         if (runtime.state != TorState.READY) throw IOException("Tor runtime is not ready.")
@@ -105,47 +122,48 @@ class TorHttpTransport(
         var redirects = 0
 
         while (true) {
-            val connection = (url.openConnection(endpoint.asJavaProxy()) as HttpURLConnection).apply {
-                instanceFollowRedirects = false
-                connectTimeout = policy.connectTimeoutMs
-                readTimeout = policy.readTimeoutMs
-                requestMethod = "GET"
-                setRequestProperty("User-Agent", policy.userAgent)
-                setRequestProperty("Accept-Encoding", "identity")
-                useCaches = false
-            }
-            try {
-                val code = connection.responseCode
-                if (code in REDIRECT_CODES) {
-                    val location = connection.getHeaderField("Location")
-                        ?: throw IOException("Redirect response has no Location header.")
-                    if (redirects >= policy.maxRedirects) throw IOException("Redirect limit exceeded.")
-                    val next = validateHttpsUrl(URL(url, location).toExternalForm())
-                    connection.disconnect()
-                    url = next
-                    redirects++
-                    continue
-                }
-                if (code !in 200..299) {
-                    val message = "Tor HTTP request failed: HTTP $code"
-                    connection.disconnect()
-                    throw IOException(message)
-                }
-                val length = connection.getHeaderFieldLong("Content-Length", -1L)
-                    .takeIf { it >= 0L }
-                if (length != null && length > policy.maxBytes) {
-                    connection.disconnect()
-                    throw IOException("Response exceeds configured byte limit.")
-                }
-                return TorHttpResponse(
-                    code, length, connection.contentType, url, connection,
-                    connection.inputStream, policy.maxBytes
-                )
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .header("User-Agent", policy.userAgent)
+                .header("Accept-Encoding", "identity")
+                .build()
+            val response = try {
+                client(endpoint).newCall(request).execute()
             } catch (failure: Exception) {
-                connection.disconnect()
                 if (failure is IOException) throw failure
                 throw IOException("Unable to open HTTPS response through Tor.", failure)
             }
+
+            val code = response.code
+            if (code in REDIRECT_CODES) {
+                val location = response.header("Location")
+                response.close()
+                if (location.isNullOrBlank()) throw IOException("Redirect response has no Location header.")
+                if (redirects >= policy.maxRedirects) throw IOException("Redirect limit exceeded.")
+                url = validateHttpsUrl(url.toURI().resolve(location).toString())
+                redirects++
+                continue
+            }
+            if (!response.isSuccessful) {
+                response.close()
+                throw IOException("Tor HTTP request failed: HTTP $code")
+            }
+
+            val body = response.body
+            if (body == null) {
+                response.close()
+                throw IOException("Tor HTTP response has no body.")
+            }
+            val length = body.contentLength().takeIf { it >= 0L }
+            if (length != null && length > policy.maxBytes) {
+                response.close()
+                throw IOException("Response exceeds configured byte limit.")
+            }
+            return TorHttpResponse(
+                code, length, body.contentType()?.toString(), url,
+                response, body.byteStream(), policy.maxBytes
+            )
         }
     }
 
