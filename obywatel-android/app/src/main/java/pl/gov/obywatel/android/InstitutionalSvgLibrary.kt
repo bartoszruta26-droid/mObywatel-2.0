@@ -377,8 +377,11 @@ private val commonsDiagnosticLock = Any()
 private fun appendCommonsDiagnostic(context: Context, message: String) {
     synchronized(commonsDiagnosticLock) {
         val stamp = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", java.util.Locale.ROOT).format(java.util.Date())
-        FileOutputStream(context.getFileStreamPath(COMMONS_DIAGNOSTIC_LOG_FILE), true).bufferedWriter(Charsets.UTF_8).use {
-            it.append(stamp).append(" ").append(message.replace("\\n", " ").take(2000)).newLine()
+        FileOutputStream(context.getFileStreamPath(COMMONS_DIAGNOSTIC_LOG_FILE), true).use { stream ->
+            java.io.OutputStreamWriter(stream, Charsets.UTF_8).buffered().use { writer ->
+                writer.append(stamp).append(" ").append(message.replace("\\n", " ").take(2000))
+                writer.append('\\n')
+            }
         }
     }
 }
