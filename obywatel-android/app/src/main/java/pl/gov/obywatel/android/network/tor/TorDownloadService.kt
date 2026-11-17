@@ -16,8 +16,12 @@ class TorDownloadService(
     private val transport = TorHttpTransport(runtime, policy)
     private val router = TorDownloadRouter(
         profiles = {
-            val embedded = runtime.proxyEndpoints().mapIndexed { index, endpoint ->
-                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — listener ${index + 1}", endpoint.host, endpoint.port)
+            // Prefer listeners explicitly configured for stream isolation. Keep the
+            // primary Guardian SOCKS endpoint as a fallback if no extra listener started.
+            val isolatedEndpoints = (runtime as? GuardianTorRuntime)?.isolatedProxyEndpoints().orEmpty()
+            val embeddedEndpoints = isolatedEndpoints.ifEmpty { listOfNotNull(runtime.proxyEndpoint()) }
+            val embedded = embeddedEndpoints.mapIndexed { index, endpoint ->
+                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — isolated listener ${index + 1}", endpoint.host, endpoint.port)
             }
             // All external profiles are loopback-only and must pass a live Tor egress probe.
             // Orbot additionally must be installed; unavailable or non-Tor SOCKS is excluded.
