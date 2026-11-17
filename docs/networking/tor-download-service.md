@@ -8,10 +8,8 @@ a closeable response stream; it does not buffer or persist the complete response
 
 ## Layers
 
-- `TorRuntime`: lifecycle and bootstrap state. Implementations may embed a Tor runtime or connect
-  to a separately managed local Tor service.
-- `TorProxyEndpoint`: loopback-only SOCKS5 endpoint. The unresolved target address asks the
-  Java SOCKS implementation to resolve the destination through the proxy rather than locally.
+- `TorRuntime`: lifecycle/state contract; `GuardianTorRuntime` embeds Guardian Project's Tor service.
+- `TorProxyEndpoint`: loopback-only SOCKS5 endpoint. OkHttp routes destination hostnames through SOCKS so DNS resolution is performed by the Tor proxy.
 - `TorHttpTransport`: HTTPS GET transport, explicit redirect handling, timeouts, response-size
   enforcement, and close/disconnect ownership.
 - Consumer: validates media/content, computes hashes, and decides whether/how to persist data.
@@ -42,9 +40,8 @@ and real-device behaviour still require instrumentation tests before release.
 
 ## Follow-up integration
 
-1. Select and integrate a maintained Android Tor runtime.
-2. Implement `TorRuntime` with bootstrap progress and lifecycle management.
-3. Add instrumented tests against a local SOCKS5 test server and a Tor test network.
-4. Migrate Wikimedia Commons API and SVG downloads to an injected transport.
-5. Add a settings surface for AUTO / DIRECT / TOR only after the runtime and fallback policy
-   are fully tested. TOR mode must fail closed; AUTO fallback must be explicit and observable.
+1. Add instrumentation tests for TorService binding, bootstrap, stop/restart, and SOCKS availability.
+2. Add an end-to-end test proving observed egress is a Tor exit, without logging sensitive URLs.
+3. Migrate Wikimedia Commons API and SVG downloads to an injected transport.
+4. Add a settings surface for AUTO / DIRECT / TOR only after runtime and fallback policy are fully tested.
+   TOR mode must fail closed; AUTO fallback must be explicit and observable.
