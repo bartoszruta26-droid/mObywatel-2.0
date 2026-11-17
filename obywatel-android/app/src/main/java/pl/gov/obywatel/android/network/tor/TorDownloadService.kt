@@ -53,7 +53,8 @@ class TorDownloadService(
                 return transport.open(url, selected.endpoint(), rangeStart, ifRange)
             } catch (failure: IOException) {
                 lastFailure = failure
-                if (selected.id.startsWith("guardian-embedded-")) throw failure
+                if (failure is TorHttpException || selected.id.startsWith("guardian-embedded-")) throw failure
+                TorEndpointProbe.markUnavailable(selected.endpoint())
             }
         }
         throw lastFailure ?: IOException("No verified Tor client could open the resource.")
