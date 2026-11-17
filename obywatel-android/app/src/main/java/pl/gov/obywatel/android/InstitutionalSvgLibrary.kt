@@ -119,83 +119,52 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
 private suspend fun discoverCommonsOpenSvgs(
     context: Context,
     limit: Int = 200,
-    onSearchProgress: suspend (titlesFound: Int, term: String) -> Unit = { _, _ -> }
+    onSearchProgress: suspend (titlesFound: Int, term: String) -> Unit = { _, _ -> },
+    onBatchReady: suspend (List<CommonsSvgCandidate>) -> Unit = {}
 ): List<CommonsSvgCandidate> {
-    // Keep discovery bounded. A single page per focused term is preferable to
-    // hundreds of serial requests; the download queue can be resumed separately.
     val terms = listOf(
-        // National, regional and institutional heraldry.
         "coat of arms", "heraldry", "national emblem", "state emblem",
         "national flag", "city flag", "institutional emblem", "official seal",
         "government logo", "herb państwa", "godło państwowe", "herb miasta",
         "herb gminy", "herb powiatu", "herb województwa", "flaga państwowa",
-        // Intergovernmental bodies and international institutions.
-        "United Nations logo", "World Health Organization logo",
-        "UNESCO logo", "UNICEF logo", "European Union emblem",
-        "Council of Europe logo", "NATO emblem",
-        // NGOs, humanitarian aid, civil society and international associations.
+        "United Nations logo", "World Health Organization logo", "UNESCO logo",
+        "UNICEF logo", "European Union emblem", "Council of Europe logo", "NATO emblem",
         "international NGO logo", "humanitarian organization logo",
         "human rights organization logo", "environmental organization logo",
-        "Amnesty International logo", "Greenpeace logo",
-        "Médecins Sans Frontières logo", "Save the Children logo",
-        "Oxfam logo", "World Wide Fund for Nature logo",
+        "Amnesty International logo", "Greenpeace logo", "Médecins Sans Frontières logo",
+        "Save the Children logo", "Oxfam logo", "World Wide Fund for Nature logo",
         "Human Rights Watch logo", "Transparency International logo",
         "International Rescue Committee logo", "CARE International logo",
-        "Caritas Internationalis logo", "World Vision logo",
-        "Plan International logo", "Habitat for Humanity logo",
-        "Rotary International logo", "Lions Clubs International logo"
+        "Caritas Internationalis logo", "World Vision logo", "Plan International logo",
+        "Habitat for Humanity logo", "Rotary International logo", "Lions Clubs International logo"
     )
-    val titles=linkedSetOf<String>()
-    for(term in terms) {
-        val query=java.net.URLEncoder.encode("$term filemime:svg","UTF-8")
-        var offset:String?=null
-        var finished=false
-        repeat(1) {
-            if(finished || titles.size>=limit*2) return@repeat
-            val offsetArg=offset?.let { "&sroffset="+java.net.URLEncoder.encode(it,"UTF-8") }.orEmpty()
-            val response = try {
-                commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
-            } catch (failure: Exception) {
-                // One unavailable search term must not cancel every other category.
-                onSearchProgress(titles.size, "$term (pominięto: ${failure.message ?: "błąd API"})")
-                finished = true
-                return@repeat
-            }
-            val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
-            for(i in 0 until results.length()) {
-                val title=results.optJSONObject(i)?.optString("title").orEmpty()
-                if(title.startsWith("File:") && title.endsWith(".svg",true)) titles.add(title)
-            }
-            offset=response.optJSONObject("continue")?.optString("sroffset")
-            if(offset.isNullOrBlank()) finished=true
-        }
-        onSearchProgress(titles.size, term)
-        // Search only a bounded candidate pool. The previous 5x threshold caused
-        // dozens of slow API calls before the first actual SVG download could start.
-        if(titles.size>=limit*2) break
-    }
-    val candidates=mutableListOf<CommonsSvgCandidate>()
-    for(batch in titles.toList().chunked(40)) {
-        if(candidates.size>=limit) break
-        val encoded=java.net.URLEncoder.encode(batch.joinToString("|"),"UTF-8")
+    val seenTitles = linkedSetOf<String>()
+    val deliveredTitles = hashSetOf<String>()
+    val allCandidates = mutableListOf<CommonsSvgCandidate>()
+
+    suspend fun verifyAndDeliver(batch: List<String>) {
+        if (batch.isEmpty() || allCandidates.size >= limit) return
+        val encoded = java.net.URLEncoder.encode(batch.joinToString("|"), "UTF-8")
         val response = try {
             commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         } catch (failure: Exception) {
-            // Keep valid candidates from earlier batches; users can resume later.
-            onSearchProgress(titles.size, "Weryfikacja metadanych: pominięto partię (${failure.message ?: "błąd API"})")
-            continue
+            onSearchProgress(seenTitles.size, "Weryfikacja metadanych: partia pominięta (" + (failure.message ?: "błąd API") + ")")
+            return
         }
-        val pages=response.optJSONObject("query")?.optJSONObject("pages") ?: continue
-        val keys=pages.keys()
-        while(keys.hasNext() && candidates.size<limit) {
-            val page=pages.optJSONObject(keys.next()) ?: continue
-            val title=page.optString("title")
-            val info=page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
-            if(info.optString("mime")!="image/svg+xml") continue
-            val meta=info.optJSONObject("extmetadata") ?: JSONObject()
-            fun value(key:String)=meta.optJSONObject(key)?.optString("value").orEmpty().replace(Regex("<[^>]*>")," ").replace("&nbsp;"," ").trim()
-            val license=value("LicenseShortName")
-            val lower=license.lowercase(java.util.Locale.ROOT)
+        val pages = response.optJSONObject("query")?.optJSONObject("pages") ?: return
+        val candidates = mutableListOf<CommonsSvgCandidate>()
+        val keys = pages.keys()
+        while (keys.hasNext() && allCandidates.size + candidates.size < limit) {
+            val page = pages.optJSONObject(keys.next()) ?: continue
+            val title = page.optString("title")
+            if (!deliveredTitles.add(title)) continue
+            val info = page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
+            if (info.optString("mime") != "image/svg+xml") continue
+            val meta = info.optJSONObject("extmetadata") ?: JSONObject()
+            fun value(key: String) = meta.optJSONObject(key)?.optString("value").orEmpty()
+                .replace(Regex("<[^>]*>"), " ").replace("&nbsp;", " ").trim()
+            val license = value("LicenseShortName")
+            val lower = license.lowercase(java.util.Locale.ROOT)
             val attributionLicense =
                 (lower.contains("cc by") || lower.contains("cc-by") ||
                     (lower.contains("creative commons") && lower.contains("attribution"))) &&
@@ -206,15 +175,55 @@ private suspend fun discoverCommonsOpenSvgs(
             val permissiveOpen = lower.contains("cc0") || lower.contains("public domain") ||
                 lower.contains("public-domain") || lower.contains("gfdl") ||
                 lower.contains("free art license") || lower.contains("lgpl") || lower.contains("gpl")
-            val ccOpen = attributionLicense
-            if(!ccOpen && !permissiveOpen) continue
-            val url=info.optString("url")
-            if(!url.startsWith("https://upload.wikimedia.org/")) continue
-            val pageUrl="https://commons.wikimedia.org/wiki/"+java.net.URLEncoder.encode(title.replace(' ','_'),"UTF-8")
-            candidates.add(CommonsSvgCandidate(title,url,pageUrl,license,value("LicenseUrl"),value("Artist"),value("Restrictions")))
+            if (!attributionLicense && !permissiveOpen) continue
+            val url = info.optString("url")
+            if (!url.startsWith("https://upload.wikimedia.org/")) continue
+            val pageUrl = "https://commons.wikimedia.org/wiki/" +
+                java.net.URLEncoder.encode(title.replace(' ', '_'), "UTF-8")
+            candidates.add(CommonsSvgCandidate(
+                title, url, pageUrl, license, value("LicenseUrl"), value("Artist"), value("Restrictions")
+            ))
+        }
+        if (candidates.isNotEmpty()) {
+            allCandidates.addAll(candidates)
+            onSearchProgress(seenTitles.size, "Zweryfikowano " + allCandidates.size + "; przekazuję partię do pobierania")
+            onBatchReady(candidates)
         }
     }
-    return candidates.distinctBy { it.title }.take(limit)
+
+    var pending = mutableListOf<String>()
+    for (term in terms) {
+        if (allCandidates.size >= limit || seenTitles.size >= limit * 2) break
+        val query = java.net.URLEncoder.encode("$term filemime:svg", "UTF-8")
+        try {
+            val response = commonsRequest(
+                context,
+                "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50&format=json"
+            )
+            val results = response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
+            for (i in 0 until results.length()) {
+                val title = results.optJSONObject(i)?.optString("title").orEmpty()
+                if (title.startsWith("File:") && title.endsWith(".svg", true) && seenTitles.add(title)) {
+                    pending.add(title)
+                    if (pending.size >= 40) {
+                        verifyAndDeliver(pending.toList())
+                        pending = mutableListOf()
+                        if (allCandidates.size >= limit) break
+                    }
+                }
+            }
+        } catch (failure: Exception) {
+            onSearchProgress(seenTitles.size, "$term (pominięto: " + (failure.message ?: "błąd API") + ")")
+        }
+        onSearchProgress(seenTitles.size, term)
+        // Verify and dispatch a first small batch while discovery is still running.
+        if (pending.size >= 10) {
+            verifyAndDeliver(pending.toList())
+            pending = mutableListOf()
+        }
+    }
+    if (pending.isNotEmpty() && allCandidates.size < limit) verifyAndDeliver(pending)
+    return allCandidates.distinctBy { it.title }.take(limit)
 }
 
 private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): String {
@@ -615,47 +624,72 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
-                            val candidates = discoverCommonsOpenSvgs(context, 200) { foundTitles, term ->
-                                withContext(Dispatchers.Main) {
-                                    status = "Wyszukiwanie Commons: $foundTitles plików SVG — $term"
+                            var totalFound = 0
+                            var totalDownloaded = 0
+                            var totalAlreadyPresent = 0
+                            var totalFailed = 0
+                            var totalAttempts = 0
+                            var processed = 0
+                            writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, JSONArray().toString())
+                            val candidates = discoverCommonsOpenSvgs(
+                                context,
+                                200,
+                                onSearchProgress = { foundTitles, term ->
+                                    withContext(Dispatchers.Main) {
+                                        status = "Wyszukiwanie SVG: $foundTitles znalezionych — $term"
+                                    }
+                                },
+                                onBatchReady = { batch ->
+                                    val manifest = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
+                                    batch.forEach { item ->
+                                        manifest.put(JSONObject()
+                                            .put("file", item.title)
+                                            .put("downloadUrl", item.url)
+                                            .put("sourcePage", item.page)
+                                            .put("license", item.license)
+                                            .put("licenseUrl", item.licenseUrl)
+                                            .put("author", item.artist)
+                                            .put("restrictions", item.restrictions)
+                                            .put("source", "Wikimedia Commons")
+                                            .put("status", "pending")
+                                            .put("attempts", 0)
+                                            .put("sha256", ""))
+                                    }
+                                    writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
+                                    totalFound += batch.size
+                                    withContext(Dispatchers.Main) {
+                                        progressCurrent = processed
+                                        progressTotal = totalFound
+                                        status = "Znaleziono $totalFound plików. Rozpoczynam pobieranie przez Tor…"
+                                    }
+                                    val part = processCommonsCandidates(context, batch) { completed, total, title ->
+                                        withContext(Dispatchers.Main) {
+                                            progressCurrent = processed + completed
+                                            progressTotal = totalFound
+                                            status = "Pobieranie SVG: " + (processed + completed) + "/$totalFound — $title"
+                                        }
+                                    }
+                                    processed += part.found
+                                    totalDownloaded += part.downloaded
+                                    totalAlreadyPresent += part.alreadyPresent
+                                    totalFailed += part.failed
+                                    totalAttempts += part.attempts
+                                    saveCommonsReport(
+                                        context, totalFound, totalDownloaded, totalAlreadyPresent,
+                                        totalFailed, totalAttempts, batch.lastOrNull()?.title.orEmpty(), emptyList()
+                                    )
                                 }
-                            }
+                            )
                             withContext(Dispatchers.Main) {
-                                progressCurrent = 0
-                                progressTotal = candidates.size
-                                status = if (candidates.isEmpty()) {
+                                progressCurrent = processed
+                                progressTotal = totalFound
+                                status = if (totalFound == 0) {
                                     "Wyszukiwanie zakończone: brak plików z potwierdzoną otwartą licencją."
                                 } else {
-                                    "Znaleziono ${candidates.size} plików. Rozpoczynam pobieranie przez Tor…"
+                                    "Zakończono wyszukiwanie: $totalFound. Pobrano $totalDownloaded; błędy $totalFailed."
                                 }
                             }
-                            val manifest = JSONArray()
-                            candidates.forEach { item ->
-                                manifest.put(JSONObject()
-                                    .put("file", item.title)
-                                    .put("downloadUrl", item.url)
-                                    .put("sourcePage", item.page)
-                                    .put("license", item.license)
-                                    .put("licenseUrl", item.licenseUrl)
-                                    .put("author", item.artist)
-                                    .put("restrictions", item.restrictions)
-                                    .put("source", "Wikimedia Commons")
-                                    .put("status", "pending")
-                                    .put("attempts", 0)
-                                    .put("sha256", ""))
-                            }
-                            writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
-                            processCommonsCandidates(context, candidates) { completed, total, title ->
-                                withContext(Dispatchers.Main) {
-                                    progressCurrent = completed
-                                    progressTotal = total
-                                    status = if (completed < total) {
-                                        "Pobieranie SVG ${completed + 1}/$total: $title"
-                                    } else {
-                                        "Zakończono pobieranie SVG $total/$total"
-                                    }
-                                }
-                            }
+                            CommonsDownloadSummary(totalFound, totalDownloaded, totalAlreadyPresent, totalFailed, totalAttempts)
                         }
                     }
                     status = result.fold(
