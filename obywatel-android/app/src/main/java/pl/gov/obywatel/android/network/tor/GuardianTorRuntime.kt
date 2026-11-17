@@ -32,6 +32,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     @Volatile private var lastFailureMessage: String? = null
     @Volatile private var lastServiceStatus: String? = null
     @Volatile private var statusSequence: Long = 0L
+    @Volatile private var serviceConnectionLost = false
 
     override val state: TorState
         get() = currentState
@@ -97,12 +98,14 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 return
             }
             torService = service
+            serviceConnectionLost = false
             val bootstrap = runCatching { service.getInfo("status/bootstrap-phase") }.getOrNull().orEmpty()
             circuitEstablished = circuitEstablished || bootstrap.contains("PROGRESS=100") || bootstrap.contains("TAG=done")
             publishReady()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            serviceConnectionLost = true
             torService = null
             socksPort = -1
             socksPorts = emptyList()
@@ -111,6 +114,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         }
 
         override fun onBindingDied(name: ComponentName?) {
+            serviceConnectionLost = true
             torService = null
             socksPort = -1
             socksPorts = emptyList()
@@ -119,6 +123,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         }
 
         override fun onNullBinding(name: ComponentName?) {
+            serviceConnectionLost = true
             torService = null
             socksPort = -1
             socksPorts = emptyList()
@@ -158,6 +163,9 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 localErrorReceiverRegistered = true
             }
             prepareFailedServiceForRestart(restartFailedService)
+            lastFailureMessage = null
+            currentState = TorState.STARTING
+            serviceConnectionLost = false
             bound = appContext.bindService(
                 Intent(appContext, TorService::class.java),
                 connection,
@@ -275,6 +283,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     private fun prepareFailedServiceForRestart(wasFailed: Boolean) {
         if (!wasFailed || !bound) return
         val previousSequence = statusSequence
+        val awaitServiceShutdown = !serviceConnectionLost && lastServiceStatus != TorService.STATUS_OFF
         runCatching { appContext.unbindService(connection) }
         bound = false
         torService = null
@@ -283,18 +292,20 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         circuitEstablished = false
         runCatching { appContext.stopService(Intent(appContext, TorService::class.java)) }
 
-        val deadline = System.currentTimeMillis() + 5_000L
-        while (statusSequence <= previousSequence || lastServiceStatus != TorService.STATUS_OFF) {
-            if (System.currentTimeMillis() >= deadline) {
-                throw IllegalStateException(
-                    "Guardian Tor: zwolniono nieudane powiązanie, ale usługa nie potwierdziła stanu OFF; ponowne uruchomienie wstrzymano."
-                )
-            }
-            try {
-                Thread.sleep(50L)
-            } catch (interrupted: InterruptedException) {
-                Thread.currentThread().interrupt()
-                throw IllegalStateException("Oczekiwanie na zamknięcie usługi Guardian Tor zostało przerwane.", interrupted)
+        if (awaitServiceShutdown) {
+            val deadline = System.currentTimeMillis() + 5_000L
+            while (statusSequence <= previousSequence || lastServiceStatus != TorService.STATUS_OFF) {
+                if (System.currentTimeMillis() >= deadline) {
+                    throw IllegalStateException(
+                        "Guardian Tor: zwolniono nieudane powiązanie, ale usługa nie potwierdziła stanu OFF; ponowne uruchomienie wstrzymano."
+                    )
+                }
+                try {
+                    Thread.sleep(50L)
+                } catch (interrupted: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    throw IllegalStateException("Oczekiwanie na zamknięcie usługi Guardian Tor zostało przerwane.", interrupted)
+                }
             }
         }
         lastServiceStatus = null
