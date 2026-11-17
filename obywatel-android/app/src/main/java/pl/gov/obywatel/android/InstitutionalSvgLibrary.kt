@@ -23,11 +23,11 @@ import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
 import pl.gov.obywatel.android.network.tor.TorDownloadKind
 import pl.gov.obywatel.android.network.tor.TorDownloadServiceProvider
+import pl.gov.obywatel.android.network.tor.TorHttpException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -67,13 +67,13 @@ private fun waitForCommonsRequestSlot() {
     }
 }
 
-private fun retryAfterMillis(connection: HttpURLConnection): Long? {
-    val value = connection.getHeaderField("Retry-After")?.trim() ?: return null
-    value.toLongOrNull()?.let { seconds ->
+private fun retryAfterMillis(value: String?): Long? {
+    val header = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+    header.toLongOrNull()?.let { seconds ->
         return if (seconds <= 0L) 0L else if (seconds >= 180L) 180000L else seconds * 1000L
     }
     return runCatching {
-        val date = java.time.ZonedDateTime.parse(value, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli()
+        val date = java.time.ZonedDateTime.parse(header, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli()
         (date - System.currentTimeMillis()).coerceAtLeast(0L).coerceAtMost(180000L)
     }.getOrNull()
 }
@@ -92,33 +92,32 @@ internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null):
     return maxOf(serverDelay ?: exponentialDelay, exponentialDelay).coerceIn(4000L, 180000L)
 }
 
-private fun commonsRequest(params:String):JSONObject {
+private fun commonsRequest(context: Context, params: String): JSONObject {
     var lastFailure: Exception? = null
+    val tor = TorDownloadServiceProvider.get(context)
     repeat(COMMONS_API_MAX_ATTEMPTS) { attempt ->
-        // One global queue prevents bursts across API searches and file downloads.
         waitForCommonsRequestSlot()
-        val connection=URL("https://commons.wikimedia.org/w/api.php?$params&maxlag=5").openConnection() as HttpURLConnection
-        connection.connectTimeout=20000
-        connection.readTimeout=30000
-        connection.setRequestProperty("User-Agent","mObywatelska-2.0/1.1 (Wikimedia Commons SVG asset catalog)")
         try {
-            val code = connection.responseCode
-            if (code in 200..299) {
-                return JSONObject(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
+            val url = "https://commons.wikimedia.org/w/api.php?$params&maxlag=5"
+            return tor.open(url, TorDownloadKind.API).use { response ->
+                JSONObject(response.body.bufferedReader(Charsets.UTF_8).use { it.readText() })
             }
-            val retryAfterMs = retryAfterMillis(connection)
-            val retryable = code == 429 || code == 503 || code == 502 || code == 504
-            lastFailure = CommonsHttpException(code, retryAfterMs)
+        } catch (failure: TorHttpException) {
+            val retryAfterMs = retryAfterMillis(failure.retryAfter)
+            val retryable = failure.httpCode == 429 || failure.httpCode == 503 || failure.httpCode == 502 || failure.httpCode == 504
+            lastFailure = CommonsHttpException(failure.httpCode, retryAfterMs)
             if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
             Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2), retryAfterMs ?: 0L))
-        } finally {
-            connection.disconnect()
+        } catch (failure: Exception) {
+            lastFailure = failure
+            if (attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw failure
+            Thread.sleep(commonsRetryDelayMs(attempt + 2))
         }
     }
-    throw lastFailure ?: java.io.IOException("Wikimedia Commons: nie udało się wykonać żądania API.")
+    throw lastFailure ?: java.io.IOException("Wikimedia Commons: nie udało się wykonać żądania API przez Tor.")
 }
 
-private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
+private fun discoverCommonsOpenSvgs(context: Context, limit: Int = 200): List<CommonsSvgCandidate> {
     val terms = listOf(
         "coat of arms", "heraldry", "heraldic arms", "blazon", "escutcheon",
         "flag", "national flag", "city flag", "province flag", "municipal flag",
@@ -144,7 +143,7 @@ private fun discoverCommonsOpenSvgs(limit:Int=200):List<CommonsSvgCandidate> {
         repeat(4) {
             if(finished || titles.size>=limit*5) return@repeat
             val offsetArg=offset?.let { "&sroffset="+java.net.URLEncoder.encode(it,"UTF-8") }.orEmpty()
-            val response=commonsRequest("action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
+            val response=commonsRequest(context, "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50$offsetArg&format=json")
             val results=response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
             for(i in 0 until results.length()) {
                 val title=results.optJSONObject(i)?.optString("title").orEmpty()
@@ -542,7 +541,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
-                            val candidates = discoverCommonsOpenSvgs(200)
+                            val candidates = discoverCommonsOpenSvgs(context, 200)
                             val manifest = JSONArray()
                             candidates.forEach { item ->
                                 manifest.put(JSONObject()
