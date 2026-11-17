@@ -49,7 +49,11 @@ object TorEndpointProbe {
     }
 }
 
-/** Process-wide runtime. The embedded Guardian client remains the guaranteed fallback. */
+/** Whether selecting Orbot should defer startup of the embedded Guardian client. */
+internal fun shouldStartGuardianForSelectedClient(activeClientId: String, orbotInstalled: Boolean): Boolean =
+    !(activeClientId.startsWith("orbot-") && orbotInstalled)
+
+/** Process-wide runtime. The embedded Guardian client is started lazily as a fallback. */
 object TorDownloadServiceProvider {
     @Volatile private var runtime: GuardianTorRuntime? = null
     @Volatile private var service: TorDownloadService? = null
@@ -61,16 +65,26 @@ object TorDownloadServiceProvider {
     fun get(context: Context): TorDownloadService {
         val app = context.applicationContext
         val activeRuntime = runtime ?: GuardianTorRuntime(app).also { runtime = it }
-        if (activeRuntime.state == TorState.STOPPED || activeRuntime.state == TorState.FAILED) {
-            activeRuntime.start()
-        }
-        val deadline = System.currentTimeMillis() + 120_000L
-        while (activeRuntime.state != TorState.READY && activeRuntime.state != TorState.FAILED &&
-            System.currentTimeMillis() < deadline) {
-            Thread.sleep(250L)
-        }
-        if (activeRuntime.state != TorState.READY) {
-            throw java.io.IOException("Wbudowany klient Guardian Tor nie osiągnął stanu READY; pobieranie zatrzymano.")
+        val activeClientId = TorClientRegistry.activeId(app)
+        val orbotInstalled = TorEndpointProbe.isOrbotInstalled(app)
+        if (shouldStartGuardianForSelectedClient(activeClientId, orbotInstalled)) {
+            if (activeRuntime.state == TorState.STOPPED || activeRuntime.state == TorState.FAILED) {
+                activeRuntime.start()
+            }
+            val deadline = System.currentTimeMillis() + 120_000L
+            while (activeRuntime.state != TorState.READY && activeRuntime.state != TorState.FAILED &&
+                System.currentTimeMillis() < deadline
+            ) {
+                try {
+                    Thread.sleep(250L)
+                } catch (interrupted: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    throw java.io.IOException("Oczekiwanie na Guardian Tor zostało przerwane.", interrupted)
+                }
+            }
+            if (activeRuntime.state != TorState.READY) {
+                throw java.io.IOException("Wbudowany klient Guardian Tor nie osiągnął stanu READY.")
+            }
         }
         return service ?: TorDownloadService(app, activeRuntime).also { service = it }
     }
