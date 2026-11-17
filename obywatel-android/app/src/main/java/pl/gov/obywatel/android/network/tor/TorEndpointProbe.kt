@@ -3,7 +3,6 @@
 package pl.gov.obywatel.android.network.tor
 
 import android.content.Context
-import android.content.pm.PackageManager
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -17,8 +16,9 @@ object TorEndpointProbe {
     private data class Result(val isTor: Boolean, val checkedAt: Long)
     private val cache = ConcurrentHashMap<String, Result>()
 
+    @Suppress("DEPRECATION")
     fun isOrbotInstalled(context: Context): Boolean = runCatching {
-        context.packageManager.getPackageInfo("org.torproject.android", PackageManager.PackageInfoFlags.of(0))
+        context.packageManager.getPackageInfo("org.torproject.android", 0)
     }.isSuccess
 
     fun isTor(endpoint: TorProxyEndpoint, force: Boolean = false): Boolean {
