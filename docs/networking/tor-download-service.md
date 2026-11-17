@@ -16,13 +16,19 @@ a closeable response stream; it does not buffer or persist the complete response
   enforcement, and close/disconnect ownership.
 - Consumer: validates media/content, computes hashes, and decides whether/how to persist data.
 
-## Current implementation boundary
+## Embedded Android runtime
 
-This change introduces the reusable transport contract and HTTPS-over-SOCKS5 client. It does not
-yet bundle or launch a Tor daemon. That is intentional: the runtime backend must be selected and
-audited separately (licensing, Android ABI coverage, bootstrap behaviour, battery/data use,
-foreground-service requirements, and update strategy). Until a runtime reports READY, requests
-fail closed and never silently fall back to direct networking.
+The app integrates Guardian Project tor-android 0.4.9.14 from Maven Central and uses its
+bound org.torproject.jni.TorService. The adapter listens for the service ON status and
+publishes READY only after the first Tor circuit is established and a valid SOCKS port is
+available. The runtime owns the service binding and unbinds it on stop.
+
+The Tor daemon maintains its own private operational state/cache under the app's internal
+service directory. This is distinct from downloaded response payloads: TorHttpTransport
+does not persist the requested files and returns a streaming response.
+
+The app download service remains independent from the Tor implementation. Runtime lifecycle
+and real-device behaviour still require instrumentation tests before release.
 
 ## Security properties
 
