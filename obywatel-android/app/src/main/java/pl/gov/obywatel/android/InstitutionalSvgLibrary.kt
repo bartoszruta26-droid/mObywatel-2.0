@@ -23,7 +23,6 @@ import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.net.URL
 import java.security.MessageDigest
 import pl.gov.obywatel.android.network.tor.TorDownloadKind
 import pl.gov.obywatel.android.network.tor.TorDownloadServiceProvider
@@ -158,7 +157,7 @@ private fun discoverCommonsOpenSvgs(context: Context, limit: Int = 200): List<Co
     for(batch in titles.toList().chunked(40)) {
         if(candidates.size>=limit) break
         val encoded=java.net.URLEncoder.encode(batch.joinToString("|"),"UTF-8")
-        val response=commonsRequest("action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
+        val response=commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         val pages=response.optJSONObject("query")?.optJSONObject("pages") ?: continue
         val keys=pages.keys()
         while(keys.hasNext() && candidates.size<limit) {
