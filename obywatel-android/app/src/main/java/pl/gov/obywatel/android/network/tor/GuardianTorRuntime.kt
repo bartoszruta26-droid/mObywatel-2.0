@@ -25,6 +25,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     @Volatile private var socksPort: Int = -1
     @Volatile private var bound = false
     @Volatile private var receiverRegistered = false
+    @Volatile private var circuitEstablished = false
 
     override val state: TorState
         get() = currentState
@@ -34,9 +35,13 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             if (intent?.action != TorService.ACTION_STATUS) return
             when (intent.getStringExtra(TorService.EXTRA_STATUS)) {
                 TorService.STATUS_STARTING -> currentState = TorState.BOOTSTRAPPING
-                TorService.STATUS_ON -> publishReady()
+                TorService.STATUS_ON -> {
+                    circuitEstablished = true
+                    publishReady()
+                }
                 TorService.STATUS_STOPPING, TorService.STATUS_OFF -> {
                     socksPort = -1
+                    circuitEstablished = false
                     if (currentState != TorState.STOPPING) currentState = TorState.FAILED
                 }
             }
@@ -83,6 +88,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             currentState == TorState.BOOTSTRAPPING
         ) return
         currentState = TorState.STARTING
+        circuitEstablished = false
         try {
             ContextCompat.registerReceiver(
                 appContext,
@@ -112,6 +118,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         if (currentState == TorState.STOPPED) return
         currentState = TorState.STOPPING
         socksPort = -1
+        circuitEstablished = false
         torService = null
         if (bound) {
             runCatching { appContext.unbindService(connection) }
@@ -129,6 +136,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
 
     @Synchronized
     private fun publishReady() {
+        if (!circuitEstablished) return
         val port = torService?.socksPort ?: return
         if (port in 1..65535 && currentState != TorState.STOPPING) {
             socksPort = port
