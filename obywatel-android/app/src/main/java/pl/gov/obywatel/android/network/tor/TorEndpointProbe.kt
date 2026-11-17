@@ -88,7 +88,7 @@ object TorDownloadServiceProvider {
                 }
             }
             if (activeRuntime.state != TorState.READY) {
-                throw java.io.IOException("Wbudowany klient Guardian Tor nie osiągnął stanu READY.")
+                throw java.io.IOException("Wbudowany klient Guardian Tor nie osiągnął stanu READY." +\n                    (activeRuntime.failureMessage()?.let { " Przyczyna zgłoszona przez usługę: $it" } ?: " Brak komunikatu ACTION_ERROR z usługi Tor."))
             }
         }
         return service ?: TorDownloadService(app, activeRuntime).also { service = it }
