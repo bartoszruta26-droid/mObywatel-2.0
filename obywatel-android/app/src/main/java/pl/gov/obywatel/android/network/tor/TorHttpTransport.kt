@@ -9,7 +9,6 @@ import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URL
-import java.util.Locale
 
 /** Lifecycle/state contract. A Tor runtime implementation may be embedded or externally managed. */
 interface TorRuntime {
@@ -34,7 +33,7 @@ data class TorProxyEndpoint(
     }
 
     internal fun asJavaProxy(): Proxy =
-        Proxy(Proxy.Type.SOCKS, InetSocketAddress.createUnresolved(host, port))
+        Proxy(Proxy.Type.SOCKS, InetSocketAddress(host, port))
 }
 
 data class TorRequestPolicy(
@@ -151,14 +150,16 @@ class TorHttpTransport(
     }
 
     private fun validateHttpsUrl(value: String): URL {
-        val parsed = try { URL(value) } catch (failure: Exception) {
+        val parsed = try { java.net.URI(value) } catch (failure: Exception) {
             throw IOException("Invalid download URL.", failure)
         }
-        if (!parsed.protocol.equals("https", ignoreCase = true) ||
-            parsed.host.isNullOrBlank() || parsed.userInfo != null ||
+        if (!parsed.scheme.equals("https", ignoreCase = true) ||
+            parsed.host.isNullOrBlank() || parsed.rawUserInfo != null ||
             parsed.port !in -1..65535
         ) throw IOException("Only absolute HTTPS URLs without embedded credentials are allowed.")
-        return parsed
+        return try { parsed.toURL() } catch (failure: Exception) {
+            throw IOException("Invalid HTTPS URL.", failure)
+        }
     }
 
     private companion object {
