@@ -9,6 +9,24 @@ import org.junit.Test
 
 class InstitutionalSvgDownloadAccountingTest {
     @Test
+    fun commonsSearchUsesMimeFilterAndPlainFallback() {
+        assertEquals(
+            listOf("herb miasta filemime:svg", "herb miasta"),
+            commonsSvgSearchExpressions("herb miasta")
+        )
+    }
+
+    @Test
+    fun commonsSearchRejectsBlankTerms() {
+        try {
+            commonsSvgSearchExpressions("   ")
+            throw AssertionError("Pusta fraza powinna zostać odrzucona.")
+        } catch (_: IllegalArgumentException) {
+            // expected
+        }
+    }
+
+    @Test
     fun progressLabelShowsExactCountOutOfDiscoveredSvgFiles() {
         assertEquals("Postęp: 0/200 plików SVG", commonsDownloadProgressLabel(0, 200))
         assertEquals("Postęp: 1/200 plików SVG", commonsDownloadProgressLabel(1, 200))

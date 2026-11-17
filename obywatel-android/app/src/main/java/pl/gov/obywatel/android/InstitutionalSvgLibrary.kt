@@ -51,6 +51,13 @@ private fun validateSvg(bytes:ByteArray) {
 
 internal data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
 
+/** Ordered Commons search strategies: MIME-filtered first, plain fallback second. */
+internal fun commonsSvgSearchExpressions(term: String): List<String> {
+    val safeTerm = term.trim()
+    require(safeTerm.isNotEmpty()) { "Fraza wyszukiwania SVG nie może być pusta." }
+    return listOf("$safeTerm filemime:svg", safeTerm)
+}
+
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
 private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 1000L
 private const val COMMONS_API_MAX_ATTEMPTS = 3
@@ -98,9 +105,16 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
         waitForCommonsRequestSlot()
         try {
             val url = "https://commons.wikimedia.org/w/api.php?$params&maxlag=5"
-            return tor.open(url, TorDownloadKind.API).use { response ->
+            val payload = tor.open(url, TorDownloadKind.API).use { response ->
                 JSONObject(response.body.bufferedReader(Charsets.UTF_8).use { it.readText() })
             }
+            val apiError = payload.optJSONObject("error")
+            if (apiError != null) {
+                val errorCode = apiError.optString("code", "unknown")
+                val errorInfo = apiError.optString("info", "brak szczegółów")
+                throw java.io.IOException("Wikimedia Commons API [$errorCode]: $errorInfo")
+            }
+            return payload
         } catch (failure: TorHttpException) {
             val retryAfterMs = retryAfterMillis(failure.retryAfter)
             val retryable = failure.httpCode == 429 || failure.httpCode == 503 || failure.httpCode == 502 || failure.httpCode == 504
@@ -151,7 +165,8 @@ private suspend fun discoverCommonsOpenSvgs(
             onSearchProgress(seenTitles.size, "Weryfikacja metadanych: partia pominięta (" + (failure.message ?: "błąd API") + ")")
             return
         }
-        val pages = response.optJSONObject("query")?.optJSONObject("pages") ?: return
+        val pages = response.optJSONObject("query")?.optJSONObject("pages")
+            ?: throw java.io.IOException("Wikimedia Commons nie zwróciło sekcji query.pages podczas weryfikacji SVG.")
         val candidates = mutableListOf<CommonsSvgCandidate>()
         val keys = pages.keys()
         while (keys.hasNext() && allCandidates.size + candidates.size < limit) {
@@ -194,15 +209,33 @@ private suspend fun discoverCommonsOpenSvgs(
     var pending = mutableListOf<String>()
     for (term in terms) {
         if (allCandidates.size >= limit || seenTitles.size >= limit * 2) break
-        val query = java.net.URLEncoder.encode("$term filemime:svg", "UTF-8")
-        try {
-            val response = commonsRequest(
-                context,
-                "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50&format=json"
-            )
-            val results = response.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
-            for (i in 0 until results.length()) {
-                val title = results.optJSONObject(i)?.optString("title").orEmpty()
+        // Prefer MIME-property search, then fall back to a plain file-namespace search.
+        // The final title-extension check below still guarantees that only SVG files are accepted.
+        var results: JSONArray? = null
+        var lastSearchFailure: Exception? = null
+        for (expression in commonsSvgSearchExpressions(term)) {
+            try {
+                val query = java.net.URLEncoder.encode(expression, "UTF-8")
+                val response = commonsRequest(
+                    context,
+                    "action=query&list=search&srnamespace=6&srsearch=$query&srlimit=50&format=json"
+                )
+                val searchArray = response.optJSONObject("query")?.optJSONArray("search")
+                    ?: throw java.io.IOException("Wikimedia Commons nie zwróciło listy wyników wyszukiwania.")
+                if (searchArray.length() > 0) {
+                    results = searchArray
+                    break
+                }
+            } catch (failure: Exception) {
+                lastSearchFailure = failure
+            }
+        }
+        if (results == null && lastSearchFailure != null) {
+            onSearchProgress(seenTitles.size, "$term (błąd API: " + (lastSearchFailure.message ?: "nieznany błąd") + ")")
+        }
+        results?.let { searchResults ->
+            for (i in 0 until searchResults.length()) {
+                val title = searchResults.optJSONObject(i)?.optString("title").orEmpty()
                 if (title.startsWith("File:") && title.endsWith(".svg", true) && seenTitles.add(title)) {
                     pending.add(title)
                     if (pending.size >= 40) {
@@ -212,8 +245,6 @@ private suspend fun discoverCommonsOpenSvgs(
                     }
                 }
             }
-        } catch (failure: Exception) {
-            onSearchProgress(seenTitles.size, "$term (pominięto: " + (failure.message ?: "błąd API") + ")")
         }
         onSearchProgress(seenTitles.size, term)
         // Verify and dispatch a first small batch while discovery is still running.
