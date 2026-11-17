@@ -253,6 +253,9 @@ private fun readCommonsJson(context: Context, fileName: String): String =
 internal fun isSvgDownloadDropOff(found: Int, available: Int): Boolean =
     found >= 100 && available.coerceAtLeast(0) * 2 < found
 
+internal fun commonsChecksumMatches(expectedSha256: String, actualSha256: String?): Boolean =
+    expectedSha256.matches(Regex("[a-fA-F0-9]{64}")) && actualSha256?.equals(expectedSha256, ignoreCase = true) == true
+
 internal fun commonsDownloadProgressLabel(completed: Int, total: Int): String {
     val safeTotal = total.coerceAtLeast(0)
     val safeCompleted = completed.coerceIn(0, safeTotal)
@@ -384,7 +387,7 @@ private suspend fun processCommonsCandidates(
         val recordedSha = candidate.sha256.ifBlank {
             runCatching { JSONObject(existingAsset?.rights.orEmpty()).optString("sha256") }.getOrDefault("")
         }
-        if (existingAsset != null && !recordedSha.isNullOrBlank() && actualExistingSha == recordedSha) {
+        if (existingAsset != null && commonsChecksumMatches(recordedSha, actualExistingSha)) {
             alreadyPresent++
             persistCommonsCandidateStatus(context, candidate.title, "saved", 0, null, actualExistingSha)
         } else {
@@ -393,7 +396,6 @@ private suspend fun processCommonsCandidates(
             if (result.second == null && !result.third.isNullOrBlank()) {
                 downloaded++
                 persistCommonsCandidateStatus(context, candidate.title, "saved", result.first, null, result.third!!)
-                knownAssets[assetId]?.let { /* replaced below by the next resume verification */ }
             } else {
                 failed++
                 val message = result.second ?: "Pobranie zakończone bez sumy kontrolnej."
