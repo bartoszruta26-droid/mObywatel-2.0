@@ -72,7 +72,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Ważne — bezpieczeństwo połączenia", fontWeight = FontWeight.Bold)
-                Text("Po wybraniu Orbot aplikacja najpierw korzysta z jego lokalnego SOCKS5, bez uruchamiania Guardian. Domyślny port Orbot to 9050. Wbudowany Guardian uruchamia się dopiero jako zapasowy klient i korzysta z oddzielnego portu 19040–19050, aby nie blokować Orbotu. Przed użyciem aplikacja sprawdza rzeczywiste wyjście przez Tor w check.torproject.org. Jeśli Orbot nie przejdzie testu, pobieranie może przejść na Guardian. Nie dodawaj przypadkowych publicznych proxy SOCKS.",
+                Text("Po wybraniu Orbot aplikacja najpierw korzysta z jego lokalnego SOCKS5, bez uruchamiania Guardian. Domyślny port Orbot to 9050. Wbudowany Guardian jest zatrzymywany, gdy wybierzesz Orbot, i uruchamia się dopiero jako klient zapasowy po nieudanym teście Orbotu. Dzięki temu oba procesy nie próbują zajmować tego samego portu SOCKS. Przed użyciem aplikacja sprawdza rzeczywiste wyjście przez Tor w check.torproject.org. Jeśli Orbot nie przejdzie testu, pobieranie może przejść na Guardian. Nie dodawaj przypadkowych publicznych proxy SOCKS.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
