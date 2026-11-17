@@ -27,6 +27,7 @@ object TorClientRegistry {
     private const val KEY_ACTIVE = "active_client_id"
     private const val KEY_ORBOT_MIGRATION = "orbot_profile_migration_v1"
     private const val KEY_LISTENER_PROFILE_MIGRATION = "listener_profile_migration_v2"
+    private const val KEY_ORBOT_PORT_MIGRATION = "orbot_port_migration_v1"
 
     fun load(context: Context): List<TorClientProfile> {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -71,6 +72,15 @@ object TorClientRegistry {
             val normalized = loaded.filterNot { it.id.startsWith("guardian-isolated-") }
             save(context, normalized)
             prefs.edit().putBoolean(KEY_LISTENER_PROFILE_MIGRATION, true).apply()
+            return normalized
+        }
+        if (!prefs.getBoolean(KEY_ORBOT_PORT_MIGRATION, false)) {
+            // Move the bundled Orbot profile away from Guardian's usual SOCKS port.
+            val normalized = loaded.map { profile ->
+                if (profile.id == "orbot-local" && profile.port == 9050) profile.copy(port = 9150) else profile
+            }
+            save(context, normalized)
+            prefs.edit().putBoolean(KEY_ORBOT_PORT_MIGRATION, true).apply()
             return normalized
         }
         return loaded
