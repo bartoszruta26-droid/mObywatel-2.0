@@ -26,6 +26,7 @@ object TorClientRegistry {
     private const val KEY_CLIENTS = "clients"
     private const val KEY_ACTIVE = "active_client_id"
     private const val KEY_ORBOT_MIGRATION = "orbot_profile_migration_v1"
+    private const val KEY_LISTENER_PROFILE_MIGRATION = "listener_profile_migration_v2"
 
     fun load(context: Context): List<TorClientProfile> {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -33,10 +34,6 @@ object TorClientRegistry {
         if (raw.isNullOrBlank()) {
             val defaults = listOf(
                 TorClientProfile("guardian-embedded", "Wbudowany Tor — port podstawowy", "127.0.0.1", 9050),
-                TorClientProfile("guardian-isolated-1", "Wbudowany Tor — port izolowany 1", "127.0.0.1", 19051),
-                TorClientProfile("guardian-isolated-2", "Wbudowany Tor — port izolowany 2", "127.0.0.1", 19052),
-                TorClientProfile("guardian-isolated-3", "Wbudowany Tor — port izolowany 3", "127.0.0.1", 19053),
-                TorClientProfile("guardian-isolated-4", "Wbudowany Tor — port izolowany 4", "127.0.0.1", 19054),
                 TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9050, true)
             )
             save(context, defaults)
@@ -59,7 +56,7 @@ object TorClientRegistry {
             }
         }.getOrDefault(emptyList())
         if (!prefs.getBoolean(KEY_ORBOT_MIGRATION, false)) {
-            val migrated = loaded.map { profile ->
+            val migrated = loaded.filterNot { it.id.startsWith("guardian-isolated-") }.map { profile ->
                 if (profile.id == "orbot-local" && profile.name.startsWith("Orbot")) {
                     profile.copy(enabled = true)
                 } else profile
@@ -67,6 +64,12 @@ object TorClientRegistry {
             save(context, migrated)
             prefs.edit().putBoolean(KEY_ORBOT_MIGRATION, true).apply()
             return migrated
+        }
+        if (!prefs.getBoolean(KEY_LISTENER_PROFILE_MIGRATION, false)) {
+            val normalized = loaded.filterNot { it.id.startsWith("guardian-isolated-") }
+            save(context, normalized)
+            prefs.edit().putBoolean(KEY_LISTENER_PROFILE_MIGRATION, true).apply()
+            return normalized
         }
         return loaded
     }
