@@ -60,7 +60,7 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             }
             torService = service
             val bootstrap = runCatching { service.getInfo("status/bootstrap-phase") }.getOrNull().orEmpty()
-            circuitEstablished = bootstrap.contains("PROGRESS=100") || bootstrap.contains("TAG=done")
+            circuitEstablished = circuitEstablished || bootstrap.contains("PROGRESS=100") || bootstrap.contains("TAG=done")
             // STATUS_ON is emitted after the first Tor circuit is established.
             // If the status broadcast raced with binding, the port is still checked
             // here; READY is published only when the service reports a valid SOCKS port.
