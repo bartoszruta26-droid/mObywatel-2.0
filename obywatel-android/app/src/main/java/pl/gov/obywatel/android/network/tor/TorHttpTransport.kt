@@ -23,6 +23,12 @@ interface TorRuntime {
 
 enum class TorState { STOPPED, STARTING, BOOTSTRAPPING, READY, STOPPING, FAILED }
 
+class TorHttpException(
+    val httpCode: Int,
+    val retryAfter: String?,
+    message: String
+) : IOException(message)
+
 /** A loopback-only SOCKS5 endpoint. */
 data class TorProxyEndpoint(val host: String = "127.0.0.1", val port: Int = 9050) {
     init {
@@ -62,6 +68,7 @@ class TorHttpResponse internal constructor(
     input: java.io.InputStream,
     private val maxBytes: Long
 ) : Closeable {
+    fun header(name: String): String? = response.header(name)
     val body: java.io.InputStream = object : FilterInputStream(input) {
         private var consumed = 0L
         override fun read(): Int {
@@ -125,7 +132,13 @@ class TorHttpTransport(
      * Opens a request through a locally managed client selected by TorDownloadRouter.
      * The caller is responsible for selecting only a runtime-confirmed READY Tor endpoint.
      */
-    fun open(rawUrl: String, endpoint: TorProxyEndpoint): TorHttpResponse {
+    fun open(
+        rawUrl: String,
+        endpoint: TorProxyEndpoint,
+        rangeStart: Long = 0L,
+        ifRange: String? = null
+    ): TorHttpResponse {
+        require(rangeStart >= 0L) { "Range offset cannot be negative." }
         var url = validateHttpsUrl(rawUrl)
         var redirects = 0
 
@@ -135,6 +148,10 @@ class TorHttpTransport(
                 .get()
                 .header("User-Agent", policy.userAgent)
                 .header("Accept-Encoding", "identity")
+                .apply {
+                    if (rangeStart > 0L) header("Range", "bytes=$rangeStart-")
+                    if (rangeStart > 0L && !ifRange.isNullOrBlank()) header("If-Range", ifRange)
+                }
                 .build()
             val response = try {
                 client(endpoint).newCall(request).execute()
@@ -154,8 +171,9 @@ class TorHttpTransport(
                 continue
             }
             if (!response.isSuccessful) {
+                val retryAfter = response.header("Retry-After")
                 response.close()
-                throw IOException("Tor HTTP request failed: HTTP $code")
+                throw TorHttpException(code, retryAfter, "Tor HTTP request failed: HTTP $code")
             }
 
             val body = response.body
