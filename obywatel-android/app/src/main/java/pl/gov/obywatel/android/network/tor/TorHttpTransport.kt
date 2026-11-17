@@ -20,6 +20,7 @@ interface TorRuntime {
     fun stop()
     fun proxyEndpoint(): TorProxyEndpoint?
     fun proxyEndpoints(): List<TorProxyEndpoint> = listOfNotNull(proxyEndpoint())
+    fun failureMessage(): String? = null
 }
 
 enum class TorState { STOPPED, STARTING, BOOTSTRAPPING, READY, STOPPING, FAILED }
