@@ -222,7 +222,7 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
         val statusCode = response.statusCode
         val contentRange = response.header("Content-Range")
         val append = commonsCanAppendRange(offset, statusCode, contentRange)
-        if (append) {
+        if (offset > 0L && statusCode == 206 && !append) {
             throw java.io.IOException("Serwer zwrócił niezgodny Content-Range; wznowienie odrzucone.")
         } else if (statusCode == 206) {
             require(response.header("Content-Range").orEmpty().startsWith("bytes 0-")) { "Nieprawidłowy początek zakresu SVG." }
