@@ -178,10 +178,10 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             ADDITIONAL_SOCKS_PORTS.any { port -> line.trim().startsWith("SocksPort 127.0.0.1:$port ") } ||
                 line.trim().startsWith("MaxCircuitDirtiness ")
         }.toList()
-        val listeners = ADDITIONAL_SOCKS_PORTS.joinToString(separator = "\\n") { port ->
+        val listeners = ADDITIONAL_SOCKS_PORTS.joinToString(separator = "\n") { port ->
             "SocksPort 127.0.0.1:$port IsolateClientAddr IsolateDestAddr IsolateDestPort"
         }
-        torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\\n", postfix = "\\n"))
+        torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\n", postfix = "\n"))
     }
 
     private fun unregisterReceiverIfNeeded() {
