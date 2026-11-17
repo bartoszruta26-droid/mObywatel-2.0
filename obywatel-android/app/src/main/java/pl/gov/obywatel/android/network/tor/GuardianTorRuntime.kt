@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.torproject.jni.TorService
 
 /**
@@ -26,8 +27,11 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     @Volatile private var socksPorts: List<Int> = emptyList()
     @Volatile private var bound = false
     @Volatile private var receiverRegistered = false
+    @Volatile private var localErrorReceiverRegistered = false
     @Volatile private var circuitEstablished = false
     @Volatile private var lastFailureMessage: String? = null
+    @Volatile private var lastServiceStatus: String? = null
+    @Volatile private var statusSequence: Long = 0L
 
     override val state: TorState
         get() = currentState
@@ -35,20 +39,33 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     /** Detailed reason delivered by Guardian's ACTION_ERROR broadcast, if available. */
     override fun failureMessage(): String? = lastFailureMessage
 
+    // TorService emits ACTION_ERROR through LocalBroadcastManager as well as the
+    // process broadcast. Subscribe to the local channel explicitly: it is the
+    // authoritative same-process path for the original native startup exception.
+    private val localErrorReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != TorService.ACTION_ERROR) return
+            val sourcePackage = intent.getStringExtra(TorService.EXTRA_SERVICE_PACKAGE_NAME)
+            if (sourcePackage != null && sourcePackage != appContext.packageName) return
+            lastFailureMessage = intent.getStringExtra(Intent.EXTRA_TEXT)
+                ?.trim()?.takeIf { it.isNotEmpty() }
+                ?: "Guardian Tor zgłosił ACTION_ERROR bez opisu."
+            socksPort = -1
+            socksPorts = emptyList()
+            circuitEstablished = false
+            currentState = TorState.FAILED
+        }
+    }
+
     private val statusReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == TorService.ACTION_ERROR) {
-                lastFailureMessage = intent.getStringExtra(Intent.EXTRA_TEXT)
-                    ?.trim()?.takeIf { it.isNotEmpty() }
-                    ?: "Guardian Tor zgłosił ACTION_ERROR bez opisu."
-                socksPort = -1
-                socksPorts = emptyList()
-                circuitEstablished = false
-                currentState = TorState.FAILED
-                return
-            }
             if (intent?.action != TorService.ACTION_STATUS) return
-            when (intent.getStringExtra(TorService.EXTRA_STATUS)) {
+            val sourcePackage = intent.getStringExtra(TorService.EXTRA_SERVICE_PACKAGE_NAME)
+            if (sourcePackage != null && sourcePackage != appContext.packageName) return
+            val status = intent.getStringExtra(TorService.EXTRA_STATUS)
+            lastServiceStatus = status
+            statusSequence++
+            when (status) {
                 TorService.STATUS_STARTING -> currentState = TorState.BOOTSTRAPPING
                 TorService.STATUS_ON -> {
                     circuitEstablished = true
@@ -124,13 +141,23 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
                 addAction(TorService.ACTION_STATUS)
                 addAction(TorService.ACTION_ERROR)
             }
-            ContextCompat.registerReceiver(
-                appContext,
-                statusReceiver,
-                filter,
-                ContextCompat.RECEIVER_NOT_EXPORTED
-            )
-            receiverRegistered = true
+            if (!receiverRegistered) {
+                ContextCompat.registerReceiver(
+                    appContext,
+                    statusReceiver,
+                    filter,
+                    ContextCompat.RECEIVER_NOT_EXPORTED
+                )
+                receiverRegistered = true
+            }
+            if (!localErrorReceiverRegistered) {
+                LocalBroadcastManager.getInstance(appContext).registerReceiver(
+                    localErrorReceiver,
+                    IntentFilter(TorService.ACTION_ERROR)
+                )
+                localErrorReceiverRegistered = true
+            }
+            prepareFailedServiceForRestart()
             bound = appContext.bindService(
                 Intent(appContext, TorService::class.java),
                 connection,
@@ -232,5 +259,44 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
             runCatching { appContext.unregisterReceiver(statusReceiver) }
             receiverRegistered = false
         }
+        if (localErrorReceiverRegistered) {
+            runCatching { LocalBroadcastManager.getInstance(appContext).unregisterReceiver(localErrorReceiver) }
+            localErrorReceiverRegistered = false
+        }
+    }
+
+    /**
+     * TorService calls stopSelf() when its native Tor thread exits. Because this
+     * runtime is bound, that does not destroy the failed service instance. A plain
+     * second bind would reconnect to the same dead instance without starting Tor
+     * again. Release that binding and wait for the service's OFF lifecycle event
+     * before creating a fresh service instance.
+     */
+    private fun prepareFailedServiceForRestart() {
+        if (currentState != TorState.FAILED || !bound) return
+        val previousSequence = statusSequence
+        runCatching { appContext.unbindService(connection) }
+        bound = false
+        torService = null
+        socksPort = -1
+        socksPorts = emptyList()
+        circuitEstablished = false
+        runCatching { appContext.stopService(Intent(appContext, TorService::class.java)) }
+
+        val deadline = System.currentTimeMillis() + 5_000L
+        while (statusSequence <= previousSequence || lastServiceStatus != TorService.STATUS_OFF) {
+            if (System.currentTimeMillis() >= deadline) {
+                throw IllegalStateException(
+                    "Guardian Tor: zwolniono nieudane powiązanie, ale usługa nie potwierdziła stanu OFF; ponowne uruchomienie wstrzymano."
+                )
+            }
+            try {
+                Thread.sleep(50L)
+            } catch (interrupted: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw IllegalStateException("Oczekiwanie na zamknięcie usługi Guardian Tor zostało przerwane.", interrupted)
+            }
+        }
+        lastServiceStatus = null
     }
 }
