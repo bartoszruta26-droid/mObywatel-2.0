@@ -34,7 +34,7 @@ object TorClientRegistry {
         if (raw.isNullOrBlank()) {
             val defaults = listOf(
                 TorClientProfile("guardian-embedded", "Wbudowany Tor — port podstawowy", "127.0.0.1", 9050),
-                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9050, true)
+                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9150, true)
             )
             save(context, defaults)
             return defaults
