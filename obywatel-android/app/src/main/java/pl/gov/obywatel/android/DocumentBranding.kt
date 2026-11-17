@@ -1489,12 +1489,13 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                 DocumentBrandStore.preview(context, asset.id)
                             } else null
                         }
+                        val previewBitmap = assetPreview
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (assetPreview != null) {
+                            if (previewBitmap != null) {
                                 val whiteTintedIcon = isWhiteTintedIconAssetKind(asset.kind)
                                 Box(
                                     modifier = Modifier.size(64.dp).then(
@@ -1506,7 +1507,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Image(
-                                        assetPreview.asImageBitmap(),
+                                        previewBitmap.asImageBitmap(),
                                         contentDescription = asset.label,
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Fit,
