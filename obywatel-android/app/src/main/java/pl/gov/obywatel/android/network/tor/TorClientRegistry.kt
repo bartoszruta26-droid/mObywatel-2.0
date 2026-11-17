@@ -36,7 +36,7 @@ object TorClientRegistry {
                 TorClientProfile("guardian-isolated-2", "Wbudowany Tor — port izolowany 2", "127.0.0.1", 19052),
                 TorClientProfile("guardian-isolated-3", "Wbudowany Tor — port izolowany 3", "127.0.0.1", 19053),
                 TorClientProfile("guardian-isolated-4", "Wbudowany Tor — port izolowany 4", "127.0.0.1", 19054),
-                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5 (ustaw port 9150)", "127.0.0.1", 9150, false)
+                TorClientProfile("orbot-local", "Orbot — lokalny SOCKS5", "127.0.0.1", 9150, true)
             )
             save(context, defaults)
             return defaults
