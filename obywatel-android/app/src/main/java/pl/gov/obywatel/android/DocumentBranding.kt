@@ -476,8 +476,8 @@ internal object DocumentBrandStore {
             throw failure
         }
     }
-    private fun imageById(context: Context, assetId: String): android.graphics.Bitmap? = runCatching {
-        val asset = list(context).firstOrNull { it.id == assetId } ?: return null
+    private fun imageById(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? = runCatching {
+        val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
         if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
             val resourceId = context.resources.getIdentifier(name, "drawable", context.packageName)
@@ -574,7 +574,8 @@ internal object DocumentBrandStore {
         if (!InstitutionalAssetPolicy.mayRender(kind, authorizationFor(asset))) return null
         return imageById(context, asset.id)
     }
-    fun preview(context: Context, assetId: String): android.graphics.Bitmap? = imageById(context, assetId)
+    fun preview(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? =
+        imageById(context, assetId, knownAsset)
     fun fileBytes(context: Context, assetId: String, knownAsset: BrandAsset? = null): ByteArray? = runCatching {
         val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
         if (asset.file.startsWith("resource:")) {
@@ -1486,7 +1487,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                     if (expanded) grouped.forEachIndexed { index, asset ->
                         val assetPreview by produceState<Bitmap?>(initialValue = null, asset.id, expanded) {
                             value = if (expanded) withContext(Dispatchers.IO) {
-                                DocumentBrandStore.preview(context, asset.id)
+                                DocumentBrandStore.preview(context, asset.id, asset)
                             } else null
                         }
                         val previewBitmap = assetPreview
