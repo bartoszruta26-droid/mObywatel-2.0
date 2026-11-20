@@ -49,7 +49,7 @@ class VCardCodecTest {
         val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski", "notes" to "Linia 1")
         val encoded = VCardCodec.encodeArchive(source)
             .replaceFirst("\r\n", "\n")
-            .replace("X-OWD-ARCHIVE-VERSION:1\r\n", "X-OWD-ARCHIVE-VERSION:1\\r\\n")
+            .replace("X-OWD-ARCHIVE-VERSION:2\r\n", "X-OWD-ARCHIVE-VERSION:1\\r\\n")
         assertEquals(source, VCardCodec.decodeForImport(encoded))
     }
 
