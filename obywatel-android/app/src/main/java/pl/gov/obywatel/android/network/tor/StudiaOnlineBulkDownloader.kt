@@ -150,10 +150,10 @@ class StudiaOnlineBulkDownloader(
                     sha256ById[item.id] = save(item, downloaded)
                     success += item.id
                 } catch (failure: Exception) {
-                    failed[item.id] = failure.message ?: failure.javaClass.simpleName
+                    failed[item.id] = describeFailure(failure)
                 }
             } else if (lastFailure != null) {
-                failed[item.id] = lastFailure.message ?: lastFailure.javaClass.simpleName
+                failed[item.id] = describeFailure(lastFailure)
             } else {
                 break
             }
@@ -234,6 +234,12 @@ class StudiaOnlineBulkDownloader(
     }
 
     companion object {
+        internal fun describeFailure(failure: Exception): String = when ((failure as? TorHttpException)?.httpCode) {
+            404 -> "Materiał nie został znaleziony (HTTP 404)."
+            410 -> "Materiał został usunięty z serwisu (HTTP 410)."
+            else -> failure.message ?: failure.javaClass.simpleName
+        }
+
         internal fun retryAfterDelayMillis(value: String?, nowMs: Long): Long {
             if (value.isNullOrBlank()) return 0L
             value.trim().toLongOrNull()?.let { seconds ->
