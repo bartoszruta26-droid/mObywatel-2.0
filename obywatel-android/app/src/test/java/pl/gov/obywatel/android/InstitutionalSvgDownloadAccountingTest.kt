@@ -157,4 +157,31 @@ class InstitutionalSvgDownloadAccountingTest {
         assertTrue(csv.contains("\"Artist, Name\""))
         assertEquals(2, csv.lines().size)
     }
+    @Test
+    fun importsCommonsCsvWithMetadataAndDeduplicatesTheSameUploadUrl() {
+        val csv = "\"filename\",\"symbol_type\",\"commons_page\",\"svg_url\",\"author\",\"license\",\"license_url\",\"restrictions\",\"sha256\"\n" +
+            "\"File:logo.svg\",\"logo/emblemat\",\"page\",\"https://upload.wikimedia.org/a/logo.svg\",\"Author\",\"CC0\",\"license\",\"\",\"\"\n" +
+            "\"File:logo-copy.svg\",\"logo/emblemat\",\"page\",\"https://upload.wikimedia.org/a/logo.svg?download=1\",\"Author\",\"CC0\",\"license\",\"\",\"\"\n"
+        val imported = parseExternalCommonsSvgList(csv)
+        assertEquals(1, imported.size)
+        assertEquals("File:logo.svg", imported.single().title)
+        assertEquals("Author", imported.single().artist)
+    }
+
+    @Test
+    fun importsPlainTextListOfWikimediaSvgUrls() {
+        val imported = parseExternalCommonsSvgList("https://upload.wikimedia.org/a/coat.svg\n")
+        assertEquals(1, imported.size)
+        assertEquals("File:coat.svg", imported.single().title)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsExternalSvgUrlsOutsideWikimediaUploadHost() {
+        parseExternalCommonsSvgList("https://example.org/logo.svg")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsExternalCsvWithoutSvgUrlColumn() {
+        parseExternalCommonsSvgList("\"filename\",\"author\"\n\"File:logo.svg\",\"Author\"")
+    }
 }
