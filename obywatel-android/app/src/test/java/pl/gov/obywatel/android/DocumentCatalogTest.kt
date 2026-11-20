@@ -227,4 +227,34 @@ class DocumentCatalogTest {
             ))
         }
     }
+
+    @Test
+    fun fivePaymentDocumentsShareCashLedgerFieldsButKeepSeparateDocumentNamespaces() {
+        val documentIds = setOf(
+            "payment_account_foundation", "payment_account_association",
+            "payment_account_church", "payment_account_business", "payment_account_person"
+        )
+        val requiredCashKeys = setOf(
+            "cashRegisterId", "cashEntryId", "cashEventType", "cashEventDate", "cashEventTime",
+            "cashAmount", "cashCurrency", "cashReceivedBy", "cashReceiverAuthorization",
+            "cashReceiptNumber", "cashRegisterBalanceBefore", "cashRegisterBalanceAfter",
+            "cashReportNumber", "cashHandoverDate", "cashHandoverAmount", "cashHandoverBy",
+            "cashHandoverTo", "cashBankDepositDate", "cashBankDepositAmount",
+            "cashBankDepositAccount", "cashBankDepositReference", "cashAccountingDate",
+            "cashAccountingReference", "cashAccountingStatus", "cashReconciliationStatus",
+            "cashDifferenceAmount"
+        )
+        documentIds.forEach { id ->
+            val keys = documentEditorFieldDefinitions(id).map { it.key }.toSet()
+            assertTrue("Brak wspólnych pól kasowych dla $id", keys.containsAll(requiredCashKeys))
+            assertTrue("Brak identyfikatora własnego rejestru dla $id", "cashRegisterId" in keys)
+        }
+        val storageKeys = documentIds.flatMap { id ->
+            requiredCashKeys.map { key -> "doc_${id}_${key}" }
+        }
+        assertEquals("Każdy dokument musi mieć własną przestrzeń rejestru.", storageKeys.size, storageKeys.toSet().size)
+        assertTrue("KP, wpłata bankowa i księgowanie muszą mieć odrębne referencje.",
+            requiredCashKeys.containsAll(setOf("cashReceiptNumber", "cashBankDepositReference", "cashAccountingReference")))
+    }
+
 }
