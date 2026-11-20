@@ -30,9 +30,27 @@ class StudiaOnlineDownloadCatalogTest {
         StudiaOnlineDownloadCatalog.fromRange(1, 2_001)
     }
 
+
+    @Test fun rangeIsInclusiveAndPreservesDoubleSlash() {
+        val items = StudiaOnlineDownloadCatalog.fromRange(41, 43)
+        assertEquals(listOf(41, 42, 43), items.map { it.id })
+        assertEquals(
+            listOf(
+                "https://studia-online.pl//pobierz-material/41",
+                "https://studia-online.pl//pobierz-material/42",
+                "https://studia-online.pl//pobierz-material/43"
+            ),
+            items.map { it.url }
+        )
+    }
+
+    @Test fun acceptsExactlyTwoThousandItems() {
+        assertEquals(2_000, StudiaOnlineDownloadCatalog.fromRange(10, 2_009).size)
+    }
+
     @Test(expected = IllegalArgumentException::class)
-    fun acceptsOnlyTwoThousandItemsPerRange() {
-        StudiaOnlineDownloadCatalog.fromRange(1, 2_001)
+    fun rejectsReversedRange() {
+        StudiaOnlineDownloadCatalog.fromRange(10, 9)
     }
 
     @Test fun statusReportsRemainingItems() {
