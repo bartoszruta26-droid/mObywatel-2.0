@@ -37,6 +37,13 @@ Docelowy katalog: **800 rekordów**. Pierwsze wydanie użytkowe: minimum **500 z
 - `HatScripts/circle-flags` i `lipis/flag-icons`: duże zbiory flag z licencją MIT; używać w osobnej grupie flag, z dodatkową kontrolą ograniczeń prawnych.
 - `TiltTek/heraldry`: biblioteka generowania heraldyki, a nie zbiór autentycznych herbów instytucji. Nie przedstawiać generowanych wzorów jako oficjalnych.
 
+## Pierwszy wynik indeksowania źródeł
+
+- Rejestr kandydatów zawiera obecnie **76 unikalnych rekordów** po deduplikacji ścieżek plików.
+- Repozytorium `collective-service/organizations-logo` zawierało 57 plików graficznych (12 SVG); 17 ścieżek pokrywało się z już zarejestrowanymi pozycjami, dlatego pozostawiono je bez duplikowania. Pozostałe pozycje zostały dopisane jako rekordy referencyjne, bez kopiowania plików.
+- GitHub Actions sprawdził 7 repozytoriów i wygenerował artefakt z indeksem **1 505 ścieżek kandydackich**: 57 z kolekcji NGO, 3 dopasowane znaki Simple Icons oraz 1 445 pozycji flagowych z trzech zbiorów. Liczba 1 505 nie oznacza 1 505 zweryfikowanych logotypów NGO; flagi są odrębną kategorią, a część repozytoriów ma nieustalone prawa do poszczególnych plików.
+- Artefakt CI: https://github.com/bartoszruta26-droid/mObywatel-2.0/actions/runs/44796125438/artifacts/14657129035
+
 ## Model rekordów
 
 Każdy rekord ma: stabilny `assetId`, nazwę, nazwę alternatywną, grupę, podgrupę, kraj/obszar, typ symbolu, właściciela, okres obowiązywania, źródło oryginalne, adres pliku, autora, licencję, odnośnik do licencji, wersję źródła, sumę SHA-256, format, rozmiar, status prawny, status weryfikacji, status zgody, dozwolone zastosowania i notatki.
