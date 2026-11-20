@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+# SPDX-License-Identifier: CC0-1.0
 candidate_id,organization,category,scope,source_repository,source_path_or_url,license_status,ingestion_status,notes
 "collective_goal","GOAL","international_ngo","international","collective-service/organizations-logo","GOAL/goal-logo.svg","license_unknown","reference_only","Official file path found in upstream repository; no repository license file found."
 "collective_iasc","Inter-Agency Standing Committee","intergovernmental_humanitarian","international","collective-service/organizations-logo","IASC/logo-iasc.svg","license_unknown","reference_only","Verify ownership and permission."
