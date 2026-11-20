@@ -291,4 +291,19 @@ END:VCARD
         assertEquals(fields, VCardCodec.decodeForImport(VCardCodec.encodeArchive(fields)))
     }
 
+
+    @Test
+    fun archiveRoundTripsApplicationKeysContainingSpacesAndPunctuation() {
+        val fields = linkedMapOf(
+            "firstNames" to "Jan",
+            "service association legal person specific 0" to "Dane podmiotu",
+            "service_association_legal_person_specific_0" to "Dane z klucza technicznego",
+            "custom.field/name" to "Wartość"
+        )
+        val encoded = VCardCodec.encodeArchive(fields)
+        assertTrue(encoded.contains("X-OWD-ARCHIVE-VERSION:2"))
+        assertEquals(fields, VCardCodec.decodeArchive(encoded))
+        assertEquals(fields, VCardCodec.decodeForImport(encoded))
+    }
+
 }
