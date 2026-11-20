@@ -57,7 +57,7 @@ internal fun commonsCandidatesCsv(candidates: List<CommonsSvgCandidate>): String
     val rows = candidates.distinctBy { it.title }.map { item ->
         val title = item.title.lowercase()
         val type = when {
-            listOf("coat of arms", "coat_of_arms", "herb", "crest", "arms").any(title::contains) -> "herb/godło"
+            listOf("coat of arms", "coat_of_arms", "herb", "crest", "arms").any(title::contains) || Regex("\\bcoa\\b").containsMatchIn(title) -> "herb/godło"
             listOf("logo", "emblem", "seal", "insignia", "symbol").any(title::contains) -> "logo/emblemat"
             listOf("flag", "banner").any(title::contains) -> "flaga"
             else -> "symbol"
@@ -427,7 +427,7 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     val title = item.title.removePrefix("File:")
     val kind = when {
         title.contains("flag", true) -> "Flaga"
-        title.contains("coat of arms", true) || title.contains("herald", true) -> "Herb"
+        title.contains("coat of arms", true) || title.contains("herald", true) || Regex("\\bCOA\\b", RegexOption.IGNORE_CASE).containsMatchIn(title) -> "Herb"
         title.contains("seal", true) -> "Pieczęć"
         title.contains("emblem", true) -> "Godło"
         else -> "Logo"
