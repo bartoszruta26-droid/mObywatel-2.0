@@ -187,6 +187,9 @@ class StudiaOnlineBulkDownloader(
             if (response.statusCode !in 200..299) {
                 throw IOException("Nieoczekiwany status HTTP ${response.statusCode}.")
             }
+            if (response.contentLength != null && response.contentLength!! > MAX_FILE_BYTES) {
+                throw IOException("Materiał przekracza limit 64 MB.")
+            }
             val output = java.io.ByteArrayOutputStream()
             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
             var total = 0L
@@ -203,7 +206,7 @@ class StudiaOnlineBulkDownloader(
                 }
                 if (read < 0) break
                 total += read
-                if (total > MAX_FILE_BYTES) throw IOException("Materiał przekracza limit 256 MB.")
+                if (total > MAX_FILE_BYTES) throw IOException("Materiał przekracza limit 64 MB.")
                 output.write(buffer, 0, read)
             }
             output.toByteArray().also {
@@ -232,7 +235,7 @@ class StudiaOnlineBulkDownloader(
         const val DEFAULT_COOLDOWN_MS = 15_000L
         private const val PAUSE_POLL_MS = 250L
         private const val MAX_RETRY_WAIT_MS = 300_000L
-        private const val MAX_FILE_BYTES = 256L * 1024L * 1024L
+        private const val MAX_FILE_BYTES = 64L * 1024L * 1024L
     }
 
     private class InterruptedIOException(message: String) : IOException(message)
