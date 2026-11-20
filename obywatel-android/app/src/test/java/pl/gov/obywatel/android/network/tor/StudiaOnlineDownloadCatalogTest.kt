@@ -53,6 +53,28 @@ class StudiaOnlineDownloadCatalogTest {
         StudiaOnlineDownloadCatalog.fromRange(10, 9)
     }
 
+    @Test fun retryAfterDeltaSecondsIsConvertedToMilliseconds() {
+        assertEquals(5_000L, StudiaOnlineBulkDownloader.retryAfterDelayMillis("5", 1_000L))
+    }
+
+    @Test fun retryAfterHttpDateIsConvertedToRemainingDelay() {
+        val now = java.time.ZonedDateTime.parse(
+            "Wed, 21 Oct 2015 07:27:00 GMT",
+            java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME
+        ).toInstant().toEpochMilli()
+        assertEquals(
+            120_000L,
+            StudiaOnlineBulkDownloader.retryAfterDelayMillis("Wed, 21 Oct 2015 07:29:00 GMT", now)
+        )
+    }
+
+    @Test fun retryAfterPastDateDoesNotCreateNegativeDelay() {
+        assertEquals(
+            0L,
+            StudiaOnlineBulkDownloader.retryAfterDelayMillis("Wed, 21 Oct 2015 07:29:00 GMT", 2_000_000_000_000L)
+        )
+    }
+
     @Test fun statusReportsRemainingItems() {
         val progress = StudiaOnlineDownloadProgress(2, 5, 3, listOf(1, 2), emptyMap(), false, false)
         assertEquals(3, progress.remaining)
