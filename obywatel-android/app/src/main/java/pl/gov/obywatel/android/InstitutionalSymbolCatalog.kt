@@ -87,7 +87,9 @@ private fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolCa
         // Convert only the exact GitHub blob URL shape; never accept an arbitrary host here.
         val githubRawUrl = Regex("^https://github\\.com/([^/]+/[^/]+)/blob/([^/]+)/(.+)$")
             .matchEntire(sourceUrl)?.let { match ->
-                "https://raw.githubusercontent.com/${match.groupValues[1]}/${match.groupValues[2]}/${match.groupValues[3]}"
+                val encodedPath = java.net.URLEncoder.encode(match.groupValues[3], "UTF-8")
+                    .replace("+", "%20").replace("%2F", "/")
+                "https://raw.githubusercontent.com/${match.groupValues[1]}/${match.groupValues[2]}/$encodedPath"
             }.orEmpty()
         val url = catalogUrl.ifBlank { githubRawUrl }
         if (!path.endsWith(".svg", true) || url.isBlank()) return@mapNotNull null
