@@ -41,11 +41,11 @@ internal object SvgSafetyValidator {
         require(!Regex("\\s(?:on[a-z][a-z0-9_-]*|xml:base)\\s*=", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
             "SVG zawiera atrybut zdarzenia lub xml:base."
         }
-        require(!Regex("(?:href|src)\\s*=\\s*(['\\\"])\\s*(?:https?:|file:|javascript:|data:|//)", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
-            "SVG zawiera zewnętrzne lub aktywne odwołanie."
+        require(!Regex("""(?:href|src)\\s*=\\s*(['"])(?!#)[^'"]*\\1""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
+            "SVG zawiera odwołanie poza lokalnym fragmentem dokumentu."
         }
-        // CSS resource URLs are rejected except local fragment references such as url(#gradient).
-        require(!Regex("@\\s*import|url\\s*\\(\\s*(['\\\"]?)(?!#)(?:https?:|file:|javascript:|data:|//)[^)]*\\)", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
+        // CSS resource URLs are rejected unless they point to an in-document fragment.
+        require(!Regex("""@\\s*import|url\\s*\\(\\s*(['"]?)(?!#)[^)]+\\)""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
             "SVG zawiera zewnętrzne odwołanie CSS."
         }
     }
