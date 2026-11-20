@@ -4,27 +4,23 @@ package pl.gov.obywatel.android.network.tor
 
 import java.io.IOException
 
-/**
- * Validated source for an explicitly selected set of files on the user's own
- * studia-online.pl account. The double slash in the supplied URL is preserved
- * as a path separator by URL construction.
- */
+/** User-selected materials hosted at the exact studia-online.pl path supplied in the request. */
 object StudiaOnlineDownloadCatalog {
     private const val BASE = "https://studia-online.pl//pobierz-material/"
 
     fun fromRange(first: Int, last: Int): List<StudiaOnlineDownloadItem> {
         require(first > 0 && last >= first) { "Zakres numerów materiałów jest nieprawidłowy." }
-        require(last.toLong() - first.toLong() <= MAX_RANGE_SIZE) {
-            "Zakres przekracza limit $MAX_RANGE_SIZE materiałów na jedno zadanie."
-        }
-        return (first..last).map { item(it) }
+        val count = last.toLong() - first.toLong() + 1L
+        require(count <= MAX_RANGE_SIZE) { "Zakres przekracza limit $MAX_RANGE_SIZE materiałów na jedno zadanie." }
+        return (first..last).map(::item)
     }
 
     fun fromIds(ids: List<Int>): List<StudiaOnlineDownloadItem> {
         require(ids.isNotEmpty()) { "Podaj przynajmniej jeden numer materiału." }
-        require(ids.size <= MAX_RANGE_SIZE) { "Lista przekracza limit $MAX_RANGE_SIZE materiałów." }
         require(ids.all { it > 0 }) { "Numery materiałów muszą być dodatnie." }
-        return ids.distinct().map { item(it) }
+        val unique = ids.distinct()
+        require(unique.size <= MAX_RANGE_SIZE) { "Lista przekracza limit $MAX_RANGE_SIZE materiałów." }
+        return unique.map(::item)
     }
 
     private fun item(id: Int) = StudiaOnlineDownloadItem(
@@ -38,7 +34,7 @@ object StudiaOnlineDownloadCatalog {
 data class StudiaOnlineDownloadItem(
     val id: Int,
     val url: String,
-    val fileName: String = "studia-online-material-$id"
+    val fileName: String = "studia-online-material-$id.bin"
 )
 
 data class StudiaOnlineDownloadProgress(
@@ -54,12 +50,9 @@ data class StudiaOnlineDownloadProgress(
 }
 
 /**
- * Sequential bulk downloader. Every request is sent through TorDownloadService,
- * which verifies and rotates the configured local Tor SOCKS clients. A cooldown
- * is enforced between requests and Retry-After is respected for HTTP 429/503.
- *
- * The destination is supplied by the Android Storage Access Framework; this
- * class never writes outside the user-selected tree.
+ * Sequential, rate-limited downloader using the app's verified Tor client pool.
+ * It never starts more than one request at a time. Pause during a transfer closes
+ * that response and restarts the same item from byte zero after resume.
  */
 class StudiaOnlineBulkDownloader(
     private val downloads: TorDownloadService,
@@ -85,99 +78,104 @@ class StudiaOnlineBulkDownloader(
         require(cooldownMs in MIN_COOLDOWN_MS..MAX_COOLDOWN_MS) {
             "Przerwa musi wynosić od 2 do 300 sekund."
         }
+
         stopRequested = false
         pauseRequested = false
         val success = mutableListOf<Int>()
         val failed = linkedMapOf<Int, String>()
         var completed = 0
-        var previousRequestAt = 0L
-        var lastStatus = StudiaOnlineDownloadProgress(0, items.size, null, success, failed, false, false)
-        var lastFailureWaitMs = 0L
+        var previousRequestAt: Long? = null
+        var retryAfterMs = 0L
 
-        fun emit(current: Int?, paused: Boolean, finished: Boolean = false) {
-            lastStatus = StudiaOnlineDownloadProgress(
-                completed, items.size, current, success.toList(), failed.toMap(), paused, finished
+        fun emit(currentId: Int?, isPaused: Boolean, finished: Boolean = false) {
+            onProgress(
+                StudiaOnlineDownloadProgress(
+                    completed, items.size, currentId, success.toList(), failed.toMap(), isPaused, finished
+                )
             )
-            onProgress(lastStatus)
         }
 
         for (item in items) {
             if (stopRequested) break
-            while (pauseRequested && !stopRequested) {
-                emit(item.id, true)
-                sleepInterruptibly(PAUSE_POLL_MS)
-            }
-            if (stopRequested) break
 
-            var wait = (cooldownMs - (clock() - previousRequestAt)).coerceAtLeast(0L)
-            while (wait > 0L && !stopRequested && !pauseRequested) {
-                sleepInterruptibly(wait)
-                wait = (cooldownMs - (clock() - previousRequestAt)).coerceAtLeast(0L)
-            }
-            if (stopRequested) break
-            while (pauseRequested && !stopRequested) {
-                emit(item.id, true)
-                sleeper(PAUSE_POLL_MS)
-            }
-            if (stopRequested) break
-            if (lastFailureWaitMs > 0L) {
-                sleepInterruptibly(lastFailureWaitMs.coerceIn(cooldownMs, MAX_RETRY_WAIT_MS))
-                lastFailureWaitMs = 0L
-            }
-            if (stopRequested) break
-
-            emit(item.id, false)
-            previousRequestAt = clock()
-            try {
-                val bytes = downloads.open(item.url, TorDownloadKind.ARCHIVE).use { response ->
-                    if (response.statusCode !in 200..299) {
-                        throw IOException("Nieoczekiwany status HTTP ${response.statusCode}.")
-                    }
-                    val output = java.io.ByteArrayOutputStream()
-                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                    var total = 0L
-                    while (true) {
-                        if (stopRequested || pauseRequested) throw InterruptedIOException("Pobieranie przerwano; można wznowić zadanie.")
-                        val read = response.body.read(buffer)
-                        if (read < 0) break
-                        total += read
-                        if (total > MAX_FILE_BYTES) throw IOException("Materiał przekracza limit 256 MB.")
-                        output.write(buffer, 0, read)
-                    }
-                    output.toByteArray()
-                }
-                if (bytes.isEmpty()) throw IOException("Serwer zwrócił pusty plik.")
-                save(item, bytes)
-                success += item.id
-            } catch (failure: Exception) {
+            // Cooldown is measured from the start of the previous HTTP request.
+            // Pause freezes progress through the cooldown without bypassing it.
+            val earliestNextRequest = previousRequestAt?.plus(cooldownMs)
+            while (!stopRequested) {
+                waitWhilePaused(item.id, ::emit)
                 if (stopRequested) break
-                if (pauseRequested) {
-                    // Discard the incomplete response; restart this item from byte zero.
-                    while (pauseRequested && !stopRequested) {
-                        emit(item.id, true)
-                        sleepInterruptibly(PAUSE_POLL_MS)
-                    }
+
+                val remainingCooldown = earliestNextRequest?.let { (it - clock()).coerceAtLeast(0L) } ?: 0L
+                val remainingRetryAfter = retryAfterMs.coerceAtLeast(0L)
+                val waitMs = maxOf(remainingCooldown, remainingRetryAfter)
+                if (waitMs <= 0L) break
+                sleepInterruptibly(minOf(waitMs, PAUSE_POLL_MS))
+            }
+            if (stopRequested) break
+            retryAfterMs = 0L
+
+            var downloaded: ByteArray? = null
+            var lastFailure: Exception? = null
+            while (downloaded == null && !stopRequested) {
+                waitWhilePaused(item.id, ::emit)
+                if (stopRequested) break
+
+                val requestStartedAt = clock()
+                previousRequestAt = requestStartedAt
+                emit(item.id, false)
+                try {
+                    downloaded = downloadWholeItem(item)
+                } catch (failure: Exception) {
                     if (stopRequested) break
-                    try {
-                        val bytes = downloadWholeItem(item)
-                        save(item, bytes)
-                        success += item.id
-                    } catch (retryFailure: Exception) {
-                        failed[item.id] = retryFailure.message ?: retryFailure.javaClass.simpleName
+                    if (pauseRequested || failure is InterruptedIOException) {
+                        // The response is already closed by use {}; restart after resume.
+                        continue
                     }
-                } else {
-                    val retryAfter = (failure as? TorHttpException)?.retryAfter?.toLongOrNull()
-                    if (retryAfter != null) lastFailureWaitMs = retryAfter * 1_000L
+                    lastFailure = failure
+                    val retrySeconds = (failure as? TorHttpException)?.retryAfter?.toLongOrNull()
+                    if (retrySeconds != null && retrySeconds > 0L) {
+                        retryAfterMs = (retrySeconds * 1_000L).coerceAtMost(MAX_RETRY_WAIT_MS)
+                    }
+                    break
+                }
+            }
+            if (stopRequested) break
+
+            if (downloaded != null) {
+                try {
+                    save(item, downloaded!!)
+                    success += item.id
+                } catch (failure: Exception) {
                     failed[item.id] = failure.message ?: failure.javaClass.simpleName
                 }
+            } else if (lastFailure != null) {
+                failed[item.id] = lastFailure.message ?: lastFailure.javaClass.simpleName
+            } else {
+                break
             }
+
             completed++
-            emit(if (completed < items.size) items[completed].id else null, false)
+            emit(items.getOrNull(completed)?.id, false)
         }
-        emit(null, false, finished = !stopRequested && completed == items.size)
-        return lastStatus
+
+        val finished = !stopRequested && completed == items.size
+        emit(null, false, finished)
+        return StudiaOnlineDownloadProgress(
+            completed, items.size, null, success.toList(), failed.toMap(), false, finished
+        )
     }
 
+    private fun waitWhilePaused(
+        itemId: Int,
+        emit: (Int?, Boolean, Boolean) -> Unit
+    ) {
+        while (pauseRequested && !stopRequested) {
+            emit(itemId, true, false)
+            sleepInterruptibly(PAUSE_POLL_MS)
+        }
+    }
+
+    @Throws(IOException::class)
     private fun downloadWholeItem(item: StudiaOnlineDownloadItem): ByteArray =
         downloads.open(item.url, TorDownloadKind.ARCHIVE).use { response ->
             if (response.statusCode !in 200..299) {
@@ -187,9 +185,8 @@ class StudiaOnlineBulkDownloader(
             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
             var total = 0L
             while (true) {
-                if (stopRequested || pauseRequested) {
-                    throw InterruptedIOException("Pobieranie przerwano; można wznowić zadanie.")
-                }
+                if (stopRequested) throw InterruptedIOException("Pobieranie zatrzymano.")
+                if (pauseRequested) throw InterruptedIOException("Pobieranie wstrzymano.")
                 val read = response.body.read(buffer)
                 if (read < 0) break
                 total += read
@@ -203,8 +200,9 @@ class StudiaOnlineBulkDownloader(
 
     private fun sleepInterruptibly(totalMs: Long) {
         var remaining = totalMs.coerceAtLeast(0L)
-        while (remaining > 0L && !stopRequested && !pauseRequested) {
-            val slice = minOf(remaining, 250L)
+        while (remaining > 0L && !stopRequested) {
+            if (pauseRequested) return
+            val slice = minOf(remaining, PAUSE_POLL_MS)
             sleeper(slice)
             remaining -= slice
         }
@@ -214,7 +212,7 @@ class StudiaOnlineBulkDownloader(
         const val MIN_COOLDOWN_MS = 2_000L
         const val MAX_COOLDOWN_MS = 300_000L
         const val DEFAULT_COOLDOWN_MS = 15_000L
-        private const val PAUSE_POLL_MS = 500L
+        private const val PAUSE_POLL_MS = 250L
         private const val MAX_RETRY_WAIT_MS = 300_000L
         private const val MAX_FILE_BYTES = 256L * 1024L * 1024L
     }
