@@ -56,6 +56,9 @@ GitHub Actions pobrał również metadane plików bezpośrednio z API Wikimedia 
 - SVG flags of international organizations — do 150 pozycji;
 - SVG logos of governments and government agencies — do 150 pozycji;
 - Logos of charitable organizations — do 150 pozycji.
+- SVG coats of arms of cities of Poland — do 200 pozycji.
+- SVG coats of arms of gminas of Poland — do 200 pozycji.
+- SVG coats of arms of powiats of Poland — do 100 pozycji (w kategorii znaleziono 69 plików).
 
 Łącznie API zwróciło 763 pozycje z pięciu kategorii. Następnie dodano trzy kategorie polskiej heraldyki samorządowej: do 200 herbów miast, do 200 herbów gmin i 69 herbów powiatów. To 469 dodatkowych kandydatów. Po deduplikacji w indeksie jest obecnie 1 229 unikalnych stron plików Wikimedia Commons. Dla każdej pozycji zapisano adres strony pliku, oryginalny adres pobrania oraz dostępne pola licencji, autora, źródła i atrybucji. Łączny artefakt obejmuje **2 734 ścieżki kandydackie** z GitHub i Wikimedia Commons (1 505 z GitHub, 1 229 z Commons). To materiał do klasyfikacji i kontroli praw, nie automatycznie zatwierdzone pliki produkcyjne.
 
