@@ -224,6 +224,10 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                     Text("Pozostało: ${it.remaining}")
                     Text("Pobrano poprawnie: ${it.succeeded.size}")
                     Text("Błędy: ${it.failed.size}")
+                    Text("Sumy SHA-256 zapisanych plików: ${it.sha256ById.size}")
+                    it.sha256ById.forEach { (id, checksum) ->
+                        Text("Materiał $id · SHA-256: $checksum", style = MaterialTheme.typography.bodySmall)
+                    }
                     it.currentId?.let { id -> Text("Aktualny materiał: $id") }
                     if (it.failed.isNotEmpty()) {
                         Text(
