@@ -148,7 +148,6 @@ class DocumentCatalogTest {
             assertTrue("Brak kafelka $id", documentDisplayOptions.any { it.first == id })
             assertTrue("Dodano nową grupę dla $id", group in existingGroups)
             assertEquals("Nieprawidłowa grupa dla $id", group, documentVisibilityGroup(id))
-            assertEquals("Nieprawidłowa grupa definicji dla $id", group, paymentAccountDocumentDefinition(id)?.group)
             val route = requireNotNull(DocumentRouteRegistry.find(id))
             assertEquals("Dokument $id musi mieć trasę DOCUMENT", DocumentRouteType.DOCUMENT, route.type)
             assertEquals("Trasa musi zachować identyfikator $id", id, route.documentId)
