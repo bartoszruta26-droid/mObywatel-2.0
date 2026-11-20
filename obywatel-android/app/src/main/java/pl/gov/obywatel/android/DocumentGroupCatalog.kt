@@ -20,7 +20,8 @@ private val legacyDocumentGroupNames = mapOf(
     "Dokumenty finansowe" to "Służba finansowa",
     "Dokumenty publiczne i obywatelskie" to "Służba państwowa",
     "Dokumenty firmowe i podmiotowe" to "Służba gospodarcza",
-    "Dokumenty fundacji" to "Służba fundacyjna",
+    "Dokumenty fundacji" to "Służba społeczna",
+    "Służba fundacyjna" to "Służba społeczna",
     "Dokumenty przedsiębiorstwa" to "Służba gospodarcza",
     "Dokumenty stowarzyszenia" to "Służba stowarzyszeniowa",
     "Dokumenty zawodowe i edukacyjne" to "Służba zawodowa",
@@ -33,7 +34,7 @@ internal fun migrateDocumentGroupName(name: String): String =
     legacyDocumentGroupNames[name] ?: name
 
 internal fun migrateDocumentGroupAssignment(documentId: String, group: String): String = when {
-    documentId == "organization_foundation" && group == "Służba gospodarcza" -> "Służba fundacyjna"
+    documentId == "organization_foundation" && group in setOf("Służba gospodarcza", "Służba fundacyjna") -> "Służba społeczna"
     documentId == "organization_association" && group == "Służba gospodarcza" -> "Służba stowarzyszeniowa"
     else -> group
 }
