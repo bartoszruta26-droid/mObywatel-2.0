@@ -95,7 +95,7 @@ class StudiaOnlineDownloadCatalogTest {
 
     @Test fun binaryMaterialIsNotRejectedByHtmlResponseDetection() {
         val binary = byteArrayOf(0x25, 0x50, 0x44, 0x46)
-        assertEquals(null, StudiaOnlineBulkDownloader.notFoundPageMessage("application/pdf", binary))
+        assertEquals(null, StudiaOnlineBulkDownloader.htmlResponseErrorMessage("application/pdf", binary))
     }
 
     @Test fun http404IsReportedAsMissingMaterial() {
