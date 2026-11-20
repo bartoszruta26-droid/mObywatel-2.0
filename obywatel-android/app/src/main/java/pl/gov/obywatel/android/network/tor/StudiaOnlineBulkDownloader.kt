@@ -120,10 +120,9 @@ class StudiaOnlineBulkDownloader(
                 waitWhilePaused(item.id, ::emit)
                 if (stopRequested) break
 
-                val requestStartedAt = clock()
-                previousRequestAt = requestStartedAt
                 emit(item.id, false)
                 try {
+                    previousRequestAt = clock()
                     downloaded = downloadWholeItem(item)
                 } catch (failure: Exception) {
                     if (stopRequested) break
@@ -143,7 +142,7 @@ class StudiaOnlineBulkDownloader(
 
             if (downloaded != null) {
                 try {
-                    save(item, downloaded!!)
+                    save(item, downloaded)
                     success += item.id
                 } catch (failure: Exception) {
                     failed[item.id] = failure.message ?: failure.javaClass.simpleName
@@ -171,7 +170,12 @@ class StudiaOnlineBulkDownloader(
     ) {
         while (pauseRequested && !stopRequested) {
             emit(itemId, true, false)
-            sleepInterruptibly(PAUSE_POLL_MS)
+            try {
+                sleeper(PAUSE_POLL_MS)
+            } catch (interrupted: InterruptedException) {
+                Thread.currentThread().interrupt()
+                stopRequested = true
+            }
         }
     }
 
@@ -200,10 +204,15 @@ class StudiaOnlineBulkDownloader(
 
     private fun sleepInterruptibly(totalMs: Long) {
         var remaining = totalMs.coerceAtLeast(0L)
-        while (remaining > 0L && !stopRequested) {
-            if (pauseRequested) return
+        while (remaining > 0L && !stopRequested && !pauseRequested) {
             val slice = minOf(remaining, PAUSE_POLL_MS)
-            sleeper(slice)
+            try {
+                sleeper(slice)
+            } catch (interrupted: InterruptedException) {
+                Thread.currentThread().interrupt()
+                stopRequested = true
+                return
+            }
             remaining -= slice
         }
     }
