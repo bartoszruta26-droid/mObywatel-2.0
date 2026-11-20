@@ -100,7 +100,7 @@ internal object InternationalDonationDocumentCatalog {
         DonationDocumentDefinition(
             INTERNATIONAL_DONATION_NGO_ID,
             "Międzynarodowy dokument darowizny na rzecz krajowej organizacji pozarządowej",
-            "Służba stowarzyszeniowa",
+            "Służba społeczna",
             "Dokument darowizny na rzecz organizacji pozarządowej zarejestrowanej w państwie darczyńcy lub odbiorcy. Podaj kraj rejestracji i identyfikatory pozwalające ustalić podmiot.",
             commonDonorFields() + listOf(
                 DonationDocumentField("recipient_name", "Pełna nazwa organizacji pozarządowej", required = true),
