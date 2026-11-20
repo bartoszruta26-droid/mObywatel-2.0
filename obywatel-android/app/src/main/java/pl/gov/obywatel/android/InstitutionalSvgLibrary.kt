@@ -662,8 +662,17 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: error("Nie można odczytać pliku.")
             val candidates = parseExternalCommonsSvgList(raw); val manifest = JSONArray()
             candidates.forEach { item -> manifest.put(JSONObject().put("file", item.title).put("downloadUrl", item.url).put("sourcePage", item.page).put("license", item.license).put("licenseUrl", item.licenseUrl).put("author", item.artist).put("restrictions", item.restrictions).put("sha256", item.sha256).put("source", "Lista zewnętrzna").put("status", "pending").put("attempts", 0)) }
-            writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2)); candidates.size
-        } }; status = result.fold({ "Zaimportowano " + it + " unikatowych plików SVG. Możesz wznowić pobieranie." }, { "Błąd importu listy SVG: " + (it.message ?: "nieznany błąd") }); busy = null } }
+            writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
+            val known = DocumentBrandStore.list(context).associateBy { it.id }
+            val alreadySaved = candidates.count { item ->
+                val asset = known[commonsAssetId(item.title)]
+                val bytes = asset?.let { DocumentBrandStore.fileBytes(context, it.id, it) }
+                val actual = bytes?.let { MessageDigest.getInstance("SHA-256").digest(it).joinToString("") { byte -> "%02x".format(byte) } }
+                val expected = item.sha256.ifBlank { runCatching { JSONObject(asset?.rights.orEmpty()).optString("sha256") }.getOrDefault("") }
+                asset != null && commonsChecksumMatches(expected, actual)
+            }
+            candidates.size to alreadySaved
+        } }; status = result.fold({ "Zaimportowano " + it.first + " plików SVG; już pobrane i zgodne: " + it.second + ". Pozostałe pobierzesz przyciskiem wznowienia." }, { "Błąd importu listy SVG: " + (it.message ?: "nieznany błąd") }); busy = null } }
     }
     val diagnosticLogLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         if (uri != null) {
@@ -839,7 +848,6 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                             progressTotal = totalFound
                                             status = "Pobieranie SVG: " + (processed + completed) + "/$totalFound — $title"
                                         }
-                                    }
                                     }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
                                     processed += part.found
                                     totalDownloaded += part.downloaded
