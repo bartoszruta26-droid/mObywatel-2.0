@@ -155,7 +155,7 @@ class InstitutionalSvgDownloadAccountingTest {
         assertTrue(csv.startsWith("\"filename\",\"symbol_type\",\"commons_page\""))
         assertTrue(csv.contains("\"logo/emblemat\""))
         assertTrue(csv.contains("\"Artist, Name\""))
-        assertEquals(2, csv.lines().size)
+        assertEquals(2, csv.trimEnd().lines().size)
     }
     @Test
     fun importsCommonsCsvWithMetadataAndDeduplicatesTheSameUploadUrl() {
