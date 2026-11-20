@@ -170,6 +170,21 @@ class InstitutionalSvgDownloadAccountingTest {
 
 
     @Test
+    fun importsGeneratedCommonsCandidateIndexWithMultilineAuthorMetadata() {
+        val csv = """# SPDX-License-Identifier: CC0-1.0
+source_id,repository,ref,path,group,rights_status,import_status,source_url,download_url,license_short_name,license_url,author,attribution_required,source_credit,commons_categories
+wikimedia-commons,Wikimedia Commons,live,"File:Example.svg",international_ngo,per_file_metadata_review_required,not_imported,"https://commons.wikimedia.org/wiki/File%3AExample.svg","https://upload.wikimedia.org/wikipedia/commons/a/ab/Example.svg","CC BY 4.0","https://creativecommons.org/licenses/by/4.0","Author One
+Author Two",true,credit,NGO
+"""
+        val candidates = parseExternalCommonsSvgList(csv)
+        assertEquals(1, candidates.size)
+        assertEquals("File:Example.svg", candidates.single().title)
+        assertEquals("Author One\nAuthor Two", candidates.single().artist)
+        assertEquals("CC BY 4.0", candidates.single().license)
+        assertEquals("https://commons.wikimedia.org/wiki/File%3AExample.svg", candidates.single().page)
+    }
+
+    @Test
     fun downloadsRequireSourcePageAndPerFileLicenseMetadata() {
         val licensed = CommonsSvgCandidate(
             "File:logo.svg", "https://upload.wikimedia.org/a/logo.svg",
