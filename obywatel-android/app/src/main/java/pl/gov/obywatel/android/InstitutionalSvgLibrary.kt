@@ -82,9 +82,12 @@ internal fun parseExternalCommonsSvgList(raw: String): List<CommonsSvgCandidate>
         require(!quoted) { "Nieprawidłowe cudzysłowy w CSV." }; out += cell.toString(); return out
     }
     val first = csv(lines.first()).map { it.trim().lowercase() }
-    val candidates = if (first.any { it in setOf("svg_url", "downloadurl", "url") }) {
+    val isCsvHeader = first.any { it in setOf("filename", "file", "title", "svg_url", "downloadurl", "url") } &&
+        (lines.first().contains(",") || first.any { it in setOf("svg_url", "downloadurl", "url") })
+    val candidates = if (isCsvHeader) {
         fun idx(vararg names: String) = names.firstNotNullOfOrNull { name -> first.indexOf(name).takeIf { it >= 0 } }
-        val urlCol = idx("svg_url", "downloadurl", "url") ?: error("Brak kolumny URL w CSV.")
+        val urlCol = idx("svg_url", "downloadurl", "url")
+        require(urlCol != null) { "Brak kolumny URL w CSV." }
         val fileCol = idx("filename", "file", "title"); val pageCol = idx("commons_page", "sourcepage", "page")
         val authorCol = idx("author", "artist"); val licenseCol = idx("license")
         val licenseUrlCol = idx("license_url", "licenseurl"); val restrictionsCol = idx("restrictions"); val shaCol = idx("sha256")
