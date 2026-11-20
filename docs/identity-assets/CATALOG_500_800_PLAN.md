@@ -57,7 +57,7 @@ GitHub Actions pobrał również metadane plików bezpośrednio z API Wikimedia 
 - SVG logos of governments and government agencies — do 150 pozycji;
 - Logos of charitable organizations — do 150 pozycji.
 
-Łącznie API zwróciło 763 pozycje kategorii, które po połączeniu i deduplikacji dały 760 unikalnych stron plików. Dla każdej pozycji zapisano adres strony pliku, oryginalny adres pobrania oraz dostępne pola licencji, autora, źródła i atrybucji. Łączny artefakt obejmuje 2 265 ścieżek kandydackich z GitHub i Wikimedia Commons. To materiał do klasyfikacji i kontroli praw, nie automatycznie zatwierdzone pliki produkcyjne.
+Łącznie API zwróciło 763 pozycje z pięciu kategorii. Następnie dodano trzy kategorie polskiej heraldyki samorządowej: do 200 herbów miast, do 200 herbów gmin i 69 herbów powiatów. To 469 dodatkowych kandydatów. Po deduplikacji w indeksie jest obecnie 1 229 unikalnych stron plików Wikimedia Commons. Dla każdej pozycji zapisano adres strony pliku, oryginalny adres pobrania oraz dostępne pola licencji, autora, źródła i atrybucji. Łączny artefakt obejmuje **2 734 ścieżki kandydackie** z GitHub i Wikimedia Commons (1 505 z GitHub, 1 229 z Commons). To materiał do klasyfikacji i kontroli praw, nie automatycznie zatwierdzone pliki produkcyjne.
 
 Artefakt z metadanymi Commons: https://github.com/bartoszruta26-droid/mObywatel-2.0/actions/runs/44796739367/artifacts/14658238721
 
