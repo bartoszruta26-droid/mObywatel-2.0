@@ -53,6 +53,19 @@ class StudiaOnlineDownloadCatalogTest {
         StudiaOnlineDownloadCatalog.fromRange(10, 9)
     }
 
+    @Test fun htmlErrorPageWithHttp200IsNotAcceptedAsMaterial() {
+        val html = "<!doctype html><html><body>Nie znaleziono materiału</body></html>".toByteArray()
+        assertEquals(
+            "Materiał nie został znaleziony — serwis zwrócił stronę błędu zamiast pliku.",
+            StudiaOnlineBulkDownloader.notFoundPageMessage("text/html; charset=UTF-8", html)
+        )
+    }
+
+    @Test fun binaryMaterialIsNotRejectedByHtmlErrorDetection() {
+        val binary = byteArrayOf(0x25, 0x50, 0x44, 0x46)
+        assertEquals(null, StudiaOnlineBulkDownloader.notFoundPageMessage("application/pdf", binary))
+    }
+
     @Test fun http404IsReportedAsMissingMaterial() {
         assertEquals(
             "Materiał nie został znaleziony (HTTP 404).",
