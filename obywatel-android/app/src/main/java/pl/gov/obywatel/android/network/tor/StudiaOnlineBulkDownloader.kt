@@ -98,27 +98,24 @@ class StudiaOnlineBulkDownloader(
         for (item in items) {
             if (stopRequested) break
 
-            // Cooldown is measured from the start of the previous HTTP request.
-            // Pause freezes progress through the cooldown without bypassing it.
-            val earliestNextRequest = previousRequestAt?.plus(cooldownMs)
-            while (!stopRequested) {
-                waitWhilePaused(item.id, ::emit)
-                if (stopRequested) break
-
-                val remainingCooldown = earliestNextRequest?.let { (it - clock()).coerceAtLeast(0L) } ?: 0L
-                val remainingRetryAfter = retryAfterMs.coerceAtLeast(0L)
-                val waitMs = maxOf(remainingCooldown, remainingRetryAfter)
-                if (waitMs <= 0L) break
-                sleepInterruptibly(minOf(waitMs, PAUSE_POLL_MS))
-            }
-            if (stopRequested) break
-            retryAfterMs = 0L
+            // Cooldown and server Retry-After are both enforced before every
+            // new request, including a retry after a paused/failed response.
 
             var downloaded: ByteArray? = null
             var lastFailure: Exception? = null
             while (downloaded == null && !stopRequested) {
                 waitWhilePaused(item.id, ::emit)
                 if (stopRequested) break
+
+                val earliestNextRequest = previousRequestAt?.plus(cooldownMs)
+                val remainingCooldown = earliestNextRequest?.let { (it - clock()).coerceAtLeast(0L) } ?: 0L
+                val remainingRetryAfter = retryAfterMs.coerceAtLeast(0L)
+                val waitMs = maxOf(remainingCooldown, remainingRetryAfter)
+                if (waitMs > 0L) {
+                    sleepInterruptibly(minOf(waitMs, PAUSE_POLL_MS))
+                    continue
+                }
+                retryAfterMs = 0L
 
                 emit(item.id, false)
                 try {
