@@ -3078,7 +3078,8 @@ private fun MoreMenuScreen(
     onOpenHistory: () -> Unit,
     onOpenIdentityDesigner: () -> Unit,
     onOpenImportedDocuments: () -> Unit,
-    onOpenLegalInformation: () -> Unit
+    onOpenLegalInformation: () -> Unit,
+    onOpenStudiaOnlineArchive: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -3092,6 +3093,12 @@ private fun MoreMenuScreen(
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Projektant dokumentów", "Tworzenie dokumentów, układ, podgląd i eksport PDF", Icons.Filled.Description, onOpenIdentityDesigner)
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
+        ProfileActionCard(
+            "Archiwum materiałów – pobierz moje pliki",
+            "Pobierz materiały z studia-online.pl przez Tor, z przerwami i wyborem folderu",
+            Icons.Filled.Description,
+            onOpenStudiaOnlineArchive
+        )
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
         ProfileActionCard("Informacje prawne", "Podstawy prawne, prawa obywatelskie i zasady działania aplikacji", Icons.Filled.Description, onOpenLegalInformation)
