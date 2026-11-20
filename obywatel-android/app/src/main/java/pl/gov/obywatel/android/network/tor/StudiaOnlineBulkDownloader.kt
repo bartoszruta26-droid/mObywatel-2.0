@@ -90,7 +90,7 @@ class StudiaOnlineBulkDownloader(
         val sha256ById = linkedMapOf<Int, String>()
         var completed = 0
         var previousRequestAt: Long? = null
-        var retryAfterMs = 0L
+        var retryAfterUntilMs: Long? = null
 
         fun emit(currentId: Int?, isPaused: Boolean, finished: Boolean = false) {
             onProgress(
@@ -106,6 +106,7 @@ class StudiaOnlineBulkDownloader(
 
             var downloaded: ByteArray? = null
             var lastFailure: Exception? = null
+            var transientRetryCount = 0
             while (downloaded == null && !stopRequested) {
                 waitWhilePaused(item.id, ::emit)
                 if (stopRequested) break
@@ -114,14 +115,15 @@ class StudiaOnlineBulkDownloader(
                 // pause/resume. Retry-After is treated as a minimum wait.
                 val earliestNextRequest = previousRequestAt?.plus(cooldownMs)
                 val remainingCooldown = earliestNextRequest?.let { (it - clock()).coerceAtLeast(0L) } ?: 0L
-                val remainingRetryAfter = retryAfterMs.coerceAtLeast(0L)
+                val retryDeadline = retryAfterUntilMs
+                val remainingRetryAfter = retryDeadline?.let { (it - clock()).coerceAtLeast(0L) } ?: 0L
+                if (remainingRetryAfter == 0L) retryAfterUntilMs = null
                 val waitMs = maxOf(remainingCooldown, remainingRetryAfter)
                 if (waitMs > 0L) {
                     sleepInterruptibly(minOf(waitMs, PAUSE_POLL_MS))
                     continue
                 }
                 if (stopRequested || pauseRequested) continue
-                retryAfterMs = 0L
 
                 emit(item.id, false)
                 try {
@@ -139,8 +141,19 @@ class StudiaOnlineBulkDownloader(
                         break
                     }
                     lastFailure = failure
-                    val retryAfter = (failure as? TorHttpException)?.retryAfter
-                    retryAfterMs = retryAfterDelayMillis(retryAfter, clock())
+                    val httpFailure = failure as? TorHttpException
+                    val retryDelay = retryAfterDelayMillis(httpFailure?.retryAfter, clock())
+                    if (retryDelay > 0L) {
+                        retryAfterUntilMs = clock() + retryDelay
+                    }
+                    // Retry rate-limited or temporarily unavailable resources, but
+                    // cap retries so a persistent server-side failure cannot loop forever.
+                    if (httpFailure?.httpCode in RETRYABLE_HTTP_CODES &&
+                        retryDelay > 0L && transientRetryCount < MAX_TRANSIENT_RETRIES
+                    ) {
+                        transientRetryCount++
+                        continue
+                    }
                     break
                 }
             }
@@ -291,6 +304,8 @@ class StudiaOnlineBulkDownloader(
         const val DEFAULT_COOLDOWN_MS = 15_000L
         private const val PAUSE_POLL_MS = 250L
         private const val MAX_RETRY_WAIT_MS = 300_000L
+        private const val MAX_TRANSIENT_RETRIES = 2
+        private val RETRYABLE_HTTP_CODES = setOf(429, 503)
         private const val MAX_FILE_BYTES = 64L * 1024L * 1024L
     }
 
