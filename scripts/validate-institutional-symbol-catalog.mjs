@@ -1,3 +1,5 @@
+/* SPDX-FileCopyrightText: 2026 bartoszruta26-droid */
+/* SPDX-License-Identifier: CC0-1.0 */
 import fs from "node:fs";
 import path from "node:path";
 
@@ -24,7 +26,9 @@ function parseCsv(source) {
   return rows;
 }
 for (const file of files) {
-  const rows=parseCsv(fs.readFileSync(path.join(root,file),"utf8"));
+  const source=fs.readFileSync(path.join(root,file),"utf8");
+  const csvBody=source.split(/\r?\n/).filter(line => !line.trimStart().startsWith("#")).join("\n");
+  const rows=parseCsv(csvBody);
   if (rows.length < 2) throw new Error(file+": no data rows");
   const header=rows[0], idIndex=header.findIndex(x=>/^(source_id|candidate_id)$/.test(x));
   if (idIndex<0) throw new Error(file+": missing stable ID column");
