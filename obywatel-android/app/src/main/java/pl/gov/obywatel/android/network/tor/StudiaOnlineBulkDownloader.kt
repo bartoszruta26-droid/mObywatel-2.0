@@ -98,15 +98,14 @@ class StudiaOnlineBulkDownloader(
         for (item in items) {
             if (stopRequested) break
 
-            // Cooldown and server Retry-After are both enforced before every
-            // new request, including a retry after a paused/failed response.
-
             var downloaded: ByteArray? = null
             var lastFailure: Exception? = null
             while (downloaded == null && !stopRequested) {
                 waitWhilePaused(item.id, ::emit)
                 if (stopRequested) break
 
+                // Cooldown is based on the previous request start and survives
+                // pause/resume. Retry-After is treated as a minimum wait.
                 val earliestNextRequest = previousRequestAt?.plus(cooldownMs)
                 val remainingCooldown = earliestNextRequest?.let { (it - clock()).coerceAtLeast(0L) } ?: 0L
                 val remainingRetryAfter = retryAfterMs.coerceAtLeast(0L)
@@ -125,8 +124,13 @@ class StudiaOnlineBulkDownloader(
                 } catch (failure: Exception) {
                     if (stopRequested) break
                     if (pauseRequested || failure is InterruptedIOException) {
-                        // The response is already closed by use {}; restart after resume.
-                        continue
+                        // The response is closed by use(); do not issue a new
+                        // request until the user resumes.
+                        if (pauseRequested) {
+                            waitWhilePaused(item.id, ::emit)
+                            continue
+                        }
+                        break
                     }
                     lastFailure = failure
                     val retrySeconds = (failure as? TorHttpException)?.retryAfter?.toLongOrNull()
