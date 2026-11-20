@@ -5,7 +5,7 @@ package pl.gov.obywatel.android.network.tor
 import android.content.Context
 import java.io.IOException
 
-/** Shared Tor-only streaming download service for all app resources. */
+/** Reusable Tor-only streaming download service for all app resources. */
 class TorDownloadService(
     private val context: Context,
     private val runtime: TorRuntime,
@@ -51,18 +51,12 @@ class TorDownloadService(
         rules = routeRules
     )
 
-    /**
-     * The selected external client (Orbot) is used independently of the embedded
-     * Guardian runtime. Guardian starts lazily only when no selected client is ready
-     * or an external SOCKS connection fails. No direct-network fallback exists.
-     */
+    /** Opens through an eligible local Tor client; there is no direct-network fallback. */
     @Throws(IOException::class)
     fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse {
         val selected = try {
             router.select(kind)
         } catch (selectionFailure: IOException) {
-            // An unavailable Orbot must not strand the request: start Guardian as
-            // the verified fallback, then ask the router to select again.
             ensureGuardianEndpoint()
             try {
                 router.select(kind)
@@ -71,7 +65,6 @@ class TorDownloadService(
                 throw retryFailure
             }
         }
-
         try {
             return transport.open(url, selected.endpoint(), rangeStart, ifRange)
         } catch (failure: IOException) {
@@ -110,7 +103,8 @@ class TorDownloadService(
         }
         if (runtime.state != TorState.READY) {
             throw IOException("Guardian Tor nie osiągnął stanu READY; pobieranie pozostaje zablokowane." +
-                (runtime.failureMessage()?.let { " Przyczyna zgłoszona przez usługę: $it" } ?: " Brak komunikatu ACTION_ERROR z usługi Tor."))
+                (runtime.failureMessage()?.let { " Przyczyna zgłoszona przez usługę Tor: $it" }
+                    ?: " Brak komunikatu ACTION_ERROR z usługi Tor."))
         }
         return runtime.proxyEndpoint()
             ?: throw IOException("Guardian Tor zgłosił READY, ale nie udostępnia działającego SOCKS5.")
