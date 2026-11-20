@@ -35,7 +35,8 @@ for (const source of sources) {
     candidates.push({
       source_id:source.id, repository:source.repo, ref:source.ref, path:item.path,
       group:source.group, rights_status:source.rights, import_status:"not_imported",
-      source_url:`https://github.com/${source.repo}/blob/${source.ref}/${item.path}`
+      source_url:`https://github.com/${source.repo}/blob/${source.ref}/${item.path}`,
+      download_url:"",license_short_name:"",license_url:"",author:"",attribution_required:"",source_credit:"",commons_categories:""
     });
   }
   reports.push({
@@ -46,9 +47,64 @@ for (const source of sources) {
     rights_status:source.rights, mode:source.mode
   });
 }
+
+const commonsCategories = [
+  { id:"commons-nonprofit-svg", title:"Category:SVG logos of non-profit organizations", group:"international_ngo", limit:200 },
+  { id:"commons-ngo-logos", title:"Category:Logos of non-governmental organizations", group:"ngo_and_social_organizations", limit:200 },
+  { id:"commons-international-flags", title:"Category:SVG flags of international organizations", group:"international_organization_flags", limit:150 },
+  { id:"commons-government-svg", title:"Category:SVG logos of governments and government agencies", group:"government_and_public_institutions", limit:150 },
+  { id:"commons-charity-logos", title:"Category:Logos of charitable organizations", group:"charitable_organizations", limit:150 }
+];
+const commonsHeaders = { "User-Agent":"mObywatel-2.0-symbol-catalog/1.0 (https://github.com/bartoszruta26-droid/mObywatel-2.0)", "Accept":"application/json" };
+const commonsByPage = new Map();
+const commonsReports = [];
+const meta = (info,key) => String(info?.[key]?.value || "").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim();
+for (const category of commonsCategories) {
+  let continuation = null, collected = 0, pagesFetched = 0;
+  while (collected < category.limit && pagesFetched < 5) {
+    const params = new URLSearchParams({
+      action:"query", generator:"categorymembers", gcmtitle:category.title,
+      gcmtype:"file", gcmnamespace:"6", gcmlimit:String(Math.min(200,category.limit-collected)),
+      prop:"imageinfo", iiprop:"url|extmetadata", format:"json", formatversion:"2"
+    });
+    if (continuation) params.set("gcmcontinue",continuation);
+    const response = await fetch("https://commons.wikimedia.org/w/api.php?"+params.toString(),{headers:commonsHeaders});
+    if (!response.ok) throw new Error("Wikimedia Commons "+category.title+": HTTP "+response.status);
+    const payload = await response.json();
+    const pages = payload.query?.pages || [];
+    for (const page of pages) {
+      const info = page.imageinfo?.[0] || {};
+      const pageUrl = "https://commons.wikimedia.org/wiki/"+encodeURIComponent(String(page.title||"").replace(/ /g,"_"));
+      const record = {
+        source_id:"wikimedia-commons", repository:"Wikimedia Commons", ref:"live-category-snapshot",
+        path:page.title, group:category.group, rights_status:"per_file_metadata_review_required",
+        import_status:"not_imported", source_url:pageUrl, download_url:info.url || "",
+        license_short_name:meta(info.extmetadata,"LicenseShortName"),
+        license_url:meta(info.extmetadata,"LicenseUrl"),
+        author:meta(info.extmetadata,"Artist"),
+        attribution_required:meta(info.extmetadata,"AttributionRequired"),
+        source_credit:meta(info.extmetadata,"Credit"),
+        commons_categories:category.title
+      };
+      const key=pageUrl;
+      if (commonsByPage.has(key)) {
+        const old=commonsByPage.get(key);
+        old.commons_categories += " | "+category.title;
+      } else commonsByPage.set(key,record);
+      collected++;
+    }
+    pagesFetched++;
+    continuation = payload.continue?.gcmcontinue || null;
+    if (!continuation || pages.length===0) break;
+  }
+  commonsReports.push({category:category.title,group:category.group,items_seen:collected,pages_fetched:pagesFetched});
+}
+candidates.push(...commonsByPage.values());
+reports.push(...commonsReports.map(x=>({source_id:"wikimedia-commons",repository:"Wikimedia Commons",ref:"live-category-snapshot",visual_file_count:x.items_seen,svg_file_count:null,license_files:[],selected_candidate_count:x.items_seen,rights_status:"per_file_metadata_review_required",mode:x.category,group:x.group})));
+
 fs.mkdirSync("build",{recursive:true});
 fs.writeFileSync("build/upstream-symbol-audit.json",JSON.stringify({generatedAt:new Date().toISOString(),reports,candidateCount:candidates.length,candidates},null,2)+"\n");
-const cols=["source_id","repository","ref","path","group","rights_status","import_status","source_url"];
+const cols=["source_id","repository","ref","path","group","rights_status","import_status","source_url","download_url","license_short_name","license_url","author","attribution_required","source_credit","commons_categories"];
 const quote=v=>'"'+String(v).replace(/"/g,'""')+'"';
 fs.writeFileSync("build/upstream-symbol-candidates.csv",cols.join(",")+"\n"+candidates.map(x=>cols.map(k=>quote(x[k])).join(",")).join("\n")+"\n");
 for (const r of reports) console.log(`${r.repository}: ${r.svg_file_count} SVG, ${r.visual_file_count} visual files, ${r.selected_candidate_count} candidates; rights=${r.rights_status}`);
