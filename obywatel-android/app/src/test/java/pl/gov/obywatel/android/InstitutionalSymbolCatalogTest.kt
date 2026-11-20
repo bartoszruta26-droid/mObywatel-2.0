@@ -57,4 +57,39 @@ class InstitutionalSymbolCatalogTest {
         )
         assertTrue(parseInstitutionalSymbolCsv(header + "\n" + png + "\n" + missing).isEmpty())
     }
+    @Test
+    fun svgSecurityGateRejectsEventHandlersAndActiveElements() {
+        val unsafe = listOf(
+            """<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"></svg>""",
+            """<svg><script>alert(1)</script></svg>""",
+            """<svg><foreignObject /></svg>""",
+            """<svg><animate attributeName="x" /></svg>""",
+            """<svg xml:base="https://evil.example/"></svg>"""
+        )
+        unsafe.forEach { markup ->
+            try {
+                SvgSafetyValidator.validateMarkupSecurity(markup)
+                throw AssertionError("Niebezpieczny SVG został zaakceptowany: $markup")
+            } catch (_: IllegalArgumentException) { }
+        }
+    }
+
+    @Test
+    fun svgSecurityGateRejectsRemoteCssButAllowsLocalFragments() {
+        val unsafe = listOf(
+            """<svg><path style="fill:url(https://evil.example/a.svg#x)" /></svg>""",
+            """<svg><style>@import url(https://evil.example/a.css);</style></svg>""",
+            """<svg><image href="data:image/svg+xml;base64,PHN2Zz4=" /></svg>"""
+        )
+        unsafe.forEach { markup ->
+            try {
+                SvgSafetyValidator.validateMarkupSecurity(markup)
+                throw AssertionError("Niebezpieczny SVG został zaakceptowany: $markup")
+            } catch (_: IllegalArgumentException) { }
+        }
+        SvgSafetyValidator.validateMarkupSecurity(
+            """<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" /></defs><path fill="url(#g)" /></svg>"""
+        )
+    }
+
 }
