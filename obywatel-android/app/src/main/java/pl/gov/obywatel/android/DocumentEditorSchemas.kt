@@ -82,6 +82,7 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
 }
 
 private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<DocumentEditorFieldDefinition> = when (documentId) {
+        in paymentAccountDocumentTargets().map { it.first }.toSet() -> fields(*paymentAccountDocumentFields(documentId).toTypedArray())
         in internationalDocumentCatalogIds -> internationalDocumentEditorFields(documentId)
         "international_medical_certificate" -> fields(
             Triple("documentNumber", "Document Number", ""),
