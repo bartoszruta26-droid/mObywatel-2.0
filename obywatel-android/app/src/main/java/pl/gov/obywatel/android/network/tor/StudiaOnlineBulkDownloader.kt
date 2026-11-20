@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android.network.tor
 
 import java.io.IOException
+import java.math.BigInteger
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -271,8 +272,11 @@ class StudiaOnlineBulkDownloader(
 
         internal fun retryAfterDelayMillis(value: String?, nowMs: Long): Long {
             if (value.isNullOrBlank()) return 0L
-            value.trim().toLongOrNull()?.let { seconds ->
-                if (seconds > 0L) return seconds.coerceAtMost(MAX_RETRY_WAIT_MS / 1_000L) * 1_000L
+            value.trim().toBigIntegerOrNull()?.let { seconds ->
+                if (seconds.signum() > 0) {
+                    val cappedSeconds = seconds.min(BigInteger.valueOf(MAX_RETRY_WAIT_MS / 1_000L))
+                    return cappedSeconds.toLong() * 1_000L
+                }
                 return 0L
             }
             val targetMs = runCatching {
