@@ -31,21 +31,23 @@ internal object SvgSafetyValidator {
 
     /** Pure string checks are JVM-testable without Android XML runtime. */
     internal fun validateMarkupSecurity(raw: String) {
-        require(Regex("<svg\\b", RegexOption.IGNORE_CASE).containsMatchIn(raw)) { "Źródło nie zawiera elementu SVG." }
-        require(!Regex("<!DOCTYPE|<!ENTITY|<\\?(?!xml\s)", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
+        require(Regex("""<svg\b""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
+            "Źródło nie zawiera elementu SVG."
+        }
+        require(!Regex("""<!DOCTYPE|<!ENTITY|<\?(?!xml\s)""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
             "SVG zawiera niedozwolone deklaracje XML."
         }
-        require(!Regex("<\s*(script|foreignObject|animate|animateMotion|animateTransform|set)\\b", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
+        require(!Regex("""<\s*(script|foreignObject|animate|animateMotion|animateTransform|set)\b""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
             "SVG zawiera niedozwolony element aktywny lub animację."
         }
-        require(!Regex("\s(?:on[a-z][a-z0-9_-]*|xml:base)\s*=", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
+        require(!Regex("""\s(?:on[a-z][a-z0-9_-]*|xml:base)\s*=""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
             "SVG zawiera atrybut zdarzenia lub xml:base."
         }
         require(!Regex("""(?:href|src)\s*=\s*(['"])(?!#)[^'"]*\1""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
             "SVG zawiera odwołanie poza lokalnym fragmentem dokumentu."
         }
         // CSS resource URLs are rejected unless they point to an in-document fragment.
-        require(!Regex("""@\s*import|url\s*\\(\s*(['"]?)(?!#)[^)]+\\)""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
+        require(!Regex("""@\s*import|url\s*\(\s*(['"]?)(?!#)[^)]+\)""", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
             "SVG zawiera zewnętrzne odwołanie CSS."
         }
     }
