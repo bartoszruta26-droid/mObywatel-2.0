@@ -79,9 +79,9 @@ Statusy prawne i operacyjne muszą być rozdzielone:
 
 GitHub Actions może klonować publiczne repozytoria, pobierać wybrane pliki, optymalizować SVG, wyliczać SHA-256 i przygotowywać PR z zasobami. Nie należy automatycznie kopiować całych repozytoriów ani traktować licencji repozytorium jako licencji każdego logo. Import musi działać z allowlisty rekordów, zachowywać upstream repo/ref/path, plik licencji, źródło, atrybucję i status prawny. Każdy import ma być powtarzalny i nie może nadpisywać zatwierdzonych zasobów bez kontroli różnic.
 
-## Wbudowany katalog aplikacji: 800 kandydatów
+## Wbudowany katalog nazw: 1 229 kandydatów
 
-Do zasobów aplikacji dodano plik `obywatel-android/app/src/main/assets/institutions/institutional-symbol-catalog-800.csv`. Zawiera dokładnie 800 unikalnych kandydatów SVG. Każdy rekord ma stronę pliku Commons, oryginalny adres SVG, nazwę autora i nazwę licencji.
+Do zasobów aplikacji dodano plik `obywatel-android/app/src/main/assets/institutions/institutional-symbol-catalog.csv`. Zawiera 1 229 unikalnych stron plików SVG z Wikimedia Commons. Każdy rekord ma nazwę pliku, kategorię, stronę źródłową, oryginalny adres SVG oraz dostępne pola autora, licencji i atrybucji. To indeks plików, nie 1 229 odrębnych organizacji.
 
 | Grupa | Liczba |
 |---|---:|
@@ -89,17 +89,22 @@ Do zasobów aplikacji dodano plik `obywatel-android/app/src/main/assets/institut
 | Herby gmin Polski | 200 |
 | Herby powiatów Polski | 69 |
 | Międzynarodowe NGO i organizacje non-profit | 200 |
-| Instytucje publiczne i agencje | 93 |
-| Organizacje charytatywne | 29 |
-| Organizacje społeczne | 9 |
-| **Razem** | **800** |
+| Instytucje publiczne i agencje | 95 |
+| Organizacje charytatywne | 148 |
+| Organizacje społeczne | 199 |
+| Flagi organizacji międzynarodowych | 118 |\n| **Razem** | **1 229** |
 
-Katalog jest dołączony do zasobów aplikacji i może być załadowany bez wyszukiwania online. Przycisk w panelu biblioteki wczytuje listę do kolejki pobierania; same grafiki nie są pobierane automatycznie. Aplikacja wymaga nazwy licencji i strony źródłowej przed pobraniem, zachowuje autora i ograniczenia, a `permittedKinds` pozostaje puste do odrębnej akceptacji.
+Katalog jest dołączony do zasobów aplikacji i może być przeszukiwany offline po nazwie pliku, autorze i grupie. Aplikacja nie pobiera masowo 1 229 grafik. Po wybraniu konkretnego wyniku pobiera pojedynczy SVG przez Tor, sprawdza format i zapisuje stronę źródłową, autora, licencję, ograniczenia oraz SHA-256. Wyniki spoza katalogu można wyszukać po nazwie bezpośrednio w Wikimedia Commons; samo wyszukiwanie pobiera wyłącznie metadane.
 
-Wszystkie 800 pozycji mają nazwę licencji z metadanych Commons, ale w 674 rekordach nie zwrócono osobnego URL licencji. Dla tych pozycji trzeba otworzyć stronę pliku i sprawdzić pełne warunki, autora oraz ograniczenia znaków towarowych/heraldycznych. Katalog jest zatem gotowym indeksem 800 kandydatów, a nie deklaracją, że 800 znaków ma już potwierdzone prawo do swobodnego wykorzystania.
+Przycisk masowego pobierania całej kolejki został usunięty z panelu. Pozostaje pobieranie pojedynczego wybranego znaku. Historia pobrań i istniejące pliki są zachowywane przy aktualizacji katalogu.
 
-Poprzedni plik `institutional-symbol-catalog-200.csv` pozostaje jako zachowany podzbiór pilotażowy; aplikacja ładuje teraz wersję 800.
+W katalogu 1 229 pozycji każda ma nazwę licencji, ale **811 nie ma osobnego adresu licencji**, a **84 nie ma wskazanego autora**. W tych przypadkach aplikacja zachowuje stronę źródłową i wymaga dodatkowej weryfikacji. `permittedKinds` pozostaje puste; obecność SVG w bibliotece nie oznacza prawa do użycia go na dokumencie.
 
+### Pakiet 50 najczęściej używanych symboli
+
+Pakiet 50 SVG będzie osobnym, ograniczonym zestawem. Do pakietu można włączyć tylko pliki, dla których sprawdzono konkretną licencję, autora, atrybucję, aktualność znaku oraz ograniczenia znaków towarowych i emblematów. Znaki wymagające zgody pozostają w katalogu nazw, ale nie są automatycznie dołączane do pakietu. Szczególne emblematy (np. chronione znaki organizacji międzynarodowych i humanitarnych) wymagają odrębnej oceny, nawet gdy strona pliku deklaruje domenę publiczną.
+
+Do czasu zamknięcia takiej kontroli aplikacja nie pobiera 50 plików w ciemno. Najpierw powstaje lista priorytetowa 50 pozycji z potwierdzonymi prawami; pozostałe pozycje są pobierane pojedynczo na żądanie.
 ## Etapy
 
 1. Zbudować indeks kandydatów i rejestr źródeł (ten etap).
