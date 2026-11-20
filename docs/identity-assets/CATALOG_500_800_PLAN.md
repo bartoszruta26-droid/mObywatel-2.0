@@ -47,6 +47,20 @@ Docelowy katalog: **800 rekordów**. Pierwsze wydanie użytkowe: minimum **500 z
 - GitHub Actions sprawdził 7 repozytoriów i wygenerował artefakt z indeksem **1 505 ścieżek kandydackich**: 57 z kolekcji NGO, 3 dopasowane znaki Simple Icons oraz 1 445 pozycji flagowych z trzech zbiorów. Liczba 1 505 nie oznacza 1 505 zweryfikowanych logotypów NGO; flagi są odrębną kategorią, a część repozytoriów ma nieustalone prawa do poszczególnych plików.
 - Artefakt CI: https://github.com/bartoszruta26-droid/mObywatel-2.0/actions/runs/44796125438/artifacts/14657129035
 
+### Rozszerzenie indeksu o Wikimedia Commons
+
+GitHub Actions pobrał również metadane plików bezpośrednio z API Wikimedia Commons z pięciu kategorii:
+
+- SVG logos of non-profit organizations — do 200 pozycji;
+- Logos of non-governmental organizations — do 200 pozycji;
+- SVG flags of international organizations — do 150 pozycji;
+- SVG logos of governments and government agencies — do 150 pozycji;
+- Logos of charitable organizations — do 150 pozycji.
+
+Łącznie API zwróciło 763 pozycje kategorii, które po połączeniu i deduplikacji dały 760 unikalnych stron plików. Dla każdej pozycji zapisano adres strony pliku, oryginalny adres pobrania oraz dostępne pola licencji, autora, źródła i atrybucji. Łączny artefakt obejmuje 2 265 ścieżek kandydackich z GitHub i Wikimedia Commons. To materiał do klasyfikacji i kontroli praw, nie automatycznie zatwierdzone pliki produkcyjne.
+
+Artefakt z metadanymi Commons: https://github.com/bartoszruta26-droid/mObywatel-2.0/actions/runs/44796739367/artifacts/14658238721
+
 ## Model rekordów
 
 Każdy rekord ma: stabilny `assetId`, nazwę, nazwę alternatywną, grupę, podgrupę, kraj/obszar, typ symbolu, właściciela, okres obowiązywania, źródło oryginalne, adres pliku, autora, licencję, odnośnik do licencji, wersję źródła, sumę SHA-256, format, rozmiar, status prawny, status weryfikacji, status zgody, dozwolone zastosowania i notatki.
