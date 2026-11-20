@@ -2,10 +2,16 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.network.tor
 
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,14 +48,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Composable
 fun StudiaOnlineBulkDownloadScreen(
     onBack: () -> Unit,
-    download: suspend (
-        List<StudiaOnlineDownloadItem>,
-        Long,
-        Uri,
-        (StudiaOnlineDownloadProgress) -> Unit
-    ) -> StudiaOnlineDownloadProgress
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val runtime = remember(context) { GuardianTorRuntime(context) }
+    val downloadService = remember(context) { TorDownloadService(context, runtime) }
+    val downloader = remember(context) { StudiaOnlineBulkDownloader(downloadService) }
+    val store = remember(context) { StudiaOnlineSafStore(context) }
     var firstId by remember { mutableStateOf("1") }
     var lastId by remember { mutableStateOf("100") }
     var intervalSeconds by remember { mutableStateOf(15f) }
@@ -78,7 +83,7 @@ fun StudiaOnlineBulkDownloadScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("‹  Powrót", color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp))
+            modifier = Modifier.fillMaxWidth().clickable(onClick = onBack).padding(bottom = 4.dp))
         Text("Archiwum materiałów", style = MaterialTheme.typography.headlineSmall)
         Text(
             "Pobieranie Twoich materiałów z serwisu studia-online.pl przez skonfigurowaną pulę lokalnych klientów Tor. " +
@@ -129,10 +134,24 @@ fun StudiaOnlineBulkDownloadScreen(
                         activeResume = jobResume
                         activeStop = jobStop
                         scope.launch {
+                            running = true
+                            activePause = { downloader.pause() }
+                            activeResume = { downloader.resume() }
+                            activeStop = { downloader.stop() }
                             try {
-                                val result = download(items, intervalSeconds.toLong() * 1_000L, destination) {
-                                    progress = it
-                                    paused = it.paused
+                                if (runtime.state == TorState.STOPPED || runtime.state == TorState.FAILED) {
+                                    withContext(Dispatchers.IO) { runtime.start() }
+                                }
+                                val result = withContext(Dispatchers.IO) {
+                                    downloader.run(items, intervalSeconds.toLong() * 1_000L, save = { item, bytes ->
+                                        store.save(destination, item, bytes)
+                                    }, onProgress = { update ->
+                                        // Callback is emitted by the IO worker; Compose state is updated on Main.
+                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                            progress = update
+                                            paused = update.paused
+                                        }
+                                    })
                                 }
                                 progress = result
                                 statusText = if (result.finished) "Pobieranie zakończone." else "Zadanie zatrzymane."
@@ -161,8 +180,7 @@ fun StudiaOnlineBulkDownloadScreen(
                 }
                 OutlinedButton(onClick = {
                     activeStop?.invoke()
-                    stopSignal.set(true)
-                    pauseSignal.set(false)
+                    activeStop?.invoke()
                     paused = false
                     statusText = "Zatrzymywanie po bezpiecznym zamknięciu bieżącego żądania…"
                 }, modifier = Modifier.weight(1f)) {
