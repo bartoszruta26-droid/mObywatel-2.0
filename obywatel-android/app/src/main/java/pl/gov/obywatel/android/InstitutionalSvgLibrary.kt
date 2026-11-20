@@ -51,6 +51,21 @@ private fun validateSvg(bytes:ByteArray) {
 
 internal data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
 internal fun commonsCandidateHasRightsMetadata(item: CommonsSvgCandidate): Boolean = item.page.isNotBlank() && item.license.isNotBlank()
+/** Offline name search over the locally bundled symbol metadata catalog. */
+internal fun filterCommonsCandidatesByName(
+    candidates: List<CommonsSvgCandidate>,
+    query: String,
+    limit: Int = 30
+): List<CommonsSvgCandidate> {
+    val term = query.trim()
+    if (term.length < 2) return emptyList()
+    return candidates.filter { item ->
+        item.title.contains(term, ignoreCase = true) ||
+            item.artist.contains(term, ignoreCase = true) ||
+            item.restrictions.contains(term, ignoreCase = true)
+    }.take(limit.coerceIn(1, 100))
+}
+
 /** CSV export of search results only; this never downloads SVG payloads. */
 internal fun commonsCandidatesCsv(candidates: List<CommonsSvgCandidate>): String {
     fun quote(value: String): String = "\"" + value.replace("\"", "\"\"") + "\""
@@ -981,13 +996,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
         if (loaded.isFailure) status = "Nie udało się załadować katalogu: ${loaded.exceptionOrNull()?.message ?: "błąd"}"
     }
     val localMatches = remember(searchQuery, catalogCandidates) {
-        val term = searchQuery.trim()
-        if (term.length < 2) emptyList()
-        else catalogCandidates.filter { item ->
-            item.title.contains(term, ignoreCase = true) ||
-                item.artist.contains(term, ignoreCase = true) ||
-                item.restrictions.contains(term, ignoreCase = true)
-        }.take(30)
+        filterCommonsCandidatesByName(catalogCandidates, searchQuery, 30)
     }
     val savedIds = remember(savedVersion) { DocumentBrandStore.list(context).map { it.id }.toSet() }
     fun downloadOne(item: CommonsSvgCandidate) {
