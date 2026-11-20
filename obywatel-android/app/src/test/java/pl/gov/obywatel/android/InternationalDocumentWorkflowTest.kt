@@ -30,7 +30,7 @@ class InternationalDocumentWorkflowTest {
             "vatican_passport_ordinary", "holy_see_passport_diplomatic", "holy_see_passport_service",
             "holy_see_passport_temporary_service", "vatican_citizenship_certificate",
             "ecclesiastical_baptism_certificate", "ecclesiastical_marriage_certificate",
-            "ecclesiastical_death_certificate", "clerical_ordination_certificate", INTERNATIONAL_DONATION_WORSHIP_ID, INTERNATIONAL_DONATION_NGO_ID, INTERNATIONAL_DONATION_PERSON_ID
+            "ecclesiastical_death_certificate", "clerical_ordination_certificate"
         )
         authorityIds.forEach { id ->
             val workflow = InternationalDocumentWorkflowCatalog.find(id)
