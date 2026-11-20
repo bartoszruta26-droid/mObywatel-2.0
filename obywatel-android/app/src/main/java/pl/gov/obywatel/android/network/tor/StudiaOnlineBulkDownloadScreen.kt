@@ -57,6 +57,9 @@ fun StudiaOnlineBulkDownloadScreen(
     var running by remember { mutableStateOf(false) }
     var paused by remember { mutableStateOf(false) }
     var statusText by remember { mutableStateOf("Wybierz zakres materiałów i folder docelowy.") }
+    var activePause by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var activeResume by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var activeStop by remember { mutableStateOf<(() -> Unit)?>(null) }
     var progress by remember { mutableStateOf<StudiaOnlineDownloadProgress?>(null) }
     var errorText by remember { mutableStateOf("") }
     val pauseSignal = remember { AtomicBoolean(false) }
@@ -119,6 +122,12 @@ fun StudiaOnlineBulkDownloadScreen(
                         progress = null
                         pauseSignal.set(false)
                         stopSignal.set(false)
+                        val jobPause = { pauseSignal.set(true) }
+                        val jobResume = { pauseSignal.set(false) }
+                        val jobStop = { stopSignal.set(true); pauseSignal.set(false) }
+                        activePause = jobPause
+                        activeResume = jobResume
+                        activeStop = jobStop
                         scope.launch {
                             try {
                                 val result = download(items, intervalSeconds.toLong() * 1_000L, destination) {
@@ -132,6 +141,9 @@ fun StudiaOnlineBulkDownloadScreen(
                             } finally {
                                 running = false
                                 paused = false
+                                activePause = null
+                                activeResume = null
+                                activeStop = null
                             }
                         }
                     },
@@ -148,6 +160,7 @@ fun StudiaOnlineBulkDownloadScreen(
                     IconLabel(if (paused) "Wznów" else "Pauza", if (paused) Icons.Filled.PlayArrow else Icons.Filled.Pause)
                 }
                 OutlinedButton(onClick = {
+                    activeStop?.invoke()
                     stopSignal.set(true)
                     pauseSignal.set(false)
                     paused = false
