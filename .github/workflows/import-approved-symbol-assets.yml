@@ -33,4 +33,3 @@ jobs:
             Automated import from the explicit allowlist.
             Every file was checked against a pinned SHA-256, HTTPS source, approved license status and SVG active-content restrictions.
             Review source attribution and legal status before merging.
-          labels: assets, legal-review
