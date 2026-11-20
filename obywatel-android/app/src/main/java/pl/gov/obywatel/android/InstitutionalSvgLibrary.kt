@@ -70,40 +70,90 @@ internal fun commonsCandidatesCsv(candidates: List<CommonsSvgCandidate>): String
 
 /** Import parser for Commons CSV exports and plain URL lists. */
 internal fun parseExternalCommonsSvgList(raw: String): List<CommonsSvgCandidate> {
-    val lines = raw.removePrefix("\uFEFF").lineSequence().map { it.trim().trimEnd('\r') }.filter { it.isNotBlank() && !it.startsWith("#") }.toList()
-    require(lines.isNotEmpty()) { "Zaimportowana lista SVG jest pusta." }
-    fun csv(line: String): List<String> {
-        val out = mutableListOf<String>(); val cell = StringBuilder(); var quoted = false; var i = 0
-        while (i < line.length) { val ch = line[i]; when {
-            ch == '"' && quoted && i + 1 < line.length && line[i + 1] == '"' -> { cell.append('"'); i++ }
-            ch == '"' -> quoted = !quoted
-            ch == ',' && !quoted -> { out += cell.toString(); cell.setLength(0) }
-            else -> cell.append(ch)
-        }; i++ }
-        require(!quoted) { "Nieprawidłowe cudzysłowy w CSV." }; out += cell.toString(); return out
+    val source = raw.removePrefix("\uFEFF").lineSequence()
+        .dropWhile { it.isBlank() || it.trimStart().startsWith("#") }
+        .joinToString("\n")
+    require(source.isNotBlank()) { "Zaimportowana lista SVG jest pusta." }
+
+    fun parseCsv(text: String): List<List<String>> {
+        val rows = mutableListOf<List<String>>()
+        val row = mutableListOf<String>()
+        val cell = StringBuilder()
+        var quoted = false
+        var i = 0
+        while (i < text.length) {
+            val ch = text[i]
+            when {
+                ch == '"' && quoted && i + 1 < text.length && text[i + 1] == '"' -> {
+                    cell.append('"')
+                    i++
+                }
+                ch == '"' -> quoted = !quoted
+                ch == ',' && !quoted -> {
+                    row += cell.toString()
+                    cell.setLength(0)
+                }
+                (ch == '\n' || ch == '\r') && !quoted -> {
+                    if (ch == '\r' && i + 1 < text.length && text[i + 1] == '\n') i++
+                    row += cell.toString()
+                    if (row.any { it.isNotBlank() }) rows += row.toList()
+                    row.clear()
+                    cell.setLength(0)
+                }
+                else -> cell.append(ch)
+            }
+            i++
+        }
+        require(!quoted) { "Nieprawidłowe cudzysłowy w CSV." }
+        row += cell.toString()
+        if (row.any { it.isNotBlank() }) rows += row.toList()
+        return rows
     }
-    val first = csv(lines.first()).map { it.trim().lowercase() }
-    val isCsvHeader = first.any { it in setOf("filename", "file", "title", "svg_url", "downloadurl", "url") } &&
-        (lines.first().contains(",") || first.any { it in setOf("svg_url", "downloadurl", "url") })
+
+    val rows = parseCsv(source)
+    require(rows.isNotEmpty()) { "Zaimportowana lista SVG jest pusta." }
+    val first = rows.first().map { it.trim().lowercase() }
+    val isCsvHeader = first.any {
+        it in setOf("filename", "file", "title", "path", "svg_url", "download_url", "downloadurl", "url")
+    } && (source.contains(',') || first.any { it in setOf("svg_url", "download_url", "downloadurl", "url") })
+
     val candidates = if (isCsvHeader) {
         fun idx(vararg names: String) = names.firstNotNullOfOrNull { name -> first.indexOf(name).takeIf { it >= 0 } }
-        val urlCol = idx("svg_url", "downloadurl", "url")
+        val urlCol = idx("svg_url", "download_url", "downloadurl", "url")
         require(urlCol != null) { "Brak kolumny URL w CSV." }
-        val fileCol = idx("filename", "file", "title"); val pageCol = idx("commons_page", "sourcepage", "page")
-        val authorCol = idx("author", "artist"); val licenseCol = idx("license")
-        val licenseUrlCol = idx("license_url", "licenseurl"); val restrictionsCol = idx("restrictions"); val shaCol = idx("sha256")
-        lines.drop(1).mapNotNull { line -> val row = csv(line); fun v(col: Int?) = col?.let { row.getOrNull(it).orEmpty().trim() }.orEmpty();
-            val url = v(urlCol); if (url.isBlank()) null else CommonsSvgCandidate(v(fileCol).ifBlank { "File:" + url.substringAfterLast('/').substringBefore('?') }, url, v(pageCol), v(licenseCol), v(licenseUrlCol), v(authorCol), v(restrictionsCol), v(shaCol)) }
-    } else lines.map { url -> CommonsSvgCandidate("File:" + url.substringAfterLast('/').substringBefore('?'), url, "", "", "", "", "") }
+        val fileCol = idx("filename", "file", "title", "path")
+        val pageCol = idx("commons_page", "source_page", "source_url", "sourcepage", "page")
+        val authorCol = idx("author", "artist")
+        val licenseCol = idx("license", "license_short_name")
+        val licenseUrlCol = idx("license_url", "licenseurl")
+        val restrictionsCol = idx("restrictions", "rights_status")
+        val shaCol = idx("sha256")
+        rows.drop(1).mapNotNull { row ->
+            fun v(col: Int?) = col?.let { row.getOrNull(it).orEmpty().trim() }.orEmpty()
+            val url = v(urlCol)
+            if (url.isBlank()) null else CommonsSvgCandidate(
+                v(fileCol).ifBlank { "File:" + url.substringAfterLast('/').substringBefore('?') },
+                url, v(pageCol), v(licenseCol), v(licenseUrlCol), v(authorCol), v(restrictionsCol), v(shaCol)
+            )
+        }
+    } else {
+        rows.mapNotNull { row ->
+            val url = row.firstOrNull()?.trim().orEmpty()
+            if (url.isBlank() || url.startsWith("#")) null
+            else CommonsSvgCandidate("File:" + url.substringAfterLast('/').substringBefore('?'), url, "", "", "", "", "")
+        }
+    }
     val checked = candidates.map { item ->
         val uri = java.net.URI(item.url)
-        require(uri.scheme.equals("https", true) && uri.host.equals("upload.wikimedia.org", true) && uri.path.endsWith(".svg", true) && uri.userInfo == null) { "Lista zawiera niedozwolony adres SVG." }
+        require(uri.scheme.equals("https", true) && uri.host.equals("upload.wikimedia.org", true) &&
+            uri.path.endsWith(".svg", true) && uri.userInfo == null) { "Lista zawiera niedozwolony adres SVG." }
         item.copy(title = item.title.trim().let { if (it.startsWith("File:")) it else "File:$it" })
     }
     val unique = distinctCommonsCandidates(checked)
     require(unique.isNotEmpty()) { "Lista nie zawiera prawidłowych, unikatowych plików SVG Wikimedia Commons." }
     return unique
 }
+
 /** Ordered Commons search strategies: MIME-filtered first, plain fallback second. */
 internal fun commonsSvgSearchExpressions(term: String): List<String> {
     val safeTerm = term.trim()
