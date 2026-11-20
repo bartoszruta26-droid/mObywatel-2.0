@@ -53,6 +53,20 @@ const appHeader=appRows[0];
 const required=["filename","symbol_type","commons_page","svg_url","author","license","license_url","restrictions","sha256"];
 for (const key of required) if (!appHeader.includes(key)) throw new Error(appCatalogPath+": missing column "+key);
 const appIndex=Object.fromEntries(required.map(k=>[k,appHeader.indexOf(k)]));
+const typeCounts=new Map();
+const typeIndex=appHeader.indexOf("symbol_type");
+for (const row of appRows.slice(1)) {
+  const type=row[typeIndex];
+  typeCounts.set(type,(typeCounts.get(type)||0)+1);
+}
+const expectedTypes=new Map([
+  ["Herb miasta",200],["Herb gminy",200],["Herb powiatu",69],
+  ["Logo organizacji pozarządowej",200],["Logo instytucji publicznej",93],
+  ["Logo organizacji charytatywnej",29],["Logo organizacji społecznej",9]
+]);
+for (const [type,count] of expectedTypes) {
+  if (typeCounts.get(type)!==count) throw new Error(appCatalogPath+": expected "+count+" entries for "+type+", got "+(typeCounts.get(type)||0));
+}
 const titles=new Set();
 for (const [i,row] of appRows.slice(1).entries()) {
   if (row.length!==appHeader.length) throw new Error(appCatalogPath+":"+(i+2)+": malformed CSV row");
