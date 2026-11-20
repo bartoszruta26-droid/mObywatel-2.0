@@ -61,7 +61,7 @@ const commonsCategories = [
 const commonsHeaders = { "User-Agent":"mObywatel-2.0-symbol-catalog/1.0 (https://github.com/bartoszruta26-droid/mObywatel-2.0)", "Accept":"application/json" };
 const commonsByPage = new Map();
 const commonsReports = [];
-const meta = (info,key) => String(info?.[key]?.value || "").replace(/<[^>]*>/g," ").replace(/\\s+/g," ").trim();
+const meta = (info,key) => String(info?.[key]?.value || "").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
 for (const category of commonsCategories) {
   let continuation = null, collected = 0, pagesFetched = 0;
   while (collected < category.limit && pagesFetched < 5) {
