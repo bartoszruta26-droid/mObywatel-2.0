@@ -3712,8 +3712,6 @@ private fun SettingsMenuScreen(
             onManageDocumentEditing
         )
         ProfileActionCard("Rachunki", "Modyfikacja wzoru papierowego rachunku i treści pola Uwagi", Icons.Filled.Description, onEditReceipts)
-        ProfileActionCard("Wszystkie dane", "Otwórz dotychczasowy formularz zbiorczy",
-            Icons.Filled.Description, { onEditDocuments("all") })
         Text("Dane możesz uzupełniać własnym oświadczeniem, wskazując ich źródło, podstawę i zakres odpowiedzialności.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
