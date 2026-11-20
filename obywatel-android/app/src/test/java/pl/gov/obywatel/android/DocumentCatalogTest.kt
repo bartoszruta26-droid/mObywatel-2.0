@@ -195,4 +195,30 @@ class DocumentCatalogTest {
         }
     }
 
+
+    @Test
+    fun paymentAccountDonationDocumentsHaveIndependentGroupsRoutesAndSchemas() {
+        val expected = mapOf(
+            "payment_account_foundation" to "Służba fundacyjna",
+            "payment_account_association" to "Służba stowarzyszeniowa",
+            "payment_account_church" to "Służba kościelna",
+            "payment_account_business" to "Służba gospodarcza",
+            "payment_account_person" to "Służba osobista"
+        )
+        expected.forEach { (id, group) ->
+            assertTrue("Brak dokumentu $id", documentDisplayOptions.any { it.first == id })
+            assertEquals("Nieprawidłowa grupa dla $id", group, documentVisibilityGroup(id))
+            assertTrue("Brak trasy dla $id", DocumentRouteRegistry.find(id) != null)
+            val fields = documentEditorFieldDefinitions(id)
+            assertTrue("Brak formularza dla $id", fields.isNotEmpty())
+            assertEquals("Powtórzone pola dla $id", fields.size, fields.map { it.key }.toSet().size)
+            assertTrue("Brak danych rachunku dla $id", fields.map { it.key }.containsAll(
+                setOf("accountHolderName", "accountBankName", "accountIban", "accountCurrency", "accountStatus")
+            ))
+            assertTrue("Brak danych darowizny dla $id", fields.map { it.key }.containsAll(
+                setOf("donationPurpose", "donationDate", "donationAmount", "donationCurrency",
+                    "donationMethod", "donationTransactionReference", "donationSettlementStatus")
+            ))
+        }
+    }
 }
