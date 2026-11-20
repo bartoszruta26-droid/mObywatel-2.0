@@ -35,7 +35,7 @@ import java.util.zip.GZIPInputStream
 import pl.gov.obywatel.android.network.tor.TorDownloadKind
 import pl.gov.obywatel.android.network.tor.TorDownloadServiceProvider
 
-private data class InstitutionalSymbolCandidate(
+internal data class InstitutionalSymbolCandidate(
     val sourceId: String,
     val repository: String,
     val ref: String,
@@ -53,7 +53,7 @@ private data class InstitutionalSymbolCandidate(
         .replace('_', ' ').replace('-', ' ')
 }
 
-private fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolCandidate> {
+internal fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolCandidate> {
     fun parseLine(line: String): List<String> {
         val cells = mutableListOf<String>()
         val cell = StringBuilder()
@@ -87,8 +87,10 @@ private fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolCa
         // Convert only the exact GitHub blob URL shape; never accept an arbitrary host here.
         val githubRawUrl = Regex("^https://github\\.com/([^/]+/[^/]+)/blob/([^/]+)/(.+)$")
             .matchEntire(sourceUrl)?.let { match ->
-                val encodedPath = java.net.URLEncoder.encode(match.groupValues[3], "UTF-8")
-                    .replace("+", "%20").replace("%2F", "/")
+                val decodedPath = java.net.URLDecoder.decode(match.groupValues[3], "UTF-8")
+                val encodedPath = decodedPath.split("/").joinToString("/") { segment ->
+                    java.net.URLEncoder.encode(segment, "UTF-8").replace("+", "%20")
+                }
                 "https://raw.githubusercontent.com/${match.groupValues[1]}/${match.groupValues[2]}/$encodedPath"
             }.orEmpty()
         val url = catalogUrl.ifBlank { githubRawUrl }
