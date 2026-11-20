@@ -13,7 +13,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   inventory:
@@ -44,18 +43,19 @@ jobs:
           mkdir -p docs/identity-assets/generated
           cp build/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-audit.json
           cp build/upstream-symbol-candidates.csv docs/identity-assets/generated/upstream-symbol-candidates.csv
-      - name: Open pull request with generated candidate index
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Add generated upstream symbol candidate index"
-          branch: automation/upstream-symbol-candidate-index
-          delete-branch: true
-          title: "Add generated index of 2,000+ symbol candidates"
-          body: |
-            Automated source inventory generated from public GitHub repositories and Wikimedia Commons.
-            This pull request contains candidate metadata only. It does not grant permission to use or redistribute any logo, coat of arms, emblem or flag.
-            Protected and unverified entries must remain reference-only until their individual rights are reviewed.
-          add-paths: |
-            docs/identity-assets/generated/upstream-symbol-audit.json
-            docs/identity-assets/generated/upstream-symbol-candidates.csv
+      - name: Push generated candidate index branch for review
+        run: |
+          git fetch origin automation/upstream-symbol-candidate-index || true
+          git checkout -B automation/upstream-symbol-candidate-index origin/automation/upstream-symbol-candidate-index
+          mkdir -p docs/identity-assets/generated
+          cp build/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-audit.json
+          cp build/upstream-symbol-candidates.csv docs/identity-assets/generated/upstream-symbol-candidates.csv
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/identity-assets/generated/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-candidates.csv
+          if git diff --cached --quiet; then
+            echo "Generated candidate index is unchanged."
+            exit 0
+          fi
+          git commit -m "Add generated upstream symbol candidate index"
+          git push origin automation/upstream-symbol-candidate-index
