@@ -67,6 +67,39 @@ internal fun commonsCandidatesCsv(candidates: List<CommonsSvgCandidate>): String
     return (listOf(header) + rows).joinToString("\n") { row -> row.joinToString(",") { quote(it) } } + "\n"
 }
 
+/** Import parser for Commons CSV exports and plain URL lists. */
+internal fun parseExternalCommonsSvgList(raw: String): List<CommonsSvgCandidate> {
+    val lines = raw.removePrefix("\uFEFF").lineSequence().map { it.trim().trimEnd('\r') }.filter { it.isNotBlank() && !it.startsWith("#") }.toList()
+    require(lines.isNotEmpty()) { "Zaimportowana lista SVG jest pusta." }
+    fun csv(line: String): List<String> {
+        val out = mutableListOf<String>(); val cell = StringBuilder(); var quoted = false; var i = 0
+        while (i < line.length) { val ch = line[i]; when {
+            ch == '"' && quoted && i + 1 < line.length && line[i + 1] == '"' -> { cell.append('"'); i++ }
+            ch == '"' -> quoted = !quoted
+            ch == ',' && !quoted -> { out += cell.toString(); cell.setLength(0) }
+            else -> cell.append(ch)
+        }; i++ }
+        require(!quoted) { "Nieprawidłowe cudzysłowy w CSV." }; out += cell.toString(); return out
+    }
+    val first = csv(lines.first()).map { it.trim().lowercase() }
+    val candidates = if (first.any { it in setOf("svg_url", "downloadurl", "url") }) {
+        fun idx(vararg names: String) = names.firstNotNullOfOrNull { name -> first.indexOf(name).takeIf { it >= 0 } }
+        val urlCol = idx("svg_url", "downloadurl", "url") ?: error("Brak kolumny URL w CSV.")
+        val fileCol = idx("filename", "file", "title"); val pageCol = idx("commons_page", "sourcepage", "page")
+        val authorCol = idx("author", "artist"); val licenseCol = idx("license")
+        val licenseUrlCol = idx("license_url", "licenseurl"); val restrictionsCol = idx("restrictions"); val shaCol = idx("sha256")
+        lines.drop(1).mapNotNull { line -> val row = csv(line); fun v(col: Int?) = col?.let { row.getOrNull(it).orEmpty().trim() }.orEmpty();
+            val url = v(urlCol); if (url.isBlank()) null else CommonsSvgCandidate(v(fileCol).ifBlank { "File:" + url.substringAfterLast('/').substringBefore('?') }, url, v(pageCol), v(licenseCol), v(licenseUrlCol), v(authorCol), v(restrictionsCol), v(shaCol)) }
+    } else lines.map { url -> CommonsSvgCandidate("File:" + url.substringAfterLast('/').substringBefore('?'), url, "", "", "", "", "") }
+    val checked = candidates.map { item ->
+        val uri = java.net.URI(item.url)
+        require(uri.scheme.equals("https", true) && uri.host.equals("upload.wikimedia.org", true) && uri.path.endsWith(".svg", true) && uri.userInfo == null) { "Lista zawiera niedozwolony adres SVG." }
+        item.copy(title = item.title.trim().let { if (it.startsWith("File:")) it else "File:$it" })
+    }
+    val unique = distinctCommonsCandidates(checked)
+    require(unique.isNotEmpty()) { "Lista nie zawiera prawidłowych, unikatowych plików SVG Wikimedia Commons." }
+    return unique
+}
 /** Ordered Commons search strategies: MIME-filtered first, plain fallback second. */
 internal fun commonsSvgSearchExpressions(term: String): List<String> {
     val safeTerm = term.trim()
@@ -567,7 +600,8 @@ private suspend fun downloadCommonsSvgWithRetry(
 private suspend fun processCommonsCandidates(
     context: Context,
     candidates: List<CommonsSvgCandidate>,
-    onProgress: suspend (completed: Int, total: Int, currentTitle: String) -> Unit
+    onProgress: suspend (completed: Int, total: Int, currentTitle: String) -> Unit,
+    pauseBetweenDownloadsMs: Long = 1000L
 ): CommonsDownloadSummary {
     // A unique queue is the single source of work for all Tor routes.
     val uniqueCandidates = distinctCommonsCandidates(candidates)
@@ -609,6 +643,7 @@ private suspend fun processCommonsCandidates(
         saveCommonsReport(context, uniqueCandidates.size, downloaded, alreadyPresent, failed,
             attempts, candidate.title, errors)
         onProgress(index + 1, uniqueCandidates.size, candidate.title)
+        if (index < uniqueCandidates.lastIndex && pauseBetweenDownloadsMs > 0L) kotlinx.coroutines.delay(pauseBetweenDownloadsMs.coerceIn(0L, 60000L))
     }
     return CommonsDownloadSummary(uniqueCandidates.size, downloaded, alreadyPresent, failed, attempts)
 }
@@ -621,6 +656,15 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     var progressCurrent by remember { mutableIntStateOf(0) }
     var progressTotal by remember { mutableIntStateOf(0) }
     var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
+    var pauseBetweenDownloadsMs by remember { mutableStateOf("1000") }
+    val externalListLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) { busy = "external-import"; scope.launch { val result = withContext(Dispatchers.IO) { runCatching {
+            val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: error("Nie można odczytać pliku.")
+            val candidates = parseExternalCommonsSvgList(raw); val manifest = JSONArray()
+            candidates.forEach { item -> manifest.put(JSONObject().put("file", item.title).put("downloadUrl", item.url).put("sourcePage", item.page).put("license", item.license).put("licenseUrl", item.licenseUrl).put("author", item.artist).put("restrictions", item.restrictions).put("sha256", item.sha256).put("source", "Lista zewnętrzna").put("status", "pending").put("attempts", 0)) }
+            writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2)); candidates.size
+        } }; status = result.fold({ "Zaimportowano " + it + " unikatowych plików SVG. Możesz wznowić pobieranie." }, { "Błąd importu listy SVG: " + (it.message ?: "nieznany błąd") }); busy = null } }
+    }
     val diagnosticLogLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         if (uri != null) {
             busy = "diagnostic-export"
@@ -732,6 +776,8 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
         }
+        OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 1000 ms.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedButton(enabled = busy == null, onClick = { externalListLauncher.launch(arrayOf("text/csv", "text/plain", "text/*", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Importuj zewnętrzną listę SVG (CSV / TXT)") }
         OutlinedButton(
             enabled = busy == null,
             onClick = { candidateListLauncher.launch("wikimedia-svg-candidates.csv") },
@@ -787,13 +833,14 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                         progressTotal = totalFound
                                         status = "Znaleziono $totalFound plików. Rozpoczynam pobieranie przez Tor…"
                                     }
-                                    val part = processCommonsCandidates(context, batch) { completed, total, title ->
+                                    val part = processCommonsCandidates(context, batch, { completed, total, title ->
                                         withContext(Dispatchers.Main) {
                                             progressCurrent = processed + completed
                                             progressTotal = totalFound
                                             status = "Pobieranie SVG: " + (processed + completed) + "/$totalFound — $title"
                                         }
                                     }
+                                    }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
                                     processed += part.found
                                     totalDownloaded += part.downloaded
                                     totalAlreadyPresent += part.alreadyPresent
@@ -840,7 +887,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
                             val candidates = readCommonsCandidates(context)
-                            processCommonsCandidates(context, candidates) { completed, total, title ->
+                            processCommonsCandidates(context, candidates, { completed, total, title ->
                                 withContext(Dispatchers.Main) {
                                     progressCurrent = completed
                                     progressTotal = total
@@ -850,7 +897,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                         "Zakończono wznowienie SVG $total/$total"
                                     }
                                 }
-                            }
+                            }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
                         }
                     }
                     status = result.fold(
