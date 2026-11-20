@@ -776,6 +776,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
         Text("Wyszukiwanie plików SVG w Wikimedia Commons (repozytorium mediów Wikipedii): godeł, herbów, flag, emblematów i logo organizacji międzynarodowych, w tym organizacji pozarządowych. Możesz wyeksportować samą listę wyników do CSV bez pobierania grafik albo osobno pobrać pliki. Metadane źródła, autora i licencji są zachowywane.",style=MaterialTheme.typography.bodySmall)
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
+        InstitutionalSymbolCatalogPanel(context, onSaved)
         if (busy == "commons" || busy == "resume") {
             if (progressTotal > 0) {
                 Text(commonsDownloadProgressLabel(progressCurrent, progressTotal), style = MaterialTheme.typography.labelMedium)
