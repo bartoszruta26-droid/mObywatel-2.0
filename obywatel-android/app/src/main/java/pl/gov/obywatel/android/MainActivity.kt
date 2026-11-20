@@ -1019,7 +1019,7 @@ internal val documentDisplayOptions = (listOf(
 
 internal fun documentVisibilityGroup(id: String): String = when {
     id == INTERNATIONAL_DONATION_WORSHIP_ID -> "Służba kościelna"
-    id == INTERNATIONAL_DONATION_NGO_ID -> "Służba stowarzyszeniowa"
+    id == INTERNATIONAL_DONATION_NGO_ID -> "Służba społeczna"
     id == INTERNATIONAL_DONATION_PERSON_ID -> "Służba cywilna"
     id == "icvp" -> "Służba zdrowotna"
     id == "medical_summary" -> "Służba zdrowotna"
@@ -1107,7 +1107,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
 internal val documentVisibilityGroupOrder = listOf(
     "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
     "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
-    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa",
+    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
@@ -1117,7 +1117,7 @@ private fun documentGroupIconResource(group: String): Int = when (group) {
     "Służba kościelna" -> R.drawable.tile_ic_church_outline
     "Służba zbrojna" -> R.drawable.tile_ic_armed_service_outline
     "Służba zawodowa" -> R.drawable.tile_ic_student_outline
-    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa" -> R.drawable.tile_ic_business_outline
+    "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna" -> R.drawable.tile_ic_business_outline
     "Służba finansowa" -> R.drawable.lib_ic_wallet
     "Służba zdrowotna" -> R.drawable.tile_ic_disability_outline
     "Zasoby i dokumenty własne" -> R.drawable.lib_ic_folder
