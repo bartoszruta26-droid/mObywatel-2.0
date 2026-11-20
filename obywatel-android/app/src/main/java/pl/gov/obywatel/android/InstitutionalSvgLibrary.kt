@@ -161,6 +161,81 @@ internal fun commonsSvgSearchExpressions(term: String): List<String> {
     return listOf("$safeTerm filemime:svg", safeTerm)
 }
 
+
+/** Search Commons by a user-entered organization or institution name; fetch metadata only. */
+private suspend fun searchCommonsSvgByName(
+    context: Context,
+    query: String,
+    limit: Int = 30
+): List<CommonsSvgCandidate> {
+    val term = query.trim()
+    require(term.length >= 2) { "Wpisz co najmniej dwa znaki nazwy." }
+    require(term.length <= 120) { "Fraza wyszukiwania jest zbyt długa." }
+    val encoded = java.net.URLEncoder.encode("$term filemime:svg", "UTF-8")
+    val search = commonsRequest(
+        context,
+        "action=query&list=search&srsearch=$encoded&srnamespace=6&srlimit=${limit.coerceIn(1, 50)}&format=json"
+    )
+    val searchRows = search.optJSONObject("query")?.optJSONArray("search") ?: JSONArray()
+    val titles = (0 until searchRows.length()).mapNotNull { index ->
+        searchRows.optJSONObject(index)?.optString("title")?.takeIf { it.startsWith("File:") }
+    }.distinct()
+    if (titles.isEmpty()) return emptyList()
+    val titleParam = java.net.URLEncoder.encode(titles.joinToString("|"), "UTF-8")
+    val details = commonsRequest(
+        context,
+        "action=query&prop=imageinfo&titles=$titleParam&iiprop=url|mime|extmetadata&format=json"
+    )
+    val pages = details.optJSONObject("query")?.optJSONObject("pages") ?: JSONObject()
+    val results = mutableListOf<CommonsSvgCandidate>()
+    val keys = pages.keys()
+    while (keys.hasNext() && results.size < limit.coerceIn(1, 50)) {
+        val page = pages.optJSONObject(keys.next()) ?: continue
+        val info = page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
+        if (info.optString("mime") != "image/svg+xml") continue
+        val url = info.optString("url")
+        val uri = runCatching { java.net.URI(url) }.getOrNull() ?: continue
+        if (!uri.scheme.equals("https", true) || !uri.host.equals("upload.wikimedia.org", true) || !uri.path.endsWith(".svg", true)) continue
+        val metadata = info.optJSONObject("extmetadata") ?: JSONObject()
+        fun value(key: String): String = metadata.optJSONObject(key)?.optString("value").orEmpty()
+            .replace(Regex("<[^>]*>"), " ").replace(Regex("\\s+"), " ").trim()
+        val title = page.optString("title")
+        val pageUrl = "https://commons.wikimedia.org/wiki/" +
+            java.net.URLEncoder.encode(title.replace(" ", "_"), "UTF-8")
+        val license = value("LicenseShortName")
+        val restrictions = listOf(
+            "AttributionRequired=${value("AttributionRequired")}",
+            "Copyrighted=${value("Copyrighted")}",
+            "UsageTerms=${value("UsageTerms")}",
+            "Restrictions=${value("Restrictions")}",
+            "Credit=${value("Credit")}"
+        ).joinToString("; ")
+        results += CommonsSvgCandidate(
+            title, url, pageUrl, license, value("LicenseUrl"),
+            value("Artist"), restrictions
+        )
+    }
+    return distinctCommonsCandidates(results)
+}
+
+/** Add search results to the local queue; no SVG bytes are fetched here. */
+private fun appendCommonsCandidatesToManifest(context: Context, candidates: List<CommonsSvgCandidate>) {
+    val manifest = runCatching { JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE)) }
+        .getOrDefault(JSONArray())
+    val known = (0 until manifest.length()).mapNotNull { manifest.optJSONObject(it)?.optString("file") }.toMutableSet()
+    candidates.forEach { item ->
+        if (known.add(item.title)) {
+            manifest.put(JSONObject()
+                .put("file", item.title).put("downloadUrl", item.url).put("sourcePage", item.page)
+                .put("license", item.license).put("licenseUrl", item.licenseUrl)
+                .put("author", item.artist).put("restrictions", item.restrictions)
+                .put("source", "Wyszukiwanie po nazwie Wikimedia Commons")
+                .put("status", "pending").put("attempts", 0).put("sha256", item.sha256))
+        }
+    }
+    writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
+}
+
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
 private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 1000L
 private const val COMMONS_API_MAX_ATTEMPTS = 3
@@ -615,7 +690,7 @@ private fun loadCommonsReportSummary(context: Context): String = runCatching {
 }.getOrDefault("")
 
 private fun loadBundledCommonsCandidateManifest(context: Context): Int {
-    val raw = context.assets.open("institutions/institutional-symbol-catalog-800.csv")
+    val raw = context.assets.open("institutions/institutional-symbol-catalog.csv")
         .bufferedReader(Charsets.UTF_8).use { it.readText() }
     val candidates = parseExternalCommonsSvgList(raw)
     val manifest = JSONArray()
@@ -872,178 +947,158 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             }
         }
     }
-    Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
-        Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        Text("Biblioteka zawiera wbudowany katalog 800 herbów i logotypów oraz umożliwia wyszukiwanie dalszych plików SVG w Wikimedia Commons. Możesz wczytać gotową listę offline, wyeksportować wyniki do CSV albo osobno uruchomić pobieranie. Zachowujemy stronę źródłową, autora, licencję i ograniczenia. Samo pobranie nie daje prawa do użycia znaku na dokumencie; dozwolone zastosowania pozostają puste do odrębnej akceptacji.",style=MaterialTheme.typography.bodySmall)
-        val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
-        Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
-        if (busy == "commons" || busy == "resume") {
-            if (progressTotal > 0) {
-                Text(commonsDownloadProgressLabel(progressCurrent, progressTotal), style = MaterialTheme.typography.labelMedium)
-                LinearProgressIndicator(
-                    progress = (progressCurrent.toFloat() / progressTotal.toFloat()).coerceIn(0f, 1f),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            } else {
-                Text("Wyszukiwanie plików SVG…", style = MaterialTheme.typography.labelMedium)
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    var searchQuery by remember { mutableStateOf("") }
+    var catalogCandidates by remember { mutableStateOf(emptyList<CommonsSvgCandidate>()) }
+    var remoteCandidates by remember { mutableStateOf(emptyList<CommonsSvgCandidate>()) }
+    var savedVersion by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        val loaded = withContext(Dispatchers.IO) {
+            runCatching {
+                if (!context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE).isFile) {
+                    loadBundledCommonsCandidateManifest(context)
+                }
+                readCommonsCandidates(context)
             }
         }
-        OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 1000 ms.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        catalogCandidates = loaded.getOrDefault(emptyList())
+        if (loaded.isFailure) status = "Nie udało się załadować katalogu: ${loaded.exceptionOrNull()?.message ?: "błąd"}"
+    }
+    val localMatches = remember(searchQuery, catalogCandidates) {
+        val term = searchQuery.trim()
+        if (term.length < 2) emptyList()
+        else catalogCandidates.filter { item ->
+            item.title.contains(term, ignoreCase = true) ||
+                item.artist.contains(term, ignoreCase = true) ||
+                item.restrictions.contains(term, ignoreCase = true)
+        }.take(30)
+    }
+    val savedIds = remember(savedVersion) { DocumentBrandStore.list(context).map { it.id }.toSet() }
+    fun downloadOne(item: CommonsSvgCandidate) {
+        if (busy != null) return
+        busy = "single-download"
+        status = "Pobieranie pojedynczego pliku: ${item.title}"
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    appendCommonsCandidatesToManifest(context, listOf(item))
+                    processCommonsCandidates(context, listOf(item), { _, _, _ -> }, 0L)
+                }
+            }
+            status = result.fold(
+                { "Plik: ${item.title}. Pobrano: ${it.downloaded}; już zapisany: ${it.alreadyPresent}; błędy: ${it.failed}." },
+                { "Błąd pobierania ${item.title}: ${it.message ?: "nieznany błąd"}" }
+            )
+            reportSummary = loadCommonsReportSummary(context)
+            busy = null
+            savedVersion++
+            if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
+        }
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Katalog nazw: herby, godła i logotypy", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(
+            "Katalog działa offline i zawiera nazwy oraz metadane 1 229 plików SVG z Wikimedia Commons. Wpisz nazwę instytucji, organizacji, miasta lub gminy. Aplikacja pobiera grafikę dopiero po wybraniu konkretnej pozycji.",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Text("Pozycji w katalogu: ${catalogCandidates.size} • SVG zapisane lokalnie: ${savedIds.size}", style = MaterialTheme.typography.labelMedium)
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it; remoteCandidates = emptyList() },
+            label = { Text("Szukaj nazwy, np. ZUS, NFZ, WHO, UNICEF, Gostynin") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
         OutlinedButton(
-            enabled = busy == null,
+            enabled = busy == null && searchQuery.trim().length >= 2,
             onClick = {
-                busy = "bundled-import"
+                busy = "name-search"
+                status = "Wyszukiwanie nazwy w Wikimedia Commons; pobierane są wyłącznie metadane."
                 scope.launch {
-                    val result = withContext(Dispatchers.IO) { runCatching { loadBundledCommonsCandidateManifest(context) } }
+                    val result = withContext(Dispatchers.IO) {
+                        runCatching {
+                            val found = searchCommonsSvgByName(context, searchQuery, 30)
+                            appendCommonsCandidatesToManifest(context, found)
+                            found
+                        }
+                    }
+                    remoteCandidates = result.getOrDefault(emptyList())
                     status = result.fold(
-                        { "Załadowano wbudowany katalog: $it pozycji. Lista jest gotowa do wznowienia pobierania; każdy plik zachowuje źródło, autora, licencję i ograniczenia." },
-                        { "Błąd ładowania wbudowanego katalogu: ${it.message ?: "nieznany błąd"}" }
+                        { "Wyszukiwanie zakończone. Znaleziono ${it.size} plików SVG. Żaden plik graficzny nie został jeszcze pobrany." },
+                        { "Błąd wyszukiwania: ${it.message ?: "nieznany błąd"}" }
                     )
+                    if (result.isSuccess) {
+                        catalogCandidates = readCommonsCandidates(context)
+                    }
                     busy = null
                 }
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "bundled-import") "Ładowanie katalogu…" else "Załaduj wbudowany katalog 800 symboli") }
-        OutlinedButton(enabled = busy == null, onClick = { externalListLauncher.launch(arrayOf("text/csv", "text/plain", "text/*", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Importuj zewnętrzną listę SVG (CSV / TXT)") }
+        ) { Text(if (busy == "name-search") "Wyszukiwanie…" else "Szukaj także w Wikimedia Commons") }
+        if (searchQuery.trim().length >= 2) {
+            Text("Wyniki katalogu offline: ${localMatches.size}", style = MaterialTheme.typography.titleSmall)
+            localMatches.forEach { item ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(item.title.removePrefix("File:"), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        Text("Licencja: ${item.license.ifBlank { "nieustalona" }}", style = MaterialTheme.typography.bodySmall)
+                        Text("Autor: ${item.artist.ifBlank { "brak danych" }}", style = MaterialTheme.typography.labelSmall)
+                    }
+                    OutlinedButton(
+                        enabled = busy == null && item.license.isNotBlank() && item.page.isNotBlank() && commonsAssetId(item.title) !in savedIds,
+                        onClick = { downloadOne(item) }
+                    ) { Text(if (commonsAssetId(item.title) in savedIds) "Zapisano" else "Pobierz SVG") }
+                }
+                Divider()
+            }
+            if (localMatches.isEmpty()) Text("Brak dopasowania offline. Użyj wyszukiwania Wikimedia Commons.", style = MaterialTheme.typography.bodySmall)
+            if (remoteCandidates.isNotEmpty()) {
+                Text("Wyniki wyszukiwania internetowego: ${remoteCandidates.size}", style = MaterialTheme.typography.titleSmall)
+                remoteCandidates.forEach { item ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(item.title.removePrefix("File:"), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text("Licencja: ${item.license.ifBlank { "nieustalona" }}", style = MaterialTheme.typography.bodySmall)
+                            Text("Autor: ${item.artist.ifBlank { "brak danych" }}", style = MaterialTheme.typography.labelSmall)
+                        }
+                        OutlinedButton(
+                            enabled = busy == null && item.license.isNotBlank() && item.page.isNotBlank() && commonsAssetId(item.title) !in savedIds,
+                            onClick = { downloadOne(item) }
+                        ) { Text(if (commonsAssetId(item.title) in savedIds) "Zapisano" else "Pobierz SVG") }
+                    }
+                    Divider()
+                }
+            }
+        }
+        OutlinedButton(
+            enabled = busy == null,
+            onClick = { externalListLauncher.launch(arrayOf("text/csv", "text/plain", "text/*", "*/*")) },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Importuj katalog nazw z pliku CSV / TXT") }
         OutlinedButton(
             enabled = busy == null,
             onClick = { candidateListLauncher.launch("wikimedia-svg-candidates.csv") },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "candidate-export") "Przygotowywanie listy…" else "Eksportuj listę znalezionych plików SVG (CSV)") }
+        ) { Text(if (busy == "candidate-export") "Przygotowywanie listy…" else "Eksportuj wyniki wyszukiwania do CSV") }
         OutlinedButton(
             enabled = busy == null,
-            onClick = {
-                busy = "commons"
-                progressCurrent = 0
-                progressTotal = 0
-                status = "Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons…"
-                scope.launch {
-                    val result = withContext(Dispatchers.IO) {
-                        runCatching {
-                            var totalFound = 0
-                            var totalDownloaded = 0
-                            var totalAlreadyPresent = 0
-                            var totalFailed = 0
-                            var totalAttempts = 0
-                            var processed = 0
-                            resetCommonsDiagnostic(context)
-                            appendCommonsDiagnostic(context, "SEARCH_START limit=200 transport=Tor")
-                            writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, JSONArray().toString())
-                            val candidates = discoverCommonsOpenSvgs(
-                                context,
-                                200,
-                                onSearchProgress = { foundTitles, term ->
-                                    withContext(Dispatchers.Main) {
-                                        status = "Wyszukiwanie SVG: $foundTitles znalezionych — $term"
-                                    }
-                                },
-                                onBatchReady = { batch ->
-                                    val manifest = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
-                                    batch.forEach { item ->
-                                        manifest.put(JSONObject()
-                                            .put("file", item.title)
-                                            .put("downloadUrl", item.url)
-                                            .put("sourcePage", item.page)
-                                            .put("license", item.license)
-                                            .put("licenseUrl", item.licenseUrl)
-                                            .put("author", item.artist)
-                                            .put("restrictions", item.restrictions)
-                                            .put("source", "Wikimedia Commons")
-                                            .put("status", "pending")
-                                            .put("attempts", 0)
-                                            .put("sha256", ""))
-                                    }
-                                    writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
-                                    totalFound += batch.size
-                                    withContext(Dispatchers.Main) {
-                                        progressCurrent = processed
-                                        progressTotal = totalFound
-                                        status = "Znaleziono $totalFound plików. Rozpoczynam pobieranie przez Tor…"
-                                    }
-                                    val part = processCommonsCandidates(context, batch, { completed, total, title ->
-                                        withContext(Dispatchers.Main) {
-                                            progressCurrent = processed + completed
-                                            progressTotal = totalFound
-                                            status = "Pobieranie SVG: " + (processed + completed) + "/$totalFound — $title"
-                                        }
-                                    }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
-                                    processed += part.found
-                                    totalDownloaded += part.downloaded
-                                    totalAlreadyPresent += part.alreadyPresent
-                                    totalFailed += part.failed
-                                    totalAttempts += part.attempts
-                                    saveCommonsReport(
-                                        context, totalFound, totalDownloaded, totalAlreadyPresent,
-                                        totalFailed, totalAttempts, batch.lastOrNull()?.title.orEmpty(), emptyList()
-                                    )
-                                }
-                            )
-                            appendCommonsDiagnostic(context, "DOWNLOAD_SUMMARY found=$totalFound downloaded=$totalDownloaded alreadyPresent=$totalAlreadyPresent failed=$totalFailed attempts=$totalAttempts")
-                            withContext(Dispatchers.Main) {
-                                progressCurrent = processed
-                                progressTotal = totalFound
-                                status = if (totalFound == 0) {
-                                    "Wyszukiwanie zakończone: brak plików SVG pasujących do wyszukiwanych haseł."
-                                } else {
-                                    "Zakończono wyszukiwanie: $totalFound. Pobrano $totalDownloaded; błędy $totalFailed."
-                                }
-                            }
-                            CommonsDownloadSummary(totalFound, totalDownloaded, totalAlreadyPresent, totalFailed, totalAttempts)
-                        }
-                    }
-                    status = result.fold(
-                        { "Commons: znaleziono ${it.found}, pobrano ${it.downloaded}, już było ${it.alreadyPresent}, błędy ${it.failed}; prób pobrania ${it.attempts}." },
-                        { "Błąd wyszukiwania Commons: ${it.message ?: "nieznany błąd"}" }
-                    )
-                    reportSummary = loadCommonsReportSummary(context)
-                    busy = null
-                    if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
-                }
-            },
+            onClick = { diagnosticLogLauncher.launch("commons-svg-diagnostic.log") },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 plików SVG z Commons") }
+        ) { Text("Eksportuj log wyszukiwania SVG") }
         OutlinedButton(
-            enabled = busy == null && readCommonsCandidates(context).isNotEmpty(),
-            onClick = {
-                busy = "resume"
-                progressCurrent = 0
-                progressTotal = 0
-                status = "Wznawianie pobierania niezapisanych grafik…"
-                scope.launch {
-                    val result = withContext(Dispatchers.IO) {
-                        runCatching {
-                            val candidates = readCommonsCandidates(context)
-                            processCommonsCandidates(context, candidates, { completed, total, title ->
-                                withContext(Dispatchers.Main) {
-                                    progressCurrent = completed
-                                    progressTotal = total
-                                    status = if (completed < total) {
-                                        "Wznawianie SVG ${completed + 1}/$total: $title"
-                                    } else {
-                                        "Zakończono wznowienie SVG $total/$total"
-                                    }
-                                }
-                            }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
-                        }
-                    }
-                    status = result.fold(
-                        { "Wznowienie: znaleziono ${it.found}, pobrano ${it.downloaded}, już było ${it.alreadyPresent}, błędy ${it.failed}; prób ${it.attempts}." },
-                        { "Błąd wznowienia: ${it.message ?: "nieznany błąd"}" }
-                    )
-                    reportSummary = loadCommonsReportSummary(context)
-                    busy = null
-                    if ((result.getOrNull()?.downloaded ?: 0) > 0) onSaved()
-                }
-            },
+            enabled = busy == null && DocumentBrandStore.list(context).any { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
+            onClick = { zipLauncher.launch("institutional-svg-assets.zip") },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "resume") "Wznawianie…" else "Wznów nieudane / brakujące pobrania") }
-        OutlinedButton(enabled = busy == null, onClick = { diagnosticLogLauncher.launch("commons-svg-diagnostic.log") }, modifier = Modifier.fillMaxWidth()) {
-            Text("Eksportuj log wyszukiwania SVG")
-        }
-        OutlinedButton(enabled=busy==null && DocumentBrandStore.list(context).any { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) },
-            onClick={ zipLauncher.launch("institutional-svg-assets.zip") },modifier=Modifier.fillMaxWidth()) {
-            Text(if(busy=="zip") "Tworzenie ZIP…" else "Spakuj pobrane SVG do ZIP")
+        ) { Text(if (busy == "zip") "Tworzenie ZIP…" else "Spakuj pobrane SVG do ZIP") }
+        if (busy == "single-download" || busy == "name-search" || busy == "candidate-export" || busy == "zip") {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
         if (status.isNotBlank()) Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
         if (reportSummary.isNotBlank()) Text(reportSummary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
