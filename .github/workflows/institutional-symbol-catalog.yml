@@ -30,5 +30,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Validate source and candidate manifests
+      - name: Validate source, candidate and approved-import manifests
         run: node scripts/validate-institutional-symbol-catalog.mjs
+      - name: Verify approved-asset importer safely no-ops on empty allowlist
+        run: node scripts/import-approved-symbol-assets.mjs
