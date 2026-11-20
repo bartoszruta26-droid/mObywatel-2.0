@@ -161,4 +161,15 @@ class DocumentGroupCatalogTest {
         assertTrue(keys.all { it.startsWith("doc_") })
         assertTrue(keys.all { it.length <= 96 && it.matches(Regex("[A-Za-z0-9_-]+")) })
     }
+
+    @Test
+    fun paymentAccountDonationDocumentsRemainInTheirRespectiveServiceGroups() {
+        assertEquals("Służba fundacyjna", documentVisibilityGroup("payment_account_foundation"))
+        assertEquals("Służba stowarzyszeniowa", documentVisibilityGroup("payment_account_association"))
+        assertEquals("Służba kościelna", documentVisibilityGroup("payment_account_church"))
+        assertEquals("Służba gospodarcza", documentVisibilityGroup("payment_account_business"))
+        assertEquals("Służba osobista", documentVisibilityGroup("payment_account_person"))
+        assertEquals("Służba fundacyjna", migrateDocumentGroupAssignment("payment_account_foundation", "Służba gospodarcza"))
+        assertEquals("Służba stowarzyszeniowa", migrateDocumentGroupAssignment("payment_account_association", "Służba gospodarcza"))
+    }
 }
