@@ -92,6 +92,7 @@ private val paymentAccountDocumentCatalog = listOf(
             Triple("associationMembershipDuesSeparate", "Oddzielna ewidencja składek członkowskich", "tak / nie; składki nie są automatycznie darowiznami"),
             Triple("associationDonationResolution", "Uchwała / upoważnienie właściwego organu", ""),
             Triple("associationDonationStatutoryPurpose", "Zgodność darowizny z celami statutowymi", ""),
+            Triple("associationOppStatus", "Status OPP / ewentualne uprawnienie do otrzymywania 1,5% PIT", "wpis w KRS i aktualny status — jeżeli dotyczy"),
             Triple("associationDonorRestrictions", "Ograniczenia przyjmowania i wykorzystania darowizn", "")
         ),
         note = "Formularz ewidencyjny stowarzyszenia. Składki członkowskie, darowizny, dotacje i wpływy z działalności należy klasyfikować oddzielnie zgodnie ze statutem i zasadami rachunkowości."
