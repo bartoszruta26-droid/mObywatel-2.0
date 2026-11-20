@@ -81,10 +81,18 @@ private fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolCa
         val row = parseLine(line)
         fun value(name: String) = row.getOrNull(columns.getValue(name)).orEmpty()
         val path = value("path")
-        val url = value("download_url")
+        val sourceUrl = value("source_url")
+        val catalogUrl = value("download_url")
+        // GitHub inventory entries carry stable blob URLs rather than raw download URLs.
+        // Convert only the exact GitHub blob URL shape; never accept an arbitrary host here.
+        val githubRawUrl = Regex("^https://github\\.com/([^/]+/[^/]+)/blob/([^/]+)/(.+)$")
+            .matchEntire(sourceUrl)?.let { match ->
+                "https://raw.githubusercontent.com/${match.groupValues[1]}/${match.groupValues[2]}/${match.groupValues[3]}"
+            }.orEmpty()
+        val url = catalogUrl.ifBlank { githubRawUrl }
         if (!path.endsWith(".svg", true) || url.isBlank()) return@mapNotNull null
         InstitutionalSymbolCandidate(value("source_id"), value("repository"), value("ref"), path,
-            value("group"), value("rights_status"), value("source_url"), url,
+            value("group"), value("rights_status"), sourceUrl, url,
             value("license_short_name"), value("license_url"), value("author"), value("source_credit"))
     }.distinctBy { it.sourceId + ":" + it.path }
 }
