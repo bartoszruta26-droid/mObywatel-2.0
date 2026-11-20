@@ -54,11 +54,6 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     DisposableEffect(runtime, downloader) {
         onDispose {
             downloader.stop()
-            // Keep Tor alive until the worker notices stop and closes its response.
-            Thread {
-                try { Thread.sleep(750L) } catch (_: InterruptedException) { Thread.currentThread().interrupt() }
-                runCatching { runtime.stop() }
-            }.start()
         }
     }
 
@@ -160,9 +155,6 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                             activeResume = { downloader.resume() }
                             activeStop = { downloader.stop() }
                             try {
-                                if (runtime.state == TorState.STOPPED || runtime.state == TorState.FAILED) {
-                                    withContext(Dispatchers.IO) { runtime.start() }
-                                }
                                 val result = withContext(Dispatchers.IO) {
                                     downloader.run(
                                         items = items,
@@ -181,6 +173,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                             } catch (failure: Exception) {
                                 errorText = failure.message ?: "Błąd pobierania."
                             } finally {
+                                withContext(Dispatchers.IO) { runCatching { runtime.stop() } }
                                 running = false
                                 paused = false
                                 activePause = null
