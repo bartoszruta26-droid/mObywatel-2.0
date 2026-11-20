@@ -18,7 +18,7 @@ SHA bazowy: cd1523d515895327ec19afa4d521b36249943c2f
 ## Kontrole przed scaleniem
 
 - Uruchomić Repository compliance, Android prototype build, JVM unit tests oraz Compose UI na emulatorze dla bieżącego HEAD.
-- Sprawdzić integrację panelu z nawigacją aplikacji; obecny commit przywraca komponent katalogu, ale nie zmienia MainActivity ani routingu bez potwierdzenia miejsca docelowego.
+- Podłączono panel InstitutionalSymbolCatalogPanel do ekranu usługi „Zasoby identyfikacji dokumentów” w MainActivity; panel biblioteki dotychczasowych zasobów pozostaje dostępny poniżej.
 - Zweryfikować każdą ścieżkę pliku i URL; rekordy rastrowe i źródła bez możliwego adresu SVG pozostają w indeksie źródłowym, ale nie są wynikami wyszukiwania SVG.
 - Walidator odrzuca DTD, encje, skrypty, foreignObject, animacje, atrybuty zdarzeń i zewnętrzne odwołania CSS/URI.
 - Wymagany jest test rzeczywistego pobierania przez dostępny klient Tor na urządzeniu; CI emulatora nie zastępuje testu z działającym Orbot/Guardian.
