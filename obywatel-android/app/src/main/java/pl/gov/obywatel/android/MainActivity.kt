@@ -1812,7 +1812,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     activeService == "Służba stowarzyszeniowa" -> FamilyEntityDocumentsScreen(entityMode = true, serviceKey = "association", readOnly = true, onBack = { activeService = null })
                     activeService == "Dokumenty rejestru podmiotów" -> FamilyEntityDocumentsScreen(entityMode = true, readOnly = true, onBack = { activeService = null })
                     activeService == "Formularze dokumentów" -> OfficialDocumentsScreen(onBack = { activeService = null }, readOnly = true)
-                    activeService == "Zasoby identyfikacji dokumentów" -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { InstitutionalSymbolCatalogPanel(context = this@MainActivity, onSaved = { }); DocumentBrandAssetsScreen(onBack = { activeService = null }, readOnly = true) }
+                    activeService == "Zasoby identyfikacji dokumentów" -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { InstitutionalSymbolCatalogPanel(context = LocalContext.current, onSaved = { }); DocumentBrandAssetsScreen(onBack = { activeService = null }, readOnly = true) }
                     activeService == "Dokumenty PDF i podpisy elektroniczne" -> SignedPdfDocumentsScreen(onBack = { activeService = null }, allowImport = false, readOnly = true)
                     activeService == "Dane dzieci" -> FamilyHealthRecordsScreen(initialSection = "children", onBack = { activeService = null }, readOnly = true)
                     activeService == "eKarta Szczepień" -> FamilyHealthRecordsScreen(initialSection = "vaccines", onBack = { activeService = null }, readOnly = true)
