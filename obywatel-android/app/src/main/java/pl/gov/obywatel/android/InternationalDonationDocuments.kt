@@ -206,7 +206,7 @@ internal fun InternationalDonationDocumentEditorScreen(
                 DropdownMenu(expanded = sourceMenu, onDismissRequest = { sourceMenu = false }) {
                     languages.forEach { language -> DropdownMenuItem(
                         text = { Text(language.englishName) },
-                        onClick = { sourceLanguage = language.code; sourceMenu = false }
+                        onClick = { sourceLanguage = language.code; translations.clear(); sourceMenu = false }
                     ) }
                 }
                 OutlinedButton(onClick = { targetMenu = true }, modifier = Modifier.fillMaxWidth()) {
