@@ -196,14 +196,26 @@ Author Two",true,credit,NGO
     }
 
     @Test
-    fun bundledCatalogContainsExactly800UniqueLicensedSvgCandidates() {
-        val catalog = java.io.File("src/main/assets/institutions/institutional-symbol-catalog-800.csv")
-        assertTrue("Wbudowany katalog 200 symboli musi istnieć.", catalog.isFile)
+    fun bundledCatalogContains1229UniqueLicensedSvgCandidates() {
+        val catalog = java.io.File("src/main/assets/institutions/institutional-symbol-catalog.csv")
+        assertTrue("Wbudowany katalog nazw musi istnieć.", catalog.isFile)
         val candidates = parseExternalCommonsSvgList(catalog.readText(Charsets.UTF_8))
-        assertEquals(800, candidates.size)
-        assertEquals(800, candidates.map { it.title }.distinct().size)
+        assertEquals(1229, candidates.size)
+        assertEquals(1229, candidates.map { it.title }.distinct().size)
         assertTrue(candidates.all { it.page.isNotBlank() && it.license.isNotBlank() })
         assertTrue(candidates.any { it.title.contains("COA", true) })
+        assertTrue(candidates.any { it.title.contains("WHO", true) })
+    }
+
+    @Test
+    fun offlineCatalogSearchMatchesNameAndAuthorCaseInsensitively() {
+        val candidates = listOf(
+            CommonsSvgCandidate("File:ZUS emblem.svg", "https://upload.wikimedia.org/a/zus.svg", "page", "CC0", "", "ZUS", ""),
+            CommonsSvgCandidate("File:NFZ logo.svg", "https://upload.wikimedia.org/a/nfz.svg", "page", "CC0", "", "Narodowy Fundusz Zdrowia", "")
+        )
+        assertEquals(listOf("File:ZUS emblem.svg"), filterCommonsCandidatesByName(candidates, "zus").map { it.title })
+        assertEquals(listOf("File:NFZ logo.svg"), filterCommonsCandidatesByName(candidates, "narodowy fundusz").map { it.title })
+        assertTrue(filterCommonsCandidatesByName(candidates, " ").isEmpty())
     }
 
     @Test
