@@ -9,7 +9,7 @@ package pl.gov.obywatel.android
  * the QR session offer and cryptographic envelope remain outside the vCard.
  */
 internal object VCardCodec {
-    private val fieldName = Regex("[A-Za-z0-9_-]{1,64}")
+    private val fieldName = Regex("[A-Za-z0-9_-]{1,1024}")
 
     data class Card(
         val properties: Map<String, List<String>>,
@@ -110,11 +110,13 @@ internal object VCardCodec {
             "VERSION:4.0",
             "FN:${escape(fields["firstNames"]?.takeIf { it.isNotBlank() }?.let { "$it ${fields["lastName"].orEmpty()}".trim() } ?: "Archiwum danych obywatelskich")}",
             "N:${escapeStructured(fields["lastName"].orEmpty() + ";" + fields["firstNames"].orEmpty())}",
-            "X-OWD-ARCHIVE-VERSION:1"
+            "X-OWD-ARCHIVE-VERSION:2"
         )
         fields.toSortedMap().forEach { (name, value) ->
-            require(fieldName.matches(name)) { "Nieprawidłowa nazwa pola archiwum: $name" }
-            lines += "X-OWD-FIELD;X-OWD-NAME=$name:${escape(value)}"
+            require(name.isNotBlank() && name.length <= 512) { "Nieprawidłowa nazwa pola archiwum." }
+            val encodedName = java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(name.toByteArray(Charsets.UTF_8))
+            lines += "X-OWD-FIELD;X-OWD-NAME=$encodedName:${escape(value)}"
         }
         lines += "END:VCARD"
         val result = fold(lines).joinToString("\r\n") + "\r\n"
@@ -283,12 +285,23 @@ internal object VCardCodec {
 
     fun decodeArchive(raw: String): Map<String, String> {
         val card = decode(raw)
-        require(card.extensions["X-OWD-ARCHIVE-VERSION"]?.singleOrNull() == "1") {
-            "Plik nie jest archiwum danych tej aplikacji."
+        val archiveVersion = card.extensions["X-OWD-ARCHIVE-VERSION"]?.singleOrNull()
+        require(archiveVersion in setOf("1", "2")) {
+            "Plik nie jest obsługiwanym archiwum danych tej aplikacji."
         }
         val values = card.extensions.filterKeys { it.startsWith("FIELD:") }
-            .mapKeys { it.key.removePrefix("FIELD:") }
+            .mapKeys { entry ->
+                val storedName = entry.key.removePrefix("FIELD:")
+                val originalName = if (archiveVersion == "2") {
+                    String(java.util.Base64.getUrlDecoder().decode(storedName), Charsets.UTF_8)
+                } else storedName
+                require(originalName.isNotBlank() && originalName.length <= 512) { "Nieprawidłowa nazwa pola archiwum." }
+                originalName
+            }
             .mapValues { (_, entries) -> entries.singleOrNull() ?: error("Pole archiwum ma wiele wartości.") }
+        require(values.size == card.extensions.keys.count { it.startsWith("FIELD:") }) {
+            "Archiwum zawiera powtórzone nazwy pól."
+        }
         require(values.isNotEmpty()) { "Archiwum nie zawiera danych." }
         return values
     }

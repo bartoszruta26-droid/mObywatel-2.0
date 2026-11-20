@@ -144,4 +144,44 @@ class InstitutionalSvgDownloadAccountingTest {
         assertEquals(listOf("File:crest.svg"), queue.map { it.title })
     }
 
+    @Test
+    fun candidateCsvExportsSearchMetadataWithoutDownloadingFiles() {
+        val candidate = CommonsSvgCandidate(
+            "File:International NGO logo.svg", "https://upload.wikimedia.org/a/logo.svg",
+            "https://commons.wikimedia.org/wiki/File:International_NGO_logo.svg",
+            "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/", "Artist, Name", "Trademark restrictions"
+        )
+        val csv = commonsCandidatesCsv(listOf(candidate, candidate))
+        assertTrue(csv.startsWith("\"filename\",\"symbol_type\",\"commons_page\""))
+        assertTrue(csv.contains("\"logo/emblemat\""))
+        assertTrue(csv.contains("\"Artist, Name\""))
+        assertEquals(2, csv.trimEnd().lines().size)
+    }
+    @Test
+    fun importsCommonsCsvWithMetadataAndDeduplicatesTheSameUploadUrl() {
+        val csv = "\"filename\",\"symbol_type\",\"commons_page\",\"svg_url\",\"author\",\"license\",\"license_url\",\"restrictions\",\"sha256\"\n" +
+            "\"File:logo.svg\",\"logo/emblemat\",\"page\",\"https://upload.wikimedia.org/a/logo.svg\",\"Author\",\"CC0\",\"license\",\"\",\"\"\n" +
+            "\"File:logo-copy.svg\",\"logo/emblemat\",\"page\",\"https://upload.wikimedia.org/a/logo.svg?download=1\",\"Author\",\"CC0\",\"license\",\"\",\"\"\n"
+        val imported = parseExternalCommonsSvgList(csv)
+        assertEquals(1, imported.size)
+        assertEquals("File:logo.svg", imported.single().title)
+        assertEquals("Author", imported.single().artist)
+    }
+
+    @Test
+    fun importsPlainTextListOfWikimediaSvgUrls() {
+        val imported = parseExternalCommonsSvgList("https://upload.wikimedia.org/a/coat.svg\n")
+        assertEquals(1, imported.size)
+        assertEquals("File:coat.svg", imported.single().title)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsExternalSvgUrlsOutsideWikimediaUploadHost() {
+        parseExternalCommonsSvgList("https://example.org/logo.svg")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsExternalCsvWithoutSvgUrlColumn() {
+        parseExternalCommonsSvgList("\"filename\",\"author\"\n\"File:logo.svg\",\"Author\"")
+    }
 }

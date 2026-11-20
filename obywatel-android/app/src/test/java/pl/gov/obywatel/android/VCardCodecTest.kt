@@ -49,7 +49,7 @@ class VCardCodecTest {
         val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski", "notes" to "Linia 1")
         val encoded = VCardCodec.encodeArchive(source)
             .replaceFirst("\r\n", "\n")
-            .replace("X-OWD-ARCHIVE-VERSION:1\r\n", "X-OWD-ARCHIVE-VERSION:1\\r\\n")
+            .replace("X-OWD-ARCHIVE-VERSION:2\r\n", "X-OWD-ARCHIVE-VERSION:2\\r\\n")
         assertEquals(source, VCardCodec.decodeForImport(encoded))
     }
 
@@ -289,6 +289,21 @@ END:VCARD
             "officialDocumentArchive" to """{"passport":{"number":"PA123"}}"""
         )
         assertEquals(fields, VCardCodec.decodeForImport(VCardCodec.encodeArchive(fields)))
+    }
+
+
+    @Test
+    fun archiveRoundTripsApplicationKeysContainingSpacesAndPunctuation() {
+        val fields = linkedMapOf(
+            "firstNames" to "Jan",
+            "service association legal person specific 0" to "Dane podmiotu",
+            "service_association_legal_person_specific_0" to "Dane z klucza technicznego",
+            "custom.field/name" to "Wartość"
+        )
+        val encoded = VCardCodec.encodeArchive(fields)
+        assertTrue(encoded.contains("X-OWD-ARCHIVE-VERSION:2"))
+        assertEquals(fields, VCardCodec.decodeArchive(encoded))
+        assertEquals(fields, VCardCodec.decodeForImport(encoded))
     }
 
 }

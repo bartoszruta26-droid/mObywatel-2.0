@@ -137,9 +137,12 @@ class DocumentCatalogTest {
             "ecclesiastical_death_certificate" to "Służba kościelna",
             "canonical_status_certificate" to "Służba kościelna",
             "clerical_ordination_certificate" to "Służba kościelna",
-            "apostolic_nunciature_credential" to "Służba kościelna"
+            "apostolic_nunciature_credential" to "Służba kościelna",
+            INTERNATIONAL_DONATION_WORSHIP_ID to "Służba kościelna",
+            INTERNATIONAL_DONATION_NGO_ID to "Służba społeczna",
+            INTERNATIONAL_DONATION_PERSON_ID to "Służba cywilna"
         )
-        assertEquals(54, expectedGroups.size)
+        assertEquals(57, expectedGroups.size)
         val existingGroups = documentVisibilityGroupOrder.toSet()
         expectedGroups.forEach { (id, group) ->
             assertTrue("Brak kafelka $id", documentDisplayOptions.any { it.first == id })
@@ -158,7 +161,7 @@ class DocumentCatalogTest {
             assertTrue("Brak pól wystawcy, organu, procedury lub wzoru dla $id",
                 schema.map { it.key }.containsAll(workflowKeys))
         }
-        assertEquals(13, existingGroups.size)
+        assertEquals(14, existingGroups.size)
         val passportFields = documentEditorFieldDefinitions("holy_see_passport_service").map { it.key }.toSet()
         assertTrue(passportFields.containsAll(setOf("passportTypeCode", "passportTypeDescription", "issuingEntity")))
         val passportCodes = documentEditorFieldDefinitions("vatican_passport_ordinary").associate { it.key to it.placeholder }
