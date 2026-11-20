@@ -693,20 +693,39 @@ private fun loadBundledCommonsCandidateManifest(context: Context): Int {
     val raw = context.assets.open("institutions/institutional-symbol-catalog.csv")
         .bufferedReader(Charsets.UTF_8).use { it.readText() }
     val candidates = parseExternalCommonsSvgList(raw)
-    val manifest = JSONArray()
+    val manifest = runCatching { JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE)) }
+        .getOrDefault(JSONArray())
+    val indexes = (0 until manifest.length()).mapNotNull { index ->
+        manifest.optJSONObject(index)?.optString("file")?.takeIf { it.isNotBlank() }?.let { it to index }
+    }.toMap().toMutableMap()
     candidates.forEach { item ->
-        manifest.put(JSONObject()
-            .put("file", item.title)
-            .put("downloadUrl", item.url)
-            .put("sourcePage", item.page)
-            .put("license", item.license)
-            .put("licenseUrl", item.licenseUrl)
-            .put("author", item.artist)
-            .put("restrictions", item.restrictions)
-            .put("source", "Wbudowany katalog 800 symboli")
-            .put("status", "pending")
-            .put("attempts", 0)
-            .put("sha256", item.sha256))
+        val existingIndex = indexes[item.title]
+        if (existingIndex != null) {
+            val existing = manifest.optJSONObject(existingIndex) ?: JSONObject()
+            existing.put("downloadUrl", item.url)
+                .put("sourcePage", item.page)
+                .put("license", item.license)
+                .put("licenseUrl", item.licenseUrl)
+                .put("author", item.artist)
+                .put("restrictions", item.restrictions)
+                .put("source", "Wbudowany katalog nazw Wikimedia Commons")
+                .put("sha256", item.sha256)
+        } else {
+            val index = manifest.length()
+            manifest.put(JSONObject()
+                .put("file", item.title)
+                .put("downloadUrl", item.url)
+                .put("sourcePage", item.page)
+                .put("license", item.license)
+                .put("licenseUrl", item.licenseUrl)
+                .put("author", item.artist)
+                .put("restrictions", item.restrictions)
+                .put("source", "Wbudowany katalog nazw Wikimedia Commons")
+                .put("status", "pending")
+                .put("attempts", 0)
+                .put("sha256", item.sha256))
+            indexes[item.title] = index
+        }
     }
     writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
     return candidates.size
@@ -954,9 +973,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     LaunchedEffect(Unit) {
         val loaded = withContext(Dispatchers.IO) {
             runCatching {
-                if (!context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE).isFile) {
-                    loadBundledCommonsCandidateManifest(context)
-                }
+                loadBundledCommonsCandidateManifest(context)
                 readCommonsCandidates(context)
             }
         }
