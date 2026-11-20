@@ -3,7 +3,7 @@
 
 # Katalog herbów, godeł, flag i znaków instytucjonalnych
 
-Aktualizacja: 2026-11-16  
+Aktualizacja: 2026-11-20  
 Rejestr CSV: institutional-svg-sources.csv  
 Docelowe zasoby Android: obywatel-android/app/src/main/assets/institutions/
 
