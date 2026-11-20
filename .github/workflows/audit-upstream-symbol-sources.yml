@@ -45,9 +45,11 @@ jobs:
           mkdir -p docs/identity-assets/generated
           cp build/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-audit.json
           cp build/upstream-symbol-candidates.csv docs/identity-assets/generated/upstream-symbol-candidates.csv
+          printf '%s\\n' 'SPDX-FileCopyrightText: 2026 bartoszruta26-droid' 'SPDX-License-Identifier: CC0-1.0' > docs/identity-assets/generated/upstream-symbol-audit.json.license
+          printf '%s\\n' 'SPDX-FileCopyrightText: 2026 bartoszruta26-droid' 'SPDX-License-Identifier: CC0-1.0' > docs/identity-assets/generated/upstream-symbol-candidates.csv.license
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/identity-assets/generated/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-candidates.csv
+          git add docs/identity-assets/generated/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-candidates.csv docs/identity-assets/generated/upstream-symbol-audit.json.license docs/identity-assets/generated/upstream-symbol-candidates.csv.license
           if git diff --cached --quiet; then
             echo "Generated candidate index is unchanged."
             exit 0
