@@ -109,16 +109,20 @@ class StudiaOnlineBulkDownloader(
             }
             if (stopRequested) break
 
-            val wait = (cooldownMs - (clock() - previousRequestAt)).coerceAtLeast(0L)
-            if (previousRequestAt > 0L && wait > 0L) sleepInterruptibly(wait)
-            if (lastFailureWaitMs > 0L) {
-                sleepInterruptibly(lastFailureWaitMs.coerceIn(cooldownMs, MAX_RETRY_WAIT_MS))
-                lastFailureWaitMs = 0L
+            var wait = (cooldownMs - (clock() - previousRequestAt)).coerceAtLeast(0L)
+            while (wait > 0L && !stopRequested && !pauseRequested) {
+                sleepInterruptibly(wait)
+                wait = (cooldownMs - (clock() - previousRequestAt)).coerceAtLeast(0L)
             }
             if (stopRequested) break
             while (pauseRequested && !stopRequested) {
                 emit(item.id, true)
                 sleeper(PAUSE_POLL_MS)
+            }
+            if (stopRequested) break
+            if (lastFailureWaitMs > 0L) {
+                sleepInterruptibly(lastFailureWaitMs.coerceIn(cooldownMs, MAX_RETRY_WAIT_MS))
+                lastFailureWaitMs = 0L
             }
             if (stopRequested) break
 
