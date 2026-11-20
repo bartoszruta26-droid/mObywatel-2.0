@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android.network.tor
 
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.DisposableEffect
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,7 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun StudiaOnlineBulkDownloadScreen(
@@ -49,6 +51,9 @@ fun StudiaOnlineBulkDownloadScreen(
     val downloadService = remember(context) { TorDownloadService(context, runtime) }
     val downloader = remember(context) { StudiaOnlineBulkDownloader(downloadService) }
     val store = remember(context) { StudiaOnlineSafStore(context) }
+    DisposableEffect(runtime) {
+        onDispose { runCatching { runtime.stop() } }
+    }
     var firstId by remember { mutableStateOf("1") }
     var lastId by remember { mutableStateOf("100") }
     var intervalSeconds by remember { mutableStateOf(15f) }
@@ -155,8 +160,9 @@ fun StudiaOnlineBulkDownloadScreen(
         if (running) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = {
-                    paused = !paused
-                    if (paused) activePause?.invoke() else activeResume?.invoke()
+                    val nextPaused = !paused
+                    if (nextPaused) activePause?.invoke() else activeResume?.invoke()
+                    paused = nextPaused
                 }, modifier = Modifier.weight(1f)) {
                     IconLabel(if (paused) "Wznów" else "Pauza", if (paused) Icons.Filled.PlayArrow else Icons.Filled.Pause)
                 }
