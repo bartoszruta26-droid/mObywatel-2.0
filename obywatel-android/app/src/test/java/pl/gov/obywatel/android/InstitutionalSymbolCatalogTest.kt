@@ -22,7 +22,7 @@ class InstitutionalSymbolCatalogTest {
         )
         val item = parseInstitutionalSymbolCsv(header + "\n" + row).single()
         assertEquals("https://raw.githubusercontent.com/lipis/flag-icons/main/flags/4x3/my%20flag.svg", item.downloadUrl)
-        assertEquals("flags/4x3/my flag", item.displayName)
+        assertEquals("my flag", item.displayName)
     }
 
     @Test
