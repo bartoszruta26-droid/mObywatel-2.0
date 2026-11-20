@@ -134,7 +134,10 @@ internal object InternationalDocumentWorkflowCatalog {
         spec("ecclesiastical_death_certificate", InternationalIssuerKind.ECCLESIASTICAL_AUTHORITY, "Parafia lub diecezja prowadząca właściwą księgę", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
         spec("canonical_status_certificate", InternationalIssuerKind.ECCLESIASTICAL_AUTHORITY, "Właściwa kuria / ordynariusz / przełożony kompetentny według prawa kanonicznego", InternationalDocumentMode.PROFESSIONAL_CERTIFICATE, true, false),
         spec("clerical_ordination_certificate", InternationalIssuerKind.ECCLESIASTICAL_AUTHORITY, "Diecezja lub instytut życia konsekrowanego właściwy dla święceń", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
-        spec("apostolic_nunciature_credential", InternationalIssuerKind.APOSTOLIC_NUNCIATURE, "Właściwa nuncjatura apostolska lub Sekretariat Stanu", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD)
+        spec("apostolic_nunciature_credential", InternationalIssuerKind.APOSTOLIC_NUNCIATURE, "Właściwa nuncjatura apostolska lub Sekretariat Stanu", InternationalDocumentMode.AUTHORITY_ISSUED_RECORD),
+        spec(INTERNATIONAL_DONATION_WORSHIP_ID, InternationalIssuerKind.DOCUMENT_HOLDER, "Darczyńca i uprawniony przedstawiciel podmiotu religijnego", InternationalDocumentMode.HOLDER_MAINTAINED_RECORD, true, false),
+        spec(INTERNATIONAL_DONATION_NGO_ID, InternationalIssuerKind.DOCUMENT_HOLDER, "Darczyńca i uprawniony przedstawiciel organizacji pozarządowej", InternationalDocumentMode.HOLDER_MAINTAINED_RECORD, true, false),
+        spec(INTERNATIONAL_DONATION_PERSON_ID, InternationalIssuerKind.DOCUMENT_HOLDER, "Darczyńca i obdarowany", InternationalDocumentMode.HOLDER_MAINTAINED_RECORD, true, false)
     ).associateBy { it.documentId }
 
     fun find(documentId: String): InternationalDocumentWorkflow? = all[documentId]
