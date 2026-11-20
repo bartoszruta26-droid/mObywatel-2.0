@@ -4,6 +4,7 @@
 package pl.gov.obywatel.android
 
 import pl.gov.obywatel.android.network.tor.TorClientSettingsScreen
+import pl.gov.obywatel.android.network.tor.StudiaOnlineBulkDownloadScreen
 
 import android.os.Bundle
 import android.content.Context
@@ -1338,6 +1339,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var selectedEditorCategory by remember { mutableStateOf("all") }
     var showSettingsMenu by remember { mutableStateOf(false) }
     var showTorClientSettings by remember { mutableStateOf(false) }
+    var showStudiaOnlineBulkDownload by remember { mutableStateOf(false) }
     var showDocumentEditorCatalog by remember { mutableStateOf(false) }
     var showApplicationAppearanceSettings by remember { mutableStateOf(false) }
     var showTranslationLanguageSettings by remember { mutableStateOf(false) }
@@ -1428,6 +1430,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
             showTranslationLanguageSettings -> { showTranslationLanguageSettings = false; showSettingsMenu = true }
             showTorClientSettings -> { showTorClientSettings = false; showSettingsMenu = true }
+            showStudiaOnlineBulkDownload -> { showStudiaOnlineBulkDownload = false; selectedTab = 4 }
             showApplicationAppearanceSettings -> { showApplicationAppearanceSettings = false; showSettingsMenu = true }
             showIdentityDesigner -> { showIdentityDesigner = false }
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
@@ -1453,7 +1456,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showTorClientSettings || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showTorClientSettings || showStudiaOnlineBulkDownload || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1532,6 +1535,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     })
                     showTranslationLanguageSettings -> MedicalTranslationLanguagesSettingsScreen(onBack = { showTranslationLanguageSettings = false; showSettingsMenu = true })
                     showTorClientSettings -> TorClientSettingsScreen(onBack = { showTorClientSettings = false; showSettingsMenu = true })
+                    showStudiaOnlineBulkDownload -> StudiaOnlineBulkDownloadScreen(
+                        onBack = { showStudiaOnlineBulkDownload = false; selectedTab = 4 }
+                    )
                     showApplicationAppearanceSettings -> ApplicationAppearanceSettingsScreen(
                         appearance = LocalApplicationAppearance.current,
                         onChange = onAppearanceChange,
@@ -1913,6 +1919,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     selectedTab == 3 -> QrToolsScreen()
                     selectedTab == 4 -> MoreMenuScreen(
                         onOpenSettings = { showSettingsMenu = true },
+                        onOpenStudiaOnlineArchive = { showStudiaOnlineBulkDownload = true },
                         onOpenCertificates = { showCertificates = true },
                         onOpenHelp = { activeService = "Pomoc i informacje" },
                         onOpenHistory = { activeService = "Historia działań" },
@@ -3071,7 +3078,8 @@ private fun MoreMenuScreen(
     onOpenHistory: () -> Unit,
     onOpenIdentityDesigner: () -> Unit,
     onOpenImportedDocuments: () -> Unit,
-    onOpenLegalInformation: () -> Unit
+    onOpenLegalInformation: () -> Unit,
+    onOpenStudiaOnlineArchive: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -3085,6 +3093,12 @@ private fun MoreMenuScreen(
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Projektant dokumentów", "Tworzenie dokumentów, układ, podgląd i eksport PDF", Icons.Filled.Description, onOpenIdentityDesigner)
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
+        ProfileActionCard(
+            "Archiwum materiałów – pobierz moje pliki",
+            "Pobierz materiały z studia-online.pl przez Tor, z przerwami i wyborem folderu",
+            Icons.Filled.Description,
+            onOpenStudiaOnlineArchive
+        )
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
         ProfileActionCard("Informacje prawne", "Podstawy prawne, prawa obywatelskie i zasady działania aplikacji", Icons.Filled.Description, onOpenLegalInformation)
