@@ -92,6 +92,7 @@ class StudiaOnlineBulkDownloader(
         var completed = 0
         var previousRequestAt = 0L
         var lastStatus = StudiaOnlineDownloadProgress(0, items.size, null, success, failed, false, false)
+        var lastFailureWaitMs = 0L
 
         fun emit(current: Int?, paused: Boolean, finished: Boolean = false) {
             lastStatus = StudiaOnlineDownloadProgress(
@@ -110,6 +111,10 @@ class StudiaOnlineBulkDownloader(
 
             val wait = (cooldownMs - (clock() - previousRequestAt)).coerceAtLeast(0L)
             if (previousRequestAt > 0L && wait > 0L) sleeper(wait)
+            if (lastFailureWaitMs > 0L) {
+                sleeper(lastFailureWaitMs.coerceIn(cooldownMs, MAX_RETRY_WAIT_MS))
+                lastFailureWaitMs = 0L
+            }
             if (stopRequested) break
             while (pauseRequested && !stopRequested) {
                 emit(item.id, true)
@@ -172,7 +177,7 @@ class StudiaOnlineBulkDownloader(
                     }
                 } else {
                     val retryAfter = (failure as? TorHttpException)?.retryAfter?.toLongOrNull()
-                    if (retryAfter != null) sleeper((retryAfter * 1_000L).coerceIn(cooldownMs, MAX_RETRY_WAIT_MS))
+                    if (retryAfter != null) lastFailureWaitMs = retryAfter * 1_000L
                     failed[item.id] = failure.message ?: failure.javaClass.simpleName
                 }
             }
