@@ -54,7 +54,11 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     DisposableEffect(runtime, downloader) {
         onDispose {
             downloader.stop()
-            runCatching { runtime.stop() }
+            // Keep Tor alive until the worker notices stop and closes its response.
+            Thread {
+                try { Thread.sleep(750L) } catch (_: InterruptedException) { Thread.currentThread().interrupt() }
+                runCatching { runtime.stop() }
+            }.start()
         }
     }
 
@@ -165,7 +169,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                                         cooldownMs = intervalSeconds.toLong() * 1_000L,
                                         save = { item, bytes -> store.save(destination, item, bytes) },
                                         onProgress = { update ->
-                                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                            scope.launch(Dispatchers.Main.immediate) {
                                                 progress = update
                                                 paused = update.paused
                                             }
