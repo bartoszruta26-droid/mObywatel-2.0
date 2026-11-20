@@ -215,6 +215,7 @@ class StudiaOnlineBulkDownloader(
             }
             output.toByteArray().also {
                 if (it.isEmpty()) throw IOException("Serwer zwrócił pusty plik.")
+                notFoundPageMessage(response.contentType, it)?.let { message -> throw IOException(message) }
             }
         }
 
@@ -234,6 +235,28 @@ class StudiaOnlineBulkDownloader(
     }
 
     companion object {
+        internal fun notFoundPageMessage(contentType: String?, bytes: ByteArray): String? {
+            val prefix = bytes.copyOfRange(0, minOf(bytes.size, 32 * 1024))
+                .toString(Charsets.UTF_8)
+                .trimStart()
+            val isHtml = contentType?.contains("text/html", ignoreCase = true) == true ||
+                prefix.startsWith("<html", ignoreCase = true) ||
+                prefix.startsWith("<!doctype html", ignoreCase = true)
+            if (!isHtml) return null
+            val page = prefix.lowercase(java.util.Locale.ROOT)
+            val missingPhrases = listOf(
+                "nie znaleziono",
+                "nie istnieje",
+                "materiał nie jest dostępny",
+                "material not found",
+                "file not found",
+                "not found"
+            )
+            return if (missingPhrases.any(page::contains)) {
+                "Materiał nie został znaleziony — serwis zwrócił stronę błędu zamiast pliku."
+            } else null
+        }
+
         internal fun describeFailure(failure: Exception): String = when ((failure as? TorHttpException)?.httpCode) {
             404 -> "Materiał nie został znaleziony (HTTP 404)."
             410 -> "Materiał został usunięty z serwisu (HTTP 410)."
