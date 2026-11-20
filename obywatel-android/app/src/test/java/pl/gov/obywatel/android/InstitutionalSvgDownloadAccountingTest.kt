@@ -152,7 +152,6 @@ class InstitutionalSvgDownloadAccountingTest {
             "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/", "Artist, Name", "Trademark restrictions"
         )
         val csv = commonsCandidatesCsv(listOf(candidate, candidate))
-        assertTrue(csv.startsWith("\\"filename\\",\\"symbol_type\\",\\"commons_page\\""))
         assertTrue(csv.startsWith("\"filename\",\"symbol_type\",\"commons_page\""))
         assertTrue(csv.contains("\"logo/emblemat\""))
         assertTrue(csv.contains("\"Artist, Name\""))
