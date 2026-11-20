@@ -813,7 +813,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        Text("Wyszukiwanie plików SVG w Wikimedia Commons (repozytorium mediów Wikipedii): godeł, herbów, flag, emblematów i logo organizacji międzynarodowych, w tym organizacji pozarządowych. Możesz wyeksportować samą listę wyników do CSV bez pobierania grafik albo osobno pobrać pliki. Metadane źródła, autora i licencji są zachowywane.",style=MaterialTheme.typography.bodySmall)
+        Text("Biblioteka zawiera wbudowany katalog 200 herbów i logotypów oraz umożliwia wyszukiwanie dalszych plików SVG w Wikimedia Commons. Możesz wczytać gotową listę offline, wyeksportować wyniki do CSV albo osobno uruchomić pobieranie. Zachowujemy stronę źródłową, autora, licencję i ograniczenia. Samo pobranie nie daje prawa do użycia znaku na dokumencie; dozwolone zastosowania pozostają puste do odrębnej akceptacji.",style=MaterialTheme.typography.bodySmall)
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         if (busy == "commons" || busy == "resume") {
