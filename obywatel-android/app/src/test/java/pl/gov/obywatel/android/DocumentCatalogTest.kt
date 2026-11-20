@@ -161,7 +161,7 @@ class DocumentCatalogTest {
             assertTrue("Brak pól wystawcy, organu, procedury lub wzoru dla $id",
                 schema.map { it.key }.containsAll(workflowKeys))
         }
-        assertEquals(13, existingGroups.size)
+        assertEquals(14, existingGroups.size)
         val passportFields = documentEditorFieldDefinitions("holy_see_passport_service").map { it.key }.toSet()
         assertTrue(passportFields.containsAll(setOf("passportTypeCode", "passportTypeDescription", "issuingEntity")))
         val passportCodes = documentEditorFieldDefinitions("vatican_passport_ordinary").associate { it.key to it.placeholder }
