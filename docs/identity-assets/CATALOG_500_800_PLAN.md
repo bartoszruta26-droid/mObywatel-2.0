@@ -79,22 +79,26 @@ Statusy prawne i operacyjne muszą być rozdzielone:
 
 GitHub Actions może klonować publiczne repozytoria, pobierać wybrane pliki, optymalizować SVG, wyliczać SHA-256 i przygotowywać PR z zasobami. Nie należy automatycznie kopiować całych repozytoriów ani traktować licencji repozytorium jako licencji każdego logo. Import musi działać z allowlisty rekordów, zachowywać upstream repo/ref/path, plik licencji, źródło, atrybucję i status prawny. Każdy import ma być powtarzalny i nie może nadpisywać zatwierdzonych zasobów bez kontroli różnic.
 
-## Wbudowany katalog pierwszego wydania: 200 pozycji
+## Wbudowany katalog aplikacji: 800 kandydatów
 
-Do aplikacji dodano plik `obywatel-android/app/src/main/assets/institutions/institutional-symbol-catalog-200.csv`. Zawiera dokładnie 200 unikalnych kandydatów SVG z metadanymi źródła, autora i nazwy licencji:
+Do zasobów aplikacji dodano plik `obywatel-android/app/src/main/assets/institutions/institutional-symbol-catalog-800.csv`. Zawiera dokładnie 800 unikalnych kandydatów SVG. Każdy rekord ma stronę pliku Commons, oryginalny adres SVG, nazwę autora i nazwę licencji.
 
 | Grupa | Liczba |
 |---|---:|
-| Herby miast Polski | 60 |
-| Herby gmin Polski | 25 |
-| Herby powiatów Polski | 15 |
-| Międzynarodowe NGO | 35 |
-| Organizacje społeczne | 9 |
-| Instytucje publiczne | 27 |
+| Herby miast Polski | 200 |
+| Herby gmin Polski | 200 |
+| Herby powiatów Polski | 69 |
+| Międzynarodowe NGO i organizacje non-profit | 200 |
+| Instytucje publiczne i agencje | 93 |
 | Organizacje charytatywne | 29 |
-| **Razem** | **200** |
+| Organizacje społeczne | 9 |
+| **Razem** | **800** |
 
-Katalog jest dołączony do zasobów aplikacji i może być załadowany bez wyszukiwania online. Przycisk w panelu biblioteki wczytuje listę do kolejki pobierania. Same grafiki nie są pobierane automatycznie; użytkownik uruchamia pobieranie osobno. Aplikacja wymaga metadanych licencji przed pobraniem, zachowuje stronę źródłową, autora i ograniczenia, a `permittedKinds` pozostaje puste do odrębnej akceptacji. W 171 rekordach Commons nie zwrócił osobnego URL licencji, ale podał nazwę licencji i stronę pliku — dlatego warunki trzeba sprawdzić na stronie źródłowej.
+Katalog jest dołączony do zasobów aplikacji i może być załadowany bez wyszukiwania online. Przycisk w panelu biblioteki wczytuje listę do kolejki pobierania; same grafiki nie są pobierane automatycznie. Aplikacja wymaga nazwy licencji i strony źródłowej przed pobraniem, zachowuje autora i ograniczenia, a `permittedKinds` pozostaje puste do odrębnej akceptacji.
+
+Wszystkie 800 pozycji mają nazwę licencji z metadanych Commons, ale w 674 rekordach nie zwrócono osobnego URL licencji. Dla tych pozycji trzeba otworzyć stronę pliku i sprawdzić pełne warunki, autora oraz ograniczenia znaków towarowych/heraldycznych. Katalog jest zatem gotowym indeksem 800 kandydatów, a nie deklaracją, że 800 znaków ma już potwierdzone prawo do swobodnego wykorzystania.
+
+Poprzedni plik `institutional-symbol-catalog-200.csv` pozostaje jako zachowany podzbiór pilotażowy; aplikacja ładuje teraz wersję 800.
 
 ## Etapy
 
