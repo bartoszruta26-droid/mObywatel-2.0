@@ -70,3 +70,14 @@ assetId, label, organization, symbolType, validityPeriod, sourcePageUrl, downloa
 - Adresy źródłowe wymagają testu odpowiedzi serwera; plik niedostępny lub niezgodny z SVG zostanie odrzucony. Rejestr nie jest gwarancją dostępności każdego historycznego URL.
 
 Status kompilacji i testów należy odczytać z PR #80; nie uznawać implementacji za gotową do scalenia, dopóki Android build i walidacja GUI nie zakończą się powodzeniem.
+
+## Katalog indeksowy i pakiet podstawowy (2026-11-20)
+
+- `docs/identity-assets/generated/institutional-symbol-candidates.csv` zawiera 2 734 rekordy kandydatów z GitHub i Wikimedia Commons; szczegółowy raport źródeł znajduje się w `institutional-symbol-source-audit.json`.
+- Aplikacja otrzymuje kopię indeksu w `app/src/main/assets/identity-symbols/catalog.csv`. Indeks jest przeszukiwany lokalnie po nazwie, grupie, repozytorium i identyfikatorze źródła.
+- Dla adresów GitHub typu `/blob/{ref}/{path}` aplikacja wyprowadza bezpośredni adres `raw.githubusercontent.com`; dla Commons wykorzystuje bezpośredni adres pliku z metadanych. Pobierany jest tylko wybrany plik SVG.
+- Pobranie zachowuje źródło, rewizję, ścieżkę, autora, licencję, adres licencji, opis źródła i SHA-256. Nie ma blokady wyników wyszukiwania na etapie indeksowania; status prawny i ograniczenia są metadanymi.
+- Wbudowany pakiet podstawowy zawiera 50 flag SVG z projektu `lipis/flag-icons` w proporcji 4:3. Tekst licencji MIT jest w `FLAG-ICONS-LICENSE.txt`, a zakres plików i kody ISO opisuje `assets/identity-symbols/README.md`.
+- Flagi są odrębnym zasobem identyfikacyjnym; sam pakiet MIT nie znosi krajowych zasad używania flag. Nie należy utożsamiać flagi z herbem, godłem, pieczęcią ani logo organizacji.
+- Pobrane z indeksu znaki nie otrzymują automatycznie `permittedKinds`; to pole pozostaje puste do czasu zatwierdzenia konkretnego zastosowania. Nie ogranicza to wyszukiwania ani pobrania pliku do biblioteki.
+- Każdy pobrany plik przechodzi walidację XML/SVG, limit 12 MB oraz odrzucenie DTD, encji, skryptów, `foreignObject` i zewnętrznych/aktywnych odwołań.
