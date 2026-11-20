@@ -334,6 +334,8 @@ private suspend fun discoverCommonsOpenSvgs(
 }
 
 private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): String {
+    require(item.page.isNotBlank()) { "Brak strony źródłowej pliku; pozycja pozostaje referencyjna." }
+    require(item.license.isNotBlank()) { "Brak metadanych licencji; plik pozostaje w katalogu referencyjnym i nie może zostać pobrany." }
     waitForCommonsRequestSlot()
     val tor = TorDownloadServiceProvider.get(context)
     val assetId = commonsAssetId(item.title)
@@ -560,6 +562,29 @@ private fun loadCommonsReportSummary(context: Context): String = runCatching {
         (if (errorDetails.isNotBlank()) " Przykładowe błędy: $errorDetails." else "") +
         " Aktualizacja: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(report.optLong("updatedAt")))}."
 }.getOrDefault("")
+
+private fun loadBundledCommonsCandidateManifest(context: Context): Int {
+    val raw = context.assets.open("institutions/institutional-symbol-catalog-200.csv")
+        .bufferedReader(Charsets.UTF_8).use { it.readText() }
+    val candidates = parseExternalCommonsSvgList(raw)
+    val manifest = JSONArray()
+    candidates.forEach { item ->
+        manifest.put(JSONObject()
+            .put("file", item.title)
+            .put("downloadUrl", item.url)
+            .put("sourcePage", item.page)
+            .put("license", item.license)
+            .put("licenseUrl", item.licenseUrl)
+            .put("author", item.artist)
+            .put("restrictions", item.restrictions)
+            .put("source", "Wbudowany katalog 200 symboli")
+            .put("status", "pending")
+            .put("attempts", 0)
+            .put("sha256", item.sha256))
+    }
+    writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
+    return candidates.size
+}
 
 private fun readCommonsCandidates(context: Context): List<CommonsSvgCandidate> = runCatching {
     val array = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
@@ -804,6 +829,21 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             }
         }
         OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 1000 ms.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedButton(
+            enabled = busy == null,
+            onClick = {
+                busy = "bundled-import"
+                scope.launch {
+                    val result = withContext(Dispatchers.IO) { runCatching { loadBundledCommonsCandidateManifest(context) } }
+                    status = result.fold(
+                        { "Załadowano wbudowany katalog: $it pozycji. Lista jest gotowa do wznowienia pobierania; każdy plik zachowuje źródło, autora, licencję i ograniczenia." },
+                        { "Błąd ładowania wbudowanego katalogu: ${it.message ?: "nieznany błąd"}" }
+                    )
+                    busy = null
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(if (busy == "bundled-import") "Ładowanie katalogu…" else "Załaduj wbudowany katalog 200 symboli") }
         OutlinedButton(enabled = busy == null, onClick = { externalListLauncher.launch(arrayOf("text/csv", "text/plain", "text/*", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Importuj zewnętrzną listę SVG (CSV / TXT)") }
         OutlinedButton(
             enabled = busy == null,
