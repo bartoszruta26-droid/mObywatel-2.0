@@ -119,6 +119,22 @@ class StudiaOnlineDownloadCatalogTest {
         )
     }
 
+    @Test fun retryAfterDeadlineCountsDownInsteadOfRepeatingTheFullDelay() {
+        assertEquals(5_000L, StudiaOnlineBulkDownloader.remainingDelayMillis(10_000L, 5_000L))
+        assertEquals(1_000L, StudiaOnlineBulkDownloader.remainingDelayMillis(10_000L, 9_000L))
+        assertEquals(0L, StudiaOnlineBulkDownloader.remainingDelayMillis(10_000L, 10_000L))
+        assertEquals(0L, StudiaOnlineBulkDownloader.remainingDelayMillis(10_000L, 11_000L))
+        assertEquals(0L, StudiaOnlineBulkDownloader.remainingDelayMillis(null, 0L))
+    }
+
+    @Test fun onlyRateLimitAndServiceUnavailableStatusesAreRetried() {
+        assertTrue(StudiaOnlineBulkDownloader.isRetryableHttpStatus(429))
+        assertTrue(StudiaOnlineBulkDownloader.isRetryableHttpStatus(503))
+        assertFalse(StudiaOnlineBulkDownloader.isRetryableHttpStatus(404))
+        assertFalse(StudiaOnlineBulkDownloader.isRetryableHttpStatus(403))
+        assertFalse(StudiaOnlineBulkDownloader.isRetryableHttpStatus(null))
+    }
+
     @Test fun retryAfterDeltaSecondsIsConvertedToMilliseconds() {
         assertEquals(5_000L, StudiaOnlineBulkDownloader.retryAfterDelayMillis("5", 1_000L))
     }
