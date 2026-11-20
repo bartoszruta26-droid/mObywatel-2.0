@@ -116,7 +116,7 @@ class StudiaOnlineBulkDownloader(
                 val earliestNextRequest = previousRequestAt?.plus(cooldownMs)
                 val remainingCooldown = earliestNextRequest?.let { (it - clock()).coerceAtLeast(0L) } ?: 0L
                 val retryDeadline = retryAfterUntilMs
-                val remainingRetryAfter = retryDeadline?.let { (it - clock()).coerceAtLeast(0L) } ?: 0L
+                val remainingRetryAfter = remainingDelayMillis(retryDeadline, clock())
                 if (remainingRetryAfter == 0L) retryAfterUntilMs = null
                 val waitMs = maxOf(remainingCooldown, remainingRetryAfter)
                 if (waitMs > 0L) {
@@ -148,7 +148,7 @@ class StudiaOnlineBulkDownloader(
                     }
                     // Retry rate-limited or temporarily unavailable resources, but
                     // cap retries so a persistent server-side failure cannot loop forever.
-                    if (httpFailure?.httpCode in RETRYABLE_HTTP_CODES &&
+                    if (isRetryableHttpStatus(httpFailure?.httpCode) &&
                         retryDelay > 0L && transientRetryCount < MAX_TRANSIENT_RETRIES
                     ) {
                         transientRetryCount++
@@ -282,6 +282,12 @@ class StudiaOnlineBulkDownloader(
             401, 403 -> "Serwis odmówił dostępu (HTTP ${(failure as TorHttpException).httpCode}). Sprawdź logowanie i uprawnienia."
             else -> failure.message ?: failure.javaClass.simpleName
         }
+
+        internal fun remainingDelayMillis(deadlineMs: Long?, nowMs: Long): Long =
+            deadlineMs?.let { (it - nowMs).coerceAtLeast(0L) } ?: 0L
+
+        internal fun isRetryableHttpStatus(statusCode: Int?): Boolean =
+            statusCode == 429 || statusCode == 503
 
         internal fun retryAfterDelayMillis(value: String?, nowMs: Long): Long {
             if (value.isNullOrBlank()) return 0L
