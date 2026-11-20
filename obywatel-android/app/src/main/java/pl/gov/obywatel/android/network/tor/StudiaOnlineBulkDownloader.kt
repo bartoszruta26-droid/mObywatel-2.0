@@ -146,30 +146,16 @@ class StudiaOnlineBulkDownloader(
                 save(item, bytes)
                 success += item.id
             } catch (failure: Exception) {
-                if (stopRequested || pauseRequested) {
-                    // Do not mark an intentionally interrupted item as a failure.
+                if (stopRequested) break
+                if (pauseRequested) {
+                    // Discard the incomplete response; restart this item from byte zero.
                     while (pauseRequested && !stopRequested) {
                         emit(item.id, true)
-                        sleeper(PAUSE_POLL_MS)
+                        sleepInterruptibly(PAUSE_POLL_MS)
                     }
                     if (stopRequested) break
-                    // Retry the interrupted item from the beginning; never append
-                    // partial bytes to a previously committed document.
                     try {
-                        val bytes = downloads.open(item.url, TorDownloadKind.ARCHIVE).use { response ->
-                            val output = java.io.ByteArrayOutputStream()
-                            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                            var total = 0L
-                            while (true) {
-                                val read = response.body.read(buffer)
-                                if (read < 0) break
-                                total += read
-                                if (total > MAX_FILE_BYTES) throw IOException("Materiał przekracza limit 256 MB.")
-                                output.write(buffer, 0, read)
-                            }
-                            output.toByteArray()
-                        }
-                        if (bytes.isEmpty()) throw IOException("Serwer zwrócił pusty plik.")
+                        val bytes = downloadWholeItem(item)
                         save(item, bytes)
                         success += item.id
                     } catch (retryFailure: Exception) {
@@ -187,6 +173,29 @@ class StudiaOnlineBulkDownloader(
         emit(null, false, finished = !stopRequested && completed == items.size)
         return lastStatus
     }
+
+    private fun downloadWholeItem(item: StudiaOnlineDownloadItem): ByteArray =
+        downloads.open(item.url, TorDownloadKind.ARCHIVE).use { response ->
+            if (response.statusCode !in 200..299) {
+                throw IOException("Nieoczekiwany status HTTP ${response.statusCode}.")
+            }
+            val output = java.io.ByteArrayOutputStream()
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            var total = 0L
+            while (true) {
+                if (stopRequested || pauseRequested) {
+                    throw InterruptedIOException("Pobieranie przerwano; można wznowić zadanie.")
+                }
+                val read = response.body.read(buffer)
+                if (read < 0) break
+                total += read
+                if (total > MAX_FILE_BYTES) throw IOException("Materiał przekracza limit 256 MB.")
+                output.write(buffer, 0, read)
+            }
+            output.toByteArray().also {
+                if (it.isEmpty()) throw IOException("Serwer zwrócił pusty plik.")
+            }
+        }
 
     private fun sleepInterruptibly(totalMs: Long) {
         var remaining = totalMs.coerceAtLeast(0L)
