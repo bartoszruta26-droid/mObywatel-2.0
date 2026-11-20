@@ -8,12 +8,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StudiaOnlineDownloadCatalogTest {
-    @Test fun preservesTheDoubleSlashInTheConfiguredUrl() {
+    @Test fun preservesDoubleSlashInTheConfiguredUrl() {
         val item = StudiaOnlineDownloadCatalog.fromIds(listOf(12345)).single()
         assertEquals("https://studia-online.pl//pobierz-material/12345", item.url)
     }
 
-    @Test fun removesDuplicateIdsWithoutChangingTheirOrder() {
+    @Test fun deduplicatesIdsWithoutChangingTheirOrder() {
         assertEquals(
             listOf(3, 1, 2),
             StudiaOnlineDownloadCatalog.fromIds(listOf(3, 1, 3, 2)).map { it.id }
@@ -27,6 +27,11 @@ class StudiaOnlineDownloadCatalogTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun rejectsRangesAboveTheSafetyLimit() {
+        StudiaOnlineDownloadCatalog.fromRange(1, 2_001)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun acceptsOnlyTwoThousandItemsPerRange() {
         StudiaOnlineDownloadCatalog.fromRange(1, 2_001)
     }
 
