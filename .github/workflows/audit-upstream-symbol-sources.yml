@@ -45,8 +45,8 @@ jobs:
           cp build/upstream-symbol-candidates.csv docs/identity-assets/generated/upstream-symbol-candidates.csv
       - name: Push generated candidate index branch for review
         run: |
-          git fetch origin automation/upstream-symbol-candidate-index || true
-          git checkout -B automation/upstream-symbol-candidate-index origin/automation/upstream-symbol-candidate-index
+          git fetch origin automation/upstream-symbol-index-only || true
+          git checkout -B automation/upstream-symbol-index-only origin/automation/upstream-symbol-index-only
           mkdir -p docs/identity-assets/generated
           cp build/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-audit.json
           cp build/upstream-symbol-candidates.csv docs/identity-assets/generated/upstream-symbol-candidates.csv
@@ -58,4 +58,4 @@ jobs:
             exit 0
           fi
           git commit -m "Add generated upstream symbol candidate index"
-          git push origin automation/upstream-symbol-candidate-index
+          git push origin automation/upstream-symbol-index-only
