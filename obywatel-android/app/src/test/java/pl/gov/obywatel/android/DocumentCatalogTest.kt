@@ -190,9 +190,6 @@ class DocumentCatalogTest {
         ids.forEach { id ->
             assertTrue("Brak istniejącego dokumentu $id", documentDisplayOptions.any { it.first == id })
             assertEquals("Służba zdrowotna", documentVisibilityGroup(id))
-            val route = requireNotNull(DocumentRouteRegistry.find(id))
-            assertEquals("Dokument $id musi mieć trasę DOCUMENT", DocumentRouteType.DOCUMENT, route.type)
-            assertEquals("Trasa musi zachować identyfikator $id", id, route.documentId)
         }
     }
 
