@@ -1,3 +1,6 @@
+SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+SPDX-License-Identifier: CC0-1.0
+
 # Audyt dokumentów „Rachunki płatnicze i darowizny” — 20 listopada 2026 r.
 
 - Repozytorium: `bartoszruta26-droid/mObywatel-2.0`
