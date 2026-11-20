@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "generatedFromWorkflowRun": 44796739367,
+  "sourceCandidateCount": 2265,
+  "wikimediaCommonsUniqueFilePages": 760,
+  "githubRepositoryCandidatePaths": 1505,
+  "note": "Candidate index only. Each symbol requires individual identity, licensing, trademark and permitted-use review before asset import.",
+  "githubSources": [
+    {
+      "repository": "collective-service/organizations-logo",
+      "visualFiles": 57,
+      "svgFiles": 12,
+      "selectedCandidates": 57,
+      "rightsStatus": "reference_only_license_unknown"
+    },
+    {
+      "repository": "simple-icons/simple-icons",
+      "svgFiles": 3472,
+      "selectedCandidates": 3,
+      "rightsStatus": "per_asset_review"
+    },
+    {
+      "repository": "glincker/thesvg",
+      "svgFiles": 14797,
+      "selectedCandidates": 0,
+      "rightsStatus": "per_asset_review"
+    },
+    {
+      "repository": "HatScripts/circle-flags",
+      "svgFiles": 646,
+      "selectedCandidates": 647,
+      "rightsStatus": "MIT_plus_flag_law_review"
+    },
+    {
+      "repository": "lipis/flag-icons",
+      "svgFiles": 542,
+      "selectedCandidates": 543,
+      "rightsStatus": "MIT_plus_flag_law_review"
+    },
+    {
+      "repository": "hampusborgos/country-flags",
+      "svgFiles": 255,
+      "selectedCandidates": 255,
+      "rightsStatus": "reference_only_license_file_missing"
+    },
+    {
+      "repository": "MuriungiPatrick/africons",
+      "svgFiles": 4,
+      "selectedCandidates": 0,
+      "rightsStatus": "reference_only_license_unverified"
+    }
+  ],
+  "wikimediaCommonsCategories": [
+    {
+      "category": "Category:SVG logos of non-profit organizations",
+      "itemsSeen": 200,
+      "group": "international_ngo"
+    },
+    {
+      "category": "Category:Logos of non-governmental organizations",
+      "itemsSeen": 200,
+      "group": "ngo_and_social_organizations"
+    },
+    {
+      "category": "Category:SVG flags of international organizations",
+      "itemsSeen": 118,
+      "group": "international_organization_flags"
+    },
+    {
+      "category": "Category:SVG logos of governments and government agencies",
+      "itemsSeen": 95,
+      "group": "government_and_public_institutions"
+    },
+    {
+      "category": "Category:Logos of charitable organizations",
+      "itemsSeen": 150,
+      "group": "charitable_organizations"
+    }
+  ],
+  "artifactUrl": "https://github.com/bartoszruta26-droid/mObywatel-2.0/actions/runs/44796739367/artifacts/14658238721",
+  "artifactSha256": "914a69431a466dae955a4d996d7d5283c26e9236a6ae87aeddf6f302c2e4554c"
+}
