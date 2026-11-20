@@ -1748,7 +1748,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     selectedDocumentId == FOREIGN_PRESCRIPTION_ID -> ForeignPrescriptionEditorScreen(
                         onBack = { selectedDocumentId = null }
                     )
-                    selectedDocumentId != null && selectedDocumentId in InternationalDonationDocumentCatalog.all.keys ->
+                    selectedDocumentId?.let { it in InternationalDonationDocumentCatalog.all.keys } == true ->
                         InternationalDonationDocumentEditorScreen(
                             documentId = selectedDocumentId!!,
                             onBack = { selectedDocumentId = null }
