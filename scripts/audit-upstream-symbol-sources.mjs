@@ -53,7 +53,10 @@ const commonsCategories = [
   { id:"commons-ngo-logos", title:"Category:Logos of non-governmental organizations", group:"ngo_and_social_organizations", limit:200 },
   { id:"commons-international-flags", title:"Category:SVG flags of international organizations", group:"international_organization_flags", limit:150 },
   { id:"commons-government-svg", title:"Category:SVG logos of governments and government agencies", group:"government_and_public_institutions", limit:150 },
-  { id:"commons-charity-logos", title:"Category:Logos of charitable organizations", group:"charitable_organizations", limit:150 }
+  { id:"commons-charity-logos", title:"Category:Logos of charitable organizations", group:"charitable_organizations", limit:150 },
+  { id:"commons-polish-city-arms", title:"Category:SVG coats of arms of cities of Poland", group:"polish_city_arms", limit:200 },
+  { id:"commons-polish-gmina-arms", title:"Category:SVG coats of arms of gminas of Poland", group:"polish_gmina_arms", limit:200 },
+  { id:"commons-polish-powiat-arms", title:"Category:SVG coats of arms of powiats of Poland", group:"polish_powiats_arms", limit:100 }
 ];
 const commonsHeaders = { "User-Agent":"mObywatel-2.0-symbol-catalog/1.0 (https://github.com/bartoszruta26-droid/mObywatel-2.0)", "Accept":"application/json" };
 const commonsByPage = new Map();
