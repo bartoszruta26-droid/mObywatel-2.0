@@ -230,10 +230,11 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                     }
                     it.currentId?.let { id -> Text("Aktualny materiał: $id") }
                     if (it.failed.isNotEmpty()) {
-                        Text(
-                            "Nieudane numery: ${it.failed.keys.joinToString()}",
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Text("Szczegóły nieudanych pobrań:", color = MaterialTheme.colorScheme.error)
+                        it.failed.forEach { (id, reason) ->
+                            Text("Materiał $id: $reason", color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
