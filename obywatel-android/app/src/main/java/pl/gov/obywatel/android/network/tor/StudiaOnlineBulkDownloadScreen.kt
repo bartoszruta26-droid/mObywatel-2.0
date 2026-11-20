@@ -2,11 +2,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 package pl.gov.obywatel.android.network.tor
 
-import android.content.Context
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,9 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Composable
@@ -67,8 +61,6 @@ fun StudiaOnlineBulkDownloadScreen(
     var activeStop by remember { mutableStateOf<(() -> Unit)?>(null) }
     var progress by remember { mutableStateOf<StudiaOnlineDownloadProgress?>(null) }
     var errorText by remember { mutableStateOf("") }
-    val pauseSignal = remember { AtomicBoolean(false) }
-    val stopSignal = remember { AtomicBoolean(false) }
     val folderPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -125,16 +117,7 @@ fun StudiaOnlineBulkDownloadScreen(
                         paused = false
                         errorText = ""
                         progress = null
-                        pauseSignal.set(false)
-                        stopSignal.set(false)
-                        val jobPause = { pauseSignal.set(true) }
-                        val jobResume = { pauseSignal.set(false) }
-                        val jobStop = { stopSignal.set(true); pauseSignal.set(false) }
-                        activePause = jobPause
-                        activeResume = jobResume
-                        activeStop = jobStop
                         scope.launch {
-                            running = true
                             activePause = { downloader.pause() }
                             activeResume = { downloader.resume() }
                             activeStop = { downloader.stop() }
@@ -146,7 +129,6 @@ fun StudiaOnlineBulkDownloadScreen(
                                     downloader.run(items, intervalSeconds.toLong() * 1_000L, save = { item, bytes ->
                                         store.save(destination, item, bytes)
                                     }, onProgress = { update ->
-                                        // Callback is emitted by the IO worker; Compose state is updated on Main.
                                         android.os.Handler(android.os.Looper.getMainLooper()).post {
                                             progress = update
                                             paused = update.paused
@@ -174,12 +156,11 @@ fun StudiaOnlineBulkDownloadScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = {
                     paused = !paused
-                    pauseSignal.set(paused)
+                    if (paused) activePause?.invoke() else activeResume?.invoke()
                 }, modifier = Modifier.weight(1f)) {
                     IconLabel(if (paused) "Wznów" else "Pauza", if (paused) Icons.Filled.PlayArrow else Icons.Filled.Pause)
                 }
                 OutlinedButton(onClick = {
-                    activeStop?.invoke()
                     activeStop?.invoke()
                     paused = false
                     statusText = "Zatrzymywanie po bezpiecznym zamknięciu bieżącego żądania…"
