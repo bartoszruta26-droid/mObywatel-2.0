@@ -3,6 +3,8 @@
 package pl.gov.obywatel.android.network.tor
 
 import java.io.IOException
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 /** User-selected materials hosted at the exact studia-online.pl path supplied in the request. */
 object StudiaOnlineDownloadCatalog {
@@ -44,7 +46,8 @@ data class StudiaOnlineDownloadProgress(
     val succeeded: List<Int>,
     val failed: Map<Int, String>,
     val paused: Boolean,
-    val finished: Boolean
+    val finished: Boolean,
+    val sha256ById: Map<Int, String> = emptyMap()
 ) {
     val remaining: Int get() = (total - completed).coerceAtLeast(0)
 }
@@ -70,7 +73,7 @@ class StudiaOnlineBulkDownloader(
     fun run(
         items: List<StudiaOnlineDownloadItem>,
         cooldownMs: Long,
-        save: (StudiaOnlineDownloadItem, ByteArray) -> Unit,
+        save: (StudiaOnlineDownloadItem, ByteArray) -> String,
         onProgress: (StudiaOnlineDownloadProgress) -> Unit = {}
     ): StudiaOnlineDownloadProgress {
         require(items.isNotEmpty()) { "Lista materiałów jest pusta." }
@@ -83,6 +86,7 @@ class StudiaOnlineBulkDownloader(
         pauseRequested = false
         val success = mutableListOf<Int>()
         val failed = linkedMapOf<Int, String>()
+        val sha256ById = linkedMapOf<Int, String>()
         var completed = 0
         var previousRequestAt: Long? = null
         var retryAfterMs = 0L
@@ -90,7 +94,8 @@ class StudiaOnlineBulkDownloader(
         fun emit(currentId: Int?, isPaused: Boolean, finished: Boolean = false) {
             onProgress(
                 StudiaOnlineDownloadProgress(
-                    completed, items.size, currentId, success.toList(), failed.toMap(), isPaused, finished
+                    completed, items.size, currentId, success.toList(), failed.toMap(), isPaused, finished,
+                    sha256ById.toMap()
                 )
             )
         }
@@ -133,10 +138,8 @@ class StudiaOnlineBulkDownloader(
                         break
                     }
                     lastFailure = failure
-                    val retrySeconds = (failure as? TorHttpException)?.retryAfter?.toLongOrNull()
-                    if (retrySeconds != null && retrySeconds > 0L) {
-                        retryAfterMs = (retrySeconds * 1_000L).coerceAtMost(MAX_RETRY_WAIT_MS)
-                    }
+                    val retryAfter = (failure as? TorHttpException)?.retryAfter
+                    retryAfterMs = retryAfterDelayMillis(retryAfter, clock())
                     break
                 }
             }
@@ -144,7 +147,7 @@ class StudiaOnlineBulkDownloader(
 
             if (downloaded != null) {
                 try {
-                    save(item, downloaded)
+                    sha256ById[item.id] = save(item, downloaded)
                     success += item.id
                 } catch (failure: Exception) {
                     failed[item.id] = failure.message ?: failure.javaClass.simpleName
@@ -162,7 +165,8 @@ class StudiaOnlineBulkDownloader(
         val finished = !stopRequested && completed == items.size
         emit(null, false, finished)
         return StudiaOnlineDownloadProgress(
-            completed, items.size, null, success.toList(), failed.toMap(), false, finished
+            completed, items.size, null, success.toList(), failed.toMap(), false, finished,
+            sha256ById.toMap()
         )
     }
 
@@ -230,6 +234,19 @@ class StudiaOnlineBulkDownloader(
     }
 
     companion object {
+        internal fun retryAfterDelayMillis(value: String?, nowMs: Long): Long {
+            if (value.isNullOrBlank()) return 0L
+            value.trim().toLongOrNull()?.let { seconds ->
+                if (seconds > 0L) return (seconds * 1_000L).coerceAtMost(MAX_RETRY_WAIT_MS)
+                return 0L
+            }
+            val targetMs = runCatching {
+                ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME)
+                    .toInstant().toEpochMilli()
+            }.getOrNull() ?: return 0L
+            return (targetMs - nowMs).coerceAtLeast(0L).coerceAtMost(MAX_RETRY_WAIT_MS)
+        }
+
         const val MIN_COOLDOWN_MS = 2_000L
         const val MAX_COOLDOWN_MS = 300_000L
         const val DEFAULT_COOLDOWN_MS = 15_000L
