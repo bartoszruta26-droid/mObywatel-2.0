@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+# SPDX-License-Identifier: EUPL-1.2
+name: Import approved institutional symbol assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import-approved-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Download only explicitly approved assets
+        run: node scripts/import-approved-symbol-assets.mjs
+      - name: Create review pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Import approved institutional symbol assets"
+          branch: automation/import-approved-symbol-assets
+          delete-branch: true
+          title: "Import approved institutional symbol assets"
+          body: |
+            Automated import from the explicit allowlist.
+            Every file was checked against a pinned SHA-256, HTTPS source, approved license status and SVG active-content restrictions.
+            Review source attribution and legal status before merging.
+          labels: assets, legal-review
