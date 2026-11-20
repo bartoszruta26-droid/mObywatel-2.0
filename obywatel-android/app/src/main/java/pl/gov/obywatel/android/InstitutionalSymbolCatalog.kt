@@ -106,29 +106,7 @@ private fun institutionalSymbolAssetId(item: InstitutionalSymbolCandidate): Stri
         .digest((item.sourceId + ":" + item.path).toByteArray(Charsets.UTF_8)).take(16)
         .joinToString("") { "%02x".format(it) }
 
-private fun validateInstitutionalSymbolSvg(bytes: ByteArray) {
-    require(bytes.isNotEmpty() && bytes.size <= 12 * 1024 * 1024) { "SVG pusty lub przekracza 12 MB." }
-    val raw = String(bytes, Charsets.UTF_8)
-    require(raw.contains("<svg", true)) { "Źródło nie zwróciło SVG." }
-    require(!Regex("<!DOCTYPE|<!ENTITY|<(script|foreignObject)\\b", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
-        "SVG zawiera niedozwolone deklaracje lub aktywne elementy."
-    }
-    require(!Regex("(href|src)\\s*=\\s*['\"]\\s*(https?:|file:|javascript:|data:)", RegexOption.IGNORE_CASE).containsMatchIn(raw)) {
-        "SVG zawiera zewnętrzne lub aktywne odwołanie."
-    }
-    val parser = android.util.Xml.newPullParser()
-    parser.setInput(java.io.StringReader(raw))
-    var rootSeen = false
-    var event = parser.eventType
-    while (event != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
-        if (event == org.xmlpull.v1.XmlPullParser.START_TAG && !rootSeen) {
-            require(parser.name.equals("svg", true)) { "Dokument XML nie ma elementu głównego SVG." }
-            rootSeen = true
-        }
-        event = parser.next()
-    }
-    require(rootSeen) { "Brak elementu SVG." }
-}
+private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidator.validate(bytes)
 
 private suspend fun downloadInstitutionalSymbol(context: Context, item: InstitutionalSymbolCandidate): String {
     val uri = java.net.URI(item.downloadUrl)
