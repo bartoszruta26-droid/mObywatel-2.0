@@ -615,7 +615,7 @@ private fun loadCommonsReportSummary(context: Context): String = runCatching {
 }.getOrDefault("")
 
 private fun loadBundledCommonsCandidateManifest(context: Context): Int {
-    val raw = context.assets.open("institutions/institutional-symbol-catalog-200.csv")
+    val raw = context.assets.open("institutions/institutional-symbol-catalog-800.csv")
         .bufferedReader(Charsets.UTF_8).use { it.readText() }
     val candidates = parseExternalCommonsSvgList(raw)
     val manifest = JSONArray()
@@ -628,7 +628,7 @@ private fun loadBundledCommonsCandidateManifest(context: Context): Int {
             .put("licenseUrl", item.licenseUrl)
             .put("author", item.artist)
             .put("restrictions", item.restrictions)
-            .put("source", "Wbudowany katalog 200 symboli")
+            .put("source", "Wbudowany katalog 800 symboli")
             .put("status", "pending")
             .put("attempts", 0)
             .put("sha256", item.sha256))
@@ -874,7 +874,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        Text("Biblioteka zawiera wbudowany katalog 200 herbów i logotypów oraz umożliwia wyszukiwanie dalszych plików SVG w Wikimedia Commons. Możesz wczytać gotową listę offline, wyeksportować wyniki do CSV albo osobno uruchomić pobieranie. Zachowujemy stronę źródłową, autora, licencję i ograniczenia. Samo pobranie nie daje prawa do użycia znaku na dokumencie; dozwolone zastosowania pozostają puste do odrębnej akceptacji.",style=MaterialTheme.typography.bodySmall)
+        Text("Biblioteka zawiera wbudowany katalog 800 herbów i logotypów oraz umożliwia wyszukiwanie dalszych plików SVG w Wikimedia Commons. Możesz wczytać gotową listę offline, wyeksportować wyniki do CSV albo osobno uruchomić pobieranie. Zachowujemy stronę źródłową, autora, licencję i ograniczenia. Samo pobranie nie daje prawa do użycia znaku na dokumencie; dozwolone zastosowania pozostają puste do odrębnej akceptacji.",style=MaterialTheme.typography.bodySmall)
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         if (busy == "commons" || busy == "resume") {
@@ -904,7 +904,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 }
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "bundled-import") "Ładowanie katalogu…" else "Załaduj wbudowany katalog 200 symboli") }
+        ) { Text(if (busy == "bundled-import") "Ładowanie katalogu…" else "Załaduj wbudowany katalog 800 symboli") }
         OutlinedButton(enabled = busy == null, onClick = { externalListLauncher.launch(arrayOf("text/csv", "text/plain", "text/*", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Importuj zewnętrzną listę SVG (CSV / TXT)") }
         OutlinedButton(
             enabled = busy == null,
