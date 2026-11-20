@@ -946,6 +946,9 @@ internal val documentDisplayOptions = (listOf(
     Triple("disability_card", "Legitymacja osoby z niepełnosprawnością", R.drawable.documents_medical_certificates),
     Triple("international_medical_certificate", "International Medical Certificate", R.drawable.documents_medical_certificates),
     Triple("foreign_prescription", "Recepta zagraniczna", R.drawable.documents_medical_certificates),
+    Triple(INTERNATIONAL_DONATION_WORSHIP_ID, "Międzynarodowa darowizna na cele kultu religijnego", R.drawable.tile_ic_church_outline),
+    Triple(INTERNATIONAL_DONATION_NGO_ID, "Międzynarodowa darowizna na rzecz organizacji pozarządowej", R.drawable.lib_ic_building),
+    Triple(INTERNATIONAL_DONATION_PERSON_ID, "Międzynarodowa darowizna na rzecz osoby fizycznej", R.drawable.lib_ic_account),
     Triple("vehicle_registration", "Dowód rejestracyjny pojazdu", R.drawable.mob_transport),
     Triple("insurance_vehicle", "Ubezpieczenie OC pojazdu", R.drawable.lib_ic_document),
     Triple("insurance_professional", "Ubezpieczenie OC zawodowe", R.drawable.lib_ic_document),
@@ -1015,6 +1018,9 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    id == INTERNATIONAL_DONATION_WORSHIP_ID -> "Służba kościelna"
+    id == INTERNATIONAL_DONATION_NGO_ID -> "Służba stowarzyszeniowa"
+    id == INTERNATIONAL_DONATION_PERSON_ID -> "Służba cywilna"
     id == "icvp" -> "Służba zdrowotna"
     id == "medical_summary" -> "Służba zdrowotna"
     id == "allergy_card" -> "Służba zdrowotna"
@@ -1403,6 +1409,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId.startsWith("organization_") -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
             documentId.startsWith("service_") -> settingsDocumentEditor = "service:$documentId"
                         documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
+            documentId in InternationalDonationDocumentCatalog.all.keys -> selectedDocumentId = documentId
             documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
             documentId == "signed_pdf" -> settingsDocumentEditor = "signed_pdf"
@@ -1741,6 +1748,11 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     selectedDocumentId == FOREIGN_PRESCRIPTION_ID -> ForeignPrescriptionEditorScreen(
                         onBack = { selectedDocumentId = null }
                     )
+                    selectedDocumentId in InternationalDonationDocumentCatalog.all.keys ->
+                        InternationalDonationDocumentEditorScreen(
+                            documentId = selectedDocumentId!!,
+                            onBack = { selectedDocumentId = null }
+                        )
                     selectedDocumentId == INTERNATIONAL_MEDICAL_CERTIFICATE_ID && selectedMedicalCertificateRecordId != null ->
                         InternationalMedicalCertificateEditorScreen(
                             recordId = selectedMedicalCertificateRecordId!!,
