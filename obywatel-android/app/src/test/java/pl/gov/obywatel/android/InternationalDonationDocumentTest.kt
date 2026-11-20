@@ -11,7 +11,7 @@ class InternationalDonationDocumentTest {
     fun allThreeInternationalDonationDocumentsAreCataloguedInTheirOwnCategories() {
         assertEquals("Służba kościelna",
             InternationalDonationDocumentCatalog.find(INTERNATIONAL_DONATION_WORSHIP_ID)?.category)
-        assertEquals("Służba stowarzyszeniowa",
+        assertEquals("Służba społeczna",
             InternationalDonationDocumentCatalog.find(INTERNATIONAL_DONATION_NGO_ID)?.category)
         assertEquals("Służba cywilna",
             InternationalDonationDocumentCatalog.find(INTERNATIONAL_DONATION_PERSON_ID)?.category)
