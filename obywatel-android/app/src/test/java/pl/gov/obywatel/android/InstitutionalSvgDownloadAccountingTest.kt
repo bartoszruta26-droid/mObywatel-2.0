@@ -144,4 +144,18 @@ class InstitutionalSvgDownloadAccountingTest {
         assertEquals(listOf("File:crest.svg"), queue.map { it.title })
     }
 
+    @Test
+    fun candidateCsvExportsSearchMetadataWithoutDownloadingFiles() {
+        val candidate = CommonsSvgCandidate(
+            "File:International NGO logo.svg", "https://upload.wikimedia.org/a/logo.svg",
+            "https://commons.wikimedia.org/wiki/File:International_NGO_logo.svg",
+            "CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/", "Artist, Name", "Trademark restrictions"
+        )
+        val csv = commonsCandidatesCsv(listOf(candidate, candidate))
+        assertTrue(csv.startsWith("\\"filename\\",\\"symbol_type\\",\\"commons_page\\""))
+        assertTrue(csv.contains("\\"logo/emblemat\\""))
+        assertTrue(csv.contains("\\"Artist, Name\\""))
+        assertTrue(csv.contains("https://upload.wikimedia.org/a/logo.svg"))
+        assertEquals(2, csv.lines().size)
+    }
 }
