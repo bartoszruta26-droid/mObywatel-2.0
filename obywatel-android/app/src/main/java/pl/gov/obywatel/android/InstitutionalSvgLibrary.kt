@@ -50,6 +50,22 @@ private fun validateSvg(bytes:ByteArray) {
 
 
 internal data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
+/** CSV export of search results only; this never downloads SVG payloads. */
+internal fun commonsCandidatesCsv(candidates: List<CommonsSvgCandidate>): String {
+    fun quote(value: String): String = "\"" + value.replace("\"", "\"\"") + "\""
+    val header = listOf("filename", "symbol_type", "commons_page", "svg_url", "author", "license", "license_url", "restrictions", "sha256")
+    val rows = candidates.distinctBy { it.title }.map { item ->
+        val title = item.title.lowercase()
+        val type = when {
+            listOf("coat of arms", "coat_of_arms", "herb", "crest", "arms").any(title::contains) -> "herb/godło"
+            listOf("logo", "emblem", "seal", "insignia", "symbol").any(title::contains) -> "logo/emblemat"
+            listOf("flag", "banner").any(title::contains) -> "flaga"
+            else -> "symbol"
+        }
+        listOf(item.title, type, item.page, item.url, item.artist, item.license, item.licenseUrl, item.restrictions, item.sha256)
+    }
+    return (listOf(header) + rows).joinToString("\n") { row -> row.joinToString(",") { quote(it) } } + "\n"
+}
 
 /** Ordered Commons search strategies: MIME-filtered first, plain fallback second. */
 internal fun commonsSvgSearchExpressions(term: String): List<String> {
@@ -621,6 +637,34 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
             }
         }
     }
+    val candidateListLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+        if (uri != null) {
+            busy = "candidate-export"
+            progressCurrent = 0
+            progressTotal = 0
+            status = "Wyszukiwanie plików SVG do eksportu listy…"
+            scope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        resetCommonsDiagnostic(context)
+                        appendCommonsDiagnostic(context, "CANDIDATE_EXPORT_START limit=200 download=false")
+                        val candidates = discoverCommonsOpenSvgs(context, limit = 200, onSearchProgress = { count, term ->
+                            withContext(Dispatchers.Main) { status = "Lista SVG: $count wyników — $term" }
+                        })
+                        val csv = commonsCandidatesCsv(candidates)
+                        context.contentResolver.openOutputStream(uri)?.use { output ->
+                            output.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
+                            output.write(csv.toByteArray(Charsets.UTF_8))
+                        } ?: error("Nie można zapisać pliku CSV.")
+                        appendCommonsDiagnostic(context, "CANDIDATE_EXPORT_COMPLETE candidates=${candidates.size} downloaded=false")
+                        candidates.size
+                    }
+                }
+                status = result.fold({ "Wyeksportowano listę ${it} plików SVG. Nie pobierano samych grafik." }, { "Błąd eksportu listy SVG: ${it.message ?: "nieznany błąd"}" })
+                busy = null
+            }
+        }
+    }
     val zipLauncher=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if(uri!=null) {
             busy="zip"
@@ -673,7 +717,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     }
     Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Herby, godła i symbole instytucjonalne",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.Bold)
-        Text("Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons. Pobrane grafiki są automatycznie zapisywane w zasobach aplikacji. Metadane źródła, autora i licencji są zachowywane, ale na tym etapie licencja nie filtruje pobierania.",style=MaterialTheme.typography.bodySmall)
+        Text("Wyszukiwanie plików SVG w Wikimedia Commons (repozytorium mediów Wikipedii): godeł, herbów, flag, emblematów i logo organizacji międzynarodowych, w tym organizacji pozarządowych. Możesz wyeksportować samą listę wyników do CSV bez pobierania grafik albo osobno pobrać pliki. Metadane źródła, autora i licencji są zachowywane.",style=MaterialTheme.typography.bodySmall)
         val savedSvgCount = DocumentBrandStore.list(context).count { it.file.endsWith(".svg.enc") || (it.file.startsWith("builtin:") && it.file.endsWith(".svg")) }
         Text("Pliki SVG zapisane w bibliotece: $savedSvgCount",style=MaterialTheme.typography.labelMedium)
         if (busy == "commons" || busy == "resume") {
@@ -688,6 +732,11 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
         }
+        OutlinedButton(
+            enabled = busy == null,
+            onClick = { candidateListLauncher.launch("wikimedia-svg-candidates.csv") },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(if (busy == "candidate-export") "Przygotowywanie listy…" else "Eksportuj listę znalezionych plików SVG (CSV)") }
         OutlinedButton(
             enabled = busy == null,
             onClick = {
