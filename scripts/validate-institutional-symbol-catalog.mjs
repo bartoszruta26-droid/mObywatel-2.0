@@ -44,11 +44,11 @@ for (const file of files) {
   console.log(file.path+": "+(rows.length-1)+" records; IDs unique; CSV shape valid");
 }
 
-const appCatalogPath="obywatel-android/app/src/main/assets/institutions/institutional-symbol-catalog-200.csv";
+const appCatalogPath="obywatel-android/app/src/main/assets/institutions/institutional-symbol-catalog-800.csv";
 const appSource=fs.readFileSync(path.join(root,appCatalogPath),"utf8");
 const appBody=appSource.split(/\r?\n/).filter(line => !line.trimStart().startsWith("#")).join("\n");
 const appRows=parseCsv(appBody);
-if (appRows.length!==201) throw new Error(appCatalogPath+": expected header plus exactly 200 catalog entries; got "+(appRows.length-1));
+if (appRows.length!==801) throw new Error(appCatalogPath+": expected header plus exactly 800 catalog entries; got "+(appRows.length-1));
 const appHeader=appRows[0];
 const required=["filename","symbol_type","commons_page","svg_url","author","license","license_url","restrictions","sha256"];
 for (const key of required) if (!appHeader.includes(key)) throw new Error(appCatalogPath+": missing column "+key);
@@ -68,4 +68,4 @@ for (const [i,row] of appRows.slice(1).entries()) {
   if (parsedUrl.protocol!=="https:" || parsedUrl.hostname!=="upload.wikimedia.org" || !parsedUrl.pathname.toLowerCase().endsWith(".svg")) throw new Error(appCatalogPath+":"+(i+2)+": invalid SVG download URL");
   if (!license) throw new Error(appCatalogPath+":"+(i+2)+": missing per-file license metadata");
 }
-console.log(appCatalogPath+": 200 unique SVG candidates; source pages and per-file license names present");
+console.log(appCatalogPath+": 800 unique SVG candidates; source pages and per-file license names present");
