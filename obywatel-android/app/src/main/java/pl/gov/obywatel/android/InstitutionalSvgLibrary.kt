@@ -50,6 +50,7 @@ private fun validateSvg(bytes:ByteArray) {
 
 
 internal data class CommonsSvgCandidate(val title:String,val url:String,val page:String,val license:String,val licenseUrl:String,val artist:String,val restrictions:String,val sha256:String = "")
+internal fun commonsCandidateHasRightsMetadata(item: CommonsSvgCandidate): Boolean = item.page.isNotBlank() && item.license.isNotBlank()
 /** CSV export of search results only; this never downloads SVG payloads. */
 internal fun commonsCandidatesCsv(candidates: List<CommonsSvgCandidate>): String {
     fun quote(value: String): String = "\"" + value.replace("\"", "\"\"") + "\""
@@ -660,6 +661,16 @@ private suspend fun processCommonsCandidates(
     }
     uniqueCandidates.forEachIndexed { index, candidate ->
         onProgress(index, uniqueCandidates.size, candidate.title)
+        if (!commonsCandidateHasRightsMetadata(candidate)) {
+            failed++
+            val message = "Brak strony źródłowej lub metadanych licencji; pozycja pozostaje referencyjna i nie jest pobierana."
+            persistCommonsCandidateStatus(context, candidate.title, "blocked", 0, message)
+            if (errors.size < 100) errors.add("${candidate.title}: $message")
+            saveCommonsReport(context, uniqueCandidates.size, downloaded, alreadyPresent, failed,
+                attempts, candidate.title, errors)
+            onProgress(index + 1, uniqueCandidates.size, candidate.title)
+            return@forEachIndexed
+        }
         val assetId = commonsAssetId(candidate.title)
         val existingAsset = knownAssets[assetId]
         val existingBytes = existingAsset?.let { DocumentBrandStore.fileBytes(context, assetId, it) }
