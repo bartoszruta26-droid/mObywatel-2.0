@@ -105,14 +105,14 @@ class StudiaOnlineBulkDownloader(
             if (stopRequested) break
             while (pauseRequested && !stopRequested) {
                 emit(item.id, true)
-                sleeper(PAUSE_POLL_MS)
+                sleepInterruptibly(PAUSE_POLL_MS)
             }
             if (stopRequested) break
 
             val wait = (cooldownMs - (clock() - previousRequestAt)).coerceAtLeast(0L)
-            if (previousRequestAt > 0L && wait > 0L) sleeper(wait)
+            if (previousRequestAt > 0L && wait > 0L) sleepInterruptibly(wait)
             if (lastFailureWaitMs > 0L) {
-                sleeper(lastFailureWaitMs.coerceIn(cooldownMs, MAX_RETRY_WAIT_MS))
+                sleepInterruptibly(lastFailureWaitMs.coerceIn(cooldownMs, MAX_RETRY_WAIT_MS))
                 lastFailureWaitMs = 0L
             }
             if (stopRequested) break
@@ -186,6 +186,15 @@ class StudiaOnlineBulkDownloader(
         }
         emit(null, false, finished = !stopRequested && completed == items.size)
         return lastStatus
+    }
+
+    private fun sleepInterruptibly(totalMs: Long) {
+        var remaining = totalMs.coerceAtLeast(0L)
+        while (remaining > 0L && !stopRequested && !pauseRequested) {
+            val slice = minOf(remaining, 250L)
+            sleeper(slice)
+            remaining -= slice
+        }
     }
 
     companion object {
