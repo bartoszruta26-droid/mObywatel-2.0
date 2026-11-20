@@ -311,7 +311,6 @@ class StudiaOnlineBulkDownloader(
         private const val PAUSE_POLL_MS = 250L
         private const val MAX_RETRY_WAIT_MS = 300_000L
         private const val MAX_TRANSIENT_RETRIES = 2
-        private val RETRYABLE_HTTP_CODES = setOf(429, 503)
         private const val MAX_FILE_BYTES = 64L * 1024L * 1024L
     }
 
