@@ -215,7 +215,7 @@ class StudiaOnlineBulkDownloader(
             }
             output.toByteArray().also {
                 if (it.isEmpty()) throw IOException("Serwer zwrócił pusty plik.")
-                notFoundPageMessage(response.contentType, it)?.let { message -> throw IOException(message) }
+                htmlResponseErrorMessage(response.contentType, it)?.let { message -> throw IOException(message) }
             }
         }
 
@@ -235,7 +235,7 @@ class StudiaOnlineBulkDownloader(
     }
 
     companion object {
-        internal fun notFoundPageMessage(contentType: String?, bytes: ByteArray): String? {
+        internal fun htmlResponseErrorMessage(contentType: String?, bytes: ByteArray): String? {
             val prefix = bytes.copyOfRange(0, minOf(bytes.size, 32 * 1024))
                 .toString(Charsets.UTF_8)
                 .trimStart()
@@ -252,21 +252,27 @@ class StudiaOnlineBulkDownloader(
                 "file not found",
                 "not found"
             )
-            return if (missingPhrases.any(page::contains)) {
-                "Materiał nie został znaleziony — serwis zwrócił stronę błędu zamiast pliku."
-            } else null
+            if (missingPhrases.any(page::contains)) {
+                return "Materiał nie został znaleziony — serwis zwrócił stronę błędu zamiast pliku."
+            }
+            val authPhrases = listOf("zaloguj się", "zaloguj sie", "logowanie", "login", "sign in", "authentication required")
+            if (authPhrases.any(page::contains)) {
+                return "Serwis zwrócił stronę logowania zamiast pliku. Sprawdź wymagane uprawnienia lub sesję."
+            }
+            return "Serwis zwrócił stronę HTML zamiast pliku. Materiał nie został zapisany."
         }
 
         internal fun describeFailure(failure: Exception): String = when ((failure as? TorHttpException)?.httpCode) {
             404 -> "Materiał nie został znaleziony (HTTP 404)."
             410 -> "Materiał został usunięty z serwisu (HTTP 410)."
+            401, 403 -> "Serwis odmówił dostępu (HTTP ${(failure as TorHttpException).httpCode}). Sprawdź logowanie i uprawnienia."
             else -> failure.message ?: failure.javaClass.simpleName
         }
 
         internal fun retryAfterDelayMillis(value: String?, nowMs: Long): Long {
             if (value.isNullOrBlank()) return 0L
             value.trim().toLongOrNull()?.let { seconds ->
-                if (seconds > 0L) return (seconds * 1_000L).coerceAtMost(MAX_RETRY_WAIT_MS)
+                if (seconds > 0L) return seconds.coerceAtMost(MAX_RETRY_WAIT_MS / 1_000L) * 1_000L
                 return 0L
             }
             val targetMs = runCatching {
