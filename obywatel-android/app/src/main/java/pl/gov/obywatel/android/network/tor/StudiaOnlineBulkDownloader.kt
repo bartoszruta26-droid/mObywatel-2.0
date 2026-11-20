@@ -115,6 +115,7 @@ class StudiaOnlineBulkDownloader(
                     sleepInterruptibly(minOf(waitMs, PAUSE_POLL_MS))
                     continue
                 }
+                if (stopRequested || pauseRequested) continue
                 retryAfterMs = 0L
 
                 emit(item.id, false)
@@ -188,7 +189,14 @@ class StudiaOnlineBulkDownloader(
             while (true) {
                 if (stopRequested) throw InterruptedIOException("Pobieranie zatrzymano.")
                 if (pauseRequested) throw InterruptedIOException("Pobieranie wstrzymano.")
-                val read = response.body.read(buffer)
+                val read = try {
+                    response.body.read(buffer)
+                } catch (failure: IOException) {
+                    if (stopRequested || pauseRequested) {
+                        throw InterruptedIOException("Bieżące pobieranie zostało wstrzymane lub zatrzymane.")
+                    }
+                    throw failure
+                }
                 if (read < 0) break
                 total += read
                 if (total > MAX_FILE_BYTES) throw IOException("Materiał przekracza limit 256 MB.")
