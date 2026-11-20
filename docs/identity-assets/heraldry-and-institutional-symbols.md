@@ -96,3 +96,12 @@ Raport źródeł: `generated/institutional-symbol-source-audit.json`
 
 Indeks upstream obejmuje także 356 plików rastrowych i formatów nie-SVG; ich obecność jest celowa jako referencja źródłowa, ale nie mogą przejść do importera SVG bez konwersji i odrębnej walidacji. Nie należy traktować ich jako SVG. Zbiór `collective-service/organizations-logo` ma status referencyjny, a `country-flags` nie ma wykrytego pliku LICENSE w audytowanym drzewie. Repozytorium `thesvg` jest zinwentaryzowane (14 797 SVG), lecz nie zostało automatycznie rozwinięte do indeksu kandydatów; ten zbiór wymaga osobnej selekcji i odczytu metadanych licencji poszczególnych marek.
 
+
+## Priorytetowy wykaz oficjalnych znaków państwowych i instytucjonalnych
+
+Dodatkowa lista nazw i oficjalnych punktów wejścia do dalszego indeksowania:
+`institutional-svg-priority-sources.csv`.
+
+Lista obejmuje godło i flagę RP, emblemat UE, ONZ, WHO, UNICEF, UNESCO, NATO, Rady Europy, Policję, Państwową Straż Pożarną, Straż Graniczną oraz ZUS, NFZ, KRUS, PFRON, NBP, GUS, PIP, UOKiK, UODO, RPO i KPRM. Pozycje bez dokładnego adresu pliku są rekordami wyszukiwawczymi, a nie zatwierdzonymi plikami SVG.
+
+Katalog nazw pozostaje przeszukiwalny niezależnie od statusu prawnego. Status prawny opisuje natomiast warunki pobrania, redystrybucji i konkretnego zastosowania.
