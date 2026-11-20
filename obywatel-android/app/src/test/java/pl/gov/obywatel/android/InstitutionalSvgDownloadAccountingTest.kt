@@ -196,12 +196,12 @@ Author Two",true,credit,NGO
     }
 
     @Test
-    fun bundledCatalogContainsExactly200UniqueLicensedSvgCandidates() {
-        val catalog = java.io.File("src/main/assets/institutions/institutional-symbol-catalog-200.csv")
+    fun bundledCatalogContainsExactly800UniqueLicensedSvgCandidates() {
+        val catalog = java.io.File("src/main/assets/institutions/institutional-symbol-catalog-800.csv")
         assertTrue("Wbudowany katalog 200 symboli musi istnieć.", catalog.isFile)
         val candidates = parseExternalCommonsSvgList(catalog.readText(Charsets.UTF_8))
-        assertEquals(200, candidates.size)
-        assertEquals(200, candidates.map { it.title }.distinct().size)
+        assertEquals(800, candidates.size)
+        assertEquals(800, candidates.map { it.title }.distinct().size)
         assertTrue(candidates.all { it.page.isNotBlank() && it.license.isNotBlank() })
         assertTrue(candidates.any { it.title.contains("COA", true) })
     }
