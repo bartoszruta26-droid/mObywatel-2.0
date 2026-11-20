@@ -57,11 +57,43 @@ class StudiaOnlineDownloadCatalogTest {
         val html = "<!doctype html><html><body>Nie znaleziono materiału</body></html>".toByteArray()
         assertEquals(
             "Materiał nie został znaleziony — serwis zwrócił stronę błędu zamiast pliku.",
-            StudiaOnlineBulkDownloader.notFoundPageMessage("text/html; charset=UTF-8", html)
+            StudiaOnlineBulkDownloader.htmlResponseErrorMessage("text/html; charset=UTF-8", html)
         )
     }
 
-    @Test fun binaryMaterialIsNotRejectedByHtmlErrorDetection() {
+    @Test fun genericHtmlPageWithHttp200IsRejectedRatherThanSaved() {
+        val html = "<html><body>Witamy w serwisie</body></html>".toByteArray()
+        assertEquals(
+            "Serwis zwrócił stronę HTML zamiast pliku. Materiał nie został zapisany.",
+            StudiaOnlineBulkDownloader.htmlResponseErrorMessage("text/html", html)
+        )
+    }
+
+    @Test fun htmlLoginPageWithHttp200IsReportedAsAuthenticationRequirement() {
+        val html = "<html><body>Zaloguj się</body></html>".toByteArray()
+        assertEquals(
+            "Serwis zwrócił stronę logowania zamiast pliku. Sprawdź wymagane uprawnienia lub sesję.",
+            StudiaOnlineBulkDownloader.htmlResponseErrorMessage("text/html", html)
+        )
+    }
+
+    @Test fun http401And403AreReportedAsAccessErrors() {
+        assertTrue(StudiaOnlineBulkDownloader.describeFailure(
+            TorHttpException(401, null, "HTTP 401")
+        ).contains("odmówił dostępu"))
+        assertTrue(StudiaOnlineBulkDownloader.describeFailure(
+            TorHttpException(403, null, "HTTP 403")
+        ).contains("odmówił dostępu"))
+    }
+
+    @Test fun retryAfterHugeDeltaSecondsIsCappedWithoutOverflow() {
+        assertEquals(
+            300_000L,
+            StudiaOnlineBulkDownloader.retryAfterDelayMillis("999999999999999999999999", 0L)
+        )
+    }
+
+    @Test fun binaryMaterialIsNotRejectedByHtmlResponseDetection() {
         val binary = byteArrayOf(0x25, 0x50, 0x44, 0x46)
         assertEquals(null, StudiaOnlineBulkDownloader.notFoundPageMessage("application/pdf", binary))
     }
