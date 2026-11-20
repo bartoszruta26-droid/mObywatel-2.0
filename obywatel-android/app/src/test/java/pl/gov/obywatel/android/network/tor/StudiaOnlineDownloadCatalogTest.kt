@@ -53,6 +53,27 @@ class StudiaOnlineDownloadCatalogTest {
         StudiaOnlineDownloadCatalog.fromRange(10, 9)
     }
 
+    @Test fun http404IsReportedAsMissingMaterial() {
+        assertEquals(
+            "Materiał nie został znaleziony (HTTP 404).",
+            StudiaOnlineBulkDownloader.describeFailure(TorHttpException(404, null, "HTTP 404"))
+        )
+    }
+
+    @Test fun http410IsReportedAsRemovedMaterial() {
+        assertEquals(
+            "Materiał został usunięty z serwisu (HTTP 410).",
+            StudiaOnlineBulkDownloader.describeFailure(TorHttpException(410, null, "HTTP 410"))
+        )
+    }
+
+    @Test fun otherHttpFailuresKeepTheirTransportMessage() {
+        assertEquals(
+            "Tor HTTP request failed: HTTP 503",
+            StudiaOnlineBulkDownloader.describeFailure(TorHttpException(503, "10", "Tor HTTP request failed: HTTP 503"))
+        )
+    }
+
     @Test fun retryAfterDeltaSecondsIsConvertedToMilliseconds() {
         assertEquals(5_000L, StudiaOnlineBulkDownloader.retryAfterDelayMillis("5", 1_000L))
     }
