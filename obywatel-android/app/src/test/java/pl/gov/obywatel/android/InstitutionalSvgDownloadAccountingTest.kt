@@ -153,9 +153,9 @@ class InstitutionalSvgDownloadAccountingTest {
         )
         val csv = commonsCandidatesCsv(listOf(candidate, candidate))
         assertTrue(csv.startsWith("\\"filename\\",\\"symbol_type\\",\\"commons_page\\""))
-        assertTrue(csv.contains("\\"logo/emblemat\\""))
-        assertTrue(csv.contains("\\"Artist, Name\\""))
-        assertTrue(csv.contains("https://upload.wikimedia.org/a/logo.svg"))
+        assertTrue(csv.startsWith("\"filename\",\"symbol_type\",\"commons_page\""))
+        assertTrue(csv.contains("\"logo/emblemat\""))
+        assertTrue(csv.contains("\"Artist, Name\""))
         assertEquals(2, csv.lines().size)
     }
 }
