@@ -170,6 +170,17 @@ class InstitutionalSvgDownloadAccountingTest {
 
 
     @Test
+    fun downloadsRequireSourcePageAndPerFileLicenseMetadata() {
+        val licensed = CommonsSvgCandidate(
+            "File:logo.svg", "https://upload.wikimedia.org/a/logo.svg",
+            "https://commons.wikimedia.org/wiki/File:logo.svg", "CC BY 4.0", "", "Author", ""
+        )
+        assertTrue(commonsCandidateHasRightsMetadata(licensed))
+        assertFalse(commonsCandidateHasRightsMetadata(licensed.copy(license = "")))
+        assertFalse(commonsCandidateHasRightsMetadata(licensed.copy(page = "")))
+    }
+
+    @Test
     fun bundledCatalogContainsExactly200UniqueLicensedSvgCandidates() {
         val catalog = java.io.File("src/main/assets/institutions/institutional-symbol-catalog-200.csv")
         assertTrue("Wbudowany katalog 200 symboli musi istnieć.", catalog.isFile)
