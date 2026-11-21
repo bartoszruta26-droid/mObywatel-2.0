@@ -1312,10 +1312,11 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 output.write(buffer, 0, count)
                                 if (total - lastReported >= 256L * 1024L) {
                                     lastReported = total
-                                    val fraction = expectedBytes?.let { (total.toFloat() / it.toFloat()).coerceIn(0f, 1f) }
+                                    val bytesRead = total
+                                    val fraction = expectedBytes?.let { (bytesRead.toFloat() / it.toFloat()).coerceIn(0f, 1f) }
                                     scope.launch(Dispatchers.Main.immediate) {
                                         importProgress = fraction?.times(0.35f)?.coerceAtLeast(0.02f) ?: 0.12f
-                                        importStatus = "Odczytywanie pliku: ${android.text.format.Formatter.formatFileSize(context, total)}" +
+                                        importStatus = "Odczytywanie pliku: ${android.text.format.Formatter.formatFileSize(context, bytesRead)}" +
                                             (expectedBytes?.let { " / ${android.text.format.Formatter.formatFileSize(context, it)}" } ?: "")
                                     }
                                 }
