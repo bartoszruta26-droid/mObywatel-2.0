@@ -106,6 +106,23 @@ END:VCARD
     }
 
     @Test
+    fun reportsMonotonicProgressForOrdinaryContactVCard() {
+        val contact = """BEGIN:VCARD
+VERSION:3.0
+FN:Jan Kowalski
+N:Kowalski;Jan;;;
+TEL:+48123456789
+EMAIL:jan@example.com
+END:VCARD
+"""
+        val progress = mutableListOf<Int>()
+        val imported = VCardCodec.decodeForImport(contact) { progress += it }
+        assertEquals("Jan", imported["firstNames"])
+        assertEquals(100, progress.last())
+        assertTrue(progress.zipWithNext().all { (a, b) -> b >= a })
+    }
+
+    @Test
     fun importsInlineBase64PhotoFromLegacyVCard() {
         val photoBytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0x01, 0x02)
         val photoBase64 = java.util.Base64.getEncoder().encodeToString(photoBytes)
