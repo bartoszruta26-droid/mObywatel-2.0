@@ -1373,6 +1373,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showImportedDocuments by remember { mutableStateOf(false) }
     var showReceipts by remember { mutableStateOf(false) }
     var showPaymentLedger by remember { mutableStateOf(false) }
+    var activeDonationLedgerId by remember { mutableStateOf<String?>(null) }
     var showBankAccounts by remember { mutableStateOf(false) }
     var showPublicServicesBrowser by remember { mutableStateOf(false) }
     var serviceSearch by remember { mutableStateOf("") }
@@ -1453,6 +1454,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             showPublicServicesBrowser -> { showPublicServicesBrowser = false }
             showImportedDocuments -> showImportedDocuments = false
             showReceipts -> showReceipts = false
+            activeDonationLedgerId != null -> { activeDonationLedgerId = null; showPaymentLedger = true }
             showPaymentLedger -> showPaymentLedger = false
             showBankAccounts -> showBankAccounts = false
             showDocumentsEditor -> { showDocumentsEditor = false; showSettingsMenu = true }
@@ -1474,7 +1476,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showTorClientSettings || showStudiaOnlineBulkDownload || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || showPaymentLedger || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showTorClientSettings || showStudiaOnlineBulkDownload || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || activeDonationLedgerId != null || showPaymentLedger || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -1570,7 +1572,18 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showPublicServicesBrowser -> PublicServicesScreen(onBack = { showPublicServicesBrowser = false })
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
                     showReceipts -> ReceiptDocumentsScreen(onBack = { showReceipts = false })
-                    showPaymentLedger -> PaymentLedgerScreen(onBack = { showPaymentLedger = false })
+                    activeDonationLedgerId != null -> DonationLedgerScreen(
+                        documentId = activeDonationLedgerId!!,
+                        readOnly = false,
+                        onBack = { activeDonationLedgerId = null; showPaymentLedger = true }
+                    )
+                    showPaymentLedger -> PaymentLedgerScreen(
+                        onBack = { showPaymentLedger = false },
+                        onOpenDonationLedger = { id ->
+                            activeDonationLedgerId = id
+                            showPaymentLedger = false
+                        }
+                    )
                     settingsDocumentEditor == "receipts" -> ReceiptTemplateSettingsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
                     settingsDocumentEditor?.startsWith("donation_ledger:") == true -> DonationLedgerScreen(
                         documentId = settingsDocumentEditor!!.substringAfter("donation_ledger:"), readOnly = false,
@@ -1780,7 +1793,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { selectedDocumentId = null }
                     )
                     selectedDocumentId?.let { DonationLedgerCatalog.find(it) != null } == true -> DonationLedgerScreen(
-                        documentId = selectedDocumentId!!, readOnly = true, onBack = { selectedDocumentId = null }
+                        documentId = selectedDocumentId!!,
+                        readOnly = true,
+                        onBack = { selectedDocumentId = null },
+                        onEdit = {
+                            activeDonationLedgerId = selectedDocumentId
+                            selectedDocumentId = null
+                        }
                     )
                     selectedDocumentId?.let { it in InternationalDonationDocumentCatalog.all.keys } == true ->
                         InternationalDonationDocumentEditorScreen(
