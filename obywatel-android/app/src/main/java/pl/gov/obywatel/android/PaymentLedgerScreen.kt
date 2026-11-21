@@ -67,7 +67,7 @@ import java.io.InputStream
 
 /** Ekran rejestru odczytuje dane z SQLite przez repozytorium pracujące na IO. */
 @Composable
-fun PaymentLedgerScreen(onBack: () -> Unit) {
+fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Unit) {
     val context = LocalContext.current
     val repository = remember(context) { PaymentLedgerRepository(context) }
     val scope = rememberCoroutineScope()
@@ -503,6 +503,21 @@ fun PaymentLedgerScreen(onBack: () -> Unit) {
             "Lokalny rejestr transakcji walutowych, kruszcowych i darowizn gotówkowych.",
             style = MaterialTheme.typography.bodyLarge
         )
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Ewidencja darowizn", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Wybierz ewidencję, aby wprowadzać, przeglądać i aktualizować wpisy darowizn.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                DonationLedgerCatalog.all.values.forEach { definition ->
+                    Button(
+                        onClick = { onOpenDonationLedger(definition.id) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(definition.title) }
+                }
+            }
+        }
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Import i eksport danych", style = MaterialTheme.typography.titleMedium)

@@ -33,10 +33,10 @@ internal object DonationLedgerCatalog {
     const val CHURCH = "donation_ledger_church"
     data class Definition(val id: String, val title: String, val entityLabel: String, val group: String)
     val all = listOf(
-        Definition(PERSON, "Ewidencja darowizn osoby fizycznej", "Imię i nazwisko obdarowanego", "Służba cywilna"),
-        Definition(FOUNDATION, "Ewidencja darowizn fundacji", "Pełna nazwa fundacji", "Służba fundacyjna"),
-        Definition(ASSOCIATION, "Ewidencja darowizn stowarzyszenia", "Pełna nazwa stowarzyszenia", "Służba stowarzyszeniowa"),
-        Definition(CHURCH, "Ewidencja darowizn Kościoła", "Nazwa Kościoła / jednostki kościelnej", "Służba kościelna")
+        Definition(PERSON, "Ewidencja darowizn osoby fizycznej", "Imię i nazwisko obdarowanego", "Służba finansowa"),
+        Definition(FOUNDATION, "Ewidencja darowizn fundacji", "Pełna nazwa fundacji", "Służba finansowa"),
+        Definition(ASSOCIATION, "Ewidencja darowizn stowarzyszenia", "Pełna nazwa stowarzyszenia", "Służba finansowa"),
+        Definition(CHURCH, "Ewidencja darowizn Kościoła", "Nazwa Kościoła / jednostki kościelnej", "Służba finansowa")
     ).associateBy { it.id }
     fun find(id: String): Definition? = all[id]
 }
@@ -132,7 +132,7 @@ private fun saveDonationLedger(context: Context, id: String, entityName: String,
 
 /** Edycja wyłącznie w Profil > Ustawienia; Portfel wyświetla ten sam rejestr tylko do odczytu. */
 @Composable
-internal fun DonationLedgerScreen(documentId: String, readOnly: Boolean, onBack: () -> Unit) {
+internal fun DonationLedgerScreen(documentId: String, readOnly: Boolean, onBack: () -> Unit, onEdit: (() -> Unit)? = null) {
     val definition = requireNotNull(DonationLedgerCatalog.find(documentId))
     val context = LocalContext.current
     val initial = remember(context, documentId) { loadDonationLedger(context, documentId) }
@@ -173,9 +173,14 @@ internal fun DonationLedgerScreen(documentId: String, readOnly: Boolean, onBack:
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Text(if (readOnly) "Podgląd ewidencji. Edycja jest dostępna w Menu główne → Profil → Ustawienia."
+        Text(if (readOnly) "Podgląd ewidencji. Wprowadzanie i zmiana danych są dostępne w Więcej → Rachunki płatnicze → Ewidencja darowizn."
             else "Każda otrzymana darowizna stanowi osobny wpis. Zachowuj dowody przekazania i dokumenty źródłowe.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (readOnly && onEdit != null) {
+            Button(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
+                Text("Przejdź do wprowadzania danych")
+            }
+        }
         if (!readOnly) {
             OutlinedTextField(entityName, { entityName = it }, label = { Text(definition.entityLabel) },
                 modifier = Modifier.fillMaxWidth(), singleLine = true)
