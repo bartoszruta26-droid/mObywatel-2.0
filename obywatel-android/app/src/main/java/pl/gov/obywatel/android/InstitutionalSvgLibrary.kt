@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
+import pl.gov.obywatel.android.network.tor.DownloadConnectionSettings
 import pl.gov.obywatel.android.network.tor.TorDownloadKind
 import pl.gov.obywatel.android.network.tor.TorDownloadServiceProvider
 import pl.gov.obywatel.android.network.tor.TorHttpException
@@ -184,7 +185,7 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
             Thread.sleep(commonsRetryDelayMs(attempt + 2))
         }
     }
-    throw lastFailure ?: java.io.IOException("Wikimedia Commons: nie udało się wykonać żądania API przez Tor.")
+    throw lastFailure ?: java.io.IOException("Wikimedia Commons: nie udało się wykonać żądania przez wybraną trasę sieciową.")
 }
 
 private suspend fun discoverCommonsOpenSvgs(
@@ -212,6 +213,11 @@ private suspend fun discoverCommonsOpenSvgs(
     val seenTitles = linkedSetOf<String>()
     val deliveredTitles = hashSetOf<String>()
     val allCandidates = mutableListOf<CommonsSvgCandidate>()
+    var successfulSearchTerms = 0
+    var failedSearchTerms = 0
+    var firstSearchFailure: String? = null
+    var successfulVerificationBatches = 0
+    var failedVerificationBatches = 0
 
     suspend fun verifyAndDeliver(batch: List<String>) {
         if (batch.isEmpty() || allCandidates.size >= limit) return
@@ -220,10 +226,12 @@ private suspend fun discoverCommonsOpenSvgs(
         val response = try {
             commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         } catch (failure: Exception) {
+            failedVerificationBatches++
             appendCommonsDiagnostic(context, "VERIFY_BATCH_FAILED type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
             onSearchProgress(seenTitles.size, "Weryfikacja metadanych: partia pominięta (" + (failure.message ?: "błąd API") + ")")
             return
         }
+        successfulVerificationBatches++
         val pages = response.optJSONObject("query")?.optJSONObject("pages")
             ?: throw java.io.IOException("Wikimedia Commons nie zwróciło sekcji query.pages podczas weryfikacji SVG.")
         val candidates = mutableListOf<CommonsSvgCandidate>()
@@ -269,6 +277,7 @@ private suspend fun discoverCommonsOpenSvgs(
         // The final title-extension check below still guarantees that only SVG files are accepted.
         var results: JSONArray? = null
         var lastSearchFailure: Exception? = null
+        var termHadSuccessfulRequest = false
         for (expression in commonsSvgSearchExpressions(term)) {
             try {
                 val query = java.net.URLEncoder.encode(expression, "UTF-8")
@@ -278,6 +287,7 @@ private suspend fun discoverCommonsOpenSvgs(
                 )
                 val searchArray = response.optJSONObject("query")?.optJSONArray("search")
                     ?: throw java.io.IOException("Wikimedia Commons nie zwróciło listy wyników wyszukiwania.")
+                termHadSuccessfulRequest = true
                 appendCommonsDiagnostic(context, "SEARCH term=$term expression=$expression results=${searchArray.length()}")
                 if (searchArray.length() > 0) {
                     results = searchArray
@@ -288,7 +298,11 @@ private suspend fun discoverCommonsOpenSvgs(
                 lastSearchFailure = failure
             }
         }
-        if (results == null && lastSearchFailure != null) {
+        if (termHadSuccessfulRequest) {
+            successfulSearchTerms++
+        } else if (lastSearchFailure != null) {
+            failedSearchTerms++
+            if (firstSearchFailure == null) firstSearchFailure = lastSearchFailure.message
             onSearchProgress(seenTitles.size, "$term (błąd API: " + (lastSearchFailure.message ?: "nieznany błąd") + ")")
         }
         results?.let { searchResults ->
@@ -313,6 +327,15 @@ private suspend fun discoverCommonsOpenSvgs(
         }
     }
     if (pending.isNotEmpty() && allCandidates.size < limit) verifyAndDeliver(pending)
+    if (successfulSearchTerms == 0 && failedSearchTerms > 0) {
+        throw java.io.IOException(
+            "Nie udało się połączyć z Wikimedia Commons przez wybraną trasę. " +
+                (firstSearchFailure ?: "Brak szczegółów błędu.")
+        )
+    }
+    if (seenTitles.isNotEmpty() && successfulVerificationBatches == 0 && failedVerificationBatches > 0) {
+        throw java.io.IOException("Nie udało się zweryfikować znalezionych plików SVG przez wybraną trasę.")
+    }
     val finalCandidates = allCandidates.distinctBy { it.title }.take(limit)
     appendCommonsDiagnostic(context, "SEARCH_COMPLETE terms=${terms.size} uniqueSvgTitles=${seenTitles.size} candidates=${finalCandidates.size}")
     return finalCandidates
@@ -798,10 +821,11 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
         OutlinedButton(
             enabled = busy == null,
             onClick = {
+                val routeLabel = DownloadConnectionSettings.get(context).label
                 busy = "commons"
                 progressCurrent = 0
                 progressTotal = 0
-                status = "Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons…"
+                status = "Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons — trasa: $routeLabel…"
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
@@ -812,7 +836,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                             var totalAttempts = 0
                             var processed = 0
                             resetCommonsDiagnostic(context)
-                            appendCommonsDiagnostic(context, "SEARCH_START limit=200 transport=Tor")
+                            appendCommonsDiagnostic(context, "SEARCH_START limit=200 transport=$routeLabel")
                             writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, JSONArray().toString())
                             val candidates = discoverCommonsOpenSvgs(
                                 context,
@@ -843,7 +867,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                     withContext(Dispatchers.Main) {
                                         progressCurrent = processed
                                         progressTotal = totalFound
-                                        status = "Znaleziono $totalFound plików. Rozpoczynam pobieranie przez Tor…"
+                                        status = "Znaleziono $totalFound plików. Rozpoczynam pobieranie przez: $routeLabel…"
                                     }
                                     val part = processCommonsCandidates(context, batch, { completed, total, title ->
                                         withContext(Dispatchers.Main) {
