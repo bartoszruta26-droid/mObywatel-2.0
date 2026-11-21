@@ -32,58 +32,16 @@ object DownloadConnectionSettings {
 class TorDownloadService(
     private val context: Context,
     private val runtime: TorRuntime,
-    policy: TorRequestPolicy = TorRequestPolicy(),
-    poolPolicy: () -> TorPoolPolicy = { TorPoolPolicy.ROUND_ROBIN },
-    routeRules: () -> Map<TorDownloadKind, String> = { emptyMap() }
+    policy: TorRequestPolicy = TorRequestPolicy()
 ) {
     private val transport = TorHttpTransport(runtime, policy)
-    private val router = TorDownloadRouter(
-        profiles = {
-            val isolatedEndpoints = (runtime as? GuardianTorRuntime)?.isolatedProxyEndpoints().orEmpty()
-            val embeddedEndpoints = isolatedEndpoints.ifEmpty { listOfNotNull(runtime.proxyEndpoint()) }
-            val embedded = embeddedEndpoints.mapIndexed { index, endpoint ->
-                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — listener ${index + 1}", endpoint.host, endpoint.port)
-            }
-            val external = TorClientRegistry.load(context).filter { profile ->
-                profile.enabled && profile.id !in setOf(
-                    "guardian-embedded", "guardian-isolated-1", "guardian-isolated-2",
-                    "guardian-isolated-3", "guardian-isolated-4"
-                )
-            }
-            val all = embedded + external
-            val preferredId = TorClientRegistry.activeId(context)
-            val preferred = all.firstOrNull { profile ->
-                profile.id == preferredId ||
-                    (preferredId == "guardian-embedded" && profile.id.startsWith("guardian-embedded-"))
-            }
-            if (preferred == null) all else listOf(preferred) + all.filter { it.id != preferred.id }
-        },
-        isReady = { profile ->
-            val endpoint = runCatching { profile.endpoint() }.getOrNull()
-            if (endpoint == null) false
-            else if (profile.id.startsWith("guardian-embedded-")) {
-                val primaryEndpoint = runtime.proxyEndpoint()
-                runtime.state == TorState.READY &&
-                    runtime.proxyEndpoints().contains(endpoint) &&
-                    primaryEndpoint != null &&
-                    TorEndpointProbe.isTor(primaryEndpoint)
-            } else {
-                val orbotProfile = profile.id.startsWith("orbot-")
-                !runtime.proxyEndpoints().contains(endpoint) &&
-                    (!orbotProfile || TorEndpointProbe.isOrbotInstalled(context)) &&
-                    TorEndpointProbe.isTor(endpoint)
-            }
-        },
-        policy = poolPolicy,
-        rules = routeRules
-    )
 
     /**
      * Route is explicit and fail-closed: Guardian and Orbot never silently switch
      * to each other, and neither silently falls back to an unproxied connection.
      */
     @Throws(IOException::class)
-    fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse =
+    fun open(url: String, @Suppress("UNUSED_PARAMETER") kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse =
         when (DownloadConnectionSettings.get(context)) {
             DownloadConnectionMode.GUARDIAN_TOR ->
                 transport.open(url, ensureGuardianEndpoint(), rangeStart, ifRange)
@@ -117,7 +75,7 @@ class TorDownloadService(
             try {
                 runtime.start()
             } catch (failure: Exception) {
-                throw IOException("Nie udało się uruchomić zapasowego klienta Guardian Tor.", failure)
+                throw IOException("Nie udało się uruchomić wybranego klienta Guardian Tor.", failure)
             }
         }
         val deadline = System.currentTimeMillis() + 120_000L
