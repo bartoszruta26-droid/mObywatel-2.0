@@ -43,6 +43,8 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         mutableStateListOf<TorClientProfile>().apply { addAll(TorClientRegistry.load(context)) }
     }
     var activeId by remember { mutableStateOf(TorClientRegistry.activeId(context)) }
+    var connectionMode by remember { mutableStateOf(DownloadConnectionSettings.get(context)) }
+    var exitRegion by remember { mutableStateOf(TorExitRegionSettings.get(context)) }
     var name by remember { mutableStateOf("") }
     var host by remember { mutableStateOf("127.0.0.1") }
     var port by remember { mutableStateOf("9050") }
@@ -53,10 +55,34 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
 
     fun persist() {
         TorClientRegistry.save(context, clients.toList())
-        if (clients.none { it.id == activeId && it.enabled }) {
-            activeId = clients.firstOrNull { it.enabled }?.id ?: "guardian-embedded"
+        val routeProfileId = when (connectionMode) {
+            DownloadConnectionMode.GUARDIAN_TOR -> "guardian-embedded"
+            DownloadConnectionMode.ORBOT -> "orbot-local"
+            DownloadConnectionMode.DIRECT -> null
         }
-        if (clients.any { it.id == activeId && it.enabled }) TorClientRegistry.setActive(context, activeId)
+        if (routeProfileId != null && clients.any { it.id == routeProfileId && it.enabled }) {
+            activeId = routeProfileId
+            TorClientRegistry.setActive(context, routeProfileId)
+        }
+    }
+
+    fun chooseMode(mode: DownloadConnectionMode) {
+        connectionMode = mode
+        DownloadConnectionSettings.set(context, mode)
+        val profileId = when (mode) {
+            DownloadConnectionMode.GUARDIAN_TOR -> "guardian-embedded"
+            DownloadConnectionMode.ORBOT -> "orbot-local"
+            DownloadConnectionMode.DIRECT -> null
+        }
+        if (profileId != null && clients.any { it.id == profileId && it.enabled }) {
+            activeId = profileId
+            TorClientRegistry.setActive(context, profileId)
+        }
+        notice = if (mode == DownloadConnectionMode.ORBOT && clients.none { it.id == "orbot-local" && it.enabled }) {
+            "Wybrano Orbot, ale jego profil jest wyłączony. Włącz profil Orbot poniżej."
+        } else {
+            "Zapisano tryb pobierania: ${mode.label}"
+        }
     }
 
     Column(
@@ -67,30 +93,81 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         Text("‹  Powrót do ustawień", color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Klienci sieci Tor", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Wybierz preferowanego klienta Tor. Usługa rotuje żądania między dostępnymi, zweryfikowanymi lokalnymi klientami; jeśli Orbot nie odpowiada lub nie potwierdza wyjścia przez Tor, pobieranie przechodzi na wbudowany Guardian.",
+        Text("Wybierz jawnie sposób pobierania plików. Tryb Tor korzysta wyłącznie z wybranego klienta i nie przełącza się automatycznie na połączenie bezpośrednie.",
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Ważne — bezpieczeństwo połączenia", fontWeight = FontWeight.Bold)
-                Text("Po wybraniu Orbot aplikacja najpierw korzysta z jego lokalnego SOCKS5, bez uruchamiania Guardian. Domyślny port Orbot to 9050. Wbudowany Guardian jest zatrzymywany, gdy wybierzesz Orbot, i uruchamia się dopiero jako klient zapasowy po nieudanym teście Orbotu. Dzięki temu oba procesy nie próbują zajmować tego samego portu SOCKS. Przed użyciem aplikacja sprawdza rzeczywiste wyjście przez Tor w check.torproject.org. Jeśli Orbot nie przejdzie testu, pobieranie może przejść na Guardian. Nie dodawaj przypadkowych publicznych proxy SOCKS.",
+                Text("Wybrany tryb jest stosowany do pobierania materiałów, symboli SVG i pozostałych zasobów. Guardian i Orbot są sprawdzane pod kątem rzeczywistego wyjścia przez Tor. Gdy wybrany klient Tor nie działa, pobieranie kończy się czytelnym błędem — aplikacja nie przełącza po cichu na inny klient ani na połączenie bezpośrednie. Tryb bezpośredni omija lokalne proxy Tor i ujawnia adres IP urządzenia serwisowi docelowemu; systemowy VPN, np. Orbot w trybie VPN całego urządzenia, nadal może tunelować ruch.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
-        Text("Zarejestrowani klienci", fontWeight = FontWeight.Bold)
+        Text("Preferowany obszar węzła wyjściowego Tor", fontWeight = FontWeight.Bold)
+        Text(
+            "Domyślnie Polska. To preferencja kierowania, a nie gwarancja adresu IP — dostępność węzłów w danym kraju lub regionie zależy od sieci Tor. W trybie bezpośrednim ustawienie nie ma zastosowania.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        TorExitRegion.values().forEach { region ->
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable {
+                    exitRegion = region
+                    TorExitRegionSettings.set(context, region)
+                    notice = "Zapisano preferowany obszar Tor: ${region.label}"
+                }.padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = exitRegion == region,
+                    onClick = {
+                        exitRegion = region
+                        TorExitRegionSettings.set(context, region)
+                        notice = "Zapisano preferowany obszar Tor: ${region.label}"
+                    }
+                )
+                Text(region.label, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        Text("Sposób pobierania", fontWeight = FontWeight.Bold)
+        DownloadConnectionMode.values().forEach { mode ->
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable {
+                    chooseMode(mode)
+                }.padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = connectionMode == mode,
+                    onClick = {
+                        chooseMode(mode)
+                    }
+                )
+                Column(Modifier.weight(1f)) {
+                    Text(mode.label, fontWeight = FontWeight.SemiBold)
+                    Text(mode.description, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        Text("Profile klientów", fontWeight = FontWeight.Bold)
+        Text("Tryb pobierania wybierasz powyżej. Profile Guardian i Orbot są powiązane z odpowiednimi trybami; dodatkowe profile lokalne służą obecnie do diagnostyki.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         clients.forEach { client ->
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(
-                            selected = activeId == client.id,
+                            selected = when (client.id) {
+                                "guardian-embedded" -> connectionMode == DownloadConnectionMode.GUARDIAN_TOR
+                                "orbot-local" -> connectionMode == DownloadConnectionMode.ORBOT
+                                else -> false
+                            },
                             onClick = {
-                                if (client.enabled) {
-                                    activeId = client.id
-                                    TorClientRegistry.setActive(context, client.id)
-                                    notice = "Wybrano: ${client.name}"
+                                when (client.id) {
+                                    "guardian-embedded" -> chooseMode(DownloadConnectionMode.GUARDIAN_TOR)
+                                    "orbot-local" -> chooseMode(DownloadConnectionMode.ORBOT)
                                 }
                             },
-                            enabled = client.enabled
+                            enabled = client.enabled && client.id in setOf("guardian-embedded", "orbot-local")
                         )
                         Column(Modifier.weight(1f)) {
                             Text(client.name, fontWeight = FontWeight.SemiBold)
@@ -112,7 +189,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                                     else TorEndpointProbe.isTor(client.endpoint(), force = true)
                                 }
                                 probeStatus[client.id] = if (result) "Połączenie działa — potwierdzono wyjście przez Tor."
-                                    else "Brak potwierdzonego połączenia Tor. Pobieranie użyje Guardian."
+                                    else "Brak potwierdzonego połączenia Tor. Ten profil nie zostanie użyty."
                             }
                         }) { Text("Testuj") }
                         if (client.id !in setOf("guardian-embedded", "orbot-local")) {
@@ -145,10 +222,10 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                 clients.add(profile)
                 name = ""
                 persist()
-                notice = "Dodano profil. Jego wybór zapisano; profil jest od razu uwzględniany przez usługę pobierania po pozytywnym teście Tor."
+                notice = "Dodano profil lokalny do diagnostyki. Aktualne tryby pobierania korzystają z Guardian, Orbot lub jawnego połączenia bezpośredniego."
             }.onFailure { error = it.message ?: "Nie udało się dodać klienta." }
         }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj do listy") }
-        Text("Orbot: zainstaluj oficjalną aplikację i uruchom Tor. Domyślny profil aplikacji sprawdza lokalny SOCKS5 127.0.0.1:9050. Jeśli zmienisz port w Orbot, ustaw identyczny port w profilu. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność proxy i rzeczywiste wyjście przez sieć Tor. Inne dodane profile lokalne również są dopuszczane do puli wyłącznie po pozytywnym teście Tor.",
+        Text("Orbot: zainstaluj oficjalną aplikację i uruchom Tor. Profil aplikacji korzysta z domyślnego lokalnego SOCKS5 127.0.0.1:9050. Pozostaw ten port w Orbot; inny port wymagałby aktualizacji profilu aplikacji. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność proxy i rzeczywiste wyjście przez sieć Tor. W aktualnych trybach pobierania używany jest profil Orbot; dodatkowe profile lokalne pozostają zapisane do konfiguracji i diagnostyki, ale nie są automatycznie wybierane przez tryb Orbot.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
