@@ -162,7 +162,7 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
             val payload = tor.open(url, TorDownloadKind.API).use { response ->
                 JSONObject(response.body.bufferedReader(Charsets.UTF_8).use { it.readText() })
             }
-            appendCommonsDiagnostic(context, "API_RESPONSE keys=${payload.keys().asSequence().toList()}")
+            appendCommonsDiagnostic(context, "API_RESPONSE keys=${payload.keys().asSequence().toList()} transport=${tor.diagnosticSnapshot()}")
             val apiError = payload.optJSONObject("error")
             if (apiError != null) {
                 val errorCode = apiError.optString("code", "unknown")
@@ -179,7 +179,7 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
             if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
             Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2), retryAfterMs ?: 0L))
         } catch (failure: Exception) {
-            appendCommonsDiagnostic(context, "API_EXCEPTION attempt=${attempt + 1} type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
+            appendCommonsDiagnostic(context, "API_EXCEPTION attempt=${attempt + 1} type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"} transport=${tor.diagnosticSnapshot()}")
             lastFailure = failure
             if (attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw failure
             Thread.sleep(commonsRetryDelayMs(attempt + 2))
