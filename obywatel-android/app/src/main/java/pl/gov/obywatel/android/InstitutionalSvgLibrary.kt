@@ -341,6 +341,17 @@ private suspend fun discoverCommonsOpenSvgs(
     return finalCandidates
 }
 
+internal fun commonsSvgAssetKind(title: String): String {
+    val key = title.lowercase(java.util.Locale.ROOT)
+    return when {
+        listOf("flag", "flaga", "banner", "bandera").any(key::contains) -> "Flaga"
+        listOf("coat of arms", "coat_of_arms", "herald", "herb", "crest").any(key::contains) -> "Herb"
+        listOf("seal", "stamp", "pieczęć", "pieczec").any(key::contains) -> "Pieczęć"
+        listOf("emblem", "godło", "godlo", "eagle").any(key::contains) -> "Godło"
+        else -> "Logo"
+    }
+}
+
 private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): String {
     waitForCommonsRequestSlot()
     val tor = TorDownloadServiceProvider.get(context)
@@ -431,13 +442,7 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
         .put("verificationStatus", "open-license-metadata-found; trademark-and-use-review-required")
         .put("permittedKinds", JSONArray()).toString()
     val title = item.title.removePrefix("File:")
-    val kind = when {
-        title.contains("flag", true) -> "Flaga"
-        title.contains("coat of arms", true) || title.contains("herald", true) -> "Herb"
-        title.contains("seal", true) -> "Pieczęć"
-        title.contains("emblem", true) -> "Godło"
-        else -> "Logo"
-    }
+    val kind = commonsSvgAssetKind(title)
     DocumentBrandStore.importBytes(context, "Wikimedia Commons", kind, title.take(180), bytes, rights = rights, mimeType = "image/svg+xml", assetId = assetId)
     partFile.delete()
     metadataFile.delete()

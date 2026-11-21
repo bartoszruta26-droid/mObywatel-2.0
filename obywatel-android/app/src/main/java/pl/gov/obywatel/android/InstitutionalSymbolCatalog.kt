@@ -182,11 +182,12 @@ private suspend fun downloadInstitutionalSymbol(
         .put("verificationStatus", "catalogued; source metadata retained; usage restrictions require review")
         .put("permittedKinds", JSONArray())
         .toString()
-    val kind = when {
-        item.group.contains("flag", true) -> "Flaga"
-        item.group.contains("arm", true) || item.group.contains("herald", true) -> "Herb"
-        item.group.contains("government", true) -> "Znak instytucji publicznej"
-        else -> "Logo lub emblemat"
+    val kind = when (institutionalSymbolCategory(item)) {
+        "Flagi" -> "Flaga"
+        "Herby" -> "Herb"
+        "Godła" -> "Godło"
+        "Logotypy" -> "Logo"
+        else -> "Logo"
     }
     onProgress(InstitutionalSymbolDownloadProgress("Zapisuję plik i metadane w bibliotece…", bytes.size.toLong(), bytes.size.toLong()))
     DocumentBrandStore.importBytes(context, item.repository, kind, item.displayName.take(180),
