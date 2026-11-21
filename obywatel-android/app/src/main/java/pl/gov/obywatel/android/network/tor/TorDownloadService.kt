@@ -35,6 +35,7 @@ class TorDownloadService(
     policy: TorRequestPolicy = TorRequestPolicy()
 ) {
     private val transport = TorHttpTransport(runtime, policy)
+    val selectedMode: DownloadConnectionMode get() = DownloadConnectionSettings.get(context)
 
     /**
      * Route is explicit and fail-closed: Guardian and Orbot never silently switch
@@ -42,7 +43,7 @@ class TorDownloadService(
      */
     @Throws(IOException::class)
     fun open(url: String, @Suppress("UNUSED_PARAMETER") kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse =
-        when (DownloadConnectionSettings.get(context)) {
+        when (selectedMode) {
             DownloadConnectionMode.GUARDIAN_TOR ->
                 transport.open(url, ensureGuardianEndpoint(), rangeStart, ifRange)
             DownloadConnectionMode.ORBOT ->
