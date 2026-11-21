@@ -28,6 +28,12 @@ SPDX-FileCopyrightText = "2025 Centralny Ośrodek Informatyki"
 SPDX-License-Identifier = "LicenseRef-COI-MIT-PL"
 
 [[annotations]]
+path = ["obywatel-android/app/src/main/assets/identity-symbols/flags/*.svg", "obywatel-android/app/src/main/assets/identity-symbols/FLAG-ICONS-LICENSE.txt", "LICENSES/MIT.txt"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2013 Panayiotis Lipiridis"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
 path = ["security/android-signing/README.md"]
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 bartoszruta26-droid"
