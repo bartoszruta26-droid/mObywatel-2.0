@@ -812,7 +812,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                             var totalAttempts = 0
                             var processed = 0
                             resetCommonsDiagnostic(context)
-                            appendCommonsDiagnostic(context, "SEARCH_START limit=200 transport=Tor")
+                            appendCommonsDiagnostic(context, "SEARCH_START limit=200 transport=${DownloadConnectionSettings.get(context).label}")
                             writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, JSONArray().toString())
                             val candidates = discoverCommonsOpenSvgs(
                                 context,
