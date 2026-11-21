@@ -44,6 +44,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
     }
     var activeId by remember { mutableStateOf(TorClientRegistry.activeId(context)) }
     var connectionMode by remember { mutableStateOf(DownloadConnectionSettings.get(context)) }
+    var exitRegion by remember { mutableStateOf(TorExitRegionSettings.get(context)) }
     var name by remember { mutableStateOf("") }
     var host by remember { mutableStateOf("127.0.0.1") }
     var port by remember { mutableStateOf("9050") }
@@ -99,6 +100,32 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                 Text("Ważne — bezpieczeństwo połączenia", fontWeight = FontWeight.Bold)
                 Text("Wybrany tryb jest stosowany do pobierania materiałów, symboli SVG i pozostałych zasobów. Guardian i Orbot są sprawdzane pod kątem rzeczywistego wyjścia przez Tor. Gdy wybrany klient Tor nie działa, pobieranie kończy się czytelnym błędem — aplikacja nie przełącza po cichu na inny klient ani na połączenie bezpośrednie. Tryb bezpośredni omija lokalne proxy Tor i ujawnia adres IP urządzenia serwisowi docelowemu; systemowy VPN, np. Orbot w trybie VPN całego urządzenia, nadal może tunelować ruch.",
                     style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Text("Preferowany obszar węzła wyjściowego Tor", fontWeight = FontWeight.Bold)
+        Text(
+            "Domyślnie Polska. To preferencja kierowania, a nie gwarancja adresu IP — dostępność węzłów w danym kraju lub regionie zależy od sieci Tor. W trybie bezpośrednim ustawienie nie ma zastosowania.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        TorExitRegion.values().forEach { region ->
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable {
+                    exitRegion = region
+                    TorExitRegionSettings.set(context, region)
+                    notice = "Zapisano preferowany obszar Tor: ${region.label}"
+                }.padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = exitRegion == region,
+                    onClick = {
+                        exitRegion = region
+                        TorExitRegionSettings.set(context, region)
+                        notice = "Zapisano preferowany obszar Tor: ${region.label}"
+                    }
+                )
+                Text(region.label, fontWeight = FontWeight.SemiBold)
             }
         }
         Text("Sposób pobierania", fontWeight = FontWeight.Bold)
