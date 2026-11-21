@@ -165,7 +165,7 @@ private suspend fun downloadInstitutionalSymbol(context: Context, item: Institut
 
 private val institutionalSymbolCategoryOrder = listOf("Herby", "Godła", "Flagi", "Logotypy", "Pozostałe")
 
-private fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): String {
+internal fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): String {
     val key = "${item.group} ${item.path} ${item.displayName}".lowercase(Locale.ROOT)
     return when {
         Regex("flag|flaga|banner").containsMatchIn(key) -> "Flagi"
