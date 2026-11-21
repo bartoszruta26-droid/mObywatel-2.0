@@ -63,7 +63,7 @@ class TorDownloadService(
         if (runtime.proxyEndpoints().contains(endpoint)) {
             throw IOException("Port Orbot pokrywa się z listenerem Guardian. Zmień port Orbot lub zatrzymaj Guardian.")
         }
-        if (!TorEndpointProbe.isTor(endpoint)) {
+        if (!TorEndpointProbe.isTor(endpoint, force = true)) {
             throw IOException("Orbot nie potwierdził wyjścia przez sieć Tor. Uruchom Orbot i sprawdź lokalny port SOCKS5.")
         }
         return endpoint
