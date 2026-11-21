@@ -5,6 +5,8 @@ package pl.gov.obywatel.android.network.studiaonline
 import android.net.Uri
 import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceError
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -57,7 +59,27 @@ fun StudiaOnlineLoginWebView(
                             if (!isAllowedStudiaOnlineUrl(Uri.parse(url))) {
                                 onStatus("Zablokowano nawigację poza zabezpieczoną domenę studia-online.pl.")
                             } else {
-                                onStatus("Strona logowania jest gotowa. Zaloguj się ręcznie lub uzupełnij formularz zapisanymi danymi.")
+                                onStatus("Załadowano stronę serwisu. Samo załadowanie strony nie potwierdza logowania; sprawdź, czy widzisz swój panel studenta.")
+                            }
+                        }
+
+                        override fun onReceivedError(
+                            view: WebView,
+                            request: WebResourceRequest,
+                            error: WebResourceError
+                        ) {
+                            if (request.isForMainFrame) {
+                                onStatus("Błąd ładowania strony logowania (${error.errorCode}): ${error.description}")
+                            }
+                        }
+
+                        override fun onReceivedHttpError(
+                            view: WebView,
+                            request: WebResourceRequest,
+                            errorResponse: WebResourceResponse
+                        ) {
+                            if (request.isForMainFrame && errorResponse.statusCode >= 400) {
+                                onStatus("Serwis zwrócił HTTP ${errorResponse.statusCode} podczas ładowania strony logowania.")
                             }
                         }
                     }
@@ -126,17 +148,17 @@ fun StudiaOnlineLoginWebView(
         Button(
             onClick = {
                 CookieManager.getInstance().flush()
-                val cookies = CookieManager.getInstance()
-                    .getCookie("https://studia-online.pl//pobierz-material/")
+                val cookies = StudiaOnlineSessionCookies.currentHeader()
                 if (cookies.isNullOrBlank()) {
-                    onStatus("Nie znaleziono ciasteczek dla adresu pobierania. Zaloguj się na stronie i spróbuj ponownie.")
+                    onStatus("Brak ciasteczek dostępnych dla ścieżki pobierania. Pozostań w tym oknie i zaloguj się na stronie.")
                 } else {
-                    onStatus("Ciasteczka są dostępne dla adresu pobierania. Potwierdź, że strona wyświetla zalogowane konto; aktywność sesji potwierdzi odpowiedź serwisu.")
+                    val count = cookies.split(';').count { it.contains('=') }
+                    onStatus("Odczytano $count ciasteczek dla adresu pobierania. Ich wartości nie są ujawniane. Sprawdź, czy widzisz panel studenta; aktywność sesji potwierdzi odpowiedź serwera. Okno nie zostanie zamknięte.")
                     onSessionReady()
                 }
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Potwierdź zalogowanie i użyj sesji") }
+        ) { Text("Sprawdź ciasteczka sesji") }
         OutlinedButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
             Text("Zamknij okno logowania")
         }

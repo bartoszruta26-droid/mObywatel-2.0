@@ -86,6 +86,29 @@ class StudiaOnlineDownloadCatalogTest {
         ).contains("odmówił dostępu"))
     }
 
+    @Test fun forbiddenResponseIncludesSafeServerDiagnostics() {
+        val message = StudiaOnlineBulkDownloader.describeFailure(
+            TorHttpException(
+                403, null, "HTTP 403",
+                server = "cloudflare",
+                cfRay = "abc123",
+                responseContentType = "text/html"
+            )
+        )
+        assertTrue(message.contains("HTTP 403"))
+        assertTrue(message.contains("cloudflare"))
+        assertTrue(message.contains("abc123"))
+        assertTrue(message.contains("text/html"))
+    }
+
+    @Test fun forbiddenResponseWithoutServerHeadersStillExplainsLikelyCauses() {
+        val message = StudiaOnlineBulkDownloader.describeFailure(
+            TorHttpException(403, null, "HTTP 403")
+        )
+        assertTrue(message.contains("aktywnej sesji"))
+        assertTrue(message.contains("ograniczenia antyautomatyczne"))
+    }
+
     @Test fun retryAfterHugeDeltaSecondsIsCappedWithoutOverflow() {
         assertEquals(
             300_000L,

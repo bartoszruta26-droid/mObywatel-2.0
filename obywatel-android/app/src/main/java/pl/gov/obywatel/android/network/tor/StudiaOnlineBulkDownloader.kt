@@ -306,7 +306,16 @@ class StudiaOnlineBulkDownloader(
         internal fun describeFailure(failure: Exception): String = when ((failure as? TorHttpException)?.httpCode) {
             404 -> "Materiał nie został znaleziony (HTTP 404)."
             410 -> "Materiał został usunięty z serwisu (HTTP 410)."
-            401, 403 -> "Serwis odmówił dostępu (HTTP ${(failure as TorHttpException).httpCode}). Sprawdź logowanie i uprawnienia."
+            401, 403 -> {
+                val http = failure as TorHttpException
+                buildString {
+                    append("Serwis odmówił dostępu (HTTP ${http.httpCode}). ")
+                    append("Sprawdź aktywną sesję, uprawnienia materiału i ograniczenia antyautomatyczne serwisu.")
+                    http.server?.let { append(" Serwer: ").append(it).append(".") }
+                    http.cfRay?.let { append(" Identyfikator CF-RAY: ").append(it).append(".") }
+                    http.responseContentType?.let { append(" Typ odpowiedzi: ").append(it).append(".") }
+                }
+            }
             else -> failure.message ?: failure.javaClass.simpleName
         }
 

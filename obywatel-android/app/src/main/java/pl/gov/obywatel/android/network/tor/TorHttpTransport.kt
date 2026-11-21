@@ -28,7 +28,10 @@ enum class TorState { STOPPED, STARTING, BOOTSTRAPPING, READY, STOPPING, FAILED 
 class TorHttpException(
     val httpCode: Int,
     val retryAfter: String?,
-    message: String
+    message: String,
+    val server: String? = null,
+    val cfRay: String? = null,
+    val responseContentType: String? = null
 ) : IOException(message)
 
 /** A loopback-only SOCKS5 endpoint. */
@@ -179,6 +182,8 @@ class TorHttpTransport(
                 .get()
                 .header("User-Agent", policy.userAgent)
                 .header("Accept-Encoding", "identity")
+                .header("Accept", "application/pdf, application/octet-stream, */*")
+                .header("Referer", "https://studia-online.pl/konto")
                 .apply {
                     // Session cookies are sent only to the authenticated WSKZ host.
                     // Redirects to other hosts never receive the user's session cookie.
@@ -208,8 +213,14 @@ class TorHttpTransport(
             }
             if (!response.isSuccessful) {
                 val retryAfter = response.header("Retry-After")
+                val server = response.header("Server")?.take(120)
+                val cfRay = response.header("CF-RAY")?.take(120)
+                val responseContentType = response.header("Content-Type")?.take(120)
                 response.close()
-                throw TorHttpException(code, retryAfter, "HTTPS request failed: HTTP $code")
+                throw TorHttpException(
+                    code, retryAfter, "HTTPS request failed: HTTP $code",
+                    server = server, cfRay = cfRay, responseContentType = responseContentType
+                )
             }
 
             val body = response.body
