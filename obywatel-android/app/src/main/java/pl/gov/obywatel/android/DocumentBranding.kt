@@ -655,9 +655,9 @@ internal object DocumentBrandStore {
         for (index in 0 until assigned.length()) {
             val item = assigned.getJSONObject(index)
             val documentType = item.getString("documentType")
-            val kind = item.getString("kind")
+            val kind = normalizeAssetKind(item.getString("kind"))
             val assetId = item.getString("assetId")
-            require(documentBrandTargets.any { it.first == documentType } && kind in kinds && assetId in validIds) {
+            require(documentBrandTargets.any { it.first == documentType } && assetId in validIds) {
                 "Nieprawidłowe przypisanie zasobu do dokumentu."
             }
             next[documentType to kind] = BrandAssignment(documentType, kind, assetId)
@@ -705,9 +705,9 @@ internal object DocumentBrandStore {
         if (normalizedKind in imageKinds && mimeType != "application/pdf") decodeImage(bytes).recycle()
         val extension = when {
             isSvg -> ".svg.enc"
-            kind == "Certyfikat" -> ".cer.enc"
-            kind == "Załącznik tekstowy" -> ".txt.enc"
-            kind == "Załącznik" -> ".bin.enc"
+            normalizedKind == "Certyfikat" -> ".cer.enc"
+            normalizedKind == "Załącznik tekstowy" -> ".txt.enc"
+            normalizedKind == "Załącznik" -> ".bin.enc"
             else -> ".asset.enc"
         }
         val file = assetId + extension
