@@ -114,6 +114,6 @@ Ustawienie `DownloadConnectionMode` wybiera jedną z trzech tras dla wspólnej u
 - `ORBOT`: lokalny SOCKS5 Orbot; aplikacja wymaga zainstalowanego Orbot, dostępnego profilu i potwierdzonego wyjścia Tor.
 - `DIRECT`: HTTPS przez `Proxy.NO_PROXY`, bez uruchamiania Tor i bez awaryjnego przełączenia na Tor.
 
-Tryby Guardian i Orbot są rozłączne i nie przełączają się automatycznie między sobą. Żaden błąd klienta Tor nie uruchamia trybu bezpośredniego. Tryb bezpośredni jest jawnie wybierany przez użytkownika i ujawnia adres IP urządzenia serwisowi docelowemu oraz operatorowi sieci.
+Tryby Guardian i Orbot są rozłączne i nie przełączają się automatycznie między sobą. Żaden błąd klienta Tor nie uruchamia trybu bezpośredniego. Tryb bezpośredni jest jawnie wybierany przez użytkownika, omija proxy Tor skonfigurowane w aplikacji i ujawnia adres IP urządzenia serwisowi docelowemu. Nie omija jednak systemowego VPN Androida — jeśli Orbot działa jako VPN całego urządzenia, system może nadal tunelować ruch.
 
 Wybór jest wspólny dla pobierania materiałów studia-online.pl, katalogu symboli SVG i pozostałych zasobów korzystających z `TorDownloadServiceProvider`.
