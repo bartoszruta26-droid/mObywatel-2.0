@@ -139,7 +139,7 @@ class StudiaOnlineBulkDownloader(
                 try {
                     previousRequestAt = clock()
                     downloaded = downloadWholeItem(item) { bytes, expected ->
-                        emit(item.id, false, phase = "Pobieranie danych przez Tor", downloadedBytes = bytes, expectedBytes = expected)
+                        emit(item.id, false, phase = "Pobieranie danych — ${downloads.selectedMode.label}", downloadedBytes = bytes, expectedBytes = expected)
                     }
                 } catch (failure: Exception) {
                     if (stopRequested) break
