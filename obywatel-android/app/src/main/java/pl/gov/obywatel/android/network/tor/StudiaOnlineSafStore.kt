@@ -15,7 +15,7 @@ import java.security.MessageDigest
 class StudiaOnlineSafStore(private val context: Context) {
     @Throws(IOException::class)
     fun save(treeUri: Uri, item: StudiaOnlineDownloadItem, bytes: ByteArray): String {
-        require(item.url.startsWith("https://studia-online.pl/pobierz-material/")) {
+        require(item.url.startsWith("https://studia-online.pl//pobierz-material/")) {
             "Do archiwum można zapisywać wyłącznie materiały z dozwolonego katalogu."
         }
         require(bytes.isNotEmpty()) { "Nie można zapisać pustego materiału." }
