@@ -60,9 +60,6 @@ object DownloadConnectionSettings {
     fun set(context: Context, mode: DownloadConnectionMode) {
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putString(KEY_MODE, mode.name).apply()
-        if (mode != DownloadConnectionMode.GUARDIAN_TOR) {
-            TorDownloadServiceProvider.stopGuardian()
-        }
     }
 }
 
