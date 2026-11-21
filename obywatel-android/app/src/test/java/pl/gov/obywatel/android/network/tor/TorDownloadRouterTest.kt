@@ -8,6 +8,13 @@ import org.junit.Test
 import java.io.IOException
 
 class TorDownloadRouterTest {
+    @Test fun torExitRegionDefaultsAreWellFormed() {
+        assertEquals(listOf("pl"), TorExitRegion.POLAND.torCountryCodes)
+        assertTrue(TorExitRegion.EUROPE.torCountryCodes.isNotEmpty())
+        assertTrue(TorExitRegion.EUROPE.torCountryCodes.all { it.matches(Regex("[a-z]{2}")) })
+        assertTrue(TorExitRegion.WORLD.torCountryCodes.isEmpty())
+    }
+
     private val clients = listOf(
         TorClientProfile("a", "Client A", "127.0.0.1", 9050),
         TorClientProfile("b", "Client B", "127.0.0.1", 9150),
