@@ -3,6 +3,14 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import java.io.File
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,37 +44,75 @@ private data class DonationLedgerEntry(
     val amount: String, val currency: String, val method: String, val purpose: String,
     val evidence: String, val reference: String, val notes: String
 )
-private const val DONATION_LEDGER_PREFS = "donation_ledgers_v1"
+private object DonationLedgerStore {
+    private const val KEY_ALIAS = "donation_ledger_aes"
+    private const val FILE_NAME = "donation_ledgers.enc"
+    private const val IV_LENGTH = 12
+    private const val MAX_BYTES = 8 * 1024 * 1024
 
-private fun loadDonationLedger(context: Context, id: String): Pair<String, List<DonationLedgerEntry>> {
-    val raw = context.getSharedPreferences(DONATION_LEDGER_PREFS, Context.MODE_PRIVATE).getString(id, null)
-        ?: return "" to emptyList()
-    val root = JSONObject(raw)
-    val array = root.optJSONArray("entries") ?: JSONArray()
-    val entries = buildList {
-        for (i in 0 until array.length()) {
-            val item = array.optJSONObject(i) ?: continue
-            add(DonationLedgerEntry(
-                item.optString("id"), item.optString("date"), item.optString("donor"),
-                item.optString("donorIdentifier"), item.optString("amount"), item.optString("currency", "PLN"),
-                item.optString("method"), item.optString("purpose"), item.optString("evidence"),
-                item.optString("reference"), item.optString("notes")
-            ))
-        }
+    private fun decrypt(context: Context): JSONObject {
+        val file = File(context.noBackupFilesDir, FILE_NAME)
+        if (!file.exists()) return JSONObject()
+        require(file.length() in (IV_LENGTH + 1).toLong()..MAX_BYTES.toLong()) { "Plik ewidencji darowizn ma nieprawidłowy rozmiar." }
+        val encrypted = file.readBytes()
+        require(encrypted.size > IV_LENGTH && encrypted.size <= MAX_BYTES) { "Nieprawidłowy plik ewidencji darowizn." }
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, getOrCreateKey(), GCMParameterSpec(128, encrypted.copyOfRange(0, IV_LENGTH)))
+        return JSONObject(String(cipher.doFinal(encrypted.copyOfRange(IV_LENGTH, encrypted.size)), Charsets.UTF_8))
     }
-    return root.optString("entityName") to entries
+
+    fun load(context: Context, id: String): Pair<String, List<DonationLedgerEntry>> {
+        val root = decrypt(context).optJSONObject(id) ?: return "" to emptyList()
+        val array = root.optJSONArray("entries") ?: JSONArray()
+        val entries = buildList {
+            for (i in 0 until array.length()) {
+                val item = array.optJSONObject(i) ?: continue
+                add(DonationLedgerEntry(
+                    item.optString("id"), item.optString("date"), item.optString("donor"),
+                    item.optString("donorIdentifier"), item.optString("amount"), item.optString("currency", "PLN"),
+                    item.optString("method"), item.optString("purpose"), item.optString("evidence"),
+                    item.optString("reference"), item.optString("notes")
+                ))
+            }
+        }
+        return root.optString("entityName") to entries
+    }
+
+    fun save(context: Context, id: String, entityName: String, entries: List<DonationLedgerEntry>) {
+        require(id in DonationLedgerCatalog.all.keys)
+        val root = decrypt(context)
+        root.put(id, JSONObject().put("entityName", entityName).put("entries", JSONArray().apply {
+            entries.forEach { e -> put(JSONObject().put("id", e.id).put("date", e.date).put("donor", e.donor)
+                .put("donorIdentifier", e.donorIdentifier).put("amount", e.amount).put("currency", e.currency)
+                .put("method", e.method).put("purpose", e.purpose).put("evidence", e.evidence)
+                .put("reference", e.reference).put("notes", e.notes)) }
+        }))
+        val plaintext = root.toString().toByteArray(Charsets.UTF_8)
+        require(plaintext.size <= MAX_BYTES - IV_LENGTH) { "Ewidencja darowizn przekracza dozwolony rozmiar." }
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey())
+        val encrypted = cipher.iv + cipher.doFinal(plaintext)
+        writeMedicalCertificateAtomically(context.noBackupFilesDir, FILE_NAME, encrypted)
+    }
+
+    private fun getOrCreateKey(): SecretKey {
+        val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        (keyStore.getKey(KEY_ALIAS, null) as? SecretKey)?.let { return it }
+        val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
+        generator.init(KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setRandomizedEncryptionRequired(true)
+            .build())
+        return generator.generateKey()
+    }
 }
 
-private fun saveDonationLedger(context: Context, id: String, entityName: String, entries: List<DonationLedgerEntry>) {
-    val root = JSONObject().put("schemaVersion", 1).put("entityName", entityName).put("entries", JSONArray().apply {
-        entries.forEach { e -> put(JSONObject().put("id", e.id).put("date", e.date).put("donor", e.donor)
-            .put("donorIdentifier", e.donorIdentifier).put("amount", e.amount).put("currency", e.currency)
-            .put("method", e.method).put("purpose", e.purpose).put("evidence", e.evidence)
-            .put("reference", e.reference).put("notes", e.notes)) }
-    })
-    check(context.getSharedPreferences(DONATION_LEDGER_PREFS, Context.MODE_PRIVATE).edit()
-        .putString(id, root.toString()).commit()) { "Nie udało się zapisać ewidencji darowizn." }
-}
+private fun loadDonationLedger(context: Context, id: String): Pair<String, List<DonationLedgerEntry>> =
+    DonationLedgerStore.load(context, id)
+
+private fun saveDonationLedger(context: Context, id: String, entityName: String, entries: List<DonationLedgerEntry>) =
+    DonationLedgerStore.save(context, id, entityName, entries)
 
 /** Edycja wyłącznie w Profil > Ustawienia; Portfel wyświetla ten sam rejestr tylko do odczytu. */
 @Composable
