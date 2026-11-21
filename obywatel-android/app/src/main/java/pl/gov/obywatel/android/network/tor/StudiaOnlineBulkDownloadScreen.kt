@@ -100,6 +100,8 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     var errorText by remember { mutableStateOf("") }
     var showLogin by remember { mutableStateOf(false) }
     var sessionCookieCount by remember { mutableStateOf(0) }
+    var torDiagnostic by remember { mutableStateOf("Guardian Project Tor nie został jeszcze sprawdzony.") }
+    var checkingTor by remember { mutableStateOf(false) }
     var selectedConnectionMode by remember(context) {
         mutableStateOf(DownloadConnectionSettings.get(context))
     }
@@ -137,6 +139,52 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        Text("Wybrana trasa: ${downloadService.selectedMode.label}", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Diagnostyka Guardian Project Tor", style = MaterialTheme.typography.titleMedium)
+                OutlinedButton(
+                    enabled = !running && !checkingTor && downloadService.selectedMode == DownloadConnectionMode.GUARDIAN_TOR,
+                    onClick = {
+                        checkingTor = true
+                        torDiagnostic = "Uruchamianie Guardian i sprawdzanie wyjścia Tor…"
+                        scope.launch {
+                            val result = withContext(Dispatchers.IO) {
+                                runCatching {
+                                    if (runtime.state == TorState.STOPPED || runtime.state == TorState.FAILED) runtime.start()
+                                    val deadline = System.currentTimeMillis() + 120_000L
+                                    while (runtime.state != TorState.READY && runtime.state != TorState.FAILED &&
+                                        System.currentTimeMillis() < deadline
+                                    ) Thread.sleep(250L)
+                                    check(runtime.state == TorState.READY) {
+                                        "Guardian nie osiągnął READY: ${runtime.failureMessage() ?: runtime.state.name}"
+                                    }
+                                    val endpoints = runtime.proxyEndpoints()
+                                    check(endpoints.isNotEmpty()) { "Guardian nie udostępnił listenera SOCKS." }
+                                    val primary = runtime.proxyEndpoint()
+                                        ?: error("Guardian nie udostępnił podstawowego portu SOCKS.")
+                                    check(TorEndpointProbe.isTor(primary, force = true)) {
+                                        "SOCKS odpowiada, ale serwis kontrolny nie potwierdził IsTor=true."
+                                    }
+                                    "Guardian działa; potwierdzono wyjście Tor. Port SOCKS: ${primary.port}."
+                                }.getOrElse { "Test Guardian nie powiódł się: ${it.message ?: it.javaClass.simpleName}" }
+                            }
+                            torDiagnostic = result
+                            checkingTor = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(if (checkingTor) "Sprawdzanie Tor…" else "Sprawdź Guardian Project Tor") }
+                if (downloadService.selectedMode != DownloadConnectionMode.GUARDIAN_TOR) {
+                    Text("Test Guardian jest dostępny po jawnym wybraniu trybu Guardian. Orbot i DIRECT nie uruchamiają Guardian.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (checkingTor) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Text(torDiagnostic, style = MaterialTheme.typography.bodySmall,
+                    color = if (torDiagnostic.startsWith("Guardian działa")) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Konto studia-online.pl", style = MaterialTheme.typography.titleMedium)
