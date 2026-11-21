@@ -30,6 +30,7 @@ internal object SvgSafetyValidator {
             .onMalformedInput(CodingErrorAction.REPORT)
             .onUnmappableCharacter(CodingErrorAction.REPORT)
             .decode(ByteBuffer.wrap(bytes)).toString()
+        validateMarkupSecurity(raw)
         val safeMarkup = sanitizeMarkup(raw)
         val parser = Xml.newPullParser()
         parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
