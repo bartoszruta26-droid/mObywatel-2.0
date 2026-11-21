@@ -198,7 +198,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                 notice = "Dodano profil lokalny do diagnostyki. Aktualne tryby pobierania korzystają z Guardian, Orbot lub jawnego połączenia bezpośredniego."
             }.onFailure { error = it.message ?: "Nie udało się dodać klienta." }
         }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj do listy") }
-        Text("Orbot: zainstaluj oficjalną aplikację i uruchom Tor. Domyślny profil aplikacji sprawdza lokalny SOCKS5 127.0.0.1:9050. Jeśli zmienisz port w Orbot, ustaw identyczny port w profilu. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność proxy i rzeczywiste wyjście przez sieć Tor. W aktualnych trybach pobierania używany jest profil Orbot; dodatkowe profile lokalne pozostają zapisane do konfiguracji i diagnostyki, ale nie są automatycznie wybierane przez tryb Orbot.",
+        Text("Orbot: zainstaluj oficjalną aplikację i uruchom Tor. Profil aplikacji korzysta z domyślnego lokalnego SOCKS5 127.0.0.1:9050. Pozostaw ten port w Orbot; inny port wymagałby aktualizacji profilu aplikacji. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność proxy i rzeczywiste wyjście przez sieć Tor. W aktualnych trybach pobierania używany jest profil Orbot; dodatkowe profile lokalne pozostają zapisane do konfiguracji i diagnostyki, ale nie są automatycznie wybierane przez tryb Orbot.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
