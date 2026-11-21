@@ -47,15 +47,15 @@ import kotlinx.coroutines.withContext
 fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val runtime = remember(context) { GuardianTorRuntime(context) }
-    val downloadService = remember(context) { TorDownloadService(context, runtime) }
+    val runtime = remember(context) { TorDownloadServiceProvider.getRuntime(context) }
+    val downloadService = remember(context) { TorDownloadServiceProvider.get(context) }
     val downloader = remember(context) { StudiaOnlineBulkDownloader(downloadService) }
     val store = remember(context) { StudiaOnlineSafStore(context) }
 
     DisposableEffect(runtime, downloader) {
         onDispose {
             downloader.stop()
-            runCatching { runtime.stop() }
+            TorDownloadServiceProvider.stopGuardian()
         }
     }
 
