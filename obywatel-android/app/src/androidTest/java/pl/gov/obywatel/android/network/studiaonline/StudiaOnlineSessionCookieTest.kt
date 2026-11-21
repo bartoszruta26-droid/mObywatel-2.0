@@ -4,6 +4,7 @@ package pl.gov.obywatel.android.network.studiaonline
 
 import android.webkit.CookieManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,18 +18,26 @@ class StudiaOnlineSessionCookieTest {
         assertTrue(StudiaOnlineSessionCookies.DOWNLOAD_COOKIE_SCOPE.endsWith("//pobierz-material/"))
         val manager = CookieManager.getInstance()
         manager.setAcceptCookie(true)
-        manager.removeAllCookies(null)
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val cleared = CountDownLatch(1)
+        instrumentation.runOnMainSync {
+            manager.removeAllCookies { cleared.countDown() }
+        }
+        assertTrue("CookieManager did not clear the previous test state",
+            cleared.await(5, TimeUnit.SECONDS))
         manager.flush()
 
         val latch = CountDownLatch(2)
-        manager.setCookie(
-            StudiaOnlineSessionCookies.DOWNLOAD_COOKIE_SCOPE,
-            "session_root=instrumentation; Path=/; Secure; HttpOnly"
-        ) { latch.countDown() }
-        manager.setCookie(
-            StudiaOnlineSessionCookies.DOWNLOAD_COOKIE_SCOPE,
-            "session_route=instrumentation; Path=//pobierz-material/; Secure; HttpOnly"
-        ) { latch.countDown() }
+        instrumentation.runOnMainSync {
+            manager.setCookie(
+                StudiaOnlineSessionCookies.DOWNLOAD_COOKIE_SCOPE,
+                "session_root=instrumentation; Path=/; Secure; HttpOnly"
+            ) { latch.countDown() }
+            manager.setCookie(
+                StudiaOnlineSessionCookies.DOWNLOAD_COOKIE_SCOPE,
+                "session_route=instrumentation; Path=//pobierz-material/; Secure; HttpOnly"
+            ) { latch.countDown() }
+        }
 
         try {
             assertTrue("CookieManager did not finish setting the test cookies",
@@ -40,7 +49,12 @@ class StudiaOnlineSessionCookieTest {
             assertTrue("The shared cookie provider did not return the exact-route cookie",
                 header.contains("session_route=instrumentation"))
         } finally {
-            manager.removeAllCookies(null)
+            val removed = CountDownLatch(1)
+            instrumentation.runOnMainSync {
+                manager.removeAllCookies { removed.countDown() }
+            }
+            assertTrue("CookieManager did not clear the test cookies",
+                removed.await(5, TimeUnit.SECONDS))
             manager.flush()
         }
     }
