@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -159,15 +163,30 @@ private suspend fun downloadInstitutionalSymbol(context: Context, item: Institut
     return sha
 }
 
-/** Searchable source catalogue. Only the selected SVG is downloaded. */
+private val institutionalSymbolCategoryOrder = listOf("Herby", "Godła", "Flagi", "Logotypy", "Pozostałe")
+
+private fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): String {
+    val key = "${item.group} ${item.path} ${item.displayName}".lowercase(Locale.ROOT)
+    return when {
+        Regex("flag|flaga|banner").containsMatchIn(key) -> "Flagi"
+        Regex("coat.?of.?arms|herald|herb|crest|_arms|arms_").containsMatchIn(key) -> "Herby"
+        Regex("eagle|godlo|godło|emblem").containsMatchIn(key) -> "Godła"
+        Regex("logo|brand|organization|organisation|ngo|charit|mark|government|public").containsMatchIn(key) -> "Logotypy"
+        else -> "Pozostałe"
+    }
+}
+
+/** Searchable source catalogue. All candidate groups are visible before a search is entered. */
 @Composable
 internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Unit) {
     val scope = rememberCoroutineScope()
     var candidates by remember { mutableStateOf<List<InstitutionalSymbolCandidate>>(emptyList()) }
     var query by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("Wszystkie") }
     var busyId by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf("") }
     LaunchedEffect(context) {
+        message = "Wczytywanie katalogu SVG…"
         withContext(Dispatchers.IO) {
             context.assets.open("identity-symbols/catalog.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
         }.let { raw ->
@@ -175,47 +194,86 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                 message = "Nie udało się wczytać katalogu: ${it.message ?: "błąd danych"}"
                 emptyList()
             }
+            if (candidates.isNotEmpty()) message = "Katalog SVG gotowy."
         }
     }
     val normalized = query.trim().lowercase(Locale.ROOT)
-    val matches = remember(candidates, normalized) {
-        if (normalized.isBlank()) emptyList() else candidates.filter { item ->
-            listOf(item.displayName, item.path, item.group, item.repository, item.sourceId)
-                .any { it.lowercase(Locale.ROOT).contains(normalized) }
-        }.take(20)
+    val matches = remember(candidates, normalized, selectedCategory) {
+        candidates.filter { item ->
+            (selectedCategory == "Wszystkie" || institutionalSymbolCategory(item) == selectedCategory) &&
+                (normalized.isBlank() || listOf(item.displayName, item.path, item.group, item.repository, item.sourceId)
+                    .any { it.lowercase(Locale.ROOT).contains(normalized) })
+        }
     }
+    val groupedMatches = remember(matches) { matches.groupBy(::institutionalSymbolCategory) }
+    val categoryCounts = remember(candidates) { candidates.groupingBy(::institutionalSymbolCategory).eachCount() }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Katalog nazw i pobieranie pojedynczych symboli", style = MaterialTheme.typography.titleSmall)
-        Text("Indeks zawiera źródła z GitHub i Wikimedia Commons. Wyszukiwanie działa lokalnie; pobierany jest wyłącznie wybrany plik SVG.", style = MaterialTheme.typography.bodySmall)
-        Text("W katalogu: ${candidates.size} rekordów SVG z dostępnym adresem pobierania.", style = MaterialTheme.typography.labelSmall)
+        Text("Katalog źródeł SVG", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Lista obejmuje kandydatów z GitHub i Wikimedia Commons. Wybierz grupę lub wpisz nazwę. Pobierany jest tylko wskazany plik; źródło, autor i licencja pozostają zapisane w metadanych.",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Text("Rekordy z adresem SVG: ${candidates.size} · Wyniki: ${matches.size}", style = MaterialTheme.typography.labelMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            FilterChip(
+                selected = selectedCategory == "Wszystkie",
+                onClick = { selectedCategory = "Wszystkie" },
+                label = { Text("Wszystkie (${candidates.size})") }
+            )
+            institutionalSymbolCategoryOrder.forEach { category ->
+                FilterChip(
+                    selected = selectedCategory == category,
+                    onClick = { selectedCategory = category },
+                    label = { Text("$category (${categoryCounts[category] ?: 0})") }
+                )
+            }
+        }
         OutlinedTextField(
             value = query, onValueChange = { query = it },
             label = { Text("Szukaj nazwy, organizacji, państwa lub herbu") },
             singleLine = true, modifier = Modifier.fillMaxWidth()
         )
-        if (normalized.isNotBlank() && matches.isEmpty() && candidates.isNotEmpty()) {
-            Text("Brak wyników dla tej frazy.", style = MaterialTheme.typography.bodySmall)
+        if (busyId != null) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        if (matches.isEmpty() && candidates.isNotEmpty()) {
+            Text("Brak wyników w wybranej grupie.", style = MaterialTheme.typography.bodySmall)
         }
-        LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(matches, key = { it.sourceId + ":" + it.path }) { item ->
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(item.displayName, style = MaterialTheme.typography.bodyMedium)
-                    Text("${item.group} • ${item.repository}", style = MaterialTheme.typography.labelSmall)
-                    Text("Licencja: ${item.license.ifBlank { "metadane do sprawdzenia" }}", style = MaterialTheme.typography.labelSmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(enabled = busyId == null, onClick = {
-                            busyId = item.sourceId + ":" + item.path
-                            message = "Pobieranie: ${item.displayName}"
-                            scope.launch {
-                                val result = withContext(Dispatchers.IO) { runCatching { downloadInstitutionalSymbol(context, item) } }
-                                message = result.fold(
-                                    { "Zapisano ${item.displayName}; SHA-256: ${it.take(16)}…" },
-                                    { "Błąd pobierania ${item.displayName}: ${it.message ?: "nieznany błąd"}" }
-                                )
-                                busyId = null
-                                if (result.isSuccess) onSaved()
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            institutionalSymbolCategoryOrder.forEach { category ->
+                val groupItems = groupedMatches[category].orEmpty()
+                if (groupItems.isNotEmpty()) {
+                    item(key = "svg-category-$category") {
+                        Text("$category · ${groupItems.size}", style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary)
+                    }
+                    items(groupItems, key = { it.sourceId + ":" + it.path }) { item ->
+                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(item.displayName, style = MaterialTheme.typography.bodyMedium)
+                            Text("${item.group} • ${item.repository}", style = MaterialTheme.typography.labelSmall)
+                            Text("Licencja: ${item.license.ifBlank { "metadane do sprawdzenia" }}", style = MaterialTheme.typography.labelSmall)
+                            Text("Status praw: ${item.rightsStatus.ifBlank { "do niezależnej weryfikacji" }}", style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Button(enabled = busyId == null, onClick = {
+                                busyId = item.sourceId + ":" + item.path
+                                message = "Pobieranie: ${item.displayName}"
+                                scope.launch {
+                                    val result = withContext(Dispatchers.IO) { runCatching { downloadInstitutionalSymbol(context, item) } }
+                                    message = result.fold(
+                                        { "Zapisano ${item.displayName}; SHA-256: ${it.take(16)}…" },
+                                        { "Błąd pobierania ${item.displayName}: ${it.message ?: "nieznany błąd"}" }
+                                    )
+                                    busyId = null
+                                    if (result.isSuccess) onSaved()
+                                }
+                            }) {
+                                Text(if (busyId == item.sourceId + ":" + item.path) "Pobieranie…" else "Pobierz ten SVG")
                             }
-                        }) { Text(if (busyId == item.sourceId + ":" + item.path) "Pobieranie…" else "Pobierz ten SVG") }
+                        }
                     }
                 }
             }
