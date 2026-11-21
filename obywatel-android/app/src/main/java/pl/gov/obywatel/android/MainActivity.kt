@@ -112,6 +112,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -1273,6 +1274,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var exportSnapshot by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var pendingExportUri by remember { mutableStateOf<Uri?>(null) }
     var importBusy by remember { mutableStateOf(false) }
+    var importProgress by remember { mutableStateOf(0f) }
     var exportBusy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val exportVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/x-vcard")) { uri ->
@@ -1287,44 +1289,73 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         if (uri != null) {
             scope.launch {
                 importBusy = true
-                importStatus = "Odczytywanie i sprawdzanie pliku vCard…"
+                importProgress = 0.02f
+                importStatus = "Odczytywanie pliku vCard…"
                 val result = withContext(Dispatchers.IO) {
                     runCatching {
+                        val expectedBytes = runCatching {
+                            context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+                                val column = cursor.getColumnIndex(OpenableColumns.SIZE)
+                                if (column >= 0 && cursor.moveToFirst()) cursor.getLong(column).takeIf { it > 0L } else null
+                            }
+                        }.getOrNull()
                         val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
                             val output = java.io.ByteArrayOutputStream()
-                            val buffer = ByteArray(8192)
-                            var total = 0
+                            val buffer = ByteArray(64 * 1024)
+                            var total = 0L
+                            var lastReported = 0L
                             while (true) {
                                 val count = input.read(buffer)
                                 if (count < 0) break
                                 total += count
-                                require(total <= 256 * 1024 * 1024) { "Plik vCard przekracza limit 256 MB." }
+                                require(total <= 256L * 1024L * 1024L) { "Plik vCard przekracza limit 256 MB." }
                                 output.write(buffer, 0, count)
+                                if (total - lastReported >= 256L * 1024L) {
+                                    lastReported = total
+                                    val fraction = expectedBytes?.let { (total.toFloat() / it.toFloat()).coerceIn(0f, 1f) }
+                                    scope.launch(Dispatchers.Main.immediate) {
+                                        importProgress = fraction?.times(0.35f)?.coerceAtLeast(0.02f) ?: 0.12f
+                                        importStatus = "Odczytywanie pliku: ${android.text.format.Formatter.formatFileSize(context, total)}" +
+                                            (expectedBytes?.let { " / ${android.text.format.Formatter.formatFileSize(context, it)}" } ?: "")
+                                    }
+                                }
                             }
                             output.toByteArray()
                         } ?: error("Nie można otworzyć wybranego pliku.")
                         require(bytes.isNotEmpty()) { "Wybrany plik jest pusty." }
+                        scope.launch(Dispatchers.Main.immediate) {
+                            importProgress = 0.38f
+                            importStatus = "Dekodowanie tekstu i analiza struktury vCard…"
+                        }
                         val raw = runCatching {
                             Charsets.UTF_8.newDecoder()
                                 .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
                                 .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
                                 .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
                         }.getOrElse { String(bytes, java.nio.charset.Charset.forName("windows-1250")) }
-                        VCardCodec.decodeForImport(raw).also {
+                        VCardCodec.decodeForImport(raw) { parserPercent ->
+                            scope.launch(Dispatchers.Main.immediate) {
+                                importProgress = 0.40f + parserPercent / 100f * 0.32f
+                                importStatus = "Analizowanie danych vCard: ${parserPercent}%"
+                            }
+                        }.also {
                             require(it.isNotEmpty()) { "Archiwum nie zawiera danych." }
                         }
                     }
                 }
                 result.onSuccess {
+                    importProgress = 0.74f
                     pendingImport = it
                     importStatus = "Plik odczytany i poprawny. Sprawdź zakres danych przed zatwierdzeniem."
                 }.onFailure {
+                    importProgress = 0f
                     pendingImport = null
                     importStatus = "Błąd importu: ${it.message ?: "nieprawidłowy plik"}"
                 }
                 importBusy = false
             }
         } else {
+            importProgress = 0f
             importStatus = "Import anulowany — dane lokalne pozostają bez zmian."
         }
     }
@@ -1749,7 +1780,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             }
                         },
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
-                        importStatus = importStatus
+                        importStatus = importStatus,
+                        importProgress = importProgress,
+                        importBusy = importBusy
                     )
                     selectedDocumentId == FOREIGN_PRESCRIPTION_ID -> ForeignPrescriptionEditorScreen(
                         onBack = { selectedDocumentId = null }
@@ -2173,7 +2206,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
         pendingImport?.let { incoming ->
             AlertDialog(
-                onDismissRequest = { pendingImport = null },
+                onDismissRequest = { if (!importBusy) pendingImport = null },
                 title = { Text("Import danych vCard") },
                 text = {
                     val current = remember { DemoIdentityStore.load(context) }
@@ -2182,16 +2215,29 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     val recognizedIncoming = incoming.keys.count { it in supportedProfileKeys || it in supportedArchiveKeys || it.startsWith("cs_") || it.startsWith("dp_") || isSupportedDynamicDocumentField(it) }
                     val overwritten = incoming.keys.count { it in supportedProfileKeys && current.containsKey(it) }
                     val added = recognizedIncoming - overwritten
-                    Text(
-                        "Plik zawiera ${incoming.size} pól. Nowe: ${added}; zastąpią istniejące: ${overwritten}. " +
-                            "Dane zostaną połączone z profilem. Po zapisie aplikacja sprawdzi zgodność zapisanych wartości."
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "Plik zawiera ${incoming.size} pól. Nowe: ${added}; zastąpią istniejące: ${overwritten}. " +
+                                "Dane zostaną połączone z profilem. Po zapisie aplikacja sprawdzi zgodność zapisanych wartości."
+                        )
+                        if (importBusy) {
+                            LinearProgressIndicator(progress = importProgress.coerceIn(0f, 1f), modifier = Modifier.fillMaxWidth())
+                            Text(importStatus, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 },
                 confirmButton = {
-                    TextButton(onClick = {
+                    TextButton(enabled = !importBusy, onClick = {
                         scope.launch {
                             importBusy = true
+                            importProgress = 0.75f
                             importStatus = "Zapisywanie i weryfikowanie zaimportowanych danych…"
+                            fun reportImportProgress(value: Float, message: String) {
+                                scope.launch(Dispatchers.Main.immediate) {
+                                    importProgress = value.coerceIn(0f, 1f)
+                                    importStatus = message
+                                }
+                            }
                             val result = withContext(Dispatchers.IO) {
                                 var placementUpdate: Map<String, String>? = null
                                 val outcome = runCatching {
@@ -2207,20 +2253,25 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 (it in current.keys || it in documentEditorImportableFieldKeys() || isSupportedDynamicDocumentField(it)) &&
                                     !it.startsWith("cs_") && !it.startsWith("dp_")
                             }
+                            reportImportProgress(0.77f, "Zapisywanie danych profilu…")
                             val mergedProfile = current.toMutableMap().apply { putAll(profileValues) }
                             PersonalDataPropagation.apply(mergedProfile)
                             DemoIdentityStore.save(context, mergedProfile)
                             incoming["documentGroupConfiguration"]?.let { importDocumentGroupConfiguration(context, it) }
+                            reportImportProgress(0.80f, "Importowanie dokumentów kościelnych i rodowych…")
                             incoming["churchDocumentArchive"]?.let { ChurchDocumentStore.importArchive(context, it) }
                             incoming["familyEntityDocumentArchive"]?.let { FamilyEntityDocumentStore.importArchive(context, it) }
                             incoming["officialDocumentArchive"]?.let { OfficialDocumentStore.importArchive(context, it) }
+                            reportImportProgress(0.83f, "Importowanie dokumentów i załączników…")
                             incoming["signedPdfArchive"]?.let { importSignedPdfArchive(context, it) }
                             incoming["brandAssetArchive"]?.let { DocumentBrandStore.importArchive(context, it) }
+                            reportImportProgress(0.86f, "Importowanie kwalifikacji i dokumentacji zdrowotnej…")
                             incoming["professionalQualificationArchive"]?.let { importProfessionalQualificationArchive(context, it) }
                             incoming["familyHealthArchive"]?.let { importFamilyHealthArchive(context, it) }
                             incoming["medicalHistoryArchive"]?.let { importMedicalHistoryArchive(context, it) }
                             incoming["importedAttachmentArchive"]?.let { pl.gov.obywatel.android.data.ImportedDocumentStore.importArchive(context, it) }
                             incoming["originalAttachmentArchive"]?.let { importOriginalAttachmentArchive(context, it) }
+                            reportImportProgress(0.89f, "Importowanie dokumentów tożsamości, rejestrów i historii…")
                             incoming["identityDocumentsArchive"]?.let { pl.gov.obywatel.android.ui.identity.importIdentityDocumentsArchive(context, it) }
                             incoming["localRegistryArchive"]?.let { pl.gov.obywatel.android.ui.registry.importLocalRegistryArchive(context, it) }
                             incoming["activityHistoryArchive"]?.let { importActivityHistoryArchive(context, it) }
@@ -2266,6 +2317,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 }
                                 placementUpdate = verifiedPlacements
                             }
+                            reportImportProgress(0.94f, "Weryfikowanie zapisanych danych…")
                             val persisted = DemoIdentityStore.loadStrict(context)
                             require(profileValues.all { (key, value) -> persisted[key] == value }) {
                                 "Weryfikacja zapisu nie powiodła się. Dane profilu nie odpowiadają importowi."
@@ -2291,14 +2343,18 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             }
                             result.first.onSuccess { message ->
                                 result.second?.let { documentPlacements = it }
+                                importProgress = 1f
                                 importStatus = message
-                            }.onFailure { importStatus = "Błąd importu lub weryfikacji: ${it.message ?: "nieznany błąd"}" }
+                            }.onFailure {
+                                importProgress = 0f
+                                importStatus = "Błąd importu lub weryfikacji: ${it.message ?: "nieznany błąd"}"
+                            }
                             pendingImport = null
                             importBusy = false
                         }
                     }) { Text(if (importBusy) "Importowanie…" else "Importuj i zweryfikuj") }
                 },
-                dismissButton = { TextButton(onClick = { pendingImport = null }) { Text("Anuluj") } }
+                dismissButton = { TextButton(enabled = !importBusy, onClick = { pendingImport = null }) { Text("Anuluj") } }
             )
         }
     }
@@ -3654,7 +3710,9 @@ private fun SettingsMenuScreen(
     onEditOtherDocuments: (String) -> Unit,
     onExportAll: () -> Unit,
     onImportAll: () -> Unit,
-    importStatus: String
+    importStatus: String,
+    importProgress: Float,
+    importBusy: Boolean
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -3718,7 +3776,10 @@ private fun SettingsMenuScreen(
         Text("Eksport obejmuje pola profilu i ewidencji, w tym załączone dane tekstowe. Plik może zawierać dane wrażliwe — przechowuj go bezpiecznie.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Eksportuj wszystkie dane", "Zapisz jedno archiwum .vcf", Icons.Filled.Description, onExportAll)
         ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
-        if (importStatus.isNotBlank()) Text(importStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+        if (importStatus.isNotBlank()) {
+            Text(importStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
+            if (importBusy) LinearProgressIndicator(progress = importProgress.coerceIn(0f, 1f), modifier = Modifier.fillMaxWidth())
+        }
         ProfileActionCard(
             "Edytuj dane dokumentów",
             "Otwórz katalog wszystkich dokumentów, uporządkowany w rozwijane grupy. Każdy dokument ma osobny formularz edycji.",
