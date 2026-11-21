@@ -99,7 +99,7 @@ class TorDownloadService(
         }
         val endpoint = runtime.proxyEndpoint()
             ?: throw IOException("Guardian Tor zgłosił READY, ale nie udostępnia działającego SOCKS5.")
-        if (!TorEndpointProbe.isTor(endpoint)) {
+        if (!TorEndpointProbe.isTor(endpoint, force = true)) {
             throw IOException("Guardian udostępnia SOCKS5, ale nie potwierdzono wyjścia przez sieć Tor.")
         }
         return endpoint
