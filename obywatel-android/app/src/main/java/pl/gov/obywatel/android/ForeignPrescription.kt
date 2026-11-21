@@ -41,17 +41,38 @@ import org.json.JSONObject
 internal const val FOREIGN_PRESCRIPTION_ID = "foreign_prescription"
 private const val FPR_RECORD_ID = "foreign-prescription-single"
 
+/** Stable Polish labels for the prescription PDF. */
+internal fun foreignPrescriptionPolishLabel(key: String): String? = mapOf(
+    "patientName" to "Pełne imię i nazwisko pacjenta",
+    "patientAddress" to "Adres pacjenta",
+    "medicineInn" to "Nazwa powszechnie stosowana (INN)",
+    "medicineBrand" to "Nazwa handlowa (jeżeli przepisano)",
+    "medicineForm" to "Postać farmaceutyczna",
+    "medicineStrength" to "Dawka",
+    "medicineQuantity" to "Ilość",
+    "medicineDosage" to "Dawkowanie i sposób stosowania",
+    "issueDate" to "Data wystawienia",
+    "prescriberName" to "Pełne imię i nazwisko osoby przepisującej",
+    "prescriberQualifications" to "Tytuł zawodowy / kwalifikacje",
+    "prescriberSpecialty" to "Specjalizacja",
+    "prescriberPractice" to "Nazwa praktyki / placówki",
+    "prescriberContact" to "Dane kontaktowe wystawcy",
+    "prescriberAddress" to "Adres wystawcy / praktyki",
+    "prescriberCountry" to "Państwo wystawienia",
+    "prescriberRegister" to "Numer prawa wykonywania zawodu / numer w rejestrze"
+)[key]
+
 private val foreignPrescriptionFields = listOf(
-    Triple("patientName", "Patient full name", "Full name as shown on identity document"),
+    Triple("patientName", "Patient’s full name", "Full name as shown on identity document"),
     Triple("patientAddress", "Patient address", "Street, house number, postal code, city, country"),
     Triple("medicineInn", "International nonproprietary name (INN)", "Active substance"),
     Triple("medicineBrand", "Brand name (if prescribed)", "Optional trade name"),
     Triple("medicineForm", "Pharmaceutical form", "e.g. tablet, capsule, solution"),
-    Triple("medicineStrength", "Strength", "e.g. 500 mg"),
+    Triple("medicineStrength", "Dose (amount of active ingredient per unit)", "e.g. 500 mg per tablet"),
     Triple("medicineQuantity", "Quantity", "Number of units / packages"),
     Triple("medicineDosage", "Dosage and directions", "Dose, route, frequency and duration"),
     Triple("issueDate", "Date of issue", "YYYY-MM-DD"),
-    Triple("prescriberName", "Prescriber's full name", ""),
+    Triple("prescriberName", "Prescriber’s full name (person prescribing the medicine)", ""),
     Triple("prescriberQualifications", "Professional title / qualifications", "e.g. medical doctor"),
     Triple("prescriberSpecialty", "Medical specialty", "Specialty as stated in the professional register"),
     Triple("prescriberPractice", "Practice / institution name", "Name of the clinic or medical institution"),
@@ -83,6 +104,16 @@ internal fun isValidForeignPrescriptionContact(value: String): Boolean {
     if (Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(contact)) return true
     val normalizedPhone = contact.replace(Regex("[\\s().-]"), "")
     return Regex("^\\+[1-9]\\d{6,14}$").matches(normalizedPhone)
+}
+
+/** Formats a partially entered ISO date as YYYY-MM-DD without inventing missing digits. */
+internal fun formatIsoDateInput(raw: String): String {
+    val digits = raw.filter(Char::isDigit).take(8)
+    return when {
+        digits.length <= 4 -> digits
+        digits.length <= 6 -> digits.substring(0, 4) + "-" + digits.substring(4)
+        else -> digits.substring(0, 4) + "-" + digits.substring(4, 6) + "-" + digits.substring(6)
+    }
 }
 
 internal fun isValidForeignPrescriptionIssueDate(value: String): Boolean = runCatching {
@@ -184,7 +215,7 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
         foreignPrescriptionFields.forEach { (key, label, hint) ->
             OutlinedTextField(
                 value = values["fpr_$key"].orEmpty(),
-                onValueChange = { values["fpr_$key"] = it; translations.remove("$targetLanguage|$key") },
+                onValueChange = { values["fpr_$key"] = if (key == "issueDate") formatIsoDateInput(it) else it; translations.remove("$targetLanguage|$key") },
                 label = { Text(label) }, placeholder = { if (hint.isNotBlank()) Text(hint) },
                 modifier = Modifier.fillMaxWidth(), minLines = if (key == "medicineDosage") 2 else 1
             )
@@ -248,7 +279,8 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
         Button(enabled = missing.isEmpty() && validDate && !busy, onClick = {
             val pdfFields = foreignPrescriptionFields.map { (key, label, _) ->
                 MedicalCertificatePdfField(label, values["fpr_$key"].orEmpty(),
-                    translations["$targetLanguage|label:$key"] ?: label,
+                    if (targetLanguage.equals("pl", ignoreCase = true)) foreignPrescriptionPolishLabel(key) ?: label
+                    else translations["$targetLanguage|label:$key"]?.takeIf { it.isNotBlank() } ?: label,
                     translations["$targetLanguage|$key"].orEmpty())
             }
             pendingPdf = createBilingualMedicalCertificatePdf(
@@ -258,10 +290,13 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
                 doctorName = values["fpr_prescriberName"].orEmpty(),
                 doctorPractice = values["fpr_prescriberPractice"].orEmpty(),
                 doctorAddress = listOf(values["fpr_prescriberAddress"].orEmpty(), values["fpr_prescriberCountry"].orEmpty()).filter { it.isNotBlank() }.joinToString(", "),
-                doctorRegister = values["fpr_prescriberRegister"].orEmpty(),
+                doctorRegister = translations["$targetLanguage|prescriberRegister"]?.takeIf { it.isNotBlank() }
+                    ?: values["fpr_prescriberRegister"].orEmpty(),
                 doctorContact = values["fpr_prescriberContact"].orEmpty(),
-                doctorQualifications = values["fpr_prescriberQualifications"].orEmpty(),
-                doctorSpecialty = values["fpr_prescriberSpecialty"].orEmpty(),
+                doctorQualifications = translations["$targetLanguage|prescriberQualifications"]?.takeIf { it.isNotBlank() }
+                    ?: values["fpr_prescriberQualifications"].orEmpty(),
+                doctorSpecialty = translations["$targetLanguage|prescriberSpecialty"]?.takeIf { it.isNotBlank() }
+                    ?: values["fpr_prescriberSpecialty"].orEmpty(),
                 sideBySideFields = true,
                 documentTitle = "FOREIGN PRESCRIPTION / RECEPTA ZAGRANICZNA",
                 issuerHeading = "PRESCRIBER / WYSTAWCA RECEPTY",

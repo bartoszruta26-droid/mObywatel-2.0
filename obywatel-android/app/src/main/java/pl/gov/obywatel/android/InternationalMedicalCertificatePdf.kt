@@ -32,7 +32,8 @@ internal fun createBilingualMedicalCertificatePdf(
     signatureCaption: String = "Physician's handwritten signature (sign after printing)",
     stampCaption: String = "Physician identification / stamp details",
     patientSignatureCaption: String = "Patient's handwritten signature (if required)",
-    dateAndPlaceCaption: String = "Date and place"
+    dateAndPlaceCaption: String = "Date and place",
+    pageCountOverride: Int? = null
 ): ByteArray {
     val document = PdfDocument()
     val output = ByteArrayOutputStream()
@@ -40,6 +41,10 @@ internal fun createBilingualMedicalCertificatePdf(
     val pageHeight = 842
     val margin = 36f
     val contentWidth = pageWidth - margin * 2
+    val polish = targetLanguage.equals("pl", ignoreCase = true)
+    val notProvided = if (polish) "nie podano" else "not provided"
+    val originalCaption = if (polish) "ORYGINAŁ" else "ORIGINAL"
+    val translationCaption = if (polish) "TŁUMACZENIE" else "TRANSLATION"
     val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = Typeface.create("sans-serif", Typeface.BOLD)
         textSize = 16f
@@ -60,6 +65,18 @@ internal fun createBilingualMedicalCertificatePdf(
     var y = 0f
 
     fun finishPage() {
+        if (pageCountOverride != null && canvas != null) {
+            val footerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textSize = 8f
+                textAlign = Paint.Align.RIGHT
+            }
+            canvas!!.drawText(
+                if (polish) "Strona $pageNumber z $pageCountOverride" else "Page $pageNumber of $pageCountOverride",
+                pageWidth - margin,
+                pageHeight - 16f,
+                footerPaint
+            )
+        }
         page?.let(document::finishPage)
         page = null
         canvas = null
@@ -72,29 +89,41 @@ internal fun createBilingualMedicalCertificatePdf(
         y = margin
         canvas!!.drawText(documentTitle, margin, y, titlePaint)
         y += 19f
-        canvas!!.drawText("ORIGINAL / ${sourceLanguage.uppercase()}     |     TRANSLATION / ${targetLanguage.uppercase()}", margin, y, mutedPaint)
+        canvas!!.drawText("$originalCaption / ${sourceLanguage.uppercase()}     |     $translationCaption / ${targetLanguage.uppercase()}", margin, y, mutedPaint)
         y += 17f
         // Practice identity and contact information belong in the document header, not in the stamp panel.
-        val headerLines = listOf(
-            doctorPractice,
-            doctorAddress,
-            doctorContact
-        ).filter { it.isNotBlank() }
-        if (headerLines.isNotEmpty()) {
-            headerLines.forEach { line ->
-                var remaining = line
-                while (remaining.isNotEmpty()) {
-                    val count = mutedPaint.breakText(remaining, true, contentWidth, null).coerceAtLeast(1)
-                    var end = count
-                    if (count < remaining.length) {
-                        val space = remaining.lastIndexOf(' ', count - 1)
-                        if (space > 0) end = space
-                    }
-                    canvas!!.drawText(remaining.substring(0, end).trimEnd(), margin, y, mutedPaint)
-                    remaining = remaining.substring(end).trimStart()
-                    y += 10f
+        val headerLines = buildList {
+            if (doctorPractice.isNotBlank()) add((if (polish) "Placówka: " else "Practice: ") + doctorPractice)
+            if (doctorAddress.isNotBlank()) add((if (polish) "Adres: " else "Address: ") + doctorAddress)
+            if (doctorContact.isNotBlank()) add((if (polish) "Kontakt: " else "Contact: ") + doctorContact)
+        }
+        val patientHeaderLines = fields.filter { field ->
+            val label = field.sourceLabel.lowercase(java.util.Locale.ROOT)
+            label.contains("patient") ||
+                label.contains("date of birth") ||
+                label.contains("nationality") ||
+                label.contains("identity document") ||
+                label.contains("insurance identifier")
+        }.map { field ->
+            val source = field.sourceValue.ifBlank { "—" }
+            val translated = field.targetValue.ifBlank { "—" }
+            "${field.sourceLabel}: $source  |  ${field.targetLabel}: $translated"
+        }
+        (headerLines + patientHeaderLines).forEach { line ->
+            var remaining = line
+            while (remaining.isNotEmpty()) {
+                val count = mutedPaint.breakText(remaining, true, contentWidth, null).coerceAtLeast(1)
+                var end = count
+                if (count < remaining.length) {
+                    val space = remaining.lastIndexOf(' ', count - 1)
+                    if (space > 0) end = space
                 }
+                canvas!!.drawText(remaining.substring(0, end).trimEnd(), margin, y, mutedPaint)
+                remaining = remaining.substring(end).trimStart()
+                y += 10f
             }
+        }
+        if (headerLines.isNotEmpty() || patientHeaderLines.isNotEmpty()) {
             y += 4f
             canvas!!.drawLine(margin, y, margin + contentWidth, y, borderPaint)
             y += 12f
@@ -160,6 +189,7 @@ internal fun createBilingualMedicalCertificatePdf(
         y += 5f
     }
 
+    var calculatedPageCount = pageCountOverride
     try {
         startPage()
         if (sideBySideFields) {
@@ -174,13 +204,18 @@ internal fun createBilingualMedicalCertificatePdf(
                 y += 7f
             }
         }
-        if (fields.isEmpty()) drawWrapped("No document fields have been completed.", bodyPaint)
+        if (fields.isEmpty()) drawWrapped(if (polish) "Nie uzupełniono danych dokumentu." else "No document fields have been completed.", bodyPaint)
 
-        val stampLines = listOf(
-            "Name: " + doctorName.ifBlank { "not provided" },
-            "Professional title: " + doctorQualifications.ifBlank { "not provided" },
-            "Specialty: " + doctorSpecialty.ifBlank { "not provided" },
-            "Professional licence / register number: " + doctorRegister.ifBlank { "not provided" }
+        val stampLines = if (polish) listOf(
+            "Imię i nazwisko: " + doctorName.ifBlank { notProvided },
+            "Tytuł zawodowy: " + doctorQualifications.ifBlank { notProvided },
+            "Specjalizacja: " + doctorSpecialty.ifBlank { notProvided },
+            "Numer prawa wykonywania zawodu / numer w rejestrze: " + doctorRegister.ifBlank { notProvided }
+        ) else listOf(
+            "Name: " + doctorName.ifBlank { notProvided },
+            "Professional title: " + doctorQualifications.ifBlank { notProvided },
+            "Specialty: " + doctorSpecialty.ifBlank { notProvided },
+            "Professional licence / register number: " + doctorRegister.ifBlank { notProvided }
         )
         val panelHeight = 78f
         if (y + panelHeight + 85f > pageHeight - margin) {
@@ -188,14 +223,14 @@ internal fun createBilingualMedicalCertificatePdf(
             startPage()
         }
         y += 12f
-        drawWrapped(issuerHeading, headingPaint)
+        drawWrapped(if (polish && issuerHeading == "PRESCRIBER / WYSTAWCA RECEPTY") "WYSTAWCA RECEPTY" else issuerHeading, headingPaint)
         y += 4f
         val panelTop = y
         val panelLeft = margin + 220f
         val panelWidth = contentWidth - 220f
         canvas!!.drawRect(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight, borderPaint)
         var panelY = panelTop + 12f
-        canvas!!.drawText(stampCaption, panelLeft + 6f, panelY, headingPaint)
+        canvas!!.drawText(if (polish && stampCaption == "Prescriber identification / stamp details") "DANE IDENTYFIKACYJNE WYSTAWCY / DANE DO PIECZĘCI" else stampCaption, panelLeft + 6f, panelY, headingPaint)
         panelY += 13f
         stampLines.forEach { line ->
             wrapLines(line, mutedPaint, panelWidth - 12f).forEach { wrapped ->
@@ -208,19 +243,43 @@ internal fun createBilingualMedicalCertificatePdf(
         val signatureY = panelTop + panelHeight - 8f
         canvas!!.drawLine(margin, signatureY, margin + 195f, signatureY, bodyPaint)
         y = panelTop + panelHeight + 14f
-        canvas!!.drawText(signatureCaption, margin, y, mutedPaint)
+        canvas!!.drawText(if (polish && signatureCaption.startsWith("Prescriber's handwritten signature")) "Własnoręczny podpis wystawcy (złożyć po wydrukowaniu)" else signatureCaption, margin, y, mutedPaint)
         y += 23f
         canvas!!.drawLine(margin, y, margin + 195f, y, bodyPaint)
         canvas!!.drawLine(panelLeft, y, panelLeft + panelWidth, y, bodyPaint)
         y += 12f
-        canvas!!.drawText(patientSignatureCaption, margin, y, mutedPaint)
-        canvas!!.drawText(dateAndPlaceCaption, panelLeft, y, mutedPaint)
+        canvas!!.drawText(if (polish && patientSignatureCaption.startsWith("Patient's handwritten signature")) "Własnoręczny podpis pacjenta (jeżeli wymagany)" else patientSignatureCaption, margin, y, mutedPaint)
+        canvas!!.drawText(if (polish && dateAndPlaceCaption == "Date and place") "Data i miejsce" else dateAndPlaceCaption, panelLeft, y, mutedPaint)
         finishPage()
-        document.writeTo(output)
-        return output.toByteArray()
+        // Render twice: first determine the page count, then render with footers.
+        if (pageCountOverride == null) calculatedPageCount = pageNumber
+        else document.writeTo(output)
     } finally {
         page?.let { runCatching { document.finishPage(it) } }
         document.close()
         output.close()
     }
+    if (pageCountOverride == null) {
+        return createBilingualMedicalCertificatePdf(
+            sourceLanguage = sourceLanguage,
+            targetLanguage = targetLanguage,
+            fields = fields,
+            doctorName = doctorName,
+            doctorPractice = doctorPractice,
+            doctorAddress = doctorAddress,
+            doctorRegister = doctorRegister,
+            doctorContact = doctorContact,
+            doctorQualifications = doctorQualifications,
+            doctorSpecialty = doctorSpecialty,
+            sideBySideFields = sideBySideFields,
+            documentTitle = documentTitle,
+            issuerHeading = issuerHeading,
+            signatureCaption = signatureCaption,
+            stampCaption = stampCaption,
+            patientSignatureCaption = patientSignatureCaption,
+            dateAndPlaceCaption = dateAndPlaceCaption,
+            pageCountOverride = calculatedPageCount
+        )
+    }
+    return output.toByteArray()
 }

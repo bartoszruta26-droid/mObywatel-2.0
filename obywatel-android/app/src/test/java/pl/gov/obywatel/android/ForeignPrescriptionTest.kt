@@ -51,6 +51,17 @@ class ForeignPrescriptionTest {
     }
 
     @Test
+    fun isoDateInputAutomaticallyInsertsSeparators() {
+        assertEquals("2026", formatIsoDateInput("2026"))
+        assertEquals("2026-11", formatIsoDateInput("202611"))
+        assertEquals("2026-11-16", formatIsoDateInput("20261116"))
+        assertEquals("2026-11-16", formatIsoDateInput("2026-11-16"))
+        assertEquals("2026-11-16", formatIsoDateInput("2026/11/16"))
+        assertEquals("2026-11-1", formatIsoDateInput("2026111"))
+        assertEquals("2026-11-16", formatIsoDateInput("20261116999"))
+    }
+
+    @Test
     fun issueDateMustBeARealIsoCalendarDate() {
         assertTrue(isValidForeignPrescriptionIssueDate("2024-02-29"))
         assertTrue(isValidForeignPrescriptionIssueDate("2026-11-16"))
