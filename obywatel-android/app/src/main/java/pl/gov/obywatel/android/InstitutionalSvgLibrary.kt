@@ -660,6 +660,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     var progressTotal by remember { mutableIntStateOf(0) }
     var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
     var pauseBetweenDownloadsMs by remember { mutableStateOf("1000") }
+    val selectedMode = DownloadConnectionSettings.get(context)
     val externalListLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) { busy = "external-import"; scope.launch { val result = withContext(Dispatchers.IO) { runCatching {
             val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: error("Nie można odczytać pliku.")
@@ -801,7 +802,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 busy = "commons"
                 progressCurrent = 0
                 progressTotal = 0
-                status = "Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons…"
+                status = "Wyszukiwanie i pobieranie do 200 plików SVG z Wikimedia Commons przez ${selectedMode.label}…"
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         runCatching {
@@ -812,7 +813,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                             var totalAttempts = 0
                             var processed = 0
                             resetCommonsDiagnostic(context)
-                            appendCommonsDiagnostic(context, "SEARCH_START limit=200 transport=Tor")
+                            appendCommonsDiagnostic(context, "SEARCH_START limit=200 transport=${selectedMode.name}")
                             writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, JSONArray().toString())
                             val candidates = discoverCommonsOpenSvgs(
                                 context,
@@ -843,13 +844,13 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                     withContext(Dispatchers.Main) {
                                         progressCurrent = processed
                                         progressTotal = totalFound
-                                        status = "Znaleziono $totalFound plików. Rozpoczynam pobieranie przez Tor…"
+                                        status = "Znaleziono $totalFound plików. Rozpoczynam pobieranie przez ${selectedMode.label}…"
                                     }
                                     val part = processCommonsCandidates(context, batch, { completed, total, title ->
                                         withContext(Dispatchers.Main) {
                                             progressCurrent = processed + completed
                                             progressTotal = totalFound
-                                            status = "Pobieranie SVG: " + (processed + completed) + "/$totalFound — $title"
+                                            status = "Pobieranie SVG przez ${selectedMode.label}: " + (processed + completed) + "/$totalFound — $title"
                                         }
                                     }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
                                     processed += part.found
@@ -886,7 +887,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 }
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text(if (busy == "commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 plików SVG z Commons") }
+        ) { Text(if (busy == "commons") "Wyszukiwanie i pobieranie…" else "Znajdź i pobierz do 200 plików SVG z Commons (${selectedMode.label})") }
         OutlinedButton(
             enabled = busy == null && readCommonsCandidates(context).isNotEmpty(),
             onClick = {
