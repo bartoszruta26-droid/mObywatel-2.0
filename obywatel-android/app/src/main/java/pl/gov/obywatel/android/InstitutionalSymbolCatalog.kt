@@ -116,7 +116,7 @@ private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidato
 private suspend fun downloadInstitutionalSymbol(context: Context, item: InstitutionalSymbolCandidate): String {
     val uri = java.net.URI(item.downloadUrl)
     require(uri.scheme.equals("https", true) && uri.userInfo == null &&
-        (uri.host.equals("upload.wikimedia.org", true) || uri.host.equals("raw.githubusercontent.com", true))) {
+        (uri.host.equals("upload.wikimedia.org", true) || uri.host.equals("raw.githubusercontent.com", true) || uri.host.equals("cdn.jsdelivr.net", true))) {
         "Źródło pliku nie znajduje się na dozwolonej domenie Wikimedia Commons lub raw.githubusercontent.com."
     }
     val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, TorDownloadKind.SVG)
@@ -243,6 +243,12 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         if (matches.isEmpty() && candidates.isNotEmpty()) {
             Text("Brak wyników w wybranej grupie.", style = MaterialTheme.typography.bodySmall)
         }
+        val theSvgSourceCount = candidates.count { it.repository == "glincker/thesvg" }
+        Text(
+            "Źródła katalogu: Wikimedia Commons, GitHub oraz theSVG (glincker/thesvg) · $theSvgSourceCount rekordów theSVG",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         LazyColumn(
             modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
