@@ -64,7 +64,8 @@ data class StudiaOnlineDownloadProgress(
 class StudiaOnlineBulkDownloader(
     private val downloads: TorDownloadService,
     private val sleeper: (Long) -> Unit = { Thread.sleep(it) },
-    private val clock: () -> Long = { System.currentTimeMillis() }
+    private val clock: () -> Long = { System.currentTimeMillis() },
+    private val cookieHeaderProvider: () -> String? = { null }
 ) {
     @Volatile private var stopRequested = false
     @Volatile private var pauseRequested = false
@@ -217,7 +218,7 @@ class StudiaOnlineBulkDownloader(
         item: StudiaOnlineDownloadItem,
         onBytes: (downloaded: Long, expected: Long?) -> Unit
     ): ByteArray =
-        downloads.open(item.url, TorDownloadKind.ARCHIVE).use { response ->
+        downloads.open(item.url, TorDownloadKind.ARCHIVE, cookieHeader = cookieHeaderProvider()).use { response ->
             if (response.statusCode !in 200..299) {
                 throw IOException("Nieoczekiwany status HTTP ${response.statusCode}.")
             }
