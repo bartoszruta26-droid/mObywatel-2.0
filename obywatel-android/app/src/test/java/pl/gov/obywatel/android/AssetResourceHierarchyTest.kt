@@ -35,6 +35,8 @@ class AssetResourceHierarchyTest {
         assertEquals("Flaga", commonsSvgAssetKind("National flag of Poland.svg"))
         assertEquals("Herb", commonsSvgAssetKind("Coat of arms of Warsaw.svg"))
         assertEquals("Godło", commonsSvgAssetKind("National emblem.svg"))
+        assertEquals("Godło", commonsSvgAssetKind("State emblem of Poland.svg"))
+        assertEquals("Logo", commonsSvgAssetKind("Eagle illustration for a wildlife poster.svg"))
         assertEquals("Pieczęć", commonsSvgAssetKind("Official seal.svg"))
         assertEquals("Logo", commonsSvgAssetKind("Government logo.svg"))
     }
