@@ -8,7 +8,7 @@ import java.io.IOException
 enum class DownloadConnectionMode(val label: String, val description: String) {
     GUARDIAN_TOR("Guardian Project Tor", "Wbudowany klient Tor, uruchamiany na żądanie."),
     ORBOT("Orbot", "Lokalny SOCKS5 Orbot; aplikacja wymaga potwierdzenia wyjścia przez Tor."),
-    DIRECT("Bezpośrednio — bez Tor", "Zwykłe połączenie HTTPS. Adres IP urządzenia jest widoczny dla serwisu i operatora sieci.")
+    DIRECT("Bezpośrednio — bez Tor", "HTTPS bez lokalnego proxy Tor. Adres IP urządzenia jest widoczny dla serwisu; systemowy VPN (np. Orbot w trybie VPN) może nadal kierować ruch przez tunel.")
 }
 
 object DownloadConnectionSettings {
