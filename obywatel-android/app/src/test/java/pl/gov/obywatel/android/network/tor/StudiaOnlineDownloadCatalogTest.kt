@@ -8,6 +8,44 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StudiaOnlineDownloadCatalogTest {
+    @Test fun sessionCookieIsAllowedOnlyForInitialExactMaterialEndpoint() {
+        val allowed = java.net.URL("https://studia-online.pl//pobierz-material/12345")
+        assertTrue(mayAttachStudiaOnlineCookie(allowed, true))
+        assertFalse(mayAttachStudiaOnlineCookie(allowed, false))
+    }
+
+    @Test fun sessionCookieIsNotSentToOtherHostsOrPaths() {
+        assertFalse(mayAttachStudiaOnlineCookie(
+            java.net.URL("https://studia-online.pl/konto"), true
+        ))
+        assertFalse(mayAttachStudiaOnlineCookie(
+            java.net.URL("https://cdn.studia-online.pl//pobierz-material/12345"), true
+        ))
+        assertFalse(mayAttachStudiaOnlineCookie(
+            java.net.URL("https://studia-online.pl/pobierz-material/12345"), true
+        ))
+        assertFalse(mayAttachStudiaOnlineCookie(
+            java.net.URL("http://studia-online.pl//pobierz-material/12345"), true
+        ))
+        assertFalse(mayAttachStudiaOnlineCookie(
+            java.net.URL("https://studia-online.pl:8443//pobierz-material/12345"), true
+        ))
+    }
+
+    @Test fun declaredPdfMustContainPdfSignature() {
+        val invalid = "<html>not a pdf</html>".toByteArray()
+        assertTrue(StudiaOnlineBulkDownloader.materialFormatErrorMessage("application/pdf", invalid)
+            ?.contains("sygnatury PDF") == true)
+        val valid = "%PDF-1.7\\nbody".toByteArray()
+        assertEquals(null, StudiaOnlineBulkDownloader.materialFormatErrorMessage("application/pdf", valid))
+    }
+
+    @Test fun downloadedFileExtensionIsDetectedFromFileSignature() {
+        assertEquals("pdf", StudiaOnlineBulkDownloader.detectedFileExtension("%PDF-1.7".toByteArray()))
+        assertEquals("zip", StudiaOnlineBulkDownloader.detectedFileExtension(byteArrayOf(0x50, 0x4b, 0x03, 0x04)))
+        assertEquals("bin", StudiaOnlineBulkDownloader.detectedFileExtension(byteArrayOf(0x01, 0x02, 0x03)))
+    }
+
     @Test fun preservesDoubleSlashInTheConfiguredUrl() {
         val item = StudiaOnlineDownloadCatalog.fromIds(listOf(12345)).single()
         assertEquals("https://studia-online.pl//pobierz-material/12345", item.url)
