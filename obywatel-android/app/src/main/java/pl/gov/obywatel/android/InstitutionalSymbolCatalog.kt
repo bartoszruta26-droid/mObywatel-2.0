@@ -115,9 +115,11 @@ private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidato
 
 private suspend fun downloadInstitutionalSymbol(context: Context, item: InstitutionalSymbolCandidate): String {
     val uri = java.net.URI(item.downloadUrl)
-    require(uri.scheme.equals("https", true) && uri.userInfo == null &&
-        (uri.host.equals("upload.wikimedia.org", true) || uri.host.equals("raw.githubusercontent.com", true) || uri.host.equals("cdn.jsdelivr.net", true))) {
-        "Źródło pliku nie znajduje się na dozwolonej domenie Wikimedia Commons lub raw.githubusercontent.com."
+    val trustedSvgHost = uri.host.equals("upload.wikimedia.org", true) ||
+        uri.host.equals("raw.githubusercontent.com", true) ||
+        uri.host.equals("cdn.jsdelivr.net", true)
+    require(uri.scheme.equals("https", true) && uri.userInfo == null && trustedSvgHost) {
+        "Źródło pliku nie znajduje się na dozwolonej domenie Wikimedia Commons, GitHub Raw lub jsDelivr."
     }
     val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, TorDownloadKind.SVG)
     val bytes = response.use {
