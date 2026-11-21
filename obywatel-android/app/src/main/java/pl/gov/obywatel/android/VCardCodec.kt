@@ -136,9 +136,11 @@ internal object VCardCodec {
     fun decodeForImport(raw: String, onProgress: (Int) -> Unit = {}): Map<String, String> {
         onProgress(0)
         val normalized = normalizeLegacyExport(raw)
-        runCatching { decodeArchive(normalized, onProgress) }.getOrNull()?.let {
-            onProgress(100)
-            return repairMojibake(it)
+        if (normalized.contains("X-OWD-ARCHIVE-VERSION:", ignoreCase = true)) {
+            runCatching { decodeArchive(normalized, onProgress) }.getOrNull()?.let {
+                onProgress(100)
+                return repairMojibake(it)
+            }
         }
         require(normalized.toByteArray(Charsets.UTF_8).size <= 256 * 1024 * 1024) {
             "Plik vCard przekracza limit 256 MB."
