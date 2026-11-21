@@ -104,7 +104,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         }
         Text("Preferowany obszar węzła wyjściowego Tor", fontWeight = FontWeight.Bold)
         Text(
-            "Domyślnie Polska. To preferencja kierowania, a nie gwarancja adresu IP — dostępność węzłów w danym kraju lub regionie zależy od sieci Tor. W trybie bezpośrednim ustawienie nie ma zastosowania.",
+            "Domyślnie Polska. Guardian otrzymuje tę preferencję przy następnym uruchomieniu Tor; to preferencja, nie gwarancja adresu IP. Orbot jest osobną aplikacją i zachowuje własną konfigurację wyjścia. W trybie bezpośrednim ustawienie nie ma zastosowania.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
