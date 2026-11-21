@@ -99,9 +99,10 @@ class TorHttpResponse internal constructor(
 }
 
 /**
- * Reusable HTTPS-over-Tor transport. It streams response bytes and never persists them.
+ * Reusable HTTPS transport for Tor-routed and explicitly direct downloads.
  * SOCKS routing uses unresolved destination addresses in OkHttp, so destination DNS is
- * resolved by the SOCKS proxy rather than the Android device.
+ * resolved by the SOCKS proxy rather than the Android device. Direct requests explicitly
+ * disable proxy selection and are only used when the user selects the unprotected route.
  */
 class TorHttpTransport(
     private val runtime: TorRuntime,
