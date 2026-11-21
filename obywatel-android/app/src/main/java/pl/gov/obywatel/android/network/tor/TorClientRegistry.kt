@@ -29,6 +29,7 @@ object TorClientRegistry {
     private const val KEY_LISTENER_PROFILE_MIGRATION = "listener_profile_migration_v2"
     private const val KEY_ORBOT_PORT_MIGRATION = "orbot_port_migration_v1"
     private const val KEY_ORBOT_DEFAULT_PORT_MIGRATION = "orbot_default_port_migration_v2"
+    private const val KEY_EXIT_COUNTRY_PREFS = "exit_country_preferences_v1"
 
     fun load(context: Context): List<TorClientProfile> {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -122,6 +123,29 @@ object TorClientRegistry {
         require(load(context).any { it.id == id && it.enabled })
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_ACTIVE, id).apply()
+    }
+
+    /** Persist country preference for Tor clients whose configuration is owned elsewhere. */
+    fun setExitCountryPreference(context: Context, clientId: String, countryCodes: List<String>) {
+        require(clientId.isNotBlank())
+        require(countryCodes.all { it.matches(Regex("[a-z]{2}")) })
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val json = runCatching { JSONObject(prefs.getString(KEY_EXIT_COUNTRY_PREFS, "{}").orEmpty()) }
+            .getOrDefault(JSONObject())
+        json.put(clientId, JSONArray(countryCodes))
+        prefs.edit().putString(KEY_EXIT_COUNTRY_PREFS, json.toString()).apply()
+    }
+
+    fun exitCountryPreference(context: Context, clientId: String): List<String> {
+        val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_EXIT_COUNTRY_PREFS, "{}")
+        val array = runCatching { JSONObject(raw.orEmpty()).optJSONArray(clientId) }.getOrNull()
+            ?: return emptyList()
+        return buildList {
+            for (index in 0 until array.length()) {
+                array.optString(index).takeIf { it.matches(Regex("[a-z]{2}")) }?.let(::add)
+            }
+        }
     }
 
     fun newProfile(name: String, host: String, port: Int): TorClientProfile {
