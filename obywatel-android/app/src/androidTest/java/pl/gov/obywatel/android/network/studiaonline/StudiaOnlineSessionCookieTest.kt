@@ -20,19 +20,25 @@ class StudiaOnlineSessionCookieTest {
         manager.removeAllCookies(null)
         manager.flush()
 
-        val latch = CountDownLatch(1)
+        val latch = CountDownLatch(2)
         manager.setCookie(
             StudiaOnlineSessionCookies.DOWNLOAD_COOKIE_SCOPE,
-            "session_test=instrumentation; Path=/pobierz-material/; Secure; HttpOnly"
+            "session_root=instrumentation; Path=/; Secure; HttpOnly"
+        ) { latch.countDown() }
+        manager.setCookie(
+            StudiaOnlineSessionCookies.DOWNLOAD_COOKIE_SCOPE,
+            "session_route=instrumentation; Path=//pobierz-material/; Secure; HttpOnly"
         ) { latch.countDown() }
 
         try {
-            assertTrue("CookieManager did not finish setting the test cookie",
+            assertTrue("CookieManager did not finish setting the test cookies",
                 latch.await(5, TimeUnit.SECONDS))
             manager.flush()
             val header = StudiaOnlineSessionCookies.currentHeader().orEmpty()
-            assertTrue("The shared cookie provider did not return the path-scoped cookie",
-                header.contains("session_test=instrumentation"))
+            assertTrue("The shared cookie provider did not return the root-scoped cookie",
+                header.contains("session_root=instrumentation"))
+            assertTrue("The shared cookie provider did not return the exact-route cookie",
+                header.contains("session_route=instrumentation"))
         } finally {
             manager.removeAllCookies(null)
             manager.flush()
