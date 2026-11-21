@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
 
 /** User-selected materials hosted at the exact studia-online.pl path supplied in the request. */
 object StudiaOnlineDownloadCatalog {
-    private const val BASE = "https://studia-online.pl/pobierz-material/"
+    private const val BASE = "https://studia-online.pl//pobierz-material/"
 
     fun fromRange(first: Int, last: Int): List<StudiaOnlineDownloadItem> {
         require(first > 0 && last >= first) { "Zakres numerów materiałów jest nieprawidłowy." }
