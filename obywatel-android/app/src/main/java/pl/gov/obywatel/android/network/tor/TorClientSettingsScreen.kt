@@ -174,7 +174,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                 notice = "Dodano profil. Jego wybór zapisano; profil jest od razu uwzględniany przez usługę pobierania po pozytywnym teście Tor."
             }.onFailure { error = it.message ?: "Nie udało się dodać klienta." }
         }, modifier = Modifier.fillMaxWidth()) { Text("Dodaj do listy") }
-        Text("Orbot: zainstaluj oficjalną aplikację i uruchom Tor. Domyślny profil aplikacji sprawdza lokalny SOCKS5 127.0.0.1:9050. Jeśli zmienisz port w Orbot, ustaw identyczny port w profilu. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność proxy i rzeczywiste wyjście przez sieć Tor. Inne dodane profile lokalne również są dopuszczane do puli wyłącznie po pozytywnym teście Tor.",
+        Text("Orbot: zainstaluj oficjalną aplikację i uruchom Tor. Domyślny profil aplikacji sprawdza lokalny SOCKS5 127.0.0.1:9050. Jeśli zmienisz port w Orbot, ustaw identyczny port w profilu. Następnie użyj przycisku Testuj. Aplikacja nie steruje procesem Orbot — sprawdza dostępność proxy i rzeczywiste wyjście przez sieć Tor. W aktualnych trybach pobierania używany jest profil Orbot; dodatkowe profile lokalne pozostają zapisane do konfiguracji i diagnostyki, ale nie są automatycznie wybierane przez tryb Orbot.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
