@@ -286,6 +286,7 @@ private suspend fun discoverCommonsOpenSvgs(
                 )
                 val searchArray = response.optJSONObject("query")?.optJSONArray("search")
                     ?: throw java.io.IOException("Wikimedia Commons nie zwróciło listy wyników wyszukiwania.")
+                termHadSuccessfulRequest = true
                 appendCommonsDiagnostic(context, "SEARCH term=$term expression=$expression results=${searchArray.length()}")
                 if (searchArray.length() > 0) {
                     results = searchArray
@@ -296,7 +297,11 @@ private suspend fun discoverCommonsOpenSvgs(
                 lastSearchFailure = failure
             }
         }
-        if (results == null && lastSearchFailure != null) {
+        if (termHadSuccessfulRequest) {
+            successfulSearchTerms++
+        } else if (lastSearchFailure != null) {
+            failedSearchTerms++
+            if (firstSearchFailure == null) firstSearchFailure = lastSearchFailure.message
             onSearchProgress(seenTitles.size, "$term (błąd API: " + (lastSearchFailure.message ?: "nieznany błąd") + ")")
         }
         results?.let { searchResults ->
