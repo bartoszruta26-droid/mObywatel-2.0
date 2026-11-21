@@ -183,8 +183,10 @@ class TorHttpTransport(
                 .header("User-Agent", policy.userAgent)
                 .header("Accept-Encoding", "identity")
                 .header("Accept", "application/pdf, application/octet-stream, */*")
-                .header("Referer", "https://studia-online.pl/konto")
                 .apply {
+                    if (url.host.equals("studia-online.pl", ignoreCase = true)) {
+                        header("Referer", "https://studia-online.pl/konto")
+                    }
                     // Session cookies are sent only to the authenticated WSKZ host.
                     // Redirects to other hosts never receive the user's session cookie.
                     if (url.host.equals("studia-online.pl", ignoreCase = true) &&
