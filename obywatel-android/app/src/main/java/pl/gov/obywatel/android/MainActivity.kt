@@ -937,7 +937,6 @@ internal val documentDisplayOptions = (listOf(
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
     Triple("receipts", "Rachunki", R.drawable.lib_ic_document_signed),
     Triple("payment_transactions", "Rachunki płatnicze", R.drawable.lib_ic_wallet),
-    Triple("financial_service", "Służba finansowa", R.drawable.lib_ic_wallet),
     Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
     Triple("children", "Dokumentacja dzieci", R.drawable.family),
     Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.lib_ic_image),
@@ -1026,9 +1025,7 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
-    id == "financial_service" || id.startsWith("payment_account_") ||
-        id in setOf(INTERNATIONAL_DONATION_WORSHIP_ID, INTERNATIONAL_DONATION_NGO_ID, INTERNATIONAL_DONATION_PERSON_ID) ||
-        DonationLedgerCatalog.find(id) != null -> "Służba finansowa"
+    id == "financial_service" || DonationLedgerCatalog.find(id) != null -> "Służba finansowa"
     id == "payment_account_foundation" -> "Służba fundacyjna"
     id == "payment_account_association" -> "Służba stowarzyszeniowa"
     id == "payment_account_church" -> "Służba kościelna"
