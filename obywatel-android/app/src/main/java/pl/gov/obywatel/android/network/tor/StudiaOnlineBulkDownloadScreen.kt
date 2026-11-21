@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -54,6 +55,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     DisposableEffect(runtime, downloader) {
         onDispose {
             downloader.stop()
+            runCatching { runtime.stop() }
         }
     }
 
@@ -69,6 +71,8 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     var activeStop by remember { mutableStateOf<(() -> Unit)?>(null) }
     var progress by remember { mutableStateOf<StudiaOnlineDownloadProgress?>(null) }
     var errorText by remember { mutableStateOf("") }
+    var torDiagnostic by remember { mutableStateOf("Guardian Project Tor nie został jeszcze sprawdzony.") }
+    var checkingTor by remember { mutableStateOf(false) }
 
     val folderPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -99,6 +103,44 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
         )
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Diagnostyka Guardian Project Tor", style = MaterialTheme.typography.titleMedium)
+                OutlinedButton(
+                    enabled = !running && !checkingTor,
+                    onClick = {
+                        checkingTor = true
+                        torDiagnostic = "Uruchamianie usługi Guardian i oczekiwanie na obwód Tor…"
+                        scope.launch {
+                            val result = withContext(Dispatchers.IO) {
+                                runCatching {
+                                    if (runtime.state == TorState.STOPPED || runtime.state == TorState.FAILED) runtime.start()
+                                    val deadline = System.currentTimeMillis() + 120_000L
+                                    while (runtime.state != TorState.READY &&
+                                        runtime.state != TorState.FAILED &&
+                                        System.currentTimeMillis() < deadline
+                                    ) {
+                                        Thread.sleep(250L)
+                                    }
+                                    check(runtime.state == TorState.READY) {
+                                        "Guardian nie osiągnął READY: ${runtime.failureMessage() ?: runtime.state.name}"
+                                    }
+                                    val endpoints = runtime.proxyEndpoints()
+                                    check(endpoints.isNotEmpty()) { "Guardian zgłosił READY, ale nie udostępnił działającego portu SOCKS." }
+                                    val verified = endpoints.filter { TorEndpointProbe.isTor(it, force = true) }
+                                    check(verified.isNotEmpty()) {
+                                        "Port SOCKS odpowiada, ale test check.torproject.org nie potwierdził wyjścia przez sieć Tor."
+                                    }
+                                    "Guardian Project Tor działa. Obwód i wyjście Tor potwierdzone dla portów: ${verified.joinToString { it.port.toString() }}."
+                                }.getOrElse { "Test Guardian Project Tor nie powiódł się: ${it.message ?: it.javaClass.simpleName}" }
+                            }
+                            torDiagnostic = result
+                            checkingTor = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (checkingTor) "Sprawdzanie Tor…" else "Sprawdź Guardian Project Tor")
+                }
+                Text(torDiagnostic, color = if (torDiagnostic.startsWith("Guardian Project Tor działa")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 Text("Zakres numerów materiałów", style = MaterialTheme.typography.titleMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
@@ -221,6 +263,19 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Postęp: ${it.completed} / ${it.total}", style = MaterialTheme.typography.titleMedium)
+                    Text("Etap: ${it.phase}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (it.expectedBytes != null && it.expectedBytes > 0L) {
+                        LinearProgressIndicator(
+                            progress = (it.downloadedBytes.toFloat() / it.expectedBytes.toFloat()).coerceIn(0f, 1f),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else if (it.currentId != null && it.phase.contains("Pobieranie")) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                    if (it.currentId != null && it.phase.contains("Pobieranie")) {
+                        Text("Pobrano: ${android.text.format.Formatter.formatFileSize(context, it.downloadedBytes)}" +
+                            (it.expectedBytes?.let { size -> " / ${android.text.format.Formatter.formatFileSize(context, size)}" } ?: ""))
+                    }
                     Text("Pozostało: ${it.remaining}")
                     Text("Pobrano poprawnie: ${it.succeeded.size}")
                     Text("Błędy: ${it.failed.size}")
