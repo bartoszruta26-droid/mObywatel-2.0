@@ -125,11 +125,12 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                                     }
                                     val endpoints = runtime.proxyEndpoints()
                                     check(endpoints.isNotEmpty()) { "Guardian zgłosił READY, ale nie udostępnił działającego portu SOCKS." }
-                                    val verified = endpoints.filter { TorEndpointProbe.isTor(it, force = true) }
-                                    check(verified.isNotEmpty()) {
+                                    val primary = runtime.proxyEndpoint()
+                                        ?: error("Guardian nie udostępnił podstawowego portu SOCKS.")
+                                    check(TorEndpointProbe.isTor(primary, force = true)) {
                                         "Port SOCKS odpowiada, ale test check.torproject.org nie potwierdził wyjścia przez sieć Tor."
                                     }
-                                    "Guardian Project Tor działa. Obwód i wyjście Tor potwierdzone dla portów: ${verified.joinToString { it.port.toString() }}."
+                                    "Guardian Project Tor działa. Obwód i wyjście Tor potwierdzone na porcie ${primary.port}; aktywne listenery SOCKS: ${endpoints.joinToString { it.port.toString() }}."
                                 }.getOrElse { "Test Guardian Project Tor nie powiódł się: ${it.message ?: it.javaClass.simpleName}" }
                             }
                             torDiagnostic = result
