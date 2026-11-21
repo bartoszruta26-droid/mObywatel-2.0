@@ -97,7 +97,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Ważne — bezpieczeństwo połączenia", fontWeight = FontWeight.Bold)
-                Text("Wybrany tryb jest stosowany do pobierania materiałów, symboli SVG i pozostałych zasobów. Guardian i Orbot są sprawdzane pod kątem rzeczywistego wyjścia przez Tor. Gdy wybrany klient Tor nie działa, pobieranie kończy się czytelnym błędem — aplikacja nie przełącza po cichu na inny klient ani na połączenie bezpośrednie. Tryb bezpośredni nie używa Tor i ujawnia adres IP urządzenia serwisowi docelowemu.",
+                Text("Wybrany tryb jest stosowany do pobierania materiałów, symboli SVG i pozostałych zasobów. Guardian i Orbot są sprawdzane pod kątem rzeczywistego wyjścia przez Tor. Gdy wybrany klient Tor nie działa, pobieranie kończy się czytelnym błędem — aplikacja nie przełącza po cichu na inny klient ani na połączenie bezpośrednie. Tryb bezpośredni omija lokalne proxy Tor i ujawnia adres IP urządzenia serwisowi docelowemu; systemowy VPN, np. Orbot w trybie VPN całego urządzenia, nadal może tunelować ruch.",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
