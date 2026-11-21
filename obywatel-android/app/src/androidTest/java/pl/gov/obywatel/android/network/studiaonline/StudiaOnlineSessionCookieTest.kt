@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 class StudiaOnlineSessionCookieTest {
     @Test
     fun cookieForDownloadPathIsAvailableToTheNativeDownloaderProvider() {
+        assertTrue(StudiaOnlineSessionCookies.DOWNLOAD_COOKIE_SCOPE.endsWith("//pobierz-material/"))
         val manager = CookieManager.getInstance()
         manager.setAcceptCookie(true)
         manager.removeAllCookies(null)
