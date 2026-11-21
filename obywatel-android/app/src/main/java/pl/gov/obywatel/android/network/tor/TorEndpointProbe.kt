@@ -62,9 +62,15 @@ object TorDownloadServiceProvider {
         runtime?.proxyEndpoints()?.contains(endpoint) == true
 
     @Synchronized
+    fun getRuntime(context: Context): GuardianTorRuntime {
+        val app = context.applicationContext
+        return runtime ?: GuardianTorRuntime(app).also { runtime = it }
+    }
+
+    @Synchronized
     fun get(context: Context): TorDownloadService {
         val app = context.applicationContext
-        val activeRuntime = runtime ?: GuardianTorRuntime(app).also { runtime = it }
+        val activeRuntime = getRuntime(app)
         val selectedMode = DownloadConnectionSettings.get(app)
 
         // The selected download route is authoritative. DIRECT and ORBOT must never
