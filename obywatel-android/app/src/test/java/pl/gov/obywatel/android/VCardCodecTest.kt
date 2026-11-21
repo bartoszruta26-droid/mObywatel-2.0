@@ -47,6 +47,22 @@ class VCardCodecTest {
     }
 
     @Test
+    fun reportsMonotonicProgressWhileEncodingApplicationArchive() {
+        val source = buildMap {
+            put("firstNames", "Jan")
+            put("lastName", "Kowalski")
+            repeat(1_000) { put("customField$it", "wartość $it") }
+        }
+        val progress = mutableListOf<Int>()
+        val encoded = VCardCodec.encodeArchive(source) { progress += it }
+        assertEquals(source, VCardCodec.decodeArchive(encoded))
+        assertTrue(progress.isNotEmpty())
+        assertEquals(100, progress.last())
+        assertTrue(progress.all { it in 0..100 })
+        assertTrue(progress.zipWithNext().all { (a, b) -> b >= a })
+    }
+
+    @Test
     fun importsArchiveWithLfOnlyLineEndings() {
         val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski")
         val encoded = VCardCodec.encodeArchive(source).replace("\r\n", "\n")
