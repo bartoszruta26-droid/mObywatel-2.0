@@ -33,10 +33,10 @@ internal object DonationLedgerCatalog {
     const val CHURCH = "donation_ledger_church"
     data class Definition(val id: String, val title: String, val entityLabel: String, val group: String)
     val all = listOf(
-        Definition(PERSON, "Ewidencja darowizn osoby fizycznej", "Imię i nazwisko obdarowanego", "Służba cywilna"),
-        Definition(FOUNDATION, "Ewidencja darowizn fundacji", "Pełna nazwa fundacji", "Służba fundacyjna"),
-        Definition(ASSOCIATION, "Ewidencja darowizn stowarzyszenia", "Pełna nazwa stowarzyszenia", "Służba stowarzyszeniowa"),
-        Definition(CHURCH, "Ewidencja darowizn Kościoła", "Nazwa Kościoła / jednostki kościelnej", "Służba kościelna")
+        Definition(PERSON, "Ewidencja darowizn osoby fizycznej", "Imię i nazwisko obdarowanego", "Służba finansowa"),
+        Definition(FOUNDATION, "Ewidencja darowizn fundacji", "Pełna nazwa fundacji", "Służba finansowa"),
+        Definition(ASSOCIATION, "Ewidencja darowizn stowarzyszenia", "Pełna nazwa stowarzyszenia", "Służba finansowa"),
+        Definition(CHURCH, "Ewidencja darowizn Kościoła", "Nazwa Kościoła / jednostki kościelnej", "Służba finansowa")
     ).associateBy { it.id }
     fun find(id: String): Definition? = all[id]
 }
