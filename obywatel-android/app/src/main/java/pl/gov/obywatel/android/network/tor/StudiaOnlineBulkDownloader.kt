@@ -48,7 +48,10 @@ data class StudiaOnlineDownloadProgress(
     val failed: Map<Int, String>,
     val paused: Boolean,
     val finished: Boolean,
-    val sha256ById: Map<Int, String> = emptyMap()
+    val sha256ById: Map<Int, String> = emptyMap(),
+    val phase: String = "Oczekiwanie",
+    val downloadedBytes: Long = 0L,
+    val expectedBytes: Long? = null
 ) {
     val remaining: Int get() = (total - completed).coerceAtLeast(0)
 }
@@ -61,8 +64,7 @@ data class StudiaOnlineDownloadProgress(
 class StudiaOnlineBulkDownloader(
     private val downloads: TorDownloadService,
     private val sleeper: (Long) -> Unit = { Thread.sleep(it) },
-    private val clock: () -> Long = { System.currentTimeMillis() },
-    private val cookieHeaderProvider: () -> String? = { null }
+    private val clock: () -> Long = { System.currentTimeMillis() }
 ) {
     @Volatile private var stopRequested = false
     @Volatile private var pauseRequested = false
@@ -93,11 +95,18 @@ class StudiaOnlineBulkDownloader(
         var previousRequestAt: Long? = null
         var retryAfterUntilMs: Long? = null
 
-        fun emit(currentId: Int?, isPaused: Boolean, finished: Boolean = false) {
+        fun emit(
+            currentId: Int?,
+            isPaused: Boolean,
+            finished: Boolean = false,
+            phase: String = if (isPaused) "Wstrzymano" else "Oczekiwanie",
+            downloadedBytes: Long = 0L,
+            expectedBytes: Long? = null
+        ) {
             onProgress(
                 StudiaOnlineDownloadProgress(
                     completed, items.size, currentId, success.toList(), failed.toMap(), isPaused, finished,
-                    sha256ById.toMap()
+                    sha256ById.toMap(), phase, downloadedBytes, expectedBytes
                 )
             )
         }
@@ -126,10 +135,12 @@ class StudiaOnlineBulkDownloader(
                 }
                 if (stopRequested || pauseRequested) continue
 
-                emit(item.id, false)
+                emit(item.id, false, phase = "Łączenie — ${downloads.selectedMode.label}…")
                 try {
                     previousRequestAt = clock()
-                    downloaded = downloadWholeItem(item)
+                    downloaded = downloadWholeItem(item) { bytes, expected ->
+                        emit(item.id, false, phase = "Pobieranie danych — ${downloads.selectedMode.label}", downloadedBytes = bytes, expectedBytes = expected)
+                    }
                 } catch (failure: Exception) {
                     if (stopRequested) break
                     if (pauseRequested || failure is InterruptedIOException) {
@@ -162,6 +173,7 @@ class StudiaOnlineBulkDownloader(
 
             if (downloaded != null) {
                 try {
+                    emit(item.id, false, phase = "Zapisywanie pobranego pliku…", downloadedBytes = downloaded.size.toLong())
                     sha256ById[item.id] = save(item, downloaded)
                     success += item.id
                 } catch (failure: Exception) {
@@ -201,12 +213,11 @@ class StudiaOnlineBulkDownloader(
     }
 
     @Throws(IOException::class)
-    private fun downloadWholeItem(item: StudiaOnlineDownloadItem): ByteArray =
-        downloads.open(
-            item.url,
-            TorDownloadKind.ARCHIVE,
-            cookieHeader = cookieHeaderProvider()
-        ).use { response ->
+    private fun downloadWholeItem(
+        item: StudiaOnlineDownloadItem,
+        onBytes: (downloaded: Long, expected: Long?) -> Unit
+    ): ByteArray =
+        downloads.open(item.url, TorDownloadKind.ARCHIVE).use { response ->
             if (response.statusCode !in 200..299) {
                 throw IOException("Nieoczekiwany status HTTP ${response.statusCode}.")
             }
@@ -216,6 +227,9 @@ class StudiaOnlineBulkDownloader(
             val output = java.io.ByteArrayOutputStream()
             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
             var total = 0L
+            var lastProgressBytes = 0L
+            var lastProgressAtMs = clock()
+            onBytes(0L, response.contentLength)
             while (true) {
                 if (stopRequested) throw InterruptedIOException("Pobieranie zatrzymano.")
                 if (pauseRequested) throw InterruptedIOException("Pobieranie wstrzymano.")
@@ -231,7 +245,14 @@ class StudiaOnlineBulkDownloader(
                 total += read
                 if (total > MAX_FILE_BYTES) throw IOException("Materiał przekracza limit 64 MB.")
                 output.write(buffer, 0, read)
+                val now = clock()
+                if (total - lastProgressBytes >= 128L * 1024L || now - lastProgressAtMs >= 500L) {
+                    lastProgressBytes = total
+                    lastProgressAtMs = now
+                    onBytes(total, response.contentLength)
+                }
             }
+            onBytes(total, response.contentLength)
             output.toByteArray().also {
                 if (it.isEmpty()) throw IOException("Serwer zwrócił pusty plik.")
                 htmlResponseErrorMessage(response.contentType, it)?.let { message -> throw IOException(message) }

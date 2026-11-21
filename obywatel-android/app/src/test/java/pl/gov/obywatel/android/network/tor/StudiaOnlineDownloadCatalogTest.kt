@@ -157,6 +157,25 @@ class StudiaOnlineDownloadCatalogTest {
         )
     }
 
+    @Test fun downloadProgressCarriesCurrentPhaseAndByteCounts() {
+        val progress = StudiaOnlineDownloadProgress(
+            completed = 1,
+            total = 3,
+            currentId = 42,
+            succeeded = listOf(41),
+            failed = emptyMap(),
+            paused = false,
+            finished = false,
+            phase = "Pobieranie danych — Guardian Project Tor",
+            downloadedBytes = 512L * 1024L,
+            expectedBytes = 1024L * 1024L
+        )
+        assertEquals("Pobieranie danych — Guardian Project Tor", progress.phase)
+        assertEquals(512L * 1024L, progress.downloadedBytes)
+        assertEquals(1024L * 1024L, progress.expectedBytes)
+        assertEquals(2, progress.remaining)
+    }
+
     @Test fun statusReportsRemainingItems() {
         val progress = StudiaOnlineDownloadProgress(2, 5, 3, listOf(1, 2), emptyMap(), false, false)
         assertEquals(3, progress.remaining)
