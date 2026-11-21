@@ -227,7 +227,8 @@ class StudiaOnlineBulkDownloader(
             val output = java.io.ByteArrayOutputStream()
             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
             var total = 0L
-            var lastProgressAt = 0L
+            var lastProgressBytes = 0L
+            var lastProgressAtMs = clock()
             onBytes(0L, response.contentLength)
             while (true) {
                 if (stopRequested) throw InterruptedIOException("Pobieranie zatrzymano.")
@@ -245,8 +246,9 @@ class StudiaOnlineBulkDownloader(
                 if (total > MAX_FILE_BYTES) throw IOException("Materiał przekracza limit 64 MB.")
                 output.write(buffer, 0, read)
                 val now = clock()
-                if (total - lastProgressAt >= 128L * 1024L || now - lastProgressAt >= 500L) {
-                    lastProgressAt = total
+                if (total - lastProgressBytes >= 128L * 1024L || now - lastProgressAtMs >= 500L) {
+                    lastProgressBytes = total
+                    lastProgressAtMs = now
                     onBytes(total, response.contentLength)
                 }
             }
