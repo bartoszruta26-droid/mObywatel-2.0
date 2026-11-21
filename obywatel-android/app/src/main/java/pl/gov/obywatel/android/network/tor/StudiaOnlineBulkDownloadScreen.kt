@@ -14,6 +14,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import pl.gov.obywatel.android.network.studiaonline.StudiaOnlineCredentialStore
+import pl.gov.obywatel.android.network.studiaonline.StudiaOnlineLoginWebView
 import android.view.MotionEvent
 import android.view.View
 import androidx.compose.foundation.layout.Row
@@ -79,6 +83,13 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
         })
     }
     val store = remember(context) { StudiaOnlineSafStore(context) }
+    val credentialStore = remember(context) { StudiaOnlineCredentialStore(context) }
+    val savedLogin = remember(context) {
+        credentialStore.load()?.let { credentials ->
+            credentials.password.fill(Char.MIN_VALUE)
+            credentials.username
+        }
+    }
 
     DisposableEffect(runtime, downloader) {
         onDispose {
@@ -99,6 +110,11 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     var progress by remember { mutableStateOf<StudiaOnlineDownloadProgress?>(null) }
     var errorText by remember { mutableStateOf("") }
     var showLogin by remember { mutableStateOf(false) }
+    var accountLogin by remember { mutableStateOf(savedLogin.orEmpty()) }
+    var accountPassword by remember { mutableStateOf("") }
+    var credentialsSaved by remember { mutableStateOf(savedLogin != null) }
+    var credentialsMessage by remember { mutableStateOf("") }
+    var loginMessage by remember { mutableStateOf("") }
     var sessionCookieCount by remember { mutableStateOf(0) }
     var torDiagnostic by remember { mutableStateOf("Guardian Project Tor nie został jeszcze sprawdzony.") }
     var checkingTor by remember { mutableStateOf(false) }
@@ -194,6 +210,65 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Text(
+                    if (credentialsSaved) "Dane logowania są zapisane lokalnie i szyfrowane kluczem AES-256 przechowywanym w Android Keystore."
+                    else "Możesz zapisać login i hasło w zaszyfrowanym magazynie tego urządzenia albo zalogować się ręcznie.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = accountLogin,
+                    onValueChange = { accountLogin = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Login do Studia Online") },
+                    singleLine = true,
+                    enabled = !running
+                )
+                OutlinedTextField(
+                    value = accountPassword,
+                    onValueChange = { accountPassword = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Hasło") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    enabled = !running
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            val candidate = accountPassword.toCharArray()
+                            try {
+                                credentialStore.save(accountLogin.trim(), candidate)
+                                credentialsSaved = true
+                                accountPassword = ""
+                                credentialsMessage = "Dane zapisano w zaszyfrowanym magazynie urządzenia."
+                            } catch (failure: Exception) {
+                                credentialsMessage = failure.message ?: "Nie udało się zapisać danych logowania."
+                            } finally {
+                                candidate.fill(Char.MIN_VALUE)
+                            }
+                        },
+                        enabled = !running && accountLogin.isNotBlank() && accountPassword.isNotEmpty(),
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Zapisz dane") }
+                    OutlinedButton(
+                        onClick = {
+                            runCatching { credentialStore.clear() }
+                                .onSuccess {
+                                    accountLogin = ""
+                                    accountPassword = ""
+                                    credentialsSaved = false
+                                    credentialsMessage = "Usunięto zapisane dane logowania."
+                                }
+                                .onFailure { credentialsMessage = it.message ?: "Nie udało się usunąć danych." }
+                        },
+                        enabled = !running && credentialsSaved
+                    ) { Text("Usuń dane") }
+                }
+                if (credentialsMessage.isNotBlank()) {
+                    Text(credentialsMessage, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { showLogin = !showLogin }, modifier = Modifier.weight(1f)) {
                         Text(if (showLogin) "Zamknij logowanie" else "Zaloguj do WSKZ")
@@ -223,32 +298,23 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                 )
                 if (showLogin) {
                     Text(
-                        "Zaloguj się na oficjalnej stronie WSKZ. Hasło wpisujesz bezpośrednio w formularzu serwisu; aplikacja nie zapisuje go w swoich ustawieniach. Logowanie w oknie WebView korzysta z systemowej trasy sieciowej Androida, natomiast samo pobieranie poniżej używa wybranego trybu.",
+                        "Logowanie odbywa się na oficjalnej stronie HTTPS. Możesz ręcznie wpisać dane albo uzupełnić formularz zapisanymi danymi. Aplikacja nie omija zabezpieczeń serwisu. WebView korzysta z systemowej trasy sieciowej Androida; pobieranie używa wybranej trasy Tor, Orbot lub bezpośredniej.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    AndroidView(
-                        modifier = Modifier.fillMaxWidth().height(520.dp),
-                        factory = { viewContext ->
-                            TouchFriendlyWebView(viewContext).apply {
-                                isFocusable = true
-                                isFocusableInTouchMode = true
-                                isClickable = true
-                                isLongClickable = true
-                                overScrollMode = View.OVER_SCROLL_NEVER
-                                settings.javaScriptEnabled = true
-                                settings.domStorageEnabled = true
-                                CookieManager.getInstance().setAcceptCookie(true)
-                                CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                                webViewClient = object : WebViewClient() {
-                                    override fun onPageFinished(view: WebView?, url: String?) {
-                                        refreshSessionStatus()
-                                    }
-                                }
-                                loadUrl("https://studia-online.pl/")
-                            }
+                    if (loginMessage.isNotBlank()) {
+                        Text(loginMessage, style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    StudiaOnlineLoginWebView(
+                        credentialStore = credentialStore,
+                        onStatus = { loginMessage = it },
+                        onSessionReady = {
+                            showLogin = false
+                            refreshSessionStatus()
+                            loginMessage = "Potwierdzono przekazanie ciasteczek WebView. Aktywność sesji potwierdzi dopiero odpowiedź serwisu podczas pobierania."
                         },
-                        update = { }
+                        onClose = { showLogin = false }
                     )
                 }
                 Text("Trasa pobierania", style = MaterialTheme.typography.titleMedium)
