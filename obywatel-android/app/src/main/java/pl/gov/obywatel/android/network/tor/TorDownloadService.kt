@@ -54,7 +54,7 @@ object DownloadConnectionSettings {
         val stored = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getString(KEY_MODE, DownloadConnectionMode.DIRECT.name)
         return runCatching { DownloadConnectionMode.valueOf(stored.orEmpty()) }
-            .getOrDefault(DownloadConnectionMode.GUARDIAN_TOR)
+            .getOrDefault(DownloadConnectionMode.DIRECT)
     }
 
     fun set(context: Context, mode: DownloadConnectionMode) {
