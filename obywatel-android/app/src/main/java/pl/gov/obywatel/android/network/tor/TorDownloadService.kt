@@ -11,6 +11,41 @@ enum class DownloadConnectionMode(val label: String, val description: String) {
     DIRECT("Bezpośrednio — bez Tor", "HTTPS bez lokalnego proxy Tor. Adres IP urządzenia jest widoczny dla serwisu; systemowy VPN (np. Orbot w trybie VPN) może nadal kierować ruch przez tunel.")
 }
 
+/**
+ * Preferred geographic scope for the Tor exit node.
+ *
+ * This is a best-effort Tor exit preference, not a guarantee: Tor may be unable to
+ * satisfy a country or regional preference when the requested relays are unavailable.
+ * DIRECT mode ignores this setting because it does not use Tor.
+ */
+enum class TorExitRegion(val label: String, val torCountryCodes: List<String>) {
+    POLAND("Polska", listOf("pl")),
+    EUROPE("Europa", listOf(
+        "ad", "al", "at", "ba", "be", "bg", "by", "ch", "cy", "cz", "de", "dk",
+        "ee", "es", "fi", "fr", "gb", "gr", "hr", "hu", "ie", "is", "it", "li",
+        "lt", "lu", "lv", "mc", "md", "me", "mk", "mt", "nl", "no", "pl", "pt",
+        "ro", "rs", "se", "si", "sk", "sm", "tr", "ua", "va"
+    )),
+    WORLD("Świat", emptyList())
+}
+
+object TorExitRegionSettings {
+    private const val PREFS = "download_connection_settings"
+    private const val KEY_REGION = "exit_region"
+
+    fun get(context: Context): TorExitRegion {
+        val stored = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_REGION, TorExitRegion.POLAND.name)
+        return runCatching { TorExitRegion.valueOf(stored.orEmpty()) }
+            .getOrDefault(TorExitRegion.POLAND)
+    }
+
+    fun set(context: Context, region: TorExitRegion) {
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putString(KEY_REGION, region.name).apply()
+    }
+}
+
 object DownloadConnectionSettings {
     private const val PREFS = "download_connection_settings"
     private const val KEY_MODE = "mode"
