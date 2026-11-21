@@ -42,10 +42,10 @@ class AssetResourceHierarchyTest {
     @Test
     fun institutionalCatalogMapsEveryVisibleCategoryToAnAcceptedKind() {
         val examples = listOf(
-            InstitutionalSymbolCandidate("f", "repo", "main", "flags/flag.svg", "flag", "", "", "", "", "", ""),
-            InstitutionalSymbolCandidate("h", "repo", "main", "heraldry/coat-of-arms.svg", "heraldry", "", "", "", "", "", ""),
-            InstitutionalSymbolCandidate("e", "repo", "main", "symbols/eagle-emblem.svg", "institution", "", "", "", "", "", ""),
-            InstitutionalSymbolCandidate("l", "repo", "main", "logos/public-logo.svg", "government", "", "", "", "", "", "")
+            InstitutionalSymbolCandidate("f", "repo", "main", "flags/flag.svg", "flag", "", "", "", "", "", "", ""),
+            InstitutionalSymbolCandidate("h", "repo", "main", "heraldry/coat-of-arms.svg", "heraldry", "", "", "", "", "", "", ""),
+            InstitutionalSymbolCandidate("e", "repo", "main", "symbols/eagle-emblem.svg", "institution", "", "", "", "", "", "", ""),
+            InstitutionalSymbolCandidate("l", "repo", "main", "logos/public-logo.svg", "government", "", "", "", "", "", "", "")
         )
         assertEquals(listOf("Flagi", "Herby", "Godła", "Logotypy"), examples.map(::institutionalSymbolCategory))
     }
