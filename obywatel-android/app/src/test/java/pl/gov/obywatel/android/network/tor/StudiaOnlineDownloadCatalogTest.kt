@@ -33,7 +33,7 @@ class StudiaOnlineDownloadCatalogTest {
     }
 
     @Test fun declaredPdfMustContainPdfSignature() {
-        val invalid = "<html>not a pdf</html>".toByteArray()
+        val invalid = "NOT-A-PDF".toByteArray()
         assertTrue(StudiaOnlineBulkDownloader.materialFormatErrorMessage("application/pdf", invalid)
             ?.contains("sygnatury PDF") == true)
         val valid = "%PDF-1.7\\nbody".toByteArray()
