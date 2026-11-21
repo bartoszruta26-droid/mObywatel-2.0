@@ -39,7 +39,9 @@ class TorDownloadService(
             val endpoint = runCatching { profile.endpoint() }.getOrNull()
             if (endpoint == null) false
             else if (profile.id.startsWith("guardian-embedded-")) {
-                runtime.state == TorState.READY && runtime.proxyEndpoints().contains(endpoint)
+                runtime.state == TorState.READY &&
+                    runtime.proxyEndpoints().contains(endpoint) &&
+                    TorEndpointProbe.isTor(endpoint)
             } else {
                 val orbotProfile = profile.id.startsWith("orbot-")
                 !runtime.proxyEndpoints().contains(endpoint) &&
