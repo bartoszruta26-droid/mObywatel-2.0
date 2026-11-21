@@ -168,10 +168,10 @@ private val institutionalSymbolCategoryOrder = listOf("Herby", "Godła", "Flagi"
 internal fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): String {
     val key = "${item.group} ${item.path} ${item.displayName}".lowercase(Locale.ROOT)
     return when {
-        Regex("flag|flaga|banner").containsMatchIn(key) -> "Flagi"
-        Regex("coat.?of.?arms|herald|herb|crest|_arms|arms_").containsMatchIn(key) -> "Herby"
-        Regex("eagle|godlo|godło|emblem").containsMatchIn(key) -> "Godła"
-        Regex("logo|brand|organization|organisation|ngo|charit|mark|government|public").containsMatchIn(key) -> "Logotypy"
+        listOf("flag", "flaga", "banner").any(key::contains) -> "Flagi"
+        listOf("coat of arms", "coat-of-arms", "coat_of_arms", "herald", "herb", "crest", "_arms", "arms_").any(key::contains) -> "Herby"
+        listOf("eagle", "godlo", "godło", "emblem").any(key::contains) -> "Godła"
+        listOf("logo", "brand", "organization", "organisation", "ngo", "charit", "mark", "government", "public").any(key::contains) -> "Logotypy"
         else -> "Pozostałe"
     }
 }
