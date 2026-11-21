@@ -1321,7 +1321,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
                                 .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
                         }.getOrElse { String(bytes, java.nio.charset.Charset.forName("windows-1250")) }
-                        VCardCodec.decodeForImport(raw).also {
+                        VCardCodec.decodeForImport(raw) { percent ->
+                            scope.launch(Dispatchers.Main) { importStatus = "Odczytywanie vCard: $percent%" }
+                        }.also {
                             require(it.isNotEmpty()) { "Archiwum nie zawiera danych." }
                         }
                     }
@@ -1750,7 +1752,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         require(snapshot.isNotEmpty()) {
                                             "Brak danych do eksportu. Najpierw uzupełnij i zapisz dane w ustawieniach."
                                         }
-                                        VCardCodec.encodeArchive(snapshot)
+                                        VCardCodec.encodeArchive(snapshot) { percent ->
+                                            scope.launch(Dispatchers.Main) { importStatus = "Przygotowywanie archiwum vCard: $percent%" }
+                                        }
                                         snapshot
                                     }
                                 }

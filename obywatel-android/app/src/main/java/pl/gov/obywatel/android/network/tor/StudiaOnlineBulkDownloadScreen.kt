@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -70,8 +71,8 @@ private class TouchFriendlyWebView(context: android.content.Context) : WebView(c
 fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val runtime = remember(context) { GuardianTorRuntime(context) }
-    val downloadService = remember(context) { TorDownloadService(context, runtime) }
+    val runtime = remember(context) { TorDownloadServiceProvider.getRuntime(context) }
+    val downloadService = remember(context) { TorDownloadServiceProvider.get(context) }
     val downloader = remember(context) {
         StudiaOnlineBulkDownloader(downloadService, cookieHeaderProvider = {
             CookieManager.getInstance().getCookie("https://studia-online.pl//pobierz-material/")
@@ -354,6 +355,19 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Postęp: ${it.completed} / ${it.total}", style = MaterialTheme.typography.titleMedium)
+                    Text("Etap: ${it.phase}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (it.expectedBytes != null && it.expectedBytes > 0L) {
+                        LinearProgressIndicator(
+                            progress = (it.downloadedBytes.toFloat() / it.expectedBytes.toFloat()).coerceIn(0f, 1f),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else if (it.currentId != null && !it.paused && !it.finished) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                    if (it.currentId != null && it.phase.contains("Pobieranie")) {
+                        Text("Pobrano: ${android.text.format.Formatter.formatFileSize(context, it.downloadedBytes)}" +
+                            (it.expectedBytes?.let { size -> " / ${android.text.format.Formatter.formatFileSize(context, size)}" } ?: ""))
+                    }
                     Text("Pozostało: ${it.remaining}")
                     Text("Pobrano poprawnie: ${it.succeeded.size}")
                     Text("Błędy: ${it.failed.size}")

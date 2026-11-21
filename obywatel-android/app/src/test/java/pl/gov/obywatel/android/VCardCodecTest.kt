@@ -31,6 +31,38 @@ class VCardCodecTest {
     }
 
     @Test
+    fun reportsMonotonicProgressWhileDecodingApplicationArchive() {
+        val source = buildMap {
+            put("firstNames", "Jan")
+            put("lastName", "Kowalski")
+            repeat(1_000) { put("customField$it", "wartość $it") }
+        }
+        val progress = mutableListOf<Int>()
+        val imported = VCardCodec.decodeForImport(VCardCodec.encodeArchive(source)) { progress += it }
+        assertEquals(source, imported)
+        assertTrue(progress.isNotEmpty())
+        assertEquals(100, progress.last())
+        assertTrue(progress.all { it in 0..100 })
+        assertTrue(progress.zipWithNext().all { (a, b) -> b >= a })
+    }
+
+    @Test
+    fun reportsMonotonicProgressWhileEncodingApplicationArchive() {
+        val source = buildMap {
+            put("firstNames", "Jan")
+            put("lastName", "Kowalski")
+            repeat(1_000) { put("customField$it", "wartość $it") }
+        }
+        val progress = mutableListOf<Int>()
+        val encoded = VCardCodec.encodeArchive(source) { progress += it }
+        assertEquals(source, VCardCodec.decodeArchive(encoded))
+        assertTrue(progress.isNotEmpty())
+        assertEquals(100, progress.last())
+        assertTrue(progress.all { it in 0..100 })
+        assertTrue(progress.zipWithNext().all { (a, b) -> b >= a })
+    }
+
+    @Test
     fun importsArchiveWithLfOnlyLineEndings() {
         val source = mapOf("firstNames" to "Jan", "lastName" to "Kowalski")
         val encoded = VCardCodec.encodeArchive(source).replace("\r\n", "\n")
@@ -87,6 +119,23 @@ END:VCARD
         assertEquals("Fundacja Aria", imported["contactOrganization"])
         assertEquals("Dyrektor", imported["contactTitle"])
         assertEquals("https://example.org", imported["contactUrl"])
+    }
+
+    @Test
+    fun reportsMonotonicProgressForOrdinaryContactVCard() {
+        val contact = """BEGIN:VCARD
+VERSION:3.0
+FN:Jan Kowalski
+N:Kowalski;Jan;;;
+TEL:+48123456789
+EMAIL:jan@example.com
+END:VCARD
+"""
+        val progress = mutableListOf<Int>()
+        val imported = VCardCodec.decodeForImport(contact) { progress += it }
+        assertEquals("Jan", imported["firstNames"])
+        assertEquals(100, progress.last())
+        assertTrue(progress.zipWithNext().all { (a, b) -> b >= a })
     }
 
     @Test
