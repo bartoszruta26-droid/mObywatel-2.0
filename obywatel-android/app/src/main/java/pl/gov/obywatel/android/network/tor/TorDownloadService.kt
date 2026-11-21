@@ -82,7 +82,7 @@ class TorDownloadService(
         if (runtime.proxyEndpoints().contains(endpoint)) {
             throw IOException("Port Orbot pokrywa się z listenerem Guardian. Zmień port Orbot lub zatrzymaj Guardian.")
         }
-        if (!TorEndpointProbe.isTor(endpoint, force = true)) {
+        if (!TorEndpointProbe.isTor(endpoint)) {
             throw IOException("Orbot nie potwierdził wyjścia przez sieć Tor. Uruchom Orbot i sprawdź lokalny port SOCKS5.")
         }
         return endpoint
@@ -114,7 +114,7 @@ class TorDownloadService(
         }
         val primary = runtime.proxyEndpoint()
             ?: throw IOException("Guardian Tor zgłosił READY, ale nie udostępnia działającego SOCKS5.")
-        if (!TorEndpointProbe.isTor(primary, force = true)) {
+        if (!TorEndpointProbe.isTor(primary)) {
             throw IOException("Guardian udostępnia SOCKS5, ale nie potwierdzono wyjścia przez sieć Tor.")
         }
         return runCatching { guardianRouter.select(kind).endpoint() }
