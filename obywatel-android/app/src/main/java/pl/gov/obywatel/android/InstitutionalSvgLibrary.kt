@@ -347,7 +347,7 @@ internal fun commonsSvgAssetKind(title: String): String {
         listOf("flag", "flaga", "banner", "bandera").any(key::contains) -> "Flaga"
         listOf("coat of arms", "coat_of_arms", "herald", "herb", "crest").any(key::contains) -> "Herb"
         listOf("seal", "stamp", "pieczęć", "pieczec").any(key::contains) -> "Pieczęć"
-        listOf("emblem", "godło", "godlo", "eagle").any(key::contains) -> "Godło"
+        listOf("emblem", "national emblem", "state emblem", "godło", "godlo").any(key::contains) -> "Godło"
         else -> "Logo"
     }
 }
@@ -439,7 +439,7 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     val rights = JSONObject().put("source", "Wikimedia Commons").put("sourcePage", item.page).put("downloadUrl", item.url)
         .put("license", item.license).put("licenseUrl", item.licenseUrl).put("author", item.artist)
         .put("restrictions", item.restrictions).put("sha256", sha)
-        .put("verificationStatus", "open-license-metadata-found; trademark-and-use-review-required")
+        .put("verificationStatus", "metadata-collected; license-verification-required; trademark-and-use-review-required")
         .put("permittedKinds", JSONArray()).toString()
     val title = item.title.removePrefix("File:")
     val kind = commonsSvgAssetKind(title)
