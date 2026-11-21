@@ -108,6 +108,17 @@ class TorHttpTransport(
     private val policy: TorRequestPolicy = TorRequestPolicy()
 ) {
     private val clientCache = HashMap<TorProxyEndpoint, OkHttpClient>()
+    private val directClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .proxy(Proxy.NO_PROXY)
+            .connectTimeout(policy.connectTimeoutMs.toLong(), TimeUnit.MILLISECONDS)
+            .readTimeout(policy.readTimeoutMs.toLong(), TimeUnit.MILLISECONDS)
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .retryOnConnectionFailure(false)
+            .cache(null)
+            .build()
+    }
 
     @Synchronized
     private fun client(endpoint: TorProxyEndpoint): OkHttpClient =
@@ -139,6 +150,20 @@ class TorHttpTransport(
         endpoint: TorProxyEndpoint,
         rangeStart: Long = 0L,
         ifRange: String? = null
+    ): TorHttpResponse = openUsing(rawUrl, rangeStart, ifRange) { client(endpoint) }
+
+    /** Explicit direct HTTPS transport. No SOCKS proxy or Tor fallback is used. */
+    fun openDirect(
+        rawUrl: String,
+        rangeStart: Long = 0L,
+        ifRange: String? = null
+    ): TorHttpResponse = openUsing(rawUrl, rangeStart, ifRange) { directClient }
+
+    private fun openUsing(
+        rawUrl: String,
+        rangeStart: Long,
+        ifRange: String?,
+        clientForRequest: () -> OkHttpClient
     ): TorHttpResponse {
         require(rangeStart >= 0L) { "Range offset cannot be negative." }
         var url = validateHttpsUrl(rawUrl)
@@ -156,7 +181,7 @@ class TorHttpTransport(
                 }
                 .build()
             val response = try {
-                client(endpoint).newCall(request).execute()
+                clientForRequest().newCall(request).execute()
             } catch (failure: Exception) {
                 if (failure is IOException) throw failure
                 throw IOException("Unable to open HTTPS response through Tor.", failure)
