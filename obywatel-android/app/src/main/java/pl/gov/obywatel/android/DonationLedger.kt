@@ -33,10 +33,10 @@ internal object DonationLedgerCatalog {
     const val CHURCH = "donation_ledger_church"
     data class Definition(val id: String, val title: String, val entityLabel: String, val group: String)
     val all = listOf(
-        Definition(PERSON, "Ewidencja darowizn osoby fizycznej", "Imię i nazwisko obdarowanego", "Służba cywilna"),
-        Definition(FOUNDATION, "Ewidencja darowizn fundacji", "Pełna nazwa fundacji", "Służba fundacyjna"),
-        Definition(ASSOCIATION, "Ewidencja darowizn stowarzyszenia", "Pełna nazwa stowarzyszenia", "Służba stowarzyszeniowa"),
-        Definition(CHURCH, "Ewidencja darowizn Kościoła", "Nazwa Kościoła / jednostki kościelnej", "Służba kościelna")
+        Definition(PERSON, "Ewidencja darowizn osoby fizycznej", "Imię i nazwisko obdarowanego", "Służba finansowa"),
+        Definition(FOUNDATION, "Ewidencja darowizn fundacji", "Pełna nazwa fundacji", "Służba finansowa"),
+        Definition(ASSOCIATION, "Ewidencja darowizn stowarzyszenia", "Pełna nazwa stowarzyszenia", "Służba finansowa"),
+        Definition(CHURCH, "Ewidencja darowizn Kościoła", "Nazwa Kościoła / jednostki kościelnej", "Służba finansowa")
     ).associateBy { it.id }
     fun find(id: String): Definition? = all[id]
 }
@@ -130,7 +130,7 @@ private fun donationTotalsAcrossLedgers(context: Context): Map<String, BigDecima
 private fun saveDonationLedger(context: Context, id: String, entityName: String, entries: List<DonationLedgerEntry>) =
     DonationLedgerStore.save(context, id, entityName, entries)
 
-/** Edycja wyłącznie w Profil > Ustawienia; Portfel wyświetla ten sam rejestr tylko do odczytu. */
+/** Ewidencja darowizn; wprowadzanie i aktualizacja danych są dostępne z grupy Służba finansowa. */
 @Composable
 internal fun DonationLedgerScreen(documentId: String, readOnly: Boolean, onBack: () -> Unit) {
     val definition = requireNotNull(DonationLedgerCatalog.find(documentId))
