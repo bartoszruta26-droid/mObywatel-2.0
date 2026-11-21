@@ -49,7 +49,7 @@ object TorEndpointProbe {
     }
 }
 
-/** Process-wide runtime. Guardian is started only when explicitly selected. */
+/** Shared runtime and download service. Guardian starts lazily on an explicit Guardian request. */
 object TorDownloadServiceProvider {
     @Volatile private var runtime: GuardianTorRuntime? = null
     @Volatile private var service: TorDownloadService? = null
@@ -58,34 +58,28 @@ object TorDownloadServiceProvider {
         runtime?.proxyEndpoints()?.contains(endpoint) == true
 
     @Synchronized
+    fun getRuntime(context: Context): GuardianTorRuntime {
+        val app = context.applicationContext
+        return runtime ?: GuardianTorRuntime(app).also { runtime = it }
+    }
+
+    @Synchronized
     fun get(context: Context): TorDownloadService {
         val app = context.applicationContext
-        val activeRuntime = runtime ?: GuardianTorRuntime(app).also { runtime = it }
+        val activeRuntime = getRuntime(app)
         when (DownloadConnectionSettings.get(app)) {
             DownloadConnectionMode.DIRECT, DownloadConnectionMode.ORBOT -> {
-                if (activeRuntime.state != TorState.STOPPED) activeRuntime.stop()
+                if (activeRuntime.state != TorState.STOPPED) runCatching { activeRuntime.stop() }
             }
-            DownloadConnectionMode.GUARDIAN_TOR -> {
-                if (activeRuntime.state == TorState.STOPPED || activeRuntime.state == TorState.FAILED) {
-                    activeRuntime.start()
-                }
-                val deadline = System.currentTimeMillis() + 120_000L
-                while (activeRuntime.state != TorState.READY && activeRuntime.state != TorState.FAILED &&
-                    System.currentTimeMillis() < deadline
-                ) {
-                    try {
-                        Thread.sleep(250L)
-                    } catch (interrupted: InterruptedException) {
-                        Thread.currentThread().interrupt()
-                        throw java.io.IOException("Oczekiwanie na Guardian Tor zostało przerwane.", interrupted)
-                    }
-                }
-                if (activeRuntime.state != TorState.READY) {
-                    throw java.io.IOException("Wbudowany klient Guardian Tor nie osiągnął stanu READY." +
-                        (activeRuntime.failureMessage()?.let { " Przyczyna zgłoszona przez usługę: $it" } ?: " Brak komunikatu ACTION_ERROR z usługi Tor."))
-                }
-            }
+            DownloadConnectionMode.GUARDIAN_TOR -> Unit
         }
         return service ?: TorDownloadService(app, activeRuntime).also { service = it }
+    }
+
+    @Synchronized
+    fun stopGuardian() {
+        runtime?.let { activeRuntime ->
+            if (activeRuntime.state != TorState.STOPPED) runCatching { activeRuntime.stop() }
+        }
     }
 }
