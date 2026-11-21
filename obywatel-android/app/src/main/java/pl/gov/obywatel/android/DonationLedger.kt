@@ -92,6 +92,7 @@ private object DonationLedgerStore {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey())
         val encrypted = cipher.iv + cipher.doFinal(plaintext)
+        require(encrypted.size <= MAX_BYTES) { "Zaszyfrowana ewidencja darowizn przekracza dozwolony rozmiar." }
         writeMedicalCertificateAtomically(context.noBackupFilesDir, FILE_NAME, encrypted)
     }
 
@@ -129,7 +130,7 @@ internal fun DonationLedgerScreen(documentId: String, readOnly: Boolean, onBack:
     } }
     var message by remember(documentId) { mutableStateOf("") }
     fun persist() = saveDonationLedger(context, documentId, entityName, entries.toList())
-    fun field(key: String, label: String, hint: String = "") {
+    @Composable fun field(key: String, label: String, hint: String = "") {
         OutlinedTextField(value = draft[key].orEmpty(), onValueChange = { draft[key] = it },
             label = { Text(label) }, placeholder = { if (hint.isNotBlank()) Text(hint) },
             modifier = Modifier.fillMaxWidth(), singleLine = key !in setOf("purpose", "evidence", "notes"))
