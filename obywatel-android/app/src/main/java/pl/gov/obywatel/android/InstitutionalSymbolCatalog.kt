@@ -179,14 +179,15 @@ private suspend fun downloadInstitutionalSymbol(
         .put("sourceCredit", item.credit)
         .put("catalogRightsStatus", item.rightsStatus)
         .put("sha256", sha)
-        .put("verificationStatus", "catalogued; source metadata retained; usage restrictions require review")
+        .put("verificationStatus", "source-metadata-retained; no-in-app-license-gate")
         .put("permittedKinds", JSONArray())
         .toString()
-    val kind = when {
-        item.group.contains("flag", true) -> "Flaga"
-        item.group.contains("arm", true) || item.group.contains("herald", true) -> "Herb"
-        item.group.contains("government", true) -> "Znak instytucji publicznej"
-        else -> "Logo lub emblemat"
+    val kind = when (institutionalSymbolCategory(item)) {
+        "Flagi" -> "Flaga"
+        "Herby" -> "Herb"
+        "Godła" -> "Godło"
+        "Logotypy" -> "Logo"
+        else -> "Logo"
     }
     onProgress(InstitutionalSymbolDownloadProgress("Zapisuję plik i metadane w bibliotece…", bytes.size.toLong(), bytes.size.toLong()))
     DocumentBrandStore.importBytes(context, item.repository, kind, item.displayName.take(180),
@@ -317,9 +318,8 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(item.displayName, style = MaterialTheme.typography.bodyMedium)
                             Text("${item.group} • ${item.repository}", style = MaterialTheme.typography.labelSmall)
-                            Text("Licencja: ${item.license.ifBlank { "metadane do sprawdzenia" }}", style = MaterialTheme.typography.labelSmall)
-                            Text("Status praw: ${item.rightsStatus.ifBlank { "do niezależnej weryfikacji" }}", style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Źródło: ${item.repository} · autor: ${item.author.ifBlank { "niepodany w metadanych" }}", style = MaterialTheme.typography.labelSmall)
+                            
                             Button(enabled = busyId == null, onClick = {
                                 busyId = item.sourceId + ":" + item.path
                                 message = ""

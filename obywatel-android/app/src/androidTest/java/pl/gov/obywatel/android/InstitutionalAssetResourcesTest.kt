@@ -67,6 +67,29 @@ class InstitutionalAssetResourcesTest {
     }
 
     @Test
+    fun genericInstitutionalSymbolCategoryIsNormalizedAndSavedAsLogo() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0h10v10z"/></svg>"""
+        val assetId = "test_institution_logo_alias"
+        try {
+            val asset = DocumentBrandStore.importBytes(
+                context = context,
+                owner = "test",
+                kind = "Znak instytucji publicznej",
+                label = "Znak instytucji",
+                bytes = svg.toByteArray(Charsets.UTF_8),
+                mimeType = "image/svg+xml",
+                assetId = assetId
+            )
+            assertEquals("Logo", asset.kind)
+            assertEquals("Herby / godła / logo", documentBrandAssetParentGroup(asset.kind))
+            assertEquals("Logo", documentBrandAssetSubgroup(asset.kind))
+        } finally {
+            DocumentBrandStore.delete(context, assetId)
+        }
+    }
+
+    @Test
     fun bundledFlagFilesArePackagedInTheApplicationAssets() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         listOf(

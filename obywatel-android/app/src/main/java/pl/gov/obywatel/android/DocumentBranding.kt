@@ -176,6 +176,25 @@ internal val documentBrandTargets = (listOf(
 ) + churchGraphicDocumentTargets() + familyEntityGraphicDocumentTargets() +
     officialGraphicDocumentTargets()).distinctBy { it.first }
 
+internal fun documentBrandAssetParentGroup(kind: String): String = when (kind.trim()) {
+    "Herb", "Godło", "Logo" -> "Herby / godła / logo"
+    "Flaga" -> "Flagi"
+    "Tło wektorowe", "Grafika wektorowa tła kafelków", "Tło graficzne", "Tło dokumentu", "Tło kafelka" -> "Tła"
+    "Ikona", "Ikona wektorowa", "Ikona wektorowa kafelka" -> "Ikony"
+    else -> "Pozostałe zasoby"
+}
+
+internal fun documentBrandAssetSubgroup(kind: String): String = when (kind.trim()) {
+    "Herb" -> "Herby"
+    "Godło" -> "Godła"
+    "Logo" -> "Logo"
+    "Flaga" -> "Flagi"
+    "Tło wektorowe", "Grafika wektorowa tła kafelków" -> "Tła wektorowe"
+    "Tło graficzne", "Tło dokumentu", "Tło kafelka" -> "Tła graficzne"
+    "Ikona", "Ikona wektorowa", "Ikona wektorowa kafelka" -> "Ikony"
+    else -> kind
+}
+
 internal fun isWhiteTintedIconAssetKind(kind: String): Boolean =
     kind.trim().contains("ikona", ignoreCase = true) ||
         kind.trim().contains("piktogram", ignoreCase = true)
@@ -186,15 +205,17 @@ internal object DocumentBrandStore {
     private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
     private val kinds = listOf(
-        "Ikona wektorowa", "Ikona wektorowa kafelka", "Grafika wektorowa tła kafelków", "Animowany hologram", "Ikona", "Tło dokumentu", "Tło kafelka", "Herb", "Godło", "Logo",
-        "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
+        "Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona", "Tło wektorowe", "Tło graficzne",
+        "Grafika wektorowa tła kafelków", "Animowany hologram", "Tło dokumentu", "Tło kafelka",
+        "Herb", "Godło", "Logo", "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
         "Załącznik tekstowy", "Załącznik", "Fotografia", "Znak wodny",
         "Grafika hologramu / zabezpieczenia"
     )
     private val imageKinds = setOf(
-        "Ikona wektorowa", "Ikona wektorowa kafelka", "Grafika wektorowa tła kafelków", "Animowany hologram", "Ikona", "Tło dokumentu", "Tło kafelka", "Herb", "Godło", "Logo",
-        "Pieczęć", "Wzór podpisu odręcznego", "Flaga", "Fotografia", "Znak wodny",
-        "Grafika hologramu / zabezpieczenia"
+        "Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona", "Tło wektorowe", "Tło graficzne",
+        "Grafika wektorowa tła kafelków", "Animowany hologram", "Tło dokumentu", "Tło kafelka",
+        "Herb", "Godło", "Logo", "Pieczęć", "Wzór podpisu odręcznego", "Flaga", "Fotografia",
+        "Znak wodny", "Grafika hologramu / zabezpieczenia"
     )
     fun assetKinds() = kinds
 
@@ -202,11 +223,14 @@ internal object DocumentBrandStore {
         val value = raw.trim()
         kinds.firstOrNull { it.equals(value, ignoreCase = true) }?.let { return it }
         val alias = when (value.lowercase(Locale.ROOT)) {
-            "svg", "grafika svg", "grafika wektorowa" -> "Logo"
+            "svg", "grafika svg", "grafika wektorowa", "logo lub emblemat",
+            "emblemat", "znak instytucji publicznej", "znak instytucji", "logotyp" -> "Logo"
             "podpis odręczny", "wzór podpisu" -> "Wzór podpisu odręcznego"
-            "tło", "background" -> "Tło dokumentu"
-            "godlo" -> "Godło"
-            "heraldyka" -> "Herb"
+            "tło", "background", "tło graficzne", "grafika tła" -> "Tło graficzne"
+            "tło wektorowe", "wektorowe tło" -> "Tło wektorowe"
+            "godlo", "godło / emblemat" -> "Godło"
+            "heraldyka", "herb/godło" -> "Herb"
+            "flagi", "flag" -> "Flaga"
             else -> null
         }
         return alias ?: throw IllegalArgumentException(
@@ -1272,9 +1296,9 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
     var uploadKindExpanded by remember { mutableStateOf(false) }
     val legitimacySettingsState = rememberLegitimacyPreviewSettings(fixedTarget ?: "asset-library")
     val availableKinds = DocumentBrandStore.assetKinds()
-    var expandedAssetKinds by remember { mutableStateOf(setOf("Godło", "Herb", "Tło dokumentu")) }
+    var expandedAssetKinds by remember { mutableStateOf(setOf("Herby / godła / logo", "Flagi", "Tła", "Ikony")) }
     val filteredAssets = assets.filter { asset ->
-        (kindFilter == "Wszystkie" || asset.kind == kindFilter) &&
+        (kindFilter == "Wszystkie" || asset.kind == kindFilter || documentBrandAssetParentGroup(asset.kind) == kindFilter) &&
             (search.isBlank() || listOf(asset.label, asset.owner, asset.kind, asset.file)
                 .any { it.contains(search, ignoreCase = true) })
     }
@@ -1428,7 +1452,7 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                 Text("Filtr kategorii: $kindFilter")
             }
             DropdownMenu(expanded = kindMenuExpanded, onDismissRequest = { kindMenuExpanded = false }) {
-                (listOf("Wszystkie") + availableKinds).forEach { filter ->
+                (listOf("Wszystkie", "Herby / godła / logo", "Flagi", "Tła", "Ikony", "Pozostałe zasoby") + availableKinds).distinct().forEach { filter ->
                     DropdownMenuItem(
                         text = { Text(if (filter == "Wzór podpisu odręcznego") "Podpis odręczny" else filter) },
                         onClick = { kindFilter = filter; kindMenuExpanded = false }
@@ -1442,27 +1466,40 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             Text("Brak zasobów spełniających kryteria. Zmień filtr lub dodaj nowy plik.",
                 style = MaterialTheme.typography.bodySmall)
         }
-        filteredAssets.groupBy { it.kind }.forEach { (assetKind, grouped) ->
-            val expanded = assetKind in expandedAssetKinds
-            Card(Modifier.fillMaxWidth()) {
-                Column {
-                    Row(
-                        Modifier.fillMaxWidth().clickable {
-                            expandedAssetKinds = if (expanded) expandedAssetKinds - assetKind
-                                else expandedAssetKinds + assetKind
-                        }.padding(horizontal = 14.dp, vertical = 13.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            (if (assetKind == "Wzór podpisu odręcznego") "Podpisy odręczne" else assetKind) + " · ${grouped.size}",
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    if (expanded) grouped.forEachIndexed { index, asset ->
+        filteredAssets.groupBy { documentBrandAssetParentGroup(it.kind) }
+            .toSortedMap(compareBy { group -> listOf("Herby / godła / logo", "Flagi", "Tła", "Ikony", "Pozostałe zasoby").indexOf(group).let { if (it < 0) 99 else it } })
+            .forEach { (parentGroup, parentAssets) ->
+                val parentExpanded = parentGroup in expandedAssetKinds
+                Card(Modifier.fillMaxWidth()) {
+                    Column {
+                        Row(
+                            Modifier.fillMaxWidth().clickable {
+                                expandedAssetKinds = if (parentExpanded) expandedAssetKinds - parentGroup
+                                    else expandedAssetKinds + parentGroup
+                            }.padding(horizontal = 14.dp, vertical = 13.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("$parentGroup · ${parentAssets.size}", modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface)
+                            Text(if (parentExpanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        if (parentExpanded) parentAssets.groupBy { it.kind }.toSortedMap().forEach { (assetKind, grouped) ->
+                            val subgroupKey = "$parentGroup::$assetKind"
+                            val expanded = subgroupKey in expandedAssetKinds || assetKind in expandedAssetKinds
+                            Row(
+                                Modifier.fillMaxWidth().clickable {
+                                    expandedAssetKinds = if (expanded) expandedAssetKinds - subgroupKey - assetKind
+                                        else expandedAssetKinds + subgroupKey
+                                }.padding(start = 22.dp, end = 14.dp, top = 9.dp, bottom = 9.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("${documentBrandAssetSubgroup(assetKind)} · ${grouped.size}",
+                                    modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold)
+                                Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (expanded) grouped.forEachIndexed { index, asset ->
                         val assetPreview = remember(asset.id) { DocumentBrandStore.preview(context, asset.id, asset) }
                         Row(
                             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
@@ -1526,12 +1563,13 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                             }
                         }
                         if (index < grouped.lastIndex) HorizontalDivider()
+                            }
+                        }
                     }
                 }
             }
-        }
         Text(
-            "Hologram i znak wodny są elementami graficznymi. Nie stanowią zabezpieczenia antyfałszerskiego ani urzędowego poświadczenia. Wgrywaj wyłącznie znaki, do których używania masz uprawnienie.",
+            "Hologram i znak wodny są elementami graficznymi. Nie stanowią zabezpieczenia antyfałszerskiego ani urzędowego poświadczenia.",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.tertiary
         )
