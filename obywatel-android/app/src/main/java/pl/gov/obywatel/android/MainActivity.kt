@@ -1480,7 +1480,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     fun openService(title: String) {
         when (title) {
             "Służba finansowa" -> showPaymentLedger = true
-            "Służba finansowa" -> showPaymentLedger = true
             "Portfel" -> showDemoDocuments = true
             "Ustawienia" -> {
                 selectedTab = 4
@@ -1828,7 +1827,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         }
                     }
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
-                    showPaymentLedger -> PaymentLedgerScreen(onBack = { showPaymentLedger = false })
                     showPaymentLedger -> PaymentLedgerScreen(onBack = { showPaymentLedger = false })
                     activeService == "Informacje prawne" -> LegalInformationScreen(
                         onBack = { activeService = null }
