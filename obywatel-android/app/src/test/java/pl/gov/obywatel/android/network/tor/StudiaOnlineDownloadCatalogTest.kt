@@ -166,11 +166,11 @@ class StudiaOnlineDownloadCatalogTest {
             failed = emptyMap(),
             paused = false,
             finished = false,
-            phase = "Pobieranie danych przez Tor",
+            phase = "Pobieranie danych — Guardian Project Tor",
             downloadedBytes = 512L * 1024L,
             expectedBytes = 1024L * 1024L
         )
-        assertEquals("Pobieranie danych przez Tor", progress.phase)
+        assertEquals("Pobieranie danych — Guardian Project Tor", progress.phase)
         assertEquals(512L * 1024L, progress.downloadedBytes)
         assertEquals(1024L * 1024L, progress.expectedBytes)
         assertEquals(2, progress.remaining)
