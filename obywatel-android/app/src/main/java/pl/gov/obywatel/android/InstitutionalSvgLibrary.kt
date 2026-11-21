@@ -213,6 +213,7 @@ private suspend fun discoverCommonsOpenSvgs(
     val seenTitles = linkedSetOf<String>()
     val deliveredTitles = hashSetOf<String>()
     val allCandidates = mutableListOf<CommonsSvgCandidate>()
+    val failedVerificationBatches = mutableListOf<List<String>>()
     var successfulSearchTerms = 0
     var failedSearchTerms = 0
     var firstSearchFailure: String? = null
@@ -227,6 +228,7 @@ private suspend fun discoverCommonsOpenSvgs(
             commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         } catch (failure: Exception) {
             failedVerificationBatches++
+            failedVerificationBatches.add(batch.toList())
             appendCommonsDiagnostic(context, "VERIFY_BATCH_FAILED type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
             onSearchProgress(seenTitles.size, "Weryfikacja metadanych: partia pominięta (" + (failure.message ?: "błąd API") + ")")
             return
@@ -327,6 +329,18 @@ private suspend fun discoverCommonsOpenSvgs(
         }
     }
     if (pending.isNotEmpty() && allCandidates.size < limit) verifyAndDeliver(pending)
+    if (failedVerificationBatches.isNotEmpty() && allCandidates.size < limit) {
+        val retryBatches = failedVerificationBatches.toList()
+        failedVerificationBatches.clear()
+        appendCommonsDiagnostic(context, "VERIFY_RETRY_START batches=${retryBatches.size} titles=${retryBatches.sumOf { it.size }}")
+        retryBatches.forEachIndexed { index, batch ->
+            if (allCandidates.size < limit) {
+                appendCommonsDiagnostic(context, "VERIFY_RETRY_BATCH index=${index + 1} size=${batch.size}")
+                verifyAndDeliver(batch)
+            }
+        }
+        appendCommonsDiagnostic(context, "VERIFY_RETRY_COMPLETE remainingFailedBatches=${failedVerificationBatches.size} candidates=${allCandidates.size}")
+    }
     if (successfulSearchTerms == 0 && failedSearchTerms > 0) {
         throw java.io.IOException(
             "Nie udało się połączyć z Wikimedia Commons przez wybraną trasę. " +
