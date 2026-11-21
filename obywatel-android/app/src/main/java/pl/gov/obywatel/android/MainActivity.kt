@@ -1277,7 +1277,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var importProgress by remember { mutableStateOf(0f) }
     var exportBusy by remember { mutableStateOf(false) }
     var exportProgress by remember { mutableStateOf(0f) }
-    var exportBytes by remember { mutableStateOf<ByteArray?>(null) }
     val scope = rememberCoroutineScope()
     val exportVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/x-vcard")) { uri ->
         if (uri != null) {
@@ -1285,7 +1284,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             importStatus = "Wybrano miejsce zapisu. Potwierdź zapis archiwum; istniejący plik o tej nazwie może zostać zastąpiony."
         } else {
             exportProgress = 0f
-            exportBytes = null
             importStatus = "Eksport anulowany — plik nie został zapisany."
         }
     }
@@ -1779,7 +1777,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         )
                                         archiveEntries.forEachIndexed { index, entry ->
                                             reportExport(
-                                                0.10f + (index + 1).toFloat() / archiveEntries.size * 0.20f,
+                                                0.08f + (index + 1).toFloat() / archiveEntries.size * 0.82f,
                                                 "Przygotowywanie archiwum: ${index + 1} / ${archiveEntries.size} — ${entry.first}"
                                             )
                                             snapshot[entry.first] = entry.second()
@@ -1787,25 +1785,17 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         require(snapshot.isNotEmpty()) {
                                             "Brak danych do eksportu. Najpierw uzupełnij i zapisz dane w ustawieniach."
                                         }
-                                        reportExport(0.32f, "Kodowanie pól i załączników do formatu vCard…")
-                                        val encoded = VCardCodec.encodeArchive(snapshot) { percent ->
-                                            reportExport(
-                                                0.32f + percent / 100f * 0.38f,
-                                                "Kodowanie archiwum vCard: ${percent}%"
-                                            )
-                                        }
-                                        snapshot to encoded.toByteArray(Charsets.UTF_8)
+                                        reportExport(0.96f, "Zebrano wszystkie dane. Przygotowywanie miejsca zapisu…")
+                                        snapshot
                                     }
                                 }
-                                result.onSuccess { (snapshot, bytes) ->
+                                result.onSuccess { snapshot ->
                                     exportSnapshot = snapshot
-                                    exportBytes = bytes
                                     exportProgress = 1f
-                                    importStatus = "Archiwum przygotowane (${bytes.size} bajtów). Wybierz miejsce zapisu."
+                                    importStatus = "Dane archiwum przygotowane (${snapshot.size} pól). Wybierz miejsce zapisu."
                                     exportVCardLauncher.launch("obywatel-archiwum.vcf")
                                 }.onFailure {
                                     exportProgress = 0f
-                                    exportBytes = null
                                     importStatus = "Nie można przygotować eksportu: ${it.message ?: "nieznany błąd"}"
                                 }
                                 exportBusy = false
@@ -2195,7 +2185,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
         pendingExportUri?.let { destinationUri ->
             AlertDialog(
-                onDismissRequest = { if (!exportBusy) { pendingExportUri = null; exportBytes = null } },
+                onDismissRequest = { if (!exportBusy) { pendingExportUri = null } },
                 title = { Text("Potwierdzenie eksportu vCard") },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2210,13 +2200,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     TextButton(enabled = !exportBusy, onClick = {
                         scope.launch {
                             val snapshot = exportSnapshot.toMap()
-                            val bytes = exportBytes ?: run {
+                            if (snapshot.isEmpty()) {
                                 importStatus = "Brak przygotowanego archiwum. Ponownie uruchom eksport."
                                 return@launch
                             }
                             exportBusy = true
-                            exportProgress = 0.70f
-                            importStatus = "Zapisywanie archiwum vCard…"
+                            exportProgress = 0.01f
+                            importStatus = "Kodowanie archiwum vCard…"
                             fun reportExport(value: Float, message: String) {
                                 scope.launch(Dispatchers.Main.immediate) {
                                     exportProgress = value.coerceIn(0f, 1f)
@@ -2225,7 +2215,14 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             }
                             val result = withContext(Dispatchers.IO) {
                                 runCatching {
-                                    require(snapshot.isNotEmpty() && bytes.isNotEmpty()) { "Brak danych do eksportu." }
+                                    require(snapshot.isNotEmpty()) { "Brak danych do eksportu." }
+                                    val encoded = VCardCodec.encodeArchive(snapshot) { percent ->
+                                        reportExport(0.02f + percent / 100f * 0.36f,
+                                            "Kodowanie archiwum vCard: ${percent}%")
+                                    }
+                                    val bytes = encoded.toByteArray(Charsets.UTF_8)
+                                    require(bytes.isNotEmpty()) { "Nie udało się zakodować archiwum vCard." }
+                                    reportExport(0.39f, "Zapisywanie archiwum vCard…")
                                     val output = context.contentResolver.openOutputStream(destinationUri, "wt")
                                         ?: error("Android nie udostępnił strumienia zapisu dla wybranego pliku.")
                                     output.use { stream ->
@@ -2237,13 +2234,13 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                             offset += count
                                             if (offset - lastReported >= 512 * 1024 || offset == bytes.size) {
                                                 lastReported = offset
-                                                reportExport(0.70f + offset.toFloat() / bytes.size * 0.16f,
+                                                reportExport(0.39f + offset.toFloat() / bytes.size * 0.24f,
                                                     "Zapisywanie pliku: ${android.text.format.Formatter.formatFileSize(context, offset.toLong())} / ${android.text.format.Formatter.formatFileSize(context, bytes.size.toLong())}")
                                             }
                                         }
                                         stream.flush()
                                     }
-                                    reportExport(0.87f, "Ponowny odczyt zapisanego pliku…")
+                                    reportExport(0.64f, "Ponowny odczyt zapisanego pliku…")
                                     val savedBytes = context.contentResolver.openInputStream(destinationUri)?.use { input ->
                                         val buffer = ByteArray(64 * 1024)
                                         val collected = java.io.ByteArrayOutputStream()
@@ -2257,16 +2254,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                             collected.write(buffer, 0, count)
                                             if (total - lastReported >= 512L * 1024L) {
                                                 lastReported = total
-                                                reportExport(0.87f + (total.toFloat() / bytes.size.toFloat()).coerceIn(0f, 1f) * 0.05f,
+                                                reportExport(0.64f + (total.toFloat() / bytes.size.toFloat()).coerceIn(0f, 1f) * 0.12f,
                                                     "Weryfikacyjny odczyt: ${android.text.format.Formatter.formatFileSize(context, total)}")
                                             }
                                         }
                                         collected.toByteArray()
                                     } ?: error("Nie można ponownie odczytać zapisanego pliku vCard.")
                                     require(savedBytes.isNotEmpty()) { "Zapisany plik vCard jest pusty." }
-                                    reportExport(0.93f, "Sprawdzanie zgodności archiwum…")
+                                    reportExport(0.77f, "Sprawdzanie zgodności archiwum…")
                                     val verified = VCardCodec.decodeArchive(String(savedBytes, Charsets.UTF_8)) { percent ->
-                                        reportExport(0.93f + percent / 100f * 0.07f, "Weryfikacja danych vCard: ${percent}%")
+                                        reportExport(0.77f + percent / 100f * 0.23f, "Weryfikacja danych vCard: ${percent}%")
                                     }
                                     require(verified == snapshot) {
                                         "Weryfikacja zapisu nie powiodła się: odczytane dane różnią się od eksportowanych."
@@ -2278,7 +2275,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                 exportProgress = 1f
                                 importStatus = it
                                 pendingExportUri = null
-                                exportBytes = null
                             }.onFailure {
                                 importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}"
                             }
@@ -2289,7 +2285,6 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                 dismissButton = {
                     TextButton(enabled = !exportBusy, onClick = {
                         pendingExportUri = null
-                        exportBytes = null
                         exportProgress = 0f
                         importStatus = "Eksport anulowany — plik docelowy nie został zmieniony."
                     }) { Text("Anuluj") }
