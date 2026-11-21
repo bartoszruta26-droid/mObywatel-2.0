@@ -8,9 +8,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StudiaOnlineDownloadCatalogTest {
-    @Test fun usesCanonicalSingleSlashUrl() {
+    @Test fun preservesDoubleSlashInTheConfiguredUrl() {
         val item = StudiaOnlineDownloadCatalog.fromIds(listOf(12345)).single()
-        assertEquals("https://studia-online.pl/pobierz-material/12345", item.url)
+        assertEquals("https://studia-online.pl//pobierz-material/12345", item.url)
     }
 
     @Test fun deduplicatesIdsWithoutChangingTheirOrder() {
@@ -31,14 +31,14 @@ class StudiaOnlineDownloadCatalogTest {
     }
 
 
-    @Test fun rangeIsInclusiveAndUsesCanonicalUrl() {
+    @Test fun rangeIsInclusiveAndPreservesDoubleSlash() {
         val items = StudiaOnlineDownloadCatalog.fromRange(41, 43)
         assertEquals(listOf(41, 42, 43), items.map { it.id })
         assertEquals(
             listOf(
-                "https://studia-online.pl/pobierz-material/41",
-                "https://studia-online.pl/pobierz-material/42",
-                "https://studia-online.pl/pobierz-material/43"
+                "https://studia-online.pl//pobierz-material/41",
+                "https://studia-online.pl//pobierz-material/42",
+                "https://studia-online.pl//pobierz-material/43"
             ),
             items.map { it.url }
         )
