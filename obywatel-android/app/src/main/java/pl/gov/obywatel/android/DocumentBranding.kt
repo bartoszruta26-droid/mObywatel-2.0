@@ -1287,6 +1287,8 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
             style = MaterialTheme.typography.bodySmall
         )
         if (fixedTarget == null && !readOnly) {
+            InstitutionalSymbolCatalogPanel(context) { assets = DocumentBrandStore.list(context) }
+            HorizontalDivider()
             InstitutionalSvgLibraryPanel(context) { assets = DocumentBrandStore.list(context) }
             HorizontalDivider()
         }
