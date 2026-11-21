@@ -439,7 +439,7 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     val rights = JSONObject().put("source", "Wikimedia Commons").put("sourcePage", item.page).put("downloadUrl", item.url)
         .put("license", item.license).put("licenseUrl", item.licenseUrl).put("author", item.artist)
         .put("restrictions", item.restrictions).put("sha256", sha)
-        .put("verificationStatus", "metadata-collected; license-verification-required; trademark-and-use-review-required")
+        .put("verificationStatus", "source-metadata-retained; no-in-app-license-gate")
         .put("permittedKinds", JSONArray()).toString()
     val title = item.title.removePrefix("File:")
     val kind = commonsSvgAssetKind(title)
