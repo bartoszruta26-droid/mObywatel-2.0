@@ -1276,12 +1276,16 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var importBusy by remember { mutableStateOf(false) }
     var importProgress by remember { mutableStateOf(0f) }
     var exportBusy by remember { mutableStateOf(false) }
+    var exportProgress by remember { mutableStateOf(0f) }
+    var exportBytes by remember { mutableStateOf<ByteArray?>(null) }
     val scope = rememberCoroutineScope()
     val exportVCardLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/x-vcard")) { uri ->
         if (uri != null) {
             pendingExportUri = uri
             importStatus = "Wybrano miejsce zapisu. Potwierdź zapis archiwum; istniejący plik o tej nazwie może zostać zastąpiony."
         } else {
+            exportProgress = 0f
+            exportBytes = null
             importStatus = "Eksport anulowany — plik nie został zapisany."
         }
     }
@@ -1724,9 +1728,21 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onExportAll = {
                             scope.launch {
                                 exportBusy = true
+                                exportProgress = 0.01f
                                 importStatus = "Przygotowywanie archiwum vCard…"
+                                fun reportExport(value: Float, message: String) {
+                                    scope.launch(Dispatchers.Main.immediate) {
+                                        exportProgress = value.coerceIn(0f, 1f)
+                                        importStatus = message
+                                    }
+                                }
                                 val result = withContext(Dispatchers.IO) {
                                     runCatching {
+                                        reportExport(0.04f, "Odczytywanie danych profilu…")
+                                        val snapshot = linkedMapOf<String, String>()
+                                        snapshot.putAll(DemoIdentityStore.load(context))
+                                        reportExport(0.08f, "Odczytywanie ustawień wyglądu dokumentów…")
+                                        snapshot.putAll(LegitimacyPreviewSettingsStore.exportAll(context))
                                         val groupConfiguration = loadDocumentGroupConfiguration(context)
                                         val catalogManifest = org.json.JSONArray().apply {
                                             documentDisplayOptions.distinctBy { it.first }.forEach { (id, title, _) ->
@@ -1741,40 +1757,55 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                                         val allCatalogPlacements = documentDisplayOptions.distinctBy { it.first }.associate { (id, _, _) ->
                                             id to (placements[id] ?: if (id == "identity") "dashboard" else "hidden")
                                         }
-                                        val snapshot = DemoIdentityStore.load(context) +
-                                            LegitimacyPreviewSettingsStore.exportAll(context) +
-                                            allCatalogPlacements.mapKeys { "dp_${it.key}" } +
-                                            mapOf(
-                                                "documentCatalogManifest" to catalogManifest,
-                                                "documentCatalogGroupOrder" to org.json.JSONArray(groupConfiguration.groups).toString(),
-                                                "documentGroupConfiguration" to exportDocumentGroupConfiguration(context),
-                                                "documentEditorSchemaVersion" to DOCUMENT_EDITOR_SCHEMA_VERSION,
-                                                "churchDocumentArchive" to ChurchDocumentStore.exportArchive(context),
-                                                "familyEntityDocumentArchive" to FamilyEntityDocumentStore.exportArchive(context),
-                                                "officialDocumentArchive" to OfficialDocumentStore.exportArchive(context),
-                                                "signedPdfArchive" to exportSignedPdfArchive(context),
-                                                "brandAssetArchive" to DocumentBrandStore.exportArchive(context),
-                                                "professionalQualificationArchive" to exportProfessionalQualificationArchive(context),
-                                                "familyHealthArchive" to exportFamilyHealthArchive(context),
-                                                "medicalHistoryArchive" to exportMedicalHistoryArchive(context),
-                                                "importedAttachmentArchive" to pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context),
-                                                "originalAttachmentArchive" to exportOriginalAttachmentArchive(context),
-                                                "identityDocumentsArchive" to pl.gov.obywatel.android.ui.identity.exportIdentityDocumentsArchive(context),
-                                                "localRegistryArchive" to pl.gov.obywatel.android.ui.registry.exportLocalRegistryArchive(context),
-                                                "activityHistoryArchive" to exportActivityHistoryArchive(context)
+                                        snapshot.putAll(allCatalogPlacements.mapKeys { "dp_${it.key}" })
+                                        val archiveEntries: List<Pair<String, () -> String>> = listOf(
+                                            "documentCatalogManifest" to { catalogManifest },
+                                            "documentCatalogGroupOrder" to { org.json.JSONArray(groupConfiguration.groups).toString() },
+                                            "documentGroupConfiguration" to { exportDocumentGroupConfiguration(context) },
+                                            "documentEditorSchemaVersion" to { DOCUMENT_EDITOR_SCHEMA_VERSION },
+                                            "churchDocumentArchive" to { ChurchDocumentStore.exportArchive(context) },
+                                            "familyEntityDocumentArchive" to { FamilyEntityDocumentStore.exportArchive(context) },
+                                            "officialDocumentArchive" to { OfficialDocumentStore.exportArchive(context) },
+                                            "signedPdfArchive" to { exportSignedPdfArchive(context) },
+                                            "brandAssetArchive" to { DocumentBrandStore.exportArchive(context) },
+                                            "professionalQualificationArchive" to { exportProfessionalQualificationArchive(context) },
+                                            "familyHealthArchive" to { exportFamilyHealthArchive(context) },
+                                            "medicalHistoryArchive" to { exportMedicalHistoryArchive(context) },
+                                            "importedAttachmentArchive" to { pl.gov.obywatel.android.data.ImportedDocumentStore.exportArchive(context) },
+                                            "originalAttachmentArchive" to { exportOriginalAttachmentArchive(context) },
+                                            "identityDocumentsArchive" to { pl.gov.obywatel.android.ui.identity.exportIdentityDocumentsArchive(context) },
+                                            "localRegistryArchive" to { pl.gov.obywatel.android.ui.registry.exportLocalRegistryArchive(context) },
+                                            "activityHistoryArchive" to { exportActivityHistoryArchive(context) }
+                                        )
+                                        archiveEntries.forEachIndexed { index, entry ->
+                                            reportExport(
+                                                0.10f + (index + 1).toFloat() / archiveEntries.size * 0.20f,
+                                                "Przygotowywanie archiwum: ${index + 1} / ${archiveEntries.size} — ${entry.first}"
                                             )
+                                            snapshot[entry.first] = entry.second()
+                                        }
                                         require(snapshot.isNotEmpty()) {
                                             "Brak danych do eksportu. Najpierw uzupełnij i zapisz dane w ustawieniach."
                                         }
-                                        VCardCodec.encodeArchive(snapshot)
-                                        snapshot
+                                        reportExport(0.32f, "Kodowanie pól i załączników do formatu vCard…")
+                                        val encoded = VCardCodec.encodeArchive(snapshot) { percent ->
+                                            reportExport(
+                                                0.32f + percent / 100f * 0.38f,
+                                                "Kodowanie archiwum vCard: ${percent}%"
+                                            )
+                                        }
+                                        snapshot to encoded.toByteArray(Charsets.UTF_8)
                                     }
                                 }
-                                result.onSuccess {
-                                    exportSnapshot = it
-                                    importStatus = "Archiwum przygotowane. Wybierz miejsce zapisu."
+                                result.onSuccess { (snapshot, bytes) ->
+                                    exportSnapshot = snapshot
+                                    exportBytes = bytes
+                                    exportProgress = 1f
+                                    importStatus = "Archiwum przygotowane (${bytes.size} bajtów). Wybierz miejsce zapisu."
                                     exportVCardLauncher.launch("obywatel-archiwum.vcf")
                                 }.onFailure {
+                                    exportProgress = 0f
+                                    exportBytes = null
                                     importStatus = "Nie można przygotować eksportu: ${it.message ?: "nieznany błąd"}"
                                 }
                                 exportBusy = false
@@ -1783,7 +1814,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onImportAll = { importVCardLauncher.launch(arrayOf("text/vcard", "text/x-vcard", "text/plain", "*/*")) },
                         importStatus = importStatus,
                         importProgress = importProgress,
-                        importBusy = importBusy
+                        importBusy = importBusy,
+                        exportProgress = exportProgress,
+                        exportBusy = exportBusy
                     )
                     selectedDocumentId == FOREIGN_PRESCRIPTION_ID -> ForeignPrescriptionEditorScreen(
                         onBack = { selectedDocumentId = null }
@@ -2162,44 +2195,102 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
         pendingExportUri?.let { destinationUri ->
             AlertDialog(
-                onDismissRequest = { pendingExportUri = null },
+                onDismissRequest = { if (!exportBusy) { pendingExportUri = null; exportBytes = null } },
                 title = { Text("Potwierdzenie eksportu vCard") },
                 text = {
-                    Text("Zapiszesz ${exportSnapshot.size} pól oraz katalog dokumentów z ich grupami i ustawieniami widoczności. Jeżeli w wybranym miejscu istnieje plik o tej samej nazwie, jego zawartość zostanie zastąpiona. Czy kontynuować?")
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Zapiszesz ${exportSnapshot.size} pól oraz katalog dokumentów z ich grupami i ustawieniami widoczności. Jeżeli w wybranym miejscu istnieje plik o tej samej nazwie, jego zawartość zostanie zastąpiona. Czy kontynuować?")
+                        if (exportBusy) {
+                            LinearProgressIndicator(progress = exportProgress.coerceIn(0f, 1f), modifier = Modifier.fillMaxWidth())
+                            Text(importStatus, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
                 },
                 confirmButton = {
                     TextButton(enabled = !exportBusy, onClick = {
                         scope.launch {
-                            exportBusy = true
-                            importStatus = "Zapisywanie i weryfikowanie archiwum vCard…"
                             val snapshot = exportSnapshot.toMap()
+                            val bytes = exportBytes ?: run {
+                                importStatus = "Brak przygotowanego archiwum. Ponownie uruchom eksport."
+                                return@launch
+                            }
+                            exportBusy = true
+                            exportProgress = 0.70f
+                            importStatus = "Zapisywanie archiwum vCard…"
+                            fun reportExport(value: Float, message: String) {
+                                scope.launch(Dispatchers.Main.immediate) {
+                                    exportProgress = value.coerceIn(0f, 1f)
+                                    importStatus = message
+                                }
+                            }
                             val result = withContext(Dispatchers.IO) {
                                 runCatching {
-                                    require(snapshot.isNotEmpty()) { "Brak danych do eksportu." }
-                                    val bytes = VCardCodec.encodeArchive(snapshot).toByteArray(Charsets.UTF_8)
+                                    require(snapshot.isNotEmpty() && bytes.isNotEmpty()) { "Brak danych do eksportu." }
                                     val output = context.contentResolver.openOutputStream(destinationUri, "wt")
                                         ?: error("Android nie udostępnił strumienia zapisu dla wybranego pliku.")
-                                    output.use { it.write(bytes); it.flush() }
-                                    val savedBytes = context.contentResolver.openInputStream(destinationUri)?.use { it.readBytes() }
-                                        ?: error("Nie można ponownie odczytać zapisanego pliku vCard.")
+                                    output.use { stream ->
+                                        var offset = 0
+                                        var lastReported = 0
+                                        while (offset < bytes.size) {
+                                            val count = minOf(64 * 1024, bytes.size - offset)
+                                            stream.write(bytes, offset, count)
+                                            offset += count
+                                            if (offset - lastReported >= 512 * 1024 || offset == bytes.size) {
+                                                lastReported = offset
+                                                reportExport(0.70f + offset.toFloat() / bytes.size * 0.16f,
+                                                    "Zapisywanie pliku: ${android.text.format.Formatter.formatFileSize(context, offset.toLong())} / ${android.text.format.Formatter.formatFileSize(context, bytes.size.toLong())}")
+                                            }
+                                        }
+                                        stream.flush()
+                                    }
+                                    reportExport(0.87f, "Ponowny odczyt zapisanego pliku…")
+                                    val savedBytes = context.contentResolver.openInputStream(destinationUri)?.use { input ->
+                                        val buffer = ByteArray(64 * 1024)
+                                        val collected = java.io.ByteArrayOutputStream()
+                                        var total = 0L
+                                        var lastReported = 0L
+                                        while (true) {
+                                            val count = input.read(buffer)
+                                            if (count < 0) break
+                                            total += count
+                                            require(total <= 256L * 1024L * 1024L) { "Zapisany plik przekracza limit 256 MB." }
+                                            collected.write(buffer, 0, count)
+                                            if (total - lastReported >= 512L * 1024L) {
+                                                lastReported = total
+                                                reportExport(0.87f + (total.toFloat() / bytes.size.toFloat()).coerceIn(0f, 1f) * 0.05f,
+                                                    "Weryfikacyjny odczyt: ${android.text.format.Formatter.formatFileSize(context, total)}")
+                                            }
+                                        }
+                                        collected.toByteArray()
+                                    } ?: error("Nie można ponownie odczytać zapisanego pliku vCard.")
                                     require(savedBytes.isNotEmpty()) { "Zapisany plik vCard jest pusty." }
-                                    val verified = VCardCodec.decodeArchive(String(savedBytes, Charsets.UTF_8))
+                                    reportExport(0.93f, "Sprawdzanie zgodności archiwum…")
+                                    val verified = VCardCodec.decodeArchive(String(savedBytes, Charsets.UTF_8)) { percent ->
+                                        reportExport(0.93f + percent / 100f * 0.07f, "Weryfikacja danych vCard: ${percent}%")
+                                    }
                                     require(verified == snapshot) {
                                         "Weryfikacja zapisu nie powiodła się: odczytane dane różnią się od eksportowanych."
                                     }
                                     "Zapisano i zweryfikowano ${snapshot.size} pól oraz katalog dokumentów (${bytes.size} bajtów) w pliku vCard."
                                 }
                             }
-                            result.onSuccess { importStatus = it }
-                                .onFailure { importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}" }
+                            result.onSuccess {
+                                exportProgress = 1f
+                                importStatus = it
+                                pendingExportUri = null
+                                exportBytes = null
+                            }.onFailure {
+                                importStatus = "Błąd eksportu: ${it.message ?: "nieznany błąd"}"
+                            }
                             exportBusy = false
-                            pendingExportUri = null
                         }
                     }) { Text(if (exportBusy) "Zapisywanie…" else "Potwierdź zapis") }
                 },
                 dismissButton = {
-                    TextButton(onClick = {
+                    TextButton(enabled = !exportBusy, onClick = {
                         pendingExportUri = null
+                        exportBytes = null
+                        exportProgress = 0f
                         importStatus = "Eksport anulowany — plik docelowy nie został zmieniony."
                     }) { Text("Anuluj") }
                 }
@@ -3713,7 +3804,9 @@ private fun SettingsMenuScreen(
     onImportAll: () -> Unit,
     importStatus: String,
     importProgress: Float,
-    importBusy: Boolean
+    importBusy: Boolean,
+    exportProgress: Float,
+    exportBusy: Boolean
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
@@ -3779,7 +3872,12 @@ private fun SettingsMenuScreen(
         ProfileActionCard("Importuj dane z pliku vCard", "Wczytaj archiwum .vcf i zatwierdź zakres zmian", Icons.Filled.Description, onImportAll)
         if (importStatus.isNotBlank()) {
             Text(importStatus, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-            if (importBusy) LinearProgressIndicator(progress = importProgress.coerceIn(0f, 1f), modifier = Modifier.fillMaxWidth())
+            if (importBusy || exportBusy) {
+                LinearProgressIndicator(
+                    progress = (if (exportBusy) exportProgress else importProgress).coerceIn(0f, 1f),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
         ProfileActionCard(
             "Edytuj dane dokumentów",
