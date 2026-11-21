@@ -22,13 +22,16 @@ class TorDownloadRouterTest {
         TorClientProfile("disabled", "Disabled", "127.0.0.1", 9250, false)
     )
 
-    @Test fun selectedInstalledOrbotDefersGuardianStartup() {
-        assertEquals(false, shouldStartGuardianForSelectedClient("orbot-local", true))
+    @Test fun directModeNeverStartsGuardian() {
+        assertEquals(false, shouldStartGuardianForMode(DownloadConnectionMode.DIRECT))
     }
 
-    @Test fun GuardianStartsWhenItIsSelectedOrOrbotIsMissing() {
-        assertEquals(true, shouldStartGuardianForSelectedClient("guardian-embedded", true))
-        assertEquals(true, shouldStartGuardianForSelectedClient("orbot-local", false))
+    @Test fun orbotModeNeverStartsGuardian() {
+        assertEquals(false, shouldStartGuardianForMode(DownloadConnectionMode.ORBOT))
+    }
+
+    @Test fun onlyExplicitGuardianModeStartsGuardian() {
+        assertEquals(true, shouldStartGuardianForMode(DownloadConnectionMode.GUARDIAN_TOR))
     }
 
     @Test fun roundRobinDistributesAcrossReadyDistinctEndpoints() {
