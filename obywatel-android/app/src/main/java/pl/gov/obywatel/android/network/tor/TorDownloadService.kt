@@ -5,96 +5,138 @@ package pl.gov.obywatel.android.network.tor
 import android.content.Context
 import java.io.IOException
 
-/** Shared Tor-only streaming download service for all app resources. */
+enum class DownloadConnectionMode(val label: String, val description: String) {
+    GUARDIAN_TOR("Guardian Project Tor", "Wbudowany klient Tor, uruchamiany na żądanie."),
+    ORBOT("Orbot", "Lokalny SOCKS5 Orbot; aplikacja wymaga potwierdzenia wyjścia przez Tor."),
+    DIRECT("Bezpośrednio — bez Tor", "HTTPS bez lokalnego proxy Tor. Adres IP urządzenia jest widoczny dla serwisu; systemowy VPN (np. Orbot w trybie VPN) może nadal kierować ruch przez tunel.")
+}
+
+/**
+ * Preferred geographic scope for the Tor exit node.
+ *
+ * This is a best-effort Tor exit preference, not a guarantee: Tor may be unable to
+ * satisfy a country or regional preference when the requested relays are unavailable.
+ * DIRECT mode ignores this setting because it does not use Tor.
+ */
+enum class TorExitRegion(val label: String, val torCountryCodes: List<String>) {
+    POLAND("Polska", listOf("pl")),
+    EUROPE("Europa", listOf(
+        "ad", "al", "at", "ba", "be", "bg", "by", "ch", "cy", "cz", "de", "dk",
+        "ee", "es", "fi", "fr", "gb", "gr", "hr", "hu", "ie", "is", "it", "li",
+        "lt", "lu", "lv", "mc", "md", "me", "mk", "mt", "nl", "no", "pl", "pt",
+        "ro", "rs", "se", "si", "sk", "sm", "tr", "ua", "va"
+    )),
+    WORLD("Świat", emptyList())
+}
+
+object TorExitRegionSettings {
+    private const val PREFS = "download_connection_settings"
+    private const val KEY_REGION = "exit_region"
+
+    fun get(context: Context): TorExitRegion {
+        val stored = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_REGION, TorExitRegion.POLAND.name)
+        return runCatching { TorExitRegion.valueOf(stored.orEmpty()) }
+            .getOrDefault(TorExitRegion.POLAND)
+    }
+
+    fun set(context: Context, region: TorExitRegion) {
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putString(KEY_REGION, region.name).apply()
+    }
+}
+
+object DownloadConnectionSettings {
+    private const val PREFS = "download_connection_settings"
+    private const val KEY_MODE = "mode"
+
+    fun get(context: Context): DownloadConnectionMode {
+        val stored = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_MODE, DownloadConnectionMode.GUARDIAN_TOR.name)
+        return runCatching { DownloadConnectionMode.valueOf(stored.orEmpty()) }
+            .getOrDefault(DownloadConnectionMode.GUARDIAN_TOR)
+    }
+
+    fun set(context: Context, mode: DownloadConnectionMode) {
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putString(KEY_MODE, mode.name).apply()
+        if (mode != DownloadConnectionMode.GUARDIAN_TOR) {
+            TorDownloadServiceProvider.stopGuardian()
+        }
+    }
+}
+
+/** Shared download service with an explicit, user-selected network route. */
 class TorDownloadService(
     private val context: Context,
     private val runtime: TorRuntime,
-    policy: TorRequestPolicy = TorRequestPolicy(),
-    poolPolicy: () -> TorPoolPolicy = { TorPoolPolicy.ROUND_ROBIN },
-    routeRules: () -> Map<TorDownloadKind, String> = { emptyMap() }
+    policy: TorRequestPolicy = TorRequestPolicy()
 ) {
     private val transport = TorHttpTransport(runtime, policy)
-    private val router = TorDownloadRouter(
+    private val guardianRouter = TorDownloadRouter(
         profiles = {
-            val isolatedEndpoints = (runtime as? GuardianTorRuntime)?.isolatedProxyEndpoints().orEmpty()
-            val embeddedEndpoints = isolatedEndpoints.ifEmpty { listOfNotNull(runtime.proxyEndpoint()) }
-            val embedded = embeddedEndpoints.mapIndexed { index, endpoint ->
-                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — listener ${index + 1}", endpoint.host, endpoint.port)
+            val isolated = (runtime as? GuardianTorRuntime)?.isolatedProxyEndpoints().orEmpty()
+            val endpoints = isolated.ifEmpty { listOfNotNull(runtime.proxyEndpoint()) }
+            endpoints.mapIndexed { index, endpoint ->
+                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — listener ${index + 1}",
+                    endpoint.host, endpoint.port)
             }
-            val external = TorClientRegistry.load(context).filter { profile ->
-                profile.enabled && profile.id !in setOf(
-                    "guardian-embedded", "guardian-isolated-1", "guardian-isolated-2",
-                    "guardian-isolated-3", "guardian-isolated-4"
-                )
-            }
-            val all = embedded + external
-            val preferredId = TorClientRegistry.activeId(context)
-            val preferred = all.firstOrNull { profile ->
-                profile.id == preferredId ||
-                    (preferredId == "guardian-embedded" && profile.id.startsWith("guardian-embedded-"))
-            }
-            if (preferred == null) all else listOf(preferred) + all.filter { it.id != preferred.id }
         },
         isReady = { profile ->
             val endpoint = runCatching { profile.endpoint() }.getOrNull()
-            if (endpoint == null) false
-            else if (profile.id.startsWith("guardian-embedded-")) {
-                runtime.state == TorState.READY && runtime.proxyEndpoints().contains(endpoint)
-            } else {
-                val orbotProfile = profile.id.startsWith("orbot-")
-                !runtime.proxyEndpoints().contains(endpoint) &&
-                    (!orbotProfile || TorEndpointProbe.isOrbotInstalled(context)) &&
-                    TorEndpointProbe.isTor(endpoint)
-            }
-        },
-        policy = poolPolicy,
-        rules = routeRules
+            endpoint != null && runtime.state == TorState.READY &&
+                runtime.proxyEndpoints().contains(endpoint) && TorEndpointProbe.isTor(endpoint)
+        }
     )
+    val selectedMode: DownloadConnectionMode get() = DownloadConnectionSettings.get(context)
 
     /**
-     * The selected external client (Orbot) is used independently of the embedded
-     * Guardian runtime. Guardian starts lazily only when no selected client is ready
-     * or an external SOCKS connection fails. No direct-network fallback exists.
+     * Route is explicit and fail-closed: Guardian and Orbot never silently switch
+     * to each other, and neither silently falls back to an unproxied connection.
      */
     @Throws(IOException::class)
-    fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse {
-        val selected = try {
-            router.select(kind)
-        } catch (selectionFailure: IOException) {
-            // An unavailable Orbot must not strand the request: start Guardian as
-            // the verified fallback, then ask the router to select again.
-            ensureGuardianEndpoint()
-            try {
-                router.select(kind)
-            } catch (retryFailure: IOException) {
-                retryFailure.addSuppressed(selectionFailure)
-                throw retryFailure
+    fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse =
+        when (selectedMode) {
+            DownloadConnectionMode.GUARDIAN_TOR -> {
+                val endpoint = ensureGuardianEndpoint(kind)
+
+                transport.open(url, endpoint, rangeStart, ifRange)
             }
+            DownloadConnectionMode.ORBOT -> {
+                val endpoint = ensureOrbotEndpoint()
+
+                transport.open(url, endpoint, rangeStart, ifRange)
+            }
+            DownloadConnectionMode.DIRECT ->
+                transport.openDirect(url, rangeStart, ifRange)
         }
 
-        try {
-            return transport.open(url, selected.endpoint(), rangeStart, ifRange)
-        } catch (failure: IOException) {
-            if (failure is TorHttpException || selected.id.startsWith("guardian-embedded-")) throw failure
-            TorEndpointProbe.markUnavailable(selected.endpoint())
-            val guardian = ensureGuardianEndpoint()
-            if (guardian == selected.endpoint()) throw failure
-            return try {
-                transport.open(url, guardian, rangeStart, ifRange)
-            } catch (fallbackFailure: IOException) {
-                fallbackFailure.addSuppressed(failure)
-                throw fallbackFailure
-            }
+
+    @Throws(IOException::class)
+    private fun ensureOrbotEndpoint(): TorProxyEndpoint {
+        if (!TorEndpointProbe.isOrbotInstalled(context)) {
+            throw IOException("Wybrano Orbot, ale aplikacja Orbot nie jest zainstalowana.")
         }
+        val profile = TorClientRegistry.load(context).firstOrNull { it.id == "orbot-local" && it.enabled }
+            ?: throw IOException("Profil Orbot jest wyłączony lub nie istnieje. Włącz go w ustawieniach klientów Tor.")
+        val endpoint = runCatching { profile.endpoint() }
+            .getOrElse { throw IOException("Nieprawidłowy lokalny port SOCKS5 Orbot.", it) }
+        if (runtime.proxyEndpoints().contains(endpoint)) {
+            throw IOException("Port Orbot pokrywa się z listenerem Guardian. Zmień port Orbot lub zatrzymaj Guardian.")
+        }
+        if (!TorEndpointProbe.isTor(endpoint)) {
+            throw IOException("Orbot nie potwierdził wyjścia przez sieć Tor. Uruchom Orbot i sprawdź lokalny port SOCKS5.")
+        }
+        return endpoint
     }
 
     @Throws(IOException::class)
-    private fun ensureGuardianEndpoint(): TorProxyEndpoint {
+    private fun ensureGuardianEndpoint(kind: TorDownloadKind): TorProxyEndpoint {
         if (runtime.state == TorState.STOPPED || runtime.state == TorState.FAILED) {
             try {
                 runtime.start()
             } catch (failure: Exception) {
-                throw IOException("Nie udało się uruchomić zapasowego klienta Guardian Tor.", failure)
+                throw IOException("Nie udało się uruchomić wybranego klienta Guardian Tor.", failure)
             }
         }
         val deadline = System.currentTimeMillis() + 120_000L
@@ -112,7 +154,9 @@ class TorDownloadService(
             throw IOException("Guardian Tor nie osiągnął stanu READY; pobieranie pozostaje zablokowane." +
                 (runtime.failureMessage()?.let { " Przyczyna zgłoszona przez usługę: $it" } ?: " Brak komunikatu ACTION_ERROR z usługi Tor."))
         }
-        return runtime.proxyEndpoint()
+        runtime.proxyEndpoint()
             ?: throw IOException("Guardian Tor zgłosił READY, ale nie udostępnia działającego SOCKS5.")
+        return runCatching { guardianRouter.select(kind).endpoint() }
+            .getOrElse { throw IOException("Guardian nie udostępnia żadnego zweryfikowanego listenera SOCKS dla pobierania.", it) }
     }
 }
