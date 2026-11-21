@@ -197,6 +197,22 @@ internal object DocumentBrandStore {
         "Grafika hologramu / zabezpieczenia"
     )
     fun assetKinds() = kinds
+
+    private fun normalizeAssetKind(raw: String): String {
+        val value = raw.trim()
+        kinds.firstOrNull { it.equals(value, ignoreCase = true) }?.let { return it }
+        val alias = when (value.lowercase(Locale.ROOT)) {
+            "svg", "grafika svg", "grafika wektorowa" -> "Logo"
+            "podpis odręczny", "wzór podpisu" -> "Wzór podpisu odręcznego"
+            "tło", "background" -> "Tło dokumentu"
+            "godlo" -> "Godło"
+            "heraldyka" -> "Herb"
+            else -> null
+        }
+        return alias ?: throw IllegalArgumentException(
+            "Nieznany rodzaj zasobu '$value'. Wybierz jedną z kategorii: ${kinds.joinToString(", ")}."
+        )
+    }
     private fun dir(context: Context) = File(context.noBackupFilesDir, "document-brand-assets").apply { mkdirs() }
     private fun atomicRead(file: File): ByteArray =
         android.util.AtomicFile(file).openRead().use { it.readBytes() }
@@ -446,10 +462,10 @@ internal object DocumentBrandStore {
     }.getOrDefault(emptyList())
     @Synchronized fun assign(context: Context, documentType: String, kind: String, assetId: String) {
         require(documentBrandTargets.any { it.first == documentType }) { "Nieznany rodzaj dokumentu." }
-        require(kind in kinds) { "Nieznany rodzaj zasobu." }
-        require(list(context).any { it.id == assetId && it.kind == kind }) { "Wybrany zasób nie istnieje lub ma inny rodzaj." }
-        val next = assignments(context).filterNot { it.documentType == documentType && it.kind == kind } +
-            BrandAssignment(documentType, kind, assetId)
+        val normalizedKind = normalizeAssetKind(kind)
+        require(list(context).any { it.id == assetId && it.kind == normalizedKind }) { "Wybrany zasób nie istnieje lub ma inny rodzaj: $normalizedKind." }
+        val next = assignments(context).filterNot { it.documentType == documentType && it.kind == normalizedKind } +
+            BrandAssignment(documentType, normalizedKind, assetId)
         val a = JSONArray()
         next.forEach { x -> a.put(JSONObject().put("documentType", x.documentType).put("kind", x.kind).put("assetId", x.assetId)) }
         atomicWrite(File(dir(context), ASSIGNMENTS_INDEX), crypt(a.toString().toByteArray(Charsets.UTF_8), true))
@@ -612,14 +628,14 @@ internal object DocumentBrandStore {
             val item = assets.getJSONObject(index)
             val id = item.getString("id")
             require(id.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu." }
-            val kind = item.getString("kind")
-            require(kind in kinds) { "Nieznana kategoria zasobu: $kind" }
+            val kind = normalizeAssetKind(item.getString("kind"))
             val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
             require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Zasób przekracza limit 12 MB." }
+            val isSvg = SvgSafetyValidator.looksLikeSvg(bytes)
+            if (isSvg) SvgSafetyValidator.validate(bytes)
             if (kind in imageKinds && item.optString("mimeType") != "application/pdf") decodeImage(bytes).recycle()
-            val header = String(bytes, 0, minOf(bytes.size, 512), Charsets.UTF_8)
             val extension = when {
-                header.contains("<svg", true) -> ".svg.enc"
+                isSvg -> ".svg.enc"
                 kind == "Certyfikat" -> ".cer.enc"
                 kind == "Załącznik tekstowy" -> ".txt.enc"
                 kind == "Załącznik" -> ".bin.enc"
@@ -653,8 +669,16 @@ internal object DocumentBrandStore {
     }
 
     private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
-        BitmapFactory.decodeByteArray(bytes,0,bytes.size)?.let { return it }
-        val svg = com.caverock.androidsvg.SVG.getFromString(String(bytes, Charsets.UTF_8))
+        if (!SvgSafetyValidator.looksLikeSvg(bytes)) {
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { return it }
+            throw IllegalArgumentException("Nieobsługiwany format obrazu. Wybierz PNG, JPEG, WebP lub poprawny SVG.")
+        }
+        SvgSafetyValidator.validate(bytes)
+        val raw = Charsets.UTF_8.newDecoder()
+            .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+            .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+            .decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+        val svg = com.caverock.androidsvg.SVG.getFromString(SvgSafetyValidator.sanitizeMarkup(raw))
         val picture = svg.renderToPicture()
         val bitmap = android.graphics.Bitmap.createBitmap(512, 512, android.graphics.Bitmap.Config.ARGB_8888)
         val sourceWidth = picture.width.coerceAtLeast(1).toFloat()
@@ -673,13 +697,14 @@ internal object DocumentBrandStore {
         rights: String = "", version: Int = 1, createdAt: Long = System.currentTimeMillis(), mimeType: String = "",
         assetId: String = UUID.randomUUID().toString()
     ): BrandAsset {
-        require(kind in kinds) { "Nieznany rodzaj zasobu." }
+        val normalizedKind = normalizeAssetKind(kind)
         require(assetId.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu." }
         require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Plik zasobu przekracza limit 12 MB." }
-        if (kind in imageKinds && mimeType != "application/pdf") decodeImage(bytes).recycle()
-        val header = String(bytes, 0, minOf(bytes.size, 512), Charsets.UTF_8)
+        val isSvg = SvgSafetyValidator.looksLikeSvg(bytes)
+        if (isSvg) SvgSafetyValidator.validate(bytes)
+        if (normalizedKind in imageKinds && mimeType != "application/pdf") decodeImage(bytes).recycle()
         val extension = when {
-            header.contains("<svg", true) -> ".svg.enc"
+            isSvg -> ".svg.enc"
             kind == "Certyfikat" -> ".cer.enc"
             kind == "Załącznik tekstowy" -> ".txt.enc"
             kind == "Załącznik" -> ".bin.enc"
@@ -687,7 +712,7 @@ internal object DocumentBrandStore {
         }
         val file = assetId + extension
         atomicWrite(File(dir(context), file), crypt(bytes, true))
-        val asset = BrandAsset(assetId, owner.trim(), kind, label.trim().ifBlank { kind }, file,
+        val asset = BrandAsset(assetId, owner.trim(), normalizedKind, label.trim().ifBlank { normalizedKind }, file,
             rights.take(2048), version.coerceAtLeast(1), createdAt, mimeType.take(120))
         save(context, list(context).filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
             .filterNot { it.id == assetId } + asset)
