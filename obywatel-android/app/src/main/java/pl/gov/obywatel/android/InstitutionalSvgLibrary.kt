@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
+import pl.gov.obywatel.android.network.tor.DownloadConnectionSettings
 import pl.gov.obywatel.android.network.tor.TorDownloadKind
 import pl.gov.obywatel.android.network.tor.TorDownloadServiceProvider
 import pl.gov.obywatel.android.network.tor.TorHttpException
