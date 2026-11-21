@@ -105,7 +105,7 @@ class StudiaOnlineDownloadCatalogTest {
         val message = StudiaOnlineBulkDownloader.describeFailure(
             TorHttpException(403, null, "HTTP 403")
         )
-        assertTrue(message.contains("aktywnej sesji"))
+        assertTrue(message.contains("aktywną sesję"))
         assertTrue(message.contains("ograniczenia antyautomatyczne"))
     }
 
