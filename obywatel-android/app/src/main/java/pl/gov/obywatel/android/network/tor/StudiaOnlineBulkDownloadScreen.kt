@@ -107,7 +107,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Diagnostyka Guardian Project Tor", style = MaterialTheme.typography.titleMedium)
                 OutlinedButton(
-                    enabled = !running && !checkingTor,
+                    enabled = !running && !checkingTor && selectedMode == DownloadConnectionMode.GUARDIAN_TOR,
                     onClick = {
                         checkingTor = true
                         torDiagnostic = "Uruchamianie usługi Guardian i oczekiwanie na obwód Tor…"
@@ -142,6 +142,10 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(if (checkingTor) "Sprawdzanie Tor…" else "Sprawdź Guardian Project Tor")
+                }
+                if (selectedMode != DownloadConnectionMode.GUARDIAN_TOR) {
+                    Text("Test Guardian jest dostępny po wybraniu trybu Guardian Project Tor. Tryb Orbot i połączenie bezpośrednie nie uruchamiają Guardian.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (checkingTor) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 Text(torDiagnostic, color = if (torDiagnostic.startsWith("Guardian Project Tor działa")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
