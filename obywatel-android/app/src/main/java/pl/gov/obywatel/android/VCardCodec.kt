@@ -43,6 +43,8 @@ internal object VCardCodec {
             ?: record.fields["status"]
             ?: record.fields["office"]
             ?: record.schema
+        onProgress(0)
+        val sortedFields = fields.toSortedMap()
         val lines = mutableListOf(
             "BEGIN:VCARD",
             "VERSION:4.0",
@@ -107,7 +109,7 @@ internal object VCardCodec {
      * locally stored key/value entries carried as X-OWD-FIELD properties.
      * This is an application extension profile, not a universal vCard backup.
      */
-    fun encodeArchive(fields: Map<String, String>): String {
+    fun encodeArchive(fields: Map<String, String>, onProgress: (Int) -> Unit = {}): String {
         require(fields.isNotEmpty()) { "Brak danych do eksportu." }
         val lines = mutableListOf(
             "BEGIN:VCARD",
@@ -116,11 +118,15 @@ internal object VCardCodec {
             "N:${escapeStructured(fields["lastName"].orEmpty() + ";" + fields["firstNames"].orEmpty())}",
             "X-OWD-ARCHIVE-VERSION:2"
         )
-        fields.toSortedMap().forEach { (name, value) ->
+        sortedFields.entries.forEachIndexed { index, entry ->
+            val (name, value) = entry
             require(name.isNotBlank() && name.length <= 512) { "Nieprawidłowa nazwa pola archiwum." }
             val encodedName = java.util.Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(name.toByteArray(Charsets.UTF_8))
             lines += "X-OWD-FIELD;X-OWD-NAME=$encodedName:${escape(value)}"
+            if (index % 32 == 0 || index == sortedFields.size - 1) {
+                onProgress((index + 1) * 100 / sortedFields.size)
+            }
         }
         lines += "END:VCARD"
         val result = fold(lines).joinToString("\r\n") + "\r\n"
