@@ -141,6 +141,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                 ) {
                     Text(if (checkingTor) "Sprawdzanie Tor…" else "Sprawdź Guardian Project Tor")
                 }
+                if (checkingTor) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 Text(torDiagnostic, color = if (torDiagnostic.startsWith("Guardian Project Tor działa")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 Text("Zakres numerów materiałów", style = MaterialTheme.typography.titleMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
