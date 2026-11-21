@@ -57,7 +57,8 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
-        "professional", "foreign_prescription" -> emptyList()
+        "professional", "foreign_prescription", DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION,
+        DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH -> emptyList()
         else -> when {
             churchGraphicDocumentTargets().any { it.first == documentId } ||
                 familyEntityGraphicDocumentTargets().any { it.first == documentId } ||
@@ -804,7 +805,8 @@ internal fun documentUsesDedicatedEditor(documentId: String): Boolean =
         "profile", "identity", "passport", "registry", "family", "parliament", "training", "student",
         "disability", "church", "civil", "business", "entity", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts",
         "vaccines", "signed_pdf", "receipts", "imported", "children", "branding", "loyalty", "loyalty_cards",
-        "professional", "foreign_prescription"
+        "professional", "foreign_prescription", DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION,
+        DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH
     ) || churchGraphicDocumentTargets().any { it.first == documentId } ||
         familyEntityGraphicDocumentTargets().any { it.first == documentId } ||
         officialGraphicDocumentTargets().any { it.first == documentId }
