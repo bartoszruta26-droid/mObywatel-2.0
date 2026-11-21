@@ -40,6 +40,27 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
     /** Detailed reason delivered by Guardian's ACTION_ERROR broadcast, if available. */
     override fun failureMessage(): String? = lastFailureMessage
 
+    /**
+     * Configure the embedded Tor instance's exit country preference.
+     * Tor treats this as a routing preference, not a guarantee that a requested
+     * exit is available or selected for every circuit.
+     */
+    @Synchronized
+    fun setExitCountryPreference(countryCodes: List<String>) {
+        require(countryCodes.all { it.matches(Regex("[a-z]{2}")) }) {
+            "Tor country codes must be two-letter lowercase ISO codes."
+        }
+        val torrc = TorService.getTorrc(appContext)
+        val existing = if (torrc.exists()) torrc.readText() else ""
+        val filtered = existing.lineSequence()
+            .filterNot { it.trim().startsWith("ExitNodes ") || it.trim().startsWith("StrictNodes ") }
+            .toList()
+        val countryDirective = if (countryCodes.isEmpty()) emptyList()
+            else listOf("ExitNodes {" + countryCodes.joinToString("},{") + "}", "StrictNodes 0")
+        torrc.writeText((filtered + countryDirective).joinToString("\n", postfix = "\n"))
+        // torrc is read at startup; do not silently restart an active Tor process.
+    }
+
     // TorService emits ACTION_ERROR through LocalBroadcastManager as well as the
     // process broadcast. Subscribe to the local channel explicitly: it is the
     // authoritative same-process path for the original native startup exception.
