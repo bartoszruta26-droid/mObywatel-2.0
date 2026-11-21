@@ -31,22 +31,8 @@ import pl.gov.obywatel.android.network.tor.TorHttpException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-private fun validateSvg(bytes:ByteArray) {
-    require(bytes.isNotEmpty() && bytes.size <= 12*1024*1024) { "Plik pusty lub przekracza 12 MB." }
-    val raw=String(bytes,Charsets.UTF_8)
-    require(raw.contains("<svg",true)) { "Serwer nie zwrócił pliku SVG." }
-    require(!Regex("<!DOCTYPE|<!ENTITY",RegexOption.IGNORE_CASE).containsMatchIn(raw)) { "SVG zawiera DTD lub deklarację encji." }
-    require(!Regex("<(script|foreignObject)\\b",RegexOption.IGNORE_CASE).containsMatchIn(raw)) { "SVG zawiera niedozwolone elementy aktywne." }
-    require(!Regex("(href|src)\\s*=\\s*['\"]\\s*(https?:|file:|javascript:|data:)",RegexOption.IGNORE_CASE).containsMatchIn(raw)) { "SVG zawiera zewnętrzne odwołanie." }
-    val parser=Xml.newPullParser()
-    parser.setInput(java.io.StringReader(raw))
-    var root=false
-    var event=parser.eventType
-    while(event!=XmlPullParser.END_DOCUMENT) {
-        if(event==XmlPullParser.START_TAG && !root) { require(parser.name.equals("svg",true)) { "Dokument XML nie ma elementu głównego SVG." }; root=true }
-        event=parser.next()
-    }
-    require(root) { "Brak elementu SVG." }
+private fun validateSvg(bytes: ByteArray) {
+    SvgSafetyValidator.validate(bytes)
 }
 
 
