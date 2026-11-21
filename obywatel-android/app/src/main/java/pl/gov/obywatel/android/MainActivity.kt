@@ -1972,6 +1972,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onOpenHistory = { activeService = "Historia działań" },
                         onOpenIdentityDesigner = { showIdentityDesigner = true },
                         onOpenImportedDocuments = { showImportedDocuments = true },
+                        onOpenPaymentLedger = { showPaymentLedger = true },
                         onOpenLegalInformation = { activeService = "Informacje prawne" }
                     )
                     else -> {
@@ -3125,6 +3126,7 @@ private fun MoreMenuScreen(
     onOpenHistory: () -> Unit,
     onOpenIdentityDesigner: () -> Unit,
     onOpenImportedDocuments: () -> Unit,
+    onOpenPaymentLedger: () -> Unit,
     onOpenLegalInformation: () -> Unit,
     onOpenStudiaOnlineArchive: () -> Unit
 ) {
@@ -3140,6 +3142,7 @@ private fun MoreMenuScreen(
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Projektant dokumentów", "Tworzenie dokumentów, układ, podgląd i eksport PDF", Icons.Filled.Description, onOpenIdentityDesigner)
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
+        ProfileActionCard("Rachunki płatnicze", "Rejestr transakcji, walut, kruszców i ewidencja darowizn", Icons.Filled.Payments, onOpenPaymentLedger)
         ProfileActionCard(
             "Archiwum materiałów – pobierz moje pliki",
             "Pobierz materiały z studia-online.pl przez Tor, z przerwami i wyborem folderu",
