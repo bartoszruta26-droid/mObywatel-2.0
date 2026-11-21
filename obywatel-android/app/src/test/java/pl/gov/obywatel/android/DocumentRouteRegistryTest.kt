@@ -41,12 +41,12 @@ class DocumentRouteRegistryTest {
 
 
     @Test
-    fun fourDonationLedgersAreRegisteredVisibleAndAssignedToTheirOwnServiceGroups() {
+    fun fourDonationLedgersAreRegisteredVisibleAndAssignedToFinancialServiceGroup() {
         val expected = mapOf(
-            DonationLedgerCatalog.PERSON to "Służba cywilna",
-            DonationLedgerCatalog.FOUNDATION to "Służba fundacyjna",
-            DonationLedgerCatalog.ASSOCIATION to "Służba stowarzyszeniowa",
-            DonationLedgerCatalog.CHURCH to "Służba kościelna"
+            DonationLedgerCatalog.PERSON to "Służba finansowa",
+            DonationLedgerCatalog.FOUNDATION to "Służba finansowa",
+            DonationLedgerCatalog.ASSOCIATION to "Służba finansowa",
+            DonationLedgerCatalog.CHURCH to "Służba finansowa"
         )
         expected.forEach { (id, group) ->
             assertEquals(group, documentVisibilityGroup(id))
@@ -110,6 +110,7 @@ class DocumentRouteRegistryTest {
             "church" to "Dokumenty Kościelne",
             "civil" to "Formularze dokumentów",
             "business" to "Służba gospodarcza",
+            "financial_service" to "Służba finansowa",
             "professional" to "Dokumenty kwalifikacji zawodowych",
             "organization_foundation" to "Służba fundacyjna",
             "organization_church" to "Dokumenty Kościelne",
