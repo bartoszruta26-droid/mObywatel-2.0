@@ -173,7 +173,7 @@ class StudiaOnlineBulkDownloader(
 
             if (downloaded != null) {
                 try {
-                    emit(item.id, false, phase = "Zapisywanie pobranego pliku…", downloadedBytes = downloaded.size.toLong(), expectedBytes = downloaded.size.toLong())
+                    emit(item.id, false, phase = "Zapisywanie pobranego pliku…", downloadedBytes = downloaded.size.toLong())
                     sha256ById[item.id] = save(item, downloaded)
                     success += item.id
                 } catch (failure: Exception) {
