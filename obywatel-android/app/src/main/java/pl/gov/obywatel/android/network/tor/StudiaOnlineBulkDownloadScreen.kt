@@ -277,7 +277,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                             progress = (it.downloadedBytes.toFloat() / it.expectedBytes.toFloat()).coerceIn(0f, 1f),
                             modifier = Modifier.fillMaxWidth()
                         )
-                    } else if (it.currentId != null && it.phase.contains("Pobieranie")) {
+                    } else if (it.currentId != null && !it.paused && !it.finished) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     }
                     if (it.currentId != null && it.phase.contains("Pobieranie")) {
