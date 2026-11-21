@@ -92,12 +92,17 @@ class TorDownloadService(
      * to each other, and neither silently falls back to an unproxied connection.
      */
     @Throws(IOException::class)
-    fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse =
-        when (selectedMode) {
+    fun open(
+        url: String,
+        kind: TorDownloadKind,
+        rangeStart: Long = 0L,
+        ifRange: String? = null,
+        cookieHeader: String? = null
+    ): TorHttpResponse = when (selectedMode) {
             DownloadConnectionMode.GUARDIAN_TOR -> {
                 val endpoint = ensureGuardianEndpoint(kind)
 
-                transport.open(url, endpoint, rangeStart, ifRange)
+                transport.open(url, endpoint, rangeStart, ifRange, cookieHeader)
             }
             DownloadConnectionMode.ORBOT -> {
                 val endpoint = ensureOrbotEndpoint()
@@ -105,7 +110,7 @@ class TorDownloadService(
                 transport.open(url, endpoint, rangeStart, ifRange)
             }
             DownloadConnectionMode.DIRECT ->
-                transport.openDirect(url, rangeStart, ifRange)
+                transport.openDirect(url, rangeStart, ifRange, cookieHeader)
         }
 
 
