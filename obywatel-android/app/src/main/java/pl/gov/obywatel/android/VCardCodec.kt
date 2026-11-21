@@ -43,8 +43,6 @@ internal object VCardCodec {
             ?: record.fields["status"]
             ?: record.fields["office"]
             ?: record.schema
-        onProgress(0)
-        val sortedFields = fields.toSortedMap()
         val lines = mutableListOf(
             "BEGIN:VCARD",
             "VERSION:4.0",
@@ -111,6 +109,8 @@ internal object VCardCodec {
      */
     fun encodeArchive(fields: Map<String, String>, onProgress: (Int) -> Unit = {}): String {
         require(fields.isNotEmpty()) { "Brak danych do eksportu." }
+        onProgress(0)
+        val sortedFields = fields.toSortedMap()
         val lines = mutableListOf(
             "BEGIN:VCARD",
             "VERSION:4.0",
