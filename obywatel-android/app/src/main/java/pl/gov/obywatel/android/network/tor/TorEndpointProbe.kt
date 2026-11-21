@@ -49,11 +49,11 @@ object TorEndpointProbe {
     }
 }
 
-/** Whether selecting Orbot should defer startup of the embedded Guardian client. */
+/** Only an explicit Guardian route may start the embedded Guardian client. */
 internal fun shouldStartGuardianForMode(mode: DownloadConnectionMode): Boolean =
     mode == DownloadConnectionMode.GUARDIAN_TOR
 
-/** Process-wide runtime. The embedded Guardian client is started lazily as a fallback. */
+/** Process-wide runtime. Guardian starts only when explicitly selected. */
 object TorDownloadServiceProvider {
     @Volatile private var runtime: GuardianTorRuntime? = null
     @Volatile private var service: TorDownloadService? = null
@@ -93,5 +93,4 @@ object TorDownloadServiceProvider {
         }
         return service ?: TorDownloadService(app, activeRuntime).also { service = it }
     }
-}
 }
