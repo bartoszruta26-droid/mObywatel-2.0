@@ -99,12 +99,12 @@ class TorDownloadService(
         when (selectedMode) {
             DownloadConnectionMode.GUARDIAN_TOR -> {
                 val endpoint = ensureGuardianEndpoint(kind)
-                applyExitRegionPreference(endpoint)
+
                 transport.open(url, endpoint, rangeStart, ifRange)
             }
             DownloadConnectionMode.ORBOT -> {
                 val endpoint = ensureOrbotEndpoint()
-                applyExitRegionPreference(endpoint)
+
                 transport.open(url, endpoint, rangeStart, ifRange)
             }
             DownloadConnectionMode.DIRECT ->
