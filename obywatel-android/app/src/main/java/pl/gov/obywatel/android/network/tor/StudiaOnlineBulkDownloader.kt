@@ -135,7 +135,7 @@ class StudiaOnlineBulkDownloader(
                 }
                 if (stopRequested || pauseRequested) continue
 
-                emit(item.id, false, phase = "Łączenie z klientem Tor…")
+                emit(item.id, false, phase = "Łączenie — ${downloads.selectedMode.label}…")
                 try {
                     previousRequestAt = clock()
                     downloaded = downloadWholeItem(item) { bytes, expected ->
