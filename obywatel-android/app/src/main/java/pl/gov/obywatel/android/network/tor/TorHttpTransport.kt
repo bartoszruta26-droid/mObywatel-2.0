@@ -150,20 +150,23 @@ class TorHttpTransport(
         rawUrl: String,
         endpoint: TorProxyEndpoint,
         rangeStart: Long = 0L,
-        ifRange: String? = null
-    ): TorHttpResponse = openUsing(rawUrl, rangeStart, ifRange) { client(endpoint) }
+        ifRange: String? = null,
+        cookieHeader: String? = null
+    ): TorHttpResponse = openUsing(rawUrl, rangeStart, ifRange, cookieHeader) { client(endpoint) }
 
     /** Explicit direct HTTPS transport. No SOCKS proxy or Tor fallback is used. */
     fun openDirect(
         rawUrl: String,
         rangeStart: Long = 0L,
-        ifRange: String? = null
-    ): TorHttpResponse = openUsing(rawUrl, rangeStart, ifRange) { directClient }
+        ifRange: String? = null,
+        cookieHeader: String? = null
+    ): TorHttpResponse = openUsing(rawUrl, rangeStart, ifRange, cookieHeader) { directClient }
 
     private fun openUsing(
         rawUrl: String,
         rangeStart: Long,
         ifRange: String?,
+        cookieHeader: String?,
         clientForRequest: () -> OkHttpClient
     ): TorHttpResponse {
         require(rangeStart >= 0L) { "Range offset cannot be negative." }
@@ -177,6 +180,11 @@ class TorHttpTransport(
                 .header("User-Agent", policy.userAgent)
                 .header("Accept-Encoding", "identity")
                 .apply {
+                    // Session cookies are sent only to the authenticated WSKZ host.
+                    // Redirects to other hosts never receive the user's session cookie.
+                    if (url.host.equals("studia-online.pl", ignoreCase = true) &&
+                        !cookieHeader.isNullOrBlank()
+                    ) header("Cookie", cookieHeader)
                     if (rangeStart > 0L) header("Range", "bytes=$rangeStart-")
                     if (rangeStart > 0L && !ifRange.isNullOrBlank()) header("If-Range", ifRange)
                 }

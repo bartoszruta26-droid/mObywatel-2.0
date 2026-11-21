@@ -9,6 +9,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.CookieManager
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,12 +28,14 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,7 +55,11 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val runtime = remember(context) { GuardianTorRuntime(context) }
     val downloadService = remember(context) { TorDownloadService(context, runtime) }
-    val downloader = remember(context) { StudiaOnlineBulkDownloader(downloadService) }
+    val downloader = remember(context) {
+        StudiaOnlineBulkDownloader(downloadService, cookieHeaderProvider = {
+            CookieManager.getInstance().getCookie("https://studia-online.pl//pobierz-material/")
+        })
+    }
     val store = remember(context) { StudiaOnlineSafStore(context) }
 
     DisposableEffect(runtime, downloader) {
@@ -69,6 +80,17 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     var activeStop by remember { mutableStateOf<(() -> Unit)?>(null) }
     var progress by remember { mutableStateOf<StudiaOnlineDownloadProgress?>(null) }
     var errorText by remember { mutableStateOf("") }
+    var showLogin by remember { mutableStateOf(false) }
+    var sessionCookieCount by remember { mutableStateOf(0) }
+    var selectedConnectionMode by remember(context) {
+        mutableStateOf(DownloadConnectionSettings.get(context))
+    }
+    fun refreshSessionStatus() {
+        CookieManager.getInstance().flush()
+        val cookieHeader = CookieManager.getInstance().getCookie("https://studia-online.pl//pobierz-material/")
+        sessionCookieCount = cookieHeader?.split(';')?.count { it.contains('=') } ?: 0
+    }
+    LaunchedEffect(Unit) { refreshSessionStatus() }
 
     val folderPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -99,6 +121,94 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
         )
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Konto studia-online.pl", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    if (sessionCookieCount > 0) "Wykryto $sessionCookieCount ciasteczek dla domeny serwisu. To potwierdza dane sesyjne, ale nie gwarantuje aktywnego logowania."
+                    else "Brak ciasteczek sesyjnych. Zaloguj się na stronie, aby pobierać materiały wymagające konta.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { showLogin = !showLogin }, modifier = Modifier.weight(1f)) {
+                        Text(if (showLogin) "Zamknij logowanie" else "Zaloguj do WSKZ")
+                    }
+                    OutlinedButton(onClick = ::refreshSessionStatus) {
+                        Text("Sprawdź sesję")
+                    }
+                }
+                OutlinedButton(
+                    onClick = {
+                        // Android's CookieManager is shared by WebViews in this app.
+                        // Make the scope explicit rather than pretending to clear only WSKZ cookies.
+                        CookieManager.getInstance().removeAllCookies {
+                            CookieManager.getInstance().flush()
+                            sessionCookieCount = 0
+                            statusText = "Wyczyszczono ciasteczka WebView aplikacji. Zaloguj się ponownie."
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Usuń sesję i ciasteczka WebView")
+                }
+                Text(
+                    "Usunięcie czyści ciasteczka wszystkich witryn używanych przez WebView aplikacji, nie tylko WSKZ.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (showLogin) {
+                    Text(
+                        "Zaloguj się na oficjalnej stronie WSKZ. Hasło wpisujesz bezpośrednio w formularzu serwisu; aplikacja nie zapisuje go w swoich ustawieniach. Logowanie w oknie WebView korzysta z systemowej trasy sieciowej Androida, natomiast samo pobieranie poniżej używa wybranego trybu.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    AndroidView(
+                        modifier = Modifier.fillMaxWidth().height(520.dp),
+                        factory = { viewContext ->
+                            WebView(viewContext).apply {
+                                settings.javaScriptEnabled = true
+                                settings.domStorageEnabled = true
+                                CookieManager.getInstance().setAcceptCookie(true)
+                                webViewClient = object : WebViewClient() {
+                                    override fun onPageFinished(view: WebView?, url: String?) {
+                                        refreshSessionStatus()
+                                    }
+                                }
+                                loadUrl("https://studia-online.pl/")
+                            }
+                        },
+                        update = { }
+                    )
+                }
+                Text("Trasa pobierania", style = MaterialTheme.typography.titleMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    DownloadConnectionMode.values().forEach { mode ->
+                        OutlinedButton(
+                            onClick = {
+                                selectedConnectionMode = mode
+                                DownloadConnectionSettings.set(context, mode)
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                when (mode) {
+                                    DownloadConnectionMode.GUARDIAN_TOR -> if (selectedConnectionMode == mode) "✓ Tor" else "Tor"
+                                    DownloadConnectionMode.ORBOT -> if (selectedConnectionMode == mode) "✓ Orbot" else "Orbot"
+                                    DownloadConnectionMode.DIRECT -> if (selectedConnectionMode == mode) "✓ Bezpośrednio" else "Bezpośrednio"
+                                }
+                            )
+                        }
+                    }
+                }
+                Text(
+                    when (selectedConnectionMode) {
+                        DownloadConnectionMode.GUARDIAN_TOR -> "Pobieranie przez wbudowany klient Guardian Tor."
+                        DownloadConnectionMode.ORBOT -> "Pobieranie przez skonfigurowany lokalny port SOCKS5 Orbot."
+                        DownloadConnectionMode.DIRECT -> "Pobieranie bez lokalnego proxy Tor; połączenie może nadal podlegać systemowemu VPN."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Divider()
                 Text("Zakres numerów materiałów", style = MaterialTheme.typography.titleMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
