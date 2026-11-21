@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 internal object DonationLedgerCatalog {
     const val PERSON = "donation_ledger_person"
@@ -112,6 +114,19 @@ private object DonationLedgerStore {
 private fun loadDonationLedger(context: Context, id: String): Pair<String, List<DonationLedgerEntry>> =
     DonationLedgerStore.load(context, id)
 
+private fun donationTotalsAcrossLedgers(context: Context): Map<String, BigDecimal> {
+    val totals = sortedMapOf<String, BigDecimal>()
+    DonationLedgerCatalog.all.keys.forEach { id ->
+        DonationLedgerStore.load(context, id).second.forEach entryLoop@ { entry ->
+            val amount = entry.amount.trim().replace("\u00a0", "").replace(" ", "").replace(",", ".")
+                .toBigDecimalOrNull() ?: return@entryLoop
+            val currency = entry.currency.trim().uppercase().ifBlank { "PLN" }
+            totals[currency] = (totals[currency] ?: BigDecimal.ZERO).add(amount)
+        }
+    }
+    return totals
+}
+
 private fun saveDonationLedger(context: Context, id: String, entityName: String, entries: List<DonationLedgerEntry>) =
     DonationLedgerStore.save(context, id, entityName, entries)
 
@@ -129,7 +144,12 @@ internal fun DonationLedgerScreen(documentId: String, readOnly: Boolean, onBack:
         put("currency", "PLN")
     } }
     var message by remember(documentId) { mutableStateOf("") }
-    fun persist() = saveDonationLedger(context, documentId, entityName, entries.toList())
+    var aggregateVersion by remember { mutableIntStateOf(0) }
+    val aggregateTotals = remember(context, aggregateVersion) { donationTotalsAcrossLedgers(context) }
+    fun persist() {
+        saveDonationLedger(context, documentId, entityName, entries.toList())
+        aggregateVersion++
+    }
     @Composable fun field(key: String, label: String, hint: String = "") {
         OutlinedTextField(value = draft[key].orEmpty(), onValueChange = { draft[key] = it },
             label = { Text(label) }, placeholder = { if (hint.isNotBlank()) Text(hint) },
@@ -139,6 +159,20 @@ internal fun DonationLedgerScreen(documentId: String, readOnly: Boolean, onBack:
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         TextButton(onClick = onBack) { Text("‹ Powrót") }
         Text(definition.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Łączna suma darowizn ze wszystkich czterech ewidencji",
+                    fontWeight = FontWeight.SemiBold)
+                if (aggregateTotals.isEmpty()) Text("Brak zapisanych kwot.")
+                aggregateTotals.forEach { (currency, total) ->
+                    Text(total.setScale(2, RoundingMode.HALF_UP).toPlainString() + " " + currency,
+                        style = MaterialTheme.typography.titleMedium)
+                }
+                Text("Sumy są rozdzielone według waluty; kwoty w różnych walutach nie są dodawane bez przeliczenia.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         Text(if (readOnly) "Podgląd ewidencji. Edycja jest dostępna w Menu główne → Profil → Ustawienia."
             else "Każda otrzymana darowizna stanowi osobny wpis. Zachowuj dowody przekazania i dokumenty źródłowe.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
