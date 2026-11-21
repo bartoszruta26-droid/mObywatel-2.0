@@ -56,7 +56,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     val downloadService = remember(context) { TorDownloadService(context, runtime) }
     val downloader = remember(context) {
         StudiaOnlineBulkDownloader(downloadService, cookieHeaderProvider = {
-            CookieManager.getInstance().getCookie("https://studia-online.pl")
+            CookieManager.getInstance().getCookie("https://studia-online.pl//pobierz-material/")
         })
     }
     val store = remember(context) { StudiaOnlineSafStore(context) }
@@ -86,7 +86,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     }
     fun refreshSessionStatus() {
         CookieManager.getInstance().flush()
-        val cookieHeader = CookieManager.getInstance().getCookie("https://studia-online.pl")
+        val cookieHeader = CookieManager.getInstance().getCookie("https://studia-online.pl//pobierz-material/")
         sessionCookieCount = cookieHeader?.split(';')?.count { it.contains('=') } ?: 0
     }
 
