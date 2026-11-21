@@ -113,7 +113,23 @@ private fun institutionalSymbolAssetId(item: InstitutionalSymbolCandidate): Stri
 
 private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidator.validate(bytes)
 
-private suspend fun downloadInstitutionalSymbol(context: Context, item: InstitutionalSymbolCandidate): String {
+internal data class InstitutionalSymbolDownloadProgress(
+    val stage: String,
+    val downloadedBytes: Long = 0L,
+    val totalBytes: Long? = null
+)
+
+internal fun formatInstitutionalSymbolBytes(bytes: Long): String = when {
+    bytes < 1024L -> "${bytes} B"
+    bytes < 1024L * 1024L -> String.format(Locale.ROOT, "%.1f KB", bytes / 1024.0)
+    else -> String.format(Locale.ROOT, "%.2f MB", bytes / (1024.0 * 1024.0))
+}
+
+private suspend fun downloadInstitutionalSymbol(
+    context: Context,
+    item: InstitutionalSymbolCandidate,
+    onProgress: suspend (InstitutionalSymbolDownloadProgress) -> Unit
+): String {
     val uri = java.net.URI(item.downloadUrl)
     val trustedSvgHost = uri.host.equals("upload.wikimedia.org", true) ||
         uri.host.equals("raw.githubusercontent.com", true) ||
@@ -121,23 +137,34 @@ private suspend fun downloadInstitutionalSymbol(context: Context, item: Institut
     require(uri.scheme.equals("https", true) && uri.userInfo == null && trustedSvgHost) {
         "Źródło pliku nie znajduje się na dozwolonej domenie Wikimedia Commons, GitHub Raw lub jsDelivr."
     }
+    onProgress(InstitutionalSymbolDownloadProgress("Łączenie ze źródłem przez wybraną trasę sieciową. Przy uruchamianiu Tor pierwsze połączenie może potrwać dłużej."))
     val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, TorDownloadKind.SVG)
     val bytes = response.use {
         require(it.statusCode in 200..299) { "Serwer zwrócił HTTP ${it.statusCode}." }
+        val expected = it.contentLength?.takeIf { length -> length > 0L }
+        onProgress(InstitutionalSymbolDownloadProgress("Połączono. Pobieranie danych SVG…", 0L, expected))
         val output = ByteArrayOutputStream()
         it.body.use { input ->
             val buffer = ByteArray(8192)
-            var total = 0
+            var total = 0L
+            var lastUpdate = System.currentTimeMillis()
             while (true) {
                 val count = input.read(buffer)
                 if (count < 0) break
                 total += count
-                require(total <= 12 * 1024 * 1024) { "SVG przekracza limit 12 MB." }
+                require(total <= 12L * 1024L * 1024L) { "SVG przekracza limit 12 MB." }
                 output.write(buffer, 0, count)
+                val now = System.currentTimeMillis()
+                if (now - lastUpdate >= 300L) {
+                    onProgress(InstitutionalSymbolDownloadProgress("Pobieranie SVG…", total, expected))
+                    lastUpdate = now
+                }
             }
+            onProgress(InstitutionalSymbolDownloadProgress("Pobieranie zakończone. Odebrano ${formatInstitutionalSymbolBytes(total)}. Weryfikacja pliku…", total, expected ?: total))
         }
         output.toByteArray()
     }
+    onProgress(InstitutionalSymbolDownloadProgress("Sprawdzanie bezpieczeństwa i poprawności SVG…", bytes.size.toLong(), bytes.size.toLong()))
     validateInstitutionalSymbolSvg(bytes)
     val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
     val rights = JSONObject()
@@ -161,8 +188,10 @@ private suspend fun downloadInstitutionalSymbol(context: Context, item: Institut
         item.group.contains("government", true) -> "Znak instytucji publicznej"
         else -> "Logo lub emblemat"
     }
+    onProgress(InstitutionalSymbolDownloadProgress("Zapisuję plik i metadane w bibliotece…", bytes.size.toLong(), bytes.size.toLong()))
     DocumentBrandStore.importBytes(context, item.repository, kind, item.displayName.take(180),
         bytes, rights = rights, mimeType = "image/svg+xml", assetId = institutionalSymbolAssetId(item))
+    onProgress(InstitutionalSymbolDownloadProgress("Zapisano i zweryfikowano SVG.", bytes.size.toLong(), bytes.size.toLong()))
     return sha
 }
 
@@ -189,6 +218,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
     var selectedCategory by remember { mutableStateOf("Wszystkie") }
     var busyId by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf("") }
+    var downloadProgress by remember { mutableStateOf<InstitutionalSymbolDownloadProgress?>(null) }
     LaunchedEffect(context) {
         message = "Wczytywanie katalogu SVG…"
         withContext(Dispatchers.IO) {
@@ -241,7 +271,28 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
             label = { Text("Szukaj nazwy, organizacji, państwa lub herbu") },
             singleLine = true, modifier = Modifier.fillMaxWidth()
         )
-        if (busyId != null) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        if (busyId != null) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            downloadProgress?.let { progress ->
+                Text(progress.stage, style = MaterialTheme.typography.bodySmall)
+                val total = progress.totalBytes
+                Text(
+                    if (total != null && total > 0L)
+                        "${formatInstitutionalSymbolBytes(progress.downloadedBytes)} / ${formatInstitutionalSymbolBytes(total)}"
+                    else formatInstitutionalSymbolBytes(progress.downloadedBytes) + " pobrano",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        if (message.isNotBlank() && busyId == null) {
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (message.startsWith("Pobrano i zapisano")) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error
+            )
+        }
         if (matches.isEmpty() && candidates.isNotEmpty()) {
             Text("Brak wyników w wybranej grupie.", style = MaterialTheme.typography.bodySmall)
         }
@@ -271,12 +322,19 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Button(enabled = busyId == null, onClick = {
                                 busyId = item.sourceId + ":" + item.path
-                                message = "Pobieranie: ${item.displayName}"
+                                message = ""
+                                downloadProgress = InstitutionalSymbolDownloadProgress("Przygotowanie pobierania…")
                                 scope.launch {
-                                    val result = withContext(Dispatchers.IO) { runCatching { downloadInstitutionalSymbol(context, item) } }
+                                    val result = runCatching {
+                                        withContext(Dispatchers.IO) {
+                                            downloadInstitutionalSymbol(context, item) { update ->
+                                                withContext(Dispatchers.Main.immediate) { downloadProgress = update }
+                                            }
+                                        }
+                                    }
                                     message = result.fold(
-                                        { "Zapisano ${item.displayName}; SHA-256: ${it.take(16)}…" },
-                                        { "Błąd pobierania ${item.displayName}: ${it.message ?: "nieznany błąd"}" }
+                                        { "Pobrano i zapisano ${item.displayName} (${formatInstitutionalSymbolBytes(downloadProgress?.downloadedBytes ?: 0L)}). SHA-256: ${it}" },
+                                        { "Nie zapisano ${item.displayName}. ${it.message ?: "Nieznany błąd pobierania."}" }
                                     )
                                     busyId = null
                                     if (result.isSuccess) onSaved()
@@ -289,6 +347,5 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                 }
             }
         }
-        if (message.isNotBlank()) Text(message, style = MaterialTheme.typography.bodySmall)
     }
 }
