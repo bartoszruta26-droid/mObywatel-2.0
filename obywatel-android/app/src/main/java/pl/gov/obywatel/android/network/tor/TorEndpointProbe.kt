@@ -49,11 +49,7 @@ object TorEndpointProbe {
     }
 }
 
-/** Whether selecting Orbot should defer startup of the embedded Guardian client. */
-internal fun shouldStartGuardianForSelectedClient(activeClientId: String, orbotInstalled: Boolean): Boolean =
-    !(activeClientId.startsWith("orbot-") && orbotInstalled)
-
-/** Process-wide runtime. The embedded Guardian client is started lazily as a fallback. */
+/** Process-wide runtime. Guardian is started only when explicitly selected. */
 object TorDownloadServiceProvider {
     @Volatile private var runtime: GuardianTorRuntime? = null
     @Volatile private var service: TorDownloadService? = null
