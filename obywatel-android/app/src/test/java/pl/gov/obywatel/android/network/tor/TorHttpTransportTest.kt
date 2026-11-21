@@ -54,6 +54,14 @@ class TorHttpTransportTest {
         assertTrue(failure.message!!.contains("unavailable"))
     }
 
+    @Test fun directTransportDoesNotRequireTorRuntime() {
+        val transport = TorHttpTransport(FakeRuntime(state = TorState.STOPPED, endpoint = null))
+        val failure = assertThrows(java.io.IOException::class.java) {
+            transport.openDirect("http://example.org/file.bin")
+        }
+        assertTrue(failure.message!!.contains("Only absolute HTTPS"))
+    }
+
     @Test fun invalidSchemesAreRejectedBeforeConnecting() {
         val transport = TorHttpTransport(FakeRuntime())
         for (url in listOf("http://example.org/a", "file:///etc/passwd", "javascript:alert(1)")) {
