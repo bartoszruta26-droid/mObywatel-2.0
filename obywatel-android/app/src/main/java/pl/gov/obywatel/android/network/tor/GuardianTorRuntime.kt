@@ -254,7 +254,11 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         val existing = if (torrc.exists()) torrc.readText() else ""
         val filtered = existing.lineSequence().filterNot { line ->
             val port = Regex("""^\s*SocksPort\s+127[.]0[.]0[.]1:(\d+)""").find(line)?.groupValues?.getOrNull(1)?.toIntOrNull()
-            (port != null && port in 19051..19080) || line.trim().startsWith("MaxCircuitDirtiness ")
+            val directive = line.trim()
+            (port != null && port in 19051..19080) ||
+                directive.startsWith("MaxCircuitDirtiness ") ||
+                directive.startsWith("ExitNodes ") ||
+                directive.startsWith("StrictNodes ")
         }.toList()
         val listeners = availablePorts.map { port ->
             "SocksPort 127.0.0.1:$port IsolateClientAddr IsolateDestAddr IsolateDestPort"
