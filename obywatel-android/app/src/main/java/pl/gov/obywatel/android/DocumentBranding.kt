@@ -198,6 +198,20 @@ internal object DocumentBrandStore {
     )
     fun assetKinds() = kinds
     private fun dir(context: Context) = File(context.noBackupFilesDir, "document-brand-assets").apply { mkdirs() }
+    private fun atomicRead(file: File): ByteArray =
+        android.util.AtomicFile(file).openRead().use { it.readBytes() }
+
+    private fun atomicWrite(file: File, bytes: ByteArray) {
+        val atomic = android.util.AtomicFile(file)
+        val output = atomic.startWrite()
+        try {
+            output.write(bytes)
+            atomic.finishWrite(output)
+        } catch (failure: Throwable) {
+            atomic.failWrite(output)
+            throw failure
+        }
+    }
     private fun key(): SecretKey {
         val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
         (ks.getKey(ALIAS, null) as? SecretKey)?.let { return it }
@@ -407,7 +421,7 @@ internal object DocumentBrandStore {
         val stored = runCatching {
             val f = File(dir(context), INDEX)
             if (!f.exists()) emptyList() else {
-                val a = JSONArray(String(crypt(f.readBytes(), false), Charsets.UTF_8))
+                val a = JSONArray(String(crypt(atomicRead(f), false), Charsets.UTF_8))
                 (0 until a.length()).map { i -> a.getJSONObject(i).let { o ->
                     BrandAsset(o.getString("id"), o.getString("owner"), o.getString("kind"), o.getString("label"), o.getString("file"),
                         o.optString("rights"), o.optInt("version", 1), o.optLong("createdAt", 0L), o.optString("mimeType"))
@@ -420,12 +434,12 @@ internal object DocumentBrandStore {
         val a = JSONArray()
         assets.filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
             .forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file); put("rights",x.rights); put("version",x.version); put("createdAt",x.createdAt); put("mimeType",x.mimeType) }) }
-        File(dir(context), INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+        atomicWrite(File(dir(context), INDEX), crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
     @Synchronized fun assignments(context: Context): List<BrandAssignment> = runCatching {
         val f = File(dir(context), ASSIGNMENTS_INDEX)
         if (!f.exists()) return emptyList()
-        val a = JSONArray(String(crypt(f.readBytes(), false), Charsets.UTF_8))
+        val a = JSONArray(String(crypt(atomicRead(f), false), Charsets.UTF_8))
         (0 until a.length()).map { i -> a.getJSONObject(i).let { o ->
             BrandAssignment(o.getString("documentType"), o.getString("kind"), o.getString("assetId"))
         } }
@@ -438,14 +452,14 @@ internal object DocumentBrandStore {
             BrandAssignment(documentType, kind, assetId)
         val a = JSONArray()
         next.forEach { x -> a.put(JSONObject().put("documentType", x.documentType).put("kind", x.kind).put("assetId", x.assetId)) }
-        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+        atomicWrite(File(dir(context), ASSIGNMENTS_INDEX), crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
     @Synchronized fun unassign(context: Context, documentType: String, kind: String) {
         val a = JSONArray()
         assignments(context).filterNot { it.documentType == documentType && it.kind == kind }.forEach { x ->
             a.put(JSONObject().put("documentType", x.documentType).put("kind", x.kind).put("assetId", x.assetId))
         }
-        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(a.toString().toByteArray(Charsets.UTF_8), true))
+        atomicWrite(File(dir(context), ASSIGNMENTS_INDEX), crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
     private fun imageById(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? = runCatching {
         val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
@@ -465,7 +479,7 @@ internal object DocumentBrandStore {
         val storedBytes = if (asset.file.startsWith("builtin:")) {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
         } else {
-            crypt(File(dir(context), asset.file).readBytes(), false)
+            crypt(atomicRead(File(dir(context), asset.file)), false)
         }
         val bytes = if (asset.file.endsWith(".b64")) android.util.Base64.decode(String(storedBytes, Charsets.US_ASCII), android.util.Base64.DEFAULT) else storedBytes
         decodeImage(bytes)
@@ -557,7 +571,7 @@ internal object DocumentBrandStore {
         } else if (asset.file.startsWith("builtin:")) {
             val stored = context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
             if (asset.file.endsWith(".b64")) android.util.Base64.decode(String(stored, Charsets.US_ASCII), android.util.Base64.DEFAULT) else stored
-        } else crypt(File(dir(context), asset.file).readBytes(), false)
+        } else crypt(atomicRead(File(dir(context), asset.file)), false)
     }.getOrNull()
 
     /** Exports custom library files and their document assignments. Bundled resources remain app resources. */
@@ -568,7 +582,7 @@ internal object DocumentBrandStore {
         list(context).filter { !it.file.startsWith("builtin:") && !it.file.startsWith("resource:") }.forEach { asset ->
             val file = File(dir(context), asset.file)
             require(file.isFile) { "Brak pliku zasobu: ${asset.label}" }
-            val bytes = crypt(file.readBytes(), false)
+            val bytes = crypt(atomicRead(file), false)
             assets.put(JSONObject()
                 .put("id", asset.id).put("owner", asset.owner).put("kind", asset.kind)
                 .put("label", asset.label)
@@ -612,7 +626,7 @@ internal object DocumentBrandStore {
                 else -> ".asset.enc"
             }
             val file = "$id$extension"
-            File(dir(context), file).writeBytes(crypt(bytes, true))
+            atomicWrite(File(dir(context), file), crypt(bytes, true))
             restored[id] = BrandAsset(id, item.optString("owner").take(120), kind,
                 item.optString("label").take(180), file, item.optString("rights").take(2048),
                 item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()),
@@ -635,7 +649,7 @@ internal object DocumentBrandStore {
         val array = JSONArray()
         next.values.forEach { item -> array.put(JSONObject().put("documentType", item.documentType)
             .put("kind", item.kind).put("assetId", item.assetId)) }
-        File(dir(context), ASSIGNMENTS_INDEX).writeBytes(crypt(array.toString().toByteArray(Charsets.UTF_8), true))
+        atomicWrite(File(dir(context), ASSIGNMENTS_INDEX), crypt(array.toString().toByteArray(Charsets.UTF_8), true))
     }
 
     private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
@@ -672,7 +686,7 @@ internal object DocumentBrandStore {
             else -> ".asset.enc"
         }
         val file = assetId + extension
-        File(dir(context), file).writeBytes(crypt(bytes, true))
+        atomicWrite(File(dir(context), file), crypt(bytes, true))
         val asset = BrandAsset(assetId, owner.trim(), kind, label.trim().ifBlank { kind }, file,
             rights.take(2048), version.coerceAtLeast(1), createdAt, mimeType.take(120))
         save(context, list(context).filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
@@ -706,7 +720,7 @@ internal object DocumentBrandStore {
         }
         val bytes = if (asset.file.startsWith("builtin:")) {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
-        } else crypt(File(dir(context),asset.file).readBytes(),false)
+        } else crypt(atomicRead(File(dir(context),asset.file)),false)
         decodeImage(bytes)
     }.getOrNull()
     @Synchronized fun delete(context: Context, id: String) {
@@ -718,7 +732,7 @@ internal object DocumentBrandStore {
         val retained = assignments(context).filterNot { it.assetId == id }
         val index = JSONArray()
         retained.forEach { item -> index.put(JSONObject().put("documentType",item.documentType).put("kind",item.kind).put("assetId",item.assetId)) }
-        File(dir(context),ASSIGNMENTS_INDEX).writeBytes(crypt(index.toString().toByteArray(Charsets.UTF_8),true))
+        atomicWrite(File(dir(context),ASSIGNMENTS_INDEX),crypt(index.toString().toByteArray(Charsets.UTF_8),true))
     }
 }
 
