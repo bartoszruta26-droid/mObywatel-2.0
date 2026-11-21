@@ -1026,15 +1026,9 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
-    id == "payment_account_foundation" -> "Służba fundacyjna"
-    id == "payment_account_association" -> "Służba stowarzyszeniowa"
-    id == "payment_account_church" -> "Służba kościelna"
-    id == "payment_account_business" -> "Służba gospodarcza"
-    id == "payment_account_person" -> "Służba osobista"
-    id == INTERNATIONAL_DONATION_WORSHIP_ID -> "Służba kościelna"
-    id == INTERNATIONAL_DONATION_NGO_ID -> "Służba społeczna"
-    id == INTERNATIONAL_DONATION_PERSON_ID -> "Służba cywilna"
-    DonationLedgerCatalog.find(id) != null -> "Służba finansowa"
+    id == "financial_service" || id.startsWith("payment_account_") ||
+        id in setOf(INTERNATIONAL_DONATION_WORSHIP_ID, INTERNATIONAL_DONATION_NGO_ID, INTERNATIONAL_DONATION_PERSON_ID) ||
+        DonationLedgerCatalog.find(id) != null -> "Służba finansowa"
     id == "icvp" -> "Służba zdrowotna"
     id == "medical_summary" -> "Służba zdrowotna"
     id == "allergy_card" -> "Służba zdrowotna"
@@ -1485,6 +1479,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 
     fun openService(title: String) {
         when (title) {
+            "Służba finansowa" -> showPaymentLedger = true
             "Portfel" -> showDemoDocuments = true
             "Ustawienia" -> {
                 selectedTab = 4
@@ -1506,7 +1501,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             return
         }
         when (route.type) {
-            DocumentRouteType.GROUP -> activeService = requireNotNull(route.destination)
+            DocumentRouteType.GROUP -> {
+                if (route.destination == "Służba finansowa") showPaymentLedger = true
+                else activeService = requireNotNull(route.destination)
+            }
             DocumentRouteType.DOCUMENT -> {
                 // Kafelek dokumentu służy do podglądu; edycja pozostaje dostępna
                 // wyłącznie z ustawień dokumentu.
@@ -1829,6 +1827,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         }
                     }
                     showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
+                    showPaymentLedger -> PaymentLedgerScreen(onBack = { showPaymentLedger = false })
                     activeService == "Informacje prawne" -> LegalInformationScreen(
                         onBack = { activeService = null }
                     )
@@ -3936,7 +3935,8 @@ private fun DocumentsWalletScreen(
         val service = when {
             id == "financial_service" -> "Służba finansowa"
             id == "bank_accounts" || id == "rod_bank_accounts" || id == "entity_bank_accounts" -> "Konta bankowe"
-            id == "payment_transactions" || id.startsWith("donation_ledger_") || id.startsWith("payment_account_") -> "Rachunki płatnicze"
+            id == "payment_transactions" || id.startsWith("donation_ledger_") || id.startsWith("payment_account_") ||
+                id in setOf(INTERNATIONAL_DONATION_WORSHIP_ID, INTERNATIONAL_DONATION_NGO_ID, INTERNATIONAL_DONATION_PERSON_ID) -> "Rachunki płatnicze"
             id == "imported" -> "Dokumenty własne — pliki"
             id == "signed_pdf" -> "Dokumenty PDF i podpisy elektroniczne"
             id == "receipts" -> "Rachunki"
