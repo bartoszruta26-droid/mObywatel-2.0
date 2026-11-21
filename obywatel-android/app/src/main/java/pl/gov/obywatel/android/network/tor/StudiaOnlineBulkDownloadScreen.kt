@@ -14,6 +14,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.view.MotionEvent
+import android.view.View
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,6 +50,21 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private class TouchFriendlyWebView(context: android.content.Context) : WebView(context) {
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        // Keep the parent Compose verticalScroll from stealing taps and drag gestures
+        // while the user is interacting with the embedded browser.
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> parent?.requestDisallowInterceptTouchEvent(true)
+        }
+        val handled = super.dispatchTouchEvent(event)
+        if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+            parent?.requestDisallowInterceptTouchEvent(false)
+        }
+        return handled
+    }
+}
 
 @Composable
 fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
@@ -164,10 +181,16 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                     AndroidView(
                         modifier = Modifier.fillMaxWidth().height(520.dp),
                         factory = { viewContext ->
-                            WebView(viewContext).apply {
+                            TouchFriendlyWebView(viewContext).apply {
+                                isFocusable = true
+                                isFocusableInTouchMode = true
+                                isClickable = true
+                                isLongClickable = true
+                                overScrollMode = View.OVER_SCROLL_NEVER
                                 settings.javaScriptEnabled = true
                                 settings.domStorageEnabled = true
                                 CookieManager.getInstance().setAcceptCookie(true)
+                                CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                                 webViewClient = object : WebViewClient() {
                                     override fun onPageFinished(view: WebView?, url: String?) {
                                         refreshSessionStatus()
