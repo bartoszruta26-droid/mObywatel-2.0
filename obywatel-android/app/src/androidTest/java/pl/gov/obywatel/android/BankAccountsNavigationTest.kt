@@ -204,13 +204,11 @@ class BankAccountsNavigationTest {
         composeRule.onNodeWithText("Wspólny wygląd legitymacji").performScrollTo().performClick()
         composeRule.waitForIdle()
 
-        // Kontrolki są renderowane w jednym przewijanym formularzu. Weryfikujemy
-        // obecność czterech niezależnych parametrów bez przewijania do pierwszego
-        // pola, które w emulatorze powodowało unieważnienie węzła semantyki.
-        assertTrue(composeRule.onAllNodesWithText("Skala godła", substring = true).fetchSemanticsNodes().isNotEmpty())
-        assertTrue(composeRule.onAllNodesWithText("Obrót godła", substring = true).fetchSemanticsNodes().isNotEmpty())
-        assertTrue(composeRule.onAllNodesWithText("Skala flagi", substring = true).fetchSemanticsNodes().isNotEmpty())
-        assertTrue(composeRule.onAllNodesWithText("Obrót flagi", substring = true).fetchSemanticsNodes().isNotEmpty())
+        // Weryfikuj każde pole po przewinięciu go do obszaru widocznego.
+        // Sam fetchSemanticsNodes() pomija elementy poza viewportem w przewijanym formularzu.
+        listOf("Skala godła", "Obrót godła", "Skala flagi", "Obrót flagi").forEach { label ->
+            composeRule.onNodeWithText(label, substring = true).performScrollTo().assertIsDisplayed()
+        }
     }
 
     @Test
