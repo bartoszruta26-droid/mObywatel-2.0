@@ -20,9 +20,11 @@ a closeable response stream; it does not buffer or persist the complete response
 ## Embedded Android runtime
 
 The app integrates Guardian Project tor-android 0.4.9.14 from Maven Central and uses its
-bound org.torproject.jni.TorService. The adapter listens for the service ON status and
-publishes READY only after the first Tor circuit is established and a valid SOCKS port is
-available. The runtime owns the service binding and unbinds it on stop.
+bound org.torproject.jni.TorService. The adapter listens for the service ON status and publishes READY only after a loopback SOCKS
+listener accepts TCP connections. READY is a runtime/listener state, not by itself proof of Tor
+egress. Before a Guardian profile is eligible for downloads, the shared daemon's primary SOCKS
+endpoint is checked against `https://check.torproject.org/api/ip` and must return `IsTor=true`.
+The runtime owns the service binding and unbinds it on stop.
 
 The Tor daemon maintains its own private operational state/cache under the app's internal
 service directory. This is distinct from downloaded response payloads: TorHttpTransport
@@ -84,3 +86,21 @@ Publiczne przekaźniki Tor i mosty nie są publicznymi serwerami SOCKS. Przekaź
 - Wznowienie używa `Range` i `If-Range`; dopisywanie bajtów następuje wyłącznie po otrzymaniu prawidłowego `206 Partial Content` i zgodnego `Content-Range`. Przy braku walidatora albo niezgodnej odpowiedzi pobieranie zaczyna się od początku.
 - Po pobraniu aplikacja sprawdza limit rozmiaru, strukturę XML/SVG, niedozwolone elementy i SHA-256. Suma jest zapisywana w metadanych zasobu, a istniejące zasoby są ponownie haszowane przed uznaniem ich za już pobrane.
 - Ponieważ Wikimedia Commons nie dostarcza w tym przepływie zaufanej sumy SHA-256 dla pliku, pierwsza poprawna suma jest lokalnie obliczana i zapisywana; nie jest przedstawiana jako suma opublikowana przez Wikimedia.
+
+
+## Diagnostyka Guardian i postęp pobierania materiałów
+
+Ekran archiwum materiałów udostępnia test Guardian Project Tor. Test uruchamia wbudowaną usługę,
+czeka maksymalnie 120 sekund na READY, sprawdza dostępność lokalnych listenerów SOCKS, a następnie
+wymaga odpowiedzi `IsTor=true` z serwisu kontrolnego Tor. Samo otwarcie portu SOCKS ani status
+READY nie są przedstawiane jako potwierdzenie działającej trasy Tor.
+
+Pobieranie materiału raportuje osobne fazy: wybór/łączenie z klientem Tor, transfer danych,
+zapis pliku i zakończenie. Podczas transferu aktualizowane są liczba pobranych bajtów oraz
+`Content-Length`, jeśli serwer go udostępnia. Przy braku długości odpowiedzi pasek pozostaje
+nieokreślony, ale licznik bajtów nadal pokazuje rzeczywisty transfer. Błąd połączenia, odczytu,
+odpowiedź logowania i błąd HTTP są raportowane osobno.
+
+Weryfikacja CI na emulatorze potwierdza kompilację i testy interfejsu, ale nie zastępuje testu
+rzeczywistego wyjścia Guardian Tor na urządzeniu z dostępem do sieci. Do potwierdzenia działania
+na konkretnym telefonie należy uruchomić test Guardian z ekranu archiwum materiałów.
