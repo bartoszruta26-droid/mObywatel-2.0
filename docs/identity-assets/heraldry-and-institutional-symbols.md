@@ -55,6 +55,17 @@ Kolekcja SVG flags of international organizations zawiera 118 plików. Wymienian
 
 Wpisy w CSV oznaczone verify-per-file wymagają sprawdzenia strony konkretnego pliku przed pobraniem. Wpisy not-identified są wyłącznie zapytaniami wyszukiwawczymi, nie gotowymi adresami plików.
 
+## Polskie instytucje publiczne i fundusze
+
+Do wyszukiwania i weryfikacji włączono także polskie instytucje. Oficjalne strony źródłowe nie są automatycznie traktowane jako bezwarunkowa licencja na użycie znaku:
+
+- ZUS — https://www.zus.pl/o-zus/o-nas/logo-zus — znak towarowy zarejestrowany; wymagane sprawdzenie zakresu uprawnienia.
+- NFZ — https://www.nfz.gov.pl/dla-mediow/logo-nfz/ — oficjalne pliki logo i księga znaku; stosować zgodnie z zasadami NFZ.
+- KRUS — https://www.gov.pl/web/krus/logotypy-krus — KRUS wymaga akceptacji przed wykorzystaniem logo.
+- PFRON — https://www.pfron.org.pl/fileadmin/Redakcja/logo/PFRON_Ksiega_Identyfikacji_Wizualnej_2021.pdf — używać wyłącznie oficjalnych wzorców; nie odtwarzać ani nie zniekształcać znaku.
+
+Powyższe pozycje są zarejestrowanymi źródłami instytucjonalnymi, a nie gotowymi, lokalnie osadzonymi plikami SVG. Pole download_url pozostaje puste do czasu pozyskania konkretnego pliku i weryfikacji jego warunków.
+
 ## Minimalny model metadanych
 
 assetId, label, organization, symbolType, validityPeriod, sourcePageUrl, downloadUrl, author, license, licenseUrl, sourceRevision, downloadedAt, sha256, mimeType, byteSize, verificationStatus, permittedKinds, notes.

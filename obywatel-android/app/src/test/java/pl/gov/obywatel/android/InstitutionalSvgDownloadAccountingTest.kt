@@ -168,6 +168,56 @@ class InstitutionalSvgDownloadAccountingTest {
         assertEquals("Author", imported.single().artist)
     }
 
+
+    @Test
+    fun importsGeneratedCommonsCandidateIndexWithMultilineAuthorMetadata() {
+        val csv = """# SPDX-License-Identifier: CC0-1.0
+source_id,repository,ref,path,group,rights_status,import_status,source_url,download_url,license_short_name,license_url,author,attribution_required,source_credit,commons_categories
+wikimedia-commons,Wikimedia Commons,live,"File:Example.svg",international_ngo,per_file_metadata_review_required,not_imported,"https://commons.wikimedia.org/wiki/File%3AExample.svg","https://upload.wikimedia.org/wikipedia/commons/a/ab/Example.svg","CC BY 4.0","https://creativecommons.org/licenses/by/4.0","Author One
+Author Two",true,credit,NGO
+"""
+        val candidates = parseExternalCommonsSvgList(csv)
+        assertEquals(1, candidates.size)
+        assertEquals("File:Example.svg", candidates.single().title)
+        assertEquals("Author One\nAuthor Two", candidates.single().artist)
+        assertEquals("CC BY 4.0", candidates.single().license)
+        assertEquals("https://commons.wikimedia.org/wiki/File%3AExample.svg", candidates.single().page)
+    }
+
+    @Test
+    fun downloadsRequireSourcePageAndPerFileLicenseMetadata() {
+        val licensed = CommonsSvgCandidate(
+            "File:logo.svg", "https://upload.wikimedia.org/a/logo.svg",
+            "https://commons.wikimedia.org/wiki/File:logo.svg", "CC BY 4.0", "", "Author", ""
+        )
+        assertTrue(commonsCandidateHasRightsMetadata(licensed))
+        assertFalse(commonsCandidateHasRightsMetadata(licensed.copy(license = "")))
+        assertFalse(commonsCandidateHasRightsMetadata(licensed.copy(page = "")))
+    }
+
+    @Test
+    fun bundledCatalogContains1229UniqueLicensedSvgCandidates() {
+        val catalog = java.io.File("src/main/assets/institutions/institutional-symbol-catalog.csv")
+        assertTrue("Wbudowany katalog nazw musi istnieć.", catalog.isFile)
+        val candidates = parseExternalCommonsSvgList(catalog.readText(Charsets.UTF_8))
+        assertEquals(1229, candidates.size)
+        assertEquals(1229, candidates.map { it.title }.distinct().size)
+        assertTrue(candidates.all { it.page.isNotBlank() && it.license.isNotBlank() })
+        assertTrue(candidates.any { it.title.contains("COA", true) })
+        assertTrue(candidates.any { it.title.contains("WHO", true) })
+    }
+
+    @Test
+    fun offlineCatalogSearchMatchesNameAndAuthorCaseInsensitively() {
+        val candidates = listOf(
+            CommonsSvgCandidate("File:ZUS emblem.svg", "https://upload.wikimedia.org/a/zus.svg", "page", "CC0", "", "ZUS", ""),
+            CommonsSvgCandidate("File:NFZ logo.svg", "https://upload.wikimedia.org/a/nfz.svg", "page", "CC0", "", "Narodowy Fundusz Zdrowia", "")
+        )
+        assertEquals(listOf("File:ZUS emblem.svg"), filterCommonsCandidatesByName(candidates, "zus").map { it.title })
+        assertEquals(listOf("File:NFZ logo.svg"), filterCommonsCandidatesByName(candidates, "narodowy fundusz").map { it.title })
+        assertTrue(filterCommonsCandidatesByName(candidates, " ").isEmpty())
+    }
+
     @Test
     fun importsPlainTextListOfWikimediaSvgUrls() {
         val imported = parseExternalCommonsSvgList("https://upload.wikimedia.org/a/coat.svg\n")
