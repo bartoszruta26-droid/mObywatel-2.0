@@ -25,7 +25,7 @@ import javax.crypto.spec.GCMParameterSpec
  * CookieManager applies the server's Domain, Path, Secure and expiry rules here.
  */
 object StudiaOnlineSessionCookies {
-    const val DOWNLOAD_COOKIE_SCOPE = "https://studia-online.pl/pobierz-material/"
+    const val DOWNLOAD_COOKIE_SCOPE = "https://studia-online.pl//pobierz-material/"
 
     fun currentHeader(): String? {
         CookieManager.getInstance().flush()
