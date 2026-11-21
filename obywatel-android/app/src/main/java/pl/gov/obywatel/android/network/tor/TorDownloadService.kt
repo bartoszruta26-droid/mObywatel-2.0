@@ -107,7 +107,7 @@ class TorDownloadService(
             DownloadConnectionMode.ORBOT -> {
                 val endpoint = ensureOrbotEndpoint()
 
-                transport.open(url, endpoint, rangeStart, ifRange)
+                transport.open(url, endpoint, rangeStart, ifRange, cookieHeader)
             }
             DownloadConnectionMode.DIRECT ->
                 transport.openDirect(url, rangeStart, ifRange, cookieHeader)
