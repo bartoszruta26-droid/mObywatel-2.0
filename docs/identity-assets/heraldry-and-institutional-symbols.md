@@ -3,7 +3,7 @@
 
 # Katalog herbów, godeł, flag i znaków instytucjonalnych
 
-Aktualizacja: 2026-11-16  
+Aktualizacja: 2026-11-20  
 Rejestr CSV: institutional-svg-sources.csv  
 Docelowe zasoby Android: obywatel-android/app/src/main/assets/institutions/
 
@@ -70,3 +70,38 @@ assetId, label, organization, symbolType, validityPeriod, sourcePageUrl, downloa
 - Adresy źródłowe wymagają testu odpowiedzi serwera; plik niedostępny lub niezgodny z SVG zostanie odrzucony. Rejestr nie jest gwarancją dostępności każdego historycznego URL.
 
 Status kompilacji i testów należy odczytać z PR #80; nie uznawać implementacji za gotową do scalenia, dopóki Android build i walidacja GUI nie zakończą się powodzeniem.
+
+## Rozszerzony indeks kandydatów — 20 listopada 2026
+
+Zapisany indeks źródeł: `generated/institutional-symbol-candidates.csv`  
+Raport źródeł: `generated/institutional-symbol-source-audit.json`
+
+- **2 734 rekordy kandydackie** po deduplikacji ścieżek źródłowych. Nie jest to liczba 2 734 odrębnych organizacji ani 2 734 plików SVG.
+- Źródła obejmują Wikimedia Commons, publiczne repozytoria GitHub, kolekcje organizacji humanitarnych i osobne zbiory flag.
+- Wygenerowany indeks należy filtrować po kolumnie `path` kończącej się na `.svg`, aby otrzymać pliki SVG.
+- Wyszukiwanie powinno obejmować nazwę ścieżki, repozytorium, grupę, źródło, autora i opis źródłowy.
+- Pobieranie dotyczy pojedynczego wybranego rekordu: użyj `download_url` albo `source_url`, zachowaj upstream repository/ref/path oraz metadane źródłowe.
+- `rights_status` jest statusem informacyjnym konkretnego rekordu. Nie blokuje odkrywania ani wyszukiwania. Nie oznacza automatycznie prawa do dowolnego użycia znaku.
+- Znaki chronione i niezweryfikowane pozostają widoczne w katalogu; ich pobranie, redystrybucję i zastosowanie ocenia się osobno dla konkretnego kontekstu.
+
+### Model działania
+
+1. Wyszukiwanie działa na indeksie nazw i metadanych, bez pobierania grafiki.
+2. Użytkownik wybiera konkretny rekord i wariant znaku.
+3. Aplikacja pobiera tylko wskazany plik, waliduje SVG, zapisuje SHA-256, źródło, autora, wersję i metadane.
+4. Ponowne wybranie istniejącego pliku wykorzystuje lokalną kopię/cache.
+5. Osobny pakiet podstawowy przechowuje do 50 często wykorzystywanych SVG. Nie jest powiązany z ograniczeniem wyszukiwania katalogu.
+
+### Ograniczenia aktualnego indeksu
+
+Indeks upstream obejmuje także 356 plików rastrowych i formatów nie-SVG; ich obecność jest celowa jako referencja źródłowa, ale nie mogą przejść do importera SVG bez konwersji i odrębnej walidacji. Nie należy traktować ich jako SVG. Zbiór `collective-service/organizations-logo` ma status referencyjny, a `country-flags` nie ma wykrytego pliku LICENSE w audytowanym drzewie. Repozytorium `thesvg` jest zinwentaryzowane (14 797 SVG), lecz nie zostało automatycznie rozwinięte do indeksu kandydatów; ten zbiór wymaga osobnej selekcji i odczytu metadanych licencji poszczególnych marek.
+
+
+## Priorytetowy wykaz oficjalnych znaków państwowych i instytucjonalnych
+
+Dodatkowa lista nazw i oficjalnych punktów wejścia do dalszego indeksowania:
+`institutional-svg-priority-sources.csv`.
+
+Lista obejmuje godło i flagę RP, emblemat UE, ONZ, WHO, UNICEF, UNESCO, NATO, Rady Europy, Policję, Państwową Straż Pożarną, Straż Graniczną oraz ZUS, NFZ, KRUS, PFRON, NBP, GUS, PIP, UOKiK, UODO, RPO i KPRM. Pozycje bez dokładnego adresu pliku są rekordami wyszukiwawczymi, a nie zatwierdzonymi plikami SVG.
+
+Katalog nazw pozostaje przeszukiwalny niezależnie od statusu prawnego. Status prawny opisuje natomiast warunki pobrania, redystrybucji i konkretnego zastosowania.
