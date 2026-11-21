@@ -180,6 +180,7 @@ internal fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): St
 @Composable
 internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Unit) {
     val scope = rememberCoroutineScope()
+    val selectedMode = DownloadConnectionSettings.get(context)
     var candidates by remember { mutableStateOf<List<InstitutionalSymbolCandidate>>(emptyList()) }
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Wszystkie") }
@@ -209,6 +210,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
     val categoryCounts = remember(candidates) { candidates.groupingBy(::institutionalSymbolCategory).eachCount() }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Katalog źródeł SVG", style = MaterialTheme.typography.titleMedium)
+        Text("Tryb pobierania: ${selectedMode.label}", style = MaterialTheme.typography.labelMedium)
         Text(
             "Lista obejmuje kandydatów z GitHub i Wikimedia Commons. Wybierz grupę lub wpisz nazwę. Pobierany jest tylko wskazany plik; źródło, autor i licencja pozostają zapisane w metadanych.",
             style = MaterialTheme.typography.bodySmall
