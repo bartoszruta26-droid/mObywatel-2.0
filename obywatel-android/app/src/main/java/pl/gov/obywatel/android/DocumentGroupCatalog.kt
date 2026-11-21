@@ -33,6 +33,8 @@ internal fun migrateDocumentGroupName(name: String): String =
     legacyDocumentGroupNames[name] ?: name
 
 internal fun migrateDocumentGroupAssignment(documentId: String, group: String): String = when {
+    documentId == "payment_account_foundation" && group == "Służba gospodarcza" -> "Służba fundacyjna"
+    documentId == "payment_account_association" && group == "Służba gospodarcza" -> "Służba stowarzyszeniowa"
     documentId == "organization_foundation" && group == "Służba gospodarcza" -> "Służba fundacyjna"
     documentId == "organization_association" && group == "Służba gospodarcza" -> "Służba stowarzyszeniowa"
     else -> group

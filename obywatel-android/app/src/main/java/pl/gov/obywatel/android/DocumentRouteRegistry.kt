@@ -111,6 +111,7 @@ object DocumentRouteRegistry {
         documentBrandTargets.map { (id, _) -> document(id) } +
         churchGraphicDocumentTargets().map { (id, _) -> document(id) } +
         familyEntityGraphicDocumentTargets().map { (id, _) -> document(id) } +
+        paymentAccountDocumentTargets().map { (id, _, _) -> document(id) } +
         officialGraphicDocumentTargets().map { (id, _) -> document(id) }
     ).distinctBy { it.first }.associate { it }
 
