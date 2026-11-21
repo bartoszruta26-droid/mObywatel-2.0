@@ -21,7 +21,8 @@ class DocumentRouteRegistryTest {
             "shooting_sport", "archery", "tactical_training", "survival_training", "security_guard", "defense_training", "historical_reenactment", "reenactment_qualification", "reenactment_event",
             "church_bishop", "church_archbishop", "church_cardinal", "church_abbot", "church_minister",
             "church_missionary", INTERNATIONAL_DONATION_WORSHIP_ID, INTERNATIONAL_DONATION_NGO_ID,
-            INTERNATIONAL_DONATION_PERSON_ID, "professional", "professional_medical", "professional_education",
+            INTERNATIONAL_DONATION_PERSON_ID, DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION,
+            DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH, "professional", "professional_medical", "professional_education",
             "professional_therapeutic", "professional_other", "international_medical_certificate", "organization_foundation",
             "organization_church", "organization_company", "organization_association", "entity", "official"
         )
@@ -36,6 +37,24 @@ class DocumentRouteRegistryTest {
             catalogTileIds.containsAll(visibleTileIds)
         )
         visibleTileIds.forEach { id -> assertNotNull("Missing route for $id", DocumentRouteRegistry.find(id)) }
+    }
+
+
+    @Test
+    fun fourDonationLedgersAreRegisteredVisibleAndAssignedToTheirOwnServiceGroups() {
+        val expected = mapOf(
+            DonationLedgerCatalog.PERSON to "Służba cywilna",
+            DonationLedgerCatalog.FOUNDATION to "Służba fundacyjna",
+            DonationLedgerCatalog.ASSOCIATION to "Służba stowarzyszeniowa",
+            DonationLedgerCatalog.CHURCH to "Służba kościelna"
+        )
+        expected.forEach { (id, group) ->
+            assertEquals(group, documentVisibilityGroup(id))
+            assertEquals("other", defaultDocumentPlacements[id])
+            val route = requireNotNull(DocumentRouteRegistry.find(id))
+            assertEquals(DocumentRouteType.DOCUMENT, route.type)
+            assertEquals(id, route.documentId)
+        }
     }
 
     @Test

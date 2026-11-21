@@ -950,6 +950,10 @@ internal val documentDisplayOptions = (listOf(
     Triple(INTERNATIONAL_DONATION_WORSHIP_ID, "Międzynarodowa darowizna na cele kultu religijnego", R.drawable.tile_ic_church_outline),
     Triple(INTERNATIONAL_DONATION_NGO_ID, "Międzynarodowa darowizna na rzecz organizacji pozarządowej", R.drawable.lib_ic_building),
     Triple(INTERNATIONAL_DONATION_PERSON_ID, "Międzynarodowa darowizna na rzecz osoby fizycznej", R.drawable.lib_ic_account),
+    Triple(DonationLedgerCatalog.PERSON, "Ewidencja darowizn osoby fizycznej", R.drawable.lib_ic_account),
+    Triple(DonationLedgerCatalog.FOUNDATION, "Ewidencja darowizn fundacji", R.drawable.lib_ic_building),
+    Triple(DonationLedgerCatalog.ASSOCIATION, "Ewidencja darowizn stowarzyszenia", R.drawable.lib_ic_building),
+    Triple(DonationLedgerCatalog.CHURCH, "Ewidencja darowizn Kościoła", R.drawable.tile_ic_church_outline),
     Triple("vehicle_registration", "Dowód rejestracyjny pojazdu", R.drawable.mob_transport),
     Triple("insurance_vehicle", "Ubezpieczenie OC pojazdu", R.drawable.lib_ic_document),
     Triple("insurance_professional", "Ubezpieczenie OC zawodowe", R.drawable.lib_ic_document),
@@ -1022,6 +1026,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
     id == INTERNATIONAL_DONATION_WORSHIP_ID -> "Służba kościelna"
     id == INTERNATIONAL_DONATION_NGO_ID -> "Służba społeczna"
     id == INTERNATIONAL_DONATION_PERSON_ID -> "Służba cywilna"
+    DonationLedgerCatalog.find(id) != null -> DonationLedgerCatalog.find(id)!!.group
     id == "icvp" -> "Służba zdrowotna"
     id == "medical_summary" -> "Służba zdrowotna"
     id == "allergy_card" -> "Służba zdrowotna"
@@ -1130,7 +1135,7 @@ private val armedServiceDocumentIds = setOf(
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to if (id in setOf("identity", "receipts", "foreign_prescription")) "dashboard" else "hidden"
+    id to when { id in setOf("identity", "receipts", "foreign_prescription") -> "dashboard"; id in setOf(DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION, DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH) -> "other"; else -> "hidden" }
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
@@ -1411,6 +1416,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
             documentId.startsWith("organization_") -> { selectedEditorCategory = "catalog:$documentId"; showDocumentsEditor = true }
             documentId.startsWith("service_") -> settingsDocumentEditor = "service:$documentId"
                         documentId.startsWith("entity_") -> settingsDocumentEditor = "business:$documentId"
+            DonationLedgerCatalog.find(documentId) != null -> settingsDocumentEditor = "donation_ledger:$documentId"
             documentId in InternationalDonationDocumentCatalog.all.keys -> selectedDocumentId = documentId
             documentId == "vaccines" -> settingsDocumentEditor = "vaccines"
             documentId == "children" -> settingsDocumentEditor = "children_health"
@@ -1553,6 +1559,10 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     showImportedDocuments -> DocumentsScreen(onBack = { showImportedDocuments = false }, readOnly = true)
                     showReceipts -> ReceiptDocumentsScreen(onBack = { showReceipts = false })
                     settingsDocumentEditor == "receipts" -> ReceiptTemplateSettingsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true })
+                    settingsDocumentEditor?.startsWith("donation_ledger:") == true -> DonationLedgerScreen(
+                        documentId = settingsDocumentEditor!!.substringAfter("donation_ledger:"), readOnly = false,
+                        onBack = { settingsDocumentEditor = null; showSettingsMenu = true }
+                    )
                     showBankAccounts -> FamilyEntityDocumentsScreen(entityMode = false, bankAccountsOnly = true, readOnly = true, onBack = { showBankAccounts = false })
                     showDocumentsEditor -> DemoDocumentsScreen(
                         categoryId = selectedEditorCategory,
@@ -1753,6 +1763,9 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     )
                     selectedDocumentId == FOREIGN_PRESCRIPTION_ID -> ForeignPrescriptionEditorScreen(
                         onBack = { selectedDocumentId = null }
+                    )
+                    selectedDocumentId?.let { DonationLedgerCatalog.find(it) != null } == true -> DonationLedgerScreen(
+                        documentId = selectedDocumentId!!, readOnly = true, onBack = { selectedDocumentId = null }
                     )
                     selectedDocumentId?.let { it in InternationalDonationDocumentCatalog.all.keys } == true ->
                         InternationalDonationDocumentEditorScreen(
