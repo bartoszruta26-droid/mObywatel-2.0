@@ -259,7 +259,19 @@ class GuardianTorRuntime(context: Context) : TorRuntime {
         val listeners = availablePorts.map { port ->
             "SocksPort 127.0.0.1:$port IsolateClientAddr IsolateDestAddr IsolateDestPort"
         }
-        torrc.writeText((filtered + "MaxCircuitDirtiness 480" + listeners).joinToString("\n", postfix = "\n"))
+        val region = TorExitRegionSettings.get(appContext)
+        val exitPreference = when (region) {
+            TorExitRegion.POLAND -> listOf("ExitNodes {pl}", "StrictNodes 0")
+            TorExitRegion.EUROPE -> listOf(
+                "ExitNodes " + region.torCountryCodes.joinToString(",") { "{$it}" },
+                "StrictNodes 0"
+            )
+            TorExitRegion.WORLD -> emptyList()
+        }
+        torrc.writeText(
+            (filtered + "MaxCircuitDirtiness 480" + exitPreference + listeners)
+                .joinToString("\n", postfix = "\n")
+        )
     }
 
     private fun unregisterReceiverIfNeeded() {
