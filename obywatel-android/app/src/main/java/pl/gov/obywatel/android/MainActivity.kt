@@ -937,6 +937,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
     Triple("receipts", "Rachunki", R.drawable.lib_ic_document_signed),
     Triple("payment_transactions", "Rachunki płatnicze", R.drawable.lib_ic_wallet),
+    Triple("financial_service", "Służba finansowa", R.drawable.lib_ic_wallet),
     Triple("imported", "Dokumenty własne — pliki", R.drawable.lib_ic_folder),
     Triple("children", "Dokumentacja dzieci", R.drawable.family),
     Triple("branding", "Zasoby identyfikacji dokumentów", R.drawable.lib_ic_image),
@@ -1033,7 +1034,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
     id == INTERNATIONAL_DONATION_WORSHIP_ID -> "Służba kościelna"
     id == INTERNATIONAL_DONATION_NGO_ID -> "Służba społeczna"
     id == INTERNATIONAL_DONATION_PERSON_ID -> "Służba cywilna"
-    DonationLedgerCatalog.find(id) != null -> DonationLedgerCatalog.find(id)!!.group
+    DonationLedgerCatalog.find(id) != null -> "Służba finansowa"
     id == "icvp" -> "Służba zdrowotna"
     id == "medical_summary" -> "Służba zdrowotna"
     id == "allergy_card" -> "Służba zdrowotna"
@@ -1093,7 +1094,9 @@ internal fun documentVisibilityGroup(id: String): String = when {
     id == "church" || id.startsWith("church_") || id == "organization_church" ||
         id == "mission_travel" || churchGraphicDocumentTargets().any { it.first == id } -> "Służba kościelna"
     id == "family" || (id.startsWith("rod_") && id != "rod_bank_accounts") || id == "large_family" -> "Służba rodowa"
-    id in setOf("bank_accounts", "rod_bank_accounts", "entity_bank_accounts", "payment_transactions") || id.startsWith("insurance_") -> "Służba finansowa"
+    id in setOf("financial_service", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts", "payment_transactions") ||
+        id.startsWith("payment_account_") || id.startsWith("insurance_") || id.startsWith("donation_ledger_") ||
+        id in setOf(INTERNATIONAL_DONATION_WORSHIP_ID, INTERNATIONAL_DONATION_NGO_ID, INTERNATIONAL_DONATION_PERSON_ID) -> "Służba finansowa"
     id.startsWith("service_foundation_") -> "Służba fundacyjna"
     id.startsWith("service_business_") -> "Służba gospodarcza"
     id.startsWith("service_association_") -> "Służba stowarzyszeniowa"
@@ -3931,7 +3934,9 @@ private fun DocumentsWalletScreen(
     val documents = documentDisplayOptions.distinctBy { it.first }.map { (id, title, _) ->
         val group = documentVisibilityGroup(id)
         val service = when {
+            id == "financial_service" -> "Służba finansowa"
             id == "bank_accounts" || id == "rod_bank_accounts" || id == "entity_bank_accounts" -> "Konta bankowe"
+            id == "payment_transactions" || id.startsWith("donation_ledger_") || id.startsWith("payment_account_") -> "Rachunki płatnicze"
             id == "imported" -> "Dokumenty własne — pliki"
             id == "signed_pdf" -> "Dokumenty PDF i podpisy elektroniczne"
             id == "receipts" -> "Rachunki"
