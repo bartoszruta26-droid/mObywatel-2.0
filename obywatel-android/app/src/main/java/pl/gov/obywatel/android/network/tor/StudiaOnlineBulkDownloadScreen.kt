@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,6 +90,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
         val cookieHeader = CookieManager.getInstance().getCookie("https://studia-online.pl//pobierz-material/")
         sessionCookieCount = cookieHeader?.split(';')?.count { it.contains('=') } ?: 0
     }
+    LaunchedEffect(Unit) { refreshSessionStatus() }
 
     val folderPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -134,6 +136,25 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                         Text("Sprawdź sesję")
                     }
                 }
+                OutlinedButton(
+                    onClick = {
+                        // Android's CookieManager is shared by WebViews in this app.
+                        // Make the scope explicit rather than pretending to clear only WSKZ cookies.
+                        CookieManager.getInstance().removeAllCookies {
+                            CookieManager.getInstance().flush()
+                            sessionCookieCount = 0
+                            statusText = "Wyczyszczono ciasteczka WebView aplikacji. Zaloguj się ponownie."
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Usuń sesję i ciasteczka WebView")
+                }
+                Text(
+                    "Usunięcie czyści ciasteczka wszystkich witryn używanych przez WebView aplikacji, nie tylko WSKZ.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 if (showLogin) {
                     Text(
                         "Zaloguj się na oficjalnej stronie WSKZ. Hasło wpisujesz bezpośrednio w formularzu serwisu; aplikacja nie zapisuje go w swoich ustawieniach. Logowanie w oknie WebView korzysta z systemowej trasy sieciowej Androida, natomiast samo pobieranie poniżej używa wybranego trybu.",
