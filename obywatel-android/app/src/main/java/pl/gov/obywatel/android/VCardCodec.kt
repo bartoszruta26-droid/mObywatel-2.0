@@ -64,7 +64,7 @@ internal object VCardCodec {
         return fold(lines).joinToString("\r\n") + "\r\n"
     }
 
-    fun decode(raw: String): Card {
+    fun decode(raw: String, onProgress: (Int) -> Unit = {}): Card {
         require(raw.toByteArray(Charsets.UTF_8).size <= 256 * 1024 * 1024) { "Plik vCard przekracza limit 256 MB." }
         val lines = unfold(raw)
         require(lines.size >= 3 && lines.first().equals("BEGIN:VCARD", true) &&
@@ -72,7 +72,11 @@ internal object VCardCodec {
         val parsed = linkedMapOf<String, MutableList<String>>()
         val extensions = linkedMapOf<String, MutableList<String>>()
         var version: String? = null
-        lines.drop(1).dropLast(1).forEach { line ->
+        val bodyLines = lines.drop(1).dropLast(1)
+        bodyLines.forEachIndexed { index, line ->
+            if (index % 256 == 0 || index == bodyLines.lastIndex) {
+                onProgress(if (bodyLines.isEmpty()) 100 else ((index + 1) * 100 / bodyLines.size))
+            }
             val colon = findValueSeparator(line)
             require(colon > 0) { "Nieprawidłowy wiersz vCard." }
             val left = line.substring(0, colon)
@@ -129,9 +133,13 @@ internal object VCardCodec {
      * contact vCard (2.1, 3.0 or 4.0). Standard contact properties are mapped
      * to the profile keys used by the local identity editor.
      */
-    fun decodeForImport(raw: String): Map<String, String> {
+    fun decodeForImport(raw: String, onProgress: (Int) -> Unit = {}): Map<String, String> {
+        onProgress(0)
         val normalized = normalizeLegacyExport(raw)
-        runCatching { decodeArchive(normalized) }.getOrNull()?.let { return repairMojibake(it) }
+        runCatching { decodeArchive(normalized, onProgress) }.getOrNull()?.let {
+            onProgress(100)
+            return repairMojibake(it)
+        }
         require(normalized.toByteArray(Charsets.UTF_8).size <= 256 * 1024 * 1024) {
             "Plik vCard przekracza limit 256 MB."
         }
@@ -141,7 +149,11 @@ internal object VCardCodec {
 
         val properties = linkedMapOf<String, MutableList<String>>()
         var version: String? = null
-        lines.drop(1).dropLast(1).forEach { line ->
+        val importLines = lines.drop(1).dropLast(1)
+        importLines.forEachIndexed { index, line ->
+            if (index % 256 == 0 || index == importLines.lastIndex) {
+                onProgress(if (importLines.isEmpty()) 100 else ((index + 1) * 100 / importLines.size))
+            }
             val colon = findValueSeparator(line)
             require(colon > 0) { "Nieprawidłowy wiersz vCard." }
             val left = line.substring(0, colon)
@@ -283,8 +295,8 @@ internal object VCardCodec {
         return parts
     }
 
-    fun decodeArchive(raw: String): Map<String, String> {
-        val card = decode(raw)
+    fun decodeArchive(raw: String, onProgress: (Int) -> Unit = {}): Map<String, String> {
+        val card = decode(raw, onProgress)
         val archiveVersion = card.extensions["X-OWD-ARCHIVE-VERSION"]?.singleOrNull()
         require(archiveVersion in setOf("1", "2")) {
             "Plik nie jest obsługiwanym archiwum danych tej aplikacji."
