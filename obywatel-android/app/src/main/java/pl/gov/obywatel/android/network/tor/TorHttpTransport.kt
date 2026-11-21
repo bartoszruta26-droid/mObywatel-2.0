@@ -185,7 +185,7 @@ class TorHttpTransport(
                 clientForRequest().newCall(request).execute()
             } catch (failure: Exception) {
                 if (failure is IOException) throw failure
-                throw IOException("Unable to open HTTPS response through Tor.", failure)
+                throw IOException("Unable to open HTTPS response.", failure)
             }
 
             val code = response.code
@@ -201,7 +201,7 @@ class TorHttpTransport(
             if (!response.isSuccessful) {
                 val retryAfter = response.header("Retry-After")
                 response.close()
-                throw TorHttpException(code, retryAfter, "Tor HTTP request failed: HTTP $code")
+                throw TorHttpException(code, retryAfter, "HTTPS request failed: HTTP $code")
             }
 
             val body = response.body
