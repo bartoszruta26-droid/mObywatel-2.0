@@ -13,6 +13,14 @@ import java.net.Proxy
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
+/** Session cookies are attached only to the initial request for the exact material endpoint. */
+internal fun mayAttachStudiaOnlineCookie(url: URL, isInitialRequest: Boolean): Boolean =
+    isInitialRequest &&
+        url.protocol.equals("https", ignoreCase = true) &&
+        url.host.equals("studia-online.pl", ignoreCase = true) &&
+        (url.port == -1 || url.port == 443) &&
+        url.path.startsWith("//pobierz-material/")
+
 /** Lifecycle/state contract. A Tor runtime implementation may be embedded or externally managed. */
 interface TorRuntime {
     val state: TorState
@@ -28,7 +36,10 @@ enum class TorState { STOPPED, STARTING, BOOTSTRAPPING, READY, STOPPING, FAILED 
 class TorHttpException(
     val httpCode: Int,
     val retryAfter: String?,
-    message: String
+    message: String,
+    val server: String? = null,
+    val cfRay: String? = null,
+    val responseContentType: String? = null
 ) : IOException(message)
 
 /** A loopback-only SOCKS5 endpoint. */
@@ -172,6 +183,7 @@ class TorHttpTransport(
         require(rangeStart >= 0L) { "Range offset cannot be negative." }
         var url = validateHttpsUrl(rawUrl)
         var redirects = 0
+        var isInitialRequest = true
 
         while (true) {
             val request = Request.Builder()
@@ -179,10 +191,17 @@ class TorHttpTransport(
                 .get()
                 .header("User-Agent", policy.userAgent)
                 .header("Accept-Encoding", "identity")
+                .header("Accept", "application/pdf, application/octet-stream, */*")
                 .apply {
+                    if (url.host.equals("studia-online.pl", ignoreCase = true)) {
+                        header("Referer", "https://studia-online.pl/konto")
+                    }
                     // Session cookies are sent only to the authenticated WSKZ host.
                     // Redirects to other hosts never receive the user's session cookie.
-                    if (url.host.equals("studia-online.pl", ignoreCase = true) &&
+                    // CookieManager produced this header for the initial material URL.
+                    // Do not replay it after a redirect: the target may have a different
+                    // Path scope even when it remains on the same host.
+                    if (mayAttachStudiaOnlineCookie(url, isInitialRequest) &&
                         !cookieHeader.isNullOrBlank()
                     ) header("Cookie", cookieHeader)
                     if (rangeStart > 0L) header("Range", "bytes=$rangeStart-")
@@ -203,13 +222,20 @@ class TorHttpTransport(
                 if (location.isNullOrBlank()) throw IOException("Redirect response has no Location header.")
                 if (redirects >= policy.maxRedirects) throw IOException("Redirect limit exceeded.")
                 url = validateHttpsUrl(url.toURI().resolve(location).toString())
+                isInitialRequest = false
                 redirects++
                 continue
             }
             if (!response.isSuccessful) {
                 val retryAfter = response.header("Retry-After")
+                val server = response.header("Server")?.take(120)
+                val cfRay = response.header("CF-RAY")?.take(120)
+                val responseContentType = response.header("Content-Type")?.take(120)
                 response.close()
-                throw TorHttpException(code, retryAfter, "HTTPS request failed: HTTP $code")
+                throw TorHttpException(
+                    code, retryAfter, "HTTPS request failed: HTTP $code",
+                    server = server, cfRay = cfRay, responseContentType = responseContentType
+                )
             }
 
             val body = response.body

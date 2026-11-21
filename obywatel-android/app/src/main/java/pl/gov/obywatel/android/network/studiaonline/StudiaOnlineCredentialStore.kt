@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android.network.studiaonline
 
 import android.content.Context
+import android.webkit.CookieManager
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
@@ -18,6 +19,22 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+
+/**
+ * Single cookie scope shared by the login WebView and the native download client.
+ * CookieManager applies the server's Domain, Path, Secure and expiry rules here.
+ */
+object StudiaOnlineSessionCookies {
+    const val DOWNLOAD_COOKIE_SCOPE = "https://studia-online.pl//pobierz-material/"
+
+    fun currentHeader(): String? {
+        CookieManager.getInstance().flush()
+        return CookieManager.getInstance().getCookie(DOWNLOAD_COOKIE_SCOPE)
+            ?.takeIf { it.isNotBlank() }
+    }
+
+    fun count(): Int = currentHeader()?.split(';')?.count { it.contains('=') } ?: 0
+}
 
 /**
  * Stores Studia Online credentials only on this Android device.

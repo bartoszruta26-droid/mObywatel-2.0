@@ -17,6 +17,7 @@ import android.webkit.WebViewClient
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import pl.gov.obywatel.android.network.studiaonline.StudiaOnlineCredentialStore
+import pl.gov.obywatel.android.network.studiaonline.StudiaOnlineSessionCookies
 import pl.gov.obywatel.android.network.studiaonline.StudiaOnlineLoginWebView
 import android.view.MotionEvent
 import android.view.View
@@ -78,7 +79,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
     val downloadService = remember(context) { TorDownloadServiceProvider.get(context) }
     val downloader = remember(context) {
         StudiaOnlineBulkDownloader(downloadService, cookieHeaderProvider = {
-            CookieManager.getInstance().getCookie("https://studia-online.pl//pobierz-material/")
+            StudiaOnlineSessionCookies.currentHeader()
         })
     }
     val store = remember(context) { StudiaOnlineSafStore(context) }
@@ -121,9 +122,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
         mutableStateOf(DownloadConnectionSettings.get(context))
     }
     fun refreshSessionStatus() {
-        CookieManager.getInstance().flush()
-        val cookieHeader = CookieManager.getInstance().getCookie("https://studia-online.pl//pobierz-material/")
-        sessionCookieCount = cookieHeader?.split(';')?.count { it.contains('=') } ?: 0
+        sessionCookieCount = StudiaOnlineSessionCookies.count()
     }
     LaunchedEffect(Unit) { refreshSessionStatus() }
 
@@ -204,7 +203,7 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Konto studia-online.pl", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    if (sessionCookieCount > 0) "Wykryto $sessionCookieCount ciasteczek dla domeny serwisu. To potwierdza dane sesyjne, ale nie gwarantuje aktywnego logowania."
+                    if (sessionCookieCount > 0) "Wykryto $sessionCookieCount ciasteczek dostępnych dla ścieżki pobierania. Nie wyświetlamy ich wartości. Aktywność sesji potwierdzi dopiero odpowiedź serwera."
                     else "Brak ciasteczek sesyjnych. Zaloguj się na stronie, aby pobierać materiały wymagające konta.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -309,9 +308,8 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
                         credentialStore = credentialStore,
                         onStatus = { loginMessage = it },
                         onSessionReady = {
-                            showLogin = false
                             refreshSessionStatus()
-                            loginMessage = "Potwierdzono przekazanie ciasteczek WebView. Aktywność sesji potwierdzi dopiero odpowiedź serwisu podczas pobierania."
+                            loginMessage = "Odczytano ciasteczka dostępne dla adresu pobierania. Okno logowania pozostaje otwarte. To jeszcze nie potwierdza aktywnej sesji — sprawdzimy ją odpowiedzią serwera podczas pobierania."
                         },
                         onClose = { showLogin = false }
                     )

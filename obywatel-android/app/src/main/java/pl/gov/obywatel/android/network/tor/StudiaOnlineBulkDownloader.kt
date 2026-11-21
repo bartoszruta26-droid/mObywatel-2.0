@@ -175,7 +175,8 @@ class StudiaOnlineBulkDownloader(
             if (downloaded != null) {
                 try {
                     emit(item.id, false, phase = "Zapisywanie pobranego pliku…", downloadedBytes = downloaded.size.toLong())
-                    sha256ById[item.id] = save(item, downloaded)
+                    val namedItem = item.copy(fileName = item.fileName.substringBeforeLast('.') + "." + detectedFileExtension(downloaded))
+                    sha256ById[item.id] = save(namedItem, downloaded)
                     success += item.id
                 } catch (failure: Exception) {
                     failed[item.id] = describeFailure(failure)
@@ -256,7 +257,7 @@ class StudiaOnlineBulkDownloader(
             onBytes(total, response.contentLength)
             output.toByteArray().also {
                 if (it.isEmpty()) throw IOException("Serwer zwrócił pusty plik.")
-                htmlResponseErrorMessage(response.contentType, it)?.let { message -> throw IOException(message) }
+                materialFormatErrorMessage(response.contentType, it)?.let { message -> throw IOException(message) }
             }
         }
 
@@ -303,10 +304,39 @@ class StudiaOnlineBulkDownloader(
             return "Serwis zwrócił stronę HTML zamiast pliku. Materiał nie został zapisany."
         }
 
+        internal fun materialFormatErrorMessage(contentType: String?, bytes: ByteArray): String? {
+            htmlResponseErrorMessage(contentType, bytes)?.let { return it }
+            if (contentType?.contains("application/pdf", ignoreCase = true) == true) {
+                val headerWindow = bytes.copyOfRange(0, minOf(bytes.size, 1024)).toString(Charsets.ISO_8859_1)
+                if (headerWindow.indexOf("%PDF-") !in 0..1024) {
+                    return "Serwer zadeklarował PDF, ale pobrana zawartość nie ma prawidłowej sygnatury PDF. Plik nie został zapisany."
+                }
+            }
+            return null
+        }
+
+        internal fun detectedFileExtension(bytes: ByteArray): String = when {
+            bytes.size >= 5 && bytes.copyOfRange(0, 5).contentEquals("%PDF-".toByteArray(Charsets.US_ASCII)) -> "pdf"
+            bytes.size >= 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4b.toByte() &&
+                bytes[2] in byteArrayOf(0x03, 0x05, 0x07) && bytes[3] in byteArrayOf(0x04, 0x06, 0x08) -> "zip"
+            bytes.size >= 8 && bytes.copyOfRange(0, 8).contentEquals(byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) -> "png"
+            bytes.size >= 3 && bytes[0] == 0xff.toByte() && bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte() -> "jpg"
+            else -> "bin"
+        }
+
         internal fun describeFailure(failure: Exception): String = when ((failure as? TorHttpException)?.httpCode) {
             404 -> "Materiał nie został znaleziony (HTTP 404)."
             410 -> "Materiał został usunięty z serwisu (HTTP 410)."
-            401, 403 -> "Serwis odmówił dostępu (HTTP ${(failure as TorHttpException).httpCode}). Sprawdź logowanie i uprawnienia."
+            401, 403 -> {
+                val http = failure as TorHttpException
+                buildString {
+                    append("Serwis odmówił dostępu (HTTP ${http.httpCode}). ")
+                    append("Sprawdź aktywną sesję, uprawnienia materiału i ograniczenia antyautomatyczne serwisu.")
+                    http.server?.let { append(" Serwer: ").append(it).append(".") }
+                    http.cfRay?.let { append(" Identyfikator CF-RAY: ").append(it).append(".") }
+                    http.responseContentType?.let { append(" Typ odpowiedzi: ").append(it).append(".") }
+                }
+            }
             else -> failure.message ?: failure.javaClass.simpleName
         }
 
