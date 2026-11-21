@@ -58,6 +58,21 @@ class InstitutionalSymbolCatalogTest {
         assertTrue(parseInstitutionalSymbolCsv(header + "\n" + png + "\n" + missing).isEmpty())
     }
     @Test
+    fun catalogCandidatesAreClassifiedIntoVisibleHeraldryAndBrandGroups() {
+        fun candidate(group: String, path: String) = InstitutionalSymbolCandidate(
+            sourceId = "source", repository = "org/repo", ref = "main", path = path,
+            group = group, rightsStatus = "review_required", sourceUrl = "https://github.com/org/repo",
+            downloadUrl = "https://raw.githubusercontent.com/org/repo/main/$path",
+            license = "CC0", licenseUrl = "", author = "", credit = ""
+        )
+        assertEquals("Herby", institutionalSymbolCategory(candidate("polish_city_arms", "city/coat-of-arms.svg")))
+        assertEquals("Godła", institutionalSymbolCategory(candidate("emblems", "national-eagle.svg")))
+        assertEquals("Flagi", institutionalSymbolCategory(candidate("flags", "flags/state.svg")))
+        assertEquals("Logotypy", institutionalSymbolCategory(candidate("brand_and_organization_marks", "ngo/logo.svg")))
+        assertEquals("Pozostałe", institutionalSymbolCategory(candidate("miscellaneous", "symbols/ornament.svg")))
+    }
+
+    @Test
     fun svgSecurityGateRejectsEventHandlersAndActiveElements() {
         val unsafe = listOf(
             """<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"></svg>""",
