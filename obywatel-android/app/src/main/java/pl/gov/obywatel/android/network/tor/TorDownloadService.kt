@@ -111,25 +111,6 @@ class TorDownloadService(
                 transport.openDirect(url, rangeStart, ifRange)
         }
 
-    /**
-     * Apply a best-effort geographic preference to the selected Tor process.
-     * This must never silently change the transport or report a guaranteed country.
-     * The runtime's Tor configuration is changed only while the configured exit
-     * restrictions remain compatible with a healthy Tor circuit.
-     */
-    private fun applyExitRegionPreference(endpoint: TorProxyEndpoint) {
-        val region = TorExitRegionSettings.get(context)
-        val countries = region.torCountryCodes
-        if (countries.isEmpty()) return
-        if (selectedMode == DownloadConnectionMode.GUARDIAN_TOR) {
-            (runtime as? GuardianTorRuntime)?.setExitCountryPreference(countries)
-        } else {
-            // For Orbot, the application cannot safely rewrite another app's torrc.
-            // A profile-level instruction is retained for diagnostics; Orbot's own
-            // exit-node configuration remains authoritative.
-            TorClientRegistry.setExitCountryPreference(context, "orbot-local", countries)
-        }
-    }
 
     @Throws(IOException::class)
     private fun ensureOrbotEndpoint(): TorProxyEndpoint {
