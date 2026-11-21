@@ -104,3 +104,16 @@ odpowiedź logowania i błąd HTTP są raportowane osobno.
 Weryfikacja CI na emulatorze potwierdza kompilację i testy interfejsu, ale nie zastępuje testu
 rzeczywistego wyjścia Guardian Tor na urządzeniu z dostępem do sieci. Do potwierdzenia działania
 na konkretnym telefonie należy uruchomić test Guardian z ekranu archiwum materiałów.
+
+
+## Jawny wybór trasy pobierania
+
+Ustawienie `DownloadConnectionMode` wybiera jedną z trzech tras dla wspólnej usługi pobierania:
+
+- `GUARDIAN_TOR`: wbudowana usługa Guardian Project; przed żądaniem wymagane jest świeże potwierdzenie `IsTor=true`.
+- `ORBOT`: lokalny SOCKS5 Orbot; aplikacja wymaga zainstalowanego Orbot, dostępnego profilu i potwierdzonego wyjścia Tor.
+- `DIRECT`: HTTPS przez `Proxy.NO_PROXY`, bez uruchamiania Tor i bez awaryjnego przełączenia na Tor.
+
+Tryby Guardian i Orbot są rozłączne i nie przełączają się automatycznie między sobą. Żaden błąd klienta Tor nie uruchamia trybu bezpośredniego. Tryb bezpośredni jest jawnie wybierany przez użytkownika i ujawnia adres IP urządzenia serwisowi docelowemu oraz operatorowi sieci.
+
+Wybór jest wspólny dla pobierania materiałów studia-online.pl, katalogu symboli SVG i pozostałych zasobów korzystających z `TorDownloadServiceProvider`.
