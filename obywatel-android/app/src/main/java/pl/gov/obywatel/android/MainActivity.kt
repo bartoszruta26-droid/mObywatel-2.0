@@ -1135,7 +1135,7 @@ private val armedServiceDocumentIds = setOf(
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to if (id in setOf("identity", "receipts", "foreign_prescription", DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION, DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH)) "dashboard" else "hidden"
+    id to when { id in setOf("identity", "receipts", "foreign_prescription") -> "dashboard"; id in setOf(DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION, DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH) -> "other"; else -> "hidden" }
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
