@@ -49,11 +49,11 @@ object TorEndpointProbe {
     }
 }
 
-/** Whether selecting Orbot should defer startup of the embedded Guardian client. */
-internal fun shouldStartGuardianForSelectedClient(activeClientId: String, orbotInstalled: Boolean): Boolean =
-    !(activeClientId.startsWith("orbot-") && orbotInstalled)
+/** Only an explicit Guardian route may start the embedded Guardian client. */
+internal fun shouldStartGuardianForMode(mode: DownloadConnectionMode): Boolean =
+    mode == DownloadConnectionMode.GUARDIAN_TOR
 
-/** Process-wide runtime. The embedded Guardian client is started lazily as a fallback. */
+/** Process-wide runtime. Guardian starts only when explicitly selected. */
 object TorDownloadServiceProvider {
     @Volatile private var runtime: GuardianTorRuntime? = null
     @Volatile private var service: TorDownloadService? = null
@@ -65,12 +65,11 @@ object TorDownloadServiceProvider {
     fun get(context: Context): TorDownloadService {
         val app = context.applicationContext
         val activeRuntime = runtime ?: GuardianTorRuntime(app).also { runtime = it }
-        val activeClientId = TorClientRegistry.activeId(app)
-        val orbotInstalled = TorEndpointProbe.isOrbotInstalled(app)
-        if (!shouldStartGuardianForSelectedClient(activeClientId, orbotInstalled)) {
-            // Release any Guardian listener before handing the standard local SOCKS
-            // port to Orbot. If Orbot is unavailable, TorDownloadService starts
-            // Guardian again only after the Orbot probe fails.
+        val selectedMode = DownloadConnectionSettings.get(app)
+
+        // The selected download route is authoritative. DIRECT and ORBOT must never
+        // start the embedded Guardian service as a side effect of obtaining the client.
+        if (!shouldStartGuardianForMode(selectedMode)) {
             if (activeRuntime.state != TorState.STOPPED) activeRuntime.stop()
         } else {
             if (activeRuntime.state == TorState.STOPPED || activeRuntime.state == TorState.FAILED) {
