@@ -87,6 +87,15 @@ class TorDownloadService(
     )
     val selectedMode: DownloadConnectionMode get() = DownloadConnectionSettings.get(context)
 
+    /** Route diagnostics only; excludes request URLs, cookies and user content. */
+    fun diagnosticSnapshot(): String = buildString {
+        append("mode=").append(selectedMode.name)
+        append(" runtime=").append(runtime.state.name)
+        runtime.failureMessage()?.let { failure ->
+            append(" runtimeFailure=").append(failure.replace(Regex("\\s+"), " ").take(240))
+        }
+    }
+
     /**
      * Route is explicit and fail-closed: Guardian and Orbot never silently switch
      * to each other, and neither silently falls back to an unproxied connection.
