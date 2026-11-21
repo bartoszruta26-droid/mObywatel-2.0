@@ -38,6 +38,21 @@ class TorDownloadService(
     policy: TorRequestPolicy = TorRequestPolicy()
 ) {
     private val transport = TorHttpTransport(runtime, policy)
+    private val guardianRouter = TorDownloadRouter(
+        profiles = {
+            val isolated = (runtime as? GuardianTorRuntime)?.isolatedProxyEndpoints().orEmpty()
+            val endpoints = isolated.ifEmpty { listOfNotNull(runtime.proxyEndpoint()) }
+            endpoints.mapIndexed { index, endpoint ->
+                TorClientProfile("guardian-embedded-${endpoint.port}", "Guardian Tor — listener ${index + 1}",
+                    endpoint.host, endpoint.port)
+            }
+        },
+        isReady = { profile ->
+            val endpoint = runCatching { profile.endpoint() }.getOrNull()
+            endpoint != null && runtime.state == TorState.READY &&
+                runtime.proxyEndpoints().contains(endpoint) && TorEndpointProbe.isTor(endpoint)
+        }
+    )
     val selectedMode: DownloadConnectionMode get() = DownloadConnectionSettings.get(context)
 
     /**
@@ -45,10 +60,10 @@ class TorDownloadService(
      * to each other, and neither silently falls back to an unproxied connection.
      */
     @Throws(IOException::class)
-    fun open(url: String, @Suppress("UNUSED_PARAMETER") kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse =
+    fun open(url: String, kind: TorDownloadKind, rangeStart: Long = 0L, ifRange: String? = null): TorHttpResponse =
         when (selectedMode) {
             DownloadConnectionMode.GUARDIAN_TOR ->
-                transport.open(url, ensureGuardianEndpoint(), rangeStart, ifRange)
+                transport.open(url, ensureGuardianEndpoint(kind), rangeStart, ifRange)
             DownloadConnectionMode.ORBOT ->
                 transport.open(url, ensureOrbotEndpoint(), rangeStart, ifRange)
             DownloadConnectionMode.DIRECT ->
@@ -74,7 +89,7 @@ class TorDownloadService(
     }
 
     @Throws(IOException::class)
-    private fun ensureGuardianEndpoint(): TorProxyEndpoint {
+    private fun ensureGuardianEndpoint(kind: TorDownloadKind): TorProxyEndpoint {
         if (runtime.state == TorState.STOPPED || runtime.state == TorState.FAILED) {
             try {
                 runtime.start()
@@ -97,11 +112,12 @@ class TorDownloadService(
             throw IOException("Guardian Tor nie osiągnął stanu READY; pobieranie pozostaje zablokowane." +
                 (runtime.failureMessage()?.let { " Przyczyna zgłoszona przez usługę: $it" } ?: " Brak komunikatu ACTION_ERROR z usługi Tor."))
         }
-        val endpoint = runtime.proxyEndpoint()
+        val primary = runtime.proxyEndpoint()
             ?: throw IOException("Guardian Tor zgłosił READY, ale nie udostępnia działającego SOCKS5.")
-        if (!TorEndpointProbe.isTor(endpoint, force = true)) {
+        if (!TorEndpointProbe.isTor(primary, force = true)) {
             throw IOException("Guardian udostępnia SOCKS5, ale nie potwierdzono wyjścia przez sieć Tor.")
         }
-        return endpoint
+        return runCatching { guardianRouter.select(kind).endpoint() }
+            .getOrElse { throw IOException("Guardian nie udostępnia żadnego zweryfikowanego listenera SOCKS dla pobierania.", it) }
     }
 }
