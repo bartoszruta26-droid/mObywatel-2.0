@@ -43,6 +43,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         mutableStateListOf<TorClientProfile>().apply { addAll(TorClientRegistry.load(context)) }
     }
     var activeId by remember { mutableStateOf(TorClientRegistry.activeId(context)) }
+    var connectionMode by remember { mutableStateOf(DownloadConnectionSettings.get(context)) }
     var name by remember { mutableStateOf("") }
     var host by remember { mutableStateOf("127.0.0.1") }
     var port by remember { mutableStateOf("9050") }
@@ -67,13 +68,38 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         Text("‹  Powrót do ustawień", color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Klienci sieci Tor", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text("Wybierz preferowanego klienta Tor. Usługa rotuje żądania między dostępnymi, zweryfikowanymi lokalnymi klientami; jeśli Orbot nie odpowiada lub nie potwierdza wyjścia przez Tor, pobieranie przechodzi na wbudowany Guardian.",
+        Text("Wybierz jawnie sposób pobierania plików. Tryb Tor korzysta wyłącznie z wybranego klienta i nie przełącza się automatycznie na połączenie bezpośrednie.",
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Ważne — bezpieczeństwo połączenia", fontWeight = FontWeight.Bold)
-                Text("Po wybraniu Orbot aplikacja najpierw korzysta z jego lokalnego SOCKS5, bez uruchamiania Guardian. Domyślny port Orbot to 9050. Wbudowany Guardian jest zatrzymywany, gdy wybierzesz Orbot, i uruchamia się dopiero jako klient zapasowy po nieudanym teście Orbotu. Dzięki temu oba procesy nie próbują zajmować tego samego portu SOCKS. Przed użyciem aplikacja sprawdza rzeczywiste wyjście przez Tor w check.torproject.org. Jeśli Orbot nie przejdzie testu, pobieranie może przejść na Guardian. Nie dodawaj przypadkowych publicznych proxy SOCKS.",
+                Text("Wybrany tryb jest stosowany do pobierania materiałów, symboli SVG i pozostałych zasobów. Guardian i Orbot są sprawdzane pod kątem rzeczywistego wyjścia przez Tor. Gdy wybrany klient Tor nie działa, pobieranie kończy się czytelnym błędem — aplikacja nie przełącza po cichu na inny klient ani na połączenie bezpośrednie. Tryb bezpośredni nie używa Tor i ujawnia adres IP urządzenia serwisowi docelowemu.",
                     style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Text("Sposób pobierania", fontWeight = FontWeight.Bold)
+        DownloadConnectionMode.values().forEach { mode ->
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable {
+                    connectionMode = mode
+                    DownloadConnectionSettings.set(context, mode)
+                    notice = "Zapisano tryb pobierania: ${mode.label}"
+                }.padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = connectionMode == mode,
+                    onClick = {
+                        connectionMode = mode
+                        DownloadConnectionSettings.set(context, mode)
+                        notice = "Zapisano tryb pobierania: ${mode.label}"
+                    }
+                )
+                Column(Modifier.weight(1f)) {
+                    Text(mode.label, fontWeight = FontWeight.SemiBold)
+                    Text(mode.description, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
         Text("Zarejestrowani klienci", fontWeight = FontWeight.Bold)
@@ -112,7 +138,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                                     else TorEndpointProbe.isTor(client.endpoint(), force = true)
                                 }
                                 probeStatus[client.id] = if (result) "Połączenie działa — potwierdzono wyjście przez Tor."
-                                    else "Brak potwierdzonego połączenia Tor. Pobieranie użyje Guardian."
+                                    else "Brak potwierdzonego połączenia Tor. Ten profil nie zostanie użyty."
                             }
                         }) { Text("Testuj") }
                         if (client.id !in setOf("guardian-embedded", "orbot-local")) {
