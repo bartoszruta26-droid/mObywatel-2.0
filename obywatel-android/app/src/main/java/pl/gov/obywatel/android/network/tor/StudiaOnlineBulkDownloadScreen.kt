@@ -95,8 +95,10 @@ fun StudiaOnlineBulkDownloadScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth().clickable(onClick = onBack).padding(bottom = 4.dp)
         )
         Text("Archiwum materiałów", style = MaterialTheme.typography.headlineSmall)
+        val selectedMode = DownloadConnectionSettings.get(context)
+        Text("Tryb połączenia: ${selectedMode.label}", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
         Text(
-            "Pobieranie materiałów z serwisu studia-online.pl przez pulę lokalnych klientów Tor. " +
+            "Pobieranie materiałów z serwisu studia-online.pl zgodnie z wybranym trybem połączenia. " +
                 "Pobieranie jest sekwencyjne: w danym momencie wykonywane jest tylko jedno żądanie.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
