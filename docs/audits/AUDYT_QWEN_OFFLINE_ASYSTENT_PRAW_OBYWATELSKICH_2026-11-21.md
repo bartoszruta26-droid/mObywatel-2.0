@@ -1337,3 +1337,43 @@ Najpierw należy udowodnić trzy rzeczy:
 Dopiero po zamknięciu tych warunków można bezpiecznie rozwijać bazę prawa, analizator, generator i nawigator.
 
 **Status końcowy audytu:** architektura rekomendowana; implementacja lokalnego Qwen – do wykonania; wydajność na urządzeniu – do pomiaru; jakość prawna – do walidacji na korpusie testowym. Nie stwierdzono w analizowanym commicie istniejącej integracji Qwen/llama.cpp.
+
+
+---
+
+## 22. Status dokumentu i harmonogram rozpoczęcia implementacji
+
+Niniejszy audyt został zapisany jako dokument planistyczno-techniczny. **Nie wprowadza zmian w kodzie aplikacji, konfiguracji Gradle, zależnościach, manifeście, zasobach ani plikach APK.** Rozpoczęcie implementacji jest zaplanowane na kolejny tydzień, zgodnie z decyzją właściciela projektu.
+
+Do czasu rozpoczęcia implementacji obowiązują następujące zasady:
+
+1. Nie dodawać jeszcze zależności llama.cpp, NDK ani CMake do głównej aplikacji.
+2. Nie pobierać i nie osadzać plików wag modelu w repozytorium.
+3. Nie zmieniać istniejących ekranów, tras dokumentów ani magazynów danych.
+4. Nie deklarować, że Qwen działa na Xiaomi Pad 6, dopóki nie zostanie wykonany test na fizycznym urządzeniu.
+5. Nie przyjmować na stałe konkretnej rewizji Qwen bez sprawdzenia jej licencji, formatu GGUF, tokenizera, szablonu czatu i zgodności z wybraną wersją llama.cpp.
+6. Każdy etap implementacji prowadzić na osobnej gałęzi lub w małym PR, z testami i możliwością wycofania zmiany.
+
+### Warunki rozpoczęcia prac w kolejnym tygodniu
+
+- ponowne pobranie aktualnego SHA gałęzi `main` i sprawdzenie, czy od commitu bazowego audytu nie zaszły zmiany wpływające na architekturę;
+- ponowny przegląd `app/build.gradle.kts`, manifestu i plików CI;
+- potwierdzenie na tablecie wersji Androida, wolnej pamięci RAM i dostępnego miejsca;
+- wybranie jednego konkretnego modelu Qwen Instruct z legalnym źródłem wag;
+- wykonanie oddzielnego proof of concept na ARM64;
+- zapisanie wyników pomiarów przed integracją z główną aplikacją.
+
+### Zasada aktualizacji audytu
+
+Po każdym etapie należy dopisać:
+- commit i gałąź, których dotyczy wykonana praca;
+- listę zmienionych plików;
+- wyniki kompilacji;
+- wyniki testów JVM i instrumentacyjnych;
+- wyniki testów na fizycznym Xiaomi Pad 6;
+- zmierzone zużycie RAM, szybkość generowania i zachowanie termiczne;
+- wykryte problemy, decyzje i pozostałe ryzyka.
+
+Nie wolno oznaczać etapu jako zakończonego wyłącznie na podstawie utworzenia plików lub deklaracji w opisie PR. Warunkiem zamknięcia jest działający kod, testy i potwierdzenie wyników.
+
+**Status na dzień 21 listopada 2026 r.:** audyt zapisany; kod lokalnego Qwen nie został w ramach tego zadania zmieniony; proof of concept i implementacja pozostają do wykonania.
