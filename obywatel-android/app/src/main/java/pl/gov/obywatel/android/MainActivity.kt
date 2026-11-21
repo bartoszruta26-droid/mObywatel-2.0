@@ -5812,10 +5812,12 @@ private fun DemoDataField(
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
         OutlinedTextField(
             value = fields[storageKey] ?: "",
-            onValueChange = { fields[storageKey] = it },
+            onValueChange = { updated ->
+                fields[storageKey] = if (isIsoDateField(key, label, placeholder)) formatIsoDateInput(updated) else updated
+            },
             modifier = Modifier.fillMaxWidth(),
             label = { Text(label) },
-            placeholder = { Text(placeholder) },
+            placeholder = { Text(if (isIsoDateField(key, label, placeholder)) isoDateInputPlaceholder(placeholder) else placeholder) },
             singleLine = true
         )
         if (binding != null && binding.documentKey.isNotBlank() && key in selectableKeys) {

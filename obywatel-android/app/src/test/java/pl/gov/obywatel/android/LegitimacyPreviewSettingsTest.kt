@@ -260,5 +260,30 @@ class LegitimacyPreviewSettingsTest {
         assertEquals("background-specific", result.backgroundAssetId)
         assertEquals("logo-specific", result.logoAssetId)
     }
-}
 
+    @Test
+    fun isoDateInputAutomaticallyInsertsYearAndMonthSeparators() {
+        assertEquals("2", formatIsoDateInput("2"))
+        assertEquals("2026-", formatIsoDateInput("2026"))
+        assertEquals("2026-1", formatIsoDateInput("20261"))
+        assertEquals("2026-11-", formatIsoDateInput("202611"))
+        assertEquals("2026-11-1", formatIsoDateInput("2026111"))
+        assertEquals("2026-11-16", formatIsoDateInput("20261116"))
+        assertEquals("2026-11-16", formatIsoDateInput("2026-11-16"))
+    }
+
+    @Test
+    fun isoDateInputLeavesSpecialTextValuesUntouched() {
+        assertEquals("bezterminowo", formatIsoDateInput("bezterminowo"))
+    }
+
+    @Test
+    fun dateFieldsAreDetectedAcrossPolishAndEnglishLabelsAndKeys() {
+        assertTrue(isIsoDateField("birthDate", "Date of Birth"))
+        assertTrue(isIsoDateField("field_4", "Data wydania"))
+        assertTrue(isIsoDateField("field_5", "Issue Date"))
+        assertTrue(isIsoDateField("validTo", "Termin ważności"))
+        assertFalse(isIsoDateField("patientName", "Imię i nazwisko"))
+    }
+
+}
