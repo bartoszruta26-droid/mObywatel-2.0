@@ -4,6 +4,7 @@ package pl.gov.obywatel.android.network.tor
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 
