@@ -179,7 +179,7 @@ private suspend fun downloadInstitutionalSymbol(
         .put("sourceCredit", item.credit)
         .put("catalogRightsStatus", item.rightsStatus)
         .put("sha256", sha)
-        .put("verificationStatus", "catalogued; source metadata retained; usage restrictions require review")
+        .put("verificationStatus", "source-metadata-retained; no-in-app-license-gate")
         .put("permittedKinds", JSONArray())
         .toString()
     val kind = when (institutionalSymbolCategory(item)) {
@@ -318,9 +318,8 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(item.displayName, style = MaterialTheme.typography.bodyMedium)
                             Text("${item.group} • ${item.repository}", style = MaterialTheme.typography.labelSmall)
-                            Text("Licencja: ${item.license.ifBlank { "metadane do sprawdzenia" }}", style = MaterialTheme.typography.labelSmall)
-                            Text("Status praw: ${item.rightsStatus.ifBlank { "do niezależnej weryfikacji" }}", style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Źródło: ${item.repository} · autor: ${item.author.ifBlank { "niepodany w metadanych" }}", style = MaterialTheme.typography.labelSmall)
+                            
                             Button(enabled = busyId == null, onClick = {
                                 busyId = item.sourceId + ":" + item.path
                                 message = ""
