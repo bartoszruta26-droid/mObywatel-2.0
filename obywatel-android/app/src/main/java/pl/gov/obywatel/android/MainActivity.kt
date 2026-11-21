@@ -932,6 +932,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("bank_accounts", "Konta bankowe", R.drawable.lib_ic_wallet),
     Triple("rod_bank_accounts", "Rachunki bankowe Rodu", R.drawable.lib_ic_wallet),
     Triple("entity_bank_accounts", "Rachunki bankowe podmiotów", R.drawable.lib_ic_wallet),
+    ) + paymentAccountDocumentTargets().map { (id, title, _) -> Triple(id, title, R.drawable.lib_ic_wallet) } + listOf(
     Triple("vaccines", "Książeczka szczepień WHO", R.drawable.lib_ic_medical_record),
     Triple("signed_pdf", "Dokumenty PDF i podpisy", R.drawable.lib_ic_document_signed),
     Triple("receipts", "Rachunki", R.drawable.lib_ic_document_signed),
@@ -1023,6 +1024,11 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    id == "payment_account_foundation" -> "Służba fundacyjna"
+    id == "payment_account_association" -> "Służba stowarzyszeniowa"
+    id == "payment_account_church" -> "Służba kościelna"
+    id == "payment_account_business" -> "Służba gospodarcza"
+    id == "payment_account_person" -> "Służba osobista"
     id == INTERNATIONAL_DONATION_WORSHIP_ID -> "Służba kościelna"
     id == INTERNATIONAL_DONATION_NGO_ID -> "Służba społeczna"
     id == INTERNATIONAL_DONATION_PERSON_ID -> "Służba cywilna"
