@@ -92,4 +92,23 @@ class InstitutionalSymbolCatalogTest {
         )
     }
 
+
+    @Test
+    fun classifiesInsigniaAndInstitutionalSymbolsUnderIconsSymbolsCategory() {
+        val candidate = InstitutionalSymbolCandidate(
+            sourceId = "polish-insignia",
+            repository = "Wikimedia Commons",
+            ref = "main",
+            path = "symbols/Polish_Police_badge.svg",
+            group = "institutional_insignia",
+            rightsStatus = "per_file_metadata_review_required",
+            sourceUrl = "https://commons.wikimedia.org/wiki/File:Polish_Police_badge.svg",
+            downloadUrl = "https://upload.wikimedia.org/wikipedia/commons/a/ab/Polish_Police_badge.svg",
+            license = "",
+            licenseUrl = "",
+            author = "",
+            credit = ""
+        )
+        assertEquals("Symbole", institutionalSymbolCategory(candidate))
+    }
 }
