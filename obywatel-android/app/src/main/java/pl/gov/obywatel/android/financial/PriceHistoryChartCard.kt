@@ -261,13 +261,13 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.headlineSmall)
             Text(pct?.let { (if (it.signum() > 0) "+" else "") + it.toPlainString() + "%" } ?: "—")
             if (style == PriceChartStyle.CANDLE) {
-                Text("Wykres świecowy jest niedostępny: otwarte źródło publikuje kursy referencyjne, a nie dane OHLC. Nie generujemy sztucznych świec ani wolumenu.",
+                Text("Źródło nie udostępnia rzeczywistych danych OHLC. Pokazujemy kurs referencyjny jako linię, bez sztucznych świec i wolumenu.",
                     color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
-            } else {
-                PairHistoryChart(points, style, selected?.date, { selected = it },
-                    regression, regressionColors[color1], regressionColors[color2], regressionColors[color3],
-                    Modifier.fillMaxWidth().height(275.dp))
             }
+            PairHistoryChart(points, if (style == PriceChartStyle.CANDLE) PriceChartStyle.LINE else style,
+                selected?.date, { selected = it }, regression,
+                regressionColors[color1], regressionColors[color2], regressionColors[color3],
+                Modifier.fillMaxWidth().height(275.dp))
             selected?.let { Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}") }
                 ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -309,7 +309,7 @@ private fun PairHistoryChart(
     val drawableChannels = channels.filterNotNull()
     val projectedValues = drawableChannels.flatMap { ch ->
         val projectedEnd = if (regression.extendLines)
-            ch.endIndex + (ch.endIndex - ch.startIndex).coerceAtLeast(1) * 0.18
+            ch.endIndex + points.lastIndex * 0.19
         else ch.endIndex.toDouble()
         listOf(ch.lowerAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
             ch.upperAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
@@ -322,8 +322,9 @@ private fun PairHistoryChart(
     Canvas(modifier.pointerInput(points) {
         detectTapGestures { tap ->
             if (points.isNotEmpty()) {
-                val l = 8.dp.toPx(); val r = size.width - 8.dp.toPx()
-                val ratio = ((tap.x - l) / (r - l)).coerceIn(0f, 1f)
+                val l = 8.dp.toPx()
+                val dataRight = if (regression.extendLines) size.width * 0.84f else size.width - 8.dp.toPx()
+                val ratio = ((tap.x - l) / (dataRight - l)).coerceIn(0f, 1f)
                 onSelect(points[(ratio * points.lastIndex).toInt().coerceIn(0, points.lastIndex)])
             }
         }
@@ -379,7 +380,7 @@ private fun PairHistoryChart(
             val x1 = xFor(channel.startIndex.toDouble())
             val x2 = if (regression.extendLines) r else xFor(channel.endIndex.toDouble())
             val endIndex = if (regression.extendLines) {
-                channel.endIndex + ((channel.endIndex - channel.startIndex).coerceAtLeast(1) * 0.18)
+                channel.endIndex + points.lastIndex * 0.19
             } else channel.endIndex.toDouble()
             fun drawRegressionLine(offset: Double, width: Float, pattern: Int) {
                 val y1 = yFor(channel.valueAt(channel.startIndex.toDouble()) + offset)
