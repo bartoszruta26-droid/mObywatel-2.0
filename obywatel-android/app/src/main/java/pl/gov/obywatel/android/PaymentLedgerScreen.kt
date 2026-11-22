@@ -631,9 +631,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                     Button(onClick = { xmlImportLauncher.launch(arrayOf("application/xml", "text/xml", "application/octet-stream")) }) {
                         Text("Importuj XML iPKO")
                     }
-                    Button(onClick = { csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/vnd.ms-excel", "text/*", "application/octet-stream")) }) {
-                        Text("Importuj CSV banku")
-                    }
+                }
+                Button(onClick = { csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/vnd.ms-excel", "text/*", "application/octet-stream")) }) {
+                    Text("Importuj CSV banku")
                 }
                 Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
                     Text("Eksportuj JSON")
