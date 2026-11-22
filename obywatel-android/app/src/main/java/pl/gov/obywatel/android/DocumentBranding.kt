@@ -659,6 +659,7 @@ internal object DocumentBrandStore {
             val mimeType = item.optString("mimeType")
             val isXml = mimeType == "application/xml" || mimeType == "text/xml"
             if (isSvg) SvgSafetyValidator.validate(bytes)
+            if (isXml) validateInstitutionalSymbolXml(bytes)
             if (kind in imageKinds && mimeType != "application/pdf" && !isXml) decodeImage(bytes).recycle()
             val extension = when {
                 isSvg -> ".svg.enc"
@@ -730,6 +731,7 @@ internal object DocumentBrandStore {
         val isSvg = SvgSafetyValidator.looksLikeSvg(bytes)
         val isXml = mimeType == "application/xml" || mimeType == "text/xml"
         if (isSvg) SvgSafetyValidator.validate(bytes)
+        if (isXml) validateInstitutionalSymbolXml(bytes)
         if (normalizedKind in imageKinds && mimeType != "application/pdf" && !isXml) decodeImage(bytes).recycle()
         val extension = when {
             isSvg -> ".svg.enc"
