@@ -36,3 +36,14 @@ Obsługiwane w katalogu lokalnych kandydatów formaty to SVG i PNG. SVG przechod
 ## Indeksy plików GitHub
 - `github-symbol-candidates.csv`: 2 734 rekordy kandydatów z GitHub i Wikimedia Commons (2 378 SVG, 175 PNG oraz pozostałe formaty referencyjne). Zapisano stronę źródłową, bezpośredni URL, status praw, licencję, autora i atrybucję, jeśli dane źródło je publikuje. Jest to indeks odkrywania, a nie zgoda na pobranie ani użycie. Rekordy z `reference_only`, `per_asset_review`, `per_file_metadata_review_required` lub ograniczeniami flag pozostają zablokowane do indywidualnej weryfikacji.
 - `iconify-collections.csv`: 280 zestawów Iconify obejmujących 556 207 ikon. Dla każdego zestawu zapisano autora, licencję SPDX, adres licencji i bezpośredni JSON. Zestaw jest w formacie Iconify JSON, nie samodzielnym SVG; przed importem trzeba go bezpiecznie przekształcić do SVG i przeprowadzić walidację.
+
+
+## Pobieranie i klasyfikacja zasobów — 22 listopada 2026
+
+- Pobieranie SVG/PNG jest dostępne niezależnie od pola `rights_status`, nazwy licencji, pustego adresu licencji oraz grupy zasobu.
+- Aplikacja nie rozstrzyga praw do użycia grafiki w dokumencie. Zachowuje adres źródła, bezpośredni adres pliku, autora, licencję, atrybucję, status prawny i SHA-256, aby użytkownik mógł dokonać ręcznej oceny.
+- Nadal obowiązuje kontrola bezpieczeństwa technicznego: HTTPS i dozwolony host źródła, limit rozmiaru, walidacja XML/SVG oraz sygnatury i dekodowalności PNG.
+- Wyniki pokazują bezpośredni adres pojedynczego pliku i przyciski „Otwórz plik” oraz „Pobierz do zasobów”. Nie kierują użytkownika do strony kategorii Wiki/GitHub zamiast grafiki.
+- Kategorie aplikacji: Herby, Godła, Logotypy, Flagi, Ikony, Tła, Symbole i Pozostałe. Klasyfikacja wykorzystuje grupę, nazwę pliku, ścieżkę i źródło.
+- Dodane bezpośrednie pliki z baz: Bootstrap Icons, Lucide, Tabler Icons, OpenMoji i Simple Icons (102 rekordy SVG). Zasoby GitHub/Wikimedia pozostają w tym samym katalogu i są automatycznie przypisywane do kategorii.
+- Pusty opcjonalny `catalog.csv` nie może już przerwać wczytywania właściwego indeksu `github-symbol-candidates.csv`.
