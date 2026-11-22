@@ -13,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -84,6 +85,33 @@ fun BankStatementNbpChartCard(
     var valuation by remember(entries) { mutableStateOf<BankStatementNbpValuation?>(null) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(entries) {
+        if (entries.isEmpty()) {
+            valuation = null
+        } else {
+            loading = true
+            error = null
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val currencies = entries.map { it.currencyCode }.filter { it != "PLN" }.distinct()
+                    val start = entries.minOf { it.bookingDate }.minusDays(7)
+                    val end = entries.maxOf { it.bookingDate }
+                    val histories = currencies.associateWith { code ->
+                        repository.currencyRateHistory(NbpTable.A, code, start, end)
+                    }
+                    BankStatementNbpValuator.value(entries, histories)
+                }
+                valuation = result
+                if (result.points.isEmpty()) error = "Nie udało się wycenić żadnego zapisu według kursów NBP."
+            } catch (exception: Exception) {
+                valuation = null
+                error = exception.message ?: "Nie udało się przeliczyć wyciągu według NBP."
+            } finally {
+                loading = false
+            }
+        }
+    }
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Wykres rachunku — wycena zapisów w PLN", style = MaterialTheme.typography.titleMedium)
