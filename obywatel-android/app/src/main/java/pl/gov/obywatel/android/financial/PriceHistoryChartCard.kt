@@ -208,5 +208,5 @@ private fun PriceHistoryAnalyticalChart(points: List<PriceChartPoint>, indicator
         }
         drawSeries(indicators.sma20.map { it?.toFloat() }, sma20Color, 1.7.dp.toPx())
         drawSeries(indicators.sma50.map { it?.toFloat() }, sma50Color, 1.7.dp.toPx())
-
+    }
 }
