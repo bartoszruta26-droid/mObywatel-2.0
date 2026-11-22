@@ -322,12 +322,13 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         val loaded = withContext(Dispatchers.IO) {
             val sources = context.assets.open("identity-symbols/collections.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
             val local = context.assets.open("identity-symbols/catalog.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
-            sources to local
+            val github = context.assets.open("identity-symbols/github-symbol-candidates.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
+            Triple(sources, local, github)
         }
         sourceCollections = runCatching { parseInstitutionalSymbolCollectionsCsv(loaded.first) }.getOrElse {
             message = "Nie udało się wczytać rejestru kolekcji: ${it.message ?: "błąd danych"}"; emptyList()
         }
-        candidates = runCatching { parseInstitutionalSymbolCsv(loaded.second) }.getOrElse {
+        candidates = runCatching { (parseInstitutionalSymbolCsv(loaded.second) + parseInstitutionalSymbolCsv(loaded.third)).distinctBy { it.sourceId + ":" + it.path } }.getOrElse {
             message = "Nie udało się wczytać katalogu SVG: ${it.message ?: "błąd danych"}"; emptyList()
         }
         if (sourceCollections.isNotEmpty()) message = "Rejestr kolekcji gotowy: ${sourceCollections.size} źródeł."
@@ -369,7 +370,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         Text("Kandydaci z katalogu lokalnego", style = MaterialTheme.typography.titleSmall)
         Text("Rekord źródłowy nie oznacza pobrania pliku. Pliki bez zatwierdzonej licencji pozostają pozycjami referencyjnymi.", style = MaterialTheme.typography.bodySmall)
 
-        Text("Rekordy z adresem SVG: ${candidates.size} · Wyniki: ${matches.size}", style = MaterialTheme.typography.labelMedium)
+        Text("Rekordy z adresem SVG/PNG: ${candidates.size} · Wyniki: ${matches.size}", style = MaterialTheme.typography.labelMedium)
         Row(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
