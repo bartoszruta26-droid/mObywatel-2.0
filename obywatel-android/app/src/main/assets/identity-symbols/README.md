@@ -45,5 +45,5 @@ Obsługiwane w katalogu lokalnych kandydatów formaty to SVG i PNG. SVG przechod
 - Nadal obowiązuje kontrola bezpieczeństwa technicznego: HTTPS i dozwolony host źródła, limit rozmiaru, walidacja XML/SVG oraz sygnatury i dekodowalności PNG.
 - Wyniki pokazują bezpośredni adres pojedynczego pliku i przyciski „Otwórz plik” oraz „Pobierz do zasobów”. Nie kierują użytkownika do strony kategorii Wiki/GitHub zamiast grafiki.
 - Kategorie aplikacji: Herby, Godła, Logotypy, Flagi, Ikony, Tła, Symbole i Pozostałe. Klasyfikacja wykorzystuje grupę, nazwę pliku, ścieżkę i źródło.
-- Dodane bezpośrednie pliki z baz: Bootstrap Icons, Lucide, Tabler Icons, OpenMoji i Simple Icons (102 rekordy SVG). Zasoby GitHub/Wikimedia pozostają w tym samym katalogu i są automatycznie przypisywane do kategorii.
+- Dodane bezpośrednie pliki z baz: Bootstrap Icons, Lucide, Tabler Icons, OpenMoji i Simple Icons (102 rekordy SVG) w osobnym pliku `additional-graphic-files.csv`. Zasoby GitHub/Wikimedia pozostają w tym samym katalogu i są automatycznie przypisywane do kategorii.
 - Pusty opcjonalny `catalog.csv` nie może już przerwać wczytywania właściwego indeksu `github-symbol-candidates.csv`.
