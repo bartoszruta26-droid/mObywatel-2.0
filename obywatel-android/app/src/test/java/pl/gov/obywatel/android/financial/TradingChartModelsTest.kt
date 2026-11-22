@@ -15,6 +15,43 @@ class TradingChartModelsTest {
         return TradingPriceBar(LocalDate.of(2026, 1, day), price, price, price, price)
     }
 
+    @Test fun regressionChannelFitsPerfectLinearSeries() {
+        val values = (0 until 144).map { 10.0 + it * 0.5 }
+        val channel = LinearRegressionChannels.calculate(values, 144, 2.41)!!
+        assertEquals(0.5, channel.slope, 1e-10)
+        assertEquals(10.0, channel.startMid, 1e-10)
+        assertEquals(81.5, channel.endMid, 1e-10)
+        assertEquals(0.0, channel.deviation, 1e-10)
+        assertEquals(0, channel.brokenDirection)
+    }
+
+    @Test fun tripleRegressionUsesIndependentLengthsAndRequiresEnoughBars() {
+        val values = (0 until 250).map { 100.0 + it * 0.2 + kotlin.math.sin(it / 8.0) }
+        val settings = RegressionChannelSettings()
+        val result = LinearRegressionChannels.calculateThree(values, settings)
+        assertNull(result[0])
+        assertEquals(233, result[1]?.length)
+        assertEquals(144, result[2]?.length)
+    }
+
+    @Test fun regressionDetectsDownsideBreakAndFibonacciLevels() {
+        val values = (0 until 30).map { 100.0 + it.toDouble() } + listOf(1.0)
+        val channel = LinearRegressionChannels.calculate(values, 31, 1.0)!!
+        assertEquals(-1, channel.brokenDirection)
+        assertEquals(channel.lowerAt(channel.endIndex.toDouble(), 1.0) +
+            channel.deviation * 2.0 * 0.618,
+            channel.fibonacciAt(channel.endIndex.toDouble(), 0.618, 1.0), 1e-9)
+    }
+
+    @Test fun regressionSettingsRejectInvalidValues() {
+        assertThrows(IllegalArgumentException::class.java) {
+            RegressionChannelSettings(length1 = 9)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            RegressionChannelSettings(deviationMultiplier = 0.0)
+        }
+    }
+
     @Test fun crossRateSupportsCurrencyAndMetalPairs() {
         // USD buys 0.9 EUR and 0.8 CHF; one EUR is therefore 0.8/0.9 CHF.
         assertEquals(BigDecimal("0.8888888889"),
