@@ -208,7 +208,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Kanały regresji liniowej", style = MaterialTheme.typography.titleSmall)
-                    Text("Okna regresji według ciągu Fibonacciego: 987, 610, 377, 233, 144, 89, 55")
+                    Text("Okna regresji według ciągu Fibonacciego (od najdłuższego do najkrótszego): 987, 610, 377, 233, 144, 89, 55")
                     lengthTexts.indices.toList().chunked(2).forEach { rowIndices ->
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             rowIndices.forEach { index ->
