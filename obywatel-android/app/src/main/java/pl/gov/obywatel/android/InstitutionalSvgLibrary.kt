@@ -901,7 +901,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                             progressTotal = totalFound
                                             status = "Pobieranie SVG: " + (processed + completed) + "/$totalFound — $title"
                                         }
-                                    }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
+                                    }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 3000L)
                                     processed += part.found
                                     totalDownloaded += part.downloaded
                                     totalAlreadyPresent += part.alreadyPresent
