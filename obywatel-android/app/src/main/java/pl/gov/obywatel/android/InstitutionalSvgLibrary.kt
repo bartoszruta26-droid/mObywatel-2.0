@@ -759,6 +759,10 @@ private fun persistCommonsRetryDeadline(context: Context, title: String, retryAt
         }
     }
     writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
+    val earliestRetryAt = (0 until manifest.length()).mapNotNull { index ->
+        manifest.optJSONObject(index)?.optLong("nextRetryAt")?.takeIf { it > 0L }
+    }.minOrNull() ?: retryAtMs
+    CommonsSvgRetryScheduler.scheduleAt(context, earliestRetryAt)
 }
 
 private suspend fun downloadCommonsSvgWithRetry(
@@ -783,6 +787,9 @@ private suspend fun downloadCommonsSvgWithRetry(
             }
             if (httpFailure != null && (httpFailure.httpCode == 420 || httpFailure.httpCode == 429)) {
                 persistCommonsRetryDeadline(context, item.title, System.currentTimeMillis() + retryDelay, lastError)
+                // Long server Retry-After values are persisted and scheduled in WorkManager;
+                // do not keep a foreground coroutine or a worker sleeping for hours.
+                if (retryDelay > 120_000L) return Triple(index + 1, lastError, null)
             }
             appendCommonsDiagnostic(
                 context,
