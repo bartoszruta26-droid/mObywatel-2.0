@@ -264,7 +264,7 @@ private suspend fun downloadInstitutionalSymbol(
         uri.host.equals("cdn.jsdelivr.net", true) || uri.host.equals("openmoji.org", true) ||
         uri.host.equals("cdn.simpleicons.org", true)
     require(uri.scheme.equals("https", true) && uri.userInfo == null && trustedImageHost) {
-        "Źródło pliku nie znajduje się na dozwolonej domenie Wikimedia Commons, GitHub Raw lub jsDelivr."
+        "Adres pliku musi prowadzić przez HTTPS do obsługiwanego źródła graficznego."
     }
     onProgress(InstitutionalSymbolDownloadProgress("Łączenie ze źródłem przez wybraną trasę sieciową. Przy uruchamianiu Tor pierwsze połączenie może potrwać dłużej."))
     val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, if (format == "SVG") TorDownloadKind.SVG else TorDownloadKind.IMAGE)
