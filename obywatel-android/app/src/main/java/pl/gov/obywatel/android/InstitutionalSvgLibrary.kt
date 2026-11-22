@@ -677,9 +677,12 @@ internal fun reconcileCommonsDownloadState(context: Context) {
                 .put("updatedAt", System.currentTimeMillis())
             if (valid) {
                 item.put("sha256", actualSha)
+                    .put("assetId", asset!!.id)
+                    .put("storedFile", asset.file)
                     .put("lastError", "")
             } else if (oldStatus.equals("saved", true)) {
-                item.put("lastError", "Brak pliku na dysku albo plik nie przeszedł kontroli integralności; wymaga ponownego pobrania.")
+                item.put("storedFile", "")
+                    .put("lastError", "Brak pliku na dysku albo plik nie przeszedł kontroli integralności; wymaga ponownego pobrania.")
             }
             changed = true
         }
@@ -687,7 +690,7 @@ internal fun reconcileCommonsDownloadState(context: Context) {
     if (changed) writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
 }
 
-/** Retries at most 20 pending assets per WorkManager execution to keep each job bounded. */
+/** Retries one pending asset per WorkManager execution to keep each job bounded. */
 internal suspend fun retryPendingCommonsDownloads(context: Context): Boolean {
     val manifestFile = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
     if (!manifestFile.isFile) return true
@@ -715,6 +718,7 @@ private fun persistCommonsCandidateStatus(
     val file = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
     if (!file.exists()) return
     val array = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
+    val storedAsset = DocumentBrandStore.list(context).firstOrNull { it.id == commonsAssetId(title) }
     for (index in 0 until array.length()) {
         val item = array.optJSONObject(index) ?: continue
         if (item.optString("file") == title) {
@@ -722,6 +726,8 @@ private fun persistCommonsCandidateStatus(
                 .put("attempts", attempts)
                 .put("lastError", error.orEmpty())
                 .put("updatedAt", System.currentTimeMillis())
+                .put("assetId", commonsAssetId(title))
+                .put("storedFile", storedAsset?.file.orEmpty())
             if (sha256.isNotBlank()) item.put("sha256", sha256)
             break
         }
