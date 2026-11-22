@@ -22,3 +22,13 @@
 - Lista polskich punktów źródłowych i oficjalnych stron: `docs/identity-assets/institutional-svg-priority-sources.csv` (42 dodane rekordy, w tym Sejm, Senat, Prezydent RP, ZUS, NFZ, KRUS, PFRON, organy centralne, samorządy i organizacje).
 - Opis źródeł i ograniczeń: `docs/identity-assets/heraldry-and-institutional-symbols.md`.
 - Obecność adresu w rejestrze oznacza możliwość dalszej weryfikacji, a nie pobranie grafiki ani zgodę na jej wykorzystanie.
+
+## Rejestr 18 wybranych kolekcji źródłowych
+Plik `collections.csv` jest używany przez ekran katalogu symboli. Zawiera adres strony kolekcji, adres API odkrywania, formaty, politykę praw, status prawny i niezależne stany procesu:
+- wykrycie źródła: `source_registered`
+- weryfikacja pojedynczego pliku: `per_file_pending`
+- pobranie: `not_downloaded`
+- trwały zapis: `not_saved`
+- dostępność w aplikacji: `not_available`
+
+Obsługiwane w katalogu lokalnych kandydatów formaty to SVG i PNG. SVG przechodzi walidację bezpieczeństwa, a PNG kontrolę sygnatury, IHDR, wymiarów i dekodowalności. Zasoby z niezweryfikowaną licencją są blokowane przed pobraniem. Sama licencja MIT/CC0 pliku nie przesądza o prawach do znaku towarowego, godła, flagi ani odznaczenia.
