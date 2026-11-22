@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -29,7 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private data class ChartInstrument(val code: String, val label: String, val gold: Boolean = false) {
-    val title: String get() = "$${code} • $${label}"
+    val title: String get() = "${code} • ${label}"
 }
 private enum class PriceChartPeriod(val label: String, val days: Long) {
     WEEK("1T", 7), MONTH("1M", 31), QUARTER("3M", 93),
@@ -42,9 +41,6 @@ private data class PairPricePoint(val date: LocalDate, val value: BigDecimal)
 fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val prefs = remember(context) { context.getSharedPreferences("financial_chart_config", 0) }
-    val repository = remember(context) {
-        NbpRatesRepository(cacheDirectory = File(context.filesDir, "nbp-rates-cache"))
-    }
     val scope = rememberCoroutineScope()
     var base by remember { mutableStateOf(prefs.getString("base", "EUR") ?: "EUR") }
     var quote by remember { mutableStateOf(prefs.getString("quote", "PLN") ?: "PLN") }
@@ -72,7 +68,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     var error by remember { mutableStateOf<String?>(null) }
     var baseMenu by remember { mutableStateOf(false) }
     var quoteMenu by remember { mutableStateOf(false) }
-    var source by remember { mutableStateOf("Źródło: NBP • kursy referencyjne") }
+    var source by remember { mutableStateOf("Źródło: Frankfurter • otwarte dane referencyjne") }
 
     fun save() {
         prefs.edit().putString("base", base).putString("quote", quote)
@@ -90,7 +86,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                     pairRepository.history(base, quote, start, end)
                 }
                 require(data.isNotEmpty()) {
-                    "Brak wspólnych notowań dla $${base}/$${quote} w wybranym okresie."
+                    "Brak wspólnych notowań dla ${base}/${quote} w wybranym okresie."
                 }
                 points = data
                 source = "Źródło: Frankfurter • dane referencyjne banków centralnych i innych oficjalnych dostawców"
@@ -157,7 +153,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         }
         if (loading) CircularProgressIndicator()
         if (points.isNotEmpty()) {
-            Text("$${base}/$${quote}", style = MaterialTheme.typography.titleLarge)
+            Text("${base}/${quote}", style = MaterialTheme.typography.titleLarge)
             Text(last?.stripTrailingZeros()?.toPlainString() ?: "—",
                 style = MaterialTheme.typography.headlineSmall)
             Text(pct?.let { (if (it.signum() > 0) "+" else "") + it.toPlainString() + "%" } ?: "—")
@@ -168,7 +164,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 PairHistoryChart(points, style, selected?.date, { selected = it },
                     Modifier.fillMaxWidth().height(235.dp))
             }
-            selected?.let { Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} $${quote} za 1 $${base}") }
+            selected?.let { Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}") }
                 ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Column(Modifier.weight(1f)) {
@@ -184,7 +180,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                     Text(delta?.let { (if (it.signum() > 0) "+" else "") + it.stripTrailingZeros().toPlainString() } ?: "—")
                 }
             }
-            Text("$${points.size} punktów • $${points.first().date} – $${points.last().date}",
+            Text("${points.size} punktów • ${points.first().date} – ${points.last().date}",
                 style = MaterialTheme.typography.bodySmall)
         } else if (!loading) Text("Wybierz dwa różne instrumenty i naciśnij „Pokaż”.")
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
