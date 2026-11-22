@@ -44,7 +44,7 @@ class InstitutionalSymbolCatalogTest {
     }
 
     @Test
-    fun excludesRasterFilesAndRowsWithoutResolvableDownloadUrl() {
+    fun includesSupportedPngAndExcludesRowsWithoutResolvableDownloadUrl() {
         val png = csvRow(
             "source", "org/repo", "main", "logo.png", "logos", "reference_only",
             "not_imported", "https://github.com/org/repo/blob/main/logo.png",
@@ -55,7 +55,12 @@ class InstitutionalSymbolCatalogTest {
             "not_imported", "https://example.org/not-a-github-blob/logo.svg",
             "", "", "", "", "", "", ""
         )
-        assertTrue(parseInstitutionalSymbolCsv(header + "\n" + png + "\n" + missing).isEmpty())
+        val parsed = parseInstitutionalSymbolCsv(header + "\n" + png + "\n" + missing)
+        assertEquals(listOf("logo.png"), parsed.map { it.path })
+        assertEquals(
+            "https://raw.githubusercontent.com/org/repo/main/logo.png",
+            parsed.single().downloadUrl
+        )
     }
     @Test
     fun svgSecurityGateRejectsEventHandlersAndActiveElements() {
