@@ -98,7 +98,9 @@ fun BankStatementNbpChartCard(
                     val start = entries.minOf { it.bookingDate }.minusDays(7)
                     val end = entries.maxOf { it.bookingDate }
                     val histories = currencies.associateWith { code ->
-                        repository.currencyRateHistory(NbpTable.A, code, start, end)
+                        val tableA = repository.currencyRateHistory(NbpTable.A, code, start, end)
+                        if (tableA.isNotEmpty()) tableA
+                        else repository.currencyRateHistory(NbpTable.B, code, start, end)
                     }
                     BankStatementNbpValuator.value(entries, histories)
                 }
@@ -131,7 +133,9 @@ fun BankStatementNbpChartCard(
                             val start = entries.minOf { it.bookingDate }.minusDays(7)
                             val end = entries.maxOf { it.bookingDate }
                             val histories = currencies.associateWith { code ->
-                                repository.currencyRateHistory(NbpTable.A, code, start, end)
+                                val tableA = repository.currencyRateHistory(NbpTable.A, code, start, end)
+                                if (tableA.isNotEmpty()) tableA
+                                else repository.currencyRateHistory(NbpTable.B, code, start, end)
                             }
                             BankStatementNbpValuator.value(entries, histories)
                         }
