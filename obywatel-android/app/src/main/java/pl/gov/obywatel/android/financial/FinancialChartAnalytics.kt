@@ -138,7 +138,7 @@ object FinancialChartAnalytics {
     /** Pine Script v6 reference template for charting the same indicator set. */
     fun pineScriptTemplate(): String = """
 //@version=6
-indicator("mObywatelska — analiza notowań", overlay=false)
+indicator("mObywatelska — analiza notowań", overlay=true)
 src = input.source(close, "Cena referencyjna")
 showBands = input.bool(true, "Wstęgi Bollingera")
 sma20 = ta.sma(src, 20)
