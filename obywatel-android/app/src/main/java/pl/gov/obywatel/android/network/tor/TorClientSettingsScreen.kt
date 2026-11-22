@@ -153,7 +153,7 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
         }
         Text("Agent identyfikujący pobieranie (User-Agent)", fontWeight = FontWeight.Bold)
         Text(
-            "Wybierz profil nagłówka wysyłanego do serwerów albo wpisz własną wartość. Ustawienie jest zapisywane na urządzeniu i stosowane przy tworzeniu usługi pobierania. Profile przeglądarek zmieniają wyłącznie nagłówek HTTP — nie zmieniają aplikacji w przeglądarkę.",
+            "Wybierz profil nagłówka wysyłanego do serwerów albo wpisz własną wartość. Ustawienie jest zapisywane na urządzeniu i stosowane przy tworzeniu usługi pobierania. Profile przeglądarek zmieniają wyłącznie nagłówek HTTP — nie zmieniają aplikacji w przeglądarkę. Brave może używać takiego samego nagłówka jak Chrome, ponieważ ogranicza własne oznaczenia w User-Agent.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
