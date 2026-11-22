@@ -1,5 +1,8 @@
+// SPDX-FileCopyrightText: LonesomeTheBlue
 // SPDX-FileCopyrightText: 2026 bartoszruta26-droid
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: MPL-2.0
+// Kotlin adaptation of the "Linear Regression Channel" Pine Script by LonesomeTheBlue.
+// Original source license: https://mozilla.org/MPL/2.0/
 package pl.gov.obywatel.android.financial
 
 import kotlin.math.sqrt
