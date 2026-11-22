@@ -317,6 +317,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         Text(source, style = MaterialTheme.typography.bodySmall)
         Text("Dane Frankfurter są kursami referencyjnymi, nie notowaniami transakcyjnymi. Interwał zależy od częstotliwości publikacji dostawcy; nie jest generowany sztuczny wolumen.",
             style = MaterialTheme.typography.bodySmall)
+        CurrencyPortfolioForecastCard(regression, Modifier.fillMaxWidth())
     }
 }
 
