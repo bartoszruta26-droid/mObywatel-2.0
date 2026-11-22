@@ -163,7 +163,7 @@ Data rejestracji: 2026-11-22. Pełne adresy stron, punkty API, wzorce plików, f
 - Herby województw.
 - Herby powiatów (69 plików w podkategorii SVG).
 - Flagi Polski i samorządów.
-- Ordery, odznaczenia i medale Polski (13 podkategorii).
+- Ordery, odznaczenia i medale — zbiór ogólny.
 - Ordery i insygnia orderowe — zbiór światowy.
 - Baretki i wstążki odznaczeń (328 plików w podkategorii polskich baretek).
 - Logotypy Polski — SVG (77 plików i 10 podkategorii).
