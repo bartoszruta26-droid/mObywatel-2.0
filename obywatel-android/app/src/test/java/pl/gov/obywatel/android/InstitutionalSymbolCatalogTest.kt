@@ -161,4 +161,29 @@ class InstitutionalSymbolCatalogTest {
     fun rejectsPngPayloadWithoutValidSignature() {
         validateInstitutionalSymbolPng(ByteArray(64))
     }
+
+    @Test
+    fun parsesIconifyCollectionsWithPerSetLicenseAndDirectJsonSource() {
+        val header = "prefix,name,icon_count,author,author_url,license_title,license_spdx,license_url,category,source_page_url,download_url,source_format,rights_status,discovery_status"
+        val row = csvRow(
+            "example", "Example Icons", "25", "Author", "https://github.com/author",
+            "MIT", "MIT", "https://github.com/author/repo/blob/main/LICENSE", "Symbols",
+            "https://github.com/iconify/icon-sets/blob/master/json/example.json",
+            "https://raw.githubusercontent.com/iconify/icon-sets/master/json/example.json",
+            "Iconify JSON", "per_collection_license_review", "source_registered"
+        )
+        val set = parseIconifyCollectionIndex(header + "\n" + row).single()
+        assertEquals("example", set.prefix)
+        assertEquals(25, set.iconCount)
+        assertEquals("MIT", set.licenseSpdx)
+        assertTrue(set.downloadUrl.endsWith("/example.json"))
+        assertEquals("per_collection_license_review", set.rightsStatus)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsIconifyIndexWithUnsafeSourceUrl() {
+        val header = "prefix,name,icon_count,author,author_url,license_title,license_spdx,license_url,category,source_page_url,download_url,source_format,rights_status,discovery_status"
+        val row = csvRow("x","X","1","","","","","","","https://example.org/x","http://evil.example/x.json","JSON","review","found")
+        parseIconifyCollectionIndex(header + "\n" + row)
+    }
 }
