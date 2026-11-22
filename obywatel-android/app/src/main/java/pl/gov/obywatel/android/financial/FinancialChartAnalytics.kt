@@ -30,8 +30,7 @@ object FinancialChartAnalytics {
             sma50 = sma(values, 50),
             rsi14 = rsi(values, 14),
             macd = macd(values, 12, 26),
-            macdSignal = ema(macd(values, 12, 26).map { it ?: BigDecimal.ZERO }, 9)
-                .mapIndexed { index, value -> if (index < 25) null else value },
+            macdSignal = macdSignal(values, 12, 26, 9),
             bollingerUpper = bollinger(values, 20, 2).first,
             bollingerLower = bollinger(values, 20, 2).second
         )
@@ -92,6 +91,18 @@ object FinancialChartAnalytics {
             result[i] = index()
         }
         return result
+    }
+
+    fun macdSignal(values: List<BigDecimal>, fast: Int, slow: Int, signalPeriod: Int): List<BigDecimal?> {
+        require(signalPeriod > 0)
+        val line = macd(values, fast, slow)
+        val firstValid = slow - 1
+        if (line.size <= firstValid) return List(line.size) { null }
+        val signal = ema(line.drop(firstValid).mapNotNull { it }, signalPeriod)
+        return List(line.size) { index ->
+            val signalIndex = index - firstValid
+            if (signalIndex < signalPeriod - 1 || signalIndex !in signal.indices) null else signal[signalIndex]
+        }
     }
 
     fun macd(values: List<BigDecimal>, fast: Int, slow: Int): List<BigDecimal?> {
