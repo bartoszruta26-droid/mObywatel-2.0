@@ -48,7 +48,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         NbpRatesRepository(cacheDirectory = File(context.filesDir, "nbp-rates-cache"))
     }
     val scope = rememberCoroutineScope()
-    var instrument by remember { mutableStateOf(PriceChartInstrument.GOLD) }
+    var instrument by remember { mutableStateOf(PriceChartInstrument.CURRENCY) }
     var period by remember { mutableStateOf(PriceChartPeriod.YEAR) }
     var currencyCode by remember { mutableStateOf("EUR") }
     var points by remember { mutableStateOf<List<PriceChartPoint>>(emptyList()) }
@@ -99,7 +99,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     } else null
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Wykres cen i notowań", style = MaterialTheme.typography.titleMedium)
+        Text("Wykres kursów walut NBP i cen złota", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PriceChartInstrument.entries.forEach { option ->
                 Button(onClick = { instrument = option; points = emptyList(); error = null }) {
@@ -129,7 +129,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         Button(
             onClick = ::loadHistory,
             enabled = !loading && (instrument != PriceChartInstrument.CURRENCY || currencyCode.length == 3)
-        ) { Text(if (points.isEmpty()) "Wyświetl wykres" else "Odśwież wykres") }
+        ) { Text(if (points.isEmpty()) "Wyświetl wykres NBP" else "Odśwież wykres NBP") }
         if (loading) CircularProgressIndicator()
         if (points.isNotEmpty()) {
             Text(loadedLabel, style = MaterialTheme.typography.titleSmall)
