@@ -29,8 +29,8 @@ class CommonsSvgRetryWorker(
             reconcileCommonsDownloadState(applicationContext)
             val complete = retryPendingCommonsDownloads(applicationContext)
             if (complete) Result.success() else Result.retry()
-        } catch (_: kotlinx.coroutines.CancellationException) {
-            throw
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
         } catch (_: Exception) {
             Result.retry()
         }
