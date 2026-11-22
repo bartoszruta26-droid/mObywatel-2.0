@@ -123,7 +123,7 @@ object CurrencyForecastEngine {
             }
             origin += step
         }
-        return if (trials >= MIN_VALIDATION_SAMPLES) (hits + 1.0) / (trials + 2.0) else null to trials
+        return (if (trials >= MIN_VALIDATION_SAMPLES) (hits + 1.0) / (trials + 2.0) else null) to trials
     }
 
     private fun magnitude(changePercent: Double): ForecastMagnitude = when {
