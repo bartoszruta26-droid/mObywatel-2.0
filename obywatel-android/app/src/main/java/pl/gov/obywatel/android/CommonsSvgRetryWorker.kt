@@ -43,7 +43,6 @@ object CommonsSvgRetryScheduler {
     private const val UNIQUE_WORK_NAME = "commons-svg-periodic-retry"
     private const val UNIQUE_RATE_LIMIT_WORK_NAME = "commons-svg-rate-limit-retry"
 
-    /** WorkManager persists this schedule across process death and device restarts. */
     /** Schedules an exact delayed retry for the earliest persisted Retry-After deadline. */
     fun scheduleAt(context: Context, retryAtMs: Long) {
         val constraints = Constraints.Builder()
@@ -62,6 +61,7 @@ object CommonsSvgRetryScheduler {
         )
     }
 
+    /** WorkManager persists this safety-net schedule across process death and device restarts. */
     fun ensureScheduled(context: Context) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
