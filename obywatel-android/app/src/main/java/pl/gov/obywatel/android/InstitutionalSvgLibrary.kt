@@ -386,6 +386,10 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     }
     var response = try {
         tor.open(item.url, TorDownloadKind.SVG, offset, validator)
+    } catch (failure: TorHttpException) {
+        // A 429/5xx response must not trigger an immediate second request from byte zero.
+        // Let the outer retry policy honor Retry-After and apply the host cooldown.
+        throw failure
     } catch (failure: Exception) {
         if (offset <= 0L) throw failure
         partFile.delete()
