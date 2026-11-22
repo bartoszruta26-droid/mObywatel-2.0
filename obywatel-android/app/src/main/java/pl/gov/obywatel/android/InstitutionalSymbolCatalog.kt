@@ -186,7 +186,7 @@ private fun institutionalSymbolAssetId(item: InstitutionalSymbolCandidate): Stri
 internal fun institutionalSymbolCanDownload(item: InstitutionalSymbolCandidate): Boolean {
     val status = item.rightsStatus.trim().lowercase(Locale.ROOT)
     val license = item.license.trim().lowercase(Locale.ROOT)
-    return status == "mit" && license == "mit" && item.licenseUrl.startsWith("https://")
+    return status == "mit" && license == "mit" && item.licenseUrl.startsWith("https://") && !item.group.contains("flag", true)
 }
 
 private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidator.validate(bytes)
@@ -225,7 +225,7 @@ private suspend fun downloadInstitutionalSymbol(
     val bytes = response.use {
         require(it.statusCode in 200..299) { "Serwer zwrócił HTTP ${it.statusCode}." }
         val expected = it.contentLength?.takeIf { length -> length > 0L }
-        onProgress(InstitutionalSymbolDownloadProgress("Połączono. Pobieranie danych SVG…", 0L, expected))
+        onProgress(InstitutionalSymbolDownloadProgress("Połączono. Pobieranie danych $format…", 0L, expected))
         val output = ByteArrayOutputStream()
         it.body.use { input ->
             val buffer = ByteArray(8192)
@@ -239,7 +239,7 @@ private suspend fun downloadInstitutionalSymbol(
                 output.write(buffer, 0, count)
                 val now = System.currentTimeMillis()
                 if (now - lastUpdate >= 300L) {
-                    onProgress(InstitutionalSymbolDownloadProgress("Pobieranie SVG…", total, expected))
+                    onProgress(InstitutionalSymbolDownloadProgress("Pobieranie $format…", total, expected))
                     lastUpdate = now
                 }
             }
@@ -247,7 +247,7 @@ private suspend fun downloadInstitutionalSymbol(
         }
         output.toByteArray()
     }
-    onProgress(InstitutionalSymbolDownloadProgress("Sprawdzanie bezpieczeństwa i poprawności SVG…", bytes.size.toLong(), bytes.size.toLong()))
+    onProgress(InstitutionalSymbolDownloadProgress("Sprawdzanie bezpieczeństwa i poprawności $format…", bytes.size.toLong(), bytes.size.toLong()))
     when (format) {
         "SVG" -> validateInstitutionalSymbolSvg(bytes)
         "PNG" -> validateInstitutionalSymbolPng(bytes)
@@ -267,7 +267,11 @@ private suspend fun downloadInstitutionalSymbol(
         .put("sourceCredit", item.credit)
         .put("catalogRightsStatus", item.rightsStatus)
         .put("sha256", sha)
-        .put("verificationStatus", "source-metadata-retained; no-in-app-license-gate")
+        .put("verificationStatus", "file-format-and-content-validated; license-metadata-verified; app-use-review-pending")
+        .put("format", format)
+        .put("downloadStatus", "downloaded")
+        .put("storageStatus", "saved")
+        .put("availabilityStatus", "not_available")
         .put("permittedKinds", JSONArray())
         .toString()
     val kind = when (institutionalSymbolCategory(item)) {
@@ -281,7 +285,7 @@ private suspend fun downloadInstitutionalSymbol(
     onProgress(InstitutionalSymbolDownloadProgress("Zapisuję plik i metadane w bibliotece…", bytes.size.toLong(), bytes.size.toLong()))
     DocumentBrandStore.importBytes(context, item.repository, kind, item.displayName.take(180),
         bytes, rights = rights, mimeType = mimeType, assetId = institutionalSymbolAssetId(item))
-    onProgress(InstitutionalSymbolDownloadProgress("Zapisano i zweryfikowano SVG.", bytes.size.toLong(), bytes.size.toLong()))
+    onProgress(InstitutionalSymbolDownloadProgress("Zapisano i zweryfikowano $format. Dostępność w aplikacji nadal wymaga oceny praw użycia.", bytes.size.toLong(), bytes.size.toLong()))
     return sha
 }
 
