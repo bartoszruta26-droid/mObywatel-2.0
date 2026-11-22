@@ -160,6 +160,50 @@ internal fun parseInstitutionalSymbolCollectionsCsv(raw: String): List<Instituti
     }.distinctBy { it.id }
 }
 
+
+internal data class IconifyCollectionSource(
+    val prefix: String, val name: String, val iconCount: Int, val author: String,
+    val authorUrl: String, val licenseTitle: String, val licenseSpdx: String,
+    val licenseUrl: String, val category: String, val sourcePageUrl: String,
+    val downloadUrl: String, val sourceFormat: String, val rightsStatus: String,
+    val discoveryStatus: String
+)
+
+internal fun parseIconifyCollectionIndex(raw: String): List<IconifyCollectionSource> {
+    fun parseLine(line: String): List<String> {
+        val cells = mutableListOf<String>(); val cell = StringBuilder(); var quoted = false; var i = 0
+        while (i < line.length) {
+            val ch = line[i]
+            when {
+                ch == '"' && quoted && i + 1 < line.length && line[i + 1] == '"' -> { cell.append('"'); i++ }
+                ch == '"' -> quoted = !quoted
+                ch == ',' && !quoted -> { cells += cell.toString(); cell.setLength(0) }
+                else -> cell.append(ch)
+            }
+            i++
+        }
+        require(!quoted) { "Nieprawidłowe cudzysłowy w indeksie Iconify." }
+        cells += cell.toString()
+        return cells
+    }
+    val lines = raw.removePrefix("\uFEFF").lineSequence().filter { it.isNotBlank() && !it.startsWith("#") }.toList()
+    require(lines.size >= 2) { "Indeks Iconify jest pusty." }
+    val header = parseLine(lines.first()).map { it.trim() }
+    fun idx(name: String) = header.indexOf(name).also { require(it >= 0) { "Brak kolumny Iconify: $name" } }
+    val cols = listOf("prefix","name","icon_count","author","author_url","license_title","license_spdx",
+        "license_url","category","source_page_url","download_url","source_format","rights_status","discovery_status").associateWith(::idx)
+    return lines.drop(1).map { line ->
+        val row = parseLine(line)
+        fun v(key: String) = row.getOrNull(cols.getValue(key)).orEmpty()
+        require(v("source_page_url").startsWith("https://") && v("download_url").startsWith("https://")) {
+            "Indeks Iconify zawiera adres niebezpieczny lub pusty."
+        }
+        IconifyCollectionSource(v("prefix"),v("name"),v("icon_count").toIntOrNull() ?: 0,v("author"),
+            v("author_url"),v("license_title"),v("license_spdx"),v("license_url"),v("category"),
+            v("source_page_url"),v("download_url"),v("source_format"),v("rights_status"),v("discovery_status"))
+    }.distinctBy { it.prefix }
+}
+
 internal fun institutionalSymbolFormat(path: String): String? = when (path.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
     "svg" -> "SVG"
     "png" -> "PNG"
@@ -312,6 +356,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
     val selectedMode = DownloadConnectionSettings.get(context)
     var candidates by remember { mutableStateOf<List<InstitutionalSymbolCandidate>>(emptyList()) }
     var sourceCollections by remember { mutableStateOf<List<InstitutionalSymbolSourceCollection>>(emptyList()) }
+    var iconifyCollections by remember { mutableStateOf<List<IconifyCollectionSource>>(emptyList()) }
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Wszystkie") }
     var busyId by remember { mutableStateOf<String?>(null) }
@@ -323,15 +368,19 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
             val sources = context.assets.open("identity-symbols/collections.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
             val local = context.assets.open("identity-symbols/catalog.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
             val github = context.assets.open("identity-symbols/github-symbol-candidates.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
-            Triple(sources, local, github)
+            val iconify = context.assets.open("identity-symbols/iconify-collection-index.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
+            arrayOf(sources, local, github, iconify)
         }
-        sourceCollections = runCatching { parseInstitutionalSymbolCollectionsCsv(loaded.first) }.getOrElse {
+        sourceCollections = runCatching { parseInstitutionalSymbolCollectionsCsv(loaded[0]) }.getOrElse {
             message = "Nie udało się wczytać rejestru kolekcji: ${it.message ?: "błąd danych"}"; emptyList()
         }
-        candidates = runCatching { (parseInstitutionalSymbolCsv(loaded.second) + parseInstitutionalSymbolCsv(loaded.third)).distinctBy { it.sourceId + ":" + it.path } }.getOrElse {
+        candidates = runCatching { (parseInstitutionalSymbolCsv(loaded[1]) + parseInstitutionalSymbolCsv(loaded[2])).distinctBy { it.sourceId + ":" + it.path } }.getOrElse {
             message = "Nie udało się wczytać katalogu SVG: ${it.message ?: "błąd danych"}"; emptyList()
         }
-        if (sourceCollections.isNotEmpty()) message = "Rejestr kolekcji gotowy: ${sourceCollections.size} źródeł."
+        iconifyCollections = runCatching { parseIconifyCollectionIndex(loaded[3]) }.getOrElse {
+            message = "Nie udało się wczytać indeksu Iconify: ${it.message ?: "błąd danych"}"; emptyList()
+        }
+        if (sourceCollections.isNotEmpty()) message = "Rejestr kolekcji gotowy: ${sourceCollections.size} źródeł; Iconify: ${iconifyCollections.size} zestawów."
     }
     val normalized = query.trim().lowercase(Locale.ROOT)
     val matches = remember(candidates, normalized, selectedCategory) {
@@ -367,6 +416,22 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                 }
             }
         }
+
+        Text("Zestawy Iconify: ${iconifyCollections.size}", style = MaterialTheme.typography.titleSmall)
+        Text("Iconify przechowuje dane zestawów w JSON, nie gotowe pliki SVG/PNG. Każdy zestaw ma osobną licencję; pobranie grafiki wymaga osobnej konwersji i walidacji.", style = MaterialTheme.typography.bodySmall)
+        LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            items(iconifyCollections, key = { it.prefix }) { set ->
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("${set.name} (${set.iconCount} ikon)", style = MaterialTheme.typography.bodyMedium)
+                    Text("Autor: ${set.author.ifBlank { "niepodany" }} · licencja: ${set.licenseSpdx.ifBlank { "do sprawdzenia" }} · ${set.rightsStatus}", style = MaterialTheme.typography.labelSmall)
+                    Button(onClick = {
+                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(set.sourcePageUrl))) }
+                            .onFailure { message = "Nie można otworzyć źródła Iconify: ${it.message ?: "błąd systemu"}" }
+                    }, enabled = busyId == null) { Text("Otwórz zestaw") }
+                }
+            }
+        }
+
         Text("Kandydaci z katalogu lokalnego", style = MaterialTheme.typography.titleSmall)
         Text("Rekord źródłowy nie oznacza pobrania pliku. Pliki bez zatwierdzonej licencji pozostają pozycjami referencyjnymi.", style = MaterialTheme.typography.bodySmall)
 
