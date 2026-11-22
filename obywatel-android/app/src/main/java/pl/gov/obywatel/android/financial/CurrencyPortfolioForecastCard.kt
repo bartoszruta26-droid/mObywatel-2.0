@@ -99,8 +99,9 @@ fun CurrencyPortfolioForecastCard(
                     val history = withContext(Dispatchers.IO) {
                         repository.currencyRateHistory(NbpTable.A, currency.code, start, end)
                     }
-                    require(history.size >= settings.lengths.maxOrNull() ?: 987) {
-                        "Za mało danych NBP dla ${currency.code}: ${history.size} obserwacji; wymagane jest okno ${settings.lengths.maxOrNull()}."
+                    val requiredObservations = settings.lengths.maxOrNull() ?: 987
+                    require(history.size >= requiredObservations) {
+                        "Za mało danych NBP dla ${currency.code}: ${history.size} obserwacji; wymagane jest okno $requiredObservations."
                     }
                     val forecasts = CurrencyForecastEngine.forecast(
                         history.map { it.second.toDouble() }, settings
@@ -248,6 +249,15 @@ fun CurrencyPortfolioForecastCard(
                                             "Historyczna trafność kierunku: ${"%.0f".format(it * 100)}% " +
                                                 "(${f.validationSamples} prób)"
                                         } ?: "Brak wiarygodnej próby dla tego horyzontu (${f.validationSamples} prób).",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                    Text(
+                                        f.categoryProbability?.let {
+                                            "Prawdopodobieństwo historyczne tej klasy (${magnitude} ${movement}): " +
+                                                "${"%.0f".format(it * 100)}% (${f.categoryValidationSamples} prób)"
+                                        } ?: "Brak co najmniej 20 prób dla klasy ${magnitude} ${movement} " +
+                                            "(${f.categoryValidationSamples} prób).",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.secondary
                                     )
