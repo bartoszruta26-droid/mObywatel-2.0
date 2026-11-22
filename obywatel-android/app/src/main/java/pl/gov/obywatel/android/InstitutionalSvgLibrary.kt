@@ -138,9 +138,9 @@ private object CommonsRequestGate {
     }
 }
 
-private fun waitForCommonsRequestSlot() = CommonsRequestGate.awaitSlot()
+internal fun waitForCommonsRequestSlot() = CommonsRequestGate.awaitSlot()
 
-private fun recordCommonsHttpBackoff(httpCode: Int, retryAfterMs: Long?): Long {
+internal fun recordCommonsHttpBackoff(httpCode: Int, retryAfterMs: Long?): Long {
     val rateLimited = httpCode == 420 || httpCode == 429
     val minimum = if (rateLimited) COMMONS_RATE_LIMIT_COOLDOWN_MS else 10_000L
     val delayMs = maxOf(minimum, retryAfterMs ?: 0L).coerceAtMost(COMMONS_MAX_RETRY_AFTER_MS)
@@ -190,7 +190,7 @@ internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null):
     return maxOf(serverDelay ?: exponentialDelay, exponentialDelay).coerceIn(2000L, 30000L)
 }
 
-private fun commonsRequest(context: Context, params: String): JSONObject {
+internal fun commonsRequest(context: Context, params: String): JSONObject {
     var lastFailure: Exception? = null
     val tor = TorDownloadServiceProvider.get(context)
     repeat(COMMONS_API_MAX_ATTEMPTS) { attempt ->
