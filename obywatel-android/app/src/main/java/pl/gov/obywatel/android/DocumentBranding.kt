@@ -656,10 +656,13 @@ internal object DocumentBrandStore {
             val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
             require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Zasób przekracza limit 12 MB." }
             val isSvg = SvgSafetyValidator.looksLikeSvg(bytes)
+            val mimeType = item.optString("mimeType")
+            val isXml = mimeType == "application/xml" || mimeType == "text/xml"
             if (isSvg) SvgSafetyValidator.validate(bytes)
-            if (kind in imageKinds && item.optString("mimeType") != "application/pdf") decodeImage(bytes).recycle()
+            if (kind in imageKinds && mimeType != "application/pdf" && !isXml) decodeImage(bytes).recycle()
             val extension = when {
                 isSvg -> ".svg.enc"
+                isXml -> ".xml.enc"
                 kind == "Certyfikat" -> ".cer.enc"
                 kind == "Załącznik tekstowy" -> ".txt.enc"
                 kind == "Załącznik" -> ".bin.enc"
@@ -725,10 +728,12 @@ internal object DocumentBrandStore {
         require(assetId.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu." }
         require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Plik zasobu przekracza limit 12 MB." }
         val isSvg = SvgSafetyValidator.looksLikeSvg(bytes)
+        val isXml = mimeType == "application/xml" || mimeType == "text/xml"
         if (isSvg) SvgSafetyValidator.validate(bytes)
-        if (normalizedKind in imageKinds && mimeType != "application/pdf") decodeImage(bytes).recycle()
+        if (normalizedKind in imageKinds && mimeType != "application/pdf" && !isXml) decodeImage(bytes).recycle()
         val extension = when {
             isSvg -> ".svg.enc"
+            isXml -> ".xml.enc"
             normalizedKind == "Certyfikat" -> ".cer.enc"
             normalizedKind == "Załącznik tekstowy" -> ".txt.enc"
             normalizedKind == "Załącznik" -> ".bin.enc"
