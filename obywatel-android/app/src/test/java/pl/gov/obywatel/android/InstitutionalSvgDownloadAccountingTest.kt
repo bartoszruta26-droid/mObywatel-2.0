@@ -248,4 +248,31 @@ class InstitutionalSvgDownloadAccountingTest {
         assertTrue(commonsCandidateRightsVerified(cc0))
         assertFalse(commonsCandidateRightsVerified(publicDomain.copy(restrictions = "Non-free use")))
     }
+
+    @Test
+    fun incompleteRightsMetadataDoesNotBlockTechnicallyValidSvgDownload() {
+        val candidate = CommonsSvgCandidate(
+            "File:unreviewed.svg", "https://upload.wikimedia.org/a/unreviewed.svg",
+            "https://commons.wikimedia.org/wiki/File:unreviewed.svg", "", "", "", ""
+        )
+        assertTrue(commonsCandidateCanBeDownloaded(candidate))
+        assertFalse(commonsCandidateRightsVerified(candidate))
+        assertEquals(
+            "metadata_incomplete_manual_review_required_before_use",
+            commonsRightsMetadataStatus(candidate)
+        )
+    }
+
+    @Test
+    fun technicalDownloadValidationStillRejectsUnsafeSvgUrls() {
+        val valid = CommonsSvgCandidate(
+            "File:logo.svg", "https://upload.wikimedia.org/a/logo.svg",
+            "page", "", "", "", ""
+        )
+        assertTrue(commonsCandidateCanBeDownloaded(valid))
+        assertFalse(commonsCandidateCanBeDownloaded(valid.copy(url = "http://upload.wikimedia.org/a/logo.svg")))
+        assertFalse(commonsCandidateCanBeDownloaded(valid.copy(url = "https://example.org/a/logo.svg")))
+        assertFalse(commonsCandidateCanBeDownloaded(valid.copy(url = "https://upload.wikimedia.org/a/logo.png")))
+        assertFalse(commonsCandidateCanBeDownloaded(valid.copy(url = "https://user@upload.wikimedia.org/a/logo.svg")))
+    }
 }
