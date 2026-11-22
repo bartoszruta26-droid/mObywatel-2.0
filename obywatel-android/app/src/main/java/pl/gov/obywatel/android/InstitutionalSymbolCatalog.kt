@@ -164,6 +164,12 @@ private fun institutionalSymbolAssetId(item: InstitutionalSymbolCandidate): Stri
         .digest((item.sourceId + ":" + item.path).toByteArray(Charsets.UTF_8)).take(16)
         .joinToString("") { "%02x".format(it) }
 
+internal fun institutionalSymbolCanDownload(item: InstitutionalSymbolCandidate): Boolean {
+    val status = item.rightsStatus.trim().lowercase(Locale.ROOT)
+    val license = item.license.trim().lowercase(Locale.ROOT)
+    return status == "mit" && license == "mit" && item.licenseUrl.startsWith("https://")
+}
+
 private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidator.validate(bytes)
 
 internal data class InstitutionalSymbolDownloadProgress(
@@ -183,6 +189,9 @@ private suspend fun downloadInstitutionalSymbol(
     item: InstitutionalSymbolCandidate,
     onProgress: suspend (InstitutionalSymbolDownloadProgress) -> Unit
 ): String {
+    require(institutionalSymbolCanDownload(item)) {
+        "Pobieranie zablokowane: licencja nie została zatwierdzona dla tego pliku. Status: ${item.rightsStatus}; licencja: ${item.license.ifBlank { "brak" }}."
+    }
     val uri = java.net.URI(item.downloadUrl)
     val trustedSvgHost = uri.host.equals("upload.wikimedia.org", true) ||
         uri.host.equals("raw.githubusercontent.com", true) ||
@@ -399,7 +408,8 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                             Text("${item.group} • ${item.repository}", style = MaterialTheme.typography.labelSmall)
                             Text("Źródło: ${item.repository} · autor: ${item.author.ifBlank { "niepodany w metadanych" }}", style = MaterialTheme.typography.labelSmall)
                             
-                            Button(enabled = busyId == null, onClick = {
+                            Text("Licencja: ${item.license.ifBlank { "niepodana" }} · status: ${item.rightsStatus}", style = MaterialTheme.typography.labelSmall)
+                            Button(enabled = busyId == null && institutionalSymbolCanDownload(item), onClick = {
                                 busyId = item.sourceId + ":" + item.path
                                 message = ""
                                 downloadProgress = InstitutionalSymbolDownloadProgress("Przygotowanie pobierania…")
@@ -419,7 +429,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                                     if (result.isSuccess) onSaved()
                                 }
                             }) {
-                                Text(if (busyId == item.sourceId + ":" + item.path) "Pobieranie…" else "Pobierz ten SVG")
+                                Text(if (busyId == item.sourceId + ":" + item.path) "Pobieranie…" else if (institutionalSymbolCanDownload(item)) "Pobierz zweryfikowany SVG" else "Wymaga weryfikacji praw")
                             }
                         }
                     }
