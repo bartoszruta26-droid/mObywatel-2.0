@@ -210,7 +210,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                         }, label = { Text("Długość 2") }, modifier = Modifier.weight(1f), singleLine = true)
                         OutlinedTextField(length3Text, { value ->
                             length3Text = value.filter(Char::isDigit).take(4)
-                            value.toIntOrNull()?.takeIf { it >= 10 }?.let {
+                            length3Text.toIntOrNull()?.takeIf { it >= 10 }?.let {
                                 regression = regression.copy(length3 = it); saveRegression()
                             }
                         }, label = { Text("Długość 3") }, modifier = Modifier.weight(1f), singleLine = true)
@@ -305,19 +305,19 @@ private fun PairHistoryChart(
     val grid = MaterialTheme.colorScheme.outlineVariant
     val marker = MaterialTheme.colorScheme.tertiary
     val vals = points.map { it.value.toDouble() }
-    val channels = LinearRegressionChannels.calculateThree(vals, regression).filterNotNull()
-    val low = (vals + channels.flatMap { ch ->
+    val channels = LinearRegressionChannels.calculateThree(vals, regression)
+    val drawableChannels = channels.filterNotNull()
+    val projectedValues = drawableChannels.flatMap { ch ->
+        val projectedEnd = if (regression.extendLines)
+            ch.endIndex + (ch.endIndex - ch.startIndex).coerceAtLeast(1) * 0.18
+        else ch.endIndex.toDouble()
         listOf(ch.lowerAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
             ch.upperAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
-            ch.lowerAt(ch.endIndex.toDouble(), regression.deviationMultiplier),
-            ch.upperAt(ch.endIndex.toDouble(), regression.deviationMultiplier))
-    }).minOrNull() ?: 0.0
-    val high = (vals + channels.flatMap { ch ->
-        listOf(ch.lowerAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
-            ch.upperAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
-            ch.lowerAt(ch.endIndex.toDouble(), regression.deviationMultiplier),
-            ch.upperAt(ch.endIndex.toDouble(), regression.deviationMultiplier))
-    }).maxOrNull() ?: low
+            ch.lowerAt(projectedEnd, regression.deviationMultiplier),
+            ch.upperAt(projectedEnd, regression.deviationMultiplier))
+    }
+    val low = (vals + projectedValues).minOrNull() ?: 0.0
+    val high = (vals + projectedValues).maxOrNull() ?: low
     val span = (high - low).takeIf { it > 0.0 } ?: 1.0
     Canvas(modifier.pointerInput(points) {
         detectTapGestures { tap ->
@@ -371,6 +371,7 @@ private fun PairHistoryChart(
             }
         }
         channels.forEachIndexed { channelIndex, channel ->
+            if (channel != null) {
             val colors = listOf(regressionColor1, regressionColor2, regressionColor3)
             val color = if (regression.showBroken && channel.brokenDirection != 0) Color(0xFF2878D0)
                 else colors[channelIndex]
@@ -380,26 +381,30 @@ private fun PairHistoryChart(
             val endIndex = if (regression.extendLines) {
                 channel.endIndex + ((channel.endIndex - channel.startIndex).coerceAtLeast(1) * 0.18)
             } else channel.endIndex.toDouble()
-            fun drawRegressionLine(offset: Double, width: Float, dotted: Boolean) {
+            fun drawRegressionLine(offset: Double, width: Float, pattern: Int) {
                 val y1 = yFor(channel.valueAt(channel.startIndex.toDouble()) + offset)
                 val y2 = yFor(channel.valueAt(endIndex) + offset)
-                if (!dotted) drawLine(color, Offset(x1, y1), Offset(x2, y2), width)
-                else for (segment in 0 until 28 step 2) {
-                    val a = segment / 28f
-                    val z = (segment + 1) / 28f
-                    drawLine(color.copy(alpha = 0.8f),
-                        Offset(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a),
-                        Offset(x1 + (x2 - x1) * z, y1 + (y2 - y1) * z), width)
+                if (pattern == 0) drawLine(color, Offset(x1, y1), Offset(x2, y2), width)
+                else {
+                    val segments = if (pattern == 1) 28 else 14
+                    for (segment in 0 until segments step 2) {
+                        val a = segment.toFloat() / segments
+                        val z = (segment + 1).toFloat() / segments
+                        drawLine(color.copy(alpha = 0.82f),
+                            Offset(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a),
+                            Offset(x1 + (x2 - x1) * z, y1 + (y2 - y1) * z), width)
+                    }
                 }
             }
             val band = channel.deviation * regression.deviationMultiplier
-            drawRegressionLine(0.0, lineWidth, false)
-            drawRegressionLine(band, lineWidth, true)
-            drawRegressionLine(-band, lineWidth, true)
+            drawRegressionLine(0.0, lineWidth, 0)
+            drawRegressionLine(band, lineWidth, 1)
+            drawRegressionLine(-band, lineWidth, 1)
             if (regression.showFibonacci) {
                 LinearRegressionChannels.fibonacciRatios.forEach { ratio ->
-                    drawRegressionLine(-band + 2.0 * band * ratio, 1.dp.toPx(), true)
+                    drawRegressionLine(-band + 2.0 * band * ratio, 1.dp.toPx(), 2)
                 }
+            }
             }
         }
         val idx = selectedDate?.let { d -> points.indexOfFirst { it.date == d } } ?: -1
