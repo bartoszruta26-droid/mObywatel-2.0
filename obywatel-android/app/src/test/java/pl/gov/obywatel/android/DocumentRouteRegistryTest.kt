@@ -41,7 +41,7 @@ class DocumentRouteRegistryTest {
 
 
     @Test
-    fun fourDonationLedgersAreRegisteredVisibleAndAssignedToFinancialServiceGroup() {
+    fun fourDonationLedgersRemainRegisteredButAreHiddenByDefaultInFinancialServiceGroup() {
         val expected = mapOf(
             DonationLedgerCatalog.PERSON to "Służba finansowa",
             DonationLedgerCatalog.FOUNDATION to "Służba finansowa",
@@ -50,7 +50,7 @@ class DocumentRouteRegistryTest {
         )
         expected.forEach { (id, group) ->
             assertEquals(group, documentVisibilityGroup(id))
-            assertEquals("other", defaultDocumentPlacements[id])
+            assertEquals("hidden", defaultDocumentPlacements[id])
             val route = requireNotNull(DocumentRouteRegistry.find(id))
             assertEquals(DocumentRouteType.DOCUMENT, route.type)
             assertEquals(id, route.documentId)

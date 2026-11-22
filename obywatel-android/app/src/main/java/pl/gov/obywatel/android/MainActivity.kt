@@ -1148,9 +1148,17 @@ private val armedServiceDocumentIds = setOf(
     "historical_reenactment", "reenactment_qualification", "reenactment_event"
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
-    id to when { id in setOf("identity", "receipts", "foreign_prescription", "payment_transactions") -> "dashboard"; id == "financial_service" || id in setOf(DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION, DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH) -> "other"; else -> "hidden" }
+    id to when {
+        id in setOf("identity", "receipts", "foreign_prescription", "payment_transactions") -> "dashboard"
+        id == "financial_service" -> "other"
+        // Donation ledger cards are available in the catalog but never shown by default.
+        id in setOf(DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION,
+            DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH) -> "hidden"
+        else -> "hidden"
+    }
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
+private const val DONATION_LEDGER_VISIBILITY_MIGRATION_KEY = "donation_ledgers_hidden_by_default_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
 private const val ARMED_SERVICE_DASHBOARD_CLEANUP_MIGRATION_KEY = "armed_service_dashboard_cleanup_v1"
 private const val DOCUMENT_CARD_STYLE_KEY = "document_card_style"
@@ -1250,6 +1258,18 @@ private fun loadDocumentPlacements(context: Context): Map<String, String> {
         }
         editor.putBoolean(DOCUMENT_VISIBILITY_MIGRATION_KEY, true)
         check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności dokumentów." }
+    }
+    if (!prefs.getBoolean(DONATION_LEDGER_VISIBILITY_MIGRATION_KEY, false)) {
+        // Ustaw domyślną widoczność czterech ewidencji na ukrytą.
+        // Pozostaw jawne, wcześniejsze wybory użytkownika bez zmian.
+        val editor = prefs.edit()
+        listOf(DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION,
+            DonationLedgerCatalog.ASSOCIATION, DonationLedgerCatalog.CHURCH).forEach { id ->
+            val key = DOCUMENT_DISPLAY_KEY_PREFIX + id
+            if (!prefs.contains(key)) editor.putString(key, "hidden")
+        }
+        editor.putBoolean(DONATION_LEDGER_VISIBILITY_MIGRATION_KEY, true)
+        check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności ewidencji darowizn." }
     }
     if (!prefs.getBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, false)) {
         // Dodanie grupy do katalogu nie oznacza zgody na publikację jej kafelków.
