@@ -98,28 +98,78 @@ internal fun commonsSvgSearchExpressions(term: String): List<String> {
 }
 
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
-private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 1000L
+private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 3_000L
+private const val COMMONS_RATE_LIMIT_COOLDOWN_MS = 30_000L
+private const val COMMONS_MAX_RETRY_AFTER_MS = 15L * 60L * 1000L
 private const val COMMONS_API_MAX_ATTEMPTS = 3
 private const val COMMONS_DOWNLOAD_MAX_ATTEMPTS = 5
-private val commonsApiThrottleLock = Any()
-@Volatile private var commonsApiLastRequestAt = 0L
 
-private fun waitForCommonsRequestSlot() {
-    synchronized(commonsApiThrottleLock) {
-        val waitMs = COMMONS_MIN_REQUEST_INTERVAL_MS - (System.currentTimeMillis() - commonsApiLastRequestAt)
-        if (waitMs > 0) Thread.sleep(waitMs)
-        commonsApiLastRequestAt = System.currentTimeMillis()
+/**
+ * Wspólna zapora dla API Commons oraz plików upload.wikimedia.org.
+ * Odpowiedź 420/429 wstrzymuje wszystkie kolejne żądania do końca cooldownu.
+ */
+private object CommonsRequestGate {
+    private val lock = java.lang.Object()
+    private var lastRequestAtMs = 0L
+    private var blockedUntilMs = 0L
+
+    fun awaitSlot(minIntervalMs: Long = COMMONS_MIN_REQUEST_INTERVAL_MS) {
+        synchronized(lock) {
+            while (true) {
+                val now = System.currentTimeMillis()
+                val intervalWait = (minIntervalMs - (now - lastRequestAtMs)).coerceAtLeast(0L)
+                val cooldownWait = (blockedUntilMs - now).coerceAtLeast(0L)
+                val waitMs = maxOf(intervalWait, cooldownWait)
+                if (waitMs == 0L) {
+                    lastRequestAtMs = System.currentTimeMillis()
+                    return
+                }
+                lock.wait(waitMs)
+            }
+        }
     }
+
+    fun defer(delayMs: Long) {
+        val bounded = delayMs.coerceIn(0L, COMMONS_MAX_RETRY_AFTER_MS)
+        synchronized(lock) {
+            blockedUntilMs = maxOf(blockedUntilMs, System.currentTimeMillis() + bounded)
+            lock.notifyAll()
+        }
+    }
+}
+
+private fun waitForCommonsRequestSlot() = CommonsRequestGate.awaitSlot()
+
+private fun recordCommonsHttpBackoff(httpCode: Int, retryAfterMs: Long?): Long {
+    val rateLimited = httpCode == 420 || httpCode == 429
+    val minimum = if (rateLimited) COMMONS_RATE_LIMIT_COOLDOWN_MS else 10_000L
+    val delayMs = maxOf(minimum, retryAfterMs ?: 0L).coerceAtMost(COMMONS_MAX_RETRY_AFTER_MS)
+    CommonsRequestGate.defer(delayMs)
+    return delayMs
+}
+
+internal fun commonsIsRetryableHttpCode(code: Int): Boolean =
+    code == 420 || code == 429 || code == 502 || code == 503 || code == 504
+
+internal fun commonsDownloadRetryDelayMs(
+    attempt: Int,
+    httpCode: Int?,
+    retryAfterMs: Long? = null
+): Long {
+    val exponent = (attempt - 1).coerceIn(0, 4)
+    val baseDelay = if (httpCode == 420 || httpCode == 429) 30_000L else 10_000L
+    val exponentialDelay = (baseDelay * (1L shl exponent)).coerceAtMost(180_000L)
+    return maxOf(exponentialDelay, retryAfterMs ?: 0L).coerceAtMost(COMMONS_MAX_RETRY_AFTER_MS)
 }
 
 private fun retryAfterMillis(value: String?): Long? {
     val header = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
     header.toLongOrNull()?.let { seconds ->
-        return if (seconds <= 0L) 0L else if (seconds >= 180L) 180000L else seconds * 1000L
+        return if (seconds <= 0L) 0L else seconds.coerceAtMost(COMMONS_MAX_RETRY_AFTER_MS / 1000L) * 1000L
     }
     return runCatching {
         val date = java.time.ZonedDateTime.parse(header, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli()
-        (date - System.currentTimeMillis()).coerceAtLeast(0L).coerceAtMost(180000L)
+        (date - System.currentTimeMillis()).coerceAtLeast(0L).coerceAtMost(COMMONS_MAX_RETRY_AFTER_MS)
     }.getOrNull()
 }
 
@@ -159,11 +209,12 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
             return payload
         } catch (failure: TorHttpException) {
             val retryAfterMs = retryAfterMillis(failure.retryAfter)
-            val retryable = failure.httpCode == 429 || failure.httpCode == 503 || failure.httpCode == 502 || failure.httpCode == 504
+            val retryable = commonsIsRetryableHttpCode(failure.httpCode)
+            val delayMs = recordCommonsHttpBackoff(failure.httpCode, retryAfterMs)
             appendCommonsDiagnostic(context, "API_HTTP_ERROR attempt=${attempt + 1} code=${failure.httpCode} retryAfterMs=$retryAfterMs")
             lastFailure = CommonsHttpException(failure.httpCode, retryAfterMs)
             if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
-            Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2), retryAfterMs ?: 0L))
+            Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2, (delayMs / 1000L)), delayMs))
         } catch (failure: Exception) {
             appendCommonsDiagnostic(context, "API_EXCEPTION attempt=${attempt + 1} type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"} transport=${tor.diagnosticSnapshot()}")
             lastFailure = failure
@@ -372,7 +423,12 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
         offset = 0L
     }
     var response = try {
+        waitForCommonsRequestSlot()
         tor.open(item.url, TorDownloadKind.SVG, offset, validator)
+    } catch (failure: TorHttpException) {
+        val retryAfterMs = retryAfterMillis(failure.retryAfter)
+        recordCommonsHttpBackoff(failure.httpCode, retryAfterMs)
+        throw failure
     } catch (failure: Exception) {
         if (offset <= 0L) throw failure
         partFile.delete()
@@ -618,11 +674,19 @@ private suspend fun downloadCommonsSvgWithRetry(
             throw cancelled
         } catch (failure: Exception) {
             lastError = failure.message ?: failure.javaClass.simpleName
-            if (index + 1 < maxAttempts) {
-                val serverDelay = (failure as? CommonsHttpException)?.retryDelayMs ?: 0L
-                val backoff = (10000L * (1L shl index.coerceIn(0, 4))).coerceAtMost(180000L)
-                kotlinx.coroutines.delay(maxOf(backoff, serverDelay))
+            val httpFailure = failure as? TorHttpException
+            val retryAfterMs = httpFailure?.let { retryAfterMillis(it.retryAfter) }
+            val retryDelay = if (httpFailure != null) {
+                recordCommonsHttpBackoff(httpFailure.httpCode, retryAfterMs)
+                commonsDownloadRetryDelayMs(index + 1, httpFailure.httpCode, retryAfterMs)
+            } else {
+                commonsDownloadRetryDelayMs(index + 1, null)
             }
+            appendCommonsDiagnostic(
+                context,
+                "DOWNLOAD_RETRY attempt=${index + 1} httpCode=${httpFailure?.httpCode ?: "none"} delayMs=$retryDelay"
+            )
+            if (index + 1 < maxAttempts) kotlinx.coroutines.delay(retryDelay)
         }
     }
     return Triple(maxAttempts, lastError, null)
@@ -632,7 +696,7 @@ private suspend fun processCommonsCandidates(
     context: Context,
     candidates: List<CommonsSvgCandidate>,
     onProgress: suspend (completed: Int, total: Int, currentTitle: String) -> Unit,
-    pauseBetweenDownloadsMs: Long = 1000L
+    pauseBetweenDownloadsMs: Long = 3000L
 ): CommonsDownloadSummary {
     // A unique queue is the single source of work for all Tor routes.
     val uniqueCandidates = distinctCommonsCandidates(candidates)
@@ -687,7 +751,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     var progressCurrent by remember { mutableIntStateOf(0) }
     var progressTotal by remember { mutableIntStateOf(0) }
     var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
-    var pauseBetweenDownloadsMs by remember { mutableStateOf("1000") }
+    var pauseBetweenDownloadsMs by remember { mutableStateOf("3000") }
     val externalListLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) { busy = "external-import"; scope.launch { val result = withContext(Dispatchers.IO) { runCatching {
             val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: error("Nie można odczytać pliku.")
@@ -816,7 +880,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
         }
-        OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 1000 ms.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 3000 ms.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedButton(enabled = busy == null, onClick = { externalListLauncher.launch(arrayOf("text/csv", "text/plain", "text/*", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Importuj zewnętrzną listę SVG (CSV / TXT)") }
         OutlinedButton(
             enabled = busy == null,
@@ -880,7 +944,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                             progressTotal = totalFound
                                             status = "Pobieranie SVG: " + (processed + completed) + "/$totalFound — $title"
                                         }
-                                    }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
+                                    }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 3000L)
                                     processed += part.found
                                     totalDownloaded += part.downloaded
                                     totalAlreadyPresent += part.alreadyPresent
