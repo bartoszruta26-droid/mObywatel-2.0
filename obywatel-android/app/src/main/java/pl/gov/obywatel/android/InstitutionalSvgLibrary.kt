@@ -689,6 +689,8 @@ internal fun reconcileCommonsDownloadState(context: Context) {
 
 /** Retries at most 20 pending assets per WorkManager execution to keep each job bounded. */
 internal suspend fun retryPendingCommonsDownloads(context: Context): Boolean {
+    val manifestFile = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
+    if (!manifestFile.isFile) return true
     reconcileCommonsDownloadState(context)
     val manifest = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
     val pendingTitles = buildSet {
@@ -700,7 +702,7 @@ internal suspend fun retryPendingCommonsDownloads(context: Context): Boolean {
         }
     }
     if (pendingTitles.isEmpty()) return true
-    val batch = readCommonsCandidates(context).filter { it.title in pendingTitles }.take(20)
+    val batch = readCommonsCandidates(context).filter { it.title in pendingTitles }.take(1)
     if (batch.isEmpty()) return false
     val result = processCommonsCandidates(context, batch, { _, _, _ -> }, 3000L)
     return result.failed == 0 && batch.size == result.downloaded + result.alreadyPresent &&
