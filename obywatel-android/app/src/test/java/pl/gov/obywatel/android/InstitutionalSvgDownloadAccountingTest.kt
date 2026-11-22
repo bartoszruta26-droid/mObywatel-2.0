@@ -184,4 +184,23 @@ class InstitutionalSvgDownloadAccountingTest {
     fun rejectsExternalCsvWithoutSvgUrlColumn() {
         parseExternalCommonsSvgList("\"filename\",\"author\"\n\"File:logo.svg\",\"Author\"")
     }
+    @Test
+    fun commonsTreatsWikimedia420And429AsRetryableButNotPermanentErrors() {
+        assertTrue(commonsIsRetryableHttpCode(420))
+        assertTrue(commonsIsRetryableHttpCode(429))
+        assertTrue(commonsIsRetryableHttpCode(502))
+        assertTrue(commonsIsRetryableHttpCode(503))
+        assertTrue(commonsIsRetryableHttpCode(504))
+        assertFalse(commonsIsRetryableHttpCode(403))
+        assertFalse(commonsIsRetryableHttpCode(404))
+    }
+
+    @Test
+    fun commonsDownloadBackoffHonorsRateLimitAndRetryAfter() {
+        assertEquals(30_000L, commonsDownloadRetryDelayMs(1, 429, null))
+        assertEquals(60_000L, commonsDownloadRetryDelayMs(1, 420, 60_000L))
+        assertEquals(40_000L, commonsDownloadRetryDelayMs(2, 429, 10_000L))
+        assertEquals(180_000L, commonsDownloadRetryDelayMs(99, 503, 0L))
+    }
+
 }
