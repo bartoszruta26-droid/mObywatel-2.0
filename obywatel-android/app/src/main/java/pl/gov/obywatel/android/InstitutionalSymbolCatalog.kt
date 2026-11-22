@@ -55,7 +55,8 @@ internal data class InstitutionalSymbolCandidate(
     val license: String,
     val licenseUrl: String,
     val author: String,
-    val credit: String
+    val credit: String,
+    val commonsCategories: String = ""
 ) {
     val displayName: String get() = path.substringAfterLast('/').replace(Regex("(?i)\\.(svg|png)$"), "").replace('_', ' ').replace('-', ' ')
         .replace('_', ' ').replace('-', ' ')
@@ -105,7 +106,7 @@ internal fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolC
         if (institutionalSymbolFormat(path) == null || url.isBlank()) return@mapNotNull null
         InstitutionalSymbolCandidate(value("source_id"), value("repository"), value("ref"), path,
             value("group"), value("rights_status"), sourceUrl, url,
-            value("license_short_name"), value("license_url"), value("author"), value("source_credit"))
+            value("license_short_name"), value("license_url"), value("author"), value("source_credit"), value("commons_categories"))
     }.distinctBy { it.sourceId + ":" + it.path }
 }
 
@@ -207,6 +208,7 @@ internal fun parseIconifyCollectionIndex(raw: String): List<IconifyCollectionSou
 internal fun institutionalSymbolFormat(path: String): String? = when (path.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
     "svg" -> "SVG"
     "png" -> "PNG"
+    "xml" -> "XML"
     else -> null
 }
 
@@ -238,6 +240,41 @@ internal fun institutionalSymbolCanDownload(item: InstitutionalSymbolCandidate):
 }
 
 private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidator.validate(bytes)
+private fun validateInstitutionalSymbolXml(bytes: ByteArray) {
+    require(bytes.size in 1..(12 * 1024 * 1024)) { "XML przekracza limit 12 MB." }
+    val parser = android.util.Xml.newPullParser()
+    parser.setFeature(org.xmlpull.v1.XmlPullParser.FEATURE_PROCESS_DOCDECL, false)
+    parser.setInput(java.io.ByteArrayInputStream(bytes), "UTF-8")
+    val allowed = setOf("vector", "group", "path", "clip-path")
+    var rootSeen = false
+    var event = parser.eventType
+    while (event != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+        when (event) {
+            org.xmlpull.v1.XmlPullParser.START_TAG -> {
+                val tag = parser.name.substringAfter(':')
+                if (!rootSeen) {
+                    require(tag == "vector") { "XML nie jest bezpiecznym Android VectorDrawable." }
+                    rootSeen = true
+                }
+                require(tag in allowed) { "Niedozwolony element XML grafiki: $tag." }
+                for (index in 0 until parser.attributeCount) {
+                    val name = parser.getAttributeName(index).substringAfter(':')
+                    val value = parser.getAttributeValue(index).orEmpty()
+                    require(name !in setOf("href", "src", "onload", "onclick")) { "Zewnętrzne odwołania i zdarzenia XML są niedozwolone." }
+                    require(!value.contains("http:", true) && !value.contains("https:", true) &&
+                        !value.contains("file:", true) && !value.contains("content:", true)) {
+                        "XML zawiera zewnętrzne odwołanie."
+                    }
+                }
+            }
+            org.xmlpull.v1.XmlPullParser.DOCDECL,
+            org.xmlpull.v1.XmlPullParser.ENTITY_REF -> throw IllegalArgumentException("DTD i encje XML są niedozwolone.")
+        }
+        event = parser.nextToken()
+    }
+    require(rootSeen) { "XML nie zawiera elementu vector." }
+}
+
 
 internal data class InstitutionalSymbolDownloadProgress(
     val stage: String,
@@ -258,7 +295,7 @@ private suspend fun downloadInstitutionalSymbol(
 ): String {
     val uri = java.net.URI(item.downloadUrl)
     val format = institutionalSymbolFormat(item.path)
-    require(format != null) { "Obsługiwane są wyłącznie pliki SVG i PNG." }
+    require(format != null) { "Obsługiwane są pliki SVG, PNG i XML VectorDrawable." }
     val trustedImageHost = uri.host.equals("upload.wikimedia.org", true) ||
         uri.host.equals("raw.githubusercontent.com", true) ||
         uri.host.equals("cdn.jsdelivr.net", true) || uri.host.equals("openmoji.org", true) ||
@@ -267,7 +304,7 @@ private suspend fun downloadInstitutionalSymbol(
         "Adres pliku musi prowadzić przez HTTPS do obsługiwanego źródła graficznego."
     }
     onProgress(InstitutionalSymbolDownloadProgress("Łączenie ze źródłem przez wybraną trasę sieciową. Przy uruchamianiu Tor pierwsze połączenie może potrwać dłużej."))
-    val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, if (format == "SVG") TorDownloadKind.SVG else TorDownloadKind.IMAGE)
+    val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, if (format == "SVG" || format == "XML") TorDownloadKind.SVG else TorDownloadKind.IMAGE)
     val bytes = response.use {
         require(it.statusCode in 200..299) { "Serwer zwrócił HTTP ${it.statusCode}." }
         val expected = it.contentLength?.takeIf { length -> length > 0L }
@@ -281,7 +318,7 @@ private suspend fun downloadInstitutionalSymbol(
                 val count = input.read(buffer)
                 if (count < 0) break
                 total += count
-                require(total <= 12L * 1024L * 1024L) { "SVG przekracza limit 12 MB." }
+                require(total <= 12L * 1024L * 1024L) { "$format przekracza limit 12 MB." }
                 output.write(buffer, 0, count)
                 val now = System.currentTimeMillis()
                 if (now - lastUpdate >= 300L) {
@@ -297,9 +334,10 @@ private suspend fun downloadInstitutionalSymbol(
     when (format) {
         "SVG" -> validateInstitutionalSymbolSvg(bytes)
         "PNG" -> validateInstitutionalSymbolPng(bytes)
+        "XML" -> validateInstitutionalSymbolXml(bytes)
         else -> error("Nieobsługiwany format grafiki.")
     }
-    val mimeType = if (format == "SVG") "image/svg+xml" else "image/png"
+    val mimeType = when (format) { "SVG" -> "image/svg+xml"; "PNG" -> "image/png"; else -> "application/xml" }
     val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
     val rights = JSONObject()
         .put("source", item.repository)
