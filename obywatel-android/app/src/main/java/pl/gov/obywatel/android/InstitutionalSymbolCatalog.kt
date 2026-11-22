@@ -221,7 +221,7 @@ private suspend fun downloadInstitutionalSymbol(
         "Źródło pliku nie znajduje się na dozwolonej domenie Wikimedia Commons, GitHub Raw lub jsDelivr."
     }
     onProgress(InstitutionalSymbolDownloadProgress("Łączenie ze źródłem przez wybraną trasę sieciową. Przy uruchamianiu Tor pierwsze połączenie może potrwać dłużej."))
-    val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, TorDownloadKind.SVG)
+    val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, if (format == "SVG") TorDownloadKind.SVG else TorDownloadKind.IMAGE)
     val bytes = response.use {
         require(it.statusCode in 200..299) { "Serwer zwrócił HTTP ${it.statusCode}." }
         val expected = it.contentLength?.takeIf { length -> length > 0L }
@@ -267,7 +267,9 @@ private suspend fun downloadInstitutionalSymbol(
         .put("sourceCredit", item.credit)
         .put("catalogRightsStatus", item.rightsStatus)
         .put("sha256", sha)
-        .put("verificationStatus", "file-format-and-content-validated; license-metadata-verified; app-use-review-pending")
+        .put("discoveryStatus", "found")
+        .put("verificationStatus", "file-format-and-content-validated; MIT-license-metadata-verified; app-use-review-pending")
+        .put("verifiedAt", System.currentTimeMillis())
         .put("format", format)
         .put("downloadStatus", "downloaded")
         .put("storageStatus", "saved")
