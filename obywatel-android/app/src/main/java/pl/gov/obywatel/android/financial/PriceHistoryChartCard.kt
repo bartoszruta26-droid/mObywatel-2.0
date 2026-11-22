@@ -79,7 +79,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 }
                 points = loaded
                 loadedLabel = if (instrument == PriceChartInstrument.GOLD) "Cena referencyjna złota • PLN/g"
-                    else "Kurs kupna/sprzedaży \${currencyCode.uppercase()} • PLN za 1 jednostkę"
+                    else "Kurs kupna/sprzedaży ${currencyCode.uppercase()} • PLN za 1 jednostkę"
             } catch (exception: Exception) {
                 points = emptyList()
                 error = exception.message ?: "Nie udało się pobrać historii notowań."
@@ -104,7 +104,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PriceChartInstrument.entries.forEach { option ->
                 Button(onClick = { instrument = option; points = emptyList(); error = null }) {
-                    Text(if (instrument == option) "✓ \${option.label}" else option.label)
+                    Text(if (instrument == option) "✓ ${option.label}" else option.label)
                 }
             }
         }
@@ -119,7 +119,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             items(PriceChartPeriod.entries.toList()) { option ->
                 Button(onClick = { period = option; points = emptyList(); error = null }) {
-                    Text(if (period == option) "✓ \${option.label}" else option.label)
+                    Text(if (period == option) "✓ ${option.label}" else option.label)
                 }
             }
         }
@@ -135,20 +135,20 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 Column(Modifier.weight(1f)) { Text("Maksimum", style = MaterialTheme.typography.labelSmall); Text(maximum?.toPlainString().orEmpty()) }
                 Column(Modifier.weight(1f)) {
                     Text("Zmiana", style = MaterialTheme.typography.labelSmall)
-                    Text(change?.let { "\${if (it.signum() > 0) "+" else ""}\${it.toPlainString()}%" }.orEmpty())
+                    Text(change?.let { "${if (it.signum() > 0) "+" else ""}${it.toPlainString()}%" }.orEmpty())
                 }
             }
             if (latest?.bid != null && latest.ask != null) {
-                Text("Ostatni kurs kupna: \${latest.bid.toPlainString()} PLN • sprzedaży: \${latest.ask.toPlainString()} PLN")
-                Text("Spread: \${latest.ask.subtract(latest.bid).toPlainString()} PLN • relacja bid/ask: \${spreadReturn?.toPlainString()}%")
+                Text("Ostatni kurs kupna: ${latest.bid.toPlainString()} PLN • sprzedaży: ${latest.ask.toPlainString()} PLN")
+                Text("Spread: ${latest.ask.subtract(latest.bid).toPlainString()} PLN • relacja bid/ask: ${spreadReturn?.toPlainString()}%")
             } else {
-                Text("Zmiana ceny referencyjnej w okresie: \${change?.toPlainString() ?: "—"}%. To zmiana notowania, nie zrealizowany zysk z transakcji.")
+                Text("Zmiana ceny referencyjnej w okresie: ${change?.toPlainString() ?: "—"}%. To zmiana notowania, nie zrealizowany zysk z transakcji.")
             }
             Text("Wskaźniki techniczne", style = MaterialTheme.typography.titleSmall)
-            Text("SMA 20: \${indicators.sma20.lastOrNull()?.toPlainString() ?: "za mało danych"} • SMA 50: \${indicators.sma50.lastOrNull()?.toPlainString() ?: "za mało danych"}")
-            Text("RSI 14: \${indicators.rsi14.lastOrNull()?.toPlainString() ?: "za mało danych"} • MACD: \${indicators.macd.lastOrNull()?.toPlainString() ?: "za mało danych"} • sygnał: \${indicators.macdSignal.lastOrNull()?.toPlainString() ?: "za mało danych"}")
-            Text("Bollinger 20/2: dolne \${indicators.bollingerLower.lastOrNull()?.toPlainString() ?: "—"} • górne \${indicators.bollingerUpper.lastOrNull()?.toPlainString() ?: "—"}")
-            Text("Punkty: \${points.size} • \${points.first().date} – \${points.last().date} • ostatnie notowanie: \${latest?.date}")
+            Text("SMA 20: ${indicators.sma20.lastOrNull()?.toPlainString() ?: "za mało danych"} • SMA 50: ${indicators.sma50.lastOrNull()?.toPlainString() ?: "za mało danych"}")
+            Text("RSI 14: ${indicators.rsi14.lastOrNull()?.toPlainString() ?: "za mało danych"} • MACD: ${indicators.macd.lastOrNull()?.toPlainString() ?: "za mało danych"} • sygnał: ${indicators.macdSignal.lastOrNull()?.toPlainString() ?: "za mało danych"}")
+            Text("Bollinger 20/2: dolne ${indicators.bollingerLower.lastOrNull()?.toPlainString() ?: "—"} • górne ${indicators.bollingerUpper.lastOrNull()?.toPlainString() ?: "—"}")
+            Text("Punkty: ${points.size} • ${points.first().date} – ${points.last().date} • ostatnie notowanie: ${latest?.date}")
             Button(onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("Pine Script v6", FinancialChartAnalytics.pineScriptTemplate()))
