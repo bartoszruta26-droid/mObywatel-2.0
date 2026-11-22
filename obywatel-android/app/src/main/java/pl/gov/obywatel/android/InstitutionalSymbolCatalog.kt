@@ -3,6 +3,8 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -104,6 +106,57 @@ internal fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolC
             value("group"), value("rights_status"), sourceUrl, url,
             value("license_short_name"), value("license_url"), value("author"), value("source_credit"))
     }.distinctBy { it.sourceId + ":" + it.path }
+}
+
+
+internal data class InstitutionalSymbolSourceCollection(
+    val id: String, val label: String, val provider: String, val collectionRef: String,
+    val sourcePageUrl: String, val discoveryApiUrl: String, val observedSize: String,
+    val sourceFormats: String, val rightsPolicy: String, val rightsStatus: String,
+    val discoveryMethod: String, val directFilePatternOrNotes: String, val checkedAt: String,
+    val refreshIntervalDays: Int, val notes: String, val discoveryState: String,
+    val verificationState: String, val downloadState: String, val storageState: String,
+    val availabilityState: String
+)
+
+internal fun parseInstitutionalSymbolCollectionsCsv(raw: String): List<InstitutionalSymbolSourceCollection> {
+    fun parseLine(line: String): List<String> {
+        val cells = mutableListOf<String>(); val cell = StringBuilder(); var quoted = false; var index = 0
+        while (index < line.length) {
+            val ch = line[index]
+            when {
+                ch == '"' && quoted && index + 1 < line.length && line[index + 1] == '"' -> { cell.append('"'); index++ }
+                ch == '"' -> quoted = !quoted
+                ch == ',' && !quoted -> { cells += cell.toString(); cell.setLength(0) }
+                else -> cell.append(ch)
+            }
+            index++
+        }
+        require(!quoted) { "Nieprawidłowe cudzysłowy w rejestrze kolekcji." }
+        cells += cell.toString()
+        return cells
+    }
+    val lines = raw.removePrefix("\uFEFF").lineSequence().filter { it.isNotBlank() && !it.startsWith("#") }.toList()
+    require(lines.size >= 2) { "Rejestr kolekcji jest pusty." }
+    val header = parseLine(lines.first()).map { it.trim() }
+    fun column(name: String) = header.indexOf(name).also { require(it >= 0) { "Brak kolumny $name w rejestrze kolekcji." } }
+    val columns = listOf("collection_id","label","provider","collection_ref","source_page_url","discovery_api_url",
+        "observed_size","source_formats","rights_policy","rights_status","discovery_method","direct_file_pattern_or_notes",
+        "checked_at","refresh_interval_days","notes","discovery_state","verification_state","download_state",
+        "storage_state","availability_state").associateWith(::column)
+    return lines.drop(1).map { line ->
+        val row = parseLine(line)
+        fun value(key: String) = row.getOrNull(columns.getValue(key)).orEmpty()
+        val sourceUrl = value("source_page_url"); val apiUrl = value("discovery_api_url")
+        require(sourceUrl.startsWith("https://") && apiUrl.startsWith("https://")) { "Niebezpieczny lub pusty adres źródła." }
+        InstitutionalSymbolSourceCollection(
+            value("collection_id"),value("label"),value("provider"),value("collection_ref"),sourceUrl,apiUrl,
+            value("observed_size"),value("source_formats"),value("rights_policy"),value("rights_status"),
+            value("discovery_method"),value("direct_file_pattern_or_notes"),value("checked_at"),
+            value("refresh_interval_days").toIntOrNull() ?: 0,value("notes"),value("discovery_state"),
+            value("verification_state"),value("download_state"),value("storage_state"),value("availability_state")
+        )
+    }.distinctBy { it.id }
 }
 
 private fun institutionalSymbolAssetId(item: InstitutionalSymbolCandidate): String =
@@ -217,22 +270,26 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
     val scope = rememberCoroutineScope()
     val selectedMode = DownloadConnectionSettings.get(context)
     var candidates by remember { mutableStateOf<List<InstitutionalSymbolCandidate>>(emptyList()) }
+    var sourceCollections by remember { mutableStateOf<List<InstitutionalSymbolSourceCollection>>(emptyList()) }
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Wszystkie") }
     var busyId by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf("") }
     var downloadProgress by remember { mutableStateOf<InstitutionalSymbolDownloadProgress?>(null) }
     LaunchedEffect(context) {
-        message = "Wczytywanie katalogu SVG…"
-        withContext(Dispatchers.IO) {
-            context.assets.open("identity-symbols/catalog.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
-        }.let { raw ->
-            candidates = runCatching { parseInstitutionalSymbolCsv(raw) }.getOrElse {
-                message = "Nie udało się wczytać katalogu: ${it.message ?: "błąd danych"}"
-                emptyList()
-            }
-            if (candidates.isNotEmpty()) message = "Katalog SVG gotowy."
+        message = "Wczytywanie katalogów symboli…"
+        val loaded = withContext(Dispatchers.IO) {
+            val sources = context.assets.open("identity-symbols/collections.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val local = context.assets.open("identity-symbols/catalog.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
+            sources to local
         }
+        sourceCollections = runCatching { parseInstitutionalSymbolCollectionsCsv(loaded.first) }.getOrElse {
+            message = "Nie udało się wczytać rejestru kolekcji: ${it.message ?: "błąd danych"}"; emptyList()
+        }
+        candidates = runCatching { parseInstitutionalSymbolCsv(loaded.second) }.getOrElse {
+            message = "Nie udało się wczytać katalogu SVG: ${it.message ?: "błąd danych"}"; emptyList()
+        }
+        if (sourceCollections.isNotEmpty()) message = "Rejestr kolekcji gotowy: ${sourceCollections.size} źródeł."
     }
     val normalized = query.trim().lowercase(Locale.ROOT)
     val matches = remember(candidates, normalized, selectedCategory) {
@@ -251,6 +308,26 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
             "Katalog ikon obejmuje kategorię Symbole oraz herby, godła, flagi i logotypy. Wybierz grupę lub wpisz nazwę. Pobierany jest tylko wskazany plik; źródło, autor i licencja pozostają zapisane w metadanych.",
             style = MaterialTheme.typography.bodySmall
         )
+
+        Text("Kolekcje źródłowe do przeszukiwania: ${sourceCollections.size}", style = MaterialTheme.typography.titleSmall)
+        Text("Strona kolekcji i adres API są rejestrowane osobno. Każdy plik wymaga własnej kontroli formatu, autora, licencji, aktualności i praw do użycia przed pobraniem lub udostępnieniem.", style = MaterialTheme.typography.bodySmall)
+        LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(sourceCollections, key = { it.id }) { source ->
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.fillMaxWidth()) {
+                    Text(source.label, style = MaterialTheme.typography.bodyMedium)
+                    Text("${source.provider} • ${source.observedSize} • ${source.sourceFormats}", style = MaterialTheme.typography.labelSmall)
+                    Text("Etapy: ${source.discoveryState} / ${source.verificationState} / ${source.downloadState} / ${source.storageState} / ${source.availabilityState}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Prawa: ${source.rightsStatus} · sprawdzono: ${source.checkedAt} · odświeżanie: co ${source.refreshIntervalDays} dni", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Button(onClick = {
+                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(source.sourcePageUrl))) }
+                            .onFailure { message = "Nie można otworzyć strony źródłowej: ${it.message ?: "błąd systemu"}" }
+                    }, enabled = busyId == null) { Text("Otwórz kolekcję źródłową") }
+                }
+            }
+        }
+        Text("Kandydaci z katalogu lokalnego", style = MaterialTheme.typography.titleSmall)
+        Text("Rekord źródłowy nie oznacza pobrania pliku. Pliki bez zatwierdzonej licencji pozostają pozycjami referencyjnymi.", style = MaterialTheme.typography.bodySmall)
+
         Text("Rekordy z adresem SVG: ${candidates.size} · Wyniki: ${matches.size}", style = MaterialTheme.typography.labelMedium)
         Row(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
