@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2026 bartoszruta26-droid
 // SPDX-License-Identifier: CC0-1.0
 package pl.gov.obywatel.android.financial
-
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,12 +31,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.io.File
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private data class PriceChartPoint(val date: LocalDate, val value: BigDecimal)
+private data class PriceChartPoint(val date: LocalDate, val value: BigDecimal, val bid: BigDecimal? = null, val ask: BigDecimal? = null)
 private enum class PriceChartInstrument(val label: String) { GOLD("Złoto"), CURRENCY("Waluta") }
 private enum class PriceChartPeriod(val label: String, val days: Long) {
     WEEK("7 dni", 7), MONTH("1 mies.", 31), QUARTER("3 mies.", 93),
@@ -44,9 +47,7 @@ private enum class PriceChartPeriod(val label: String, val days: Long) {
 @Composable
 fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val repository = remember(context) {
-        NbpRatesRepository(cacheDirectory = File(context.filesDir, "nbp-rates-cache"))
-    }
+    val repository = remember(context) { NbpRatesRepository(cacheDirectory = File(context.filesDir, "nbp-rates-cache")) }
     val scope = rememberCoroutineScope()
     var instrument by remember { mutableStateOf(PriceChartInstrument.CURRENCY) }
     var period by remember { mutableStateOf(PriceChartPeriod.YEAR) }
@@ -65,129 +66,139 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 val start = end.minusDays(period.days - 1)
                 val loaded = withContext(Dispatchers.IO) {
                     when (instrument) {
-                        PriceChartInstrument.GOLD -> repository.goldPriceHistory(start, end).map {
-                            PriceChartPoint(it.date, it.pricePerGramPln)
+                        PriceChartInstrument.GOLD -> repository.goldPriceHistory(start, end).map { PriceChartPoint(it.date, it.pricePerGramPln) }
+                        PriceChartInstrument.CURRENCY -> repository.currencyBidAskHistory(currencyCode.trim().uppercase(), start, end).map {
+                            val midpoint = it.bidPln.add(it.askPln).divide(BigDecimal("2"), 8, RoundingMode.HALF_EVEN)
+                            PriceChartPoint(it.date, midpoint, it.bidPln, it.askPln)
                         }
-                        PriceChartInstrument.CURRENCY -> repository.currencyRateHistory(
-                            NbpTable.A, currencyCode.trim().uppercase(), start, end
-                        ).map { PriceChartPoint(it.first, it.second) }
                     }
                 }
-                require(loaded.isNotEmpty()) { "NBP nie udostępnił notowań dla wybranego instrumentu i okresu." }
-                points = loaded
-                loadedLabel = if (instrument == PriceChartInstrument.GOLD) {
-                    "Cena złota • PLN/g"
-                } else {
-                    "Kurs ${currencyCode.uppercase()} • PLN za 1 jednostkę"
+                require(loaded.isNotEmpty()) {
+                    if (instrument == PriceChartInstrument.CURRENCY) "NBP nie udostępnił historycznych kursów kupna i sprzedaży dla tej waluty w tabeli C."
+                    else "NBP nie udostępnił cen złota dla wybranego okresu."
                 }
+                points = loaded
+                loadedLabel = if (instrument == PriceChartInstrument.GOLD) "Cena referencyjna złota • PLN/g"
+                    else "Kurs kupna/sprzedaży \${currencyCode.uppercase()} • PLN za 1 jednostkę"
             } catch (exception: Exception) {
                 points = emptyList()
                 error = exception.message ?: "Nie udało się pobrać historii notowań."
-            } finally {
-                loading = false
-            }
+            } finally { loading = false }
         }
     }
 
     val values = points.map { it.value }
+    val indicators = remember(points) { if (values.isEmpty()) null else FinancialChartAnalytics.calculate(values) }
     val minimum = values.minOrNull()
     val maximum = values.maxOrNull()
     val first = values.firstOrNull()
     val last = values.lastOrNull()
-    val change = if (first != null && last != null && first.compareTo(BigDecimal.ZERO) != 0) {
-        last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, java.math.RoundingMode.HALF_EVEN)
-    } else null
+    val change = if (first != null && last != null && first.compareTo(BigDecimal.ZERO) != 0)
+        last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN) else null
+    val latest = points.lastOrNull()
+    val spreadReturn = if (latest?.bid != null && latest.ask != null && latest.ask.compareTo(BigDecimal.ZERO) > 0)
+        latest.bid.subtract(latest.ask).multiply(BigDecimal("100")).divide(latest.ask, 4, RoundingMode.HALF_EVEN) else null
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Wykres kursów walut NBP i cen złota", style = MaterialTheme.typography.titleMedium)
+        Text("Wykres analityczny walut i kruszców", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             PriceChartInstrument.entries.forEach { option ->
                 Button(onClick = { instrument = option; points = emptyList(); error = null }) {
-                    Text(if (instrument == option) "✓ ${option.label}" else option.label)
+                    Text(if (instrument == option) "✓ \${option.label}" else option.label)
                 }
             }
         }
         if (instrument == PriceChartInstrument.CURRENCY) {
-            OutlinedTextField(
-                value = currencyCode,
-                onValueChange = { currencyCode = it.filter(Char::isLetter).uppercase().take(3); points = emptyList() },
-                label = { Text("Kod waluty ISO 4217") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text("Kurs średni tabeli A NBP, wyrażony w PLN za jednostkę waluty.")
+            OutlinedTextField(value = currencyCode, onValueChange = {
+                currencyCode = it.filter(Char::isLetter).uppercase().take(3); points = emptyList()
+            }, label = { Text("Kod waluty ISO 4217") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            Text("Tabela C NBP: kurs kupna (bid) i sprzedaży (ask). To wartości referencyjne NBP, nie kurs konkretnego banku ani kantoru.")
         } else {
-            Text("Cena referencyjna NBP za gram złota, wyrażona w PLN.")
+            Text("Złoto: cena referencyjna NBP w PLN/g. To źródło nie publikuje osobnych cen kupna/sprzedaży ani notowań srebra.")
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             items(PriceChartPeriod.entries.toList()) { option ->
                 Button(onClick = { period = option; points = emptyList(); error = null }) {
-                    Text(if (period == option) "✓ ${option.label}" else option.label)
+                    Text(if (period == option) "✓ \${option.label}" else option.label)
                 }
             }
         }
-        Button(
-            onClick = ::loadHistory,
-            enabled = !loading && (instrument != PriceChartInstrument.CURRENCY || currencyCode.length == 3)
-        ) { Text(if (points.isEmpty()) "Wyświetl wykres NBP" else "Odśwież wykres NBP") }
+        Button(onClick = ::loadHistory, enabled = !loading && (instrument != PriceChartInstrument.CURRENCY || currencyCode.length == 3)) {
+            Text(if (points.isEmpty()) "Pobierz dane i pokaż wykres" else "Odśwież notowania")
+        }
         if (loading) CircularProgressIndicator()
-        if (points.isNotEmpty()) {
+        if (points.isNotEmpty() && indicators != null) {
             Text(loadedLabel, style = MaterialTheme.typography.titleSmall)
-            PriceHistoryLineChart(points = points, modifier = Modifier.fillMaxWidth().height(210.dp))
+            PriceHistoryAnalyticalChart(points, indicators, Modifier.fillMaxWidth().height(240.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text("Minimum", style = MaterialTheme.typography.labelSmall)
-                    Text(minimum?.toPlainString().orEmpty(), style = MaterialTheme.typography.bodyMedium)
-                }
-                Column(Modifier.weight(1f)) {
-                    Text("Maksimum", style = MaterialTheme.typography.labelSmall)
-                    Text(maximum?.toPlainString().orEmpty(), style = MaterialTheme.typography.bodyMedium)
-                }
+                Column(Modifier.weight(1f)) { Text("Minimum", style = MaterialTheme.typography.labelSmall); Text(minimum?.toPlainString().orEmpty()) }
+                Column(Modifier.weight(1f)) { Text("Maksimum", style = MaterialTheme.typography.labelSmall); Text(maximum?.toPlainString().orEmpty()) }
                 Column(Modifier.weight(1f)) {
                     Text("Zmiana", style = MaterialTheme.typography.labelSmall)
-                    Text(change?.let { "${if (it.signum() > 0) "+" else ""}${it.toPlainString()}%" }.orEmpty(),
-                        style = MaterialTheme.typography.bodyMedium)
+                    Text(change?.let { "\${if (it.signum() > 0) "+" else ""}\${it.toPlainString()}%" }.orEmpty())
                 }
             }
-            Text("Punkty: ${points.size} • ${points.first().date} – ${points.last().date}")
-            Text("Ostatnia cena: ${last?.toPlainString()} • ${points.last().date}")
+            if (latest?.bid != null && latest.ask != null) {
+                Text("Ostatni kurs kupna: \${latest.bid.toPlainString()} PLN • sprzedaży: \${latest.ask.toPlainString()} PLN")
+                Text("Spread: \${latest.ask.subtract(latest.bid).toPlainString()} PLN • relacja bid/ask: \${spreadReturn?.toPlainString()}%")
+            } else {
+                Text("Zmiana ceny referencyjnej w okresie: \${change?.toPlainString() ?: "—"}%. To zmiana notowania, nie zrealizowany zysk z transakcji.")
+            }
+            Text("Wskaźniki techniczne", style = MaterialTheme.typography.titleSmall)
+            Text("SMA 20: \${indicators.sma20.lastOrNull()?.toPlainString() ?: "za mało danych"} • SMA 50: \${indicators.sma50.lastOrNull()?.toPlainString() ?: "za mało danych"}")
+            Text("RSI 14: \${indicators.rsi14.lastOrNull()?.toPlainString() ?: "za mało danych"} • MACD: \${indicators.macd.lastOrNull()?.toPlainString() ?: "za mało danych"} • sygnał: \${indicators.macdSignal.lastOrNull()?.toPlainString() ?: "za mało danych"}")
+            Text("Bollinger 20/2: dolne \${indicators.bollingerLower.lastOrNull()?.toPlainString() ?: "—"} • górne \${indicators.bollingerUpper.lastOrNull()?.toPlainString() ?: "—"}")
+            Text("Punkty: \${points.size} • \${points.first().date} – \${points.last().date} • ostatnie notowanie: \${latest?.date}")
+            Button(onClick = {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Pine Script v6", FinancialChartAnalytics.pineScriptTemplate()))
+            }) { Text("Kopiuj szablon Pine Script v6") }
+            Text("Szablon obejmuje SMA, RSI, MACD i wstęgi Bollingera. Dane NBP trzeba wprowadzić do TradingView osobno; aplikacja nie publikuje automatycznie notowań jako symbolu giełdowego.")
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        Text(
-            "Źródło: Narodowy Bank Polski. Notowanie referencyjne; wykres pomija dni bez publikacji (weekendy i święta).",
-            style = MaterialTheme.typography.bodySmall
-        )
+        Text("Źródło: Narodowy Bank Polski. Weekendy i święta nie są interpolowane. Wskaźniki opisują dane historyczne i nie stanowią rekomendacji inwestycyjnej.", style = MaterialTheme.typography.bodySmall)
     }
 }
 
 @Composable
-private fun PriceHistoryLineChart(points: List<PriceChartPoint>, modifier: Modifier = Modifier) {
-    val lineColor = MaterialTheme.colorScheme.primary
+private fun PriceHistoryAnalyticalChart(points: List<PriceChartPoint>, indicators: FinancialChartIndicators, modifier: Modifier = Modifier) {
+    val mainColor = MaterialTheme.colorScheme.primary
+    val bidColor = MaterialTheme.colorScheme.tertiary
+    val askColor = MaterialTheme.colorScheme.error
+    val sma20Color = MaterialTheme.colorScheme.secondary
+    val sma50Color = MaterialTheme.colorScheme.inversePrimary
     val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val values = points.map { it.value.toFloat() }
-    val minValue = values.minOrNull() ?: 0f
-    val maxValue = values.maxOrNull() ?: 0f
+    val main = points.map { it.value.toFloat() }
+    val series = listOf(main, points.mapNotNull { it.bid?.toFloat() }, points.mapNotNull { it.ask?.toFloat() },
+        indicators.sma20.mapNotNull { it?.toFloat() }, indicators.sma50.mapNotNull { it?.toFloat() })
+    val all = series.flatten()
+    val minValue = all.minOrNull() ?: 0f
+    val maxValue = all.maxOrNull() ?: 1f
     val span = (maxValue - minValue).takeIf { it > 0f } ?: 1f
     Canvas(modifier = modifier) {
-        val left = 8.dp.toPx()
-        val right = size.width - 8.dp.toPx()
-        val top = 12.dp.toPx()
-        val bottom = size.height - 12.dp.toPx()
-        repeat(4) { index ->
-            val y = top + (bottom - top) * index / 3f
+        val left = 8.dp.toPx(); val right = size.width - 8.dp.toPx()
+        val top = 12.dp.toPx(); val bottom = size.height - 12.dp.toPx()
+        repeat(5) { index ->
+            val y = top + (bottom - top) * index / 4f
             drawLine(gridColor, Offset(left, y), Offset(right, y), strokeWidth = 1.dp.toPx())
         }
-        if (points.size == 1) {
-            val y = bottom - ((values.first() - minValue) / span) * (bottom - top)
-            drawCircle(lineColor, radius = 4.dp.toPx(), center = Offset((left + right) / 2f, y))
-        } else if (points.size > 1) {
+        fun drawSeries(values: List<Float>, color: androidx.compose.ui.graphics.Color, width: Float) {
+            if (values.isEmpty()) return
             val path = Path()
             values.forEachIndexed { index, value ->
-                val x = left + (right - left) * index / values.lastIndex.toFloat()
+                val x = left + (right - left) * index / values.lastIndex.coerceAtLeast(1).toFloat()
                 val y = bottom - ((value - minValue) / span) * (bottom - top)
                 if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
-            drawPath(path, lineColor, style = Stroke(width = 2.5.dp.toPx()))
+            if (values.size == 1) drawCircle(color, 4.dp.toPx(), Offset((left + right) / 2f, bottom - ((values[0] - minValue) / span) * (bottom - top)))
+            else drawPath(path, color, style = Stroke(width))
         }
+        drawSeries(main, mainColor, 2.8.dp.toPx())
+        if (points.all { it.bid != null && it.ask != null }) {
+            drawSeries(points.mapNotNull { it.bid?.toFloat() }, bidColor, 1.6.dp.toPx())
+            drawSeries(points.mapNotNull { it.ask?.toFloat() }, askColor, 1.6.dp.toPx())
+        }
+        drawSeries(indicators.sma20.mapNotNull { it?.toFloat() }, sma20Color, 1.7.dp.toPx())
+        drawSeries(indicators.sma50.mapNotNull { it?.toFloat() }, sma50Color, 1.7.dp.toPx())
     }
 }
