@@ -93,9 +93,9 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             width7 = prefs.getFloat("reg_fib_width_7", 1f)
         ))
     }
-    val lengthTexts = remember { mutableStateListOf(*regression.lengths.map(Int::toString).toTypedArray()) }
+    val lengthTexts = remember { mutableStateListOf(*regression.lengths.map { it.toString() }.toTypedArray()) }
     val regressionColorIndices = remember {
-        mutableStateListOf(*List(7) { index -> prefs.getInt("reg_fib_color_${index + 1}", index % 7) }.toTypedArray())
+        mutableStateListOf(*List(7) { index -> (prefs.getInt("reg_fib_color_${index + 1}", index % 7)).mod(7) }.toTypedArray())
     }
     val regressionColors = listOf(
         Color(0xFF2EAD62), Color(0xFFE4B82E), Color(0xFFE05252),
