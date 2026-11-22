@@ -216,6 +216,12 @@ fun CurrencyPortfolioForecastCard(
                                 val futureSell = if (f.currentRate > 0.0 && currentSell > 0.0)
                                     f.projectedRate * (currentSell / f.currentRate) else f.projectedRate
                                 val pnl = item.balance?.let { it * (futureSell - currentSell) }
+                                val currentAsk = item.currentBankAsk ?: f.currentRate
+                                val futureAsk = if (f.currentRate > 0.0 && currentAsk > 0.0)
+                                    f.projectedRate * (currentAsk / f.currentRate) else f.projectedRate
+                                val plnBudget = decimal("PLN")
+                                val currentBuyingPower = plnBudget?.takeIf { currentAsk > 0.0 }?.div(currentAsk)
+                                val futureBuyingPower = plnBudget?.takeIf { futureAsk > 0.0 }?.div(futureAsk)
                                 Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                                     Text(
                                         "${f.horizon.label}: ${magnitude} ${movement} • ${sign}${"%.2f".format(change)}%",
@@ -229,6 +235,12 @@ fun CurrencyPortfolioForecastCard(
                                         pnl?.let {
                                             "Zmiana wartości salda: ${if (it > 0) "+" else ""}${"%.2f".format(it)} PLN"
                                         } ?: "Wpisz saldo, aby wyliczyć zmianę wartości portfela.",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    Text(
+                                        if (currentBuyingPower != null && futureBuyingPower != null)
+                                            "Siła nabywcza budżetu PLN: ${"%.2f".format(currentBuyingPower)} ${currency.code} dziś → ${"%.2f".format(futureBuyingPower)} ${currency.code} w prognozie"
+                                        else "Wpisz saldo PLN oraz kurs sprzedaży iPKO, aby porównać siłę nabywczą.",
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                     Text(
