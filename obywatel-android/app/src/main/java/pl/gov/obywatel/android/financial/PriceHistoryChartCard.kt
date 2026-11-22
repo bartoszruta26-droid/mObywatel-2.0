@@ -16,6 +16,7 @@ import java.io.IOException
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -69,10 +70,46 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     var baseMenu by remember { mutableStateOf(false) }
     var quoteMenu by remember { mutableStateOf(false) }
     var source by remember { mutableStateOf("Źródło: Frankfurter • otwarte dane referencyjne") }
+    var regressionPanel by remember { mutableStateOf(false) }
+    var regression by remember {
+        mutableStateOf(RegressionChannelSettings(
+            length1 = prefs.getInt("reg_length_1", 377),
+            length2 = prefs.getInt("reg_length_2", 233),
+            length3 = prefs.getInt("reg_length_3", 144),
+            deviationMultiplier = prefs.getFloat("reg_deviation", 2.41f).toDouble(),
+            extendLines = prefs.getBoolean("reg_extend", true),
+            showFibonacci = prefs.getBoolean("reg_fibonacci", true),
+            showBroken = prefs.getBoolean("reg_broken", false),
+            width1 = prefs.getFloat("reg_width_1", 1f),
+            width2 = prefs.getFloat("reg_width_2", 1f),
+            width3 = prefs.getFloat("reg_width_3", 1f)
+        ))
+    }
+    var length1Text by remember { mutableStateOf(regression.length1.toString()) }
+    var length2Text by remember { mutableStateOf(regression.length2.toString()) }
+    var length3Text by remember { mutableStateOf(regression.length3.toString()) }
+    var color1 by remember { mutableIntStateOf(prefs.getInt("reg_color_1", 0)) }
+    var color2 by remember { mutableIntStateOf(prefs.getInt("reg_color_2", 1)) }
+    var color3 by remember { mutableIntStateOf(prefs.getInt("reg_color_3", 2)) }
+    val regressionColors = listOf(Color(0xFF2EAD62), Color(0xFFE4B82E), Color(0xFFE05252),
+        Color(0xFF4385D8), Color(0xFF9B59B6), Color(0xFF16A6A6))
 
     fun save() {
         prefs.edit().putString("base", base).putString("quote", quote)
             .putString("period", period.name).putString("style", style.name).apply()
+    }
+
+    fun saveRegression() {
+        prefs.edit().putInt("reg_length_1", regression.length1)
+            .putInt("reg_length_2", regression.length2).putInt("reg_length_3", regression.length3)
+            .putFloat("reg_deviation", regression.deviationMultiplier.toFloat())
+            .putBoolean("reg_extend", regression.extendLines)
+            .putBoolean("reg_fibonacci", regression.showFibonacci)
+            .putBoolean("reg_broken", regression.showBroken)
+            .putFloat("reg_width_1", regression.width1).putFloat("reg_width_2", regression.width2)
+            .putFloat("reg_width_3", regression.width3)
+            .putInt("reg_color_1", color1).putInt("reg_color_2", color2)
+            .putInt("reg_color_3", color3).apply()
     }
 
     fun load() {
@@ -151,6 +188,72 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 }
             }
         }
+        OutlinedButton(onClick = { regressionPanel = !regressionPanel }) {
+            Text(if (regressionPanel) "Ukryj ustawienia regresji" else "Ustawienia regresji • 3 kanały")
+        }
+        if (regressionPanel) {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Kanały regresji liniowej", style = MaterialTheme.typography.titleSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        OutlinedTextField(length1Text, { value ->
+                            length1Text = value.filter(Char::isDigit).take(4)
+                            length1Text.toIntOrNull()?.takeIf { it >= 10 }?.let {
+                                regression = regression.copy(length1 = it); saveRegression()
+                            }
+                        }, label = { Text("Długość 1") }, modifier = Modifier.weight(1f), singleLine = true)
+                        OutlinedTextField(length2Text, { value ->
+                            length2Text = value.filter(Char::isDigit).take(4)
+                            length2Text.toIntOrNull()?.takeIf { it >= 10 }?.let {
+                                regression = regression.copy(length2 = it); saveRegression()
+                            }
+                        }, label = { Text("Długość 2") }, modifier = Modifier.weight(1f), singleLine = true)
+                        OutlinedTextField(length3Text, { value ->
+                            length3Text = value.filter(Char::isDigit).take(4)
+                            value.toIntOrNull()?.takeIf { it >= 10 }?.let {
+                                regression = regression.copy(length3 = it); saveRegression()
+                            }
+                        }, label = { Text("Długość 3") }, modifier = Modifier.weight(1f), singleLine = true)
+                    }
+                    Text("Odchylenie: ${"%.2f".format(regression.deviationMultiplier)} × σ")
+                    Slider(regression.deviationMultiplier.toFloat(), { regression = regression.copy(deviationMultiplier = it.toDouble()) },
+                        valueRange = 0.1f..5f, steps = 48, onValueChangeFinished = ::saveRegression)
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Checkbox(regression.extendLines, { regression = regression.copy(extendLines = it); saveRegression() })
+                        Text("Przedłuż kanały w prawo")
+                    }
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Checkbox(regression.showFibonacci, { regression = regression.copy(showFibonacci = it); saveRegression() })
+                        Text("Poziomy Fibonacciego")
+                    }
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Checkbox(regression.showBroken, { regression = regression.copy(showBroken = it); saveRegression() })
+                        Text("Wyróżniaj wybite kanały")
+                    }
+                    Text("Grubość linii (1–4)")
+                    listOf(regression.width1, regression.width2, regression.width3).forEachIndexed { index, width ->
+                        Slider(width, { value ->
+                            regression = when (index) {
+                                0 -> regression.copy(width1 = value)
+                                1 -> regression.copy(width2 = value)
+                                else -> regression.copy(width3 = value)
+                            }
+                        }, valueRange = 1f..4f, steps = 2, onValueChangeFinished = ::saveRegression)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(color1, color2, color3).forEachIndexed { index, selectedColor ->
+                            OutlinedButton(onClick = {
+                                val next = (selectedColor + 1) % regressionColors.size
+                                when (index) { 0 -> color1 = next; 1 -> color2 = next; else -> color3 = next }
+                                saveRegression()
+                            }) { Text("Kolor ${index + 1}", color = regressionColors[selectedColor]) }
+                        }
+                    }
+                    Text("Kanał wymaga pełnej liczby obserwacji. Przy domyślnych długościach potrzeba odpowiednio 377, 233 i 144 punktów.",
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
         if (loading) CircularProgressIndicator()
         if (points.isNotEmpty()) {
             Text("${base}/${quote}", style = MaterialTheme.typography.titleLarge)
@@ -162,7 +265,8 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                     color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
             } else {
                 PairHistoryChart(points, style, selected?.date, { selected = it },
-                    Modifier.fillMaxWidth().height(235.dp))
+                    regression, regressionColors[color1], regressionColors[color2], regressionColors[color3],
+                    Modifier.fillMaxWidth().height(275.dp))
             }
             selected?.let { Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}") }
                 ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
@@ -193,14 +297,28 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
 @Composable
 private fun PairHistoryChart(
     points: List<PairPricePoint>, style: PriceChartStyle, selectedDate: LocalDate?,
-    onSelect: (PairPricePoint) -> Unit, modifier: Modifier = Modifier
+    onSelect: (PairPricePoint) -> Unit, regression: RegressionChannelSettings,
+    regressionColor1: Color, regressionColor2: Color, regressionColor3: Color,
+    modifier: Modifier = Modifier
 ) {
     val line = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant
     val marker = MaterialTheme.colorScheme.tertiary
-    val vals = points.map { it.value.toFloat() }
-    val low = vals.minOrNull() ?: 0f
-    val span = ((vals.maxOrNull() ?: low) - low).takeIf { it > 0f } ?: 1f
+    val vals = points.map { it.value.toDouble() }
+    val channels = LinearRegressionChannels.calculateThree(vals, regression).filterNotNull()
+    val low = (vals + channels.flatMap { ch ->
+        listOf(ch.lowerAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
+            ch.upperAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
+            ch.lowerAt(ch.endIndex.toDouble(), regression.deviationMultiplier),
+            ch.upperAt(ch.endIndex.toDouble(), regression.deviationMultiplier))
+    }).minOrNull() ?: 0.0
+    val high = (vals + channels.flatMap { ch ->
+        listOf(ch.lowerAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
+            ch.upperAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
+            ch.lowerAt(ch.endIndex.toDouble(), regression.deviationMultiplier),
+            ch.upperAt(ch.endIndex.toDouble(), regression.deviationMultiplier))
+    }).maxOrNull() ?: low
+    val span = (high - low).takeIf { it > 0.0 } ?: 1.0
     Canvas(modifier.pointerInput(points) {
         detectTapGestures { tap ->
             if (points.isNotEmpty()) {
@@ -210,15 +328,18 @@ private fun PairHistoryChart(
             }
         }
     }) {
-        val l = 8.dp.toPx(); val r = size.width - 8.dp.toPx()
+        val l = 8.dp.toPx()
+        val dataRight = if (regression.extendLines) size.width * 0.84f else size.width - 8.dp.toPx()
+        val r = size.width - 8.dp.toPx()
         val t = 12.dp.toPx(); val b = size.height - 12.dp.toPx()
+        fun xFor(index: Double): Float =
+            l + (dataRight - l) * (index / maxOf(1, points.lastIndex).toDouble()).toFloat()
+        fun yFor(value: Double): Float = b - ((value - low) / span).toFloat() * (b - t)
         repeat(5) { i ->
             val y = t + (b - t) * i / 4f
             drawLine(grid, Offset(l, y), Offset(r, y), 1.dp.toPx())
         }
-        val coords = vals.mapIndexed { i, v ->
-            Offset(l + (r - l) * i / maxOf(1, vals.lastIndex), b - ((v - low) / span) * (b - t))
-        }
+        val coords = vals.mapIndexed { i, v -> Offset(xFor(i.toDouble()), yFor(v)) }
         if (coords.size > 1) {
             when (style) {
                 PriceChartStyle.LINE -> {
@@ -246,6 +367,38 @@ private fun PairHistoryChart(
                     // do not invent candle ranges or trading volume.
                     drawLine(line, Offset(it.x, it.y - 3.dp.toPx()),
                         Offset(it.x, it.y + 3.dp.toPx()), 1.5.dp.toPx())
+                }
+            }
+        }
+        channels.forEachIndexed { channelIndex, channel ->
+            val colors = listOf(regressionColor1, regressionColor2, regressionColor3)
+            val color = if (regression.showBroken && channel.brokenDirection != 0) Color(0xFF2878D0)
+                else colors[channelIndex]
+            val lineWidth = listOf(regression.width1, regression.width2, regression.width3)[channelIndex].dp.toPx()
+            val x1 = xFor(channel.startIndex.toDouble())
+            val x2 = if (regression.extendLines) r else xFor(channel.endIndex.toDouble())
+            val endIndex = if (regression.extendLines) {
+                channel.endIndex + ((channel.endIndex - channel.startIndex).coerceAtLeast(1) * 0.18)
+            } else channel.endIndex.toDouble()
+            fun drawRegressionLine(offset: Double, width: Float, dotted: Boolean) {
+                val y1 = yFor(channel.valueAt(channel.startIndex.toDouble()) + offset)
+                val y2 = yFor(channel.valueAt(endIndex) + offset)
+                if (!dotted) drawLine(color, Offset(x1, y1), Offset(x2, y2), width)
+                else for (segment in 0 until 28 step 2) {
+                    val a = segment / 28f
+                    val z = (segment + 1) / 28f
+                    drawLine(color.copy(alpha = 0.8f),
+                        Offset(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a),
+                        Offset(x1 + (x2 - x1) * z, y1 + (y2 - y1) * z), width)
+                }
+            }
+            val band = channel.deviation * regression.deviationMultiplier
+            drawRegressionLine(0.0, lineWidth, false)
+            drawRegressionLine(band, lineWidth, true)
+            drawRegressionLine(-band, lineWidth, true)
+            if (regression.showFibonacci) {
+                LinearRegressionChannels.fibonacciRatios.forEach { ratio ->
+                    drawRegressionLine(-band + 2.0 * band * ratio, 1.dp.toPx(), true)
                 }
             }
         }
