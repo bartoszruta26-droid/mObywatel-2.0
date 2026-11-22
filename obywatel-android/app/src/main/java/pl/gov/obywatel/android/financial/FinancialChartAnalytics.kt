@@ -96,7 +96,7 @@ object FinancialChartAnalytics {
     fun macdSignal(values: List<BigDecimal>, fast: Int, slow: Int, signalPeriod: Int): List<BigDecimal?> {
         require(signalPeriod > 0)
         val line = macd(values, fast, slow)
-        val firstValid = slow - 1
+        val firstValid = 0
         if (line.size <= firstValid) return List(line.size) { null }
         val signal = ema(line.drop(firstValid).mapNotNull { it }, signalPeriod)
         return List(line.size) { index ->
