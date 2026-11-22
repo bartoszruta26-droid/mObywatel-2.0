@@ -3,6 +3,8 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.net.Uri
+import android.util.Xml
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,9 +37,11 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.ByteArrayInputStream
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.zip.GZIPInputStream
+import org.xmlpull.v1.XmlPullParser
 import pl.gov.obywatel.android.network.tor.TorDownloadKind
 import pl.gov.obywatel.android.network.tor.TorDownloadServiceProvider
 
@@ -53,7 +57,8 @@ internal data class InstitutionalSymbolCandidate(
     val license: String,
     val licenseUrl: String,
     val author: String,
-    val credit: String
+    val credit: String,
+    val commonsCategories: String = ""
 ) {
     val displayName: String get() = path.substringAfterLast('/').replace(Regex("(?i)\\.(svg|png)$"), "").replace('_', ' ').replace('-', ' ')
         .replace('_', ' ').replace('-', ' ')
@@ -82,7 +87,7 @@ internal fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolC
     require(lines.isNotEmpty()) { "Katalog symboli jest pusty." }
     val header = parseLine(lines.first()).map { it.trim() }
     fun index(name: String) = header.indexOf(name).also { require(it >= 0) { "Brak kolumny $name w katalogu symboli." } }
-    val columns = listOf("source_id", "repository", "ref", "path", "group", "rights_status", "source_url", "download_url", "license_short_name", "license_url", "author", "source_credit").associateWith(::index)
+    val columns = listOf("source_id", "repository", "ref", "path", "group", "rights_status", "source_url", "download_url", "license_short_name", "license_url", "author", "source_credit", "commons_categories").associateWith(::index)
     return lines.drop(1).mapNotNull { line ->
         val row = parseLine(line)
         fun value(name: String) = row.getOrNull(columns.getValue(name)).orEmpty()
@@ -103,7 +108,7 @@ internal fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolC
         if (institutionalSymbolFormat(path) == null || url.isBlank()) return@mapNotNull null
         InstitutionalSymbolCandidate(value("source_id"), value("repository"), value("ref"), path,
             value("group"), value("rights_status"), sourceUrl, url,
-            value("license_short_name"), value("license_url"), value("author"), value("source_credit"))
+            value("license_short_name"), value("license_url"), value("author"), value("source_credit"), value("commons_categories"))
     }.distinctBy { it.sourceId + ":" + it.path }
 }
 
@@ -202,9 +207,108 @@ internal fun parseIconifyCollectionIndex(raw: String): List<IconifyCollectionSou
     }.distinctBy { it.prefix }
 }
 
+private fun commonsCollectionGroup(id: String): String = when {
+    id.contains("flags") -> "flags"
+    id.contains("arms") || id.contains("heraldry") -> "polish_city_arms"
+    id.contains("orders") || id.contains("ribbons") || id.contains("symbols") -> "institutional_insignia"
+    id.contains("logos") || id.contains("gov") -> "logos"
+    else -> "institutional_symbols"
+}
+
+private fun commonsMetadataValue(ext: JSONObject?, key: String): String =
+    ext?.optJSONObject(key)?.optString("value").orEmpty()
+        .replace(Regex("<[^>]*>"), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+
+/** Odkrywa pojedyncze pliki w wybranej kolekcji Commons, pobierając URL z imageinfo (nie konstruując go). */
+internal suspend fun discoverCommonsCollection(
+    context: Context,
+    source: InstitutionalSymbolSourceCollection,
+    maxPages: Int = 3
+): List<InstitutionalSymbolCandidate> = withContext(Dispatchers.IO) {
+    require(source.provider.equals("Wikimedia Commons", true)) { "To źródło nie jest kolekcją Wikimedia Commons." }
+    require(maxPages in 1..5) { "Limit stron musi wynosić od 1 do 5." }
+    val discovered = mutableListOf<InstitutionalSymbolCandidate>()
+    var continuation: String? = null
+    repeat(maxPages) {
+        val builder = Uri.parse("https://commons.wikimedia.org/w/api.php").buildUpon()
+            .appendQueryParameter("action", "query")
+            .appendQueryParameter("generator", "categorymembers")
+            .appendQueryParameter("gcmtitle", source.collectionRef)
+            .appendQueryParameter("gcmtype", "file")
+            .appendQueryParameter("gcmlimit", "100")
+            .appendQueryParameter("prop", "imageinfo")
+            .appendQueryParameter("iiprop", "url|extmetadata")
+            .appendQueryParameter("format", "json")
+        continuation?.let { builder.appendQueryParameter("gcmcontinue", it) }
+        val response = TorDownloadServiceProvider.get(context).open(builder.build().toString(), TorDownloadKind.API)
+        val jsonText = response.use {
+            require(it.statusCode in 200..299) { "Wikimedia Commons zwróciło HTTP ${it.statusCode}." }
+            it.body.bufferedReader(Charsets.UTF_8).use { reader -> reader.readText() }
+        }
+        val root = JSONObject(jsonText)
+        val pages = root.optJSONObject("query")?.optJSONObject("pages") ?: JSONObject()
+        val keys = pages.keys()
+        while (keys.hasNext()) {
+            val page = pages.getJSONObject(keys.next())
+            val title = page.optString("title")
+            val imageInfo = page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
+            val directUrl = imageInfo.optString("url")
+            val path = title.removePrefix("File:")
+            if (institutionalSymbolFormat(path) !in setOf("SVG", "PNG", "XML")) continue
+            if (!directUrl.startsWith("https://upload.wikimedia.org/")) continue
+            val ext = imageInfo.optJSONObject("extmetadata")
+            val filePage = Uri.parse("https://commons.wikimedia.org/wiki").buildUpon()
+                .appendPath(title).build().toString()
+            discovered += InstitutionalSymbolCandidate(
+                sourceId = "wikimedia-commons:${source.id}",
+                repository = "Wikimedia Commons · ${source.label}",
+                ref = "live-category-snapshot",
+                path = path,
+                group = commonsCollectionGroup(source.id),
+                rightsStatus = "per_file_metadata_review_required",
+                sourceUrl = filePage,
+                downloadUrl = directUrl,
+                license = commonsMetadataValue(ext, "LicenseShortName"),
+                licenseUrl = commonsMetadataValue(ext, "LicenseUrl"),
+                author = commonsMetadataValue(ext, "Artist"),
+                credit = commonsMetadataValue(ext, "Credit").ifBlank { commonsMetadataValue(ext, "Attribution") },
+                commonsCategories = source.collectionRef
+            )
+        }
+        continuation = root.optJSONObject("continue")?.optString("gcmcontinue")
+            ?.takeIf { it.isNotBlank() && it != "null" }
+        if (continuation == null) return@withContext discovered.distinctBy { it.sourceId + ":" + it.path }
+    }
+    discovered.distinctBy { it.sourceId + ":" + it.path }
+}
+
+internal fun iconifyCandidate(collection: IconifyCollectionSource, iconName: String): InstitutionalSymbolCandidate {
+    val prefix = collection.prefix.trim().lowercase(Locale.ROOT)
+    val name = iconName.trim()
+    require(prefix.matches(Regex("[a-z0-9-]{1,64}"))) { "Nieprawidłowy prefiks kolekcji Iconify." }
+    require(name.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nazwa ikony zawiera niedozwolone znaki." }
+    return InstitutionalSymbolCandidate(
+        sourceId = "github_iconify_sets",
+        repository = "Iconify · ${collection.name}",
+        ref = "master",
+        path = "${prefix}/${name}.svg",
+        group = collection.category,
+        rightsStatus = collection.rightsStatus,
+        sourceUrl = collection.sourcePageUrl,
+        downloadUrl = "https://api.iconify.design/${prefix}/${name}.svg",
+        license = collection.licenseTitle + " (${collection.licenseSpdx})",
+        licenseUrl = collection.licenseUrl,
+        author = collection.author,
+        credit = collection.author
+    )
+}
+
 internal fun institutionalSymbolFormat(path: String): String? = when (path.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
     "svg" -> "SVG"
     "png" -> "PNG"
+    "xml" -> "XML"
     else -> null
 }
 
@@ -237,6 +341,26 @@ internal fun institutionalSymbolCanDownload(item: InstitutionalSymbolCandidate):
 
 private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidator.validate(bytes)
 
+internal fun validateInstitutionalSymbolXml(bytes: ByteArray) {
+    require(bytes.isNotEmpty() && bytes.size <= 12 * 1024 * 1024) { "XML ma nieprawidłowy rozmiar." }
+    val parser = Xml.newPullParser()
+    parser.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false)
+    parser.setInput(ByteArrayInputStream(bytes), null)
+    var root: String? = null
+    var event = parser.eventType
+    while (event != XmlPullParser.END_DOCUMENT) {
+        when (event) {
+            XmlPullParser.DOCDECL, XmlPullParser.ENTITY_REF ->
+                throw IllegalArgumentException("Deklaracje DTD i encje XML są niedozwolone.")
+            XmlPullParser.START_TAG -> if (root == null) root = parser.name
+        }
+        event = parser.nextToken()
+    }
+    require(root in setOf("vector", "selector", "animated-vector", "shape", "svg", "resources")) {
+        "XML nie jest rozpoznanym zasobem graficznym Androida ani dokumentem SVG."
+    }
+}
+
 internal data class InstitutionalSymbolDownloadProgress(
     val stage: String,
     val downloadedBytes: Long = 0L,
@@ -256,7 +380,7 @@ private suspend fun downloadInstitutionalSymbol(
 ): String {
     val uri = java.net.URI(item.downloadUrl)
     val format = institutionalSymbolFormat(item.path)
-    require(format != null) { "Obsługiwane są wyłącznie pliki SVG i PNG." }
+    require(format != null) { "Obsługiwane są wyłącznie pliki SVG, PNG i XML." }
     val trustedImageHost = uri.host.equals("upload.wikimedia.org", true) ||
         uri.host.equals("raw.githubusercontent.com", true) ||
         uri.host.equals("cdn.jsdelivr.net", true) || uri.host.equals("openmoji.org", true) ||
@@ -295,9 +419,10 @@ private suspend fun downloadInstitutionalSymbol(
     when (format) {
         "SVG" -> validateInstitutionalSymbolSvg(bytes)
         "PNG" -> validateInstitutionalSymbolPng(bytes)
+        "XML" -> validateInstitutionalSymbolXml(bytes)
         else -> error("Nieobsługiwany format grafiki.")
     }
-    val mimeType = if (format == "SVG") "image/svg+xml" else "image/png"
+    val mimeType = when (format) { "SVG" -> "image/svg+xml"; "PNG" -> "image/png"; else -> "application/xml" }
     val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
     val rights = JSONObject()
         .put("source", item.repository)
@@ -363,6 +488,8 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
     var candidates by remember { mutableStateOf<List<InstitutionalSymbolCandidate>>(emptyList()) }
     var sourceCollections by remember { mutableStateOf<List<InstitutionalSymbolSourceCollection>>(emptyList()) }
     var iconifyCollections by remember { mutableStateOf<List<IconifyCollectionSource>>(emptyList()) }
+    var selectedIconifyPrefix by remember { mutableStateOf("") }
+    var iconifyName by remember { mutableStateOf("") }
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Wszystkie") }
     var busyId by remember { mutableStateOf<String?>(null) }
@@ -406,7 +533,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         Text("Ikony → Symbole, herby i znaki instytucjonalne", style = MaterialTheme.typography.titleMedium)
         Text("Tryb pobierania: ${selectedMode.label}", style = MaterialTheme.typography.labelMedium)
         Text(
-            "Zasoby są przypisane do kategorii: herby, godła, logotypy, flagi, ikony, tła, symbole i pozostałe. Pobieranie pojedynczych plików SVG/PNG nie jest blokowane statusem praw. Aplikacja sprawdza bezpieczeństwo pliku i zapisuje źródło, autora oraz informacje o licencji do późniejszej ręcznej oceny.",
+            "Zasoby są przypisane do kategorii: herby, godła, logotypy, flagi, ikony, tła, symbole i pozostałe. Pobieranie pojedynczych plików SVG/PNG/XML nie jest blokowane statusem praw. Aplikacja sprawdza bezpieczeństwo pliku i zapisuje źródło, autora oraz informacje o licencji do późniejszej ręcznej oceny.",
             style = MaterialTheme.typography.bodySmall
         )
 
@@ -420,14 +547,61 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                     Text("Etapy: ${source.discoveryState} / ${source.verificationState} / ${source.downloadState} / ${source.storageState} / ${source.availabilityState}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("Źródło indeksu: ${source.provider} · odświeżanie: co ${source.refreshIntervalDays} dni", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("Pliki są prezentowane osobno w wynikach katalogu; ten wpis nie jest odsyłaczem do grafiki.", style = MaterialTheme.typography.labelSmall)
+                    if (source.provider.equals("Wikimedia Commons", true)) {
+                        Button(enabled = busyId == null, onClick = {
+                            busyId = "source:${source.id}"
+                            message = ""
+                            scope.launch {
+                                val result = runCatching { discoverCommonsCollection(context, source, maxPages = 3) }
+                                result.onSuccess { found ->
+                                    candidates = (candidates + found).distinctBy { it.sourceId + ":" + it.path }
+                                    message = if (found.isEmpty()) "Źródło ${source.label}: brak plików SVG/PNG/XML w pobranym zakresie."
+                                        else "Źródło ${source.label}: dodano ${found.size} pojedynczych plików."
+                                }.onFailure { failure ->
+                                    message = "Nie udało się przeszukać ${source.label}: ${failure.message ?: "błąd źródła"}"
+                                }
+                                busyId = null
+                            }
+                        }) { Text(if (busyId == "source:${source.id}") "Wczytywanie…" else "Przeszukaj źródło i wczytaj pliki") }
+                    }
                 }
             }
         }
 
-        Text("Pliki graficzne z katalogów i repozytoriów", style = MaterialTheme.typography.titleSmall)
-        Text("Każdy wynik prowadzi do pojedynczego pliku SVG/PNG. Status praw jest informacyjny i nie blokuje pobierania.", style = MaterialTheme.typography.bodySmall)
+        if (iconifyCollections.isNotEmpty()) {
+            val selectedIconify = iconifyCollections.firstOrNull { it.prefix == selectedIconifyPrefix }
+                ?: iconifyCollections.first()
+            Text("Iconify — pojedyncze pliki SVG", style = MaterialTheme.typography.titleSmall)
+            OutlinedTextField(
+                value = selectedIconifyPrefix.ifBlank { selectedIconify.prefix },
+                onValueChange = { selectedIconifyPrefix = it.trim().lowercase(Locale.ROOT) },
+                label = { Text("Prefiks kolekcji Iconify, np. mdi lub lucide") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text("${selectedIconify.name} • ${selectedIconify.iconCount} ikon • ${selectedIconify.licenseTitle} • ${selectedIconify.author}")
+            OutlinedTextField(
+                value = iconifyName,
+                onValueChange = { iconifyName = it },
+                label = { Text("Nazwa pojedynczej ikony") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(enabled = busyId == null && iconifyName.isNotBlank(), onClick = {
+                runCatching {
+                    iconifyCandidate(selectedIconify.copy(prefix = selectedIconifyPrefix.ifBlank { selectedIconify.prefix }), iconifyName)
+                }.onSuccess { candidate ->
+                    candidates = (candidates + candidate).distinctBy { it.sourceId + ":" + it.path }
+                    query = candidate.displayName
+                    message = "Dodano pojedynczy plik Iconify do wyników. Wybierz „Pobierz do zasobów”."
+                }.onFailure { message = it.message ?: "Nieprawidłowa nazwa ikony." }
+            }) { Text("Dodaj pojedynczą ikonę do wyników") }
+        }
 
-        Text("Rekordy z adresem SVG/PNG: ${candidates.size} · Wyniki: ${matches.size}", style = MaterialTheme.typography.labelMedium)
+        Text("Pliki graficzne z katalogów i repozytoriów", style = MaterialTheme.typography.titleSmall)
+        Text("Każdy wynik prowadzi do pojedynczego pliku SVG/PNG/XML. Status praw jest informacyjny i nie blokuje pobierania.", style = MaterialTheme.typography.bodySmall)
+
+        Text("Rekordy z adresem SVG/PNG/XML: ${candidates.size} · Wyniki: ${matches.size}", style = MaterialTheme.typography.labelMedium)
         Row(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
