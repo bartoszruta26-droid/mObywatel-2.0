@@ -202,7 +202,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             }
         }
         OutlinedButton(onClick = { regressionPanel = !regressionPanel }) {
-            Text(if (regressionPanel) "Ukryj ustawienia regresji" else "Ustawienia regresji • 3 kanały")
+            Text(if (regressionPanel) "Ukryj ustawienia regresji" else "Ustawienia regresji • 7 kanałów")
         }
         if (regressionPanel) {
             Card(Modifier.fillMaxWidth()) {
