@@ -184,3 +184,10 @@ Każda kolekcja ma oddzielne stany: `source_registered`, `per_file_pending`, `no
 - `not_available` pozostaje stanem domyślnym po pobraniu do biblioteki, dopóki nie zostanie osobno zatwierdzone użycie znaku w aplikacji.
 
 Rejestr źródeł nie jest potwierdzeniem autentyczności, aktualności ani zgody na użycie konkretnego symbolu.
+
+
+## Zmiana zasad pobierania i klasyfikacji — 22 listopada 2026
+
+Pobranie pojedynczego pliku SVG/PNG nie jest blokowane przez status prawny, brak metadanych licencji ani grupę zasobu. Aplikacja wykonuje wyłącznie kontrolę bezpieczeństwa technicznego pliku i zachowuje metadane źródła, autora, licencji, atrybucji oraz statusu prawnego. Ocena praw do wykorzystania grafiki w konkretnym dokumencie pozostaje po stronie użytkownika.
+
+Indeks rozszerzono o 102 bezpośrednie adresy pojedynczych plików SVG z baz Bootstrap Icons, Lucide, Tabler Icons, OpenMoji i Simple Icons. Rekordy GitHub i Wikimedia Commons są przypisywane do kategorii Herby, Godła, Logotypy, Flagi, Ikony, Tła, Symbole lub Pozostałe. Interfejs prezentuje adres pliku graficznego i nie zastępuje go odsyłaczem do strony kategorii lub repozytorium.
