@@ -305,4 +305,17 @@ class InstitutionalSymbolCatalogTest {
         assertEquals("XML", institutionalSymbolFormat("drawable/ic_emblem.xml"))
     }
 
+    @Test
+    fun allGraphicGroupsHaveACompatibleAssetKind() {
+        val kinds = DocumentBrandStore.assetKinds()
+        assertTrue(kinds.contains("Herb"))
+        assertTrue(kinds.contains("Godło"))
+        assertTrue(kinds.contains("Logo"))
+        assertTrue(kinds.contains("Flaga"))
+        assertTrue(kinds.contains("Ikona"))
+        assertTrue(kinds.contains("Tło graficzne"))
+        assertTrue(kinds.contains("Symbol"))
+        assertTrue(kinds.contains("Pozostałe"))
+    }
+
 }
