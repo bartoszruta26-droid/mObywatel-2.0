@@ -32,3 +32,7 @@ Plik `collections.csv` jest używany przez ekran katalogu symboli. Zawiera adres
 - dostępność w aplikacji: `not_available`
 
 Obsługiwane w katalogu lokalnych kandydatów formaty to SVG i PNG. SVG przechodzi walidację bezpieczeństwa, a PNG kontrolę sygnatury, IHDR, wymiarów i dekodowalności. Zasoby z niezweryfikowaną licencją są blokowane przed pobraniem. Sama licencja MIT/CC0 pliku nie przesądza o prawach do znaku towarowego, godła, flagi ani odznaczenia.
+
+## Indeksy plików GitHub
+- `github-symbol-candidates.csv`: 3 472 wpisy Simple Icons oraz 542 pliki flag-icons. Każdy wpis ma stronę pliku, bezpośredni adres raw, format, status praw i metadane licencji, jeśli źródło je publikuje. Znaki Simple Icons pozostają zablokowane do kontroli praw do marki; flagi do kontroli zgodności z prawem i wzorem urzędowym.
+- `iconify-collections.csv`: 280 zestawów Iconify obejmujących 556 207 ikon. Dla każdego zestawu zapisano autora, licencję SPDX, adres licencji i bezpośredni JSON. Zestaw jest w formacie Iconify JSON, nie samodzielnym SVG; przed importem trzeba go bezpiecznie przekształcić do SVG i przeprowadzić walidację.
