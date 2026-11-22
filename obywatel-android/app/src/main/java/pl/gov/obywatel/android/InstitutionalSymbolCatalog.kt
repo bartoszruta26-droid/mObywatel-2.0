@@ -173,7 +173,7 @@ internal fun validateInstitutionalSymbolPng(bytes: ByteArray) {
     require(String(bytes, 12, 4, Charsets.US_ASCII) == "IHDR") { "Brak nagłówka IHDR w PNG." }
     fun readInt(offset: Int): Long = ((bytes[offset].toLong() and 0xff) shl 24) or ((bytes[offset + 1].toLong() and 0xff) shl 16) or ((bytes[offset + 2].toLong() and 0xff) shl 8) or (bytes[offset + 3].toLong() and 0xff)
     val width = readInt(16); val height = readInt(20)
-    require(width in 1..16384 && height in 1..16384) { "PNG ma nieprawidłowe lub zbyt duże wymiary." }
+    require(width in 1L..16384L && height in 1L..16384L) { "PNG ma nieprawidłowe lub zbyt duże wymiary." }
     val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
     require(options.outWidth == width.toInt() && options.outHeight == height.toInt()) { "PNG nie przechodzi dekodowania nagłówka obrazu." }
