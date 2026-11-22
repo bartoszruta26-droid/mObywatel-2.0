@@ -161,8 +161,13 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             Text(last?.stripTrailingZeros()?.toPlainString() ?: "—",
                 style = MaterialTheme.typography.headlineSmall)
             Text(pct?.let { (if (it.signum() > 0) "+" else "") + it.toPlainString() + "%" } ?: "—")
-            PairHistoryChart(points, style, selected?.date, { selected = it },
-                Modifier.fillMaxWidth().height(235.dp))
+            if (style == PriceChartStyle.CANDLE) {
+                Text("Wykres świecowy jest niedostępny: otwarte źródło publikuje kursy referencyjne, a nie dane OHLC. Nie generujemy sztucznych świec ani wolumenu.",
+                    color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
+            } else {
+                PairHistoryChart(points, style, selected?.date, { selected = it },
+                    Modifier.fillMaxWidth().height(235.dp))
+            }
             selected?.let { Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} $${quote} za 1 $${base}") }
                 ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -322,7 +327,7 @@ private class FrankfurterChartRepository {
             val basePerUsd = rates[base] ?: if (base == "USD") BigDecimal.ONE else null
             val quotePerUsd = rates[quote] ?: if (quote == "USD") BigDecimal.ONE else null
             if (basePerUsd == null || quotePerUsd == null || basePerUsd.signum() == 0) null
-            else PairPricePoint(date, quotePerUsd.divide(basePerUsd, 10, RoundingMode.HALF_EVEN))
+            else PairPricePoint(date, TradingPairMath.crossRate(basePerUsd, quotePerUsd))
         }.sortedBy { it.date }
     }
 }
