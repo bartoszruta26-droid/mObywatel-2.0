@@ -128,6 +128,9 @@ private class CommonsHttpException(
     val retryDelayMs: Long?,
 ) : java.io.IOException("Wikimedia Commons: HTTP $httpCode")
 
+internal fun commonsIsRetryableHttpCode(code: Int): Boolean =
+    code == 420 || code == 429 || code == 502 || code == 503 || code == 504
+
 internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null): Long {
     // Cap before multiplication so an untrusted Retry-After value cannot overflow Long.
     val serverDelay = retryAfterSeconds?.takeIf { it >= 0 }?.let { seconds ->
@@ -159,7 +162,7 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
             return payload
         } catch (failure: TorHttpException) {
             val retryAfterMs = retryAfterMillis(failure.retryAfter)
-            val retryable = failure.httpCode == 429 || failure.httpCode == 503 || failure.httpCode == 502 || failure.httpCode == 504
+            val retryable = commonsIsRetryableHttpCode(failure.httpCode)
             appendCommonsDiagnostic(context, "API_HTTP_ERROR attempt=${attempt + 1} code=${failure.httpCode} retryAfterMs=$retryAfterMs")
             lastFailure = CommonsHttpException(failure.httpCode, retryAfterMs)
             if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
@@ -617,9 +620,14 @@ private suspend fun downloadCommonsSvgWithRetry(
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (failure: Exception) {
-            lastError = failure.message ?: failure.javaClass.simpleName
+            // Preserve HTTP status and Retry-After from the actual SVG response.
+            // Wikimedia may use HTTP 420 ("Enhance Your Calm") as well as 429.
+            val normalizedFailure = if (failure is TorHttpException) {
+                CommonsHttpException(failure.httpCode, retryAfterMillis(failure.retryAfter))
+            } else failure
+            lastError = normalizedFailure.message ?: normalizedFailure.javaClass.simpleName
             if (index + 1 < maxAttempts) {
-                val serverDelay = (failure as? CommonsHttpException)?.retryDelayMs ?: 0L
+                val serverDelay = (normalizedFailure as? CommonsHttpException)?.retryDelayMs ?: 0L
                 val backoff = (10000L * (1L shl index.coerceIn(0, 4))).coerceAtMost(180000L)
                 kotlinx.coroutines.delay(maxOf(backoff, serverDelay))
             }
