@@ -34,7 +34,14 @@ internal object FinancialDataCipher {
             return runCatching { decrypt(context, name, stored) }.getOrDefault(defaultValue)
         }
         // Migracja ewentualnych wartości zapisanych przez wcześniejszą wersję modułu.
-        return preferences.getString(name, defaultValue) ?: defaultValue
+        val legacy = preferences.getString(name, null) ?: return defaultValue
+        runCatching {
+            preferences.edit()
+                .putString(PREFIX + name, encrypt(context, name, legacy))
+                .remove(name)
+                .apply()
+        }
+        return legacy
     }
 
     fun encrypt(context: Context, name: String, plaintext: String): String {
