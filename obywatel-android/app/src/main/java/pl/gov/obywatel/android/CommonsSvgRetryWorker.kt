@@ -7,8 +7,10 @@ import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
@@ -39,8 +41,27 @@ class CommonsSvgRetryWorker(
 
 object CommonsSvgRetryScheduler {
     private const val UNIQUE_WORK_NAME = "commons-svg-periodic-retry"
+    private const val UNIQUE_RATE_LIMIT_WORK_NAME = "commons-svg-rate-limit-retry"
 
-    /** WorkManager persists this schedule across process death and device restarts. */
+    /** Schedules an exact delayed retry for the earliest persisted Retry-After deadline. */
+    fun scheduleAt(context: Context, retryAtMs: Long) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val delayMs = (retryAtMs - System.currentTimeMillis()).coerceAtLeast(0L)
+        val request = OneTimeWorkRequestBuilder<CommonsSvgRetryWorker>()
+            .setInitialDelay(delayMs, TimeUnit.MILLISECONDS)
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+            .build()
+        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
+            UNIQUE_RATE_LIMIT_WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            request
+        )
+    }
+
+    /** WorkManager persists this safety-net schedule across process death and device restarts. */
     fun ensureScheduled(context: Context) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

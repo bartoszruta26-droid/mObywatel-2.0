@@ -18,6 +18,14 @@ class InstitutionalSvgDownloadAccountingTest {
     }
 
     @Test
+    fun rateLimitedCommonsEntriesWaitUntilPersistedRetryDeadline() {
+        assertFalse(commonsDownloadEligibleForRetry("failed", 20_000L, 19_999L))
+        assertTrue(commonsDownloadEligibleForRetry("failed", 20_000L, 20_000L))
+        assertTrue(commonsDownloadEligibleForRetry("pending", 0L, 20_000L))
+        assertFalse(commonsDownloadEligibleForRetry("saved", 0L, 20_000L))
+    }
+
+    @Test
     fun commonsSearchUsesMimeFilterAndPlainFallback() {
         assertEquals(
             listOf("herb miasta filemime:svg", "herb miasta"),
@@ -206,10 +214,11 @@ class InstitutionalSvgDownloadAccountingTest {
 
     @Test
     fun commonsDownloadBackoffHonorsRateLimitAndRetryAfter() {
-        assertEquals(30_000L, commonsDownloadRetryDelayMs(1, 429, null))
+        assertEquals(60_000L, commonsDownloadRetryDelayMs(1, 429, null))
         assertEquals(60_000L, commonsDownloadRetryDelayMs(1, 420, 60_000L))
-        assertEquals(60_000L, commonsDownloadRetryDelayMs(2, 429, 10_000L))
-        assertEquals(180_000L, commonsDownloadRetryDelayMs(99, 503, 0L))
+        assertEquals(120_000L, commonsDownloadRetryDelayMs(2, 429, 10_000L))
+        assertEquals(900_000L, commonsDownloadRetryDelayMs(99, 503, 0L))
+        assertEquals(3_600_000L, commonsDownloadRetryDelayMs(1, 429, 3_600_000L))
     }
 
 }

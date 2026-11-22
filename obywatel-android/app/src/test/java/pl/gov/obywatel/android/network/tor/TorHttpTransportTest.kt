@@ -33,6 +33,15 @@ class TorHttpTransportTest {
         assertEquals("::1", TorProxyEndpoint(host = "::1").host)
     }
 
+    @Test fun commonsRequestsUseAnHonestDescriptiveApplicationUserAgent() {
+        val userAgent = TorRequestPolicy().userAgent
+        assertTrue(userAgent.startsWith("mObywatel-2.0/"))
+        assertTrue(userAgent.contains("Android"))
+        assertTrue(userAgent.contains("github.com/bartoszruta26-droid/mObywatel-2.0"))
+        assertTrue(!userAgent.contains("Chrome", ignoreCase = true))
+        assertTrue(!userAgent.contains("Brave", ignoreCase = true))
+    }
+
     @Test fun policyRejectsUnsafeLimits() {
         assertThrows(IllegalArgumentException::class.java) { TorRequestPolicy(maxRedirects = 11) }
         assertThrows(IllegalArgumentException::class.java) { TorRequestPolicy(maxBytes = 0) }
