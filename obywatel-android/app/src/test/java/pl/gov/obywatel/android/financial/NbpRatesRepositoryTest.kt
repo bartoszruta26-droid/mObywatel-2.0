@@ -253,6 +253,25 @@ class NbpRatesRepositoryTest {
     }
 
     @Test
+    fun currencyBidAskHistoryReadsTableCAndSplitsLongRanges() {
+        val requested = mutableListOf<String>()
+        val repository = NbpRatesRepository(object : NbpHttpTransport {
+            override fun get(url: String): String {
+                requested += url
+                return """[{"table":"C","no":"1/C/NBP/2026","tradingDate":"2026-01-01","effectiveDate":"2026-01-02","rates":[{"currency":"euro","code":"EUR","bid":4.20,"ask":4.30}]}]"""
+            }
+        })
+        val history = repository.currencyBidAskHistory(
+            "EUR", LocalDate.parse("2026-01-01"), LocalDate.parse("2026-04-04")
+        )
+        assertEquals(2, requested.size)
+        assertTrue(requested.all { it.contains("/exchangerates/tables/C/") })
+        assertEquals(1, history.size)
+        assertEquals("4.20", history.single().bidPln.toPlainString())
+        assertEquals("4.30", history.single().askPln.toPlainString())
+    }
+
+    @Test
     fun goldPriceHistorySplitsLongRangesAndSortsPublishedPrices() {
         val requested = mutableListOf<String>()
         val repository = NbpRatesRepository(object : NbpHttpTransport {
