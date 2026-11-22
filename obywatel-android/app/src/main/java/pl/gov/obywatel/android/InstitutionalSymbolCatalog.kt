@@ -202,28 +202,6 @@ internal fun parseIconifyCollectionIndex(raw: String): List<IconifyCollectionSou
     }.distinctBy { it.prefix }
 }
 
-internal fun iconifyCandidate(collection: IconifyCollectionSource, iconName: String): InstitutionalSymbolCandidate? {
-    val prefix = collection.prefix.lowercase(Locale.ROOT)
-    val name = iconName.trim().lowercase(Locale.ROOT)
-    if (!prefix.matches(Regex("[a-z0-9][a-z0-9-]{0,63}")) ||
-        !name.matches(Regex("[a-z0-9][a-z0-9-]{0,95}"))) return null
-    val encodedName = java.net.URLEncoder.encode(name, "UTF-8").replace("+", "%20")
-    return InstitutionalSymbolCandidate(
-        sourceId = "iconify:$prefix",
-        repository = "Iconify · ${collection.name}",
-        ref = "master",
-        path = "iconify/$prefix/$name.svg",
-        group = if (collection.category.contains("logo", true) || collection.category.contains("brand", true)) "logos" else "ui_icons",
-        rightsStatus = collection.rightsStatus,
-        sourceUrl = collection.sourcePageUrl,
-        downloadUrl = "https://api.iconify.design/$prefix/$encodedName.svg",
-        license = listOf(collection.licenseTitle, collection.licenseSpdx).filter { it.isNotBlank() }.distinct().joinToString(" · "),
-        licenseUrl = collection.licenseUrl,
-        author = collection.author,
-        credit = collection.author
-    )
-}
-
 internal fun institutionalSymbolFormat(path: String): String? = when (path.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
     "svg" -> "SVG"
     "png" -> "PNG"
@@ -389,9 +367,6 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
     var selectedCategory by remember { mutableStateOf("Wszystkie") }
     var busyId by remember { mutableStateOf<String?>(null) }
     var expandedLegalInfoId by remember { mutableStateOf<String?>(null) }
-    var iconifyCollectionQuery by remember { mutableStateOf("") }
-    var selectedIconifyPrefix by remember { mutableStateOf<String?>(null) }
-    var iconifyIconName by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var downloadProgress by remember { mutableStateOf<InstitutionalSymbolDownloadProgress?>(null) }
     LaunchedEffect(context) {
@@ -447,67 +422,6 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                     Text("Pliki są prezentowane osobno w wynikach katalogu; ten wpis nie jest odsyłaczem do grafiki.", style = MaterialTheme.typography.labelSmall)
                 }
             }
-        }
-
-        Text("18. Kolekcja źródłowa Iconify — ${iconifyCollections.size} zestawów, ikony SVG pobierane pojedynczo", style = MaterialTheme.typography.titleSmall)
-        Text("Wybierz zestaw, wpisz nazwę ikony i pobierz ją bezpośrednio do zasobów. Ikona zostanie przypisana automatycznie do grupy Ikony albo Logotypy na podstawie metadanych zestawu.", style = MaterialTheme.typography.bodySmall)
-        OutlinedTextField(
-            value = iconifyCollectionQuery,
-            onValueChange = { iconifyCollectionQuery = it },
-            label = { Text("Szukaj zestawu Iconify (np. Material, Lucide, Tabler)") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        val matchingIconifyCollections = iconifyCollections.filter {
-            iconifyCollectionQuery.isBlank() ||
-                listOf(it.prefix, it.name, it.category, it.author).any { value ->
-                    value.contains(iconifyCollectionQuery.trim(), ignoreCase = true)
-                }
-        }.take(12)
-        matchingIconifyCollections.forEach { collection ->
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(collection.name, style = MaterialTheme.typography.bodyMedium)
-                Text("${collection.prefix} · ${collection.iconCount} ikon · ${collection.licenseSpdx.ifBlank { collection.licenseTitle }}", style = MaterialTheme.typography.labelSmall)
-                Button(onClick = { selectedIconifyPrefix = collection.prefix }) {
-                    Text(if (selectedIconifyPrefix == collection.prefix) "Wybrano" else "Wybierz zestaw")
-                }
-            }
-        }
-        val selectedIconifyCollection = iconifyCollections.firstOrNull { it.prefix == selectedIconifyPrefix }
-        if (selectedIconifyCollection != null) {
-            Text("Wybrany zestaw: ${selectedIconifyCollection.name} (${selectedIconifyCollection.prefix})", style = MaterialTheme.typography.titleSmall)
-            OutlinedTextField(
-                value = iconifyIconName,
-                onValueChange = { iconifyIconName = it },
-                label = { Text("Nazwa ikony w zestawie") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            val iconifyCandidate = iconifyCandidate(selectedIconifyCollection, iconifyIconName)
-            Button(
-                enabled = busyId == null && iconifyCandidate != null && institutionalSymbolCanDownload(iconifyCandidate),
-                onClick = {
-                    val item = iconifyCandidate ?: return@Button
-                    busyId = item.sourceId + ":" + item.path
-                    message = ""
-                    downloadProgress = InstitutionalSymbolDownloadProgress("Pobieranie ikony Iconify…")
-                    scope.launch {
-                        val result = runCatching {
-                            withContext(Dispatchers.IO) {
-                                downloadInstitutionalSymbol(context, item) { update ->
-                                    withContext(Dispatchers.Main.immediate) { downloadProgress = update }
-                                }
-                            }
-                        }
-                        message = result.fold(
-                            { "Pobrano i zapisano ikonę ${item.displayName}. SHA-256: ${it}" },
-                            { "Nie zapisano ikony. ${it.message ?: "Nieznany błąd pobierania."}" }
-                        )
-                        busyId = null
-                        if (result.isSuccess) onSaved()
-                    }
-                }
-            ) { Text("Pobierz ikonę do zasobów") }
         }
 
         Text("Pliki graficzne z katalogów i repozytoriów", style = MaterialTheme.typography.titleSmall)
