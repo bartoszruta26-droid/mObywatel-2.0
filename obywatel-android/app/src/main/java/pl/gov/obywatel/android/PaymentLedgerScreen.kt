@@ -48,6 +48,7 @@ import pl.gov.obywatel.android.financial.FinancialReportSafWriter
 import pl.gov.obywatel.android.financial.PaymentAccountScope
 import pl.gov.obywatel.android.financial.StoredFinancialTransaction
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
+import pl.gov.obywatel.android.financial.BankStatementCsvParser
 import pl.gov.obywatel.android.financial.PaymentLedgerJsonCodec
 import pl.gov.obywatel.android.Asset
 import pl.gov.obywatel.android.CashDonation
@@ -386,6 +387,39 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
         }
     }
 
+    val csvImportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            val selectedAccountScopeId = accountScopeId.trim()
+            scope.launch {
+                try {
+                    val knownScopes = repository.getAccountScopes()
+                    if (knownScopes.none { it.accountScopeId == selectedAccountScopeId }) {
+                        repository.saveAccountScope(selectedAccountScopeId, selectedAccountScopeId)
+                        accountScopes = repository.getAccountScopes()
+                    }
+                    val archiveJson = withContext(Dispatchers.IO) {
+                        val input = context.contentResolver.openInputStream(uri)
+                            ?: throw IllegalStateException("Nie można odczytać wybranego pliku CSV.")
+                        val bytes = input.use { readBytesLimited(it, MAX_IMPORT_BYTES) }
+                        val parsedEntries = BankStatementCsvParser.parse(bytes, selectedAccountScopeId)
+                        PaymentLedgerJsonCodec.encode(parsedEntries)
+                    }
+                    val preview = repository.previewJson(archiveJson)
+                    pendingJson = archiveJson
+                    importPreview = preview
+                    message = "Plik CSV banku odczytano. Sprawdź podgląd przed zatwierdzeniem."
+                    error = null
+                } catch (exception: Exception) {
+                    pendingJson = null
+                    importPreview = null
+                    error = exception.message ?: "Nie udało się odczytać pliku CSV."
+                }
+            }
+        }
+    }
+
     val donationAttachmentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -577,6 +611,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                     }
                     Button(onClick = { xmlImportLauncher.launch(arrayOf("application/xml", "text/xml", "application/octet-stream")) }) {
                         Text("Importuj XML iPKO")
+                    }
+                    Button(onClick = { csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/vnd.ms-excel", "text/*", "application/octet-stream")) }) {
+                        Text("Importuj CSV banku")
                     }
                 }
                 Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
@@ -984,6 +1021,21 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
 
 
 private const val MAX_IMPORT_BYTES = 10 * 1024 * 1024
+
+/** Odczyt bajtów z limitem; zachowuje kodowanie dla parsera CSV (UTF-8/Windows-1250). */
+private fun readBytesLimited(input: InputStream, maxBytes: Int): ByteArray {
+    val output = ByteArrayOutputStream()
+    val buffer = ByteArray(8 * 1024)
+    var total = 0
+    while (true) {
+        val count = input.read(buffer)
+        if (count < 0) break
+        total += count
+        require(total <= maxBytes) { "Plik przekracza limit 10 MB." }
+        output.write(buffer, 0, count)
+    }
+    return output.toByteArray()
+}
 
 /** Odczyt z limitem bajtów — chroni UI i pamięć przed nieograniczonym plikiem wejściowym. */
 private fun readUtf8Limited(input: InputStream, maxBytes: Int): String {
