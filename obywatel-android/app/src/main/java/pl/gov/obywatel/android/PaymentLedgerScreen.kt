@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -526,7 +528,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(20.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -537,6 +539,23 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
             "Lokalny rejestr transakcji walutowych, kruszcowych i darowizn gotówkowych.",
             style = MaterialTheme.typography.bodyLarge
         )
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Wykresy NBP i wycena rachunku", style = MaterialTheme.typography.titleMedium)
+                pl.gov.obywatel.android.financial.PriceHistoryChartCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(10.dp))
+                pl.gov.obywatel.android.financial.BankStatementNbpChartCard(
+                    entries = entries,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(10.dp))
+                pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Ewidencja darowizn", style = MaterialTheme.typography.titleMedium)
@@ -776,7 +795,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
             }
         }
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            modifier = Modifier.fillMaxWidth().height(320.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (financialTransactions.isNotEmpty()) {
@@ -1001,19 +1020,6 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                         }
                     }
                 }
-            }
-        }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Notowania i wycena", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(6.dp))
-                pl.gov.obywatel.android.financial.PriceHistoryChartCard(
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(12.dp))
-                pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         }
     }
