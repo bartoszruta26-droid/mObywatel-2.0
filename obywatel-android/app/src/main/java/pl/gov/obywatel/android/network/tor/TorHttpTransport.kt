@@ -191,7 +191,7 @@ class TorHttpTransport(
                 .get()
                 .header("User-Agent", policy.userAgent)
                 .header("Accept-Encoding", "identity")
-                .header("Accept", "image/svg+xml, application/xml;q=0.9, */*;q=0.8")
+                .header("Accept", "image/svg+xml, application/xml;q=0.9, application/pdf;q=0.8, application/octet-stream;q=0.7, */*;q=0.5")
                 .apply {
                     if (url.host.equals("studia-online.pl", ignoreCase = true)) {
                         header("Referer", "https://studia-online.pl/konto")
