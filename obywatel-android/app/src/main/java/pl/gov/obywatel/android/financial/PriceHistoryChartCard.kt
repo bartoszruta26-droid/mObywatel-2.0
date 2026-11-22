@@ -145,7 +145,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             }
             if (latest?.bid != null && latest.ask != null) {
                 Text("Ostatni kurs kupna: ${latest.bid.toPlainString()} PLN • sprzedaży: ${latest.ask.toPlainString()} PLN")
-                Text("Spread bieżący: ${latest.ask.subtract(latest.bid).toPlainString()} PLN • relacja bid/ask: ${spreadReturn?.toPlainString()}%")
+                Text("Spread bieżący: ${latest.ask.subtract(latest.bid).toPlainString()} PLN • koszt spreadu względem ask: ${spreadReturn?.toPlainString()}%")
                 Text("Wynik hipotetyczny za 1 jednostkę: kupno po ask ${firstQuote?.ask?.toPlainString()} PLN (${firstQuote?.date}) → sprzedaż po bid ${latest.bid.toPlainString()} PLN (${latest.date}): ${hypotheticalCurrencyProfit?.toPlainString()} PLN (${hypotheticalCurrencyProfitPercent?.toPlainString()}%). Bez prowizji i marży konkretnego dostawcy.")
             } else {
                 Text("Zmiana ceny referencyjnej w okresie: ${change?.toPlainString() ?: "—"}%. To zmiana notowania, nie zrealizowany zysk z transakcji.")
