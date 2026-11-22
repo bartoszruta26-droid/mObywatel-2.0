@@ -144,4 +144,25 @@ class TradingChartModelsTest {
         assertEquals(BigDecimal("100"), values[2])
         assertEquals(BigDecimal("50.00000000"), values[3])
     }
+    @Test fun currencyForecastProducesAllEightHorizonsAndWalkForwardProbability() {
+        val values = (0 until 1300).map { index ->
+            4.0 + index * 0.0008 + kotlin.math.sin(index / 17.0) * 0.003
+        }
+        val forecasts = CurrencyForecastEngine.forecast(values, RegressionChannelSettings())
+        assertEquals(8, forecasts.size)
+        assertEquals(ForecastHorizon.WEEK, forecasts.first().horizon)
+        assertTrue(forecasts.first().expectedChangePercent > 0.0)
+        assertNotNull(forecasts.first().directionalProbability)
+        assertTrue(forecasts.first().validationSamples >= 20)
+        assertEquals(ForecastHorizon.THREE_YEARS, forecasts.last().horizon)
+        assertNull(forecasts.last().directionalProbability)
+        assertTrue(forecasts.last().projectedRate > forecasts.last().currentRate)
+    }
+
+    @Test fun currencyForecastRejectsInvalidSeries() {
+        assertThrows(IllegalArgumentException::class.java) {
+            CurrencyForecastEngine.forecast(listOf(4.0, 0.0), RegressionChannelSettings())
+        }
+    }
+
 }
