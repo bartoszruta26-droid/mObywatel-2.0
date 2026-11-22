@@ -66,7 +66,7 @@ object CurrencyForecastEngine {
         val agreement = maxOf(positiveChannels, negativeChannels).toDouble() / channels.size
 
         return horizons.map { horizon ->
-            val projected = current + consensusSlope * horizon.tradingSessions
+            val projected = (current + consensusSlope * horizon.tradingSessions).coerceAtLeast(0.00000001)
             val change = ((projected / current) - 1.0) * 100.0
             val direction = when {
                 change > NEUTRAL_BAND_PERCENT -> ForecastDirection.UP
@@ -77,7 +77,7 @@ object CurrencyForecastEngine {
             HorizonCurrencyForecast(
                 horizon = horizon,
                 currentRate = current,
-                projectedRate = projected.coerceAtLeast(0.00000001),
+                projectedRate = projected,
                 expectedChangePercent = change,
                 direction = direction,
                 magnitude = magnitude(abs(change)),
@@ -123,7 +123,7 @@ object CurrencyForecastEngine {
             }
             origin += step
         }
-        return if (trials >= MIN_VALIDATION_SAMPLES) hits.toDouble() / trials else null to trials
+        return if (trials >= MIN_VALIDATION_SAMPLES) (hits + 1.0) / (trials + 2.0) else null to trials
     }
 
     private fun magnitude(changePercent: Double): ForecastMagnitude = when {
