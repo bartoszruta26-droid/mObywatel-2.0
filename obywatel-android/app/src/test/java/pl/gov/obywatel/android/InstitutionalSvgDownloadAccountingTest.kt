@@ -199,7 +199,7 @@ class InstitutionalSvgDownloadAccountingTest {
     fun commonsDownloadBackoffHonorsRateLimitAndRetryAfter() {
         assertEquals(30_000L, commonsDownloadRetryDelayMs(1, 429, null))
         assertEquals(60_000L, commonsDownloadRetryDelayMs(1, 420, 60_000L))
-        assertEquals(40_000L, commonsDownloadRetryDelayMs(2, 429, 10_000L))
+        assertEquals(60_000L, commonsDownloadRetryDelayMs(2, 429, 10_000L))
         assertEquals(180_000L, commonsDownloadRetryDelayMs(99, 503, 0L))
     }
 
