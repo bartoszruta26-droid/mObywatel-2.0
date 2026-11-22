@@ -146,7 +146,7 @@ fun BankStatementNbpChartCard(
         if (loading) CircularProgressIndicator()
         valuation?.let { result ->
             val total = result.points.fold(BigDecimal.ZERO) { sum, point -> sum.add(point.netPln) }
-            Text("Suma salda przepływów z zaimportowanych zapisów: ${total.setScale(2, RoundingMode.HALF_EVEN).toPlainString()} PLN")
+            Text("Łączna wartość netto zaimportowanych zapisów: ${total.setScale(2, RoundingMode.HALF_EVEN).toPlainString()} PLN")
             Text("Punkty wykresu: ${result.points.size} • ${result.points.firstOrNull()?.date ?: "—"} – ${result.points.lastOrNull()?.date ?: "—"}")
             if (result.points.isNotEmpty()) {
                 BankStatementNbpLineChart(result.points, Modifier.fillMaxWidth().height(190.dp))
