@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # Wykres analityczny i przygotowanie do Pine Script — 2026-11-22
 
 ## Stan wyjściowy
