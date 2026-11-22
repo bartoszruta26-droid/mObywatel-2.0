@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -56,7 +57,7 @@ internal data class InstitutionalSymbolCandidate(
     val author: String,
     val credit: String
 ) {
-    val displayName: String get() = path.substringAfterLast('/').removeSuffix(".svg")
+    val displayName: String get() = path.substringAfterLast('/').replace(Regex("(?i)\\.(svg|png)$"), "").replace('_', ' ').replace('-', ' ')
         .replace('_', ' ').replace('-', ' ')
 }
 
@@ -101,7 +102,7 @@ internal fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolC
                 "https://raw.githubusercontent.com/${match.groupValues[1]}/${match.groupValues[2]}/$encodedPath"
             }.orEmpty()
         val url = catalogUrl.ifBlank { githubRawUrl }
-        if (!path.endsWith(".svg", true) || url.isBlank()) return@mapNotNull null
+        if (institutionalSymbolFormat(path) == null || url.isBlank()) return@mapNotNull null
         InstitutionalSymbolCandidate(value("source_id"), value("repository"), value("ref"), path,
             value("group"), value("rights_status"), sourceUrl, url,
             value("license_short_name"), value("license_url"), value("author"), value("source_credit"))
@@ -159,6 +160,24 @@ internal fun parseInstitutionalSymbolCollectionsCsv(raw: String): List<Instituti
     }.distinctBy { it.id }
 }
 
+internal fun institutionalSymbolFormat(path: String): String? = when (path.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
+    "svg" -> "SVG"
+    "png" -> "PNG"
+    else -> null
+}
+
+internal fun validateInstitutionalSymbolPng(bytes: ByteArray) {
+    val signature = byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)
+    require(bytes.size in 33..(12 * 1024 * 1024)) { "PNG ma nieprawidłowy rozmiar." }
+    require(bytes.copyOfRange(0, 8).contentEquals(signature)) { "Nieprawidłowy podpis PNG." }
+    require(String(bytes, 12, 4, Charsets.US_ASCII) == "IHDR") { "Brak nagłówka IHDR w PNG." }
+    fun readInt(offset: Int): Long = ((bytes[offset].toLong() and 0xff) shl 24) or ((bytes[offset + 1].toLong() and 0xff) shl 16) or ((bytes[offset + 2].toLong() and 0xff) shl 8) or (bytes[offset + 3].toLong() and 0xff)
+    val width = readInt(16); val height = readInt(20)
+    require(width in 1..16384 && height in 1..16384) { "PNG ma nieprawidłowe lub zbyt duże wymiary." }
+    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+    require(options.outWidth == width.toInt() && options.outHeight == height.toInt()) { "PNG nie przechodzi dekodowania nagłówka obrazu." }
+}
 private fun institutionalSymbolAssetId(item: InstitutionalSymbolCandidate): String =
     "symbol_" + MessageDigest.getInstance("SHA-256")
         .digest((item.sourceId + ":" + item.path).toByteArray(Charsets.UTF_8)).take(16)
@@ -193,10 +212,12 @@ private suspend fun downloadInstitutionalSymbol(
         "Pobieranie zablokowane: licencja nie została zatwierdzona dla tego pliku. Status: ${item.rightsStatus}; licencja: ${item.license.ifBlank { "brak" }}."
     }
     val uri = java.net.URI(item.downloadUrl)
-    val trustedSvgHost = uri.host.equals("upload.wikimedia.org", true) ||
+    val format = institutionalSymbolFormat(item.path)
+    require(format != null) { "Obsługiwane są wyłącznie pliki SVG i PNG." }
+    val trustedImageHost = uri.host.equals("upload.wikimedia.org", true) ||
         uri.host.equals("raw.githubusercontent.com", true) ||
         uri.host.equals("cdn.jsdelivr.net", true)
-    require(uri.scheme.equals("https", true) && uri.userInfo == null && trustedSvgHost) {
+    require(uri.scheme.equals("https", true) && uri.userInfo == null && trustedImageHost) {
         "Źródło pliku nie znajduje się na dozwolonej domenie Wikimedia Commons, GitHub Raw lub jsDelivr."
     }
     onProgress(InstitutionalSymbolDownloadProgress("Łączenie ze źródłem przez wybraną trasę sieciową. Przy uruchamianiu Tor pierwsze połączenie może potrwać dłużej."))
@@ -227,7 +248,12 @@ private suspend fun downloadInstitutionalSymbol(
         output.toByteArray()
     }
     onProgress(InstitutionalSymbolDownloadProgress("Sprawdzanie bezpieczeństwa i poprawności SVG…", bytes.size.toLong(), bytes.size.toLong()))
-    validateInstitutionalSymbolSvg(bytes)
+    when (format) {
+        "SVG" -> validateInstitutionalSymbolSvg(bytes)
+        "PNG" -> validateInstitutionalSymbolPng(bytes)
+        else -> error("Nieobsługiwany format grafiki.")
+    }
+    val mimeType = if (format == "SVG") "image/svg+xml" else "image/png"
     val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
     val rights = JSONObject()
         .put("source", item.repository)
@@ -254,7 +280,7 @@ private suspend fun downloadInstitutionalSymbol(
     }
     onProgress(InstitutionalSymbolDownloadProgress("Zapisuję plik i metadane w bibliotece…", bytes.size.toLong(), bytes.size.toLong()))
     DocumentBrandStore.importBytes(context, item.repository, kind, item.displayName.take(180),
-        bytes, rights = rights, mimeType = "image/svg+xml", assetId = institutionalSymbolAssetId(item))
+        bytes, rights = rights, mimeType = mimeType, assetId = institutionalSymbolAssetId(item))
     onProgress(InstitutionalSymbolDownloadProgress("Zapisano i zweryfikowano SVG.", bytes.size.toLong(), bytes.size.toLong()))
     return sha
 }
@@ -314,7 +340,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         Text("Ikony → Symbole, herby i znaki instytucjonalne", style = MaterialTheme.typography.titleMedium)
         Text("Tryb pobierania: ${selectedMode.label}", style = MaterialTheme.typography.labelMedium)
         Text(
-            "Katalog ikon obejmuje kategorię Symbole oraz herby, godła, flagi i logotypy. Wybierz grupę lub wpisz nazwę. Pobierany jest tylko wskazany plik; źródło, autor i licencja pozostają zapisane w metadanych.",
+            "Katalog ikon obejmuje kategorię Symbole oraz herby, godła, flagi i logotypy. Obsługiwane są pliki SVG i PNG. Wybierz grupę lub wpisz nazwę. Pobierany jest tylko wskazany plik po kontroli licencji i walidacji zawartości; źródło, autor i licencja pozostają zapisane w metadanych.",
             style = MaterialTheme.typography.bodySmall
         )
 
