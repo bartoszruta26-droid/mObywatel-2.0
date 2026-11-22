@@ -48,6 +48,7 @@ import pl.gov.obywatel.android.financial.FinancialReportSafWriter
 import pl.gov.obywatel.android.financial.PaymentAccountScope
 import pl.gov.obywatel.android.financial.StoredFinancialTransaction
 import pl.gov.obywatel.android.financial.BankStatementXmlParser
+import pl.gov.obywatel.android.financial.BankStatementCsvParser
 import pl.gov.obywatel.android.financial.PaymentLedgerJsonCodec
 import pl.gov.obywatel.android.Asset
 import pl.gov.obywatel.android.CashDonation
@@ -386,6 +387,38 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
         }
     }
 
+    val csvImportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            val selectedAccountScopeId = accountScopeId.trim()
+            scope.launch {
+                try {
+                    val knownScopes = repository.getAccountScopes()
+                    if (knownScopes.none { it.accountScopeId == selectedAccountScopeId }) {
+                        repository.saveAccountScope(selectedAccountScopeId, selectedAccountScopeId)
+                        accountScopes = repository.getAccountScopes()
+                    }
+                    val archiveJson = withContext(Dispatchers.IO) {
+                        val input = context.contentResolver.openInputStream(uri)
+                            ?: throw IllegalStateException("Nie można odczytać wybranego pliku CSV.")
+                        val bytes = input.use { readBytesLimited(it, MAX_IMPORT_BYTES) }
+                        val parsedEntries = BankStatementCsvParser.parse(bytes, selectedAccountScopeId)
+                        PaymentLedgerJsonCodec.encode(parsedEntries)
+                    }
+                    val preview = repository.previewJson(archiveJson)
+                    pendingJson = archiveJson
+                    importPreview = preview
+                    message = "CSV wyciągu bankowego odczytano. Sprawdź podgląd przed zatwierdzeniem."
+                    error = null
+                } catch (exception: Exception) {
+                    pendingJson = null
+                    importPreview = null
+                    error = exception.message ?: "Nie udało się odczytać pliku CSV."
+                }
+            }
+        }
+    }
     val donationAttachmentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -578,6 +611,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                     Button(onClick = { xmlImportLauncher.launch(arrayOf("application/xml", "text/xml", "application/octet-stream")) }) {
                         Text("Importuj XML iPKO")
                     }
+                    Button(onClick = { csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/vnd.ms-excel", "text/*", "application/octet-stream")) }) {
+                        Text("Importuj CSV banku")
+                    }
                 }
                 Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
                     Text("Eksportuj JSON")
@@ -640,6 +676,18 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                         Text("Import zablokowany do czasu wyjaśnienia konfliktów.", color = MaterialTheme.colorScheme.error)
                     }
                 }
+            }
+        }
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Kursy walut i wykresy NBP", style = MaterialTheme.typography.titleMedium)
+                Text("Historyczne kursy średnie tabeli A NBP oraz ceny złota. Wybierz walutę i okres, a następnie wyświetl wykres.")
+                pl.gov.obywatel.android.financial.PriceHistoryChartCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
+                pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
         Card(modifier = Modifier.fillMaxWidth()) {
@@ -966,19 +1014,6 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                 }
             }
         }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Notowania i wycena", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(6.dp))
-                pl.gov.obywatel.android.financial.PriceHistoryChartCard(
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(12.dp))
-                pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
     }
 }
 
@@ -986,7 +1021,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
 private const val MAX_IMPORT_BYTES = 10 * 1024 * 1024
 
 /** Odczyt z limitem bajtów — chroni UI i pamięć przed nieograniczonym plikiem wejściowym. */
-private fun readUtf8Limited(input: InputStream, maxBytes: Int): String {
+private fun readBytesLimited(input: InputStream, maxBytes: Int): ByteArray {
     val output = ByteArrayOutputStream()
     val buffer = ByteArray(8 * 1024)
     var total = 0
@@ -997,5 +1032,8 @@ private fun readUtf8Limited(input: InputStream, maxBytes: Int): String {
         require(total <= maxBytes) { "Plik przekracza limit 10 MB." }
         output.write(buffer, 0, count)
     }
-    return output.toString(Charsets.UTF_8.name())
+    return output.toByteArray()
 }
+
+private fun readUtf8Limited(input: InputStream, maxBytes: Int): String =
+    readBytesLimited(input, maxBytes).toString(Charsets.UTF_8)
