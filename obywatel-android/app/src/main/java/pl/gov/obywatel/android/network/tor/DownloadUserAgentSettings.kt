@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android.network.tor
 
 import android.content.Context
+import android.webkit.WebSettings
 
 enum class DownloadUserAgentProfile(val label: String) {
     MOBYWATEL("mObywatel"),
@@ -48,14 +49,16 @@ object DownloadUserAgentSettings {
 
     fun value(context: Context): String {
         val preferences = prefs(context)
+        val chromiumBase = WebSettings.getDefaultUserAgent(context)
+            .replace("; wv)", ")")
+            .replace("Version/4.0 ", "")
+            .trim()
         return when (profile(context)) {
             DownloadUserAgentProfile.MOBYWATEL -> DEFAULT_MOBYWATEL
-            DownloadUserAgentProfile.BRAVE ->
-                "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
-            DownloadUserAgentProfile.CHROME ->
-                "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
-            DownloadUserAgentProfile.VIVALDI ->
-                "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36 Vivaldi/7.0"
+            // Brave intentionally minimizes browser-specific User-Agent differences.
+            DownloadUserAgentProfile.BRAVE -> chromiumBase
+            DownloadUserAgentProfile.CHROME -> chromiumBase
+            DownloadUserAgentProfile.VIVALDI -> "$chromiumBase Vivaldi"
             DownloadUserAgentProfile.CUSTOM -> preferences.getString(KEY_CUSTOM, "")
                 ?.trim()?.takeIf { it.isNotEmpty() } ?: DEFAULT_MOBYWATEL
         }
