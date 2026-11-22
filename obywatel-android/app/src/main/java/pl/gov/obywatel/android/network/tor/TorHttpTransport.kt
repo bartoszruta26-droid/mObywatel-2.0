@@ -60,7 +60,7 @@ data class TorRequestPolicy(
     val readTimeoutMs: Int = 30_000,
     val maxRedirects: Int = 5,
     val maxBytes: Long = 64L * 1024L * 1024L,
-    val userAgent: String = "mObywatel-2.0"
+    val userAgent: String = "mObywatel-2.0/2026.11 (Android; +https://github.com/bartoszruta26-droid/mObywatel-2.0)"
 ) {
     init {
         require(connectTimeoutMs > 0)
@@ -191,7 +191,7 @@ class TorHttpTransport(
                 .get()
                 .header("User-Agent", policy.userAgent)
                 .header("Accept-Encoding", "identity")
-                .header("Accept", "application/pdf, application/octet-stream, */*")
+                .header("Accept", "image/svg+xml, application/xml;q=0.9, */*;q=0.8")
                 .apply {
                     if (url.host.equals("studia-online.pl", ignoreCase = true)) {
                         header("Referer", "https://studia-online.pl/konto")
