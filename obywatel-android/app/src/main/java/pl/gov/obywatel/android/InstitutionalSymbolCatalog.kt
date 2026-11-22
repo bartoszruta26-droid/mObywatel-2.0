@@ -331,7 +331,8 @@ private suspend fun downloadInstitutionalSymbol(
         "Godła" -> "Godło"
         "Symbole" -> "Symbol"
         "Logotypy" -> "Logo"
-        else -> "Logo"
+        "Pozostałe" -> "Pozostałe"
+        else -> "Pozostałe"
     }
     onProgress(InstitutionalSymbolDownloadProgress("Zapisuję plik i metadane w bibliotece…", bytes.size.toLong(), bytes.size.toLong()))
     DocumentBrandStore.importBytes(context, item.repository, kind, item.displayName.take(180),
