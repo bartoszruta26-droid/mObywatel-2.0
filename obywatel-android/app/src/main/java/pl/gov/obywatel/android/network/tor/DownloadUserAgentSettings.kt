@@ -41,7 +41,7 @@ object DownloadUserAgentSettings {
     fun setCustomValue(context: Context, value: String) {
         require(value.isNotBlank()) { "Wartość User-Agent nie może być pusta." }
         require(value.length <= 512) { "Wartość User-Agent może mieć maksymalnie 512 znaków." }
-        require(value.none { it == '\\r' || it == '\\n' }) {
+        require(value.none { it == '\r' || it == '\n' }) {
             "Wartość User-Agent nie może zawierać znaków nowej linii."
         }
         prefs(context).edit().putString(KEY_CUSTOM, value.trim()).apply()
