@@ -43,6 +43,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -853,6 +854,8 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CommonsSvgRetryScheduler.ensureScheduled(this)
+        lifecycleScope.launch(Dispatchers.IO) { reconcileCommonsDownloadState(applicationContext) }
         // Ten sam znak i tło są wyświetlane przez okno startowe oraz ekran powitalny.
         window.setBackgroundDrawableResource(R.drawable.splash_screen)
         ApplicationAppearanceStore.applyLauncherIcon(this, ApplicationAppearanceStore.load(this).launcherIcon)
