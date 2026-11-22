@@ -3,6 +3,7 @@
 package pl.gov.obywatel.android
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -190,5 +191,25 @@ class InstitutionalSymbolCatalogTest {
         val header = "prefix,name,icon_count,author,author_url,license_title,license_spdx,license_url,category,source_page_url,download_url,source_format,rights_status,discovery_status"
         val row = csvRow("x","X","1","","","","","","","https://example.org/x","http://evil.example/x.json","JSON","review","found")
         parseIconifyCollectionIndex(header + "\n" + row)
+    }
+
+    @Test
+    fun bundledUpstreamCandidateIndexIsParseableAndKeepsUnverifiedAssetsBlocked() {
+        val catalog = java.io.File("src/main/assets/identity-symbols/github-symbol-candidates.csv")
+        assertTrue("Indeks kandydatów musi być dołączony do aplikacji.", catalog.isFile)
+        val candidates = parseInstitutionalSymbolCsv(catalog.readText(Charsets.UTF_8))
+        assertTrue("Indeks powinien zawierać ponad 2 500 pozycji SVG/PNG.", candidates.size > 2500)
+        assertEquals(
+            "Kandydaci muszą mieć stabilne, unikalne identyfikatory.",
+            candidates.size,
+            candidates.map { it.sourceId + ":" + it.path }.distinct().size
+        )
+        assertTrue(candidates.all { it.downloadUrl.startsWith("https://") })
+        assertTrue(candidates.all { institutionalSymbolFormat(it.path) in setOf("SVG", "PNG") })
+
+        val commons = candidates.first { it.sourceId == "wikimedia-commons" }
+        assertFalse("Rekord Commons wymagający weryfikacji pliku nie może być pobierany.", institutionalSymbolCanDownload(commons))
+        val flag = candidates.first { it.group.contains("flag", ignoreCase = true) }
+        assertFalse("Flagi wymagające odrębnej kontroli prawnej pozostają zablokowane.", institutionalSymbolCanDownload(flag))
     }
 }
