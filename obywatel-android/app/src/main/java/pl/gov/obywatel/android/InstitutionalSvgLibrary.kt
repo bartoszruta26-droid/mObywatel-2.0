@@ -424,6 +424,9 @@ internal fun commonsSvgAssetKind(title: String): String {
 }
 
 private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): String {
+    require(commonsCandidateCanBeDownloaded(item)) {
+        "Adres SVG musi używać HTTPS i wskazywać plik .svg na upload.wikimedia.org."
+    }
     waitForCommonsRequestSlot()
     val tor = TorDownloadServiceProvider.get(context)
     val assetId = commonsAssetId(item.title)
@@ -515,7 +518,8 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     val rights = JSONObject().put("source", "Wikimedia Commons").put("sourcePage", item.page).put("downloadUrl", item.url)
         .put("license", item.license).put("licenseUrl", item.licenseUrl).put("author", item.artist)
         .put("restrictions", item.restrictions).put("sha256", sha)
-        .put("verificationStatus", "mime-and-svg-validated; license-metadata-verified; app-use-approval-pending")
+        .put("verificationStatus", commonsRightsMetadataStatus(item))
+        .put("manualReviewRequiredBeforeUse", true)
         .put("permittedKinds", JSONArray()).toString()
     val title = item.title.removePrefix("File:")
     val kind = commonsSvgAssetKind(title)
@@ -679,6 +683,23 @@ internal fun commonsCandidateRightsVerified(item: CommonsSvgCandidate): Boolean 
         item.page.startsWith("https://commons.wikimedia.org/wiki/") &&
         item.url.startsWith("https://upload.wikimedia.org/")
 }
+
+/** Technical eligibility is separate from copyright review: downloading never grants usage rights. */
+internal fun commonsCandidateCanBeDownloaded(item: CommonsSvgCandidate): Boolean = runCatching {
+    val uri = java.net.URI(item.url)
+    uri.scheme.equals("https", ignoreCase = true) &&
+        uri.host.equals("upload.wikimedia.org", ignoreCase = true) &&
+        uri.userInfo == null &&
+        uri.path.endsWith(".svg", ignoreCase = true)
+}.getOrDefault(false)
+
+/** Preserve the result of metadata review without using it as a download gate. */
+internal fun commonsRightsMetadataStatus(item: CommonsSvgCandidate): String =
+    if (commonsCandidateRightsVerified(item)) {
+        "metadata_complete_manual_review_required_before_use"
+    } else {
+        "metadata_incomplete_manual_review_required_before_use"
+    }
 
 /**
  * Reconcile the durable download manifest against the encrypted on-disk asset library.
@@ -858,10 +879,10 @@ private suspend fun processCommonsCandidates(
     }
     uniqueCandidates.forEachIndexed { index, candidate ->
         onProgress(index, uniqueCandidates.size, candidate.title)
-        if (!commonsCandidateRightsVerified(candidate)) {
+        if (!commonsCandidateCanBeDownloaded(candidate)) {
             failed++
-            val reason = "Wymagana indywidualna weryfikacja licencji, autora lub ograniczeń; plik nie został pobrany."
-            persistCommonsCandidateStatus(context, candidate.title, "rights_review_required", 0, reason)
+            val reason = "Nieprawidłowy technicznie adres SVG; wymagany jest HTTPS i host upload.wikimedia.org."
+            persistCommonsCandidateStatus(context, candidate.title, "failed", 0, reason)
             if (errors.size < 100) errors.add("${candidate.title}: ${reason}")
             saveCommonsReport(context, uniqueCandidates.size, downloaded, alreadyPresent, failed,
                 attempts, candidate.title, errors)
