@@ -192,8 +192,6 @@ class InstitutionalSymbolCatalogTest {
         val row = csvRow("x","X","1","","","","","","","https://example.org/x","http://evil.example/x.json","JSON","review","found")
         parseIconifyCollectionIndex(header + "\n" + row)
     }
-}
-
 
     @Test
     fun bundledUpstreamCandidateIndexIsParseableAndKeepsUnverifiedAssetsBlocked() {
@@ -214,3 +212,4 @@ class InstitutionalSymbolCatalogTest {
         val flag = candidates.first { it.group.contains("flag", ignoreCase = true) }
         assertFalse("Flagi wymagające odrębnej kontroli prawnej pozostają zablokowane.", institutionalSymbolCanDownload(flag))
     }
+}
