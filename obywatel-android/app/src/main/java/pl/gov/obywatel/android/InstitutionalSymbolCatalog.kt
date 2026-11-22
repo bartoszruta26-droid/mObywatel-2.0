@@ -377,13 +377,14 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                 context.assets.open("identity-symbols/catalog.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
             }.getOrDefault("")
             val github = context.assets.open("identity-symbols/github-symbol-candidates.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val additional = context.assets.open("identity-symbols/additional-graphic-files.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
             val iconify = context.assets.open("identity-symbols/iconify-collection-index.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
-            arrayOf(sources, local, github, iconify)
+            arrayOf(sources, local, github, iconify, additional)
         }
         sourceCollections = runCatching { parseInstitutionalSymbolCollectionsCsv(loaded[0]) }.getOrElse {
             message = "Nie udało się wczytać rejestru kolekcji: ${it.message ?: "błąd danych"}"; emptyList()
         }
-        candidates = runCatching { ((if (loaded[1].isBlank()) emptyList() else parseInstitutionalSymbolCsv(loaded[1])) + parseInstitutionalSymbolCsv(loaded[2])).distinctBy { it.sourceId + ":" + it.path } }.getOrElse {
+        candidates = runCatching { ((if (loaded[1].isBlank()) emptyList() else parseInstitutionalSymbolCsv(loaded[1])) + parseInstitutionalSymbolCsv(loaded[2]) + parseInstitutionalSymbolCsv(loaded[4])).distinctBy { it.sourceId + ":" + it.path } }.getOrElse {
             message = "Nie udało się wczytać katalogu SVG: ${it.message ?: "błąd danych"}"; emptyList()
         }
         iconifyCollections = runCatching { parseIconifyCollectionIndex(loaded[3]) }.getOrElse {
