@@ -26,7 +26,7 @@ class FinancialChartAnalyticsTest {
     @Test
     fun rsiReturnsHundredForStrictlyRisingSeriesAndFiftyForFlatSeries() {
         val rising = FinancialChartAnalytics.rsi(values(20), 14)
-        assertEquals("100.00000000", rising.last()?.toPlainString())
+        assertEquals(0, rising.last()!!.compareTo(BigDecimal("100")))
         val flat = FinancialChartAnalytics.rsi(List(20) { BigDecimal("4.0") }, 14)
         assertEquals("50", flat.last()?.stripTrailingZeros()?.toPlainString())
     }
