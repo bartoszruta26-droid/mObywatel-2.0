@@ -238,20 +238,23 @@ class InstitutionalSymbolCatalogTest {
         assertTrue("Indeks kandydatów musi być dołączony do aplikacji.", catalog.isFile)
         val candidates = parseInstitutionalSymbolCsv(catalog.readText(Charsets.UTF_8))
         assertTrue("Indeks powinien zawierać ponad 2 500 pozycji SVG/PNG.", candidates.size > 2500)
+        val additionalCatalog = java.io.File("src/main/assets/identity-symbols/additional-graphic-files.csv")
+        assertTrue("Dodatkowy indeks bezpośrednich plików graficznych musi być dołączony do aplikacji.", additionalCatalog.isFile)
+        val external = parseInstitutionalSymbolCsv(additionalCatalog.readText(Charsets.UTF_8))
+        assertEquals("Dodatkowe bazy powinny udostępniać 102 bezpośrednie pliki SVG.", 102, external.size)
+        val allCandidates = candidates + external
         assertEquals(
             "Kandydaci muszą mieć stabilne, unikalne identyfikatory.",
-            candidates.size,
-            candidates.map { it.sourceId + ":" + it.path }.distinct().size
+            allCandidates.size,
+            allCandidates.map { it.sourceId + ":" + it.path }.distinct().size
         )
-        assertTrue(candidates.all { it.downloadUrl.startsWith("https://") })
-        assertTrue(candidates.all { institutionalSymbolFormat(it.path) in setOf("SVG", "PNG") })
+        assertTrue(allCandidates.all { it.downloadUrl.startsWith("https://") })
+        assertTrue(allCandidates.all { institutionalSymbolFormat(it.path) in setOf("SVG", "PNG") })
 
         val commons = candidates.first { it.sourceId == "wikimedia-commons" }
         assertTrue("Status praw nie może blokować pobrania pliku Commons.", institutionalSymbolCanDownload(commons))
         val flag = candidates.first { it.group.contains("flag", ignoreCase = true) }
         assertTrue("Status praw nie może blokować pobrania flagi.", institutionalSymbolCanDownload(flag))
-        val external = candidates.filter { it.sourceId in setOf("bootstrap-icons", "lucide-static", "tabler-icons", "openmoji", "simple-icons") }
-        assertTrue("Indeks powinien zawierać bezpośrednie pliki z dodatkowych baz graficznych.", external.size >= 90)
-        assertTrue(external.all { institutionalSymbolCanDownload(it) })
+        assertTrue("Dodatkowe pliki z baz graficznych muszą być dostępne do pobrania.", external.all { institutionalSymbolCanDownload(it) })
     }
 }
