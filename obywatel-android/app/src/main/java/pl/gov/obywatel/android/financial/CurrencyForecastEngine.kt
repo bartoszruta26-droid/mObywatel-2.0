@@ -146,9 +146,8 @@ object CurrencyForecastEngine {
                     actualPercent < -NEUTRAL_BAND_PERCENT -> ForecastDirection.DOWN
                     else -> ForecastDirection.NEUTRAL
                 }
-                if (predictedDirection != ForecastDirection.NEUTRAL &&
-                    actualDirection != ForecastDirection.NEUTRAL
-                ) {
+                if (predictedDirection != ForecastDirection.NEUTRAL) {
+                    // Ruch neutralny lub przeciwny jest błędem prognozy kierunku, nie pomijamy go.
                     directionTrials++
                     if (predictedDirection == actualDirection) directionHits++
                 }
