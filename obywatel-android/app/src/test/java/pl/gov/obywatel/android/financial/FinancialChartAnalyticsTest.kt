@@ -36,10 +36,9 @@ class FinancialChartAnalyticsTest {
         val input = values(60)
         val line = FinancialChartAnalytics.macd(input, 12, 26)
         val signal = FinancialChartAnalytics.macdSignal(input, 12, 26, 9)
-        assertNull(line[24])
-        assertNotNull(line[25])
-        assertNull(signal[32])
-        assertNotNull(signal[33])
+        assertNotNull(line[0])
+        assertNull(signal[7])
+        assertNotNull(signal[8])
     }
 
     @Test
