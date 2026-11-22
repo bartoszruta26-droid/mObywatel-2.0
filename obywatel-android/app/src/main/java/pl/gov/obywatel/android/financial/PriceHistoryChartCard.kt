@@ -9,6 +9,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import org.json.JSONArray
+import java.net.HttpURLConnection
+import java.net.URL
+import java.io.IOException
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -50,11 +54,18 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     var style by remember { mutableStateOf(PriceChartStyle.entries.firstOrNull {
         it.name == prefs.getString("style", "LINE")
     } ?: PriceChartStyle.LINE) }
+    val pairRepository = remember { FrankfurterChartRepository() }
     var instruments by remember { mutableStateOf(listOf(
         ChartInstrument("PLN", "złoty polski"), ChartInstrument("EUR", "euro"),
         ChartInstrument("USD", "dolar amerykański"), ChartInstrument("CHF", "frank szwajcarski"),
-        ChartInstrument("GBP", "funt brytyjski"), ChartInstrument("XAU", "złoto • gram", true)
+        ChartInstrument("GBP", "funt brytyjski"), ChartInstrument("XAU", "złoto"),
+        ChartInstrument("XAG", "srebro"), ChartInstrument("XPT", "platyna"),
+        ChartInstrument("XPD", "pallad")
     )) }
+    LaunchedEffect(pairRepository) {
+        runCatching { withContext(Dispatchers.IO) { pairRepository.fetchInstruments() } }
+            .onSuccess { discovered -> if (discovered.isNotEmpty()) instruments = discovered }
+    }
     var points by remember { mutableStateOf<List<PairPricePoint>>(emptyList()) }
     var selected by remember { mutableStateOf<PairPricePoint?>(null) }
     var loading by remember { mutableStateOf(false) }
@@ -76,34 +87,13 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 val end = LocalDate.now()
                 val start = end.minusDays(period.days - 1)
                 val data = withContext(Dispatchers.IO) {
-                    val a = instruments.firstOrNull { it.code == base }
-                        ?: throw IllegalArgumentException("Nieznany instrument bazowy.")
-                    val b = instruments.firstOrNull { it.code == quote }
-                        ?: throw IllegalArgumentException("Nieznany instrument kwotowany.")
-                    fun plnSeries(item: ChartInstrument): Map<LocalDate, BigDecimal> = when {
-                        item.code == "PLN" -> (0 until period.days.toInt() + 1)
-                            .associate { start.plusDays(it.toLong()) to BigDecimal.ONE }
-                        item.gold -> repository.goldPriceHistory(start, end)
-                            .associate { it.date to it.pricePerGramPln }
-                        else -> repository.currencyRateHistory(NbpTable.A, item.code, start, end)
-                            .associate { it.first to it.second }
-                    }
-                    val av = plnSeries(a); val bv = plnSeries(b)
-                    av.keys.intersect(bv.keys).sorted().mapNotNull { date ->
-                        val ap = av[date] ?: return@mapNotNull null
-                        val bp = bv[date] ?: return@mapNotNull null
-                        if (bp.signum() == 0) null else PairPricePoint(
-                            date, ap.divide(bp, 10, RoundingMode.HALF_EVEN)
-                        )
-                    }
+                    pairRepository.history(base, quote, start, end)
                 }
                 require(data.isNotEmpty()) {
                     "Brak wspólnych notowań dla $${base}/$${quote} w wybranym okresie."
                 }
                 points = data
-                source = if (base == "XAU" || quote == "XAU")
-                    "Źródło: NBP • złoto PLN/g i waluta PLN • kurs krzyżowy"
-                else "Źródło: NBP, tabela A • kursy średnie • kurs krzyżowy"
+                source = "Źródło: Frankfurter • dane referencyjne banków centralnych i innych oficjalnych dostawców"
                 save()
             } catch (e: Exception) {
                 points = emptyList()
@@ -194,7 +184,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         } else if (!loading) Text("Wybierz dwa różne instrumenty i naciśnij „Pokaż”.")
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(source, style = MaterialTheme.typography.bodySmall)
-        Text("Kurs pary jest obliczany jako A/PLN ÷ B/PLN. Dane NBP są dziennymi kursami referencyjnymi, nie notowaniami transakcyjnymi ani wolumenem giełdowym.",
+        Text("Dane Frankfurter są kursami referencyjnymi, nie notowaniami transakcyjnymi. Interwał zależy od częstotliwości publikacji dostawcy; nie jest generowany sztuczny wolumen.",
             style = MaterialTheme.typography.bodySmall)
     }
 }
@@ -264,5 +254,72 @@ private fun PairHistoryChart(
             drawLine(marker, Offset(p.x, t), Offset(p.x, b), 1.dp.toPx())
             drawCircle(marker, 5.dp.toPx(), p)
         }
+    }
+}
+
+
+/**
+ * Frankfurter v2: publiczny, otwarty interfejs bez klucza API.
+ * Dostarcza waluty oraz wybrane aktywa, w tym metale szlachetne.
+ */
+private class FrankfurterChartRepository {
+    private fun get(url: String): String {
+        val connection = URL(url).openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 10000
+            connection.readTimeout = 20000
+            connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("User-Agent", "mObywatelska-2.0")
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+            if (status !in 200..299) throw IOException("Frankfurter API HTTP $status: $body")
+            return body
+        } finally { connection.disconnect() }
+    }
+
+    fun fetchInstruments(): List<ChartInstrument> {
+        val array = JSONArray(get("https://api.frankfurter.dev/v2/currencies"))
+        val result = (0 until array.length()).mapNotNull { index ->
+            val item = array.getJSONObject(index)
+            val code = sequenceOf("iso_code", "code", "symbol")
+                .map { item.optString(it).trim().uppercase() }
+                .firstOrNull { it.matches(Regex("[A-Z0-9]{3,5}")) } ?: return@mapNotNull null
+            val name = sequenceOf("name", "description", "title")
+                .map { item.optString(it).trim() }
+                .firstOrNull { it.isNotBlank() } ?: code
+            ChartInstrument(code, name, code in setOf("XAU", "XAG", "XPT", "XPD"))
+        }
+        return (result + listOf(
+            ChartInstrument("PLN", "złoty polski"),
+            ChartInstrument("XAU", "złoto", true),
+            ChartInstrument("XAG", "srebro", true),
+            ChartInstrument("XPT", "platyna", true),
+            ChartInstrument("XPD", "pallad", true)
+        )).distinctBy { it.code }.sortedBy { it.code }
+    }
+
+    fun history(base: String, quote: String, start: LocalDate, end: LocalDate): List<PairPricePoint> {
+        require(base != quote) { "Para musi zawierać dwa różne instrumenty." }
+        val url = "https://api.frankfurter.dev/v2/rates?from=$start&to=$end&base=$base&quotes=$quote"
+        val rows = runCatching { JSONArray(get(url)) }.getOrElse {
+            // Some providers publish a metal only as a quote. Try the inverse pair.
+            val inverseUrl = "https://api.frankfurter.dev/v2/rates?from=$start&to=$end&base=$quote&quotes=$base"
+            val inverse = JSONArray(get(inverseUrl))
+            return (0 until inverse.length()).mapNotNull { index ->
+                val row = inverse.getJSONObject(index)
+                val rate = row.optString("rate").toBigDecimalOrNull() ?: return@mapNotNull null
+                if (rate.signum() == 0) null else PairPricePoint(
+                    LocalDate.parse(row.getString("date")),
+                    BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_EVEN)
+                )
+            }.sortedBy { it.date }
+        }
+        return (0 until rows.length()).mapNotNull { index ->
+            val row = rows.getJSONObject(index)
+            val rate = row.optString("rate").toBigDecimalOrNull() ?: return@mapNotNull null
+            PairPricePoint(LocalDate.parse(row.getString("date")), rate)
+        }.sortedBy { it.date }
     }
 }
