@@ -478,9 +478,8 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         if (matches.isEmpty() && candidates.isNotEmpty()) {
             Text("Brak wyników w wybranej grupie.", style = MaterialTheme.typography.bodySmall)
         }
-        val theSvgSourceCount = candidates.count { it.repository == "glincker/thesvg" }
         Text(
-            "Źródła plików: Wikimedia Commons, GitHub, theSVG, Bootstrap Icons, Lucide, Tabler Icons, OpenMoji i Simple Icons · $theSvgSourceCount rekordów theSVG",
+            "Źródła plików: Wikimedia Commons, GitHub, Bootstrap Icons, Lucide, Tabler Icons, OpenMoji i Simple Icons",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
