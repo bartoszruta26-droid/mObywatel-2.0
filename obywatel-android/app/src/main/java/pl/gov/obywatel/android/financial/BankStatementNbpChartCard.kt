@@ -116,6 +116,9 @@ fun BankStatementNbpChartCard(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Wykres rachunku — wycena zapisów w PLN", style = MaterialTheme.typography.titleMedium)
         Text("Przeliczenie według historycznych kursów średnich NBP z tabeli A, z uwzględnieniem daty księgowania. Oryginalne kwoty i waluty pozostają bez zmian.")
+        if (entries.isEmpty()) {
+            Text("Po zaimportowaniu wyciągu CSV lub XML wykres wyceny zostanie obliczony automatycznie.")
+        }
         Button(
             enabled = entries.isNotEmpty() && !loading,
             onClick = {
