@@ -67,7 +67,7 @@ object DownloadConnectionSettings {
 class TorDownloadService(
     private val context: Context,
     private val runtime: TorRuntime,
-    policy: TorRequestPolicy = TorRequestPolicy()
+    policy: TorRequestPolicy = TorRequestPolicy(userAgent = DownloadUserAgentSettings.value(context))
 ) {
     private val transport = TorHttpTransport(runtime, policy)
     private val guardianRouter = TorDownloadRouter(
