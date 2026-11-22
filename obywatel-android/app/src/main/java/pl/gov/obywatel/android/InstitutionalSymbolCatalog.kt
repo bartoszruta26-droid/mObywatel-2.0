@@ -233,22 +233,15 @@ internal suspend fun discoverCommonsCollection(
     val discovered = mutableListOf<InstitutionalSymbolCandidate>()
     var continuation: String? = null
     repeat(maxPages) {
-        val builder = Uri.parse("https://commons.wikimedia.org/w/api.php").buildUpon()
-            .appendQueryParameter("action", "query")
-            .appendQueryParameter("generator", "categorymembers")
-            .appendQueryParameter("gcmtitle", source.collectionRef)
-            .appendQueryParameter("gcmtype", "file")
-            .appendQueryParameter("gcmlimit", "100")
-            .appendQueryParameter("prop", "imageinfo")
-            .appendQueryParameter("iiprop", "url|extmetadata")
-            .appendQueryParameter("format", "json")
-        continuation?.let { builder.appendQueryParameter("gcmcontinue", it) }
-        val response = TorDownloadServiceProvider.get(context).open(builder.build().toString(), TorDownloadKind.API)
-        val jsonText = response.use {
-            require(it.statusCode in 200..299) { "Wikimedia Commons zwróciło HTTP ${it.statusCode}." }
-            it.body.bufferedReader(Charsets.UTF_8).use { reader -> reader.readText() }
+        val params = buildString {
+            append("action=query&generator=categorymembers")
+            append("&gcmtitle=").append(Uri.encode(source.collectionRef))
+            append("&gcmtype=file&gcmlimit=100&prop=imageinfo")
+            append("&iiprop=url%7Cextmetadata&format=json")
+            continuation?.let { append("&gcmcontinue=").append(Uri.encode(it)) }
         }
-        val root = JSONObject(jsonText)
+        // Wspólny klient Commons stosuje globalny odstęp żądań, maxlag i cooldown 420/429.
+        val root = commonsRequest(context, params)
         val pages = root.optJSONObject("query")?.optJSONObject("pages") ?: JSONObject()
         val keys = pages.keys()
         while (keys.hasNext()) {
@@ -390,8 +383,12 @@ private suspend fun downloadInstitutionalSymbol(
         "Adres pliku musi prowadzić przez HTTPS do obsługiwanego źródła graficznego."
     }
     onProgress(InstitutionalSymbolDownloadProgress("Łączenie ze źródłem przez wybraną trasę sieciową. Przy uruchamianiu Tor pierwsze połączenie może potrwać dłużej."))
+    if (uri.host.equals("upload.wikimedia.org", true)) waitForCommonsRequestSlot()
     val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, if (format == "SVG") TorDownloadKind.SVG else TorDownloadKind.IMAGE)
     val bytes = response.use {
+        if (uri.host.equals("upload.wikimedia.org", true) && it.statusCode in setOf(420, 429)) {
+            recordCommonsHttpBackoff(it.statusCode, null)
+        }
         require(it.statusCode in 200..299) { "Serwer zwrócił HTTP ${it.statusCode}." }
         val expected = it.contentLength?.takeIf { length -> length > 0L }
         onProgress(InstitutionalSymbolDownloadProgress("Połączono. Pobieranie danych $format…", 0L, expected))
