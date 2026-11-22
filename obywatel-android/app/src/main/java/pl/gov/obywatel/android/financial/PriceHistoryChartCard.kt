@@ -302,24 +302,27 @@ private class FrankfurterChartRepository {
 
     fun history(base: String, quote: String, start: LocalDate, end: LocalDate): List<PairPricePoint> {
         require(base != quote) { "Para musi zawierać dwa różne instrumenty." }
-        val url = "https://api.frankfurter.dev/v2/rates?from=$start&to=$end&base=$base&quotes=$quote"
-        val rows = runCatching { JSONArray(get(url)) }.getOrElse {
-            // Some providers publish a metal only as a quote. Try the inverse pair.
-            val inverseUrl = "https://api.frankfurter.dev/v2/rates?from=$start&to=$end&base=$quote&quotes=$base"
-            val inverse = JSONArray(get(inverseUrl))
-            return (0 until inverse.length()).mapNotNull { index ->
-                val row = inverse.getJSONObject(index)
-                val rate = row.optString("rate").toBigDecimalOrNull() ?: return@mapNotNull null
-                if (rate.signum() == 0) null else PairPricePoint(
-                    LocalDate.parse(row.getString("date")),
-                    BigDecimal.ONE.divide(rate, 10, RoundingMode.HALF_EVEN)
-                )
-            }.sortedBy { it.date }
+        // Use USD as a common numeraire so currencies and metals can be paired
+        // even when a provider does not expose a particular metal as the base.
+        val requested = listOf(base, quote).filter { it != "USD" }.distinct()
+        val url = buildString {
+            append("https://api.frankfurter.dev/v2/rates?from=$start&to=$end&base=USD")
+            if (requested.isNotEmpty()) append("&quotes=").append(requested.joinToString(","))
         }
-        return (0 until rows.length()).mapNotNull { index ->
+        val rows = JSONArray(get(url))
+        val byDate = mutableMapOf<LocalDate, MutableMap<String, BigDecimal>>()
+        for (index in 0 until rows.length()) {
             val row = rows.getJSONObject(index)
-            val rate = row.optString("rate").toBigDecimalOrNull() ?: return@mapNotNull null
-            PairPricePoint(LocalDate.parse(row.getString("date")), rate)
+            val date = LocalDate.parse(row.getString("date"))
+            val code = row.optString("quote").uppercase()
+            val rate = row.optString("rate").toBigDecimalOrNull() ?: continue
+            byDate.getOrPut(date) { mutableMapOf("USD" to BigDecimal.ONE) }[code] = rate
+        }
+        return byDate.entries.mapNotNull { (date, rates) ->
+            val basePerUsd = rates[base] ?: if (base == "USD") BigDecimal.ONE else null
+            val quotePerUsd = rates[quote] ?: if (quote == "USD") BigDecimal.ONE else null
+            if (basePerUsd == null || quotePerUsd == null || basePerUsd.signum() == 0) null
+            else PairPricePoint(date, quotePerUsd.divide(basePerUsd, 10, RoundingMode.HALF_EVEN))
         }.sortedBy { it.date }
     }
 }
