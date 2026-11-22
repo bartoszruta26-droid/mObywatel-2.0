@@ -111,4 +111,42 @@ class InstitutionalSymbolCatalogTest {
         )
         assertEquals("Symbole", institutionalSymbolCategory(candidate))
     }
+
+    @Test
+    fun loadsAllSelectedSourceCollectionsAndKeepsLifecycleStatesSeparate() {
+        val header = "collection_id,label,provider,collection_ref,source_page_url,discovery_api_url,observed_size,source_formats,rights_policy,rights_status,discovery_method,direct_file_pattern_or_notes,checked_at,refresh_interval_days,notes,discovery_state,verification_state,download_state,storage_state,availability_state"
+        val row = csvRow(
+            "commons_pl_gov_svg", "Polskie instytucje", "Wikimedia Commons", "Category:Gov",
+            "https://commons.wikimedia.org/wiki/Category:Gov",
+            "https://commons.wikimedia.org/w/api.php?action=query", "52", "SVG",
+            "Per-file license", "reference_only", "categorymembers API", "imageinfo.url",
+            "2026-11-22", "30", "Check each file", "source_registered", "per_file_pending",
+            "not_downloaded", "not_saved", "not_available"
+        )
+        val result = parseInstitutionalSymbolCollectionsCsv(header + "\n" + row)
+        assertEquals(1, result.size)
+        assertEquals("52", result.single().observedSize)
+        assertEquals("source_registered", result.single().discoveryState)
+        assertEquals("per_file_pending", result.single().verificationState)
+        assertEquals("not_downloaded", result.single().downloadState)
+        assertEquals("not_saved", result.single().storageState)
+        assertEquals("not_available", result.single().availabilityState)
+    }
+
+    @Test
+    fun blocksInstitutionalSymbolDownloadsWithoutExplicitLicenseApproval() {
+        val referenceOnly = InstitutionalSymbolCandidate(
+            "commons", "Wikimedia Commons", "main", "File:coat.svg", "polish_arms",
+            "per_file_metadata_review_required", "https://commons.wikimedia.org/wiki/File:coat.svg",
+            "https://upload.wikimedia.org/a/coat.svg", "CC BY-SA 4.0",
+            "https://creativecommons.org/licenses/by-sa/4.0/", "Artist", "Credit"
+        )
+        val approvedMit = referenceOnly.copy(
+            rightsStatus = "MIT",
+            license = "MIT",
+            licenseUrl = "https://github.com/lipis/flag-icons/blob/main/LICENSE"
+        )
+        assertEquals(false, institutionalSymbolCanDownload(referenceOnly))
+        assertEquals(true, institutionalSymbolCanDownload(approvedMit))
+    }
 }
