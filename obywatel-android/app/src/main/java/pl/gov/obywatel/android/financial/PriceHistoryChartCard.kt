@@ -169,9 +169,9 @@ private fun PriceHistoryAnalyticalChart(points: List<PriceChartPoint>, indicator
     val sma50Color = MaterialTheme.colorScheme.inversePrimary
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val main = points.map { it.value.toFloat() }
-    val series = listOf(main, points.mapNotNull { it.bid?.toFloat() }, points.mapNotNull { it.ask?.toFloat() },
-        indicators.sma20.mapNotNull { it?.toFloat() }, indicators.sma50.mapNotNull { it?.toFloat() })
-    val all = series.flatten()
+    val series = listOf(main, points.map { it.bid?.toFloat() }, points.map { it.ask?.toFloat() },
+        indicators.sma20.map { it?.toFloat() }, indicators.sma50.map { it?.toFloat() })
+    val all = series.flatten().filterNotNull()
     val minValue = all.minOrNull() ?: 0f
     val maxValue = all.maxOrNull() ?: 1f
     val span = (maxValue - minValue).takeIf { it > 0f } ?: 1f
@@ -182,23 +182,31 @@ private fun PriceHistoryAnalyticalChart(points: List<PriceChartPoint>, indicator
             val y = top + (bottom - top) * index / 4f
             drawLine(gridColor, Offset(left, y), Offset(right, y), strokeWidth = 1.dp.toPx())
         }
-        fun drawSeries(values: List<Float>, color: androidx.compose.ui.graphics.Color, width: Float) {
-            if (values.isEmpty()) return
+        fun drawSeries(values: List<Float?>, color: androidx.compose.ui.graphics.Color, width: Float) {
             val path = Path()
-            values.forEachIndexed { index, value ->
+            var started = false
+            var count = 0
+            values.forEachIndexed { index, nullableValue ->
+                val value = nullableValue ?: return@forEachIndexed
                 val x = left + (right - left) * index / values.lastIndex.coerceAtLeast(1).toFloat()
                 val y = bottom - ((value - minValue) / span) * (bottom - top)
-                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                if (!started) { path.moveTo(x, y); started = true } else path.lineTo(x, y)
+                count++
             }
-            if (values.size == 1) drawCircle(color, 4.dp.toPx(), Offset((left + right) / 2f, bottom - ((values[0] - minValue) / span) * (bottom - top)))
-            else drawPath(path, color, style = Stroke(width))
+            if (count == 1) {
+                val index = values.indexOfFirst { it != null }
+                val value = values[index]!!
+                val x = left + (right - left) * index / values.lastIndex.coerceAtLeast(1).toFloat()
+                val y = bottom - ((value - minValue) / span) * (bottom - top)
+                drawCircle(color, 4.dp.toPx(), Offset(x, y))
+            } else if (count > 1) drawPath(path, color, style = Stroke(width))
         }
-        drawSeries(main, mainColor, 2.8.dp.toPx())
+        drawSeries(points.map { it.value.toFloat() }, mainColor, 2.8.dp.toPx())
         if (points.all { it.bid != null && it.ask != null }) {
-            drawSeries(points.mapNotNull { it.bid?.toFloat() }, bidColor, 1.6.dp.toPx())
-            drawSeries(points.mapNotNull { it.ask?.toFloat() }, askColor, 1.6.dp.toPx())
+            drawSeries(points.map { it.bid?.toFloat() }, bidColor, 1.6.dp.toPx())
+            drawSeries(points.map { it.ask?.toFloat() }, askColor, 1.6.dp.toPx())
         }
-        drawSeries(indicators.sma20.mapNotNull { it?.toFloat() }, sma20Color, 1.7.dp.toPx())
-        drawSeries(indicators.sma50.mapNotNull { it?.toFloat() }, sma50Color, 1.7.dp.toPx())
-    }
+        drawSeries(indicators.sma20.map { it?.toFloat() }, sma20Color, 1.7.dp.toPx())
+        drawSeries(indicators.sma50.map { it?.toFloat() }, sma50Color, 1.7.dp.toPx())
+
 }
