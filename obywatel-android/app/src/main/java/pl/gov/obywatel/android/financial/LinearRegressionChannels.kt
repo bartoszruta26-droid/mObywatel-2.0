@@ -7,23 +7,60 @@ package pl.gov.obywatel.android.financial
 
 import kotlin.math.sqrt
 
-/** Parametry trzech niezależnych kanałów regresji liniowej. */
+/**
+ * Siedem niezależnych kanałów opartych na kolejnych liczbach Fibonacciego:
+ * 987, 610, 377, 233, 144, 89, 55 obserwacji.
+ * Zachowano możliwość ręcznej zmiany każdego okna.
+ */
 data class RegressionChannelSettings(
-    val length1: Int = 377,
-    val length2: Int = 233,
-    val length3: Int = 144,
+    val length1: Int = 987,
+    val length2: Int = 610,
+    val length3: Int = 377,
+    val length4: Int = 233,
+    val length5: Int = 144,
+    val length6: Int = 89,
+    val length7: Int = 55,
     val deviationMultiplier: Double = 2.41,
     val extendLines: Boolean = true,
     val showFibonacci: Boolean = true,
     val showBroken: Boolean = false,
     val width1: Float = 1f,
     val width2: Float = 1f,
-    val width3: Float = 1f
+    val width3: Float = 1f,
+    val width4: Float = 1f,
+    val width5: Float = 1f,
+    val width6: Float = 1f,
+    val width7: Float = 1f
 ) {
     init {
-        require(length1 >= 10 && length2 >= 10 && length3 >= 10)
+        require(lengths.all { it >= 10 })
         require(deviationMultiplier >= 0.1 && deviationMultiplier.isFinite())
-        require(width1 in 1f..4f && width2 in 1f..4f && width3 in 1f..4f)
+        require(widths.all { it in 1f..4f })
+    }
+
+    val lengths: List<Int> get() = listOf(length1, length2, length3, length4, length5, length6, length7)
+    val widths: List<Float> get() = listOf(width1, width2, width3, width4, width5, width6, width7)
+
+    fun withLength(index: Int, value: Int): RegressionChannelSettings = when (index) {
+        0 -> copy(length1 = value)
+        1 -> copy(length2 = value)
+        2 -> copy(length3 = value)
+        3 -> copy(length4 = value)
+        4 -> copy(length5 = value)
+        5 -> copy(length6 = value)
+        6 -> copy(length7 = value)
+        else -> throw IndexOutOfBoundsException("Kanał regresji: $index")
+    }
+
+    fun withWidth(index: Int, value: Float): RegressionChannelSettings = when (index) {
+        0 -> copy(width1 = value)
+        1 -> copy(width2 = value)
+        2 -> copy(width3 = value)
+        3 -> copy(width4 = value)
+        4 -> copy(width5 = value)
+        5 -> copy(width6 = value)
+        6 -> copy(width7 = value)
+        else -> throw IndexOutOfBoundsException("Kanał regresji: $index")
     }
 }
 
@@ -49,6 +86,7 @@ data class RegressionChannelResult(
 
 object LinearRegressionChannels {
     val fibonacciRatios = listOf(0.236, 0.382, 0.618, 0.786)
+    val fibonacciWindowLengths = listOf(987, 610, 377, 233, 144, 89, 55)
 
     /** OLS na szeregu chronologicznym; odchylenie to RMS reszt regresji. */
     fun calculate(values: List<Double>, length: Int, deviationMultiplier: Double = 2.41): RegressionChannelResult? {
@@ -88,9 +126,12 @@ object LinearRegressionChannels {
             deviation, slope, broken)
     }
 
-    fun calculateThree(values: List<Double>, settings: RegressionChannelSettings) = listOf(
-        calculate(values, settings.length1, settings.deviationMultiplier),
-        calculate(values, settings.length2, settings.deviationMultiplier),
-        calculate(values, settings.length3, settings.deviationMultiplier)
-    )
+    fun calculateAll(values: List<Double>, settings: RegressionChannelSettings): List<RegressionChannelResult?> =
+        settings.lengths.map { calculate(values, it, settings.deviationMultiplier) }
+
+    /** Zachowane dla zgodności ze starszymi wywołaniami i testami. */
+    fun calculateThree(values: List<Double>, settings: RegressionChannelSettings) =
+        listOf(settings.length3, settings.length4, settings.length5).map {
+            calculate(values, it, settings.deviationMultiplier)
+        }
 }
