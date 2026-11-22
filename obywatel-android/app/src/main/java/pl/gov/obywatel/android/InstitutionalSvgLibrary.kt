@@ -98,9 +98,9 @@ internal fun commonsSvgSearchExpressions(term: String): List<String> {
 }
 
 // Commons rate limiting: keep every API and file request sequential and deliberately slow.
-private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 3_000L
-private const val COMMONS_RATE_LIMIT_COOLDOWN_MS = 30_000L
-private const val COMMONS_MAX_RETRY_AFTER_MS = 15L * 60L * 1000L
+private const val COMMONS_MIN_REQUEST_INTERVAL_MS = 10_000L
+private const val COMMONS_RATE_LIMIT_COOLDOWN_MS = 60_000L
+private const val COMMONS_MAX_RETRY_AFTER_MS = 24L * 60L * 60L * 1000L
 private const val COMMONS_API_MAX_ATTEMPTS = 3
 private const val COMMONS_DOWNLOAD_MAX_ATTEMPTS = 5
 
@@ -157,8 +157,8 @@ internal fun commonsDownloadRetryDelayMs(
     retryAfterMs: Long? = null
 ): Long {
     val exponent = (attempt - 1).coerceIn(0, 5)
-    val baseDelay = if (httpCode == 420 || httpCode == 429) 30_000L else 10_000L
-    val exponentialDelay = (baseDelay * (1L shl exponent)).coerceAtMost(180_000L)
+    val baseDelay = if (httpCode == 420 || httpCode == 429) 60_000L else 10_000L
+    val exponentialDelay = (baseDelay * (1L shl exponent)).coerceAtMost(15L * 60L * 1000L)
     return maxOf(exponentialDelay, retryAfterMs ?: 0L).coerceAtMost(COMMONS_MAX_RETRY_AFTER_MS)
 }
 
@@ -177,6 +177,9 @@ private class CommonsHttpException(
     val httpCode: Int,
     val retryDelayMs: Long?,
 ) : java.io.IOException("Wikimedia Commons: HTTP $httpCode")
+
+internal fun commonsDownloadEligibleForRetry(status: String, nextRetryAtMs: Long, nowMs: Long): Boolean =
+    commonsDownloadStatusNeedsRetry(status) && nextRetryAtMs <= nowMs
 
 internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null): Long {
     // Cap before multiplication so an untrusted Retry-After value cannot overflow Long.
@@ -213,7 +216,7 @@ private fun commonsRequest(context: Context, params: String): JSONObject {
             val delayMs = recordCommonsHttpBackoff(failure.httpCode, retryAfterMs)
             appendCommonsDiagnostic(context, "API_HTTP_ERROR attempt=${attempt + 1} code=${failure.httpCode} retryAfterMs=$retryAfterMs")
             lastFailure = CommonsHttpException(failure.httpCode, retryAfterMs)
-            if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS) throw lastFailure!!
+            if (!retryable || attempt + 1 >= COMMONS_API_MAX_ATTEMPTS || delayMs > 120_000L) throw lastFailure!!
             Thread.sleep(maxOf(commonsRetryDelayMs(attempt + 2, (delayMs / 1000L)), delayMs))
         } catch (failure: Exception) {
             appendCommonsDiagnostic(context, "API_EXCEPTION attempt=${attempt + 1} type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"} transport=${tor.diagnosticSnapshot()}")
@@ -264,6 +267,7 @@ private suspend fun discoverCommonsOpenSvgs(
         val response = try {
             commonsRequest(context, "action=query&prop=imageinfo&titles=$encoded&iiprop=url|mime|extmetadata&format=json")
         } catch (failure: Exception) {
+            if (failure is CommonsHttpException && (failure.httpCode == 420 || failure.httpCode == 429)) throw failure
             failedVerificationBatches++
             failedVerificationQueue.add(batch.toList())
             appendCommonsDiagnostic(context, "VERIFY_BATCH_FAILED type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
@@ -333,6 +337,7 @@ private suspend fun discoverCommonsOpenSvgs(
                     break
                 }
             } catch (failure: Exception) {
+                if (failure is CommonsHttpException && (failure.httpCode == 420 || failure.httpCode == 429)) throw failure
                 appendCommonsDiagnostic(context, "SEARCH_FAILED term=$term expression=$expression type=${failure.javaClass.simpleName} message=${failure.message ?: "brak"}")
                 lastSearchFailure = failure
             }
@@ -696,18 +701,22 @@ internal suspend fun retryPendingCommonsDownloads(context: Context): Boolean {
     if (!manifestFile.isFile) return true
     reconcileCommonsDownloadState(context)
     val manifest = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
+    val now = System.currentTimeMillis()
     val pendingTitles = buildSet {
         for (index in 0 until manifest.length()) {
             val item = manifest.optJSONObject(index) ?: continue
-            if (commonsDownloadStatusNeedsRetry(item.optString("status", "pending"))) {
+            val nextRetryAt = item.optLong("nextRetryAt", 0L)
+            if (commonsDownloadEligibleForRetry(item.optString("status", "pending"), nextRetryAt, now)) {
                 add(item.optString("file"))
             }
         }
     }
     if (pendingTitles.isEmpty()) return true
-    val batch = readCommonsCandidates(context).filter { it.title in pendingTitles }.take(1)
+    // A bounded batch avoids a single worker monopolising the device. The periodic
+    // WorkManager schedule will continue the queue on its next connected-network run.
+    val batch = readCommonsCandidates(context).filter { it.title in pendingTitles }.take(5)
     if (batch.isEmpty()) return false
-    val result = processCommonsCandidates(context, batch, { _, _, _ -> }, 3000L)
+    val result = processCommonsCandidates(context, batch, { _, _, _ -> }, 10_000L)
     return result.failed == 0 && batch.size == result.downloaded + result.alreadyPresent &&
         pendingTitles.size <= batch.size
 }
@@ -729,10 +738,27 @@ private fun persistCommonsCandidateStatus(
                 .put("assetId", commonsAssetId(title))
                 .put("storedFile", storedAsset?.file.orEmpty())
             if (sha256.isNotBlank()) item.put("sha256", sha256)
+            if (status.equals("saved", ignoreCase = true)) item.remove("nextRetryAt")
             break
         }
     }
     writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, array.toString(2))
+}
+
+private fun persistCommonsRetryDeadline(context: Context, title: String, retryAtMs: Long, error: String) {
+    val file = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
+    if (!file.isFile) return
+    val manifest = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
+    for (index in 0 until manifest.length()) {
+        val item = manifest.optJSONObject(index) ?: continue
+        if (item.optString("file") == title) {
+            item.put("nextRetryAt", retryAtMs)
+                .put("lastError", error)
+                .put("updatedAt", System.currentTimeMillis())
+            break
+        }
+    }
+    writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
 }
 
 private suspend fun downloadCommonsSvgWithRetry(
@@ -754,6 +780,9 @@ private suspend fun downloadCommonsSvgWithRetry(
                 commonsDownloadRetryDelayMs(index + 1, httpFailure.httpCode, retryAfterMs)
             } else {
                 commonsDownloadRetryDelayMs(index + 1, null)
+            }
+            if (httpFailure != null && (httpFailure.httpCode == 420 || httpFailure.httpCode == 429)) {
+                persistCommonsRetryDeadline(context, item.title, System.currentTimeMillis() + retryDelay, lastError)
             }
             appendCommonsDiagnostic(
                 context,
@@ -824,7 +853,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     var progressCurrent by remember { mutableIntStateOf(0) }
     var progressTotal by remember { mutableIntStateOf(0) }
     var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
-    var pauseBetweenDownloadsMs by remember { mutableStateOf("3000") }
+    var pauseBetweenDownloadsMs by remember { mutableStateOf("10000") }
     val externalListLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) { busy = "external-import"; scope.launch { val result = withContext(Dispatchers.IO) { runCatching {
             val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: error("Nie można odczytać pliku.")
@@ -953,7 +982,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
         }
-        OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 3000 ms.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 10000 ms. Przy HTTP 429 aplikacja respektuje Retry-After.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedButton(enabled = busy == null, onClick = { externalListLauncher.launch(arrayOf("text/csv", "text/plain", "text/*", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Importuj zewnętrzną listę SVG (CSV / TXT)") }
         OutlinedButton(
             enabled = busy == null,
