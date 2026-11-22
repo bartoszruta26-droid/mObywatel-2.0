@@ -9,6 +9,15 @@ import org.junit.Test
 
 class InstitutionalSvgDownloadAccountingTest {
     @Test
+    fun onlyNonSavedCommonsManifestEntriesNeedRetry() {
+        assertFalse(commonsDownloadStatusNeedsRetry("saved"))
+        assertFalse(commonsDownloadStatusNeedsRetry("SAVED"))
+        assertTrue(commonsDownloadStatusNeedsRetry("pending"))
+        assertTrue(commonsDownloadStatusNeedsRetry("failed"))
+        assertTrue(commonsDownloadStatusNeedsRetry(""))
+    }
+
+    @Test
     fun commonsSearchUsesMimeFilterAndPlainFallback() {
         assertEquals(
             listOf("herb miasta filemime:svg", "herb miasta"),
