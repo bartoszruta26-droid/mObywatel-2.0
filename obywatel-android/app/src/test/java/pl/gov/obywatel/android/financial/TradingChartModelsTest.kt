@@ -15,6 +15,21 @@ class TradingChartModelsTest {
         return TradingPriceBar(LocalDate.of(2026, 1, day), price, price, price, price)
     }
 
+    @Test fun crossRateSupportsCurrencyAndMetalPairs() {
+        // USD buys 0.9 EUR and 0.8 CHF; one EUR is therefore 0.8/0.9 CHF.
+        assertEquals(BigDecimal("0.8888888889"),
+            TradingPairMath.crossRate(BigDecimal("0.9"), BigDecimal("0.8")))
+        // USD buys 0.00025 troy ounces of gold and 0.02 troy ounces of silver.
+        assertEquals(BigDecimal("80.0000000000"),
+            TradingPairMath.crossRate(BigDecimal("0.00025"), BigDecimal("0.02")))
+    }
+
+    @Test fun crossRateRejectsNonPositiveInputs() {
+        assertThrows(IllegalArgumentException::class.java) {
+            TradingPairMath.crossRate(BigDecimal.ZERO, BigDecimal.ONE)
+        }
+    }
+
     @Test fun referenceBarHasNoInventedRangeOrVolume() {
         val price = BigDecimal("4.3210")
         val candle = TradingPriceBar.reference(LocalDate.of(2026, 1, 1), price)
