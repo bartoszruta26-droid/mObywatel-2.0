@@ -3,191 +3,266 @@
 package pl.gov.obywatel.android.financial
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.io.File
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private data class PriceChartPoint(val date: LocalDate, val value: BigDecimal)
-private enum class PriceChartInstrument(val label: String) { GOLD("Złoto"), CURRENCY("Waluta") }
-private enum class PriceChartPeriod(val label: String, val days: Long) {
-    WEEK("7 dni", 7), MONTH("1 mies.", 31), QUARTER("3 mies.", 93),
-    HALF_YEAR("6 mies.", 183), YEAR("1 rok", 365), FIVE_YEARS("5 lat", 1825)
+private data class ChartInstrument(val code: String, val label: String, val gold: Boolean = false) {
+    val title: String get() = "$${code} • $${label}"
 }
+private enum class PriceChartPeriod(val label: String, val days: Long) {
+    WEEK("1T", 7), MONTH("1M", 31), QUARTER("3M", 93),
+    HALF_YEAR("6M", 183), YEAR("1R", 365), FIVE_YEARS("5R", 1825)
+}
+private enum class PriceChartStyle(val label: String) { LINE("Linia"), AREA("Obszar"), CANDLE("Świece") }
+private data class PairPricePoint(val date: LocalDate, val value: BigDecimal)
 
 @Composable
 fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val prefs = remember(context) { context.getSharedPreferences("financial_chart_config", 0) }
     val repository = remember(context) {
         NbpRatesRepository(cacheDirectory = File(context.filesDir, "nbp-rates-cache"))
     }
     val scope = rememberCoroutineScope()
-    var instrument by remember { mutableStateOf(PriceChartInstrument.CURRENCY) }
-    var period by remember { mutableStateOf(PriceChartPeriod.YEAR) }
-    var currencyCode by remember { mutableStateOf("EUR") }
-    var points by remember { mutableStateOf<List<PriceChartPoint>>(emptyList()) }
+    var base by remember { mutableStateOf(prefs.getString("base", "EUR") ?: "EUR") }
+    var quote by remember { mutableStateOf(prefs.getString("quote", "PLN") ?: "PLN") }
+    var period by remember { mutableStateOf(PriceChartPeriod.entries.firstOrNull {
+        it.name == prefs.getString("period", "YEAR")
+    } ?: PriceChartPeriod.YEAR) }
+    var style by remember { mutableStateOf(PriceChartStyle.entries.firstOrNull {
+        it.name == prefs.getString("style", "LINE")
+    } ?: PriceChartStyle.LINE) }
+    var instruments by remember { mutableStateOf(listOf(
+        ChartInstrument("PLN", "złoty polski"), ChartInstrument("EUR", "euro"),
+        ChartInstrument("USD", "dolar amerykański"), ChartInstrument("CHF", "frank szwajcarski"),
+        ChartInstrument("GBP", "funt brytyjski"), ChartInstrument("XAU", "złoto • gram", true)
+    )) }
+    var points by remember { mutableStateOf<List<PairPricePoint>>(emptyList()) }
+    var selected by remember { mutableStateOf<PairPricePoint?>(null) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
-    var loadedLabel by remember { mutableStateOf("") }
+    var baseMenu by remember { mutableStateOf(false) }
+    var quoteMenu by remember { mutableStateOf(false) }
+    var source by remember { mutableStateOf("Źródło: NBP • kursy referencyjne") }
 
-    fun loadHistory() {
+    fun save() {
+        prefs.edit().putString("base", base).putString("quote", quote)
+            .putString("period", period.name).putString("style", style.name).apply()
+    }
+
+    fun load() {
+        if (base == quote) { error = "Wybierz dwa różne instrumenty."; points = emptyList(); return }
         scope.launch {
-            loading = true
-            error = null
+            loading = true; error = null; selected = null
             try {
                 val end = LocalDate.now()
                 val start = end.minusDays(period.days - 1)
-                val loaded = withContext(Dispatchers.IO) {
-                    when (instrument) {
-                        PriceChartInstrument.GOLD -> repository.goldPriceHistory(start, end).map {
-                            PriceChartPoint(it.date, it.pricePerGramPln)
-                        }
-                        PriceChartInstrument.CURRENCY -> repository.currencyRateHistory(
-                            NbpTable.A, currencyCode.trim().uppercase(), start, end
-                        ).map { PriceChartPoint(it.first, it.second) }
+                val data = withContext(Dispatchers.IO) {
+                    val a = instruments.firstOrNull { it.code == base }
+                        ?: throw IllegalArgumentException("Nieznany instrument bazowy.")
+                    val b = instruments.firstOrNull { it.code == quote }
+                        ?: throw IllegalArgumentException("Nieznany instrument kwotowany.")
+                    fun plnSeries(item: ChartInstrument): Map<LocalDate, BigDecimal> = when {
+                        item.code == "PLN" -> (0 until period.days.toInt() + 1)
+                            .associate { start.plusDays(it.toLong()) to BigDecimal.ONE }
+                        item.gold -> repository.goldPriceHistory(start, end)
+                            .associate { it.date to it.pricePerGramPln }
+                        else -> repository.currencyRateHistory(NbpTable.A, item.code, start, end)
+                            .associate { it.first to it.second }
+                    }
+                    val av = plnSeries(a); val bv = plnSeries(b)
+                    av.keys.intersect(bv.keys).sorted().mapNotNull { date ->
+                        val ap = av[date] ?: return@mapNotNull null
+                        val bp = bv[date] ?: return@mapNotNull null
+                        if (bp.signum() == 0) null else PairPricePoint(
+                            date, ap.divide(bp, 10, RoundingMode.HALF_EVEN)
+                        )
                     }
                 }
-                require(loaded.isNotEmpty()) { "NBP nie udostępnił notowań dla wybranego instrumentu i okresu." }
-                points = loaded
-                loadedLabel = if (instrument == PriceChartInstrument.GOLD) {
-                    "Cena złota • PLN/g"
-                } else {
-                    "Kurs ${currencyCode.uppercase()} • PLN za 1 jednostkę"
+                require(data.isNotEmpty()) {
+                    "Brak wspólnych notowań dla $${base}/$${quote} w wybranym okresie."
                 }
-            } catch (exception: Exception) {
+                points = data
+                source = if (base == "XAU" || quote == "XAU")
+                    "Źródło: NBP • złoto PLN/g i waluta PLN • kurs krzyżowy"
+                else "Źródło: NBP, tabela A • kursy średnie • kurs krzyżowy"
+                save()
+            } catch (e: Exception) {
                 points = emptyList()
-                error = exception.message ?: "Nie udało się pobrać historii notowań."
-            } finally {
-                loading = false
-            }
+                error = e.message ?: "Nie udało się pobrać notowań."
+            } finally { loading = false }
         }
     }
 
-    val values = points.map { it.value }
-    val minimum = values.minOrNull()
-    val maximum = values.maxOrNull()
-    val first = values.firstOrNull()
-    val last = values.lastOrNull()
-    val change = if (first != null && last != null && first.compareTo(BigDecimal.ZERO) != 0) {
-        last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, java.math.RoundingMode.HALF_EVEN)
-    } else null
+    val min = points.minOfOrNull { it.value }
+    val max = points.maxOfOrNull { it.value }
+    val first = points.firstOrNull()?.value
+    val last = points.lastOrNull()?.value
+    val delta = if (first != null && last != null) last.subtract(first) else null
+    val pct = if (first != null && last != null && first.signum() != 0)
+        last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN)
+    else null
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Wykres kursów walut NBP i cen złota", style = MaterialTheme.typography.titleMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PriceChartInstrument.entries.forEach { option ->
-                Button(onClick = { instrument = option; points = emptyList(); error = null }) {
-                    Text(if (instrument == option) "✓ ${option.label}" else option.label)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Analiza pary instrumentów", style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box {
+                OutlinedButton(onClick = { baseMenu = true }) { Text(base) }
+                DropdownMenu(baseMenu, onDismissRequest = { baseMenu = false }) {
+                    instruments.filter { it.code != quote }.forEach { item ->
+                        DropdownMenuItem(text = { Text(item.title) }, onClick = {
+                            base = item.code; baseMenu = false; points = emptyList(); save()
+                        })
+                    }
                 }
             }
+            Text("/", style = MaterialTheme.typography.titleLarge)
+            Box {
+                OutlinedButton(onClick = { quoteMenu = true }) { Text(quote) }
+                DropdownMenu(quoteMenu, onDismissRequest = { quoteMenu = false }) {
+                    instruments.filter { it.code != base }.forEach { item ->
+                        DropdownMenuItem(text = { Text(item.title) }, onClick = {
+                            quote = item.code; quoteMenu = false; points = emptyList(); save()
+                        })
+                    }
+                }
+            }
+            Button(onClick = ::load, enabled = !loading) { Text("Pokaż") }
         }
-        if (instrument == PriceChartInstrument.CURRENCY) {
-            OutlinedTextField(
-                value = currencyCode,
-                onValueChange = { currencyCode = it.filter(Char::isLetter).uppercase().take(3); points = emptyList() },
-                label = { Text("Kod waluty ISO 4217") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text("Kurs średni tabeli A NBP, wyrażony w PLN za jednostkę waluty.")
-        } else {
-            Text("Cena referencyjna NBP za gram złota, wyrażona w PLN.")
-        }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             items(PriceChartPeriod.entries.toList()) { option ->
-                Button(onClick = { period = option; points = emptyList(); error = null }) {
-                    Text(if (period == option) "✓ ${option.label}" else option.label)
+                if (period == option) Button(onClick = { period = option; save(); load() }) {
+                    Text(option.label)
+                } else OutlinedButton(onClick = { period = option; save(); load() }) {
+                    Text(option.label)
                 }
             }
         }
-        Button(
-            onClick = ::loadHistory,
-            enabled = !loading && (instrument != PriceChartInstrument.CURRENCY || currencyCode.length == 3)
-        ) { Text(if (points.isEmpty()) "Wyświetl wykres NBP" else "Odśwież wykres NBP") }
+        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            PriceChartStyle.entries.forEach { option ->
+                if (style == option) Button(onClick = { style = option; save() }) {
+                    Text(option.label)
+                } else OutlinedButton(onClick = { style = option; save() }) {
+                    Text(option.label)
+                }
+            }
+        }
         if (loading) CircularProgressIndicator()
         if (points.isNotEmpty()) {
-            Text(loadedLabel, style = MaterialTheme.typography.titleSmall)
-            PriceHistoryLineChart(points = points, modifier = Modifier.fillMaxWidth().height(210.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("$${base}/$${quote}", style = MaterialTheme.typography.titleLarge)
+            Text(last?.stripTrailingZeros()?.toPlainString() ?: "—",
+                style = MaterialTheme.typography.headlineSmall)
+            Text(pct?.let { (if (it.signum() > 0) "+" else "") + it.toPlainString() + "%" } ?: "—")
+            PairHistoryChart(points, style, selected?.date, { selected = it },
+                Modifier.fillMaxWidth().height(235.dp))
+            selected?.let { Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} $${quote} za 1 $${base}") }
+                ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text("Minimum", style = MaterialTheme.typography.labelSmall)
-                    Text(minimum?.toPlainString().orEmpty(), style = MaterialTheme.typography.bodyMedium)
+                    Text(min?.stripTrailingZeros()?.toPlainString() ?: "—")
                 }
                 Column(Modifier.weight(1f)) {
                     Text("Maksimum", style = MaterialTheme.typography.labelSmall)
-                    Text(maximum?.toPlainString().orEmpty(), style = MaterialTheme.typography.bodyMedium)
+                    Text(max?.stripTrailingZeros()?.toPlainString() ?: "—")
                 }
                 Column(Modifier.weight(1f)) {
                     Text("Zmiana", style = MaterialTheme.typography.labelSmall)
-                    Text(change?.let { "${if (it.signum() > 0) "+" else ""}${it.toPlainString()}%" }.orEmpty(),
-                        style = MaterialTheme.typography.bodyMedium)
+                    Text(delta?.let { (if (it.signum() > 0) "+" else "") + it.stripTrailingZeros().toPlainString() } ?: "—")
                 }
             }
-            Text("Punkty: ${points.size} • ${points.first().date} – ${points.last().date}")
-            Text("Ostatnia cena: ${last?.toPlainString()} • ${points.last().date}")
-        }
+            Text("$${points.size} punktów • $${points.first().date} – $${points.last().date}",
+                style = MaterialTheme.typography.bodySmall)
+        } else if (!loading) Text("Wybierz dwa różne instrumenty i naciśnij „Pokaż”.")
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        Text(
-            "Źródło: Narodowy Bank Polski. Notowanie referencyjne; wykres pomija dni bez publikacji (weekendy i święta).",
-            style = MaterialTheme.typography.bodySmall
-        )
+        Text(source, style = MaterialTheme.typography.bodySmall)
+        Text("Kurs pary jest obliczany jako A/PLN ÷ B/PLN. Dane NBP są dziennymi kursami referencyjnymi, nie notowaniami transakcyjnymi ani wolumenem giełdowym.",
+            style = MaterialTheme.typography.bodySmall)
     }
 }
 
 @Composable
-private fun PriceHistoryLineChart(points: List<PriceChartPoint>, modifier: Modifier = Modifier) {
-    val lineColor = MaterialTheme.colorScheme.primary
-    val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val values = points.map { it.value.toFloat() }
-    val minValue = values.minOrNull() ?: 0f
-    val maxValue = values.maxOrNull() ?: 0f
-    val span = (maxValue - minValue).takeIf { it > 0f } ?: 1f
-    Canvas(modifier = modifier) {
-        val left = 8.dp.toPx()
-        val right = size.width - 8.dp.toPx()
-        val top = 12.dp.toPx()
-        val bottom = size.height - 12.dp.toPx()
-        repeat(4) { index ->
-            val y = top + (bottom - top) * index / 3f
-            drawLine(gridColor, Offset(left, y), Offset(right, y), strokeWidth = 1.dp.toPx())
-        }
-        if (points.size == 1) {
-            val y = bottom - ((values.first() - minValue) / span) * (bottom - top)
-            drawCircle(lineColor, radius = 4.dp.toPx(), center = Offset((left + right) / 2f, y))
-        } else if (points.size > 1) {
-            val path = Path()
-            values.forEachIndexed { index, value ->
-                val x = left + (right - left) * index / values.lastIndex.toFloat()
-                val y = bottom - ((value - minValue) / span) * (bottom - top)
-                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+private fun PairHistoryChart(
+    points: List<PairPricePoint>, style: PriceChartStyle, selectedDate: LocalDate?,
+    onSelect: (PairPricePoint) -> Unit, modifier: Modifier = Modifier
+) {
+    val line = MaterialTheme.colorScheme.primary
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val marker = MaterialTheme.colorScheme.tertiary
+    val vals = points.map { it.value.toFloat() }
+    val low = vals.minOrNull() ?: 0f
+    val span = ((vals.maxOrNull() ?: low) - low).takeIf { it > 0f } ?: 1f
+    Canvas(modifier.pointerInput(points) {
+        detectTapGestures { tap ->
+            if (points.isNotEmpty()) {
+                val l = 8.dp.toPx(); val r = size.width - 8.dp.toPx()
+                val ratio = ((tap.x - l) / (r - l)).coerceIn(0f, 1f)
+                onSelect(points[(ratio * points.lastIndex).toInt().coerceIn(0, points.lastIndex)])
             }
-            drawPath(path, lineColor, style = Stroke(width = 2.5.dp.toPx()))
+        }
+    }) {
+        val l = 8.dp.toPx(); val r = size.width - 8.dp.toPx()
+        val t = 12.dp.toPx(); val b = size.height - 12.dp.toPx()
+        repeat(5) { i ->
+            val y = t + (b - t) * i / 4f
+            drawLine(grid, Offset(l, y), Offset(r, y), 1.dp.toPx())
+        }
+        val coords = vals.mapIndexed { i, v ->
+            Offset(l + (r - l) * i / maxOf(1, vals.lastIndex), b - ((v - low) / span) * (b - t))
+        }
+        if (coords.size > 1) {
+            when (style) {
+                PriceChartStyle.LINE -> {
+                    val p = Path().apply {
+                        moveTo(coords.first().x, coords.first().y)
+                        coords.drop(1).forEach { lineTo(it.x, it.y) }
+                    }
+                    drawPath(p, line, style = Stroke(2.5.dp.toPx()))
+                }
+                PriceChartStyle.AREA -> {
+                    val area = Path().apply {
+                        moveTo(coords.first().x, b); lineTo(coords.first().x, coords.first().y)
+                        coords.drop(1).forEach { lineTo(it.x, it.y) }
+                        lineTo(coords.last().x, b); close()
+                    }
+                    drawPath(area, line.copy(alpha = 0.18f))
+                    val p = Path().apply {
+                        moveTo(coords.first().x, coords.first().y)
+                        coords.drop(1).forEach { lineTo(it.x, it.y) }
+                    }
+                    drawPath(p, line, style = Stroke(2.5.dp.toPx()))
+                }
+                PriceChartStyle.CANDLE -> coords.forEach {
+                    // NBP supplies one reference price, not OHLC. Show neutral ticks;
+                    // do not invent candle ranges or trading volume.
+                    drawLine(line, Offset(it.x, it.y - 3.dp.toPx()),
+                        Offset(it.x, it.y + 3.dp.toPx()), 1.5.dp.toPx())
+                }
+            }
+        }
+        val idx = selectedDate?.let { d -> points.indexOfFirst { it.date == d } } ?: -1
+        if (idx >= 0) {
+            val p = coords[idx]
+            drawLine(marker, Offset(p.x, t), Offset(p.x, b), 1.dp.toPx())
+            drawCircle(marker, 5.dp.toPx(), p)
         }
     }
 }
