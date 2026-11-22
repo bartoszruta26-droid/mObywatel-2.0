@@ -1001,7 +1001,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                         "Zakończono wznowienie SVG $total/$total"
                                     }
                                 }
-                            }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 1000L)
+                            }, pauseBetweenDownloadsMs.toLongOrNull()?.coerceIn(0L, 60000L) ?: 3000L)
                         }
                     }
                     status = result.fold(
