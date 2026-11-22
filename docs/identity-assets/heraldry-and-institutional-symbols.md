@@ -147,3 +147,40 @@ Do kategorii „Symbole” trafiają m.in. insygnia, odznaki, oznaki, pieczęcie
 ### Ważne rozróżnienie statusów
 Adres strony instytucji, strona opisu pliku i bezpośredni adres pobrania to trzy różne pola. Puste `download_url` oznacza, że wskazano źródło, ale nie potwierdzono jeszcze bezpośredniego pliku. Rekordy ZUS, NFZ, KRUS, PFRON, Prezydenta RP i część znaków organów publicznych pozostają pod kontrolą warunków użycia. Kolekcje Wikimedia są punktami odkrywania — każdy plik wymaga indywidualnej kontroli autora, licencji, aktualności i ograniczeń prawnych.
 
+## Wybrane kolekcje użytkownika — rejestr 18 źródeł
+
+Data rejestracji: 2026-11-22. Pełne adresy stron, punkty API, wzorce plików, formaty, zasady prawne i cykl odświeżania zapisano w `selected-symbol-collections.csv`. Ten sam rejestr jest dołączony do aplikacji jako `obywatel-android/app/src/main/assets/identity-symbols/collections.csv`.
+
+### Wikimedia Commons
+- Polskie instytucje państwowe — SVG (52 pliki w kategorii).
+- Polskie urzędy i agencje — wszystkie formaty (112 plików).
+- Godła i herby państwowe Polski (223 elementy łącznie z podkategoriami).
+- Heraldyka Polski — SVG.
+- Herby Polski — zbiór ogólny.
+- Historyczne herby Polski (272 elementy łącznie z podkategoriami).
+- Wszystkie symbole Polski (50 podkategorii).
+- Herby miast i gmin.
+- Herby województw.
+- Herby powiatów (69 plików w podkategorii SVG).
+- Flagi Polski i samorządów.
+- Ordery, odznaczenia i medale Polski (13 podkategorii).
+- Ordery i insygnia orderowe — zbiór światowy.
+- Baretki i wstążki odznaczeń (328 plików w podkategorii polskich baretek).
+- Logotypy Polski — SVG (77 plików i 10 podkategorii).
+
+### GitHub
+- `simple-icons/simple-icons` — drzewo repozytorium zawiera ponad 3,4 tys. znaków SVG; projekt CC0 nie oznacza automatycznie braku praw do znaków towarowych poszczególnych marek.
+- `lipis/flag-icons` — flagi SVG w wariantach 1:1 i 4:3; repozytorium MIT, ale wzory flag wymagają dodatkowej kontroli zgodności z przepisami państw.
+- `iconify/icon-sets` — ponad 200 zestawów w formacie Iconify JSON. Licencję należy ustalać osobno dla każdego zestawu; licencja repozytorium nie obejmuje automatycznie wszystkich grafik.
+
+### Statusy i zasady importu
+Każda kolekcja ma oddzielne stany: `source_registered`, `per_file_pending`, `not_downloaded`, `not_saved`, `not_available`. W rejestrze plików aplikacja rozdziela wykrycie źródła, weryfikację metadanych, pobranie, trwały zapis i dostępność do użycia.
+
+- Wikimedia: bezpośredni URL pliku i MIME należy pobrać z `imageinfo`; nie wyprowadzać adresu upload z samej nazwy pliku.
+- SVG: walidacja XML i zapory bezpieczeństwa SVG przed zapisem.
+- PNG: kontrola sygnatury PNG, nagłówka IHDR, wymiarów i dekodowalności nagłówka.
+- Licencja: brak autora, licencji, linku licencji lub jasnych ograniczeń oznacza status wymagający przeglądu; nie uruchamia pobrania.
+- Znaki marek, godła, flagi, odznaczenia i symbole urzędowe mogą podlegać odrębnym prawom, nawet jeśli sam plik ma licencję otwartą.
+- `not_available` pozostaje stanem domyślnym po pobraniu do biblioteki, dopóki nie zostanie osobno zatwierdzone użycie znaku w aplikacji.
+
+Rejestr źródeł nie jest potwierdzeniem autentyczności, aktualności ani zgody na użycie konkretnego symbolu.
