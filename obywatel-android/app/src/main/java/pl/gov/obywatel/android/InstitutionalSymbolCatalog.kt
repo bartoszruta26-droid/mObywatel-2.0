@@ -404,7 +404,7 @@ private suspend fun downloadInstitutionalSymbol(
                 val count = input.read(buffer)
                 if (count < 0) break
                 total += count
-                require(total <= 12L * 1024L * 1024L) { "SVG przekracza limit 12 MB." }
+                require(total <= 12L * 1024L * 1024L) { "Plik graficzny przekracza limit 12 MB." }
                 output.write(buffer, 0, count)
                 val now = System.currentTimeMillis()
                 if (now - lastUpdate >= 300L) {
@@ -564,6 +564,16 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                                 busyId = null
                             }
                         }) { Text(if (busyId == "source:${source.id}") "Wczytywanie…" else "Przeszukaj źródło i wczytaj pliki") }
+                    } else if (source.id == "github_simple_icons" || source.id == "github_flag_icons") {
+                        val candidatePrefix = if (source.id == "github_simple_icons") "simple-icons" else "flag-icons"
+                        val indexedCount = candidates.count { it.sourceId.contains(candidatePrefix, ignoreCase = true) }
+                        Button(enabled = indexedCount > 0, onClick = {
+                            selectedCategory = "Wszystkie"
+                            query = candidatePrefix
+                            message = "Wyświetlono ${indexedCount} plików z kolekcji ${source.label}."
+                        }) { Text("Pokaż pliki z indeksu (${indexedCount})") }
+                    } else if (source.id == "github_iconify_sets") {
+                        Text("Pojedyncze ikony tej kolekcji wybierzesz w sekcji Iconify poniżej.", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
