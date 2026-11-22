@@ -205,6 +205,83 @@ internal fun parseIconifyCollectionIndex(raw: String): List<IconifyCollectionSou
     }.distinctBy { it.prefix }
 }
 
+private fun commonsCollectionGroup(id: String): String = when {
+    id.contains("flags") -> "flags"
+    id.contains("arms") || id.contains("heraldry") -> "polish_city_arms"
+    id.contains("orders") || id.contains("ribbons") || id.contains("symbols") -> "institutional_insignia"
+    id.contains("logos") || id.contains("gov") -> "logos"
+    else -> "institutional_symbols"
+}
+
+private fun commonsMetadataValue(ext: JSONObject?, key: String): String =
+    ext?.optJSONObject(key)?.optString("value").orEmpty()
+        .replace(Regex("<[^>]*>"), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+
+/** Odkrywa pojedyncze pliki w wybranej kolekcji Commons, pobierając URL z imageinfo (nie konstruując go). */
+internal suspend fun discoverCommonsCollection(
+    context: Context,
+    source: InstitutionalSymbolSourceCollection,
+    maxPages: Int = 3
+): List<InstitutionalSymbolCandidate> = withContext(Dispatchers.IO) {
+    require(source.provider.equals("Wikimedia Commons", true)) { "To źródło nie jest kolekcją Wikimedia Commons." }
+    require(maxPages in 1..5) { "Limit stron musi wynosić od 1 do 5." }
+    val discovered = mutableListOf<InstitutionalSymbolCandidate>()
+    var continuation: String? = null
+    repeat(maxPages) {
+        val builder = Uri.parse("https://commons.wikimedia.org/w/api.php").buildUpon()
+            .appendQueryParameter("action", "query")
+            .appendQueryParameter("generator", "categorymembers")
+            .appendQueryParameter("gcmtitle", source.collectionRef)
+            .appendQueryParameter("gcmtype", "file")
+            .appendQueryParameter("gcmlimit", "100")
+            .appendQueryParameter("prop", "imageinfo")
+            .appendQueryParameter("iiprop", "url|extmetadata")
+            .appendQueryParameter("format", "json")
+        continuation?.let { builder.appendQueryParameter("gcmcontinue", it) }
+        val response = TorDownloadServiceProvider.get(context).open(builder.build().toString(), TorDownloadKind.API)
+        val jsonText = response.use {
+            require(it.statusCode in 200..299) { "Wikimedia Commons zwróciło HTTP ${it.statusCode}." }
+            it.body.bufferedReader(Charsets.UTF_8).use { reader -> reader.readText() }
+        }
+        val root = JSONObject(jsonText)
+        val pages = root.optJSONObject("query")?.optJSONObject("pages") ?: JSONObject()
+        val keys = pages.keys()
+        while (keys.hasNext()) {
+            val page = pages.getJSONObject(keys.next())
+            val title = page.optString("title")
+            val imageInfo = page.optJSONArray("imageinfo")?.optJSONObject(0) ?: continue
+            val directUrl = imageInfo.optString("url")
+            val path = title.removePrefix("File:")
+            if (institutionalSymbolFormat(path) !in setOf("SVG", "PNG", "XML")) continue
+            if (!directUrl.startsWith("https://upload.wikimedia.org/")) continue
+            val ext = imageInfo.optJSONObject("extmetadata")
+            val filePage = Uri.parse("https://commons.wikimedia.org/wiki").buildUpon()
+                .appendPath(title).build().toString()
+            discovered += InstitutionalSymbolCandidate(
+                sourceId = "wikimedia-commons:${source.id}",
+                repository = "Wikimedia Commons · ${source.label}",
+                ref = "live-category-snapshot",
+                path = path,
+                group = commonsCollectionGroup(source.id),
+                rightsStatus = "per_file_metadata_review_required",
+                sourceUrl = filePage,
+                downloadUrl = directUrl,
+                license = commonsMetadataValue(ext, "LicenseShortName"),
+                licenseUrl = commonsMetadataValue(ext, "LicenseUrl"),
+                author = commonsMetadataValue(ext, "Artist"),
+                credit = commonsMetadataValue(ext, "Credit").ifBlank { commonsMetadataValue(ext, "Attribution") },
+                commonsCategories = source.collectionRef
+            )
+        }
+        continuation = root.optJSONObject("continue")?.optString("gcmcontinue")
+            ?.takeIf { it.isNotBlank() && it != "null" }
+        if (continuation == null) return@withContext discovered.distinctBy { it.sourceId + ":" + it.path }
+    }
+    discovered.distinctBy { it.sourceId + ":" + it.path }
+}
+
 internal fun institutionalSymbolFormat(path: String): String? = when (path.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
     "svg" -> "SVG"
     "png" -> "PNG"
