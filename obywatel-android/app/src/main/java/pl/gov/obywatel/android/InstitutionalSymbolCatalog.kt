@@ -186,6 +186,7 @@ private suspend fun downloadInstitutionalSymbol(
         "Flagi" -> "Flaga"
         "Herby" -> "Herb"
         "Godła" -> "Godło"
+        "Symbole" -> "Symbol"
         "Logotypy" -> "Logo"
         else -> "Logo"
     }
@@ -196,7 +197,7 @@ private suspend fun downloadInstitutionalSymbol(
     return sha
 }
 
-private val institutionalSymbolCategoryOrder = listOf("Herby", "Godła", "Flagi", "Logotypy", "Pozostałe")
+private val institutionalSymbolCategoryOrder = listOf("Symbole", "Herby", "Godła", "Flagi", "Logotypy", "Pozostałe")
 
 internal fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): String {
     val key = "${item.group} ${item.path} ${item.displayName}".lowercase(Locale.ROOT)
@@ -204,6 +205,7 @@ internal fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): St
         listOf("flag", "flaga", "banner").any { key.contains(it) } -> "Flagi"
         listOf("coat of arms", "coat-of-arms", "coat_of_arms", "herald", "herb", "crest", "_arms", "arms_").any { key.contains(it) } -> "Herby"
         listOf("eagle", "godlo", "godło", "emblem").any { key.contains(it) } -> "Godła"
+        listOf("insignia", "insigne", "badge", "seal", "pieczęć", "pieczec", "medal", "order", "symbol", "insygnia", "odznaka", "oznaka", "monogram").any { key.contains(it) } -> "Symbole"
         listOf("logo", "brand", "organization", "organisation", "ngo", "charit", "mark", "government", "public").any { key.contains(it) } -> "Logotypy"
         else -> "Pozostałe"
     }
@@ -243,10 +245,10 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
     val groupedMatches = remember(matches) { matches.groupBy(::institutionalSymbolCategory) }
     val categoryCounts = remember(candidates) { candidates.groupingBy(::institutionalSymbolCategory).eachCount() }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Katalog źródeł SVG", style = MaterialTheme.typography.titleMedium)
+        Text("Ikony → Symbole, herby i znaki instytucjonalne", style = MaterialTheme.typography.titleMedium)
         Text("Tryb pobierania: ${selectedMode.label}", style = MaterialTheme.typography.labelMedium)
         Text(
-            "Lista obejmuje kandydatów z GitHub i Wikimedia Commons. Wybierz grupę lub wpisz nazwę. Pobierany jest tylko wskazany plik; źródło, autor i licencja pozostają zapisane w metadanych.",
+            "Katalog ikon obejmuje kategorię Symbole oraz herby, godła, flagi i logotypy. Wybierz grupę lub wpisz nazwę. Pobierany jest tylko wskazany plik; źródło, autor i licencja pozostają zapisane w metadanych.",
             style = MaterialTheme.typography.bodySmall
         )
         Text("Rekordy z adresem SVG: ${candidates.size} · Wyniki: ${matches.size}", style = MaterialTheme.typography.labelMedium)
