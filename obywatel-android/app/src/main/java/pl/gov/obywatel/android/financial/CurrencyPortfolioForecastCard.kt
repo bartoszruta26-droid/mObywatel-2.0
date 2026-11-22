@@ -103,9 +103,11 @@ fun CurrencyPortfolioForecastCard(
                     require(history.size >= requiredObservations) {
                         "Za mało danych NBP dla ${currency.code}: ${history.size} obserwacji; wymagane jest okno $requiredObservations."
                     }
-                    val forecasts = CurrencyForecastEngine.forecast(
-                        history.map { it.second.toDouble() }, settings
-                    )
+                    val forecasts = withContext(Dispatchers.Default) {
+                        CurrencyForecastEngine.forecast(
+                            history.map { it.second.toDouble() }, settings
+                        )
+                    }
                     val balance = decimal("balance_${currency.code}")
                     val bid = decimal("bid_${currency.code}")?.takeIf { it > 0.0 }
                     val ask = decimal("ask_${currency.code}")?.takeIf { it > 0.0 }
