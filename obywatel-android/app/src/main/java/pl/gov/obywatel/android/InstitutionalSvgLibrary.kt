@@ -156,7 +156,7 @@ internal fun commonsDownloadRetryDelayMs(
     httpCode: Int?,
     retryAfterMs: Long? = null
 ): Long {
-    val exponent = (attempt - 1).coerceIn(0, 4)
+    val exponent = (attempt - 1).coerceIn(0, 5)
     val baseDelay = if (httpCode == 420 || httpCode == 429) 30_000L else 10_000L
     val exponentialDelay = (baseDelay * (1L shl exponent)).coerceAtMost(180_000L)
     return maxOf(exponentialDelay, retryAfterMs ?: 0L).coerceAtMost(COMMONS_MAX_RETRY_AFTER_MS)
