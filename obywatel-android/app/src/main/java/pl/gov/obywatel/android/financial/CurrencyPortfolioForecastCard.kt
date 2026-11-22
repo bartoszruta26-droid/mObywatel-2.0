@@ -61,7 +61,7 @@ fun CurrencyPortfolioForecastCard(
     }
     val fields = remember {
         mutableStateMapOf<String, String>().apply {
-            put("PLN", prefs.getString("balance_PLN", "") ?: "")
+            put("PLN", FinancialDataCipher.read(context, prefs, "balance_PLN", ""))
             currencies.forEach { currency ->
                 put("balance_${currency.code}", prefs.getString("balance_${currency.code}", "") ?: "")
                 put("bid_${currency.code}", prefs.getString("bid_${currency.code}", "") ?: "")
@@ -78,9 +78,16 @@ fun CurrencyPortfolioForecastCard(
     }
 
     fun saveFields() {
-        val editor = prefs.edit()
-        fields.forEach { (key, value) -> editor.putString(key, value) }
-        editor.apply()
+        runCatching {
+            val editor = prefs.edit()
+            fields.forEach { (key, value) ->
+                editor.putString("secure_" + key, FinancialDataCipher.encrypt(context, key, value))
+                editor.remove(key)
+            }
+            editor.apply()
+        }.onFailure {
+            error = "Nie udało się bezpiecznie zapisać sald i kursów. Sprawdź blokadę urządzenia i spróbuj ponownie."
+        }
     }
 
     fun decimal(key: String): Double? = fields[key]?.trim()
