@@ -10,11 +10,11 @@ Docelowe zasoby Android: obywatel-android/app/src/main/assets/institutions/
 ## Zasady kwalifikacji
 
 - Rekord w CSV jest kandydatem do pobrania, a nie zbiorowym potwierdzeniem licencji.
-- Przed pobraniem aplikacja musi pobrać stronę opisu konkretnego pliku i odczytać autora, źródło, licencję, wersję i ewentualne ograniczenia.
+- Pobranie nie wymaga uprzedniej oceny praw. Aplikacja zachowuje stronę źródłową, bezpośredni URL, autora, licencję, wersję i ewentualne ograniczenia, aby użytkownik mógł ręcznie ocenić możliwość wykorzystania grafiki w dokumencie.
 - Preferować domenę publiczną, CC0 i licencje zgodne z polityką projektu. Dla CC BY/CC BY-SA zachować autora, tytuł, źródło, licencję i wymagane oznaczenia.
 - Nie zakładać, że plik jest wolny od ograniczeń tylko dlatego, że znajduje się w Wikimedia Commons. Ochrona symboli państwowych, emblematów organizacji i znaków towarowych może obowiązywać niezależnie od licencji pliku.
 - Nieaktualne, historyczne, rekonstrukcyjne i niezweryfikowane warianty pozostają w katalogu badawczym; nie trafiają automatycznie do biblioteki produkcyjnej.
-- Dodanie grafiki do biblioteki nie upoważnia do umieszczenia jej na dokumencie urzędowym. Zachować ograniczenia permittedKinds i wymagać właściwego uprawnienia.
+- Samo pobranie nie jest zatwierdzeniem praw do wykorzystania grafiki. Ocena i decyzja o użyciu w dokumencie pozostaje po stronie użytkownika; aplikacja nie może przedstawiać metadanych licencji jako automatycznej zgody.
 - Pobieranie ma następować na żądanie, z podglądem, informacją o licencji, rozmiarem, potwierdzeniem i możliwością usunięcia.
 - SVG trzeba walidować jako XML/SVG, ograniczyć rozmiar, odrzucić skrypty, zewnętrzne odwołania, encje zewnętrzne i niebezpieczne elementy. Renderować w bezpiecznym rendererze.
 - Błąd sieci, licencji, walidacji lub zapisu nie może naruszać istniejących zasobów.
