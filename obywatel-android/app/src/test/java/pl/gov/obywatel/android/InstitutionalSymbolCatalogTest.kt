@@ -140,7 +140,7 @@ class InstitutionalSymbolCatalogTest {
     }
 
     @Test
-    fun blocksInstitutionalSymbolDownloadsWithoutExplicitLicenseApproval() {
+    fun rightsMetadataDoesNotBlockInstitutionalSymbolDownloads() {
         val referenceOnly = InstitutionalSymbolCandidate(
             "commons", "Wikimedia Commons", "main", "File:coat.svg", "polish_arms",
             "per_file_metadata_review_required", "https://commons.wikimedia.org/wiki/File:coat.svg",
@@ -152,8 +152,47 @@ class InstitutionalSymbolCatalogTest {
             license = "MIT",
             licenseUrl = "https://github.com/lipis/flag-icons/blob/main/LICENSE"
         )
-        assertEquals(false, institutionalSymbolCanDownload(referenceOnly))
+        assertEquals(true, institutionalSymbolCanDownload(referenceOnly))
         assertEquals(true, institutionalSymbolCanDownload(approvedMit))
+    }
+
+
+    @Test
+    fun mapsUpstreamGroupsIntoExistingGraphicResourceCategories() {
+        fun candidate(group: String, path: String, source: String = "Wikimedia Commons") =
+            InstitutionalSymbolCandidate("source", source, "main", path, group, "reference_only",
+                "https://example.org/source", "https://upload.wikimedia.org/wikipedia/commons/a/file.svg",
+                "", "", "", "")
+        assertEquals("Flagi", institutionalSymbolCategory(candidate("international_organization_flags", "flags/UN.svg")))
+        assertEquals("Herby", institutionalSymbolCategory(candidate("polish_city_arms", "city/arms.svg")))
+        assertEquals("Logotypy", institutionalSymbolCategory(candidate("NGO_and_humanitarian", "organization/logo.svg")))
+        assertEquals("Ikony", institutionalSymbolCategory(candidate("ui_icons", "user.svg", "Lucide")))
+        assertEquals("Tła", institutionalSymbolCategory(candidate("background_patterns", "backgrounds/waves.svg")))
+    }
+
+    @Test
+    fun acceptsDirectSvgFilesFromAdditionalGraphicDatabases() {
+        val header = "source_id,repository,ref,path,group,rights_status,import_status,source_url,download_url,license_short_name,license_url,author,attribution_required,source_credit,commons_categories"
+        val row = csvRow(
+            "openmoji", "OpenMoji", "pinned-release", "person.svg", "ui_icons",
+            "rights_review_pending", "not_imported", "https://openmoji.org/data/color/svg/1F464.svg",
+            "https://openmoji.org/data/color/svg/1F464.svg", "CC BY-SA 4.0",
+            "https://creativecommons.org/licenses/by-sa/4.0/", "OpenMoji", "true", "OpenMoji", ""
+        )
+        val item = parseInstitutionalSymbolCsv(header + "\n" + row).single()
+        assertEquals("https://openmoji.org/data/color/svg/1F464.svg", item.downloadUrl)
+        assertTrue(institutionalSymbolCanDownload(item))
+        assertEquals("Ikony", institutionalSymbolCategory(item))
+    }
+
+    @Test
+    fun rejectsNonHttpsAndUntrustedDirectGraphicHosts() {
+        val base = InstitutionalSymbolCandidate(
+            "test", "Test", "main", "icon.svg", "ui_icons", "reference_only",
+            "https://example.org/source", "http://evil.example/icon.svg", "", "", "", ""
+        )
+        assertFalse(institutionalSymbolCanDownload(base))
+        assertFalse(institutionalSymbolCanDownload(base.copy(downloadUrl = "https://evil.example/icon.svg")))
     }
 
     @Test
@@ -194,22 +233,28 @@ class InstitutionalSymbolCatalogTest {
     }
 
     @Test
-    fun bundledUpstreamCandidateIndexIsParseableAndKeepsUnverifiedAssetsBlocked() {
+    fun bundledUpstreamCandidateIndexIsParseableAndAllowsDownloadPendingManualRightsReview() {
         val catalog = java.io.File("src/main/assets/identity-symbols/github-symbol-candidates.csv")
         assertTrue("Indeks kandydatów musi być dołączony do aplikacji.", catalog.isFile)
         val candidates = parseInstitutionalSymbolCsv(catalog.readText(Charsets.UTF_8))
         assertTrue("Indeks powinien zawierać ponad 2 500 pozycji SVG/PNG.", candidates.size > 2500)
+        val additionalCatalog = java.io.File("src/main/assets/identity-symbols/additional-graphic-files.csv")
+        assertTrue("Dodatkowy indeks bezpośrednich plików graficznych musi być dołączony do aplikacji.", additionalCatalog.isFile)
+        val external = parseInstitutionalSymbolCsv(additionalCatalog.readText(Charsets.UTF_8))
+        assertEquals("Dodatkowe bazy powinny udostępniać 102 bezpośrednie pliki SVG.", 102, external.size)
+        val allCandidates = candidates + external
         assertEquals(
             "Kandydaci muszą mieć stabilne, unikalne identyfikatory.",
-            candidates.size,
-            candidates.map { it.sourceId + ":" + it.path }.distinct().size
+            allCandidates.size,
+            allCandidates.map { it.sourceId + ":" + it.path }.distinct().size
         )
-        assertTrue(candidates.all { it.downloadUrl.startsWith("https://") })
-        assertTrue(candidates.all { institutionalSymbolFormat(it.path) in setOf("SVG", "PNG") })
+        assertTrue(allCandidates.all { it.downloadUrl.startsWith("https://") })
+        assertTrue(allCandidates.all { institutionalSymbolFormat(it.path) in setOf("SVG", "PNG") })
 
         val commons = candidates.first { it.sourceId == "wikimedia-commons" }
-        assertFalse("Rekord Commons wymagający weryfikacji pliku nie może być pobierany.", institutionalSymbolCanDownload(commons))
+        assertTrue("Status praw nie może blokować pobrania pliku Commons.", institutionalSymbolCanDownload(commons))
         val flag = candidates.first { it.group.contains("flag", ignoreCase = true) }
-        assertFalse("Flagi wymagające odrębnej kontroli prawnej pozostają zablokowane.", institutionalSymbolCanDownload(flag))
+        assertTrue("Status praw nie może blokować pobrania flagi.", institutionalSymbolCanDownload(flag))
+        assertTrue("Dodatkowe pliki z baz graficznych muszą być dostępne do pobrania.", external.all { institutionalSymbolCanDownload(it) })
     }
 }

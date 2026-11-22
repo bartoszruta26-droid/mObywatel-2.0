@@ -10,11 +10,11 @@ Docelowe zasoby Android: obywatel-android/app/src/main/assets/institutions/
 ## Zasady kwalifikacji
 
 - Rekord w CSV jest kandydatem do pobrania, a nie zbiorowym potwierdzeniem licencji.
-- Przed pobraniem aplikacja musi pobrać stronę opisu konkretnego pliku i odczytać autora, źródło, licencję, wersję i ewentualne ograniczenia.
+- Pobranie nie wymaga uprzedniej oceny praw. Aplikacja zachowuje stronę źródłową, bezpośredni URL, autora, licencję, wersję i ewentualne ograniczenia, aby użytkownik mógł ręcznie ocenić możliwość wykorzystania grafiki w dokumencie.
 - Preferować domenę publiczną, CC0 i licencje zgodne z polityką projektu. Dla CC BY/CC BY-SA zachować autora, tytuł, źródło, licencję i wymagane oznaczenia.
 - Nie zakładać, że plik jest wolny od ograniczeń tylko dlatego, że znajduje się w Wikimedia Commons. Ochrona symboli państwowych, emblematów organizacji i znaków towarowych może obowiązywać niezależnie od licencji pliku.
 - Nieaktualne, historyczne, rekonstrukcyjne i niezweryfikowane warianty pozostają w katalogu badawczym; nie trafiają automatycznie do biblioteki produkcyjnej.
-- Dodanie grafiki do biblioteki nie upoważnia do umieszczenia jej na dokumencie urzędowym. Zachować ograniczenia permittedKinds i wymagać właściwego uprawnienia.
+- Samo pobranie nie jest zatwierdzeniem praw do wykorzystania grafiki. Ocena i decyzja o użyciu w dokumencie pozostaje po stronie użytkownika; aplikacja nie może przedstawiać metadanych licencji jako automatycznej zgody.
 - Pobieranie ma następować na żądanie, z podglądem, informacją o licencji, rozmiarem, potwierdzeniem i możliwością usunięcia.
 - SVG trzeba walidować jako XML/SVG, ograniczyć rozmiar, odrzucić skrypty, zewnętrzne odwołania, encje zewnętrzne i niebezpieczne elementy. Renderować w bezpiecznym rendererze.
 - Błąd sieci, licencji, walidacji lub zapisu nie może naruszać istniejących zasobów.
@@ -53,7 +53,7 @@ https://commons.wikimedia.org/wiki/Category:SVG_coats_of_arms_by_country
 
 Kolekcja SVG flags of international organizations zawiera 118 plików. Wymieniane przykłady obejmują flagi ICAO, ILO, IMO, ITU, NATO, UNESCO, UNIDO, UPU, WHO, IAEA i WFP. Inne rozpoznane instytucje i organizacje w rejestrze obejmują ONZ, UNICEF, UNFCCC, UE, Radę Europy, ASEAN, Unię Afrykańską, Ligę Państw Arabskich, OPEC, OAS, OBWE, Wspólnotę Narodów, Mercosur, CARICOM, SADC, EAEU, Radę Nordycką, OIC, Organizację Państw Turkijskich, FIFA, MKOl, IPC, WIPO i Międzynarodowy Ruch Czerwonego Krzyża.
 
-Wpisy w CSV oznaczone verify-per-file wymagają sprawdzenia strony konkretnego pliku przed pobraniem. Wpisy not-identified są wyłącznie zapytaniami wyszukiwawczymi, nie gotowymi adresami plików.
+Wpisy w CSV oznaczone verify-per-file mogą być pobierane, jeśli mają bezpośredni adres pliku; oznaczenie informuje o potrzebie ręcznej oceny praw przed użyciem. Wpisy not-identified są wyłącznie zapytaniami wyszukiwawczymi i nie mają jeszcze adresu pliku do pobrania.
 
 ## Minimalny model metadanych
 
@@ -66,7 +66,7 @@ assetId, label, organization, symbolType, validityPeriod, sourcePageUrl, downloa
 - Dodano eksport do ZIP przez systemowy selektor zapisu Androida. Archiwum zawiera oryginalne SVG, `manifest.json` i `README.md`; można je następnie ręcznie rozpakować i dodać do repozytorium.
 - Walidacja odrzuca pliki z DTD/encjami, skryptami, `foreignObject`, zewnętrznymi/aktywnymi odwołaniami oraz pliki większe niż 12 MB.
 - Emblemat Stolicy Apostolskiej przeniesiono do `assets/institutions/holy-see-emblem-vatican-va.svg` i zarejestrowano jako zasób wbudowany.
-- Wszystkie pobrane symbole z katalogu pozostają z pustym `permittedKinds`, dopóki licencja i uprawnienie do konkretnego zastosowania nie zostaną zatwierdzone.
+- Pobranie nie ustawia automatycznie `permittedKinds`; użytkownik ocenia prawa i decyduje o wykorzystaniu konkretnej grafiki w dokumencie.
 - Adresy źródłowe wymagają testu odpowiedzi serwera; plik niedostępny lub niezgodny z SVG zostanie odrzucony. Rejestr nie jest gwarancją dostępności każdego historycznego URL.
 
 Status kompilacji i testów należy odczytać z PR #80; nie uznawać implementacji za gotową do scalenia, dopóki Android build i walidacja GUI nie zakończą się powodzeniem.
@@ -179,8 +179,15 @@ Każda kolekcja ma oddzielne stany: `source_registered`, `per_file_pending`, `no
 - Wikimedia: bezpośredni URL pliku i MIME należy pobrać z `imageinfo`; nie wyprowadzać adresu upload z samej nazwy pliku.
 - SVG: walidacja XML i zapory bezpieczeństwa SVG przed zapisem.
 - PNG: kontrola sygnatury PNG, nagłówka IHDR, wymiarów i dekodowalności nagłówka.
-- Licencja: brak autora, licencji, linku licencji lub jasnych ograniczeń oznacza status wymagający przeglądu; nie uruchamia pobrania.
+- Licencja: brak autora, licencji, linku licencji lub jasnych ograniczeń oznacza status wymagający ręcznego przeglądu przed użyciem; nie blokuje pobrania pliku.
 - Znaki marek, godła, flagi, odznaczenia i symbole urzędowe mogą podlegać odrębnym prawom, nawet jeśli sam plik ma licencję otwartą.
 - `not_available` pozostaje stanem domyślnym po pobraniu do biblioteki, dopóki nie zostanie osobno zatwierdzone użycie znaku w aplikacji.
 
 Rejestr źródeł nie jest potwierdzeniem autentyczności, aktualności ani zgody na użycie konkretnego symbolu.
+
+
+## Zmiana zasad pobierania i klasyfikacji — 22 listopada 2026
+
+Pobranie pojedynczego pliku SVG/PNG nie jest blokowane przez status prawny, brak metadanych licencji ani grupę zasobu. Aplikacja wykonuje wyłącznie kontrolę bezpieczeństwa technicznego pliku i zachowuje metadane źródła, autora, licencji, atrybucji oraz statusu prawnego. Ocena praw do wykorzystania grafiki w konkretnym dokumencie pozostaje po stronie użytkownika.
+
+Indeks rozszerzono o 102 bezpośrednie adresy pojedynczych plików SVG z baz Bootstrap Icons, Lucide, Tabler Icons, OpenMoji i Simple Icons, zapisane w `additional-graphic-files.csv`. Rekordy GitHub i Wikimedia Commons są przypisywane do kategorii Herby, Godła, Logotypy, Flagi, Ikony, Tła, Symbole lub Pozostałe. Interfejs prezentuje adres pliku graficznego i nie zastępuje go odsyłaczem do strony kategorii lub repozytorium.

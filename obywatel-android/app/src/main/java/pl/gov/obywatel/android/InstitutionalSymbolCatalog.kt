@@ -228,9 +228,13 @@ private fun institutionalSymbolAssetId(item: InstitutionalSymbolCandidate): Stri
         .joinToString("") { "%02x".format(it) }
 
 internal fun institutionalSymbolCanDownload(item: InstitutionalSymbolCandidate): Boolean {
-    val status = item.rightsStatus.trim().lowercase(Locale.ROOT)
-    val license = item.license.trim().lowercase(Locale.ROOT)
-    return status == "mit" && license == "mit" && item.licenseUrl.startsWith("https://") && !item.group.contains("flag", true)
+    if (institutionalSymbolFormat(item.path) == null) return false
+    return runCatching {
+        val uri = java.net.URI(item.downloadUrl)
+        val host = uri.host?.lowercase(Locale.ROOT).orEmpty()
+        uri.scheme.equals("https", true) && uri.userInfo == null &&
+            host in setOf("upload.wikimedia.org", "raw.githubusercontent.com", "cdn.jsdelivr.net", "openmoji.org", "cdn.simpleicons.org")
+    }.getOrDefault(false)
 }
 
 private fun validateInstitutionalSymbolSvg(bytes: ByteArray) = SvgSafetyValidator.validate(bytes)
@@ -252,17 +256,15 @@ private suspend fun downloadInstitutionalSymbol(
     item: InstitutionalSymbolCandidate,
     onProgress: suspend (InstitutionalSymbolDownloadProgress) -> Unit
 ): String {
-    require(institutionalSymbolCanDownload(item)) {
-        "Pobieranie zablokowane: licencja nie została zatwierdzona dla tego pliku. Status: ${item.rightsStatus}; licencja: ${item.license.ifBlank { "brak" }}."
-    }
     val uri = java.net.URI(item.downloadUrl)
     val format = institutionalSymbolFormat(item.path)
     require(format != null) { "Obsługiwane są wyłącznie pliki SVG i PNG." }
     val trustedImageHost = uri.host.equals("upload.wikimedia.org", true) ||
         uri.host.equals("raw.githubusercontent.com", true) ||
-        uri.host.equals("cdn.jsdelivr.net", true)
+        uri.host.equals("cdn.jsdelivr.net", true) || uri.host.equals("openmoji.org", true) ||
+        uri.host.equals("cdn.simpleicons.org", true)
     require(uri.scheme.equals("https", true) && uri.userInfo == null && trustedImageHost) {
-        "Źródło pliku nie znajduje się na dozwolonej domenie Wikimedia Commons, GitHub Raw lub jsDelivr."
+        "Adres pliku musi prowadzić przez HTTPS do obsługiwanego źródła graficznego."
     }
     onProgress(InstitutionalSymbolDownloadProgress("Łączenie ze źródłem przez wybraną trasę sieciową. Przy uruchamianiu Tor pierwsze połączenie może potrwać dłużej."))
     val response = TorDownloadServiceProvider.get(context).open(item.downloadUrl, if (format == "SVG") TorDownloadKind.SVG else TorDownloadKind.IMAGE)
@@ -312,7 +314,8 @@ private suspend fun downloadInstitutionalSymbol(
         .put("catalogRightsStatus", item.rightsStatus)
         .put("sha256", sha)
         .put("discoveryStatus", "found")
-        .put("verificationStatus", "file-format-and-content-validated; MIT-license-metadata-verified; app-use-review-pending")
+        .put("rightsReviewStatus", "pending-user-review")
+        .put("verificationStatus", "file-format-and-content-validated; rights-review-pending")
         .put("verifiedAt", System.currentTimeMillis())
         .put("format", format)
         .put("downloadStatus", "downloaded")
@@ -322,29 +325,34 @@ private suspend fun downloadInstitutionalSymbol(
         .toString()
     val kind = when (institutionalSymbolCategory(item)) {
         "Flagi" -> "Flaga"
+        "Ikony" -> "Ikona"
+        "Tła" -> "Tło"
         "Herby" -> "Herb"
         "Godła" -> "Godło"
         "Symbole" -> "Symbol"
         "Logotypy" -> "Logo"
-        else -> "Logo"
+        "Pozostałe" -> "Pozostałe"
+        else -> "Pozostałe"
     }
     onProgress(InstitutionalSymbolDownloadProgress("Zapisuję plik i metadane w bibliotece…", bytes.size.toLong(), bytes.size.toLong()))
     DocumentBrandStore.importBytes(context, item.repository, kind, item.displayName.take(180),
         bytes, rights = rights, mimeType = mimeType, assetId = institutionalSymbolAssetId(item))
-    onProgress(InstitutionalSymbolDownloadProgress("Zapisano i zweryfikowano $format. Dostępność w aplikacji nadal wymaga oceny praw użycia.", bytes.size.toLong(), bytes.size.toLong()))
+    onProgress(InstitutionalSymbolDownloadProgress("Zapisano i sprawdzono technicznie $format. Ocena praw do wykorzystania pozostaje po stronie użytkownika.", bytes.size.toLong(), bytes.size.toLong()))
     return sha
 }
 
-private val institutionalSymbolCategoryOrder = listOf("Symbole", "Herby", "Godła", "Flagi", "Logotypy", "Pozostałe")
+private val institutionalSymbolCategoryOrder = listOf("Herby", "Godła", "Logotypy", "Flagi", "Ikony", "Tła", "Symbole", "Pozostałe")
 
 internal fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): String {
     val key = "${item.group} ${item.path} ${item.displayName}".lowercase(Locale.ROOT)
     return when {
         listOf("flag", "flaga", "banner").any { key.contains(it) } -> "Flagi"
-        listOf("coat of arms", "coat-of-arms", "coat_of_arms", "herald", "herb", "crest", "_arms", "arms_").any { key.contains(it) } -> "Herby"
+        listOf("background", "wallpaper", "pattern", "texture", "tło", "tla").any { key.contains(it) } -> "Tła"
+        listOf("coat of arms", "coat-of-arms", "coat_of_arms", "herald", "herb", "crest", "_arms", "arms_", "polish_city_arms", "polish_gmina_arms", "polish_powiats_arms").any { key.contains(it) } -> "Herby"
         listOf("eagle", "godlo", "godło", "emblem").any { key.contains(it) } -> "Godła"
-        listOf("insignia", "insigne", "badge", "seal", "pieczęć", "pieczec", "medal", "order", "symbol", "insygnia", "odznaka", "oznaka", "monogram").any { key.contains(it) } -> "Symbole"
-        listOf("logo", "brand", "organization", "organisation", "ngo", "charit", "mark", "government", "public").any { key.contains(it) } -> "Logotypy"
+        listOf("insignia", "insigne", "badge", "seal", "pieczęć", "pieczec", "medal", "order", "insygnia", "odznaka", "oznaka", "monogram").any { key.contains(it) } -> "Symbole"
+        listOf("ui_icons", "icon", "icons", "emoji", "glyph", "pictogram").any { key.contains(it) } -> "Ikony"
+        listOf("logo", "brand", "organization", "organisation", "ngo", "charit", "mark", "government", "public", "simple-icons").any { key.contains(it) } -> "Logotypy"
         else -> "Pozostałe"
     }
 }
@@ -366,15 +374,18 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         message = "Wczytywanie katalogów symboli…"
         val loaded = withContext(Dispatchers.IO) {
             val sources = context.assets.open("identity-symbols/collections.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
-            val local = context.assets.open("identity-symbols/catalog.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val local = runCatching {
+                context.assets.open("identity-symbols/catalog.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
+            }.getOrDefault("")
             val github = context.assets.open("identity-symbols/github-symbol-candidates.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val additional = context.assets.open("identity-symbols/additional-graphic-files.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
             val iconify = context.assets.open("identity-symbols/iconify-collection-index.csv").bufferedReader(Charsets.UTF_8).use { it.readText() }
-            arrayOf(sources, local, github, iconify)
+            arrayOf(sources, local, github, iconify, additional)
         }
         sourceCollections = runCatching { parseInstitutionalSymbolCollectionsCsv(loaded[0]) }.getOrElse {
             message = "Nie udało się wczytać rejestru kolekcji: ${it.message ?: "błąd danych"}"; emptyList()
         }
-        candidates = runCatching { (parseInstitutionalSymbolCsv(loaded[1]) + parseInstitutionalSymbolCsv(loaded[2])).distinctBy { it.sourceId + ":" + it.path } }.getOrElse {
+        candidates = runCatching { ((if (loaded[1].isBlank()) emptyList() else parseInstitutionalSymbolCsv(loaded[1])) + parseInstitutionalSymbolCsv(loaded[2]) + parseInstitutionalSymbolCsv(loaded[4])).distinctBy { it.sourceId + ":" + it.path } }.getOrElse {
             message = "Nie udało się wczytać katalogu SVG: ${it.message ?: "błąd danych"}"; emptyList()
         }
         iconifyCollections = runCatching { parseIconifyCollectionIndex(loaded[3]) }.getOrElse {
@@ -396,44 +407,28 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         Text("Ikony → Symbole, herby i znaki instytucjonalne", style = MaterialTheme.typography.titleMedium)
         Text("Tryb pobierania: ${selectedMode.label}", style = MaterialTheme.typography.labelMedium)
         Text(
-            "Katalog ikon obejmuje kategorię Symbole oraz herby, godła, flagi i logotypy. Obsługiwane są pliki SVG i PNG. Wybierz grupę lub wpisz nazwę. Pobierany jest tylko wskazany plik po kontroli licencji i walidacji zawartości; źródło, autor i licencja pozostają zapisane w metadanych.",
+            "Zasoby są przypisane do kategorii: herby, godła, logotypy, flagi, ikony, tła, symbole i pozostałe. Pobieranie pojedynczych plików SVG/PNG nie jest blokowane statusem praw. Aplikacja sprawdza bezpieczeństwo pliku i zapisuje źródło, autora oraz informacje o licencji do późniejszej ręcznej oceny.",
             style = MaterialTheme.typography.bodySmall
         )
 
         Text("Kolekcje źródłowe do przeszukiwania: ${sourceCollections.size}", style = MaterialTheme.typography.titleSmall)
-        Text("Strona kolekcji i adres API są rejestrowane osobno. Każdy plik wymaga własnej kontroli formatu, autora, licencji, aktualności i praw do użycia przed pobraniem lub udostępnieniem.", style = MaterialTheme.typography.bodySmall)
+        Text("Rejestr służy do odkrywania zasobów. W wynikach pobierania pokazujemy bezpośrednie adresy pojedynczych plików; nie blokujemy pobrania ze względu na status licencji.", style = MaterialTheme.typography.bodySmall)
         LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(sourceCollections, key = { it.id }) { source ->
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.fillMaxWidth()) {
                     Text(source.label, style = MaterialTheme.typography.bodyMedium)
                     Text("${source.provider} • ${source.observedSize} • ${source.sourceFormats}", style = MaterialTheme.typography.labelSmall)
                     Text("Etapy: ${source.discoveryState} / ${source.verificationState} / ${source.downloadState} / ${source.storageState} / ${source.availabilityState}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Prawa: ${source.rightsStatus} · sprawdzono: ${source.checkedAt} · odświeżanie: co ${source.refreshIntervalDays} dni", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Button(onClick = {
-                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(source.sourcePageUrl))) }
-                            .onFailure { message = "Nie można otworzyć strony źródłowej: ${it.message ?: "błąd systemu"}" }
-                    }, enabled = busyId == null) { Text("Otwórz kolekcję źródłową") }
+                    Text("Źródło indeksu: ${source.provider} · odświeżanie: co ${source.refreshIntervalDays} dni", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Pliki są prezentowane osobno w wynikach katalogu; ten wpis nie jest odsyłaczem do grafiki.", style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
 
-        Text("Zestawy Iconify: ${iconifyCollections.size}", style = MaterialTheme.typography.titleSmall)
-        Text("Iconify przechowuje dane zestawów w JSON, nie gotowe pliki SVG/PNG. Każdy zestaw ma osobną licencję; pobranie grafiki wymaga osobnej konwersji i walidacji.", style = MaterialTheme.typography.bodySmall)
-        LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            items(iconifyCollections, key = { it.prefix }) { set ->
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("${set.name} (${set.iconCount} ikon)", style = MaterialTheme.typography.bodyMedium)
-                    Text("Autor: ${set.author.ifBlank { "niepodany" }} · licencja: ${set.licenseSpdx.ifBlank { "do sprawdzenia" }} · ${set.rightsStatus}", style = MaterialTheme.typography.labelSmall)
-                    Button(onClick = {
-                        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(set.sourcePageUrl))) }
-                            .onFailure { message = "Nie można otworzyć źródła Iconify: ${it.message ?: "błąd systemu"}" }
-                    }, enabled = busyId == null) { Text("Otwórz zestaw") }
-                }
-            }
-        }
+        Text("Indeks Iconify: ${iconifyCollections.size} zestawów technicznych; w tym panelu wyświetlane są pojedyncze pliki SVG/PNG, a nie odsyłacze do baz zestawów.", style = MaterialTheme.typography.bodySmall)
 
-        Text("Kandydaci z katalogu lokalnego", style = MaterialTheme.typography.titleSmall)
-        Text("Rekord źródłowy nie oznacza pobrania pliku. Pliki bez zatwierdzonej licencji pozostają pozycjami referencyjnymi.", style = MaterialTheme.typography.bodySmall)
+        Text("Pliki graficzne z katalogów i repozytoriów", style = MaterialTheme.typography.titleSmall)
+        Text("Każdy wynik prowadzi do pojedynczego pliku SVG/PNG. Status praw jest informacyjny i nie blokuje pobierania.", style = MaterialTheme.typography.bodySmall)
 
         Text("Rekordy z adresem SVG/PNG: ${candidates.size} · Wyniki: ${matches.size}", style = MaterialTheme.typography.labelMedium)
         Row(
@@ -483,9 +478,8 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
         if (matches.isEmpty() && candidates.isNotEmpty()) {
             Text("Brak wyników w wybranej grupie.", style = MaterialTheme.typography.bodySmall)
         }
-        val theSvgSourceCount = candidates.count { it.repository == "glincker/thesvg" }
         Text(
-            "Źródła katalogu: Wikimedia Commons, GitHub oraz theSVG (glincker/thesvg) · $theSvgSourceCount rekordów theSVG",
+            "Źródła plików: Wikimedia Commons, GitHub, Bootstrap Icons, Lucide, Tabler Icons, OpenMoji i Simple Icons",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -506,8 +500,14 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                             Text("${item.group} • ${item.repository}", style = MaterialTheme.typography.labelSmall)
                             Text("Źródło: ${item.repository} · autor: ${item.author.ifBlank { "niepodany w metadanych" }}", style = MaterialTheme.typography.labelSmall)
                             
-                            Text("Licencja: ${item.license.ifBlank { "niepodana" }} · status: ${item.rightsStatus}", style = MaterialTheme.typography.labelSmall)
-                            Button(enabled = busyId == null && institutionalSymbolCanDownload(item), onClick = {
+                            Text("Plik: ${item.downloadUrl}", style = MaterialTheme.typography.labelSmall)
+                            Text("Licencja: ${item.license.ifBlank { "niepodana" }} · status informacyjny: ${item.rightsStatus}", style = MaterialTheme.typography.labelSmall)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Button(enabled = busyId == null, onClick = {
+                                    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(item.downloadUrl))) }
+                                        .onFailure { message = "Nie można otworzyć bezpośredniego pliku: ${it.message ?: "błąd systemu"}" }
+                                }) { Text("Otwórz plik") }
+                                Button(enabled = busyId == null && institutionalSymbolCanDownload(item), onClick = {
                                 busyId = item.sourceId + ":" + item.path
                                 message = ""
                                 downloadProgress = InstitutionalSymbolDownloadProgress("Przygotowanie pobierania…")
@@ -527,7 +527,8 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                                     if (result.isSuccess) onSaved()
                                 }
                             }) {
-                                Text(if (busyId == item.sourceId + ":" + item.path) "Pobieranie…" else if (institutionalSymbolCanDownload(item)) "Pobierz zweryfikowany SVG" else "Wymaga weryfikacji praw")
+                                Text(if (busyId == item.sourceId + ":" + item.path) "Pobieranie…" else "Pobierz do zasobów")
+                                }
                             }
                         }
                     }
