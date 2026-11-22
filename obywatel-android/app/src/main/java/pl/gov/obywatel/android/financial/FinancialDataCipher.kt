@@ -39,7 +39,7 @@ internal object FinancialDataCipher {
 
     fun encrypt(context: Context, name: String, plaintext: String): String {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey(), cipher.parameters)
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey())
         cipher.updateAAD(name.toByteArray(Charsets.UTF_8))
         val encrypted = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
         return Base64.encodeToString(cipher.iv + encrypted, Base64.NO_WRAP)
