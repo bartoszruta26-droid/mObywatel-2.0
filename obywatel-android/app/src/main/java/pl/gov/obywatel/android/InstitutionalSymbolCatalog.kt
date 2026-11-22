@@ -4,8 +4,6 @@ package pl.gov.obywatel.android
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -368,6 +366,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Wszystkie") }
     var busyId by remember { mutableStateOf<String?>(null) }
+    var expandedLegalInfoId by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf("") }
     var downloadProgress by remember { mutableStateOf<InstitutionalSymbolDownloadProgress?>(null) }
     LaunchedEffect(context) {
@@ -495,39 +494,56 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                             color = MaterialTheme.colorScheme.primary)
                     }
                     items(groupItems, key = { it.sourceId + ":" + it.path }) { item ->
-                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text(item.displayName, style = MaterialTheme.typography.bodyMedium)
-                            Text("${item.group} • ${item.repository}", style = MaterialTheme.typography.labelSmall)
-                            Text("Źródło: ${item.repository} · autor: ${item.author.ifBlank { "niepodany w metadanych" }}", style = MaterialTheme.typography.labelSmall)
-                            
-                            Text("Plik: ${item.downloadUrl}", style = MaterialTheme.typography.labelSmall)
-                            Text("Licencja: ${item.license.ifBlank { "niepodana" }} · status informacyjny: ${item.rightsStatus}", style = MaterialTheme.typography.labelSmall)
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Button(enabled = busyId == null, onClick = {
-                                    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(item.downloadUrl))) }
-                                        .onFailure { message = "Nie można otworzyć bezpośredniego pliku: ${it.message ?: "błąd systemu"}" }
-                                }) { Text("Otwórz plik") }
-                                Button(enabled = busyId == null && institutionalSymbolCanDownload(item), onClick = {
-                                busyId = item.sourceId + ":" + item.path
-                                message = ""
-                                downloadProgress = InstitutionalSymbolDownloadProgress("Przygotowanie pobierania…")
-                                scope.launch {
-                                    val result = runCatching {
-                                        withContext(Dispatchers.IO) {
-                                            downloadInstitutionalSymbol(context, item) { update ->
-                                                withContext(Dispatchers.Main.immediate) { downloadProgress = update }
+                            Button(
+                                enabled = busyId == null && institutionalSymbolCanDownload(item),
+                                onClick = {
+                                    busyId = item.sourceId + ":" + item.path
+                                    message = ""
+                                    downloadProgress = InstitutionalSymbolDownloadProgress("Przygotowanie pobierania…")
+                                    scope.launch {
+                                        val result = runCatching {
+                                            withContext(Dispatchers.IO) {
+                                                downloadInstitutionalSymbol(context, item) { update ->
+                                                    withContext(Dispatchers.Main.immediate) { downloadProgress = update }
+                                                }
                                             }
                                         }
+                                        message = result.fold(
+                                            { "Pobrano i zapisano ${item.displayName} (${formatInstitutionalSymbolBytes(downloadProgress?.downloadedBytes ?: 0L)}). SHA-256: ${it}" },
+                                            { "Nie zapisano ${item.displayName}. ${it.message ?: "Nieznany błąd pobierania."}" }
+                                        )
+                                        busyId = null
+                                        if (result.isSuccess) onSaved()
                                     }
-                                    message = result.fold(
-                                        { "Pobrano i zapisano ${item.displayName} (${formatInstitutionalSymbolBytes(downloadProgress?.downloadedBytes ?: 0L)}). SHA-256: ${it}" },
-                                        { "Nie zapisano ${item.displayName}. ${it.message ?: "Nieznany błąd pobierania."}" }
-                                    )
-                                    busyId = null
-                                    if (result.isSuccess) onSaved()
                                 }
-                            }) {
+                            ) {
                                 Text(if (busyId == item.sourceId + ":" + item.path) "Pobieranie…" else "Pobierz do zasobów")
+                            }
+                            Button(
+                                enabled = busyId == null,
+                                onClick = {
+                                    val key = item.sourceId + ":" + item.path
+                                    expandedLegalInfoId = if (expandedLegalInfoId == key) null else key
+                                }
+                            ) {
+                                Text(if (expandedLegalInfoId == item.sourceId + ":" + item.path) "Ukryj więcej informacji prawnych" else "Więcej informacji prawnych")
+                            }
+                            if (expandedLegalInfoId == item.sourceId + ":" + item.path) {
+                                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                    Text("Informacje o źródle i organizacji", style = MaterialTheme.typography.titleSmall)
+                                    Text("Grupa: ${item.group}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Repozytorium / wydawca: ${item.repository}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Identyfikator źródła: ${item.sourceId} · rewizja: ${item.ref}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Ścieżka pliku: ${item.path}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Adres źródłowy: ${item.sourceUrl}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Adres pobierania: ${item.downloadUrl}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Autor: ${item.author.ifBlank { "niepodany w metadanych" }}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Atrybucja: ${item.credit.ifBlank { "niepodana w metadanych" }}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Licencja: ${item.license.ifBlank { "niepodana" }}", style = MaterialTheme.typography.bodySmall)
+                                    if (item.licenseUrl.isNotBlank()) Text("Tekst licencji: ${item.licenseUrl}", style = MaterialTheme.typography.bodySmall)
+                                    Text("Status praw: ${item.rightsStatus}. Wymagana ręczna ocena warunków wykorzystania; pobranie nie oznacza udzielenia licencji.", style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
