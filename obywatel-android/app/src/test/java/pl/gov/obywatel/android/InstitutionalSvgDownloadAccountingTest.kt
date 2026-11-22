@@ -14,7 +14,8 @@ class InstitutionalSvgDownloadAccountingTest {
         assertFalse(commonsDownloadStatusNeedsRetry("SAVED"))
         assertTrue(commonsDownloadStatusNeedsRetry("pending"))
         assertTrue(commonsDownloadStatusNeedsRetry("failed"))
-        assertTrue(commonsDownloadStatusNeedsRetry(""))
+        assertFalse(commonsDownloadStatusNeedsRetry("rights_review_required"))
+        assertFalse(commonsDownloadStatusNeedsRetry(""))
     }
 
     @Test
@@ -221,4 +222,30 @@ class InstitutionalSvgDownloadAccountingTest {
         assertEquals(3_600_000L, commonsDownloadRetryDelayMs(1, 429, 3_600_000L))
     }
 
+
+    @Test
+    fun commonsDownloadRequiresRecognizedLicenseAuthorAndClearRestrictions() {
+        val verified = CommonsSvgCandidate(
+            "File:public-symbol.svg", "https://upload.wikimedia.org/a/public-symbol.svg",
+            "https://commons.wikimedia.org/wiki/File:public-symbol.svg", "CC BY-SA 4.0",
+            "https://creativecommons.org/licenses/by-sa/4.0/", "Artist Name", ""
+        )
+        assertTrue(commonsCandidateRightsVerified(verified))
+        assertFalse(commonsCandidateRightsVerified(verified.copy(license = "")))
+        assertFalse(commonsCandidateRightsVerified(verified.copy(artist = "")))
+        assertFalse(commonsCandidateRightsVerified(verified.copy(licenseUrl = "")))
+        assertFalse(commonsCandidateRightsVerified(verified.copy(restrictions = "Trademark restrictions")))
+    }
+
+    @Test
+    fun commonsPublicDomainAndCc0DoNotRequireAttributionButStillNeedClearRightsMetadata() {
+        val publicDomain = CommonsSvgCandidate(
+            "File:public-domain.svg", "https://upload.wikimedia.org/a/public-domain.svg",
+            "https://commons.wikimedia.org/wiki/File:public-domain.svg", "Public domain", "", "", "none"
+        )
+        val cc0 = publicDomain.copy(license = "CC0")
+        assertTrue(commonsCandidateRightsVerified(publicDomain))
+        assertTrue(commonsCandidateRightsVerified(cc0))
+        assertFalse(commonsCandidateRightsVerified(publicDomain.copy(restrictions = "Non-free use")))
+    }
 }

@@ -44,7 +44,7 @@ class InstitutionalSymbolCatalogTest {
     }
 
     @Test
-    fun excludesRasterFilesAndRowsWithoutResolvableDownloadUrl() {
+    fun includesSupportedPngAndExcludesRowsWithoutResolvableDownloadUrl() {
         val png = csvRow(
             "source", "org/repo", "main", "logo.png", "logos", "reference_only",
             "not_imported", "https://github.com/org/repo/blob/main/logo.png",
@@ -55,7 +55,12 @@ class InstitutionalSymbolCatalogTest {
             "not_imported", "https://example.org/not-a-github-blob/logo.svg",
             "", "", "", "", "", "", ""
         )
-        assertTrue(parseInstitutionalSymbolCsv(header + "\n" + png + "\n" + missing).isEmpty())
+        val parsed = parseInstitutionalSymbolCsv(header + "\n" + png + "\n" + missing)
+        assertEquals(listOf("logo.png"), parsed.map { it.path })
+        assertEquals(
+            "https://raw.githubusercontent.com/org/repo/main/logo.png",
+            parsed.single().downloadUrl
+        )
     }
     @Test
     fun svgSecurityGateRejectsEventHandlersAndActiveElements() {
@@ -92,4 +97,98 @@ class InstitutionalSymbolCatalogTest {
         )
     }
 
+
+    @Test
+    fun classifiesInsigniaAndInstitutionalSymbolsUnderIconsSymbolsCategory() {
+        val candidate = InstitutionalSymbolCandidate(
+            sourceId = "polish-insignia",
+            repository = "Wikimedia Commons",
+            ref = "main",
+            path = "symbols/Polish_Police_badge.svg",
+            group = "institutional_insignia",
+            rightsStatus = "per_file_metadata_review_required",
+            sourceUrl = "https://commons.wikimedia.org/wiki/File:Polish_Police_badge.svg",
+            downloadUrl = "https://upload.wikimedia.org/wikipedia/commons/a/ab/Polish_Police_badge.svg",
+            license = "",
+            licenseUrl = "",
+            author = "",
+            credit = ""
+        )
+        assertEquals("Symbole", institutionalSymbolCategory(candidate))
+    }
+
+    @Test
+    fun loadsAllSelectedSourceCollectionsAndKeepsLifecycleStatesSeparate() {
+        val header = "collection_id,label,provider,collection_ref,source_page_url,discovery_api_url,observed_size,source_formats,rights_policy,rights_status,discovery_method,direct_file_pattern_or_notes,checked_at,refresh_interval_days,notes,discovery_state,verification_state,download_state,storage_state,availability_state"
+        val row = csvRow(
+            "commons_pl_gov_svg", "Polskie instytucje", "Wikimedia Commons", "Category:Gov",
+            "https://commons.wikimedia.org/wiki/Category:Gov",
+            "https://commons.wikimedia.org/w/api.php?action=query", "52", "SVG",
+            "Per-file license", "reference_only", "categorymembers API", "imageinfo.url",
+            "2026-11-22", "30", "Check each file", "source_registered", "per_file_pending",
+            "not_downloaded", "not_saved", "not_available"
+        )
+        val result = parseInstitutionalSymbolCollectionsCsv(header + "\n" + row)
+        assertEquals(1, result.size)
+        assertEquals("52", result.single().observedSize)
+        assertEquals("source_registered", result.single().discoveryState)
+        assertEquals("per_file_pending", result.single().verificationState)
+        assertEquals("not_downloaded", result.single().downloadState)
+        assertEquals("not_saved", result.single().storageState)
+        assertEquals("not_available", result.single().availabilityState)
+    }
+
+    @Test
+    fun blocksInstitutionalSymbolDownloadsWithoutExplicitLicenseApproval() {
+        val referenceOnly = InstitutionalSymbolCandidate(
+            "commons", "Wikimedia Commons", "main", "File:coat.svg", "polish_arms",
+            "per_file_metadata_review_required", "https://commons.wikimedia.org/wiki/File:coat.svg",
+            "https://upload.wikimedia.org/a/coat.svg", "CC BY-SA 4.0",
+            "https://creativecommons.org/licenses/by-sa/4.0/", "Artist", "Credit"
+        )
+        val approvedMit = referenceOnly.copy(
+            rightsStatus = "MIT",
+            license = "MIT",
+            licenseUrl = "https://github.com/lipis/flag-icons/blob/main/LICENSE"
+        )
+        assertEquals(false, institutionalSymbolCanDownload(referenceOnly))
+        assertEquals(true, institutionalSymbolCanDownload(approvedMit))
+    }
+
+    @Test
+    fun recognizesSvgAndPngButRejectsUnsupportedRasterFormats() {
+        assertEquals("SVG", institutionalSymbolFormat("symbols/crest.svg"))
+        assertEquals("PNG", institutionalSymbolFormat("logos/institution.PNG"))
+        assertEquals(null, institutionalSymbolFormat("logos/institution.jpg"))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsPngPayloadWithoutValidSignature() {
+        validateInstitutionalSymbolPng(ByteArray(64))
+    }
+
+    @Test
+    fun parsesIconifyCollectionsWithPerSetLicenseAndDirectJsonSource() {
+        val header = "prefix,name,icon_count,author,author_url,license_title,license_spdx,license_url,category,source_page_url,download_url,source_format,rights_status,discovery_status"
+        val row = csvRow(
+            "example", "Example Icons", "25", "Author", "https://github.com/author",
+            "MIT", "MIT", "https://github.com/author/repo/blob/main/LICENSE", "Symbols",
+            "https://github.com/iconify/icon-sets/blob/master/json/example.json",
+            "https://raw.githubusercontent.com/iconify/icon-sets/master/json/example.json",
+            "Iconify JSON", "per_collection_license_review", "source_registered"
+        )
+        val set = parseIconifyCollectionIndex(header + "\n" + row).single()
+        assertEquals("example", set.prefix)
+        assertEquals(25, set.iconCount)
+        assertEquals("MIT", set.licenseSpdx)
+        assertTrue(set.downloadUrl.endsWith("/example.json"))
+        assertEquals("per_collection_license_review", set.rightsStatus)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsIconifyIndexWithUnsafeSourceUrl() {
+        val header = "prefix,name,icon_count,author,author_url,license_title,license_spdx,license_url,category,source_page_url,download_url,source_format,rights_status,discovery_status"
+        val row = csvRow("x","X","1","","","","","","","https://example.org/x","http://evil.example/x.json","JSON","review","found")
+        parseIconifyCollectionIndex(header + "\n" + row)
+    }
 }
