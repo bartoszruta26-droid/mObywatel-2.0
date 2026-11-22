@@ -642,6 +642,71 @@ private fun readCommonsCandidates(context: Context): List<CommonsSvgCandidate> =
     }.filter { it.title.startsWith("File:") && it.url.startsWith("https://upload.wikimedia.org/") }
 }.getOrDefault(emptyList())
 
+internal fun commonsDownloadStatusNeedsRetry(status: String): Boolean =
+    !status.equals("saved", ignoreCase = true)
+
+/**
+ * Reconcile the durable download manifest against the encrypted on-disk asset library.
+ * A manifest entry is marked saved only when the corresponding file can be read,
+ * passes SVG validation, and matches its recorded checksum (when available).
+ */
+@Synchronized
+internal fun reconcileCommonsDownloadState(context: Context) {
+    val manifestFile = context.getFileStreamPath(COMMONS_DOWNLOAD_LIST_FILE)
+    if (!manifestFile.isFile) return
+    val manifest = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
+    val assets = DocumentBrandStore.list(context).associateBy { it.id }
+    var changed = false
+    for (index in 0 until manifest.length()) {
+        val item = manifest.optJSONObject(index) ?: continue
+        val title = item.optString("file")
+        if (title.isBlank()) continue
+        val asset = assets[commonsAssetId(title)]
+        val bytes = asset?.let { DocumentBrandStore.fileBytes(context, it.id, it) }
+        val actualSha = bytes?.takeIf { data -> runCatching { validateSvg(data) }.isSuccess }
+            ?.let { data -> MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) } }
+        val expectedSha = item.optString("sha256").ifBlank {
+            runCatching { JSONObject(asset?.rights.orEmpty()).optString("sha256") }.getOrDefault("")
+        }
+        val valid = asset != null && actualSha != null &&
+            (expectedSha.isBlank() || commonsChecksumMatches(expectedSha, actualSha))
+        val oldStatus = item.optString("status", "pending")
+        val newStatus = if (valid) "saved" else if (oldStatus.equals("saved", true)) "pending" else oldStatus
+        if (newStatus != oldStatus || (valid && item.optString("sha256") != actualSha)) {
+            item.put("status", newStatus)
+                .put("updatedAt", System.currentTimeMillis())
+            if (valid) {
+                item.put("sha256", actualSha)
+                    .put("lastError", "")
+            } else if (oldStatus.equals("saved", true)) {
+                item.put("lastError", "Brak pliku na dysku albo plik nie przeszedł kontroli integralności; wymaga ponownego pobrania.")
+            }
+            changed = true
+        }
+    }
+    if (changed) writeCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE, manifest.toString(2))
+}
+
+/** Retries at most 20 pending assets per WorkManager execution to keep each job bounded. */
+internal suspend fun retryPendingCommonsDownloads(context: Context): Boolean {
+    reconcileCommonsDownloadState(context)
+    val manifest = JSONArray(readCommonsJson(context, COMMONS_DOWNLOAD_LIST_FILE))
+    val pendingTitles = buildSet {
+        for (index in 0 until manifest.length()) {
+            val item = manifest.optJSONObject(index) ?: continue
+            if (commonsDownloadStatusNeedsRetry(item.optString("status", "pending"))) {
+                add(item.optString("file"))
+            }
+        }
+    }
+    if (pendingTitles.isEmpty()) return true
+    val batch = readCommonsCandidates(context).filter { it.title in pendingTitles }.take(20)
+    if (batch.isEmpty()) return false
+    val result = processCommonsCandidates(context, batch, { _, _, _ -> }, 3000L)
+    return result.failed == 0 && batch.size == result.downloaded + result.alreadyPresent &&
+        pendingTitles.size <= batch.size
+}
+
 private fun persistCommonsCandidateStatus(
     context: Context, title: String, status: String, attempts: Int, error: String?, sha256: String = ""
 ) {
