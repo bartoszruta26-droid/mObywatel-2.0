@@ -156,6 +156,8 @@ class TradingChartModelsTest {
         assertTrue(forecasts.first().expectedChangePercent > 0.0)
         assertNotNull(forecasts.first().directionalProbability)
         assertTrue(forecasts.first().validationSamples >= 20)
+        assertNotNull(forecasts.first().categoryProbability)
+        assertTrue(forecasts.first().categoryValidationSamples >= 20)
         assertEquals(ForecastHorizon.THREE_YEARS, forecasts.last().horizon)
         assertNull(forecasts.last().directionalProbability)
         assertTrue(forecasts.last().projectedRate > forecasts.last().currentRate)
