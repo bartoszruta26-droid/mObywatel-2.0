@@ -45,6 +45,8 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
     var activeId by remember { mutableStateOf(TorClientRegistry.activeId(context)) }
     var connectionMode by remember { mutableStateOf(DownloadConnectionSettings.get(context)) }
     var exitRegion by remember { mutableStateOf(TorExitRegionSettings.get(context)) }
+    var userAgentProfile by remember { mutableStateOf(DownloadUserAgentSettings.profile(context)) }
+    var customUserAgent by remember { mutableStateOf(DownloadUserAgentSettings.customValue(context)) }
     var name by remember { mutableStateOf("") }
     var host by remember { mutableStateOf("127.0.0.1") }
     var port by remember { mutableStateOf("9050") }
@@ -148,6 +150,55 @@ fun TorClientSettingsScreen(onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+        }
+        Text("Agent identyfikujący pobieranie (User-Agent)", fontWeight = FontWeight.Bold)
+        Text(
+            "Wybierz profil nagłówka wysyłanego do serwerów albo wpisz własną wartość. Ustawienie jest zapisywane na urządzeniu i stosowane przy tworzeniu usługi pobierania. Profile przeglądarek zmieniają wyłącznie nagłówek HTTP — nie zmieniają aplikacji w przeglądarkę.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        DownloadUserAgentProfile.values().forEach { profile ->
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable {
+                    userAgentProfile = profile
+                    DownloadUserAgentSettings.setProfile(context, profile)
+                    notice = "Zapisano profil agenta: ${profile.label}. Nowe połączenia pobierania użyją tego profilu."
+                }.padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = userAgentProfile == profile,
+                    onClick = {
+                        userAgentProfile = profile
+                        DownloadUserAgentSettings.setProfile(context, profile)
+                        notice = "Zapisano profil agenta: ${profile.label}. Nowe połączenia pobierania użyją tego profilu."
+                    }
+                )
+                Text(profile.label, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        if (userAgentProfile == DownloadUserAgentProfile.CUSTOM) {
+            OutlinedTextField(
+                value = customUserAgent,
+                onValueChange = { value ->
+                    customUserAgent = value
+                    error = ""
+                },
+                label = { Text("Własna wartość User-Agent") },
+                supportingText = { Text("Maksymalnie 512 znaków; bez znaków nowej linii.") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedButton(
+                onClick = {
+                    runCatching {
+                        DownloadUserAgentSettings.setCustomValue(context, customUserAgent)
+                        notice = "Zapisano własną wartość User-Agent. Nowe połączenia pobierania użyją tej wartości."
+                        error = ""
+                    }.onFailure { error = it.message ?: "Nieprawidłowa wartość User-Agent." }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Zapisz własnego agenta") }
         }
         Text("Profile klientów", fontWeight = FontWeight.Bold)
         Text("Tryb pobierania wybierasz powyżej. Profile Guardian i Orbot są powiązane z odpowiednimi trybami; dodatkowe profile lokalne służą obecnie do diagnostyki.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
