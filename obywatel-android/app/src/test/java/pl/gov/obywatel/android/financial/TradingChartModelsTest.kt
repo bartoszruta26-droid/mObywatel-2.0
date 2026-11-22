@@ -15,6 +15,30 @@ class TradingChartModelsTest {
         return TradingPriceBar(LocalDate.of(2026, 1, day), price, price, price, price)
     }
 
+    @Test fun sevenRegressionWindowsFollowFibonacciSequence() {
+        val settings = RegressionChannelSettings()
+        assertEquals(listOf(987, 610, 377, 233, 144, 89, 55), settings.lengths)
+        assertEquals(settings.lengths, LinearRegressionChannels.fibonacciWindowLengths)
+        val values = (0 until 1000).map { 50.0 + it * 0.03 + kotlin.math.sin(it / 13.0) }
+        val channels = LinearRegressionChannels.calculateAll(values, settings)
+        assertEquals(7, channels.size)
+        assertEquals(settings.lengths, channels.mapNotNull { it?.length })
+    }
+
+    @Test fun fibonacciRegressionLengthsCanBeEditedAndWidthsRemainIndependent() {
+        val settings = RegressionChannelSettings()
+            .withLength(0, 900)
+            .withLength(6, 34)
+            .withWidth(0, 2.5f)
+            .withWidth(6, 3f)
+        assertEquals(900, settings.length1)
+        assertEquals(34, settings.length7)
+        assertEquals(2.5f, settings.width1)
+        assertEquals(3f, settings.width7)
+        assertEquals(987, RegressionChannelSettings().length1)
+        assertEquals(55, RegressionChannelSettings().length7)
+    }
+
     @Test fun regressionChannelFitsPerfectLinearSeries() {
         val values = (0 until 144).map { 10.0 + it * 0.5 }
         val channel = LinearRegressionChannels.calculate(values, 144, 2.41)!!
