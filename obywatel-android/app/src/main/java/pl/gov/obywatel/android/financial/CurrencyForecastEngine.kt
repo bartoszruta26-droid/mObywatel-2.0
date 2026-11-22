@@ -36,6 +36,8 @@ data class HorizonCurrencyForecast(
     /** Empirical walk-forward directional hit rate; null when the sample is too small. */
     val directionalProbability: Double?,
     val validationSamples: Int,
+    val categoryProbability: Double?,
+    val categoryValidationSamples: Int,
     val activeChannels: Int,
     val channelAgreement: Double
 )
@@ -73,7 +75,7 @@ object CurrencyForecastEngine {
                 change < -NEUTRAL_BAND_PERCENT -> ForecastDirection.DOWN
                 else -> ForecastDirection.NEUTRAL
             }
-            val validation = walkForwardHitRate(values, settings, horizon.tradingSessions)
+            val validation = walkForwardValidation(values, settings, horizon.tradingSessions, direction, magnitude(abs(change)))
             HorizonCurrencyForecast(
                 horizon = horizon,
                 currentRate = current,
@@ -81,30 +83,45 @@ object CurrencyForecastEngine {
                 expectedChangePercent = change,
                 direction = direction,
                 magnitude = magnitude(abs(change)),
-                directionalProbability = validation.first,
-                validationSamples = validation.second,
+                directionalProbability = validation.directionProbability,
+                validationSamples = validation.directionSamples,
+                categoryProbability = validation.categoryProbability,
+                categoryValidationSamples = validation.categorySamples,
                 activeChannels = channels.size,
                 channelAgreement = agreement
             )
         }
     }
 
+    private data class WalkForwardValidation(
+        val directionProbability: Double?,
+        val directionSamples: Int,
+        val categoryProbability: Double?,
+        val categorySamples: Int
+    )
+
     /**
-     * Walk-forward validation: each historical forecast uses only observations available
-     * at its origin. We require every configured channel to be available, preventing
-     * a shorter-window backtest from overstating confidence in a seven-channel forecast.
+     * Krocząca walidacja bez dostępu do przyszłych obserwacji. Osobno mierzy
+     * trafność kierunku i trafność pełnej klasy (kierunek + skala ruchu).
      */
-    private fun walkForwardHitRate(
+    private fun walkForwardValidation(
         values: List<Double>,
         settings: RegressionChannelSettings,
-        horizon: Int
-    ): Pair<Double?, Int> {
-        val minimumWindow = settings.lengths.maxOrNull() ?: return null to 0
+        horizon: Int,
+        targetDirection: ForecastDirection,
+        targetMagnitude: ForecastMagnitude
+    ): WalkForwardValidation {
+        val minimumWindow = settings.lengths.maxOrNull()
+            ?: return WalkForwardValidation(null, 0, null, 0)
         val lastOrigin = values.lastIndex - horizon
-        if (lastOrigin < minimumWindow - 1) return null to 0
+        if (lastOrigin < minimumWindow - 1) {
+            return WalkForwardValidation(null, 0, null, 0)
+        }
 
-        var hits = 0
-        var trials = 0
+        var directionHits = 0
+        var directionTrials = 0
+        var categoryHits = 0
+        var categoryTrials = 0
         val step = maxOf(1, horizon / 20)
         var origin = minimumWindow - 1
         while (origin <= lastOrigin) {
@@ -115,15 +132,45 @@ object CurrencyForecastEngine {
                 val predictedSlope = slopes.sumOf {
                     it.slope / sqrt(it.length.toDouble())
                 } / weightSum
-                val actualReturn = values[origin + horizon] / values[origin] - 1.0
-                if (abs(predictedSlope) > 1e-12 && abs(actualReturn) > 1e-12) {
-                    trials++
-                    if ((predictedSlope > 0.0) == (actualReturn > 0.0)) hits++
+                val predictedRate = historical.last() + predictedSlope * horizon
+                val predictedPercent = ((predictedRate.coerceAtLeast(0.00000001) /
+                    historical.last()) - 1.0) * 100.0
+                val predictedDirection = when {
+                    predictedPercent > NEUTRAL_BAND_PERCENT -> ForecastDirection.UP
+                    predictedPercent < -NEUTRAL_BAND_PERCENT -> ForecastDirection.DOWN
+                    else -> ForecastDirection.NEUTRAL
+                }
+                val actualPercent = ((values[origin + horizon] / values[origin]) - 1.0) * 100.0
+                val actualDirection = when {
+                    actualPercent > NEUTRAL_BAND_PERCENT -> ForecastDirection.UP
+                    actualPercent < -NEUTRAL_BAND_PERCENT -> ForecastDirection.DOWN
+                    else -> ForecastDirection.NEUTRAL
+                }
+                if (predictedDirection != ForecastDirection.NEUTRAL &&
+                    actualDirection != ForecastDirection.NEUTRAL
+                ) {
+                    directionTrials++
+                    if (predictedDirection == actualDirection) directionHits++
+                }
+                if (predictedDirection == targetDirection &&
+                    magnitude(abs(predictedPercent)) == targetMagnitude &&
+                    predictedDirection != ForecastDirection.NEUTRAL
+                ) {
+                    categoryTrials++
+                    if (actualDirection == predictedDirection &&
+                        magnitude(abs(actualPercent)) == targetMagnitude
+                    ) categoryHits++
                 }
             }
             origin += step
         }
-        return (if (trials >= MIN_VALIDATION_SAMPLES) (hits + 1.0) / (trials + 2.0) else null) to trials
+        val directionProbability = if (directionTrials >= MIN_VALIDATION_SAMPLES)
+            (directionHits + 1.0) / (directionTrials + 2.0) else null
+        val categoryProbability = if (categoryTrials >= MIN_VALIDATION_SAMPLES)
+            (categoryHits + 1.0) / (categoryTrials + 2.0) else null
+        return WalkForwardValidation(
+            directionProbability, directionTrials, categoryProbability, categoryTrials
+        )
     }
 
     private fun magnitude(changePercent: Double): ForecastMagnitude = when {
