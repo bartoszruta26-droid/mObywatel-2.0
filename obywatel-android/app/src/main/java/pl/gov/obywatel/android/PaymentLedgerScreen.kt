@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -409,7 +411,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                     val preview = repository.previewJson(archiveJson)
                     pendingJson = archiveJson
                     importPreview = preview
-                    message = "CSV wyciągu bankowego odczytano. Sprawdź podgląd przed zatwierdzeniem."
+                    message = "Plik CSV banku odczytano. Sprawdź podgląd przed zatwierdzeniem."
                     error = null
                 } catch (exception: Exception) {
                     pendingJson = null
@@ -419,6 +421,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
             }
         }
     }
+
     val donationAttachmentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -525,7 +528,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(20.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -536,6 +539,23 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
             "Lokalny rejestr transakcji walutowych, kruszcowych i darowizn gotówkowych.",
             style = MaterialTheme.typography.bodyLarge
         )
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Wykresy NBP i wycena rachunku", style = MaterialTheme.typography.titleMedium)
+                pl.gov.obywatel.android.financial.PriceHistoryChartCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(10.dp))
+                pl.gov.obywatel.android.financial.BankStatementNbpChartCard(
+                    entries = entries,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(10.dp))
+                pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Ewidencja darowizn", style = MaterialTheme.typography.titleMedium)
@@ -611,9 +631,9 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                     Button(onClick = { xmlImportLauncher.launch(arrayOf("application/xml", "text/xml", "application/octet-stream")) }) {
                         Text("Importuj XML iPKO")
                     }
-                    Button(onClick = { csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/vnd.ms-excel", "text/*", "application/octet-stream")) }) {
-                        Text("Importuj CSV banku")
-                    }
+                }
+                Button(onClick = { csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/vnd.ms-excel", "text/*", "application/octet-stream")) }) {
+                    Text("Importuj CSV banku")
                 }
                 Button(onClick = { exportLauncher.launch("rachunki-platnicze.json") }) {
                     Text("Eksportuj JSON")
@@ -676,18 +696,6 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                         Text("Import zablokowany do czasu wyjaśnienia konfliktów.", color = MaterialTheme.colorScheme.error)
                     }
                 }
-            }
-        }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Kursy walut i wykresy NBP", style = MaterialTheme.typography.titleMedium)
-                Text("Historyczne kursy średnie tabeli A NBP oraz ceny złota. Wybierz walutę i okres, a następnie wyświetl wykres.")
-                pl.gov.obywatel.android.financial.PriceHistoryChartCard(
-                    modifier = Modifier.fillMaxWidth()
-                )
-                pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         }
         Card(modifier = Modifier.fillMaxWidth()) {
@@ -787,7 +795,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
             }
         }
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            modifier = Modifier.fillMaxWidth().height(320.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (financialTransactions.isNotEmpty()) {
@@ -1020,7 +1028,7 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
 
 private const val MAX_IMPORT_BYTES = 10 * 1024 * 1024
 
-/** Odczyt z limitem bajtów — chroni UI i pamięć przed nieograniczonym plikiem wejściowym. */
+/** Odczyt bajtów z limitem; zachowuje kodowanie dla parsera CSV (UTF-8/Windows-1250). */
 private fun readBytesLimited(input: InputStream, maxBytes: Int): ByteArray {
     val output = ByteArrayOutputStream()
     val buffer = ByteArray(8 * 1024)
@@ -1035,5 +1043,17 @@ private fun readBytesLimited(input: InputStream, maxBytes: Int): ByteArray {
     return output.toByteArray()
 }
 
-private fun readUtf8Limited(input: InputStream, maxBytes: Int): String =
-    readBytesLimited(input, maxBytes).toString(Charsets.UTF_8)
+/** Odczyt z limitem bajtów — chroni UI i pamięć przed nieograniczonym plikiem wejściowym. */
+private fun readUtf8Limited(input: InputStream, maxBytes: Int): String {
+    val output = ByteArrayOutputStream()
+    val buffer = ByteArray(8 * 1024)
+    var total = 0
+    while (true) {
+        val count = input.read(buffer)
+        if (count < 0) break
+        total += count
+        require(total <= maxBytes) { "Plik przekracza limit 10 MB." }
+        output.write(buffer, 0, count)
+    }
+    return output.toString(Charsets.UTF_8.name())
+}
