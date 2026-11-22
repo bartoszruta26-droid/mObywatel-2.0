@@ -710,6 +710,10 @@ internal fun reconcileCommonsDownloadState(context: Context) {
         if (newStatus != oldStatus || (valid && item.optString("sha256") != actualSha)) {
             item.put("status", newStatus)
                 .put("updatedAt", System.currentTimeMillis())
+                .put("discoveryStatus", "found")
+                .put("downloadStatus", if (valid) "downloaded" else "not_downloaded")
+                .put("storageStatus", if (valid) "saved" else "not_saved")
+                .put("availabilityStatus", "not_available")
             if (valid) {
                 item.put("sha256", actualSha)
                     .put("assetId", asset!!.id)
@@ -767,6 +771,9 @@ private fun persistCommonsCandidateStatus(
                 .put("updatedAt", System.currentTimeMillis())
                 .put("assetId", commonsAssetId(title))
                 .put("storedFile", storedAsset?.file.orEmpty())
+                .put("downloadStatus", if (status.equals("saved", true)) "downloaded" else if (status == "rights_review_required") "blocked_pending_rights_review" else "failed")
+                .put("storageStatus", if (status.equals("saved", true)) "saved" else "not_saved")
+                .put("availabilityStatus", "not_available")
             if (sha256.isNotBlank()) item.put("sha256", sha256)
             if (status.equals("saved", ignoreCase = true)) item.remove("nextRetryAt")
             break
@@ -1077,6 +1084,11 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                                             .put("restrictions", item.restrictions)
                                             .put("source", "Wikimedia Commons")
                                             .put("status", "pending")
+                                            .put("discoveryStatus", "found")
+                                            .put("verificationStatus", if (commonsCandidateRightsVerified(item)) "license_metadata_verified" else "rights_review_required")
+                                            .put("downloadStatus", "not_downloaded")
+                                            .put("storageStatus", "not_saved")
+                                            .put("availabilityStatus", "not_available")
                                             .put("attempts", 0)
                                             .put("sha256", ""))
                                     }
