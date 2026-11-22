@@ -96,8 +96,13 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     val change = if (first != null && last != null && first.compareTo(BigDecimal.ZERO) != 0)
         last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN) else null
     val latest = points.lastOrNull()
+    val firstQuote = points.firstOrNull()
     val spreadReturn = if (latest?.bid != null && latest.ask != null && latest.ask.compareTo(BigDecimal.ZERO) > 0)
         latest.bid.subtract(latest.ask).multiply(BigDecimal("100")).divide(latest.ask, 4, RoundingMode.HALF_EVEN) else null
+    val hypotheticalCurrencyProfit = if (firstQuote?.ask != null && latest?.bid != null)
+        latest.bid.subtract(firstQuote.ask) else null
+    val hypotheticalCurrencyProfitPercent = if (firstQuote?.ask != null && latest?.bid != null && firstQuote.ask.compareTo(BigDecimal.ZERO) > 0)
+        latest.bid.subtract(firstQuote.ask).multiply(BigDecimal("100")).divide(firstQuote.ask, 4, RoundingMode.HALF_EVEN) else null
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Wykres analityczny walut i kruszców", style = MaterialTheme.typography.titleMedium)
@@ -140,7 +145,8 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             }
             if (latest?.bid != null && latest.ask != null) {
                 Text("Ostatni kurs kupna: ${latest.bid.toPlainString()} PLN • sprzedaży: ${latest.ask.toPlainString()} PLN")
-                Text("Spread: ${latest.ask.subtract(latest.bid).toPlainString()} PLN • relacja bid/ask: ${spreadReturn?.toPlainString()}%")
+                Text("Spread bieżący: ${latest.ask.subtract(latest.bid).toPlainString()} PLN • relacja bid/ask: ${spreadReturn?.toPlainString()}%")
+                Text("Wynik hipotetyczny za 1 jednostkę: kupno po ask ${firstQuote?.ask?.toPlainString()} PLN (${firstQuote?.date}) → sprzedaż po bid ${latest.bid.toPlainString()} PLN (${latest.date}): ${hypotheticalCurrencyProfit?.toPlainString()} PLN (${hypotheticalCurrencyProfitPercent?.toPlainString()}%). Bez prowizji i marży konkretnego dostawcy.")
             } else {
                 Text("Zmiana ceny referencyjnej w okresie: ${change?.toPlainString() ?: "—"}%. To zmiana notowania, nie zrealizowany zysk z transakcji.")
             }
