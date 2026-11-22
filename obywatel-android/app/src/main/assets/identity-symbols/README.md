@@ -14,3 +14,11 @@
 - Licencja pakietu: MIT; pełny tekst znajduje się w `FLAG-ICONS-LICENSE.txt` oraz `LICENSES/MIT.txt`.
 - Rekordy są oznaczone w katalogu jako `country_flags`; pobieranie odbywa się pojedynczo przez wspólną usługę wybranego trybu sieciowego.
 - Pakiet flag nie stanowi zgody na używanie herbów, godeł, pieczęci ani logotypów i nie oznacza oficjalnego poparcia przez państwo.
+
+## Hierarchia katalogu ikon
+- Nadkategoria: **Ikony**.
+- Nowa kategoria: **Symbole** — insygnia, odznaki, oznaki, pieczęcie, medale, ordery i monogramy.
+- Pozostałe kategorie: **Herby**, **Godła**, **Flagi**, **Logotypy**, **Pozostałe**.
+- Lista polskich punktów źródłowych i oficjalnych stron: `docs/identity-assets/institutional-svg-priority-sources.csv` (42 dodane rekordy, w tym Sejm, Senat, Prezydent RP, ZUS, NFZ, KRUS, PFRON, organy centralne, samorządy i organizacje).
+- Opis źródeł i ograniczeń: `docs/identity-assets/heraldry-and-institutional-symbols.md`.
+- Obecność adresu w rejestrze oznacza możliwość dalszej weryfikacji, a nie pobranie grafiki ani zgodę na jej wykorzystanie.
