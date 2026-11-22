@@ -105,3 +105,45 @@ Dodatkowa lista nazw i oficjalnych punktów wejścia do dalszego indeksowania:
 Lista obejmuje godło i flagę RP, emblemat UE, ONZ, WHO, UNICEF, UNESCO, NATO, Rady Europy, Policję, Państwową Straż Pożarną, Straż Graniczną oraz ZUS, NFZ, KRUS, PFRON, NBP, GUS, PIP, UOKiK, UODO, RPO i KPRM. Pozycje bez dokładnego adresu pliku są rekordami wyszukiwawczymi, a nie zatwierdzonymi plikami SVG.
 
 Katalog nazw pozostaje przeszukiwalny niezależnie od statusu prawnego. Status prawny opisuje natomiast warunki pobrania, redystrybucji i konkretnego zastosowania.
+
+## Rozszerzenie polskich źródeł i nowa kategoria „Ikony → Symbole”
+
+Aktualizacja: 2026-11-22
+
+Pełny rejestr punktów wejścia i adresów źródłowych znajduje się w:
+- `institutional-svg-priority-sources.csv` — 42 nowe rekordy polskich instytucji, symboli państwowych, samorządów i organizacji.
+- `institutional-svg-sources.csv` — szczegółowy rejestr konkretnych kandydatów SVG, z osobnymi polami strony źródłowej i adresu pobrania.
+
+### Oficjalne źródła pierwszego wyboru
+- [Materiały do pobrania — Prezydent RP](https://www.prezydent.pl/dla-mediow/materialy-do-pobrania) — godło RP, znak Prezydent RP i znaki patronatów.
+- [Znak Prezydent RP — warianty i zasady stosowania](https://www.prezydent.pl/dla-mediow/materialy-do-pobrania/znak-prezydent-rp)
+- [Godło RP — oficjalny plik](https://www.prezydent.pl/dla-mediow/materialy-do-pobrania/godlo-rp)
+- [Wspólna identyfikacja wizualna administracji rządowej](https://www.gov.pl/web/premier/wspolna-identyfikacja-wizualna-administracji-rzadowej)
+- [ZUS — logo](https://www.zus.pl/o-zus/o-nas/logo-zus)
+- [NFZ — logo i materiały dla mediów](https://www.nfz.gov.pl/dla-mediow/logo-nfz/)
+- [KRUS — logotypy](https://www.gov.pl/web/krus/logotypy-krus)
+- [PFRON — księga identyfikacji wizualnej](https://www.pfron.org.pl/fileadmin/Redakcja/logo/PFRON_Ksiega_Identyfikacji_Wizualnej_2021.pdf)
+- [Ustawa o godle, barwach i hymnie RP — tekst jednolity 2025](https://eli.gov.pl/eli/DU/2025/299/ogl)
+
+### Kolekcje do przeszukania
+- [SVG logos of governments and government agencies of Poland](https://commons.wikimedia.org/wiki/Category:SVG_logos_of_governments_and_government_agencies_of_Poland) — kategoria obejmuje 52 pliki, m.in. Sejm RP, Senat, NFZ, GUS, NBP, KPRM i ministerstwa.
+- [Herby Polski](https://commons.wikimedia.org/wiki/Category:Coats_of_arms_of_Poland)
+- [Herby województw](https://commons.wikimedia.org/wiki/Category:Coats_of_arms_of_voivodeships_of_Poland)
+- [Herby powiatów](https://commons.wikimedia.org/wiki/Category:Coats_of_arms_of_counties_of_Poland)
+- [Herby miast](https://commons.wikimedia.org/wiki/Category:Coats_of_arms_of_cities_in_Poland)
+- [Flagi Polski](https://commons.wikimedia.org/wiki/Category:Flags_of_Poland)
+- [Pieczęcie Polski](https://commons.wikimedia.org/wiki/Category:Seals_of_Poland)
+- [Agencje rządowe Polski](https://commons.wikimedia.org/wiki/Category:Government_agencies_of_Poland)
+- [Organizacje pozarządowe w Polsce](https://commons.wikimedia.org/wiki/Category:Non-governmental_organizations_in_Poland)
+- [Związki zawodowe w Polsce](https://commons.wikimedia.org/wiki/Category:Trade_unions_in_Poland)
+
+### Hierarchia w aplikacji
+Nadkategoria: **Ikony**  
+Nowa kategoria: **Symbole**  
+Sąsiednie kategorie katalogu: **Herby**, **Godła**, **Flagi**, **Logotypy**, **Pozostałe**.
+
+Do kategorii „Symbole” trafiają m.in. insygnia, odznaki, oznaki, pieczęcie, medale, ordery i monogramy. Rozpoznawanie kategorii nie jest potwierdzeniem autentyczności ani prawa do użycia znaku.
+
+### Ważne rozróżnienie statusów
+Adres strony instytucji, strona opisu pliku i bezpośredni adres pobrania to trzy różne pola. Puste `download_url` oznacza, że wskazano źródło, ale nie potwierdzono jeszcze bezpośredniego pliku. Rekordy ZUS, NFZ, KRUS, PFRON, Prezydenta RP i część znaków organów publicznych pozostają pod kontrolą warunków użycia. Kolekcje Wikimedia są punktami odkrywania — każdy plik wymaga indywidualnej kontroli autora, licencji, aktualności i ograniczeń prawnych.
+
