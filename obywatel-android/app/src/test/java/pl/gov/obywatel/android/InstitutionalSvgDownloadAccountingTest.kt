@@ -56,6 +56,18 @@ class InstitutionalSvgDownloadAccountingTest {
         assertTrue(isSvgDownloadDropOff(found = 100, available = -1))
     }
     @Test
+    fun commonsRetriesWikimediaRateLimitsIncludingHttp420() {
+        assertTrue(commonsIsRetryableHttpCode(420))
+        assertTrue(commonsIsRetryableHttpCode(429))
+        assertTrue(commonsIsRetryableHttpCode(502))
+        assertTrue(commonsIsRetryableHttpCode(503))
+        assertTrue(commonsIsRetryableHttpCode(504))
+        assertFalse(commonsIsRetryableHttpCode(400))
+        assertFalse(commonsIsRetryableHttpCode(403))
+        assertFalse(commonsIsRetryableHttpCode(404))
+    }
+
+    @Test
     fun retryAfterDelayIsCappedBeforeMultiplicationAndCannotOverflow() {
         assertEquals(30000L, commonsRetryDelayMs(0, 59L))
         assertEquals(30000L, commonsRetryDelayMs(0, 60L))
