@@ -17,6 +17,9 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.EncodeHintType
 import com.google.zxing.BarcodeFormat
 import android.graphics.BitmapFactory
+import android.graphics.drawable.Drawable
+import android.util.Xml
+import java.io.ByteArrayInputStream
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
@@ -207,14 +210,14 @@ internal object DocumentBrandStore {
     private val kinds = listOf(
         "Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona", "Tło wektorowe", "Tło graficzne",
         "Grafika wektorowa tła kafelków", "Animowany hologram", "Tło dokumentu", "Tło kafelka",
-        "Herb", "Godło", "Logo", "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
+        "Herb", "Godło", "Logo", "Symbol", "Pozostałe", "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
         "Załącznik tekstowy", "Załącznik", "Fotografia", "Znak wodny",
         "Grafika hologramu / zabezpieczenia"
     )
     private val imageKinds = setOf(
         "Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona", "Tło wektorowe", "Tło graficzne",
         "Grafika wektorowa tła kafelków", "Animowany hologram", "Tło dokumentu", "Tło kafelka",
-        "Herb", "Godło", "Logo", "Pieczęć", "Wzór podpisu odręcznego", "Flaga", "Fotografia",
+        "Herb", "Godło", "Logo", "Symbol", "Pozostałe", "Pieczęć", "Wzór podpisu odręcznego", "Flaga", "Fotografia",
         "Znak wodny", "Grafika hologramu / zabezpieczenia"
     )
     fun assetKinds() = kinds
@@ -656,10 +659,14 @@ internal object DocumentBrandStore {
             val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
             require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Zasób przekracza limit 12 MB." }
             val isSvg = SvgSafetyValidator.looksLikeSvg(bytes)
+            val mimeType = item.optString("mimeType")
+            val isXml = mimeType == "application/xml" || mimeType == "text/xml"
             if (isSvg) SvgSafetyValidator.validate(bytes)
-            if (kind in imageKinds && item.optString("mimeType") != "application/pdf") decodeImage(bytes).recycle()
+            if (isXml) validateInstitutionalSymbolXml(bytes)
+            if (kind in imageKinds && mimeType != "application/pdf" && !isXml) decodeImage(bytes).recycle()
             val extension = when {
                 isSvg -> ".svg.enc"
+                isXml -> ".xml.enc"
                 kind == "Certyfikat" -> ".cer.enc"
                 kind == "Załącznik tekstowy" -> ".txt.enc"
                 kind == "Załącznik" -> ".bin.enc"
@@ -690,6 +697,19 @@ internal object DocumentBrandStore {
         next.values.forEach { item -> array.put(JSONObject().put("documentType", item.documentType)
             .put("kind", item.kind).put("assetId", item.assetId)) }
         atomicWrite(File(dir(context), ASSIGNMENTS_INDEX), crypt(array.toString().toByteArray(Charsets.UTF_8), true))
+    }
+
+    private fun decodeAndroidDrawableXml(context: Context, bytes: ByteArray): Bitmap {
+        val parser = Xml.newPullParser()
+        parser.setInput(ByteArrayInputStream(bytes), "UTF-8")
+        val drawable = Drawable.createFromXml(context.resources, parser, context.theme)
+        val width = drawable.intrinsicWidth.takeIf { it > 0 }?.coerceAtMost(1024) ?: 512
+        val height = drawable.intrinsicHeight.takeIf { it > 0 }?.coerceAtMost(1024) ?: 512
+        return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, width, height)
+            drawable.draw(canvas)
+        }
     }
 
     private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
@@ -725,10 +745,13 @@ internal object DocumentBrandStore {
         require(assetId.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu." }
         require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Plik zasobu przekracza limit 12 MB." }
         val isSvg = SvgSafetyValidator.looksLikeSvg(bytes)
+        val isXml = mimeType == "application/xml" || mimeType == "text/xml"
         if (isSvg) SvgSafetyValidator.validate(bytes)
-        if (normalizedKind in imageKinds && mimeType != "application/pdf") decodeImage(bytes).recycle()
+        if (isXml) validateInstitutionalSymbolXml(bytes)
+        if (normalizedKind in imageKinds && mimeType != "application/pdf" && !isXml) decodeImage(bytes).recycle()
         val extension = when {
             isSvg -> ".svg.enc"
+            isXml -> ".xml.enc"
             normalizedKind == "Certyfikat" -> ".cer.enc"
             normalizedKind == "Załącznik tekstowy" -> ".txt.enc"
             normalizedKind == "Załącznik" -> ".bin.enc"
@@ -770,7 +793,10 @@ internal object DocumentBrandStore {
         val bytes = if (asset.file.startsWith("builtin:")) {
             context.assets.open(asset.file.removePrefix("builtin:")).use { it.readBytes() }
         } else crypt(atomicRead(File(dir(context),asset.file)),false)
-        decodeImage(bytes)
+        if (asset.mimeType == "application/xml" || asset.mimeType == "text/xml") {
+            if (SvgSafetyValidator.looksLikeSvg(bytes)) decodeImage(bytes)
+            else decodeAndroidDrawableXml(context, bytes)
+        } else decodeImage(bytes)
     }.getOrNull()
     @Synchronized fun delete(context: Context, id: String) {
         val old=list(context)

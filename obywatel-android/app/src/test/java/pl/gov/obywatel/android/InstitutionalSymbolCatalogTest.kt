@@ -257,4 +257,65 @@ class InstitutionalSymbolCatalogTest {
         assertTrue("Status praw nie może blokować pobrania flagi.", institutionalSymbolCanDownload(flag))
         assertTrue("Dodatkowe pliki z baz graficznych muszą być dostępne do pobrania.", external.all { institutionalSymbolCanDownload(it) })
     }
+    @Test
+    fun registersAllEighteenGraphicSourceCollections() {
+        val file = java.io.File("src/main/assets/identity-symbols/collections.csv")
+        assertTrue("Rejestr 18 kolekcji źródłowych musi być dołączony.", file.isFile)
+        val sources = parseInstitutionalSymbolCollectionsCsv(file.readText(Charsets.UTF_8))
+        assertEquals(18, sources.size)
+        assertEquals(15, sources.count { it.provider.equals("Wikimedia Commons", true) })
+        assertTrue(sources.any { it.id == "github_simple_icons" })
+        assertTrue(sources.any { it.id == "github_flag_icons" })
+        assertTrue(sources.any { it.id == "github_iconify_sets" })
+    }
+
+    @Test
+    fun iconifyCollectionCreatesOneSafeDownloadableSvgCandidate() {
+        val collection = IconifyCollectionSource(
+            prefix = "mdi", name = "Material Design Icons", iconCount = 1000,
+            author = "Iconify", authorUrl = "https://iconify.design",
+            licenseTitle = "Apache 2.0", licenseSpdx = "Apache-2.0",
+            licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
+            category = "ui_icons", sourcePageUrl = "https://icon-sets.iconify.design/mdi/",
+            downloadUrl = "https://raw.githubusercontent.com/iconify/icon-sets/master/json/mdi.json",
+            sourceFormat = "Iconify JSON", rightsStatus = "per_collection_license_review",
+            discoveryStatus = "source_registered"
+        )
+        val item = iconifyCandidate(collection, "account-circle")
+        assertEquals("mdi/account-circle.svg", item.path)
+        assertEquals("https://api.iconify.design/mdi/account-circle.svg", item.downloadUrl)
+        assertTrue(institutionalSymbolCanDownload(item))
+        assertEquals("Ikony", institutionalSymbolCategory(item))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsUnsafeIconifyIconName() {
+        val collection = IconifyCollectionSource(
+            "mdi", "Material Design Icons", 1, "Iconify", "https://iconify.design",
+            "Apache 2.0", "Apache-2.0", "https://www.apache.org/licenses/LICENSE-2.0",
+            "ui_icons", "https://icon-sets.iconify.design/mdi/",
+            "https://raw.githubusercontent.com/iconify/icon-sets/master/json/mdi.json",
+            "Iconify JSON", "review", "source_registered"
+        )
+        iconifyCandidate(collection, "../evil")
+    }
+
+    @Test
+    fun recognizesXmlGraphicResources() {
+        assertEquals("XML", institutionalSymbolFormat("drawable/ic_emblem.xml"))
+    }
+
+    @Test
+    fun allGraphicGroupsHaveACompatibleAssetKind() {
+        val kinds = DocumentBrandStore.assetKinds()
+        assertTrue(kinds.contains("Herb"))
+        assertTrue(kinds.contains("Godło"))
+        assertTrue(kinds.contains("Logo"))
+        assertTrue(kinds.contains("Flaga"))
+        assertTrue(kinds.contains("Ikona"))
+        assertTrue(kinds.contains("Tło graficzne"))
+        assertTrue(kinds.contains("Symbol"))
+        assertTrue(kinds.contains("Pozostałe"))
+    }
+
 }
