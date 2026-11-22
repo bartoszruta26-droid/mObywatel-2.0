@@ -239,6 +239,21 @@ private suspend fun discoverCommonsOpenSvgs(
         "national flag", "city flag", "institutional emblem", "official seal",
         "government logo", "herb państwa", "godło państwowe", "herb miasta",
         "herb gminy", "herb powiatu", "herb województwa", "flaga państwowa",
+        "incategory:\"SVG logos of governments and government agencies of Poland\"",
+        "incategory:\"Logos of governments and government agencies of Poland\"",
+        "incategory:\"National coats of arms of Poland\"",
+        "incategory:\"SVG heraldry of Poland\"",
+        "incategory:\"Coats of arms of Poland\"",
+        "incategory:\"Historical coats of arms of Poland\"",
+        "incategory:\"Symbols of Poland\"",
+        "incategory:\"Coats of arms of cities in Poland\"",
+        "incategory:\"Coats of arms of voivodeships of Poland\"",
+        "incategory:\"Coats of arms of counties of Poland\"",
+        "incategory:\"Flags of Poland\"",
+        "incategory:\"Orders, decorations and medals of Poland\"",
+        "incategory:\"Orders\"",
+        "incategory:\"Ribbon bars of Poland\"",
+        "incategory:\"SVG logos of Poland\"",
         "United Nations logo", "World Health Organization logo", "UNESCO logo",
         "UNICEF logo", "European Union emblem", "Council of Europe logo", "NATO emblem",
         "international NGO logo", "humanitarian organization logo",
@@ -500,7 +515,7 @@ private fun downloadCommonsSvg(context: Context, item: CommonsSvgCandidate): Str
     val rights = JSONObject().put("source", "Wikimedia Commons").put("sourcePage", item.page).put("downloadUrl", item.url)
         .put("license", item.license).put("licenseUrl", item.licenseUrl).put("author", item.artist)
         .put("restrictions", item.restrictions).put("sha256", sha)
-        .put("verificationStatus", "source-metadata-retained; no-in-app-license-gate")
+        .put("verificationStatus", "mime-and-svg-validated; license-metadata-verified; app-use-approval-pending")
         .put("permittedKinds", JSONArray()).toString()
     val title = item.title.removePrefix("File:")
     val kind = commonsSvgAssetKind(title)
@@ -648,7 +663,22 @@ private fun readCommonsCandidates(context: Context): List<CommonsSvgCandidate> =
 }.getOrDefault(emptyList())
 
 internal fun commonsDownloadStatusNeedsRetry(status: String): Boolean =
-    !status.equals("saved", ignoreCase = true)
+    status.equals("pending", ignoreCase = true) || status.equals("failed", ignoreCase = true)
+
+internal fun commonsCandidateRightsVerified(item: CommonsSvgCandidate): Boolean {
+    val license = item.license.trim().lowercase(java.util.Locale.ROOT)
+    val restrictions = item.restrictions.trim().lowercase(java.util.Locale.ROOT)
+    val knownLicense = license == "cc0" || license == "public domain" ||
+        Regex("^cc by(-sa)? [1-4]\\.0(?: us)?$").matches(license) ||
+        Regex("^cc by(-sa)? [1-3]\\.0$").matches(license)
+    val restrictionsClear = restrictions.isBlank() || restrictions == "none" ||
+        restrictions == "not applicable" || restrictions == "no known restrictions"
+    val attributionComplete = license == "cc0" || license == "public domain" ||
+        (item.artist.isNotBlank() && item.licenseUrl.startsWith("https://"))
+    return knownLicense && restrictionsClear && attributionComplete &&
+        item.page.startsWith("https://commons.wikimedia.org/wiki/") &&
+        item.url.startsWith("https://upload.wikimedia.org/")
+}
 
 /**
  * Reconcile the durable download manifest against the encrypted on-disk asset library.
@@ -821,6 +851,16 @@ private suspend fun processCommonsCandidates(
     }
     uniqueCandidates.forEachIndexed { index, candidate ->
         onProgress(index, uniqueCandidates.size, candidate.title)
+        if (!commonsCandidateRightsVerified(candidate)) {
+            failed++
+            val reason = "Wymagana indywidualna weryfikacja licencji, autora lub ograniczeń; plik nie został pobrany."
+            persistCommonsCandidateStatus(context, candidate.title, "rights_review_required", 0, reason)
+            if (errors.size < 100) errors.add("${candidate.title}: ${reason}")
+            saveCommonsReport(context, uniqueCandidates.size, downloaded, alreadyPresent, failed,
+                attempts, candidate.title, errors)
+            onProgress(index + 1, uniqueCandidates.size, candidate.title)
+            return@forEachIndexed
+        }
         val assetId = commonsAssetId(candidate.title)
         val existingAsset = knownAssets[assetId]
         val existingBytes = existingAsset?.let { DocumentBrandStore.fileBytes(context, assetId, it) }
