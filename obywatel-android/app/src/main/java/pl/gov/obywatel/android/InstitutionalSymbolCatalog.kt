@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
@@ -466,13 +465,11 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
                 }
         }.take(12)
         matchingIconifyCollections.forEach { collection ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(collection.name, style = MaterialTheme.typography.bodyMedium)
-                    Text("${collection.prefix} · ${collection.iconCount} ikon · ${collection.licenseSpdx.ifBlank { collection.licenseTitle }}", style = MaterialTheme.typography.labelSmall)
-                }
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(collection.name, style = MaterialTheme.typography.bodyMedium)
+                Text("${collection.prefix} · ${collection.iconCount} ikon · ${collection.licenseSpdx.ifBlank { collection.licenseTitle }}", style = MaterialTheme.typography.labelSmall)
                 Button(onClick = { selectedIconifyPrefix = collection.prefix }) {
-                    Text(if (selectedIconifyPrefix == collection.prefix) "Wybrano" else "Wybierz")
+                    Text(if (selectedIconifyPrefix == collection.prefix) "Wybrano" else "Wybierz zestaw")
                 }
             }
         }
