@@ -60,7 +60,7 @@ internal data class InstitutionalSymbolCandidate(
     val credit: String,
     val commonsCategories: String = ""
 ) {
-    val displayName: String get() = path.substringAfterLast('/').replace(Regex("(?i)\\.(svg|png)$"), "").replace('_', ' ').replace('-', ' ')
+    val displayName: String get() = path.substringAfterLast('/').replace(Regex("(?i)\\.(svg|png|xml)$"), "").replace('_', ' ').replace('-', ' ')
         .replace('_', ' ').replace('-', ' ')
 }
 
@@ -87,7 +87,8 @@ internal fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolC
     require(lines.isNotEmpty()) { "Katalog symboli jest pusty." }
     val header = parseLine(lines.first()).map { it.trim() }
     fun index(name: String) = header.indexOf(name).also { require(it >= 0) { "Brak kolumny $name w katalogu symboli." } }
-    val columns = listOf("source_id", "repository", "ref", "path", "group", "rights_status", "source_url", "download_url", "license_short_name", "license_url", "author", "source_credit", "commons_categories").associateWith(::index)
+    val columns = listOf("source_id", "repository", "ref", "path", "group", "rights_status", "source_url", "download_url", "license_short_name", "license_url", "author", "source_credit").associateWith(::index)
+    val commonsCategoriesIndex = header.indexOf("commons_categories")
     return lines.drop(1).mapNotNull { line ->
         val row = parseLine(line)
         fun value(name: String) = row.getOrNull(columns.getValue(name)).orEmpty()
@@ -108,7 +109,7 @@ internal fun parseInstitutionalSymbolCsv(raw: String): List<InstitutionalSymbolC
         if (institutionalSymbolFormat(path) == null || url.isBlank()) return@mapNotNull null
         InstitutionalSymbolCandidate(value("source_id"), value("repository"), value("ref"), path,
             value("group"), value("rights_status"), sourceUrl, url,
-            value("license_short_name"), value("license_url"), value("author"), value("source_credit"), value("commons_categories"))
+            value("license_short_name"), value("license_url"), value("author"), value("source_credit"), row.getOrNull(commonsCategoriesIndex).orEmpty())
     }.distinctBy { it.sourceId + ":" + it.path }
 }
 
@@ -467,7 +468,7 @@ private suspend fun downloadInstitutionalSymbol(
 private val institutionalSymbolCategoryOrder = listOf("Herby", "Godła", "Logotypy", "Flagi", "Ikony", "Tła", "Symbole", "Pozostałe")
 
 internal fun institutionalSymbolCategory(item: InstitutionalSymbolCandidate): String {
-    val key = "${item.group} ${item.path} ${item.displayName}".lowercase(Locale.ROOT)
+    val key = "${item.group} ${item.path} ${item.displayName} ${item.commonsCategories}".lowercase(Locale.ROOT)
     return when {
         listOf("flag", "flaga", "banner").any { key.contains(it) } -> "Flagi"
         listOf("background", "wallpaper", "pattern", "texture", "tło", "tla").any { key.contains(it) } -> "Tła"
@@ -537,7 +538,7 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
             style = MaterialTheme.typography.bodySmall
         )
 
-        Text("Kolekcje źródłowe do przeszukiwania: ${sourceCollections.size}", style = MaterialTheme.typography.titleSmall)
+        Text("Zintegrowane kolekcje źródłowe: ${sourceCollections.size}/18", style = MaterialTheme.typography.titleSmall)
         Text("Rejestr służy do odkrywania zasobów. W wynikach pobierania pokazujemy bezpośrednie adresy pojedynczych plików; nie blokujemy pobrania ze względu na status licencji.", style = MaterialTheme.typography.bodySmall)
         LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(sourceCollections, key = { it.id }) { source ->
@@ -589,7 +590,9 @@ internal fun InstitutionalSymbolCatalogPanel(context: Context, onSaved: () -> Un
             )
             Button(enabled = busyId == null && iconifyName.isNotBlank(), onClick = {
                 runCatching {
-                    iconifyCandidate(selectedIconify.copy(prefix = selectedIconifyPrefix.ifBlank { selectedIconify.prefix }), iconifyName)
+                    val requestedPrefix = selectedIconifyPrefix.ifBlank { selectedIconify.prefix }
+                    require(requestedPrefix == selectedIconify.prefix) { "Wybierz prefiks istniejący w indeksie kolekcji Iconify." }
+                    iconifyCandidate(selectedIconify, iconifyName)
                 }.onSuccess { candidate ->
                     candidates = (candidates + candidate).distinctBy { it.sourceId + ":" + it.path }
                     query = candidate.displayName
