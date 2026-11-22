@@ -350,7 +350,7 @@ internal fun validateInstitutionalSymbolXml(bytes: ByteArray) {
         }
         event = parser.nextToken()
     }
-    require(root in setOf("vector", "selector", "animated-vector", "shape", "svg", "resources")) {
+    require(root != null && root in setOf("vector", "selector", "animated-vector", "shape", "svg", "resources")) {
         "XML nie jest rozpoznanym zasobem graficznym Androida ani dokumentem SVG."
     }
 }
