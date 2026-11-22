@@ -73,26 +73,34 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     var regressionPanel by remember { mutableStateOf(false) }
     var regression by remember {
         mutableStateOf(RegressionChannelSettings(
-            length1 = prefs.getInt("reg_length_1", 377),
-            length2 = prefs.getInt("reg_length_2", 233),
-            length3 = prefs.getInt("reg_length_3", 144),
+            length1 = prefs.getInt("reg_fib_length_1", 987),
+            length2 = prefs.getInt("reg_fib_length_2", 610),
+            length3 = prefs.getInt("reg_fib_length_3", prefs.getInt("reg_length_1", 377)),
+            length4 = prefs.getInt("reg_fib_length_4", prefs.getInt("reg_length_2", 233)),
+            length5 = prefs.getInt("reg_fib_length_5", prefs.getInt("reg_length_3", 144)),
+            length6 = prefs.getInt("reg_fib_length_6", 89),
+            length7 = prefs.getInt("reg_fib_length_7", 55),
             deviationMultiplier = prefs.getFloat("reg_deviation", 2.41f).toDouble(),
             extendLines = prefs.getBoolean("reg_extend", true),
             showFibonacci = prefs.getBoolean("reg_fibonacci", true),
             showBroken = prefs.getBoolean("reg_broken", false),
-            width1 = prefs.getFloat("reg_width_1", 1f),
-            width2 = prefs.getFloat("reg_width_2", 1f),
-            width3 = prefs.getFloat("reg_width_3", 1f)
+            width1 = prefs.getFloat("reg_fib_width_1", 1f),
+            width2 = prefs.getFloat("reg_fib_width_2", 1f),
+            width3 = prefs.getFloat("reg_fib_width_3", 1f),
+            width4 = prefs.getFloat("reg_fib_width_4", 1f),
+            width5 = prefs.getFloat("reg_fib_width_5", 1f),
+            width6 = prefs.getFloat("reg_fib_width_6", 1f),
+            width7 = prefs.getFloat("reg_fib_width_7", 1f)
         ))
     }
-    var length1Text by remember { mutableStateOf(regression.length1.toString()) }
-    var length2Text by remember { mutableStateOf(regression.length2.toString()) }
-    var length3Text by remember { mutableStateOf(regression.length3.toString()) }
-    var color1 by remember { mutableIntStateOf(prefs.getInt("reg_color_1", 0)) }
-    var color2 by remember { mutableIntStateOf(prefs.getInt("reg_color_2", 1)) }
-    var color3 by remember { mutableIntStateOf(prefs.getInt("reg_color_3", 2)) }
-    val regressionColors = listOf(Color(0xFF2EAD62), Color(0xFFE4B82E), Color(0xFFE05252),
-        Color(0xFF4385D8), Color(0xFF9B59B6), Color(0xFF16A6A6))
+    val lengthTexts = remember { mutableStateListOf(*regression.lengths.map(Int::toString).toTypedArray()) }
+    val regressionColorIndices = remember {
+        mutableStateListOf(*List(7) { index -> prefs.getInt("reg_fib_color_${index + 1}", index % 7) }.toTypedArray())
+    }
+    val regressionColors = listOf(
+        Color(0xFF2EAD62), Color(0xFFE4B82E), Color(0xFFE05252),
+        Color(0xFF4385D8), Color(0xFF9B59B6), Color(0xFF16A6A6), Color(0xFFE67E22)
+    )
 
     fun save() {
         prefs.edit().putString("base", base).putString("quote", quote)
@@ -100,16 +108,21 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     }
 
     fun saveRegression() {
-        prefs.edit().putInt("reg_length_1", regression.length1)
-            .putInt("reg_length_2", regression.length2).putInt("reg_length_3", regression.length3)
+        val editor = prefs.edit()
             .putFloat("reg_deviation", regression.deviationMultiplier.toFloat())
             .putBoolean("reg_extend", regression.extendLines)
             .putBoolean("reg_fibonacci", regression.showFibonacci)
             .putBoolean("reg_broken", regression.showBroken)
-            .putFloat("reg_width_1", regression.width1).putFloat("reg_width_2", regression.width2)
-            .putFloat("reg_width_3", regression.width3)
-            .putInt("reg_color_1", color1).putInt("reg_color_2", color2)
-            .putInt("reg_color_3", color3).apply()
+        regression.lengths.forEachIndexed { index, value ->
+            editor.putInt("reg_fib_length_${index + 1}", value)
+        }
+        regression.widths.forEachIndexed { index, value ->
+            editor.putFloat("reg_fib_width_${index + 1}", value)
+        }
+        regressionColorIndices.forEachIndexed { index, value ->
+            editor.putInt("reg_fib_color_${index + 1}", value)
+        }
+        editor.apply()
     }
 
     fun load() {
@@ -195,25 +208,27 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Kanały regresji liniowej", style = MaterialTheme.typography.titleSmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        OutlinedTextField(length1Text, { value ->
-                            length1Text = value.filter(Char::isDigit).take(4)
-                            length1Text.toIntOrNull()?.takeIf { it >= 10 }?.let {
-                                regression = regression.copy(length1 = it); saveRegression()
+                    Text("Okna regresji według ciągu Fibonacciego: 987, 610, 377, 233, 144, 89, 55")
+                    lengthTexts.indices.toList().chunked(2).forEach { rowIndices ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            rowIndices.forEach { index ->
+                                OutlinedTextField(
+                                    value = lengthTexts[index],
+                                    onValueChange = { value ->
+                                        val filtered = value.filter(Char::isDigit).take(4)
+                                        lengthTexts[index] = filtered
+                                        filtered.toIntOrNull()?.takeIf { it >= 10 }?.let { length ->
+                                            regression = regression.withLength(index, length)
+                                            saveRegression()
+                                        }
+                                    },
+                                    label = { Text("Kanał ${index + 1}") },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = true
+                                )
                             }
-                        }, label = { Text("Długość 1") }, modifier = Modifier.weight(1f), singleLine = true)
-                        OutlinedTextField(length2Text, { value ->
-                            length2Text = value.filter(Char::isDigit).take(4)
-                            length2Text.toIntOrNull()?.takeIf { it >= 10 }?.let {
-                                regression = regression.copy(length2 = it); saveRegression()
-                            }
-                        }, label = { Text("Długość 2") }, modifier = Modifier.weight(1f), singleLine = true)
-                        OutlinedTextField(length3Text, { value ->
-                            length3Text = value.filter(Char::isDigit).take(4)
-                            length3Text.toIntOrNull()?.takeIf { it >= 10 }?.let {
-                                regression = regression.copy(length3 = it); saveRegression()
-                            }
-                        }, label = { Text("Długość 3") }, modifier = Modifier.weight(1f), singleLine = true)
+                            if (rowIndices.size == 1) Spacer(Modifier.weight(1f))
+                        }
                     }
                     Text("Odchylenie: ${"%.2f".format(regression.deviationMultiplier)} × σ")
                     Slider(regression.deviationMultiplier.toFloat(), { regression = regression.copy(deviationMultiplier = it.toDouble()) },
@@ -231,26 +246,26 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                         Text("Wyróżniaj wybite kanały")
                     }
                     Text("Grubość linii (1–4)")
-                    listOf(regression.width1, regression.width2, regression.width3).forEachIndexed { index, width ->
+                    regression.widths.forEachIndexed { index, width ->
                         Text("Kanał ${index + 1}: ${width.toInt()} px", style = MaterialTheme.typography.labelSmall)
                         Slider(width, { value ->
-                            regression = when (index) {
-                                0 -> regression.copy(width1 = value)
-                                1 -> regression.copy(width2 = value)
-                                else -> regression.copy(width3 = value)
-                            }
+                            regression = regression.withWidth(index, value)
                         }, valueRange = 1f..4f, steps = 2, onValueChangeFinished = ::saveRegression)
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(color1, color2, color3).forEachIndexed { index, selectedColor ->
-                            OutlinedButton(onClick = {
-                                val next = (selectedColor + 1) % regressionColors.size
-                                when (index) { 0 -> color1 = next; 1 -> color2 = next; else -> color3 = next }
-                                saveRegression()
-                            }) { Text("Kolor ${index + 1}", color = regressionColors[selectedColor]) }
+                    Text("Kolory kanałów (dotknij, aby zmienić)")
+                    regressionColorIndices.indices.toList().chunked(4).forEach { rowIndices ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            rowIndices.forEach { index ->
+                                OutlinedButton(onClick = {
+                                    regressionColorIndices[index] = (regressionColorIndices[index] + 1) % regressionColors.size
+                                    saveRegression()
+                                }) {
+                                    Text("K${index + 1}", color = regressionColors[regressionColorIndices[index]])
+                                }
+                            }
                         }
                     }
-                    Text("Kanał wymaga pełnej liczby obserwacji. Przy domyślnych długościach potrzeba odpowiednio 377, 233 i 144 punktów.",
+                    Text("Kanał pojawia się po zebraniu pełnej liczby obserwacji. Dla okna 987 potrzeba co najmniej 987 punktów.",
                         style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -267,12 +282,12 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             }
             PairHistoryChart(points, if (style == PriceChartStyle.CANDLE) PriceChartStyle.LINE else style,
                 selected?.date, { selected = it }, regression,
-                regressionColors[color1], regressionColors[color2], regressionColors[color3],
-                Modifier.fillMaxWidth().height(275.dp))
-            val activeRegressionLengths = LinearRegressionChannels.calculateThree(
+                regressionColorIndices.map { regressionColors[it] },
+                Modifier.fillMaxWidth().height(300.dp))
+            val activeRegressionLengths = LinearRegressionChannels.calculateAll(
                 points.map { it.value.toDouble() }, regression
             ).mapIndexedNotNull { index, channel ->
-                channel?.let { listOf(regression.length1, regression.length2, regression.length3)[index] }
+                channel?.let { regression.lengths[index] }
             }
             Text(
                 if (activeRegressionLengths.isEmpty()) "Brak aktywnych kanałów: wybierz dłuższy okres lub krótsze długości regresji."
@@ -309,14 +324,14 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
 private fun PairHistoryChart(
     points: List<PairPricePoint>, style: PriceChartStyle, selectedDate: LocalDate?,
     onSelect: (PairPricePoint) -> Unit, regression: RegressionChannelSettings,
-    regressionColor1: Color, regressionColor2: Color, regressionColor3: Color,
+    regressionColors: List<Color>,
     modifier: Modifier = Modifier
 ) {
     val line = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant
     val marker = MaterialTheme.colorScheme.tertiary
     val vals = points.map { it.value.toDouble() }
-    val channels = LinearRegressionChannels.calculateThree(vals, regression)
+    val channels = LinearRegressionChannels.calculateAll(vals, regression)
     val drawableChannels = channels.filterNotNull()
     val projectedValues = drawableChannels.flatMap { ch ->
         val projectedEnd = if (regression.extendLines)
@@ -384,10 +399,9 @@ private fun PairHistoryChart(
         }
         channels.forEachIndexed { channelIndex, channel ->
             if (channel != null) {
-            val colors = listOf(regressionColor1, regressionColor2, regressionColor3)
             val color = if (regression.showBroken && channel.brokenDirection != 0) Color(0xFF2878D0)
-                else colors[channelIndex]
-            val lineWidth = listOf(regression.width1, regression.width2, regression.width3)[channelIndex].dp.toPx()
+                else regressionColors[channelIndex]
+            val lineWidth = regression.widths[channelIndex].dp.toPx()
             val x1 = xFor(channel.startIndex.toDouble())
             val x2 = if (regression.extendLines) r else xFor(channel.endIndex.toDouble())
             val endIndex = if (regression.extendLines) {
