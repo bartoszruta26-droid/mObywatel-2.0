@@ -137,6 +137,19 @@ internal fun commonsRetryDelayMs(attempt: Int, retryAfterSeconds: Long? = null):
     return maxOf(serverDelay ?: exponentialDelay, exponentialDelay).coerceIn(2000L, 30000L)
 }
 
+/** Conservative retry policy for Wikimedia file downloads; HTTP 429 gets a longer cooldown. */
+internal fun commonsDownloadRetryDelayMs(
+    attempt: Int,
+    httpCode: Int?,
+    retryAfterMs: Long? = null
+): Long {
+    val exponent = (attempt - 1).coerceIn(0, 4)
+    val baseDelay = if (httpCode == 429) 30_000L else 10_000L
+    val exponentialDelay = (baseDelay * (1L shl exponent)).coerceAtMost(180_000L)
+    val serverDelay = retryAfterMs?.coerceIn(0L, 180_000L) ?: 0L
+    return maxOf(exponentialDelay, serverDelay).coerceAtMost(180_000L)
+}
+
 private fun commonsRequest(context: Context, params: String): JSONObject {
     var lastFailure: Exception? = null
     val tor = TorDownloadServiceProvider.get(context)
@@ -619,9 +632,17 @@ private suspend fun downloadCommonsSvgWithRetry(
         } catch (failure: Exception) {
             lastError = failure.message ?: failure.javaClass.simpleName
             if (index + 1 < maxAttempts) {
-                val serverDelay = (failure as? CommonsHttpException)?.retryDelayMs ?: 0L
-                val backoff = (10000L * (1L shl index.coerceIn(0, 4))).coerceAtMost(180000L)
-                kotlinx.coroutines.delay(maxOf(backoff, serverDelay))
+                val commonsFailure = failure as? CommonsHttpException
+                val transportFailure = failure as? TorHttpException
+                val httpCode = commonsFailure?.httpCode ?: transportFailure?.httpCode
+                val retryAfterMs = commonsFailure?.retryDelayMs
+                    ?: transportFailure?.let { retryAfterMillis(it.retryAfter) }
+                val delayMs = commonsDownloadRetryDelayMs(index + 1, httpCode, retryAfterMs)
+                appendCommonsDiagnostic(
+                    context,
+                    "DOWNLOAD_RETRY title=${item.title} attempt=${index + 1} httpCode=${httpCode ?: "none"} delayMs=$delayMs"
+                )
+                kotlinx.coroutines.delay(delayMs)
             }
         }
     }
@@ -632,7 +653,7 @@ private suspend fun processCommonsCandidates(
     context: Context,
     candidates: List<CommonsSvgCandidate>,
     onProgress: suspend (completed: Int, total: Int, currentTitle: String) -> Unit,
-    pauseBetweenDownloadsMs: Long = 1000L
+    pauseBetweenDownloadsMs: Long = 3000L
 ): CommonsDownloadSummary {
     // A unique queue is the single source of work for all Tor routes.
     val uniqueCandidates = distinctCommonsCandidates(candidates)
@@ -687,7 +708,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
     var progressCurrent by remember { mutableIntStateOf(0) }
     var progressTotal by remember { mutableIntStateOf(0) }
     var reportSummary by remember { mutableStateOf(loadCommonsReportSummary(context)) }
-    var pauseBetweenDownloadsMs by remember { mutableStateOf("1000") }
+    var pauseBetweenDownloadsMs by remember { mutableStateOf("3000") }
     val externalListLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) { busy = "external-import"; scope.launch { val result = withContext(Dispatchers.IO) { runCatching {
             val raw = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: error("Nie można odczytać pliku.")
@@ -816,7 +837,7 @@ internal fun InstitutionalSvgLibraryPanel(context:Context,onSaved:()->Unit) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
         }
-        OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 1000 ms.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(value = pauseBetweenDownloadsMs, onValueChange = { if (it.all(Char::isDigit) && it.length <= 5) pauseBetweenDownloadsMs = it }, label = { Text("Pauza między pobraniami (ms)") }, supportingText = { Text("Zakres 0–60000 ms; domyślnie 3000 ms. Przy HTTP 429 aplikacja automatycznie wydłuża przerwę.") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         OutlinedButton(enabled = busy == null, onClick = { externalListLauncher.launch(arrayOf("text/csv", "text/plain", "text/*", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Importuj zewnętrzną listę SVG (CSV / TXT)") }
         OutlinedButton(
             enabled = busy == null,
