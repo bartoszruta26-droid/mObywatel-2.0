@@ -149,4 +149,16 @@ class InstitutionalSymbolCatalogTest {
         assertEquals(false, institutionalSymbolCanDownload(referenceOnly))
         assertEquals(true, institutionalSymbolCanDownload(approvedMit))
     }
+
+    @Test
+    fun recognizesSvgAndPngButRejectsUnsupportedRasterFormats() {
+        assertEquals("SVG", institutionalSymbolFormat("symbols/crest.svg"))
+        assertEquals("PNG", institutionalSymbolFormat("logos/institution.PNG"))
+        assertEquals(null, institutionalSymbolFormat("logos/institution.jpg"))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsPngPayloadWithoutValidSignature() {
+        validateInstitutionalSymbolPng(ByteArray(64))
+    }
 }
