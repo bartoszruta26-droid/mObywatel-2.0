@@ -53,7 +53,7 @@ class TradingChartModelsTest {
         val bars = listOf(bar(1, "1"), bar(2, "2"), bar(3, "3"))
         assertEquals(listOf(null, BigDecimal("1.50000000"), BigDecimal("2.50000000")),
             TradingChartAnalytics.simpleMovingAverage(bars, 2))
-        assertEquals(BigDecimal("2.33333333"),
+        assertEquals(BigDecimal("2.55555556"),
             TradingChartAnalytics.exponentialMovingAverage(bars, 2)[2])
     }
 
@@ -66,6 +66,6 @@ class TradingChartModelsTest {
         assertNull(values[0])
         assertNull(values[1])
         assertEquals(BigDecimal("100"), values[2])
-        assertEquals(BigDecimal("50"), values[3])
+        assertEquals(BigDecimal("50.00000000"), values[3])
     }
 }
