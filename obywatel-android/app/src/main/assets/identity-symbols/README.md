@@ -6,7 +6,7 @@
 - Pojedynczy wybrany SVG jest pobierany przez wspólną warstwę Tor i walidowany przed zapisem.
 - Źródło, autora, licencję, atrybucję, status prawny i SHA-256 zachowujemy w metadanych.
 - Status prawny nie filtruje odkrywania; nie oznacza jednak zgody na redystrybucję lub użycie na dokumencie.
-- Znaki wymagające zgody albo kontroli pozostają wyszukiwalne jako referencje; `permittedKinds` pozostaje puste do czasu odrębnego zatwierdzenia.
+- Znaki wymagające zgody albo kontroli pozostają widoczne i możliwe do pobrania; `permittedKinds` nie jest automatycznie zatwierdzane i pozostaje kwestią decyzji użytkownika przed użyciem.
 
 ## Pakiet flag SVG
 
@@ -31,10 +31,10 @@ Plik `collections.csv` jest używany przez ekran katalogu symboli. Zawiera adres
 - trwały zapis: `not_saved`
 - dostępność w aplikacji: `not_available`
 
-Obsługiwane w katalogu lokalnych kandydatów formaty to SVG i PNG. SVG przechodzi walidację bezpieczeństwa, a PNG kontrolę sygnatury, IHDR, wymiarów i dekodowalności. Zasoby z niezweryfikowaną licencją są blokowane przed pobraniem. Sama licencja MIT/CC0 pliku nie przesądza o prawach do znaku towarowego, godła, flagi ani odznaczenia.
+Obsługiwane w katalogu lokalnych kandydatów formaty to SVG i PNG. SVG przechodzi walidację bezpieczeństwa, a PNG kontrolę sygnatury, IHDR, wymiarów i dekodowalności. Status licencji nie blokuje pobrania. Sama licencja MIT/CC0 pliku nie przesądza o prawach do znaku towarowego, godła, flagi ani odznaczenia; użytkownik ocenia te kwestie przed wykorzystaniem grafiki.
 
 ## Indeksy plików GitHub
-- `github-symbol-candidates.csv`: 2 734 rekordy kandydatów z GitHub i Wikimedia Commons (2 378 SVG, 175 PNG oraz pozostałe formaty referencyjne). Zapisano stronę źródłową, bezpośredni URL, status praw, licencję, autora i atrybucję, jeśli dane źródło je publikuje. Jest to indeks odkrywania, a nie zgoda na pobranie ani użycie. Rekordy z `reference_only`, `per_asset_review`, `per_file_metadata_review_required` lub ograniczeniami flag pozostają zablokowane do indywidualnej weryfikacji.
+- `github-symbol-candidates.csv`: 2 734 rekordy kandydatów z GitHub i Wikimedia Commons (2 378 SVG, 175 PNG oraz pozostałe formaty referencyjne). Zapisano stronę źródłową, bezpośredni URL, status praw, licencję, autora i atrybucję, jeśli dane źródło je publikuje. Jest to indeks odkrywania bez automatycznej oceny praw do użycia. Rekordy z `reference_only`, `per_asset_review`, `per_file_metadata_review_required` lub ograniczeniami flag pozostają widoczne i możliwe do pobrania; ich wykorzystanie wymaga ręcznej oceny użytkownika.
 - `iconify-collections.csv`: 280 zestawów Iconify obejmujących 556 207 ikon. Dla każdego zestawu zapisano autora, licencję SPDX, adres licencji i bezpośredni JSON. Zestaw jest w formacie Iconify JSON, nie samodzielnym SVG; przed importem trzeba go bezpiecznie przekształcić do SVG i przeprowadzić walidację.
 
 
