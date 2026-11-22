@@ -7,12 +7,90 @@ import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class TradingChartModelsTest {
     private fun bar(day: Int, value: String) : TradingPriceBar {
         val price = BigDecimal(value)
         return TradingPriceBar(LocalDate.of(2026, 1, day), price, price, price, price)
+    }
+
+    @Test fun sevenRegressionWindowsFollowFibonacciSequence() {
+        val settings = RegressionChannelSettings()
+        assertEquals(listOf(987, 610, 377, 233, 144, 89, 55), settings.lengths)
+        assertEquals(settings.lengths, LinearRegressionChannels.fibonacciWindowLengths)
+        val values = (0 until 1000).map { 50.0 + it * 0.03 + kotlin.math.sin(it / 13.0) }
+        val channels = LinearRegressionChannels.calculateAll(values, settings)
+        assertEquals(7, channels.size)
+        assertEquals(settings.lengths, channels.mapNotNull { it?.length })
+    }
+
+    @Test fun fibonacciRegressionLengthsCanBeEditedAndWidthsRemainIndependent() {
+        val settings = RegressionChannelSettings()
+            .withLength(0, 900)
+            .withLength(6, 34)
+            .withWidth(0, 2.5f)
+            .withWidth(6, 3f)
+        assertEquals(900, settings.length1)
+        assertEquals(34, settings.length7)
+        assertEquals(2.5f, settings.width1)
+        assertEquals(3f, settings.width7)
+        assertEquals(987, RegressionChannelSettings().length1)
+        assertEquals(55, RegressionChannelSettings().length7)
+    }
+
+    @Test fun regressionChannelFitsPerfectLinearSeries() {
+        val values = (0 until 144).map { 10.0 + it * 0.5 }
+        val channel = LinearRegressionChannels.calculate(values, 144, 2.41)!!
+        assertEquals(0.5, channel.slope, 1e-10)
+        assertEquals(10.0, channel.startMid, 1e-10)
+        assertEquals(81.5, channel.endMid, 1e-10)
+        assertEquals(0.0, channel.deviation, 1e-10)
+        assertEquals(0, channel.brokenDirection)
+    }
+
+    @Test fun tripleRegressionUsesIndependentLengthsAndRequiresEnoughBars() {
+        val values = (0 until 250).map { 100.0 + it * 0.2 + kotlin.math.sin(it / 8.0) }
+        val settings = RegressionChannelSettings()
+        val result = LinearRegressionChannels.calculateThree(values, settings)
+        assertNull(result[0])
+        assertEquals(233, result[1]?.length)
+        assertEquals(144, result[2]?.length)
+    }
+
+    @Test fun regressionDetectsDownsideBreakAndFibonacciLevels() {
+        val values = (0 until 30).map { 100.0 + it.toDouble() } + listOf(1.0)
+        val channel = LinearRegressionChannels.calculate(values, 31, 1.0)!!
+        assertEquals(-1, channel.brokenDirection)
+        assertEquals(channel.lowerAt(channel.endIndex.toDouble(), 1.0) +
+            channel.deviation * 2.0 * 0.618,
+            channel.fibonacciAt(channel.endIndex.toDouble(), 0.618, 1.0), 1e-9)
+    }
+
+    @Test fun regressionSettingsRejectInvalidValues() {
+        assertThrows(IllegalArgumentException::class.java) {
+            RegressionChannelSettings(length1 = 9)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            RegressionChannelSettings(deviationMultiplier = 0.0)
+        }
+    }
+
+    @Test fun crossRateSupportsCurrencyAndMetalPairs() {
+        // USD buys 0.9 EUR and 0.8 CHF; one EUR is therefore 0.8/0.9 CHF.
+        assertEquals(BigDecimal("0.8888888889"),
+            TradingPairMath.crossRate(BigDecimal("0.9"), BigDecimal("0.8")))
+        // USD buys 0.00025 troy ounces of gold and 0.02 troy ounces of silver.
+        assertEquals(BigDecimal("80.0000000000"),
+            TradingPairMath.crossRate(BigDecimal("0.00025"), BigDecimal("0.02")))
+    }
+
+    @Test fun crossRateRejectsNonPositiveInputs() {
+        assertThrows(IllegalArgumentException::class.java) {
+            TradingPairMath.crossRate(BigDecimal.ZERO, BigDecimal.ONE)
+        }
     }
 
     @Test fun referenceBarHasNoInventedRangeOrVolume() {
@@ -68,4 +146,27 @@ class TradingChartModelsTest {
         assertEquals(BigDecimal("100"), values[2])
         assertEquals(BigDecimal("50.00000000"), values[3])
     }
+    @Test fun currencyForecastProducesAllEightHorizonsAndWalkForwardProbability() {
+        val values = (0 until 1300).map { index ->
+            4.0 + index * 0.0008 + kotlin.math.sin(index / 17.0) * 0.003
+        }
+        val forecasts = CurrencyForecastEngine.forecast(values, RegressionChannelSettings())
+        assertEquals(8, forecasts.size)
+        assertEquals(ForecastHorizon.WEEK, forecasts.first().horizon)
+        assertTrue(forecasts.first().expectedChangePercent > 0.0)
+        assertNotNull(forecasts.first().directionalProbability)
+        assertTrue(forecasts.first().validationSamples >= 20)
+        assertNotNull(forecasts.first().categoryProbability)
+        assertTrue(forecasts.first().categoryValidationSamples >= 20)
+        assertEquals(ForecastHorizon.THREE_YEARS, forecasts.last().horizon)
+        assertNull(forecasts.last().directionalProbability)
+        assertTrue(forecasts.last().projectedRate > forecasts.last().currentRate)
+    }
+
+    @Test fun currencyForecastRejectsInvalidSeries() {
+        assertThrows(IllegalArgumentException::class.java) {
+            CurrencyForecastEngine.forecast(listOf(4.0, 0.0), RegressionChannelSettings())
+        }
+    }
+
 }

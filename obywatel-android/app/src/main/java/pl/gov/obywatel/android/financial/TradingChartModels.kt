@@ -116,3 +116,13 @@ object TradingChartAnalytics {
         return result
     }
 }
+
+
+/** Przelicza parę A/B z dwóch kursów wyrażonych w jednostkach na 1 USD. */
+object TradingPairMath {
+    fun crossRate(baseUnitsPerUsd: BigDecimal, quoteUnitsPerUsd: BigDecimal): BigDecimal {
+        require(baseUnitsPerUsd.signum() > 0) { "Kurs instrumentu bazowego musi być dodatni." }
+        require(quoteUnitsPerUsd.signum() > 0) { "Kurs instrumentu kwotowanego musi być dodatni." }
+        return quoteUnitsPerUsd.divide(baseUnitsPerUsd, 10, RoundingMode.HALF_EVEN)
+    }
+}
