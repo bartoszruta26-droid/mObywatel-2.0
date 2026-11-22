@@ -225,6 +225,37 @@ class InstitutionalSymbolCatalogTest {
         assertEquals("per_collection_license_review", set.rightsStatus)
     }
 
+    @Test
+    fun convertsIconifySetAndIconNameIntoSingleDownloadableSvgCandidate() {
+        val collection = IconifyCollectionSource(
+            prefix = "lucide", name = "Lucide", iconCount = 1500, author = "Lucide",
+            authorUrl = "https://github.com/lucide-icons/lucide",
+            licenseTitle = "ISC", licenseSpdx = "ISC",
+            licenseUrl = "https://github.com/lucide-icons/lucide/blob/main/LICENSE",
+            category = "General", sourcePageUrl = "https://github.com/iconify/icon-sets/blob/master/json/lucide.json",
+            downloadUrl = "https://raw.githubusercontent.com/iconify/icon-sets/master/json/lucide.json",
+            sourceFormat = "Iconify JSON", rightsStatus = "per_collection_license_review",
+            discoveryStatus = "source_registered"
+        )
+        val item = iconifyCandidate(collection, "accessibility")
+        assertTrue(item != null)
+        assertEquals("https://api.iconify.design/lucide/accessibility.svg", item!!.downloadUrl)
+        assertEquals("Ikony", institutionalSymbolCategory(item))
+        assertTrue(institutionalSymbolCanDownload(item))
+        assertEquals("ISC", item.license.substringAfter("· ").trim())
+    }
+
+    @Test
+    fun rejectsUnsafeIconifyPrefixAndIconNames() {
+        val collection = IconifyCollectionSource(
+            "lucide", "Lucide", 10, "Lucide", "", "ISC", "ISC", "", "General",
+            "https://github.com/iconify/icon-sets", "https://raw.githubusercontent.com/iconify/icon-sets/master/json/lucide.json",
+            "Iconify JSON", "review", "source_registered"
+        )
+        assertEquals(null, iconifyCandidate(collection, "../accessibility"))
+        assertEquals(null, iconifyCandidate(collection.copy(prefix = "https://evil.example"), "accessibility"))
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsIconifyIndexWithUnsafeSourceUrl() {
         val header = "prefix,name,icon_count,author,author_url,license_title,license_spdx,license_url,category,source_page_url,download_url,source_format,rights_status,discovery_status"
