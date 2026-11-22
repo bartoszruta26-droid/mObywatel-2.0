@@ -147,6 +147,60 @@ fun StudiaOnlineLoginWebView(
         ) { Text("Uzupełnij formularz zapisanymi danymi") }
         Button(
             onClick = {
+                val view = loginWebView
+                if (view == null) {
+                    onStatus("Okno logowania nie jest jeszcze gotowe.")
+                    return@Button
+                }
+                val script = """
+                    (function() {
+                      const pass = document.querySelector('input[type="password"]');
+                      const user = document.querySelector(
+                        'input[autocomplete="username"], input[name*="login" i], input[name*="user" i], input[placeholder*="login" i]'
+                      );
+                      if (!pass || !user || !pass.form || pass.form !== user.form) return "LOGIN_FIELDS_NOT_FOUND";
+                      if (!user.value.trim() || !pass.value) return "LOGIN_FIELDS_EMPTY";
+                      const form = pass.form;
+                      const target = new URL(form.getAttribute('action') || location.href, location.href);
+                      const hostAllowed = target.protocol === "https:" &&
+                        (target.hostname === "studia-online.pl" || target.hostname.endsWith(".studia-online.pl"));
+                      if (!hostAllowed) return "UNTRUSTED_FORM_ACTION";
+                      const submitter = form.querySelector(
+                        'button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled]), button:not([type]):not([disabled])'
+                      );
+                      if (typeof form.requestSubmit === "function") {
+                        if (submitter) form.requestSubmit(submitter);
+                        else form.requestSubmit();
+                      } else if (submitter) {
+                        submitter.click();
+                      } else {
+                        return "SUBMIT_CONTROL_NOT_FOUND";
+                      }
+                      return "SUBMIT_REQUESTED";
+                    })();
+                """.trimIndent()
+                view.evaluateJavascript(script) { result ->
+                    onStatus(
+                        when {
+                            result?.contains("SUBMIT_REQUESTED") == true ->
+                                "Wysłano formularz logowania do studia-online.pl. Poczekaj na odpowiedź serwisu i sprawdź, czy otworzył się panel studenta."
+                            result?.contains("LOGIN_FIELDS_EMPTY") == true ->
+                                "Wpisz login i hasło w formularzu przed naciśnięciem przycisku Zaloguj."
+                            result?.contains("LOGIN_FIELDS_NOT_FOUND") == true ->
+                                "Nie rozpoznano formularza logowania. Użyj formularza widocznego na stronie serwisu."
+                            result?.contains("UNTRUSTED_FORM_ACTION") == true ->
+                                "Zablokowano wysłanie formularza poza zabezpieczoną domenę studia-online.pl."
+                            result?.contains("SUBMIT_CONTROL_NOT_FOUND") == true ->
+                                "Nie znaleziono przycisku zatwierdzającego formularz logowania."
+                            else -> "Nie udało się wysłać formularza. Sprawdź dane i spróbuj ponownie."
+                        }
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Zaloguj") }
+        Button(
+            onClick = {
                 CookieManager.getInstance().flush()
                 val cookies = StudiaOnlineSessionCookies.currentHeader()
                 if (cookies.isNullOrBlank()) {
