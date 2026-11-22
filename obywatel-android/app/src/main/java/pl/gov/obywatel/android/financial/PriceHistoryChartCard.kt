@@ -232,6 +232,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                     }
                     Text("Grubość linii (1–4)")
                     listOf(regression.width1, regression.width2, regression.width3).forEachIndexed { index, width ->
+                        Text("Kanał ${index + 1}: ${width.toInt()} px", style = MaterialTheme.typography.labelSmall)
                         Slider(width, { value ->
                             regression = when (index) {
                                 0 -> regression.copy(width1 = value)
@@ -268,6 +269,16 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 selected?.date, { selected = it }, regression,
                 regressionColors[color1], regressionColors[color2], regressionColors[color3],
                 Modifier.fillMaxWidth().height(275.dp))
+            val activeRegressionLengths = LinearRegressionChannels.calculateThree(
+                points.map { it.value.toDouble() }, regression
+            ).mapIndexedNotNull { index, channel ->
+                channel?.let { listOf(regression.length1, regression.length2, regression.length3)[index] }
+            }
+            Text(
+                if (activeRegressionLengths.isEmpty()) "Brak aktywnych kanałów: wybierz dłuższy okres lub krótsze długości regresji."
+                else "Aktywne kanały regresji: ${activeRegressionLengths.joinToString(" / ")}",
+                style = MaterialTheme.typography.bodySmall
+            )
             selected?.let { Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}") }
                 ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
