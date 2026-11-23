@@ -30,9 +30,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Stateless HTTP adapters can use this coordinator for the two DSS phases:
- * prepare the exact PAdES DTBS, receive a signature from Android Keystore,
- * then embed it into the same prepared PDF revision.
+ * Coordinates the two DSS signing phases. The same API is called locally by
+ * the Android facade or by a separately authenticated HTTP adapter: prepare
+ * exact PAdES DTBS, receive an Android Keystore signature, then embed it into
+ * the same prepared PDF revision.
  *
  * The session is short-lived, bounded, and bound to the authenticated owner ID.
  * A REST layer MUST derive ownerId from its authenticated principal, never from
