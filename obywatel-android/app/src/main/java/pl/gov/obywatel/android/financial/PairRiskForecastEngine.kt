@@ -45,12 +45,12 @@ object PairRiskForecastEngine {
         }
         val logValues = values.map(::ln)
         val current = values.last()
-        val currentChannels = LinearRegressionChannels.calculateAll(logValues, settings).filterNotNull()
-        require(currentChannels.isNotEmpty()) {
-            "Za mało danych do obliczenia kanałów regresji dla wybranej pary."
-        }
         val activeLengths = settings.lengths.filter { it <= values.size }
         val minimumWindow = activeLengths.maxOrNull() ?: return horizons.map {
+            empty(it, 0.0, ForecastDirection.NEUTRAL)
+        }
+        val currentChannels = LinearRegressionChannels.calculateAll(logValues, settings).filterNotNull()
+        if (currentChannels.isEmpty()) return horizons.map {
             empty(it, 0.0, ForecastDirection.NEUTRAL)
         }
         val consensusSlope = weightedSlope(currentChannels)
