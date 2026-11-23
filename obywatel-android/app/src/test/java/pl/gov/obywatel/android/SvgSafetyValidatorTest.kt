@@ -57,3 +57,17 @@ class SvgSafetyValidatorTest {
         assertTrue(SvgSafetyValidator.looksLikeSvg(bytes))
     }
 }
+
+
+    @Test
+    fun acceptsOnlySixDigitHexColorsForGeneratedSvg() {
+        assertTrue(SvgSafetyValidator.requireSafeHexColor("#183A63") == "#183A63")
+        listOf("red", "#FFF", "#112233;url(https://evil.test)", "url(#x)", "#123456\\n").forEach { value ->
+            try {
+                SvgSafetyValidator.requireSafeHexColor(value)
+                throw AssertionError("Expected invalid color: $value")
+            } catch (_: IllegalArgumentException) {
+                // expected
+            }
+        }
+    }
