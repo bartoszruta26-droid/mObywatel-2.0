@@ -84,7 +84,9 @@ fun SelectedPairForecastCard(
                     PairRiskSignificance.PROFIT_ADVANTAGE -> "Istotna statystycznie przewaga zysku"
                     PairRiskSignificance.LOSS_ADVANTAGE -> "Ostrzeżenie: istotna przewaga straty"
                     PairRiskSignificance.INCONCLUSIVE -> "Brak istotnej przewagi zysku lub straty"
-                    PairRiskSignificance.INSUFFICIENT -> "Za mało prób do oceny statystycznej"
+                    PairRiskSignificance.INSUFFICIENT -> if (item.direction == ForecastDirection.NEUTRAL)
+                        "Model nie wskazuje kierunku — brak sygnału transakcyjnego"
+                    else "Za mało niezależnych prób do oceny statystycznej"
                 }
                 val statusColor = when (item.significance) {
                     PairRiskSignificance.PROFIT_ADVANTAGE -> Color(0xFF168447)
@@ -137,8 +139,8 @@ fun SelectedPairForecastCard(
                 }
             }
             Text(
-                "Kolor przewagi opiera się na konserwatywnym porównaniu 95-procentowych przedziałów Wilsona " +
-                    "dla zysku i straty. Jeśli przedziały się nakładają, wynik pozostaje neutralny.",
+                "Walidacja wykorzystuje niepokrywające się okresy wyników. Kolor przewagi opiera się na konserwatywnym " +
+                    "porównaniu 95-procentowych przedziałów Wilsona dla zysku i straty. Jeśli przedziały się nakładają, wynik pozostaje neutralny.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary
             )
