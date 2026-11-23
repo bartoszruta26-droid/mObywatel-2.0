@@ -16,6 +16,13 @@ import java.nio.charset.CodingErrorAction
 internal object SvgSafetyValidator {
     private const val MAX_BYTES = 12 * 1024 * 1024
     private const val DETECTION_BYTES = 16 * 1024
+    private val HEX_COLOR = Regex("#[0-9A-Fa-f]{6}")
+
+    /** Restrict dynamic SVG paint values to a single opaque RGB color. */
+    internal fun requireSafeHexColor(value: String): String {
+        require(HEX_COLOR.matches(value)) { "Kolor musi mieć format #RRGGBB." }
+        return value
+    }
 
     internal fun looksLikeSvg(bytes: ByteArray): Boolean {
         if (bytes.isEmpty()) return false
