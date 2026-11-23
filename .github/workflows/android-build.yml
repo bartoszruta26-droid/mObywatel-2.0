@@ -48,7 +48,7 @@ jobs:
 
       - name: Run Android JVM unit tests
         working-directory: obywatel-android
-        run: gradle --no-daemon :app:testDebugUnitTest :pades-validator:test
+        run: gradle --no-daemon :app:testDebugUnitTest :pades-validator:test :pades-android:testDebugUnitTest
 
       - name: Configure stable Android signing key
         id: configure-stable-signing
