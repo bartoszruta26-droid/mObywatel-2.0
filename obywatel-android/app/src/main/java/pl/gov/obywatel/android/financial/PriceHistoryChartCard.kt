@@ -3,6 +3,8 @@
 package pl.gov.obywatel.android.financial
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -18,12 +20,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import android.graphics.Paint as AndroidPaint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,10 +40,17 @@ private data class ChartInstrument(val code: String, val label: String, val gold
 }
 private enum class PriceChartPeriod(val label: String, val days: Long) {
     WEEK("1T", 7), MONTH("1M", 31), QUARTER("3M", 93),
-    HALF_YEAR("6M", 183), YEAR("1R", 365), FIVE_YEARS("5R", 1825)
+    HALF_YEAR("6M", 183), YEAR("1R", 365), FIVE_YEARS("5R", 1825),
+    TEN_YEARS("10R", 3650), TWENTY_YEARS("20R", 7300)
 }
 private enum class PriceChartStyle(val label: String) { LINE("Linia"), AREA("Obszar"), CANDLE("Świece") }
 private data class PairPricePoint(val date: LocalDate, val value: BigDecimal)
+
+private fun pairRelativePerformance(points: List<PairPricePoint>): List<Double> {
+    val anchor = points.firstOrNull()?.value?.toDouble() ?: return emptyList()
+    if (anchor == 0.0) return emptyList()
+    return points.map { (it.value.toDouble() / anchor - 1.0) * 100.0 }
+}
 
 @Composable
 fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
@@ -148,14 +162,19 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         }
     }
 
-    val min = points.minOfOrNull { it.value }
-    val max = points.maxOfOrNull { it.value }
     val first = points.firstOrNull()?.value
     val last = points.lastOrNull()?.value
     val delta = if (first != null && last != null) last.subtract(first) else null
     val pct = if (first != null && last != null && first.signum() != 0)
         last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN)
     else null
+    val relativeValues = remember(points) { pairRelativePerformance(points) }
+    val rawPairValues = remember(points) { points.map { it.value.toDouble() } }
+    val minPercent = relativeValues.minOrNull() ?: -1.0
+    val maxPercent = relativeValues.maxOrNull() ?: 1.0
+    var viewport by remember(points) {
+        mutableStateOf(PairChartViewport.fit(minPercent, maxPercent))
+    }
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Analiza pary instrumentów", style = MaterialTheme.typography.titleMedium)
@@ -280,12 +299,31 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 Text("Źródło nie udostępnia rzeczywistych danych OHLC. Pokazujemy kurs referencyjny jako linię, bez sztucznych świec i wolumenu.",
                     color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
             }
-            PairHistoryChart(points, if (style == PriceChartStyle.CANDLE) PriceChartStyle.LINE else style,
-                selected?.date, { selected = it }, regression,
-                regressionColorIndices.map { regressionColors[it] },
-                Modifier.fillMaxWidth().height(300.dp))
+            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote względem pierwszej obserwacji okresu.")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("●", color = MaterialTheme.colorScheme.primary)
+                Text("$base/$quote • zmiana relacji (%)", style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { viewport = viewport.reset(minPercent, maxPercent) }) {
+                    Text("Resetuj widok")
+                }
+            }
+            PairHistoryChart(
+                points = points,
+                relativeValues = relativeValues,
+                style = if (style == PriceChartStyle.CANDLE) PriceChartStyle.LINE else style,
+                selectedDate = selected?.date,
+                onSelect = { selected = it },
+                regression = regression,
+                regressionColors = regressionColorIndices.map { regressionColors[it] },
+                viewport = viewport,
+                onViewportChange = { viewport = it },
+                modifier = Modifier.fillMaxWidth().height(340.dp)
+            )
+            Text("Gest dwoma palcami: zmiana rozstawu poziomego skaluje daty, pionowego skaluje procenty; przesunięcie obu palców przesuwa wykres.",
+                style = MaterialTheme.typography.bodySmall)
             val activeRegressionLengths = LinearRegressionChannels.calculateAll(
-                points.map { it.value.toDouble() }, regression
+                relativeValues, regression
             ).mapIndexedNotNull { index, channel ->
                 channel?.let { regression.lengths[index] }
             }
@@ -294,155 +332,243 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 else "Aktywne kanały regresji: ${activeRegressionLengths.joinToString(" / ")}",
                 style = MaterialTheme.typography.bodySmall
             )
-            selected?.let { Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}") }
+            selected?.let {
+                val selectedIndex = points.indexOf(it)
+                val relative = relativeValues.getOrNull(selectedIndex)
+                Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}" +
+                    (relative?.let { value -> " • ${if (value > 0) "+" else ""}${"%.2f".format(value)}%" } ?: ""))
+            }
                 ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text("Minimum", style = MaterialTheme.typography.labelSmall)
-                    Text(min?.stripTrailingZeros()?.toPlainString() ?: "—")
+                    Text(minPercent.let { "%.2f%%".format(it) })
                 }
                 Column(Modifier.weight(1f)) {
                     Text("Maksimum", style = MaterialTheme.typography.labelSmall)
-                    Text(max?.stripTrailingZeros()?.toPlainString() ?: "—")
+                    Text(maxPercent.let { "%.2f%%".format(it) })
                 }
                 Column(Modifier.weight(1f)) {
                     Text("Zmiana", style = MaterialTheme.typography.labelSmall)
-                    Text(delta?.let { (if (it.signum() > 0) "+" else "") + it.stripTrailingZeros().toPlainString() } ?: "—")
+                    Text(pct?.let { (if (it.signum() > 0) "+" else "") + it.toPlainString() + "%" } ?: "—")
                 }
             }
             Text("${points.size} punktów • ${points.first().date} – ${points.last().date}",
                 style = MaterialTheme.typography.bodySmall)
+            SelectedPairForecastCard(base, quote, rawPairValues, regression, Modifier.fillMaxWidth())
         } else if (!loading) Text("Wybierz dwa różne instrumenty i naciśnij „Pokaż”.")
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(source, style = MaterialTheme.typography.bodySmall)
         Text("Dane Frankfurter są kursami referencyjnymi, nie notowaniami transakcyjnymi. Interwał zależy od częstotliwości publikacji dostawcy; nie jest generowany sztuczny wolumen.",
             style = MaterialTheme.typography.bodySmall)
-        CurrencyPortfolioForecastCard(regression, Modifier.fillMaxWidth())
     }
 }
 
 @Composable
 private fun PairHistoryChart(
-    points: List<PairPricePoint>, style: PriceChartStyle, selectedDate: LocalDate?,
-    onSelect: (PairPricePoint) -> Unit, regression: RegressionChannelSettings,
+    points: List<PairPricePoint>,
+    relativeValues: List<Double>,
+    style: PriceChartStyle,
+    selectedDate: LocalDate?,
+    onSelect: (PairPricePoint) -> Unit,
+    regression: RegressionChannelSettings,
     regressionColors: List<Color>,
+    viewport: PairChartViewport,
+    onViewportChange: (PairChartViewport) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val line = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant
     val marker = MaterialTheme.colorScheme.tertiary
-    val vals = points.map { it.value.toDouble() }
-    val channels = LinearRegressionChannels.calculateAll(vals, regression)
-    val drawableChannels = channels.filterNotNull()
-    val projectedValues = drawableChannels.flatMap { ch ->
-        val projectedEnd = if (regression.extendLines)
-            ch.endIndex + points.lastIndex * 0.19
-        else ch.endIndex.toDouble()
-        listOf(ch.lowerAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
-            ch.upperAt(ch.startIndex.toDouble(), regression.deviationMultiplier),
-            ch.lowerAt(projectedEnd, regression.deviationMultiplier),
-            ch.upperAt(projectedEnd, regression.deviationMultiplier))
-    }
-    val low = (vals + projectedValues).minOrNull() ?: 0.0
-    val high = (vals + projectedValues).maxOrNull() ?: low
-    val span = (high - low).takeIf { it > 0.0 } ?: 1.0
-    Canvas(modifier.pointerInput(points) {
-        detectTapGestures { tap ->
-            if (points.isNotEmpty()) {
-                val l = 8.dp.toPx()
-                val dataRight = if (regression.extendLines) size.width * 0.84f else size.width - 8.dp.toPx()
-                val ratio = ((tap.x - l) / (dataRight - l)).coerceIn(0f, 1f)
-                onSelect(points[(ratio * points.lastIndex).toInt().coerceIn(0, points.lastIndex)])
+    val labelColor = MaterialTheme.colorScheme.onSurface.toArgb()
+    val channels = LinearRegressionChannels.calculateAll(relativeValues, regression)
+    val plotDateFormatter = remember { DateTimeFormatter.ofPattern("dd.MM.yy", Locale.getDefault()) }
+    val latestViewport by rememberUpdatedState(viewport)
+    val latestViewportCallback by rememberUpdatedState(onViewportChange)
+    val latestSelectionCallback by rememberUpdatedState(onSelect)
+
+    Canvas(
+        modifier
+            .pointerInput(points) {
+                val widthPx = size.width.toFloat().coerceAtLeast(1f)
+                val heightPx = size.height.toFloat().coerceAtLeast(1f)
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    do {
+                        val event = awaitPointerEvent()
+                        val active = event.changes.filter { it.pressed }
+                        if (active.size >= 2) {
+                            val first = active[0]
+                            val second = active[1]
+                            val oldX = kotlin.math.abs(first.previousPosition.x - second.previousPosition.x)
+                            val newX = kotlin.math.abs(first.position.x - second.position.x)
+                            val oldY = kotlin.math.abs(first.previousPosition.y - second.previousPosition.y)
+                            val newY = kotlin.math.abs(first.position.y - second.position.y)
+                            val oldCenterX = (first.previousPosition.x + second.previousPosition.x) / 2f
+                            val oldCenterY = (first.previousPosition.y + second.previousPosition.y) / 2f
+                            val centerX = (first.position.x + second.position.x) / 2f
+                            val centerY = (first.position.y + second.position.y) / 2f
+                            val zoomX = if (oldX > 2f) (newX / oldX).toDouble() else 1.0
+                            val zoomY = if (oldY > 2f) (newY / oldY).toDouble() else 1.0
+                            val plotLeft = 48.dp.toPx()
+                            val plotRight = widthPx - 10.dp.toPx()
+                            val plotTop = 10.dp.toPx()
+                            val plotBottom = heightPx - 30.dp.toPx()
+                            latestViewportCallback(
+                                latestViewport.transform(
+                                    zoomX = zoomX,
+                                    zoomY = zoomY,
+                                    anchorX = ((centerX - plotLeft) / (plotRight - plotLeft)).toDouble(),
+                                    anchorY = ((centerY - plotTop) / (plotBottom - plotTop)).toDouble(),
+                                    panX = ((centerX - oldCenterX) / (plotRight - plotLeft)).toDouble(),
+                                    panY = ((centerY - oldCenterY) / (plotBottom - plotTop)).toDouble()
+                                )
+                            )
+                            first.consume()
+                            second.consume()
+                        }
+                    } while (event.changes.any { it.pressed })
+                }
             }
-        }
-    }) {
-        val l = 8.dp.toPx()
-        val dataRight = if (regression.extendLines) size.width * 0.84f else size.width - 8.dp.toPx()
-        val r = size.width - 8.dp.toPx()
-        val t = 12.dp.toPx(); val b = size.height - 12.dp.toPx()
+            .pointerInput(points) {
+                detectTapGestures { tap ->
+                    if (points.isNotEmpty()) {
+                        val left = 48.dp.toPx()
+                        val right = size.width - 10.dp.toPx()
+                        val ratio = ((tap.x - left) / (right - left)).coerceIn(0f, 1f)
+                        val index = latestViewport.startFraction +
+                            ratio * (latestViewport.endFraction - latestViewport.startFraction)
+                        latestSelectionCallback(points[(index * points.lastIndex).toInt().coerceIn(0, points.lastIndex)])
+                    }
+                }
+            }
+    ) {
+        if (points.isEmpty() || relativeValues.size != points.size) return@Canvas
+        val left = 48.dp.toPx()
+        val right = size.width - 10.dp.toPx()
+        val top = 10.dp.toPx()
+        val bottom = size.height - 30.dp.toPx()
+        val xSpan = (viewport.endFraction - viewport.startFraction).coerceAtLeast(0.0001)
+        val firstIndex = viewport.startFraction * points.lastIndex
+        val lastIndex = viewport.endFraction * points.lastIndex
+        val ySpan = (viewport.maxPercent - viewport.minPercent).coerceAtLeast(0.0001)
         fun xFor(index: Double): Float =
-            l + (dataRight - l) * (index / maxOf(1, points.lastIndex).toDouble()).toFloat()
-        fun yFor(value: Double): Float = b - ((value - low) / span).toFloat() * (b - t)
-        repeat(5) { i ->
-            val y = t + (b - t) * i / 4f
-            drawLine(grid, Offset(l, y), Offset(r, y), 1.dp.toPx())
+            left + ((index - firstIndex) / (lastIndex - firstIndex)).toFloat() * (right - left)
+        fun yFor(value: Double): Float =
+            bottom - ((value - viewport.minPercent) / ySpan).toFloat() * (bottom - top)
+
+        val native = drawContext.canvas.nativeCanvas
+        val textPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+            color = labelColor
+            textSize = 10.dp.toPx()
+            textAlign = AndroidPaint.Align.RIGHT
         }
-        val coords = vals.mapIndexed { i, v -> Offset(xFor(i.toDouble()), yFor(v)) }
+        val datePaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+            color = labelColor
+            textSize = 9.dp.toPx()
+            textAlign = AndroidPaint.Align.CENTER
+        }
+
+        repeat(5) { tick ->
+            val fraction = tick / 4.0
+            val y = top + (bottom - top) * fraction.toFloat()
+            val value = viewport.maxPercent - ySpan * fraction
+            drawLine(grid, Offset(left, y), Offset(right, y), 1.dp.toPx())
+            native.drawText(String.format(Locale.getDefault(), "%.1f%%", value),
+                left - 5.dp.toPx(), y + 3.dp.toPx(), textPaint)
+        }
+        repeat(5) { tick ->
+            val fraction = tick / 4.0
+            val index = firstIndex + (lastIndex - firstIndex) * fraction
+            val x = xFor(index)
+            drawLine(grid.copy(alpha = 0.45f), Offset(x, top), Offset(x, bottom), 1.dp.toPx())
+            val date = points[index.toInt().coerceIn(0, points.lastIndex)].date
+            native.drawText(date.format(plotDateFormatter), x, size.height - 7.dp.toPx(), datePaint)
+        }
+
+        val visibleStart = firstIndex.toInt().coerceIn(0, points.lastIndex)
+        val visibleEnd = kotlin.math.ceil(lastIndex).toInt().coerceIn(visibleStart, points.lastIndex)
+        val coords = (visibleStart..visibleEnd).map { index ->
+            Offset(xFor(index.toDouble()), yFor(relativeValues[index]))
+        }
         if (coords.size > 1) {
             when (style) {
                 PriceChartStyle.LINE -> {
-                    val p = Path().apply {
+                    val path = Path().apply {
                         moveTo(coords.first().x, coords.first().y)
                         coords.drop(1).forEach { lineTo(it.x, it.y) }
                     }
-                    drawPath(p, line, style = Stroke(2.5.dp.toPx()))
+                    drawPath(path, line, style = Stroke(2.5.dp.toPx()))
                 }
                 PriceChartStyle.AREA -> {
                     val area = Path().apply {
-                        moveTo(coords.first().x, b); lineTo(coords.first().x, coords.first().y)
+                        moveTo(coords.first().x, bottom)
+                        lineTo(coords.first().x, coords.first().y)
                         coords.drop(1).forEach { lineTo(it.x, it.y) }
-                        lineTo(coords.last().x, b); close()
+                        lineTo(coords.last().x, bottom)
+                        close()
                     }
                     drawPath(area, line.copy(alpha = 0.18f))
-                    val p = Path().apply {
+                    val path = Path().apply {
                         moveTo(coords.first().x, coords.first().y)
                         coords.drop(1).forEach { lineTo(it.x, it.y) }
                     }
-                    drawPath(p, line, style = Stroke(2.5.dp.toPx()))
+                    drawPath(path, line, style = Stroke(2.5.dp.toPx()))
                 }
-                PriceChartStyle.CANDLE -> coords.forEach {
-                    // NBP supplies one reference price, not OHLC. Show neutral ticks;
-                    // do not invent candle ranges or trading volume.
-                    drawLine(line, Offset(it.x, it.y - 3.dp.toPx()),
-                        Offset(it.x, it.y + 3.dp.toPx()), 1.5.dp.toPx())
+                PriceChartStyle.CANDLE -> coords.forEach { point ->
+                    drawLine(line, Offset(point.x, point.y - 3.dp.toPx()),
+                        Offset(point.x, point.y + 3.dp.toPx()), 1.5.dp.toPx())
                 }
             }
         }
+
         channels.forEachIndexed { channelIndex, channel ->
             if (channel != null) {
-            val color = if (regression.showBroken && channel.brokenDirection != 0) Color(0xFF2878D0)
-                else regressionColors[channelIndex]
-            val lineWidth = regression.widths[channelIndex].dp.toPx()
-            val x1 = xFor(channel.startIndex.toDouble())
-            val x2 = if (regression.extendLines) r else xFor(channel.endIndex.toDouble())
-            val endIndex = if (regression.extendLines) {
-                channel.endIndex + points.lastIndex * 0.19
-            } else channel.endIndex.toDouble()
-            fun drawRegressionLine(offset: Double, width: Float, pattern: Int) {
-                val y1 = yFor(channel.valueAt(channel.startIndex.toDouble()) + offset)
-                val y2 = yFor(channel.valueAt(endIndex) + offset)
-                if (pattern == 0) drawLine(color, Offset(x1, y1), Offset(x2, y2), width)
-                else {
-                    val segments = if (pattern == 1) 28 else 14
-                    for (segment in 0 until segments step 2) {
-                        val a = segment.toFloat() / segments
-                        val z = (segment + 1).toFloat() / segments
-                        drawLine(color.copy(alpha = 0.82f),
-                            Offset(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a),
-                            Offset(x1 + (x2 - x1) * z, y1 + (y2 - y1) * z), width)
+                val color = if (regression.showBroken && channel.brokenDirection != 0)
+                    Color(0xFF2878D0) else regressionColors[channelIndex]
+                val width = regression.widths[channelIndex].dp.toPx()
+                val endProjection = if (regression.extendLines)
+                    channel.endIndex + relativeValues.lastIndex * 0.19
+                else channel.endIndex.toDouble()
+                fun regressionLine(offset: Double, strokeWidth: Float, dashed: Boolean) {
+                    val startValue = channel.valueAt(channel.startIndex.toDouble()) + offset
+                    val endValue = channel.valueAt(endProjection) + offset
+                    val x1 = xFor(channel.startIndex.toDouble())
+                    val x2 = if (regression.extendLines) right else xFor(channel.endIndex.toDouble())
+                    val y1 = yFor(startValue)
+                    val y2 = yFor(endValue)
+                    if (!dashed) drawLine(color, Offset(x1, y1), Offset(x2, y2), strokeWidth)
+                    else {
+                        val segments = 28
+                        for (segment in 0 until segments step 2) {
+                            val a = segment.toFloat() / segments
+                            val z = (segment + 1).toFloat() / segments
+                            drawLine(color.copy(alpha = 0.82f),
+                                Offset(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a),
+                                Offset(x1 + (x2 - x1) * z, y1 + (y2 - y1) * z), strokeWidth)
+                        }
+                    }
+                }
+                val band = channel.deviation * regression.deviationMultiplier
+                regressionLine(0.0, width, false)
+                regressionLine(band, width, true)
+                regressionLine(-band, width, true)
+                if (regression.showFibonacci) {
+                    LinearRegressionChannels.fibonacciRatios.forEach { ratio ->
+                        regressionLine(-band + 2.0 * band * ratio, 1.dp.toPx(), true)
                     }
                 }
             }
-            val band = channel.deviation * regression.deviationMultiplier
-            drawRegressionLine(0.0, lineWidth, 0)
-            drawRegressionLine(band, lineWidth, 1)
-            drawRegressionLine(-band, lineWidth, 1)
-            if (regression.showFibonacci) {
-                LinearRegressionChannels.fibonacciRatios.forEach { ratio ->
-                    drawRegressionLine(-band + 2.0 * band * ratio, 1.dp.toPx(), 2)
-                }
-            }
-            }
         }
-        val idx = selectedDate?.let { d -> points.indexOfFirst { it.date == d } } ?: -1
-        if (idx >= 0) {
-            val p = coords[idx]
-            drawLine(marker, Offset(p.x, t), Offset(p.x, b), 1.dp.toPx())
-            drawCircle(marker, 5.dp.toPx(), p)
+
+        val selectedIndex = selectedDate?.let { date -> points.indexOfFirst { it.date == date } } ?: -1
+        if (selectedIndex >= 0 && selectedIndex.toDouble() in firstIndex..lastIndex) {
+            val point = Offset(xFor(selectedIndex.toDouble()), yFor(relativeValues[selectedIndex]))
+            drawLine(marker, Offset(point.x, top), Offset(point.x, bottom), 1.dp.toPx())
+            drawCircle(marker, 5.dp.toPx(), point)
         }
     }
 }
-
 
 /**
  * Frankfurter v2: publiczny, otwarty interfejs bez klucza API.
