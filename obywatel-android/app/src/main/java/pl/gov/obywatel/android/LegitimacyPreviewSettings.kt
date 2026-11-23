@@ -463,7 +463,7 @@ internal data class CredentialGraphicElement(
 )
 
 internal fun defaultCredentialGraphicElements(settings: LegitimacyPreviewSettings): List<CredentialGraphicElement> =
-    settings.graphicElements.takeIf { it.isNotEmpty() } ?: listOf(
+    settings.graphicElements.take(4).takeIf { it.isNotEmpty() } ?: listOf(
         CredentialGraphicElement("graphic-1", settings.flagAssetId, x = settings.flagOffsetX, y = settings.flagOffsetY,
             scale = settings.flagScale, rotation = settings.flagRotation, visible = settings.showFlag),
         CredentialGraphicElement("graphic-2", settings.crestAssetId,
@@ -1480,7 +1480,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 }
             }
             OutlinedButton(onClick = {
-                update(settings.copy(graphicScale = 1f, graphicRotation = 0f, graphicOffsetX = 0f,
+                update(settings.copy(graphicElements = defaultCredentialGraphicElements(settings).mapIndexed { index, element -> element.copy(x = if (index == 1) 76f else 0f, y = 0f, scale = 1f, rotation = 0f, captionScale = 1f) }, graphicScale = 1f, graphicRotation = 0f, graphicOffsetX = 0f,
                     graphicOffsetY = 0f, crestScale = 1f, crestRotation = 0f, crestOffsetX = 0f,
                     crestOffsetY = 0f, flagScale = 1f, flagRotation = 0f, flagOffsetX = 0f,
                     flagOffsetY = 0f, labelScale = 1f, labelRotation = 0f, labelOffsetX = 0f,
