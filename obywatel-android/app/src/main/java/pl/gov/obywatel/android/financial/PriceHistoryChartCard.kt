@@ -97,7 +97,6 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             length6 = prefs.getInt("reg_fib_length_6", 89),
             length7 = prefs.getInt("reg_fib_length_7", 55),
             deviationMultiplier = prefs.getFloat("reg_deviation", 2.41f).toDouble(),
-            extendLines = prefs.getBoolean("reg_extend", true),
             showFibonacci = prefs.getBoolean("reg_fibonacci", true),
             showBroken = prefs.getBoolean("reg_broken", false),
             width1 = prefs.getFloat("reg_fib_width_1", 1f),
@@ -126,7 +125,6 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     fun saveRegression() {
         val editor = prefs.edit()
             .putFloat("reg_deviation", regression.deviationMultiplier.toFloat())
-            .putBoolean("reg_extend", regression.extendLines)
             .putBoolean("reg_fibonacci", regression.showFibonacci)
             .putBoolean("reg_broken", regression.showBroken)
         regression.lengths.forEachIndexed { index, value ->
@@ -263,10 +261,6 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                     Text("Odchylenie: ${"%.2f".format(regression.deviationMultiplier)} × σ")
                     Slider(regression.deviationMultiplier.toFloat(), { regression = regression.copy(deviationMultiplier = it.toDouble()) },
                         valueRange = 0.1f..5f, steps = 48, onValueChangeFinished = ::saveRegression)
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        Checkbox(regression.extendLines, { regression = regression.copy(extendLines = it); saveRegression() })
-                        Text("Przedłuż kanały w prawo")
-                    }
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Checkbox(regression.showFibonacci, { regression = regression.copy(showFibonacci = it); saveRegression() })
                         Text("Poziomy Fibonacciego")
