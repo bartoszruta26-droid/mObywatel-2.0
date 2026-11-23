@@ -1874,7 +1874,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             )
                         }
                     }
-                    showCertificates -> CertificateStudioScreen(onBack = { showCertificates = false })
+                    showCertificates -> CertificateStudioScreen(onBack = { showCertificates = false }, onOpenDigitalCertificates = { settingsDocumentEditor = "signed_pdf" })
                     activeService == "Informacje prawne" -> LegalInformationScreen(
                         onBack = { activeService = null }
                     )
