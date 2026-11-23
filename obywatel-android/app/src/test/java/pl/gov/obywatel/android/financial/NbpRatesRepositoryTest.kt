@@ -267,6 +267,7 @@ class NbpRatesRepositoryTest {
         assertEquals(2, requested.size)
         assertTrue(requested.all { it.contains("/exchangerates/tables/C/") })
         assertEquals(1, history.size)
+        // Porównujemy wartość liczbową, nie skalę dziesiętną utraconą przy parsowaniu JSON.
         assertEquals(0, java.math.BigDecimal("4.20").compareTo(history.single().bidPln))
         assertEquals(0, java.math.BigDecimal("4.30").compareTo(history.single().askPln))
     }
