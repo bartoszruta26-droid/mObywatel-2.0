@@ -3,7 +3,7 @@
 
 # OWD PAdES validation module
 
-Experimental JVM-side validation component based on European Commission Digital Signature Services (DSS) **6.5.1**. It is intentionally separate from the Android APK: DSS validation, trust-list and certificate-validation dependencies belong in a controlled backend process.
+Shared JVM implementation based on European Commission Digital Signature Services (DSS) **6.5.1**. It is used by the optional backend and is exposed to the Android application through the `:pades-android` module for local-first processing. Android runtime compatibility of the PDF backend remains under test; successful packaging alone is not production acceptance.
 
 ## Implemented
 
@@ -33,7 +33,7 @@ The signing coordinator is a JVM library API, not an HTTP server. A backend adap
 
 The engine returns DSS reports without flattening evidence. It does **not** itself create an HTTP endpoint, provision trust anchors, schedule trusted-list refreshes, or establish a production trust policy. Do not expose it directly to untrusted network clients; wrap it in an authenticated, size-limited backend API and retain the original signed bytes and report digest for audit.
 
-**Status:** isolated backend library; not production-ready and not connected to the Android UI. The tests cover input rejection and size bounds for validation and signing-session setup. A controlled integration test with valid and invalid PAdES fixtures, trusted-list refresh, revocation and timestamp scenarios remains required.
+**Status:** shared JVM library plus experimental Android packaging path. The local Android facade is present, but end-to-end PAdES runtime compatibility and connection to the production UI remain unverified. The tests cover input rejection and size bounds for validation and signing-session setup. A controlled integration test with valid and invalid PAdES fixtures, trusted-list refresh, revocation and timestamp scenarios remains required.
 
 ## Build and test
 
