@@ -58,6 +58,16 @@ class PairChartInteractionTest {
         assertTrue(bounds.second >= values.maxOrNull()!!)
     }
 
+    @Test fun shortChartPeriodUsesAdaptiveRegressionWhenConfiguredWindowsDoNotFit() {
+        val values = (0 until 21).map { 100.0 + it * 0.1 + kotlin.math.sin(it / 4.0) }
+        val channels = RegressionPlotGeometry.channelsForPlot(values, RegressionChannelSettings())
+        assertEquals(1, channels.size)
+        assertEquals(21, channels.single()?.length)
+        val bounds = RegressionPlotGeometry.fitRange(values, RegressionChannelSettings())
+        assertTrue(bounds.first < values.minOrNull()!!)
+        assertTrue(bounds.second > values.maxOrNull()!!)
+    }
+
     @Test fun selectedPairReportsMonthlyThroughAnnualRiskFromLongHistory() {
         // 20 lat danych dziennych: roczny wynik ma mniej niż 20 prób niezależnych,
         // ale można pokazać ostrożny szacunek z liczbą prób i bez etykiety przewagi.
