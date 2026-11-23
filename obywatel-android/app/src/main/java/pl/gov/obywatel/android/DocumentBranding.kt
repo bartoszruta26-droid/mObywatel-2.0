@@ -210,14 +210,16 @@ internal object DocumentBrandStore {
     private val kinds = listOf(
         "Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona", "Tło wektorowe", "Tło graficzne",
         "Grafika wektorowa tła kafelków", "Animowany hologram", "Tło dokumentu", "Tło kafelka",
-        "Herb", "Godło", "Logo", "Symbol", "Pozostałe", "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
+        "Herb", "Godło", "Logo", "Symbol", "Pozostałe", "Pieczęć", "Pieczęć graficzna (własna)",
+        "Wzór podpisu odręcznego", "Podpis wektorowy (tekst)", "Certyfikat", "Flaga",
         "Załącznik tekstowy", "Załącznik", "Fotografia", "Znak wodny",
         "Grafika hologramu / zabezpieczenia"
     )
     private val imageKinds = setOf(
         "Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona", "Tło wektorowe", "Tło graficzne",
         "Grafika wektorowa tła kafelków", "Animowany hologram", "Tło dokumentu", "Tło kafelka",
-        "Herb", "Godło", "Logo", "Symbol", "Pozostałe", "Pieczęć", "Wzór podpisu odręcznego", "Flaga", "Fotografia",
+        "Herb", "Godło", "Logo", "Symbol", "Pozostałe", "Pieczęć", "Pieczęć graficzna (własna)",
+        "Wzór podpisu odręcznego", "Podpis wektorowy (tekst)", "Flaga", "Fotografia",
         "Znak wodny", "Grafika hologramu / zabezpieczenia"
     )
     fun assetKinds() = kinds
