@@ -136,6 +136,8 @@ internal fun X509CertificatePanel() {
                         OutlinedButton(onClick = {
                             runCatching {
                                 X509CertificateService.requireIssuedCertificateMatchesKey(alias.trim(), certificate)
+                                val orderedChain = listOf(certificate) + certificates.filter { it != certificate }
+                                X509CertificateService.installIssuedCertificateChain(alias.trim(), orderedChain)
                                 val bundle = certificateBundleBytes ?: error("Zaimportuj ponownie plik certyfikatu CA.")
                                 val existing = DocumentBrandStore.list(context).firstOrNull {
                                     it.kind == "Certyfikat" && it.owner == alias.trim() &&
