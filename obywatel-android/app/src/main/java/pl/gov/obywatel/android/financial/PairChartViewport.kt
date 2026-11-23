@@ -49,8 +49,11 @@ data class PairChartViewport(
         )
     }
 
-    fun reset(fullMinPercent: Double, fullMaxPercent: Double): PairChartViewport =
-        fit(fullMinPercent, fullMaxPercent)
+    fun reset(
+        fullMinPercent: Double,
+        fullMaxPercent: Double,
+        endFraction: Double = 1.0
+    ): PairChartViewport = fit(fullMinPercent, fullMaxPercent, endFraction)
 
     companion object {
         fun fit(
