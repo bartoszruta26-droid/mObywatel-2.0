@@ -341,6 +341,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 regression = regression,
                 regressionColors = regressionColorIndices.map { regressionColors[it] },
                 viewport = viewport,
+                projectionEndIndex = projectionEndIndex,
                 onViewportChange = { viewport = it },
                 modifier = Modifier.fillMaxWidth().height(340.dp)
             )
@@ -396,6 +397,7 @@ private fun PairHistoryChart(
     regression: RegressionChannelSettings,
     regressionColors: List<Color>,
     viewport: PairChartViewport,
+    projectionEndIndex: Int,
     onViewportChange: (PairChartViewport) -> Unit,
     modifier: Modifier = Modifier
 ) {
