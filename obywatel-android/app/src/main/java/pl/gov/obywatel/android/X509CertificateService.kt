@@ -5,7 +5,7 @@ package pl.gov.obywatel.android
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import java.io.ByteArrayInputStream
-import java.security.CertPathBuilder
+import java.security.cert.CertPathBuilder
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.KeyStore
@@ -74,9 +74,11 @@ object X509CertificateService {
     }
 
     fun inspect(certificate: X509Certificate, now: Date = Date()): X509CertificateDetails {
-        val usage = certificate.keyUsage?.mapIndexedNotNull { index, enabled ->
-            if (enabled) keyUsageNames.getOrNull(index) else null
-        }.orEmpty()
+        val usage: List<String> = certificate.keyUsage?.let { bits ->
+            bits.indices.mapNotNull { index ->
+                if (bits[index]) keyUsageNames.getOrNull(index) else null
+            }
+        } ?: emptyList()
         val sans = runCatching {
             certificate.subjectAlternativeNames.orEmpty().mapNotNull { entry ->
                 if (entry.size >= 2) "${entry[0]}: ${entry[1]}" else null
