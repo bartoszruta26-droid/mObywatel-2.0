@@ -24,11 +24,11 @@ class PairChartInteractionTest {
     }
 
     @Test fun viewportPanKeepsDateWindowInsideAvailableHistory() {
-        val initial = PairChartViewport.fit(-5.0, 5.0)
-        val right = initial.transform(panX = 10.0)
-        assertEquals(0.0, right.endFraction, 1e-9)
-        assertTrue(right.startFraction >= 0.0)
-        assertTrue(right.endFraction <= 1.0)
+        val initial = PairChartViewport.fit(-5.0, 5.0).transform(zoomX = 2.0)
+        val shiftedToStart = initial.transform(panX = 10.0)
+        assertEquals(0.0, shiftedToStart.startFraction, 1e-9)
+        assertTrue(shiftedToStart.endFraction > 0.0)
+        assertTrue(shiftedToStart.endFraction <= 1.0)
     }
 
     @Test fun pairRiskReportsProfitAndLossForOneSelectedSeries() {
