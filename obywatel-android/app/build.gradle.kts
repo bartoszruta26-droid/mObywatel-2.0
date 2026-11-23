@@ -73,6 +73,8 @@ android {
             // JAXB build-time binding descriptors are not needed by the Android runtime.
             // Exclude duplicate metadata rather than concatenate invalid XML documents.
             excludes += "xsd/bindings.xml"
+            // JAXB episode descriptors are build-time metadata and are not needed at runtime.
+            excludes += "META-INF/sun-jaxb.episode"
         }
     }
 }
