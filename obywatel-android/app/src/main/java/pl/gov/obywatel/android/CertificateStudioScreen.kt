@@ -64,10 +64,34 @@ internal fun makeTextSignatureSvg(name: String, color: String): ByteArray {
     val safeColor = SvgSafetyValidator.requireSafeHexColor(color)
     val safeName = safeSvgText(name.trim().take(90))
     require(safeName.isNotBlank()) { "Wpisz tekst podpisu." }
-    return """<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="260" viewBox="0 0 1000 260">
-<rect width="1000" height="260" fill="none"/>
-<text x="500" y="145" text-anchor="middle" font-family="cursive" font-size="104" font-style="italic" fill="$safeColor">$safeName</text>
-<path d="M150 195 Q390 235 650 190 T900 188" fill="none" stroke="$safeColor" stroke-width="3" stroke-linecap="round"/>
+    return """<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340">
+<defs>
+  <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="$safeColor"/>
+    <stop offset=".52" stop-color="$safeColor" stop-opacity=".88"/>
+    <stop offset="1" stop-color="$safeColor"/>
+  </linearGradient>
+</defs>
+<rect width="1200" height="340" fill="none"/>
+<path d="M90 250 C190 220 220 285 320 248 S470 226 545 248" fill="none" stroke="$safeColor" stroke-width="2.4" stroke-linecap="round" opacity=".72"/>
+<text x="600" y="188" text-anchor="middle"
+  font-family="Dancing Script, Segoe Script, Brush Script MT, URW Chancery L, cursive"
+  font-size="118" font-style="italic" font-weight="500" letter-spacing="-3"
+  fill="url(#ink)">$safeName</text>
+<path d="M210 224 C350 300 540 275 700 226 C835 185 945 205 1040 244
+         C1082 262 1114 251 1130 226
+         M850 263 C940 293 1050 286 1110 267
+         M180 230 C130 260 112 280 135 290 C156 299 183 279 194 262"
+      fill="none" stroke="$safeColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M105 115 C125 87 148 87 166 113 C145 109 132 121 128 141
+         M1034 105 C1055 77 1084 78 1102 106 C1080 100 1062 114 1060 136"
+      fill="none" stroke="$safeColor" stroke-width="2.2" stroke-linecap="round" opacity=".82"/>
+<path d="M260 292 Q600 318 940 288" fill="none" stroke="$safeColor" stroke-width="1.5" stroke-linecap="round" opacity=".55"/>
+<g fill="$safeColor" opacity=".8">
+  <circle cx="225" cy="104" r="4"/><circle cx="975" cy="100" r="4"/>
+  <path d="M190 86 l5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 12 -5z"/>
+  <path d="M1010 78 l5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 12 -5z"/>
+</g>
 </svg>""".toByteArray(Charsets.UTF_8)
 }
 
@@ -77,15 +101,41 @@ internal fun makeStampSvg(organization: String, centerText: String, identifier: 
     val center = safeSvgText(centerText.trim().take(50))
     val number = safeSvgText(identifier.trim().take(40))
     require(org.isNotBlank()) { "Wpisz nazwę organizacji." }
-    return """<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">
-<rect width="640" height="640" fill="none"/>
-<circle cx="320" cy="320" r="278" fill="none" stroke="$safeColor" stroke-width="12"/>
-<circle cx="320" cy="320" r="245" fill="none" stroke="$safeColor" stroke-width="4"/>
-<circle cx="320" cy="320" r="190" fill="none" stroke="$safeColor" stroke-width="2" stroke-dasharray="8 9"/>
-<text x="320" y="205" text-anchor="middle" font-family="serif" font-size="32" font-weight="bold" fill="$safeColor">$org</text>
-<text x="320" y="325" text-anchor="middle" font-family="serif" font-size="42" font-weight="bold" fill="$safeColor">$center</text>
-<text x="320" y="405" text-anchor="middle" font-family="serif" font-size="25" fill="$safeColor">$number</text>
-<text x="320" y="505" text-anchor="middle" font-family="sans-serif" font-size="18" fill="$safeColor">WZÓR GRAFICZNY • NIE PIECZĘĆ URZĘDOWA</text>
+    return """<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720">
+<defs>
+  <path id="topArc" d="M 105,360 A 255,255 0 0 1 615,360"/>
+  <path id="bottomArc" d="M 615,360 A 255,255 0 0 1 105,360"/>
+  <radialGradient id="sealInk"><stop offset="0" stop-color="$safeColor" stop-opacity=".08"/><stop offset="1" stop-color="$safeColor" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="720" height="720" fill="none"/>
+<circle cx="360" cy="360" r="315" fill="url(#sealInk)" stroke="$safeColor" stroke-width="3"/>
+<circle cx="360" cy="360" r="294" fill="none" stroke="$safeColor" stroke-width="13"/>
+<circle cx="360" cy="360" r="275" fill="none" stroke="$safeColor" stroke-width="2.5"/>
+<circle cx="360" cy="360" r="238" fill="none" stroke="$safeColor" stroke-width="2" stroke-dasharray="2 9"/>
+<circle cx="360" cy="360" r="205" fill="none" stroke="$safeColor" stroke-width="4"/>
+<circle cx="360" cy="360" r="184" fill="none" stroke="$safeColor" stroke-width="1.8"/>
+<text fill="$safeColor" font-family="serif" font-size="29" font-weight="bold" letter-spacing="2.2">
+  <textPath href="#topArc" startOffset="50%" text-anchor="middle">$org</textPath>
+</text>
+<text fill="$safeColor" font-family="serif" font-size="21" font-weight="bold" letter-spacing="3">
+  <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">$number</textPath>
+</text>
+<g fill="$safeColor">
+  <path d="M360 125 l11 25 27 2 -21 17 7 27 -24 -15 -24 15 7 -27 -21 -17 27 -2z"/>
+  <path d="M360 524 l8 18 20 2 -15 13 5 20 -18 -11 -18 11 5 -20 -15 -13 20 -2z"/>
+  <circle cx="151" cy="360" r="9"/><circle cx="569" cy="360" r="9"/>
+  <circle cx="180" cy="180" r="5"/><circle cx="540" cy="180" r="5"/>
+  <circle cx="180" cy="540" r="5"/><circle cx="540" cy="540" r="5"/>
+</g>
+<g fill="none" stroke="$safeColor" stroke-width="3" stroke-linecap="round">
+  <path d="M220 260 Q250 220 280 260 Q250 300 220 260 M500 260 Q470 220 440 260 Q470 300 500 260"/>
+  <path d="M220 460 Q250 500 280 460 Q250 420 220 460 M500 460 Q470 500 440 460 Q470 420 500 460"/>
+  <path d="M260 360 Q310 315 360 360 Q410 405 460 360"/>
+</g>
+<text x="360" y="338" text-anchor="middle" font-family="serif" font-size="42" font-weight="bold" letter-spacing="1.5" fill="$safeColor">$center</text>
+<path d="M245 375 Q360 405 475 375" fill="none" stroke="$safeColor" stroke-width="2.5"/>
+<text x="360" y="420" text-anchor="middle" font-family="serif" font-size="18" letter-spacing="2" fill="$safeColor">WZÓR WŁASNY</text>
+<text x="360" y="448" text-anchor="middle" font-family="sans-serif" font-size="13" letter-spacing="1.1" fill="$safeColor">NIE JEST PIECZĘCIĄ URZĘDOWĄ</text>
 </svg>""".toByteArray(Charsets.UTF_8)
 }
 

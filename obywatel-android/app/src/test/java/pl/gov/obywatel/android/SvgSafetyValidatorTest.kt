@@ -78,7 +78,11 @@ class SvgSafetyValidatorTest {
         SvgSafetyValidator.validateMarkupSecurity(signature)
 
         val stamp = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "F-2026/01", "#244B75").toString(Charsets.UTF_8)
-        assertTrue(stamp.contains("WZÓR GRAFICZNY"))
+        assertTrue(stamp.contains("WZÓR WŁASNY"))
+        assertTrue(stamp.contains("textPath"))
+        assertTrue(stamp.contains("stroke-dasharray"))
+        assertTrue(signature.contains("Dancing Script"))
+        assertTrue(signature.contains("Segoe Script"))
         SvgSafetyValidator.validateMarkupSecurity(stamp)
     }
 
