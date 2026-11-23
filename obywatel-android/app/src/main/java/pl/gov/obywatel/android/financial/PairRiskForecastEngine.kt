@@ -70,10 +70,11 @@ object PairRiskForecastEngine {
                     if (matchesSignal) {
                         val actualPercent = (values[origin + current.horizon.tradingSessions] /
                             values[origin] - 1.0) * 100.0
+                        val actualDirection = direction(actualPercent)
                         when {
-                            actualPercent > NEUTRAL_BAND_PERCENT -> profit++
-                            actualPercent < -NEUTRAL_BAND_PERCENT -> loss++
-                            else -> neutral++
+                            actualDirection == ForecastDirection.NEUTRAL -> neutral++
+                            actualDirection == predictedDirection -> profit++
+                            else -> loss++
                         }
                         samples++
                     }
