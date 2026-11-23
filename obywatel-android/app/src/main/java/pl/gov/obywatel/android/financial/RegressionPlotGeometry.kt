@@ -19,6 +19,19 @@ data class RegressionPlotSegment(
  * wartości przyszłej z pozycją ostatniej historycznej obserwacji.
  */
 object RegressionPlotGeometry {
+    /**
+     * Gdy wybrany zakres ma mniej obserwacji niż najkrótsze skonfigurowane okno,
+     * użyj jednej regresji adaptacyjnej obejmującej dostępne dane (minimum 10 punktów).
+     */
+    fun channelsForPlot(
+        values: List<Double>,
+        settings: RegressionChannelSettings
+    ): List<RegressionChannelResult?> {
+        val configured = LinearRegressionChannels.calculateAll(values, settings)
+        if (configured.any { it != null } || values.size < 10) return configured
+        return listOf(LinearRegressionChannels.calculate(values, values.size, settings.deviationMultiplier))
+    }
+
     fun visibleSegment(
         channel: RegressionChannelResult,
         visibleStart: Double,
@@ -45,7 +58,7 @@ object RegressionPlotGeometry {
     ): Pair<Double, Double> {
         require(values.isNotEmpty() && values.all { it.isFinite() })
         val candidates = values.toMutableList()
-        LinearRegressionChannels.calculateAll(values, settings).filterNotNull().forEach { channel ->
+        channelsForPlot(values, settings).filterNotNull().forEach { channel ->
             val band = channel.deviation * settings.deviationMultiplier
             val start = channel.valueAt(channel.startIndex.toDouble())
             val end = channel.valueAt(channel.endIndex.toDouble())
