@@ -112,6 +112,16 @@ object X509CertificateService {
         validationTime: Date = Date()
     ): X509PathValidation {
         require(trustAnchors.isNotEmpty()) { "Brak zaufanych kotwic certyfikacji." }
+        leaf.checkValidity(validationTime)
+        trustAnchors.forEach { anchor ->
+            anchor.trustedCert?.let { root ->
+                root.checkValidity(validationTime)
+                require(root.basicConstraints >= 0) { "Wskazany certyfikat kotwicy nie jest certyfikatem CA." }
+                root.keyUsage?.let { usage ->
+                    require(usage.size > 5 && usage[5]) { "Certyfikat kotwicy nie ma uprawnienia keyCertSign." }
+                }
+            }
+        }
         val certificates = (listOf(leaf) + intermediates)
             .distinctBy { it.serialNumber.toString() + it.issuerX500Principal.name }
         val selector = X509CertSelector().apply { certificate = leaf }
