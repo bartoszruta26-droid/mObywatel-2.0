@@ -24,7 +24,6 @@ data class PairHorizonRisk(
 object PairRiskForecastEngine {
     private const val NEUTRAL_BAND_PERCENT = 0.05
     private const val MIN_SAMPLES = 20
-    private const val MAX_VALIDATION_POINTS = 250
 
     fun forecast(
         values: List<Double>,
@@ -40,11 +39,13 @@ object PairRiskForecastEngine {
 
         return currentForecasts.map { current ->
             val currentSignal = current.direction
+            if (currentSignal == ForecastDirection.NEUTRAL) return@map empty(current)
             val lastOrigin = values.lastIndex - current.horizon.tradingSessions
             if (lastOrigin < minimumWindow - 1) return@map empty(current)
 
-            val possibleOrigins = lastOrigin - minimumWindow + 2
-            val step = maxOf(1, possibleOrigins / MAX_VALIDATION_POINTS)
+            // Nie nakładamy na siebie okresów wyniku: ogranicza to zależność prób
+            // i zapobiega sztucznemu zawyżaniu istotności statystycznej.
+            val step = current.horizon.tradingSessions
             var profit = 0
             var loss = 0
             var neutral = 0
@@ -63,9 +64,7 @@ object PairRiskForecastEngine {
                         .coerceAtLeast(1e-12)
                     val predictedPercent = (projected / history.last() - 1.0) * 100.0
                     val predictedDirection = direction(predictedPercent)
-                    val matchesSignal = if (currentSignal == ForecastDirection.NEUTRAL) {
-                        predictedDirection != ForecastDirection.NEUTRAL
-                    } else predictedDirection == currentSignal
+                    val matchesSignal = predictedDirection == currentSignal
 
                     if (matchesSignal) {
                         val actualPercent = (values[origin + current.horizon.tradingSessions] /
