@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import java.util.UUID
 
 private data class CertificateStandardProfile(
     val id: String, val title: String, val reference: String,
@@ -56,7 +55,7 @@ private fun certificateXmlText(value: String): String = value
     .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     .replace("\"", "&quot;").replace("'", "&apos;")
 
-private fun makeTextSignatureSvg(name: String, color: String): ByteArray {
+internal fun makeTextSignatureSvg(name: String, color: String): ByteArray {
     val safe = certificateXmlText(name.trim().take(90))
     return """<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="260" viewBox="0 0 1000 260">
 <rect width="1000" height="260" fill="none"/>
@@ -65,7 +64,7 @@ private fun makeTextSignatureSvg(name: String, color: String): ByteArray {
 </svg>""".toByteArray(Charsets.UTF_8)
 }
 
-private fun makeStampSvg(organization: String, centerText: String, identifier: String, color: String): ByteArray {
+internal fun makeStampSvg(organization: String, centerText: String, identifier: String, color: String): ByteArray {
     val org = certificateXmlText(organization.trim().take(70))
     val center = certificateXmlText(centerText.trim().take(50))
     val number = certificateXmlText(identifier.trim().take(40))
