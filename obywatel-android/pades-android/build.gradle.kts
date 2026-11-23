@@ -31,4 +31,6 @@ dependencies {
     implementation("eu.europa.ec.joinup.sd-dss:dss-cms-object:6.5.1")
     implementation("eu.europa.ec.joinup.sd-dss:dss-service:6.5.1")
     implementation("eu.europa.ec.joinup.sd-dss:dss-tsl-validation:6.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
 }
