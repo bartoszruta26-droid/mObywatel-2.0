@@ -1164,8 +1164,6 @@ internal fun LegitimacyPreviewSettingsPanel(
             Text("Elementy wzoru", fontWeight = FontWeight.SemiBold)
             listOf(
                 Triple(settings.showPhoto, "Fotografia", { v: Boolean -> update(settings.copy(showPhoto = v)) }),
-                Triple(settings.showFlag, "Flaga", { v: Boolean -> update(settings.copy(showFlag = v)) }),
-                Triple(settings.showCrest, "Godło / herb", { v: Boolean -> update(settings.copy(showCrest = v)) }),
                 Triple(settings.showLogo, "Logo wystawcy", { v: Boolean -> update(settings.copy(showLogo = v)) }),
                 Triple(settings.showBackground, "Tło dokumentu", { v: Boolean -> update(settings.copy(showBackground = v)) })
             ).forEach { (checked, label, onToggle) ->
