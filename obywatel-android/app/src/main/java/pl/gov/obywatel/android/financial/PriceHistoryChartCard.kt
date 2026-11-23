@@ -430,14 +430,14 @@ private fun PairHistoryChart(
                     } while (event.changes.any { it.pressed })
                 }
             }
-            .pointerInput(points, viewport) {
+            .pointerInput(points) {
                 detectTapGestures { tap ->
                     if (points.isNotEmpty()) {
                         val left = 48.dp.toPx()
                         val right = size.width - 10.dp.toPx()
                         val ratio = ((tap.x - left) / (right - left)).coerceIn(0f, 1f)
-                        val index = viewport.startFraction +
-                            ratio * (viewport.endFraction - viewport.startFraction)
+                        val index = latestViewport.startFraction +
+                            ratio * (latestViewport.endFraction - latestViewport.startFraction)
                         latestSelectionCallback(points[(index * points.lastIndex).toInt().coerceIn(0, points.lastIndex)])
                     }
                 }
