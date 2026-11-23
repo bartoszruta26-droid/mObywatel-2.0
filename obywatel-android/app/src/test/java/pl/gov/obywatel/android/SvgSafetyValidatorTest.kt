@@ -91,3 +91,5 @@ class SvgSafetyValidatorTest {
     fun stampGeneratorRejectsUnsafeColorValue() {
         makeStampSvg("Fundacja", "PIECZĘĆ", "1", "url(#malicious)")
     }
+
+}
