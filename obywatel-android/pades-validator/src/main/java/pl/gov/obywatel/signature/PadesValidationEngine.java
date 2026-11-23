@@ -3,6 +3,7 @@
 package pl.gov.obywatel.signature;
 
 import eu.europa.esig.dss.model.FileDocument;
+import eu.europa.esig.dss.simplereport.SimpleReport;
 import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier;
 import eu.europa.esig.dss.validation.SignedDocumentValidator;
 import eu.europa.esig.dss.validation.reports.Reports;
@@ -15,6 +16,9 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * JVM-side PAdES validation engine. Host it behind an authenticated backend API;
@@ -36,10 +40,45 @@ public final class PadesValidationEngine {
                     SignedDocumentValidator.fromDocument(new FileDocument(stagedPdf.toFile()));
             validator.setCertificateVerifier(verifier);
             Reports reports = validator.validateDocument();
+            SimpleReport simple = reports.getSimpleReport();
+            List<SignatureSummary> signatures = new ArrayList<>();
+            for (String signatureId : simple.getSignatureIdList()) {
+                var chain = simple.getCertificateChain(signatureId);
+                List<String> certificateNames = chain == null
+                        ? List.of()
+                        : chain.getCertificate().stream()
+                            .map(certificate -> certificate.getQualifiedName()
+                                    + (certificate.isTrusted() ? " [trusted]" : " [not trusted]"))
+                            .toList();
+                signatures.add(new SignatureSummary(
+                        signatureId,
+                        simple.isValid(signatureId),
+                        Objects.toString(simple.getIndication(signatureId), "UNKNOWN"),
+                        Objects.toString(simple.getSubIndication(signatureId), "UNKNOWN"),
+                        Objects.toString(simple.getSignatureQualification(signatureId), "UNKNOWN"),
+                        Objects.toString(simple.getSignatureFormat(signatureId), "UNKNOWN"),
+                        simple.getSignedBy(signatureId),
+                        toIso(simple.getSigningTime(signatureId)),
+                        toIso(simple.getBestSignatureTime(signatureId)),
+                        certificateNames));
+            }
+            List<TimestampSummary> timestamps = new ArrayList<>();
+            for (String timestampId : simple.getTimestampIdList()) {
+                timestamps.add(new TimestampSummary(
+                        timestampId,
+                        simple.getProducedBy(timestampId),
+                        toIso(simple.getProductionTime(timestampId)),
+                        Objects.toString(simple.getTimestampQualification(timestampId), "UNKNOWN"),
+                        simple.isValid(timestampId)));
+            }
             return new ValidationReport(
                     reports.getXmlSimpleReport(),
                     reports.getXmlDetailedReport(),
-                    reports.getXmlValidationReport());
+                    reports.getXmlDiagnosticData(),
+                    reports.getXmlValidationReport(),
+                    toIso(simple.getValidationTime()),
+                    signatures,
+                    timestamps);
         } finally {
             Files.deleteIfExists(stagedPdf);
         }
@@ -89,14 +128,48 @@ public final class PadesValidationEngine {
         }
     }
 
+    private static String toIso(Date value) {
+        return value == null ? null : value.toInstant().toString();
+    }
+
+    public record SignatureSummary(
+            String signatureId,
+            boolean dssValid,
+            String indication,
+            String subIndication,
+            String qualification,
+            String padesLevel,
+            String signerIdentity,
+            String signingTime,
+            String bestSignatureTime,
+            List<String> certificateChainNames) {
+        public SignatureSummary {
+            certificateChainNames = List.copyOf(certificateChainNames);
+        }
+    }
+
+    public record TimestampSummary(
+            String timestampId,
+            String authority,
+            String producedAt,
+            String qualification,
+            boolean dssValid) {}
+
     public record ValidationReport(
             String simpleReportXml,
             String detailedReportXml,
-            String etsiValidationReportXml) {
+            String diagnosticDataXml,
+            String etsiValidationReportXml,
+            String validationTime,
+            List<SignatureSummary> signatures,
+            List<TimestampSummary> timestamps) {
         public ValidationReport {
             Objects.requireNonNull(simpleReportXml);
             Objects.requireNonNull(detailedReportXml);
+            Objects.requireNonNull(diagnosticDataXml);
             Objects.requireNonNull(etsiValidationReportXml);
+            signatures = List.copyOf(signatures);
+            timestamps = List.copyOf(timestamps);
         }
     }
 }
