@@ -66,6 +66,8 @@ android {
     packaging {
         resources {
             excludes += "META-INF/DEPENDENCIES"
+            // Preserve and concatenate third-party license texts instead of dropping them.
+            merges += "META-INF/LICENSE.md"
         }
     }
 }
