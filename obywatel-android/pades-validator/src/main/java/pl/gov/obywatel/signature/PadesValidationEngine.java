@@ -68,7 +68,10 @@ public final class PadesValidationEngine {
                         .toList();
                 signatures.add(new SignatureSummary(
                         signatureId,
+                        reports.getDiagnosticData().isBLevelTechnicallyValid(signatureId),
                         simple.isValid(signatureId),
+                        reports.getDiagnosticData().getSignatureById(signatureId) != null
+                                && reports.getDiagnosticData().getSignatureById(signatureId).isTrustedChain(),
                         Objects.toString(simple.getIndication(signatureId), "UNKNOWN"),
                         Objects.toString(simple.getSubIndication(signatureId), "UNKNOWN"),
                         Objects.toString(simple.getSignatureQualification(signatureId), "UNKNOWN"),
@@ -151,7 +154,9 @@ public final class PadesValidationEngine {
 
     public record SignatureSummary(
             String signatureId,
+            boolean cryptographicSignatureValid,
             boolean dssValid,
+            boolean certificateChainTrusted,
             String indication,
             String subIndication,
             String qualification,
