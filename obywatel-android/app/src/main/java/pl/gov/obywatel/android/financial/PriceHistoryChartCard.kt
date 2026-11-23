@@ -140,7 +140,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     }
 
     fun load() {
-        if (base == quote) { error = "Wybierz dwa różne instrumenty."; points = emptyList(); return }
+        if (base == quote) { error = "Wybierz dwa różne instrumenty."; points = emptyList(); forecastValues = emptyList(); return }
         scope.launch {
             loading = true; error = null; selected = null
             try {
@@ -149,7 +149,12 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 // Jedno pobranie 20-letniej historii zasila wykres i walidację prognoz.
                 // Widoczny wykres nadal pokazuje wyłącznie wybrany przez użytkownika okres.
                 val fullHistory = withContext(Dispatchers.IO) {
-                    pairRepository.history(base, quote, end.minusYears(20), end)
+                    try {
+                        pairRepository.history(base, quote, end.minusYears(20), end)
+                    } catch (_: Exception) {
+                        // Krótki wykres nadal działa, jeśli dostawca nie zwróci pełnych 20 lat.
+                        pairRepository.history(base, quote, start, end)
+                    }
                 }
                 val data = fullHistory.filter { !it.date.isBefore(start) }
                 require(data.isNotEmpty()) {
@@ -304,7 +309,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 Text("Źródło nie udostępnia rzeczywistych danych OHLC. Pokazujemy kurs referencyjny jako linię, bez sztucznych świec i wolumenu.",
                     color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
             }
-            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote względem pierwszej obserwacji okresu.")
+            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote względem pierwszej obserwacji okresu. Regresja jest dopasowana do tych samych punktów procentowych, bez projekcji poza ostatnią obserwację.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("●", color = MaterialTheme.colorScheme.primary)
                 Text("$base/$quote • zmiana relacji (%)", style = MaterialTheme.typography.bodySmall)
