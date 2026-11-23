@@ -130,8 +130,17 @@ internal fun CertificateStudioScreen(onBack: () -> Unit) {
         if (uri != null) runCatching {
             renderTrainingCertificatePdf(context, uri, certificateStandardProfiles.first { it.id == standardId },
                 issuer, recipient, course, scope, hours, issueDate, number, signatory, signatureId, stampId)
-        }.onSuccess { status = "Wygenerowano certyfikat PDF." }
-            .onFailure { status = "Nie udało się wygenerować PDF: ${it.message ?: "błąd"}" }
+            val pdfBytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: error("Nie można ponownie odczytać wygenerowanego PDF.")
+            DocumentBrandStore.importBytes(
+                context, issuer.ifBlank { "Wystawca" }, "Certyfikat",
+                "Certyfikat — ${recipient.take(55)} — ${course.take(65)}",
+                pdfBytes, rights = "Dokument wygenerowany lokalnie przez użytkownika; wymaga zatwierdzenia przez wystawcę.",
+                mimeType = "application/pdf"
+            )
+            assets = DocumentBrandStore.list(context).filter { it.kind in certificateResourceKinds }
+        }.onSuccess { status = "Wygenerowano PDF i zapisano kopię w bibliotece certyfikatów." }
+            .onFailure { status = "Nie udało się wygenerować lub zapisać PDF: ${it.message ?: "błąd"}" }
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
