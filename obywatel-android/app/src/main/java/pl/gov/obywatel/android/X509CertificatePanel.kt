@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import java.security.cert.TrustAnchor
 import java.security.cert.X509Certificate
@@ -33,6 +34,7 @@ import java.util.Locale
 
 @Composable
 internal fun X509CertificatePanel() {
+    val context = LocalContext.current
     var certificates by remember { mutableStateOf<List<X509Certificate>>(emptyList()) }
     var selectedLeaf by remember { mutableStateOf(0) }
     var selectedAnchor by remember { mutableStateOf(-1) }
@@ -46,16 +48,34 @@ internal fun X509CertificatePanel() {
 
     val certificatePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
-            val bytes = uri.let { context -> /* marker replaced below */ ByteArray(0) }
-            bytes
+            val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
+                val output = java.io.ByteArrayOutputStream()
+                val buffer = ByteArray(8192)
+                var total = 0
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) break
+                    total += read
+                    require(total <= 5 * 1024 * 1024) { "Plik przekracza limit 5 MiB." }
+                    output.write(buffer, 0, read)
+                }
+                output.toByteArray()
+            } ?: error("Nie można odczytać wybranego pliku.")
+            certificates = X509CertificateService.parseCertificates(bytes)
+            selectedLeaf = 0
+            selectedAnchor = -1
+            issuedCertificateMatches = null
+            report = "Odczytano certyfikaty X.509: ${certificates.size}. Okres ważności i ścieżkę zaufania należy ocenić osobno."
         }.onFailure { report = "Nie udało się odczytać certyfikatu: ${it.message}" }
     }
     val csrSaver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pkcs10")) { uri ->
         val bytes = pendingCsr
         if (uri != null && bytes != null) runCatching {
-            // SAF output is written by the caller-owned URI in the activity context.
+            context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+                ?: error("Nie można zapisać pliku CSR.")
             pendingCsr = null
-        }.onFailure { report = "Nie udało się przygotować pliku CSR: ${it.message}" }
+            report = "Zapisano żądanie PKCS#10 CSR. Przekaż je urzędowi certyfikacji (CA)."
+        }.onFailure { report = "Nie udało się zapisać pliku CSR: ${it.message}" }
     }
 
     Column(
