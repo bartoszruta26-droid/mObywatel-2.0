@@ -1192,7 +1192,9 @@ internal fun LegitimacyPreviewSettingsPanel(
                             choices = remember(documentKey, assets) {
                                 listOf(Triple("", "Bez grafiki", null)) + assets.filter { it.kind in setOf(
                                     "Herb", "Godło", "Logo", "Flaga", "Symbol", "Pieczęć", "Wzór podpisu odręcznego",
-                                    "Pozostałe", "Fotografia", "Znak wodny", "Ikona", "Ikona wektorowa", "Ikona wektorowa kafelka")
+                                    "Pozostałe", "Fotografia", "Znak wodny", "Ikona", "Ikona wektorowa", "Ikona wektorowa kafelka",
+                                    "Tło wektorowe", "Tło graficzne", "Grafika wektorowa tła kafelków",
+                                    "Animowany hologram", "Tło dokumentu", "Tło kafelka")
                                 }.distinctBy { it.id }.map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
                             },
                             onSelect = { selected -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(assetId = selected) else it })) }
