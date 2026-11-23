@@ -55,6 +55,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.json.JSONArray
+import org.json.JSONObject
 
 // Visual parity: checkmark scan frame and horizontal gradient identity-card shortcut.
 internal data class CredentialFieldOption(val key: String, val label: String)
@@ -447,6 +449,49 @@ internal fun credentialValidityForDocument(documentKey: String, values: Map<Stri
     return !explicitlyInvalid && isCredentialValidByExpiry(expiry)
 }
 
+internal data class CredentialGraphicElement(
+    val id: String,
+    val assetId: String = "",
+    val caption: String = "",
+    val x: Float = 0f,
+    val y: Float = 0f,
+    val scale: Float = 1f,
+    val rotation: Float = 0f,
+    val captionScale: Float = 1f,
+    val captionPosition: String = "Po prawej",
+    val visible: Boolean = true
+)
+
+internal fun defaultCredentialGraphicElements(settings: LegitimacyPreviewSettings): List<CredentialGraphicElement> =
+    settings.graphicElements.takeIf { it.isNotEmpty() } ?: listOf(
+        CredentialGraphicElement("graphic-1", settings.flagAssetId, x = settings.flagOffsetX, y = settings.flagOffsetY,
+            scale = settings.flagScale, rotation = settings.flagRotation, visible = settings.showFlag),
+        CredentialGraphicElement("graphic-2", settings.crestAssetId,
+            caption = settings.crestCaption.ifBlank { "Rzeczpospolita\nPolska" },
+            x = 76f + settings.crestOffsetX, y = settings.crestOffsetY, scale = settings.crestScale,
+            rotation = settings.crestRotation, captionPosition = settings.captionPosition, visible = settings.showCrest)
+    )
+
+private fun encodeCredentialGraphicElements(elements: List<CredentialGraphicElement>): String =
+    JSONArray().apply { elements.take(4).forEach { e ->
+        put(JSONObject().put("id", e.id).put("assetId", e.assetId).put("caption", e.caption)
+            .put("x", e.x).put("y", e.y).put("scale", e.scale).put("rotation", e.rotation)
+            .put("captionScale", e.captionScale).put("captionPosition", e.captionPosition).put("visible", e.visible))
+    } }.toString()
+
+private fun decodeCredentialGraphicElements(raw: String?): List<CredentialGraphicElement> = runCatching {
+    val a = JSONArray(raw ?: "[]")
+    (0 until a.length()).mapNotNull { i ->
+        val e = a.optJSONObject(i) ?: return@mapNotNull null
+        CredentialGraphicElement(e.optString("id", "graphic-" + (i + 1)), e.optString("assetId"), e.optString("caption"),
+            e.optDouble("x", 0.0).toFloat().coerceIn(-180f, 360f),
+            e.optDouble("y", 0.0).toFloat().coerceIn(-180f, 240f),
+            e.optDouble("scale", 1.0).toFloat().coerceIn(0.25f, 3f),
+            e.optDouble("rotation", 0.0).toFloat().coerceIn(-180f, 180f),
+            e.optDouble("captionScale", 1.0).toFloat().coerceIn(0.5f, 3f),
+            e.optString("captionPosition", "Po prawej"), e.optBoolean("visible", true))
+    }.take(4)
+}.getOrDefault(emptyList())
 internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
@@ -466,6 +511,7 @@ internal data class LegitimacyPreviewSettings(
     val flagAssetId: String = "",
     val backgroundAssetId: String = "",
     val logoAssetId: String = "",
+    val graphicElements: List<CredentialGraphicElement> = emptyList(),
     val crestCaption: String = "",
     val captionPosition: String = "Pod herbem",
     val orientation: String = "PIONOWA",
@@ -640,7 +686,8 @@ internal fun mergeSharedLegitimacyAppearance(
         valueOffsetY = shared.valueOffsetY,
         fontFamily = shared.fontFamily,
         fontColor = document.fontColor.ifBlank { shared.fontColor },
-        imageFilter = shared.imageFilter
+        imageFilter = shared.imageFilter,
+        graphicElements = shared.graphicElements
     )
 }
 
@@ -672,6 +719,7 @@ internal object LegitimacyPreviewSettingsStore {
             flagAssetId = p.getString("${key}_flag", "").orEmpty(),
             backgroundAssetId = p.getString("${key}_background", "").orEmpty(),
             logoAssetId = p.getString("${key}_logo", "").orEmpty(),
+            graphicElements = decodeCredentialGraphicElements(p.getString("${key}_graphic_elements", null)),
             crestCaption = p.getString("${key}_caption", "").orEmpty(),
             captionPosition = p.getString("${key}_caption_position", "Pod herbem").orEmpty(),
             orientation = p.getString("${key}_orientation", "PIONOWA").orEmpty(),
@@ -753,6 +801,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putFloat("${key}_value_y", value.valueOffsetY)
                 .putString("${key}_font_family", value.fontFamily)
                 .putString("${key}_font_color", value.fontColor)
+                .putString("${key}_graphic_elements", encodeCredentialGraphicElements(value.graphicElements))
                 .putString("${key}_image_filter", value.imageFilter)
             listOf("crest", "flag", "background", "logo", "caption", "caption_position").forEach {
                 editor.remove("${key}_$it")
@@ -774,6 +823,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_tile_vector_motif", value.tileVectorMotifId)
                 .putString("${key}_tile_gradient_palette", value.tileGradientPaletteId)
                 .putString("${key}_logo", value.logoAssetId)
+                .putString("${key}_graphic_elements", encodeCredentialGraphicElements(value.graphicElements))
                 .putString("${key}_caption", value.crestCaption)
                 .putString("${key}_caption_position", value.captionPosition)
                 .putStringSet("${key}_visible_fields", value.visibleFields)
