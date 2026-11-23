@@ -120,6 +120,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
     var editRights by remember { mutableStateOf("") }
     var editVersion by remember { mutableStateOf("1") }
     var deleteAsset by remember { mutableStateOf<BrandAsset?>(null) }
+    var exportAsset by remember { mutableStateOf<BrandAsset?>(null) }
     var signatureId by remember { mutableStateOf("") }
     var stampId by remember { mutableStateOf("") }
     var signatureMenu by remember { mutableStateOf(false) }
@@ -140,6 +141,17 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
             status = "Dodano zasób do biblioteki."
             resourceName = ""
         }.onFailure { status = "Import nie powiódł się: ${it.message ?: "błąd"}" }
+    }
+    val exportPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
+        val asset = exportAsset
+        if (uri != null && asset != null) runCatching {
+            val bytes = DocumentBrandStore.fileBytes(context, asset.id, asset)
+                ?: error("Nie można odczytać pliku zasobu.")
+            context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+                ?: error("Nie można zapisać wybranego pliku.")
+            status = "Wyeksportowano: ${asset.label}"
+        }.onFailure { status = "Eksport nie powiódł się: ${it.message ?: "błąd"}" }
+        exportAsset = null
     }
     val pdfPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         if (uri != null) runCatching {
@@ -255,6 +267,21 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                                 Text(asset.label, fontWeight = FontWeight.SemiBold)
                                 Text("${asset.kind} · ${asset.owner} · v${asset.version}", style = MaterialTheme.typography.bodySmall)
                             }
+                            TextButton(onClick = {
+                                exportAsset = asset
+                                val baseName = asset.label.lowercase()
+                                    .replace(Regex("[^a-z0-9ąćęłńóśźż_-]+"), "-")
+                                    .trim('-').take(48).ifBlank { "zasob" }
+                                val extension = when {
+                                    asset.mimeType == "application/pdf" -> ".pdf"
+                                    asset.file.contains(".svg") -> ".svg"
+                                    asset.mimeType == "image/png" -> ".png"
+                                    asset.mimeType == "image/jpeg" -> ".jpg"
+                                    asset.mimeType == "image/webp" -> ".webp"
+                                    else -> ".bin"
+                                }
+                                exportPicker.launch(baseName + extension)
+                            }) { Text("Eksportuj") }
                             TextButton(onClick = {
                                 editAsset = asset; editLabel = asset.label; editOwner = asset.owner
                                 editRights = asset.rights; editVersion = asset.version.toString()
