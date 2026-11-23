@@ -188,6 +188,57 @@ object X509CertificateService {
         return KeyPair(certificate.publicKey, privateKey)
     }
 
+    /** Returns the certificate chain currently associated with the Keystore key. */
+    fun getSigningCertificateChain(alias: String): List<X509Certificate> {
+        require(alias.matches(Regex("[A-Za-z0-9._-]{1,80}"))) { "Nieprawidłowy alias klucza." }
+        val store = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
+        val chain = store.getCertificateChain(alias)
+            ?.mapNotNull { it as? X509Certificate }
+            .orEmpty()
+        require(chain.isNotEmpty()) { "Klucz nie ma przypisanego certyfikatu X.509." }
+        return chain
+    }
+
+    /**
+     * Associates a CA-issued certificate chain with the existing non-exportable
+     * Android Keystore private key. The private key bytes are never exported.
+     * The first certificate must be the leaf certificate for this key.
+     */
+    fun installIssuedCertificateChain(alias: String, chain: List<X509Certificate>) {
+        require(chain.isNotEmpty() && chain.size <= MAX_CERTIFICATES) { "Nieprawidłowy łańcuch certyfikatów." }
+        require(chain.first().publicKey.encoded.contentEquals(getSigningKeyPair(alias).public.encoded)) {
+            "Certyfikat końcowy nie odpowiada kluczowi z Android Keystore."
+        }
+        chain.forEach { it.checkValidity() }
+        val store = KeyStore.getInstance(KEYSTORE_PROVIDER).apply { load(null) }
+        val privateKey = store.getKey(alias, null) as? java.security.PrivateKey
+            ?: error("Nie znaleziono klucza prywatnego w Android Keystore.")
+        store.setKeyEntry(alias, privateKey, null, chain.toTypedArray())
+        val installed = getSigningCertificateChain(alias)
+        require(installed.first().encoded.contentEquals(chain.first().encoded)) {
+            "Android Keystore nie potwierdził instalacji certyfikatu CA."
+        }
+    }
+
+    /**
+     * Signs DSS Data-To-Be-Signed bytes with the non-exportable P-256 key.
+     * The input is the exact byte sequence returned by DSS getDataToSign(),
+     * not a separately pre-hashed digest.
+     */
+    fun signPadesData(alias: String, dataToBeSigned: ByteArray): ByteArray {
+        require(dataToBeSigned.isNotEmpty() && dataToBeSigned.size <= 1024 * 1024) {
+            "Nieprawidłowy rozmiar danych do podpisu."
+        }
+        val pair = getSigningKeyPair(alias)
+        require(pair.public.algorithm.equals("EC", ignoreCase = true)) {
+            "Podpis PAdES z tej ścieżki wymaga klucza EC."
+        }
+        val signer = Signature.getInstance("SHA256withECDSA")
+        signer.initSign(pair.private)
+        signer.update(dataToBeSigned)
+        return signer.sign()
+    }
+
     /**
      * Creates a PKCS#10 CSR signed by the non-exportable Android Keystore key.
      * P-256 / SHA256withECDSA is used. The private key is never serialized.
