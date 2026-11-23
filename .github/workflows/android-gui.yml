@@ -50,7 +50,7 @@ jobs:
 
       - name: Run Android unit tests
         working-directory: obywatel-android
-        run: gradle --no-daemon :app:testDebugUnitTest :pades-validator:test
+        run: gradle --no-daemon :app:testDebugUnitTest :pades-validator:test :pades-android:testDebugUnitTest
 
       - name: Enable KVM access for Android emulator
         run: |
@@ -73,7 +73,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-snapshot-save
           script: |
-            cd obywatel-android && timeout --signal=TERM --kill-after=30s 30m gradle --no-daemon :app:connectedDebugAndroidTest || { echo "Android instrumentation failed or timed out; collecting emulator diagnostics."; adb devices -l || true; adb logcat -d -v threadtime | tail -n 500 || true; exit 1; }
+            cd obywatel-android && timeout --signal=TERM --kill-after=30s 30m gradle --no-daemon :app:connectedDebugAndroidTest :pades-android:connectedDebugAndroidTest || { echo "Android instrumentation failed or timed out; collecting emulator diagnostics."; adb devices -l || true; adb logcat -d -v threadtime | tail -n 500 || true; exit 1; }
 
       - name: Archive Android instrumentation reports
         if: always()

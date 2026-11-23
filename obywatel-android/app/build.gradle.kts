@@ -60,6 +60,26 @@ android {
     }
 
     buildFeatures { compose = true }
+
+    // DSS/PDFBox dependencies contain duplicate informational Maven metadata.
+    // DEPENDENCIES is not runtime code; exclude it from the APK merge.
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+            // Preserve and concatenate third-party license texts instead of dropping them.
+            merges += "META-INF/LICENSE.md"
+            // Preserve the distinct upstream attribution notices in the packaged APK.
+            merges += "META-INF/NOTICE.md"
+            // JAXB build-time binding descriptors are not needed by the Android runtime.
+            // Exclude duplicate metadata rather than concatenate invalid XML documents.
+            excludes += "xsd/bindings.xml"
+            // JAXB episode descriptors are build-time metadata and are not needed at runtime.
+            excludes += "META-INF/sun-jaxb.episode"
+            // DSS modules ship OASIS catalog entries at the same path; concatenate
+            // catalogs so schema/public/system mappings from every module remain available.
+            merges += "xsd/catalog.cat"
+        }
+    }
 }
 
 kotlin {
@@ -69,6 +89,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":pades-android"))
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)

@@ -177,7 +177,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
         Text("Pracownia certyfikatów, baza wzorów, podpisów graficznych i pieczęci.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            listOf("generator" to "Generator", "resources" to "Baza", "signature" to "TXT → SVG", "stamp" to "Pieczęć")
+            listOf("generator" to "Generator", "resources" to "Baza", "signature" to "TXT → SVG", "stamp" to "Pieczęć", "x509" to "X.509")
                 .forEachIndexed { index, item ->
                     SegmentedButton(section == item.first, { section = item.first },
                         SegmentedButtonDefaults.itemShape(index, 4)) { Text(item.second) }
@@ -242,6 +242,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                     Text("Certyfikaty cyfrowe i podpisy elektroniczne")
                 }
             }
+            "x509" -> X509CertificatePanel()
             "resources" -> {
                 Text("Baza zasobów", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 Text("Zasoby przechowywane są w istniejącym szyfrowanym magazynie aplikacji. Dołączaj własne wzory PDF i grafiki SVG, PNG, JPEG lub WebP.",

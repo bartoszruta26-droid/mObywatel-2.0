@@ -7,4 +7,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "ObywatelAndroid"
-include(":app", ":pades-validator")
+include(":app", ":pades-validator", ":pades-android")

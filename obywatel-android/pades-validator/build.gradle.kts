@@ -16,6 +16,8 @@ java {
 dependencies {
     api("eu.europa.ec.joinup.sd-dss:dss-validation:6.5.1")
     implementation("eu.europa.ec.joinup.sd-dss:dss-pades:6.5.1")
+    implementation("eu.europa.ec.joinup.sd-dss:dss-pades-pdfbox:6.5.1")
+    implementation("eu.europa.ec.joinup.sd-dss:dss-cms-object:6.5.1")
     implementation("eu.europa.ec.joinup.sd-dss:dss-service:6.5.1")
     implementation("eu.europa.ec.joinup.sd-dss:dss-tsl-validation:6.5.1")
     testImplementation("junit:junit:4.13.2")

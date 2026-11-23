@@ -1,0 +1,50 @@
+// SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+// SPDX-License-Identifier: EUPL-1.2
+plugins {
+    id("com.android.library")
+}
+
+group = "pl.gov.obywatel"
+version = "0.1.0"
+
+android {
+    namespace = "pl.gov.obywatel.pades"
+    compileSdk = 37
+
+    defaultConfig {
+        minSdk = 26
+        consumerProguardFiles("consumer-rules.pro")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // The library's instrumentation APK packages the DSS/PDFBox dependency graph
+    // independently of the app module, so app-level resource rules do not apply.
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "xsd/bindings.xml"
+            excludes += "META-INF/sun-jaxb.episode"
+            merges += "META-INF/LICENSE.md"
+            merges += "META-INF/NOTICE.md"
+            merges += "xsd/catalog.cat"
+        }
+    }
+}
+
+dependencies {
+    api(project(":pades-validator"))
+    // Keep DSS pinned to the same release as the JVM validator.
+    api("eu.europa.ec.joinup.sd-dss:dss-validation:6.5.1")
+    api("eu.europa.ec.joinup.sd-dss:dss-pades:6.5.1")
+    implementation("eu.europa.ec.joinup.sd-dss:dss-pades-pdfbox:6.5.1")
+    implementation("eu.europa.ec.joinup.sd-dss:dss-cms-object:6.5.1")
+    implementation("eu.europa.ec.joinup.sd-dss:dss-service:6.5.1")
+    implementation("eu.europa.ec.joinup.sd-dss:dss-tsl-validation:6.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+}
