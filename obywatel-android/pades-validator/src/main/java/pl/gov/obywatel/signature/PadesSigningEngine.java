@@ -96,15 +96,15 @@ public final class PadesSigningEngine {
             CommonCertificateVerifier certificateVerifier) throws IOException, GeneralSecurityException {
         requireOwner(authenticatedOwnerId);
         Objects.requireNonNull(originalPdf, "originalPdf");
-        Objects.requireNonNull(signingCertificate, "signingCertificate");
-        Objects.requireNonNull(certificateChain, "certificateChain");
-        Objects.requireNonNull(certificateVerifier, "certificateVerifier");
         expireOldSessions();
 
         if (originalPdf.length < 8 || originalPdf.length > MAX_PDF_BYTES
-                || !new String(originalPdf, 0, 5, StandardCharsets.US_ASCII).equals("%PDF-")) {
+                || !new String(originalPdf, 0, Math.min(originalPdf.length, 5), StandardCharsets.US_ASCII).equals("%PDF-")) {
             throw new IOException("Input must be a PDF between 8 bytes and 50 MiB");
         }
+        Objects.requireNonNull(signingCertificate, "signingCertificate");
+        Objects.requireNonNull(certificateChain, "certificateChain");
+        Objects.requireNonNull(certificateVerifier, "certificateVerifier");
         if (sessions.size() >= MAX_ACTIVE_SESSIONS) {
             throw new IOException("Signing capacity is busy; retry after an active signing session expires");
         }
