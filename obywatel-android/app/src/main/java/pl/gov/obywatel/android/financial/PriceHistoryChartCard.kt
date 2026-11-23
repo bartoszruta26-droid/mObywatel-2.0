@@ -5,7 +5,6 @@ package pl.gov.obywatel.android.financial
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import android.graphics.Paint as AndroidPaint
@@ -179,15 +179,24 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN)
     else null
     val relativeValues = remember(points) { pairRelativePerformance(points) }
+    val projectionBars = if (points.size > 1) maxOf(3, kotlin.math.ceil(points.size * 0.20).toInt()) else 0
+    val projectionEndIndex = (points.lastIndex + projectionBars).coerceAtLeast(0)
+    val projectionEndFraction = if (points.size > 1)
+        projectionEndIndex.toDouble() / points.lastIndex.toDouble() else 1.0
     val minPercent = relativeValues.minOrNull() ?: -1.0
     val maxPercent = relativeValues.maxOrNull() ?: 1.0
-    // Skala Y obejmuje zarówno przebieg procentowy, jak i wszystkie widoczne
-    // kanały regresji; nie obcinamy pasm na krawędzi wykresu.
-    val regressionBounds = remember(relativeValues, regression) {
-        RegressionPlotGeometry.fitRange(relativeValues, regression)
+    val regressionBounds = remember(relativeValues, regression, projectionEndIndex) {
+        RegressionPlotGeometry.fitRange(
+            relativeValues, regression,
+            projectionEndIndex.takeIf { it > points.lastIndex }?.toDouble()
+        )
     }
     var viewport by remember(points, regression) {
-        mutableStateOf(PairChartViewport.fit(regressionBounds.first, regressionBounds.second))
+        mutableStateOf(
+            PairChartViewport.fit(
+                regressionBounds.first, regressionBounds.second, projectionEndFraction
+            )
+        )
     }
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -309,7 +318,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 Text("Źródło nie udostępnia rzeczywistych danych OHLC. Pokazujemy kurs referencyjny jako linię, bez sztucznych świec i wolumenu.",
                     color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
             }
-            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote względem pierwszej obserwacji okresu. Regresja jest dopasowana do tych samych punktów procentowych, bez projekcji poza ostatnią obserwację.")
+            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote. Linia ciągła pokazuje regresję historyczną, a przerywana — jej projekcję poza ostatnie notowanie.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("●", color = MaterialTheme.colorScheme.primary)
                 Text("$base/$quote • zmiana relacji (%)", style = MaterialTheme.typography.bodySmall)
@@ -330,7 +339,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 onViewportChange = { viewport = it },
                 modifier = Modifier.fillMaxWidth().height(340.dp)
             )
-            Text("Gest dwoma palcami: zmiana rozstawu poziomego skaluje daty, pionowego skaluje procenty; przesunięcie obu palców przesuwa wykres.",
+            Text("Przeciągnij jednym palcem w lewo/prawo lub góra/dół, aby przesunąć wykres. Dwa palce służą do niezależnego skalowania osi dat i procentów.",
                 style = MaterialTheme.typography.bodySmall)
             val activeRegressionLengths = RegressionPlotGeometry.channelsForPlot(
                 relativeValues, regression
@@ -398,55 +407,72 @@ private fun PairHistoryChart(
     Canvas(
         modifier
             .pointerInput(points) {
-                val widthPx = size.width.toFloat().coerceAtLeast(1f)
-                val heightPx = size.height.toFloat().coerceAtLeast(1f)
                 awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false)
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var dragging = false
+                    var accumulated = Offset.Zero
+                    val plotLeft = 48.dp.toPx()
+                    val plotRight = size.width - 10.dp.toPx()
+                    val plotTop = 10.dp.toPx()
+                    val plotBottom = size.height - 30.dp.toPx()
+                    val plotWidth = (plotRight - plotLeft).coerceAtLeast(1f)
+                    val plotHeight = (plotBottom - plotTop).coerceAtLeast(1f)
                     do {
                         val event = awaitPointerEvent()
                         val active = event.changes.filter { it.pressed }
-                        if (active.size >= 2) {
-                            val first = active[0]
-                            val second = active[1]
-                            val oldX = kotlin.math.abs(first.previousPosition.x - second.previousPosition.x)
-                            val newX = kotlin.math.abs(first.position.x - second.position.x)
-                            val oldY = kotlin.math.abs(first.previousPosition.y - second.previousPosition.y)
-                            val newY = kotlin.math.abs(first.position.y - second.position.y)
-                            val oldCenterX = (first.previousPosition.x + second.previousPosition.x) / 2f
-                            val oldCenterY = (first.previousPosition.y + second.previousPosition.y) / 2f
-                            val centerX = (first.position.x + second.position.x) / 2f
-                            val centerY = (first.position.y + second.position.y) / 2f
-                            val zoomX = if (oldX > 2f) (newX / oldX).toDouble() else 1.0
-                            val zoomY = if (oldY > 2f) (newY / oldY).toDouble() else 1.0
-                            val plotLeft = 48.dp.toPx()
-                            val plotRight = widthPx - 10.dp.toPx()
-                            val plotTop = 10.dp.toPx()
-                            val plotBottom = heightPx - 30.dp.toPx()
-                            latestViewportCallback(
-                                latestViewport.transform(
-                                    zoomX = zoomX,
-                                    zoomY = zoomY,
-                                    anchorX = ((centerX - plotLeft) / (plotRight - plotLeft)).toDouble(),
-                                    anchorY = ((centerY - plotTop) / (plotBottom - plotTop)).toDouble(),
-                                    panX = ((centerX - oldCenterX) / (plotRight - plotLeft)).toDouble(),
-                                    panY = ((centerY - oldCenterY) / (plotBottom - plotTop)).toDouble()
+                        when {
+                            active.size >= 2 -> {
+                                dragging = true
+                                val first = active[0]
+                                val second = active[1]
+                                val oldX = kotlin.math.abs(first.previousPosition.x - second.previousPosition.x)
+                                val newX = kotlin.math.abs(first.position.x - second.position.x)
+                                val oldY = kotlin.math.abs(first.previousPosition.y - second.previousPosition.y)
+                                val newY = kotlin.math.abs(first.position.y - second.position.y)
+                                val oldCenterX = (first.previousPosition.x + second.previousPosition.x) / 2f
+                                val oldCenterY = (first.previousPosition.y + second.previousPosition.y) / 2f
+                                val centerX = (first.position.x + second.position.x) / 2f
+                                val centerY = (first.position.y + second.position.y) / 2f
+                                latestViewportCallback(
+                                    latestViewport.transform(
+                                        zoomX = if (oldX > 2f) (newX / oldX).toDouble() else 1.0,
+                                        zoomY = if (oldY > 2f) (newY / oldY).toDouble() else 1.0,
+                                        anchorX = ((centerX - plotLeft) / plotWidth).toDouble(),
+                                        anchorY = ((centerY - plotTop) / plotHeight).toDouble(),
+                                        panX = ((centerX - oldCenterX) / plotWidth).toDouble(),
+                                        panY = ((centerY - oldCenterY) / plotHeight).toDouble()
+                                    )
                                 )
-                            )
-                            first.consume()
-                            second.consume()
+                                active.forEach { it.consume() }
+                            }
+                            active.size == 1 -> {
+                                val change = active.first()
+                                val delta = change.position - change.previousPosition
+                                accumulated += delta
+                                if (kotlin.math.hypot(
+                                        accumulated.x.toDouble(), accumulated.y.toDouble()
+                                    ) > viewConfiguration.touchSlop
+                                ) dragging = true
+                                if (dragging && (delta.x != 0f || delta.y != 0f)) {
+                                    latestViewportCallback(
+                                        latestViewport.transform(
+                                            panX = delta.x.toDouble() / plotWidth,
+                                            panY = delta.y.toDouble() / plotHeight
+                                        )
+                                    )
+                                    change.consume()
+                                }
+                            }
                         }
                     } while (event.changes.any { it.pressed })
-                }
-            }
-            .pointerInput(points) {
-                detectTapGestures { tap ->
-                    if (points.isNotEmpty()) {
-                        val left = 48.dp.toPx()
-                        val right = size.width - 10.dp.toPx()
-                        val ratio = ((tap.x - left) / (right - left)).coerceIn(0f, 1f)
-                        val index = latestViewport.startFraction +
+
+                    if (!dragging && points.isNotEmpty()) {
+                        val ratio = ((down.position.x - plotLeft) / plotWidth).coerceIn(0f, 1f)
+                        val indexFraction = latestViewport.startFraction +
                             ratio * (latestViewport.endFraction - latestViewport.startFraction)
-                        latestSelectionCallback(points[(index * points.lastIndex).toInt().coerceIn(0, points.lastIndex)])
+                        val index = (indexFraction * points.lastIndex).toInt()
+                            .coerceIn(0, points.lastIndex)
+                        latestSelectionCallback(points[index])
                     }
                 }
             }
@@ -490,7 +516,15 @@ private fun PairHistoryChart(
             val index = firstIndex + (lastIndex - firstIndex) * fraction
             val x = xFor(index)
             drawLine(grid.copy(alpha = 0.45f), Offset(x, top), Offset(x, bottom), 1.dp.toPx())
-            val date = points[index.toInt().coerceIn(0, points.lastIndex)].date
+            val date = if (index <= points.lastIndex) {
+                points[index.toInt().coerceIn(0, points.lastIndex)].date
+            } else {
+                val lastDate = points.last().date
+                val intervalDays = if (points.size > 1)
+                    ChronoUnit.DAYS.between(points[points.lastIndex - 1].date, lastDate).coerceAtLeast(1)
+                else 1L
+                lastDate.plusDays(kotlin.math.round((index - points.lastIndex) * intervalDays).toLong())
+            }
             native.drawText(date.format(plotDateFormatter), x, size.height - 7.dp.toPx(), datePaint)
         }
 
@@ -535,35 +569,53 @@ private fun PairHistoryChart(
                 val color = if (regression.showBroken && channel.brokenDirection != 0)
                     Color(0xFF2878D0) else regressionColors[channelIndex]
                 val width = regression.widths[channelIndex].dp.toPx()
-                fun regressionLine(offset: Double, strokeWidth: Float, dashed: Boolean) {
-                    // X i Y muszą opisywać dokładnie te same indeksy szeregu.
-                    // Nie rysujemy ekstrapolacji z przyszłej daty na krawędzi ostatniej obserwacji.
-                    val segment = RegressionPlotGeometry.visibleSegment(
-                        channel, firstIndex, lastIndex, offset
-                    ) ?: return
+                fun drawDashedSegment(segment: RegressionPlotSegment, strokeWidth: Float, alpha: Float) {
                     val x1 = xFor(segment.startIndex)
                     val x2 = xFor(segment.endIndex)
                     val y1 = yFor(segment.startValue)
                     val y2 = yFor(segment.endValue)
-                    if (!dashed) drawLine(color, Offset(x1, y1), Offset(x2, y2), strokeWidth)
-                    else {
-                        val segments = 28
-                        for (segment in 0 until segments step 2) {
-                            val a = segment.toFloat() / segments
-                            val z = (segment + 1).toFloat() / segments
-                            drawLine(color.copy(alpha = 0.82f),
-                                Offset(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a),
-                                Offset(x1 + (x2 - x1) * z, y1 + (y2 - y1) * z), strokeWidth)
-                        }
+                    val dashCount = 32
+                    for (dash in 0 until dashCount step 2) {
+                        val a = dash.toFloat() / dashCount
+                        val z = (dash + 1).toFloat() / dashCount
+                        drawLine(
+                            color.copy(alpha = alpha),
+                            Offset(x1 + (x2 - x1) * a, y1 + (y2 - y1) * a),
+                            Offset(x1 + (x2 - x1) * z, y1 + (y2 - y1) * z),
+                            strokeWidth
+                        )
                     }
+                }
+                fun regressionLine(offset: Double, strokeWidth: Float, dashed: Boolean) {
+                    val segment = RegressionPlotGeometry.visibleSegment(
+                        channel, firstIndex, lastIndex, offset
+                    ) ?: return
+                    if (dashed) drawDashedSegment(segment, strokeWidth, 0.72f)
+                    else drawLine(
+                        color,
+                        Offset(xFor(segment.startIndex), yFor(segment.startValue)),
+                        Offset(xFor(segment.endIndex), yFor(segment.endValue)),
+                        strokeWidth
+                    )
+                }
+                fun forecastLine(offset: Double, strokeWidth: Float, alpha: Float) {
+                    val segment = RegressionPlotGeometry.forecastSegment(
+                        channel, projectionEndIndex.toDouble(), firstIndex, lastIndex, offset
+                    ) ?: return
+                    drawDashedSegment(segment, strokeWidth, alpha)
                 }
                 val band = channel.deviation * regression.deviationMultiplier
                 regressionLine(0.0, width, false)
                 regressionLine(band, width, true)
                 regressionLine(-band, width, true)
+                forecastLine(0.0, (width * 1.35f).coerceAtLeast(2.dp.toPx()), 1.0f)
+                forecastLine(band, width, 0.58f)
+                forecastLine(-band, width, 0.58f)
                 if (regression.showFibonacci) {
                     LinearRegressionChannels.fibonacciRatios.forEach { ratio ->
-                        regressionLine(-band + 2.0 * band * ratio, 1.dp.toPx(), true)
+                        val offset = -band + 2.0 * band * ratio
+                        regressionLine(offset, 1.dp.toPx(), true)
+                        forecastLine(offset, 1.dp.toPx(), 0.42f)
                     }
                 }
             }
