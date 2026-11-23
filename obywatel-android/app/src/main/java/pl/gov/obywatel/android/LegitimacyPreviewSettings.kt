@@ -1499,6 +1499,19 @@ internal fun LegitimacyPreviewSettingsPanel(
 }
 
 @Composable
+private fun SimpleGraphicCaptionPosition(value: String, onSelect: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) { Text("Położenie podpisu: $value") }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            listOf("Po prawej", "Po lewej", "Nad grafiką", "Pod grafiką").forEach { position ->
+                DropdownMenuItem(text = { Text(position) }, onClick = { onSelect(position); expanded = false })
+            }
+        }
+    }
+}
+
+@Composable
 internal fun LegitimacyHeraldry(
     settings: LegitimacyPreviewSettings,
     documentKey: String,
@@ -1514,74 +1527,60 @@ internal fun LegitimacyHeraldry(
             ?: defaultDocumentEmblem(context, title)
     }
     val assignedFlag = remember(documentKey, assetRevision, title) {
-        DocumentBrandStore.imageForDocument(context, documentKey, title, "Flaga")
-            ?: defaultDocumentFlag(context, title)
+        DocumentBrandStore.imageForDocument(context, documentKey, title, "Flaga") ?: defaultDocumentFlag(context, title)
     }
-    val selectedCrest = remember(settings.crestAssetId, assignedCrest) {
-        settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedCrest
+    val elements = remember(settings.graphicElements, settings.crestAssetId, settings.flagAssetId, settings.crestCaption,
+        settings.showFlag, settings.showCrest, settings.flagScale, settings.crestScale, settings.flagOffsetX, settings.flagOffsetY,
+        settings.crestOffsetX, settings.crestOffsetY, settings.flagRotation, settings.crestRotation) {
+        defaultCredentialGraphicElements(settings)
     }
-    val selectedFlag = remember(settings.flagAssetId, assignedFlag) {
-        settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedFlag
-    }
-    val caption = settings.crestCaption.ifBlank { "Rzeczpospolita\nPolska" }
     val imageFilter = remember(settings.imageFilter) { credentialImageColorFilter(settings.imageFilter) }
-    Column(
-        Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(7.dp)
-    ) {
-        if (settings.showFlag && selectedFlag != null) {
-            Image(
-                selectedFlag.asImageBitmap(),
-                contentDescription = "Flaga dokumentu — wyrównana do lewego marginesu zdjęcia i godła",
-                alignment = Alignment.CenterStart,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .graphicsLayer {
-                        // Flaga jest elementem kolumny zdjęcia: pozostaje przy jej lewym
-                        // marginesie i nie dziedziczy przesunięć używanych dla godła.
-                        transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
-                        scaleX = settings.flagScale
-                        scaleY = settings.flagScale
-                        rotationZ = settings.flagRotation
-                        translationX = settings.flagOffsetX * density
-                        translationY = settings.flagOffsetY * density
-                    },
-                contentScale = androidx.compose.ui.layout.ContentScale.Fit
-            )
-        }
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (settings.showCrest && selectedCrest != null) {
-                Image(
-                    selectedCrest.asImageBitmap(),
-                    contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(68.dp).graphicsLayer {
-                        scaleX = settings.crestScale
-                        scaleY = settings.crestScale
-                        rotationZ = settings.crestRotation
-                        translationX = settings.crestOffsetX * density
-                        translationY = settings.crestOffsetY * density
-                    },
-                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                    colorFilter = imageFilter
-                )
-            }
-            if (settings.showCrest) Spacer(Modifier.width(6.dp))
-            if (settings.showCrest || caption.isNotBlank()) {
-                Text(
-                    caption,
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = credentialFontColor(settings.fontColor),
-                    maxLines = 2
-                )
+    Box(Modifier.fillMaxWidth().height(if (vertical) 132.dp else 112.dp)) {
+        elements.forEachIndexed { index, element ->
+            if (element.visible) {
+                val fallback = when (index) { 0 -> assignedFlag; 1 -> assignedCrest; else -> null }
+                val bitmap = remember(element.assetId, fallback, assetRevision) {
+                    element.assetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: fallback
+                }
+                Row(
+                    modifier = Modifier.offset(x = element.x.dp, y = element.y.dp).graphicsLayer { rotationZ = element.rotation },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    if (element.captionPosition == "Po lewej" && element.caption.isNotBlank()) {
+                        Text(element.caption, fontSize = (10f * element.captionScale).sp,
+                            lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
+                            color = credentialFontColor(settings.fontColor))
+                    }
+                    if (element.captionPosition == "Nad grafiką" || element.captionPosition == "Pod grafiką") {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (element.captionPosition == "Nad grafiką" && element.caption.isNotBlank()) {
+                                Text(element.caption, fontSize = (10f * element.captionScale).sp,
+                                    lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
+                                    color = credentialFontColor(settings.fontColor))
+                            }
+                            if (bitmap != null) Image(bitmap.asImageBitmap(),
+                                contentDescription = "Element graficzny legitymacji ${index + 1}",
+                                modifier = Modifier.size((46f * element.scale).dp), contentScale = ContentScale.Fit,
+                                colorFilter = if (index == 1) imageFilter else null)
+                            if (element.captionPosition == "Pod grafiką" && element.caption.isNotBlank()) {
+                                Text(element.caption, fontSize = (10f * element.captionScale).sp,
+                                    lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
+                                    color = credentialFontColor(settings.fontColor))
+                            }
+                        }
+                    } else {
+                        if (bitmap != null) Image(bitmap.asImageBitmap(),
+                            contentDescription = "Element graficzny legitymacji ${index + 1}",
+                            modifier = Modifier.size((46f * element.scale).dp), contentScale = ContentScale.Fit,
+                            colorFilter = if (index == 1) imageFilter else null)
+                        if (element.captionPosition != "Po lewej" && element.caption.isNotBlank()) {
+                            Text(element.caption, fontSize = (10f * element.captionScale).sp,
+                                lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
+                                color = credentialFontColor(settings.fontColor))
+                        }
+                    }
+                }
             }
         }
     }
