@@ -56,13 +56,11 @@ class SvgSafetyValidatorTest {
         val bytes = """<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"/>""".toByteArray(Charsets.UTF_8)
         assertTrue(SvgSafetyValidator.looksLikeSvg(bytes))
     }
-}
-
 
     @Test
     fun acceptsOnlySixDigitHexColorsForGeneratedSvg() {
         assertTrue(SvgSafetyValidator.requireSafeHexColor("#183A63") == "#183A63")
-        listOf("red", "#FFF", "#112233;url(https://evil.test)", "url(#x)", "#123456\\n").forEach { value ->
+        listOf("red", "#FFF", "#112233;url(https://evil.test)", "url(#x)", "#123456\n").forEach { value ->
             try {
                 SvgSafetyValidator.requireSafeHexColor(value)
                 throw AssertionError("Expected invalid color: $value")
