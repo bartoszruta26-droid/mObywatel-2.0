@@ -128,12 +128,14 @@ public final class OfflineEvidenceStore {
             }
             int nonceLength = data.readInt();
             if (nonceLength != 12) throw new SecurityException("Invalid AES-GCM nonce");
-            nonce = data.readNBytes(nonceLength);
+            nonce = new byte[nonceLength];
+            data.readFully(nonce);
             int cipherLength = data.readInt();
             if (cipherLength < 16 || cipherLength > MAX_ITEM_BYTES + 4096) {
                 throw new SecurityException("Invalid evidence cache payload size");
             }
-            ciphertext = data.readNBytes(cipherLength);
+            ciphertext = new byte[cipherLength];
+            data.readFully(ciphertext);
             if (ciphertext.length != cipherLength || data.read() != -1) {
                 throw new SecurityException("Truncated or trailing evidence cache data");
             }
@@ -186,7 +188,8 @@ public final class OfflineEvidenceStore {
             if (length <= 0 || length > MAX_ITEM_BYTES || length > in.available()) {
                 throw new SecurityException("Invalid cached evidence length");
             }
-            byte[] payload = in.readNBytes(length);
+            byte[] payload = new byte[length];
+            in.readFully(payload);
             if (payload.length != length || in.read() != -1) {
                 throw new SecurityException("Invalid cached evidence envelope");
             }
@@ -241,7 +244,8 @@ public final class OfflineEvidenceStore {
         for (File file : files) {
             if (total <= MAX_CACHE_BYTES) break;
             long size = file.length();
-            if (new AtomicFile(file).delete()) total -= size;
+            new AtomicFile(file).delete();
+            if (!file.exists()) total -= size;
         }
     }
 }
