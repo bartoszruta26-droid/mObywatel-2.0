@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 /**
- * JVM-side PAdES validation engine. Host it behind an authenticated backend API;
- * do not package the DSS validation stack into the Android APK.
+ * Shared JVM-side PAdES validation engine. It can run in a controlled backend
+ * or through the Android packaging module after device-level compatibility tests.
  */
 public final class PadesValidationEngine {
     public static final long MAX_PDF_BYTES = 50L * 1024L * 1024L;
