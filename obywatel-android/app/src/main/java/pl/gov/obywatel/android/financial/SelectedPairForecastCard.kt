@@ -70,21 +70,26 @@ fun SelectedPairForecastCard(
             if (loading) CircularProgressIndicator()
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             forecasts.forEach { item ->
-                val (profitColor, lossColor, status, statusColor) = when (item.significance) {
-                    PairRiskSignificance.PROFIT_ADVANTAGE -> Quad(
-                        Color(0xFF168447), Color(0xFFB56A20), "Istotna statystycznie przewaga zysku", Color(0xFF168447)
-                    )
-                    PairRiskSignificance.LOSS_ADVANTAGE -> Quad(
-                        Color(0xFFB3261E), Color(0xFFB3261E), "Ostrzeżenie: istotna przewaga straty", Color(0xFFB3261E)
-                    )
-                    PairRiskSignificance.INCONCLUSIVE -> Quad(
-                        MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.onSurface,
-                        "Brak istotnej przewagi zysku lub straty", MaterialTheme.colorScheme.secondary
-                    )
-                    PairRiskSignificance.INSUFFICIENT -> Quad(
-                        MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.secondary,
-                        "Za mało prób do oceny statystycznej", MaterialTheme.colorScheme.secondary
-                    )
+                val profitColor = when (item.significance) {
+                    PairRiskSignificance.PROFIT_ADVANTAGE -> Color(0xFF168447)
+                    PairRiskSignificance.LOSS_ADVANTAGE -> Color(0xFFB3261E)
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
+                val lossColor = when (item.significance) {
+                    PairRiskSignificance.PROFIT_ADVANTAGE -> Color(0xFFB56A20)
+                    PairRiskSignificance.LOSS_ADVANTAGE -> Color(0xFFB3261E)
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
+                val status = when (item.significance) {
+                    PairRiskSignificance.PROFIT_ADVANTAGE -> "Istotna statystycznie przewaga zysku"
+                    PairRiskSignificance.LOSS_ADVANTAGE -> "Ostrzeżenie: istotna przewaga straty"
+                    PairRiskSignificance.INCONCLUSIVE -> "Brak istotnej przewagi zysku lub straty"
+                    PairRiskSignificance.INSUFFICIENT -> "Za mało prób do oceny statystycznej"
+                }
+                val statusColor = when (item.significance) {
+                    PairRiskSignificance.PROFIT_ADVANTAGE -> Color(0xFF168447)
+                    PairRiskSignificance.LOSS_ADVANTAGE -> Color(0xFFB3261E)
+                    else -> MaterialTheme.colorScheme.secondary
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -141,14 +146,3 @@ fun SelectedPairForecastCard(
     }
 }
 
-private data class Quad(
-    val first: Color,
-    val second: Color,
-    val third: String,
-    val fourth: Color
-) {
-    operator fun component1() = first
-    operator fun component2() = second
-    operator fun component3() = third
-    operator fun component4() = fourth
-}
