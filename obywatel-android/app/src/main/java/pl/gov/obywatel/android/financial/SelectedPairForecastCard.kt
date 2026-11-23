@@ -44,7 +44,17 @@ fun SelectedPairForecastCard(
             error = null
             try {
                 forecasts = withContext(Dispatchers.Default) {
-                    PairRiskForecastEngine.forecast(values, settings)
+                    PairRiskForecastEngine.forecast(
+                        values,
+                        settings,
+                        listOf(
+                            ForecastHorizon.MONTH,
+                            ForecastHorizon.TWO_MONTHS,
+                            ForecastHorizon.QUARTER,
+                            ForecastHorizon.HALF_YEAR,
+                            ForecastHorizon.YEAR
+                        )
+                    )
                 }
             } catch (exception: Exception) {
                 forecasts = emptyList()
@@ -67,6 +77,12 @@ fun SelectedPairForecastCard(
                     "Nie uwzględniają spreadu, prowizji ani podatków.",
                 style = MaterialTheme.typography.bodySmall
             )
+            Text(
+                "Walidacja wyłącznie dla tej pary: ${values.size} obserwacji historycznych. " +
+                    "Wykres może pokazywać krótszy zakres; szanse liczone są z dłuższej historii tej samej pary.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.secondary
+            )
             if (loading) CircularProgressIndicator()
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             forecasts.forEach { item ->
@@ -84,6 +100,7 @@ fun SelectedPairForecastCard(
                     PairRiskSignificance.PROFIT_ADVANTAGE -> "Istotna statystycznie przewaga zysku"
                     PairRiskSignificance.LOSS_ADVANTAGE -> "Ostrzeżenie: istotna przewaga straty"
                     PairRiskSignificance.INCONCLUSIVE -> "Brak istotnej przewagi zysku lub straty"
+                    PairRiskSignificance.LOW_SAMPLE -> "Wstępny szacunek — mała próba; bez wniosku o przewadze"
                     PairRiskSignificance.INSUFFICIENT -> if (item.direction == ForecastDirection.NEUTRAL)
                         "Model nie wskazuje kierunku — brak sygnału transakcyjnego"
                     else "Za mało niezależnych prób do oceny statystycznej"
@@ -139,8 +156,9 @@ fun SelectedPairForecastCard(
                 }
             }
             Text(
-                "Walidacja wykorzystuje niepokrywające się okresy wyników. Kolor przewagi opiera się na konserwatywnym " +
-                    "porównaniu 95-procentowych przedziałów Wilsona dla zysku i straty. Jeśli przedziały się nakładają, wynik pozostaje neutralny.",
+                "Walidacja wykorzystuje niepokrywające się okresy wyników. Szacunki od 10 do 19 prób są oznaczane jako wstępne; " +
+                    "kolor przewagi pojawia się dopiero od 20 prób i po rozdzieleniu 95-procentowych przedziałów Wilsona. " +
+                    "Wyniki nie uwzględniają spreadu, prowizji ani podatków.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary
             )

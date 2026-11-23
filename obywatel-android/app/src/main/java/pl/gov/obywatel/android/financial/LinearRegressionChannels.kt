@@ -21,7 +21,6 @@ data class RegressionChannelSettings(
     val length6: Int = 89,
     val length7: Int = 55,
     val deviationMultiplier: Double = 2.41,
-    val extendLines: Boolean = true,
     val showFibonacci: Boolean = true,
     val showBroken: Boolean = false,
     val width1: Float = 1f,

@@ -78,6 +78,8 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             .onSuccess { discovered -> if (discovered.isNotEmpty()) instruments = discovered }
     }
     var points by remember { mutableStateOf<List<PairPricePoint>>(emptyList()) }
+    // Ryzyko liczymy z długiej historii tej samej pary, niezależnie od zakresu widocznego wykresu.
+    var forecastValues by remember { mutableStateOf<List<Double>>(emptyList()) }
     var selected by remember { mutableStateOf<PairPricePoint?>(null) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -95,7 +97,6 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             length6 = prefs.getInt("reg_fib_length_6", 89),
             length7 = prefs.getInt("reg_fib_length_7", 55),
             deviationMultiplier = prefs.getFloat("reg_deviation", 2.41f).toDouble(),
-            extendLines = prefs.getBoolean("reg_extend", true),
             showFibonacci = prefs.getBoolean("reg_fibonacci", true),
             showBroken = prefs.getBoolean("reg_broken", false),
             width1 = prefs.getFloat("reg_fib_width_1", 1f),
@@ -124,7 +125,6 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     fun saveRegression() {
         val editor = prefs.edit()
             .putFloat("reg_deviation", regression.deviationMultiplier.toFloat())
-            .putBoolean("reg_extend", regression.extendLines)
             .putBoolean("reg_fibonacci", regression.showFibonacci)
             .putBoolean("reg_broken", regression.showBroken)
         regression.lengths.forEachIndexed { index, value ->
@@ -140,23 +140,33 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     }
 
     fun load() {
-        if (base == quote) { error = "Wybierz dwa różne instrumenty."; points = emptyList(); return }
+        if (base == quote) { error = "Wybierz dwa różne instrumenty."; points = emptyList(); forecastValues = emptyList(); return }
         scope.launch {
             loading = true; error = null; selected = null
             try {
                 val end = LocalDate.now()
                 val start = end.minusDays(period.days - 1)
-                val data = withContext(Dispatchers.IO) {
-                    pairRepository.history(base, quote, start, end)
+                // Jedno pobranie 20-letniej historii zasila wykres i walidację prognoz.
+                // Widoczny wykres nadal pokazuje wyłącznie wybrany przez użytkownika okres.
+                val fullHistory = withContext(Dispatchers.IO) {
+                    try {
+                        pairRepository.history(base, quote, end.minusYears(20), end)
+                    } catch (_: Exception) {
+                        // Krótki wykres nadal działa, jeśli dostawca nie zwróci pełnych 20 lat.
+                        pairRepository.history(base, quote, start, end)
+                    }
                 }
+                val data = fullHistory.filter { !it.date.isBefore(start) }
                 require(data.isNotEmpty()) {
                     "Brak wspólnych notowań dla ${base}/${quote} w wybranym okresie."
                 }
                 points = data
+                forecastValues = fullHistory.map { it.value.toDouble() }
                 source = "Źródło: Frankfurter • dane referencyjne banków centralnych i innych oficjalnych dostawców"
                 save()
             } catch (e: Exception) {
                 points = emptyList()
+                forecastValues = emptyList()
                 error = e.message ?: "Nie udało się pobrać notowań."
             } finally { loading = false }
         }
@@ -169,11 +179,15 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN)
     else null
     val relativeValues = remember(points) { pairRelativePerformance(points) }
-    val rawPairValues = remember(points) { points.map { it.value.toDouble() } }
     val minPercent = relativeValues.minOrNull() ?: -1.0
     val maxPercent = relativeValues.maxOrNull() ?: 1.0
-    var viewport by remember(points) {
-        mutableStateOf(PairChartViewport.fit(minPercent, maxPercent))
+    // Skala Y obejmuje zarówno przebieg procentowy, jak i wszystkie widoczne
+    // kanały regresji; nie obcinamy pasm na krawędzi wykresu.
+    val regressionBounds = remember(relativeValues, regression) {
+        RegressionPlotGeometry.fitRange(relativeValues, regression)
+    }
+    var viewport by remember(points, regression) {
+        mutableStateOf(PairChartViewport.fit(regressionBounds.first, regressionBounds.second))
     }
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -184,7 +198,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 DropdownMenu(baseMenu, onDismissRequest = { baseMenu = false }) {
                     instruments.filter { it.code != quote }.forEach { item ->
                         DropdownMenuItem(text = { Text(item.title) }, onClick = {
-                            base = item.code; baseMenu = false; points = emptyList(); save()
+                            base = item.code; baseMenu = false; points = emptyList(); forecastValues = emptyList(); save()
                         })
                     }
                 }
@@ -195,7 +209,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 DropdownMenu(quoteMenu, onDismissRequest = { quoteMenu = false }) {
                     instruments.filter { it.code != base }.forEach { item ->
                         DropdownMenuItem(text = { Text(item.title) }, onClick = {
-                            quote = item.code; quoteMenu = false; points = emptyList(); save()
+                            quote = item.code; quoteMenu = false; points = emptyList(); forecastValues = emptyList(); save()
                         })
                     }
                 }
@@ -253,10 +267,6 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                     Slider(regression.deviationMultiplier.toFloat(), { regression = regression.copy(deviationMultiplier = it.toDouble()) },
                         valueRange = 0.1f..5f, steps = 48, onValueChangeFinished = ::saveRegression)
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        Checkbox(regression.extendLines, { regression = regression.copy(extendLines = it); saveRegression() })
-                        Text("Przedłuż kanały w prawo")
-                    }
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Checkbox(regression.showFibonacci, { regression = regression.copy(showFibonacci = it); saveRegression() })
                         Text("Poziomy Fibonacciego")
                     }
@@ -299,12 +309,12 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 Text("Źródło nie udostępnia rzeczywistych danych OHLC. Pokazujemy kurs referencyjny jako linię, bez sztucznych świec i wolumenu.",
                     color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
             }
-            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote względem pierwszej obserwacji okresu.")
+            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote względem pierwszej obserwacji okresu. Regresja jest dopasowana do tych samych punktów procentowych, bez projekcji poza ostatnią obserwację.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("●", color = MaterialTheme.colorScheme.primary)
                 Text("$base/$quote • zmiana relacji (%)", style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = { viewport = viewport.reset(minPercent, maxPercent) }) {
+                TextButton(onClick = { viewport = viewport.reset(regressionBounds.first, regressionBounds.second) }) {
                     Text("Resetuj widok")
                 }
             }
@@ -322,11 +332,9 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             )
             Text("Gest dwoma palcami: zmiana rozstawu poziomego skaluje daty, pionowego skaluje procenty; przesunięcie obu palców przesuwa wykres.",
                 style = MaterialTheme.typography.bodySmall)
-            val activeRegressionLengths = LinearRegressionChannels.calculateAll(
+            val activeRegressionLengths = RegressionPlotGeometry.channelsForPlot(
                 relativeValues, regression
-            ).mapIndexedNotNull { index, channel ->
-                channel?.let { regression.lengths[index] }
-            }
+            ).mapNotNull { it?.length }
             Text(
                 if (activeRegressionLengths.isEmpty()) "Brak aktywnych kanałów: wybierz dłuższy okres lub krótsze długości regresji."
                 else "Aktywne kanały regresji: ${activeRegressionLengths.joinToString(" / ")}",
@@ -355,7 +363,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             }
             Text("${points.size} punktów • ${points.first().date} – ${points.last().date}",
                 style = MaterialTheme.typography.bodySmall)
-            SelectedPairForecastCard(base, quote, rawPairValues, regression, Modifier.fillMaxWidth())
+            SelectedPairForecastCard(base, quote, forecastValues, regression, Modifier.fillMaxWidth())
         } else if (!loading) Text("Wybierz dwa różne instrumenty i naciśnij „Pokaż”.")
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(source, style = MaterialTheme.typography.bodySmall)
@@ -381,7 +389,7 @@ private fun PairHistoryChart(
     val grid = MaterialTheme.colorScheme.outlineVariant
     val marker = MaterialTheme.colorScheme.tertiary
     val labelColor = MaterialTheme.colorScheme.onSurface.toArgb()
-    val channels = LinearRegressionChannels.calculateAll(relativeValues, regression)
+    val channels = RegressionPlotGeometry.channelsForPlot(relativeValues, regression)
     val plotDateFormatter = remember { DateTimeFormatter.ofPattern("dd.MM.yy", Locale.getDefault()) }
     val latestViewport by rememberUpdatedState(viewport)
     val latestViewportCallback by rememberUpdatedState(onViewportChange)
@@ -527,16 +535,16 @@ private fun PairHistoryChart(
                 val color = if (regression.showBroken && channel.brokenDirection != 0)
                     Color(0xFF2878D0) else regressionColors[channelIndex]
                 val width = regression.widths[channelIndex].dp.toPx()
-                val endProjection = if (regression.extendLines)
-                    channel.endIndex + relativeValues.lastIndex * 0.19
-                else channel.endIndex.toDouble()
                 fun regressionLine(offset: Double, strokeWidth: Float, dashed: Boolean) {
-                    val startValue = channel.valueAt(channel.startIndex.toDouble()) + offset
-                    val endValue = channel.valueAt(endProjection) + offset
-                    val x1 = xFor(channel.startIndex.toDouble())
-                    val x2 = if (regression.extendLines) right else xFor(channel.endIndex.toDouble())
-                    val y1 = yFor(startValue)
-                    val y2 = yFor(endValue)
+                    // X i Y muszą opisywać dokładnie te same indeksy szeregu.
+                    // Nie rysujemy ekstrapolacji z przyszłej daty na krawędzi ostatniej obserwacji.
+                    val segment = RegressionPlotGeometry.visibleSegment(
+                        channel, firstIndex, lastIndex, offset
+                    ) ?: return
+                    val x1 = xFor(segment.startIndex)
+                    val x2 = xFor(segment.endIndex)
+                    val y1 = yFor(segment.startValue)
+                    val y2 = yFor(segment.endValue)
                     if (!dashed) drawLine(color, Offset(x1, y1), Offset(x2, y2), strokeWidth)
                     else {
                         val segments = 28
