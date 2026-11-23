@@ -62,8 +62,8 @@ fun SelectedPairForecastCard(
         ) {
             Text("Ryzyko wybranej pary: $base/$quote", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Prawdopodobieństwa dotyczą wyłącznie pary widocznej na wykresie. Zysk oznacza wzrost wartości " +
-                    "instrumentu bazowego względem kwotowanego (pozycja długa na $base); strata oznacza spadek. " +
+                "Prawdopodobieństwa dotyczą wyłącznie pary widocznej na wykresie. Zysk oznacza ruch zgodny z sygnałem modelu " +
+                    "(pozycja długa przy prognozie wzrostu lub krótka przy prognozie spadku); strata oznacza ruch przeciwny. " +
                     "Nie uwzględniają spreadu, prowizji ani podatków.",
                 style = MaterialTheme.typography.bodySmall
             )
