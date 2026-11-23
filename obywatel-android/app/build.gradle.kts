@@ -60,6 +60,14 @@ android {
     }
 
     buildFeatures { compose = true }
+
+    // DSS/PDFBox dependencies contain duplicate informational Maven metadata.
+    // DEPENDENCIES is not runtime code; exclude it from the APK merge.
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
+    }
 }
 
 kotlin {
