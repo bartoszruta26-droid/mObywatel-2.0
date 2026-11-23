@@ -9,6 +9,46 @@ import org.junit.Test
 
 class LegitimacyPreviewSettingsTest {
     @Test
+    fun sharedCredentialGraphicsDefaultToFlagAndCaptionedEmblemSlots() {
+        val elements = defaultCredentialGraphicElements(LegitimacyPreviewSettings())
+        assertEquals(2, elements.size)
+        assertEquals("graphic-1", elements[0].id)
+        assertEquals("graphic-2", elements[1].id)
+        assertEquals("Rzeczpospolita\nPolska", elements[1].caption)
+        assertEquals("Po prawej", elements[1].captionPosition)
+    }
+
+    @Test
+    fun sharedCredentialGraphicsCanUseFourUnrestrictedAssetsAndOptionalCaptions() {
+        val elements = (1..5).map { index ->
+            CredentialGraphicElement(
+                id = "custom-$index", assetId = "asset-$index",
+                caption = if (index == 2) "" else "Opis $index",
+                x = index * 12f, y = index * 5f, scale = 1f + index / 10f
+            )
+        }
+        val settings = LegitimacyPreviewSettings(graphicElements = elements)
+        val effective = defaultCredentialGraphicElements(settings)
+        assertEquals("Maksymalnie cztery elementy powinny trafić do układu.", 4, effective.size)
+        assertEquals("asset-1", effective[0].assetId)
+        assertEquals("", effective[1].caption)
+        assertEquals("asset-4", effective[3].assetId)
+    }
+
+    @Test
+    fun sharedGraphicElementsOverridePerDocumentSlotsWithoutReplacingDocumentAssets() {
+        val sharedElements = listOf(
+            CredentialGraphicElement("one", "arbitrary-symbol", "Nazwa znaku", x = 14f, scale = 1.4f),
+            CredentialGraphicElement("two", "arbitrary-seal", "", x = 80f)
+        )
+        val document = LegitimacyPreviewSettings(crestAssetId = "personal-crest", flagAssetId = "personal-flag")
+        val shared = LegitimacyPreviewSettings(graphicElements = sharedElements)
+        val merged = mergeSharedLegitimacyAppearance(document, shared)
+        assertEquals(sharedElements, merged.graphicElements)
+        assertEquals("personal-crest", merged.crestAssetId)
+        assertEquals("personal-flag", merged.flagAssetId)
+    }
+    @Test
     fun reverseSideIsHiddenByDefault() {
         assertFalse("Rewers wszystkich dokumentów ma być domyślnie ukryty.",
             LegitimacyPreviewSettings().showReverse)
