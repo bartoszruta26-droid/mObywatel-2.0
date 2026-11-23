@@ -14,7 +14,7 @@ data class PairChartViewport(
 ) {
     init {
         require(startFraction.isFinite() && endFraction.isFinite())
-        require(startFraction >= 0.0 && endFraction <= 1.0 && startFraction < endFraction)
+        require(startFraction >= 0.0 && endFraction <= 3.0 && startFraction < endFraction)
         require(minPercent.isFinite() && maxPercent.isFinite() && minPercent < maxPercent)
     }
 
@@ -30,10 +30,10 @@ data class PairChartViewport(
         val ax = anchorX.coerceIn(0.0, 1.0)
         val ay = anchorY.coerceIn(0.0, 1.0)
         val oldXSpan = endFraction - startFraction
-        val newXSpan = (oldXSpan / zoomX.coerceIn(0.05, 20.0)).coerceIn(0.01, 1.0)
+        val newXSpan = (oldXSpan / zoomX.coerceIn(0.05, 20.0)).coerceIn(0.01, 3.0)
         val xAnchor = startFraction + ax * oldXSpan
         val rawStart = xAnchor - ax * newXSpan - panX * newXSpan
-        val newStart = rawStart.coerceIn(0.0, 1.0 - newXSpan)
+        val newStart = rawStart.coerceIn(0.0, (3.0 - newXSpan).coerceAtLeast(0.0))
 
         val oldYSpan = maxPercent - minPercent
         val newYSpan = (oldYSpan / zoomY.coerceIn(0.05, 20.0)).coerceIn(0.01, 100_000.0)
@@ -53,12 +53,17 @@ data class PairChartViewport(
         fit(fullMinPercent, fullMaxPercent)
 
     companion object {
-        fun fit(minPercent: Double, maxPercent: Double): PairChartViewport {
+        fun fit(
+            minPercent: Double,
+            maxPercent: Double,
+            endFraction: Double = 1.0
+        ): PairChartViewport {
             val low = min(minPercent, maxPercent)
             val high = max(minPercent, maxPercent)
             val rawSpan = (high - low).takeIf { it > 0.0 } ?: 1.0
             val padding = max(rawSpan * 0.08, 0.1)
             return PairChartViewport(
+                endFraction = endFraction.coerceIn(0.01, 3.0),
                 minPercent = low - padding,
                 maxPercent = high + padding
             )
