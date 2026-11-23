@@ -75,6 +75,9 @@ android {
             excludes += "xsd/bindings.xml"
             // JAXB episode descriptors are build-time metadata and are not needed at runtime.
             excludes += "META-INF/sun-jaxb.episode"
+            // DSS modules ship OASIS catalog entries at the same path; concatenate
+            // catalogs so schema/public/system mappings from every module remain available.
+            merges += "xsd/catalog.cat"
         }
     }
 }
