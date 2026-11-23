@@ -332,11 +332,9 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             )
             Text("Gest dwoma palcami: zmiana rozstawu poziomego skaluje daty, pionowego skaluje procenty; przesunięcie obu palców przesuwa wykres.",
                 style = MaterialTheme.typography.bodySmall)
-            val activeRegressionLengths = LinearRegressionChannels.calculateAll(
+            val activeRegressionLengths = RegressionPlotGeometry.channelsForPlot(
                 relativeValues, regression
-            ).mapIndexedNotNull { index, channel ->
-                channel?.let { regression.lengths[index] }
-            }
+            ).mapNotNull { it?.length }
             Text(
                 if (activeRegressionLengths.isEmpty()) "Brak aktywnych kanałów: wybierz dłuższy okres lub krótsze długości regresji."
                 else "Aktywne kanały regresji: ${activeRegressionLengths.joinToString(" / ")}",
@@ -391,7 +389,7 @@ private fun PairHistoryChart(
     val grid = MaterialTheme.colorScheme.outlineVariant
     val marker = MaterialTheme.colorScheme.tertiary
     val labelColor = MaterialTheme.colorScheme.onSurface.toArgb()
-    val channels = LinearRegressionChannels.calculateAll(relativeValues, regression)
+    val channels = RegressionPlotGeometry.channelsForPlot(relativeValues, regression)
     val plotDateFormatter = remember { DateTimeFormatter.ofPattern("dd.MM.yy", Locale.getDefault()) }
     val latestViewport by rememberUpdatedState(viewport)
     val latestViewportCallback by rememberUpdatedState(onViewportChange)
