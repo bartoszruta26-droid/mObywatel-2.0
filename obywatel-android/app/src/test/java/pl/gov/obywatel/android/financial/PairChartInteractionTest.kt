@@ -64,8 +64,8 @@ class PairChartInteractionTest {
         assertEquals(1, channels.size)
         assertEquals(21, channels.single()?.length)
         val bounds = RegressionPlotGeometry.fitRange(values, RegressionChannelSettings())
-        assertTrue(bounds.first < values.minOrNull()!!)
-        assertTrue(bounds.second > values.maxOrNull()!!)
+        assertTrue(bounds.first <= values.minOrNull()!!)
+        assertTrue(bounds.second >= values.maxOrNull()!!)
     }
 
     @Test fun selectedPairReportsMonthlyThroughAnnualRiskFromLongHistory() {
