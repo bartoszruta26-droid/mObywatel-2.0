@@ -160,7 +160,10 @@ public final class OfflineEvidenceStore {
     }
 
     public synchronized boolean delete(EvidenceType type, String cacheKey) {
-        return new AtomicFile(targetFile(type, cacheKey)).delete();
+        File target = targetFile(type, cacheKey);
+        boolean existed = target.exists();
+        new AtomicFile(target).delete();
+        return existed && !target.exists();
     }
 
     private static byte[] encode(
