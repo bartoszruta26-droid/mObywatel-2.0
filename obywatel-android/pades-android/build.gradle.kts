@@ -24,6 +24,7 @@ android {
 }
 
 dependencies {
+    api(project(":pades-validator"))
     // Keep DSS pinned to the same release as the JVM validator.
     api("eu.europa.ec.joinup.sd-dss:dss-validation:6.5.1")
     api("eu.europa.ec.joinup.sd-dss:dss-pades:6.5.1")
