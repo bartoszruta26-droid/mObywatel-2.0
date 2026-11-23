@@ -58,6 +58,11 @@ class PairChartInteractionTest {
         assertTrue(bounds.second >= values.maxOrNull()!!)
     }
 
+    @Test fun emptyChartHistoryUsesSafeDefaultPercentBounds() {
+        assertEquals(-1.0, RegressionPlotGeometry.fitRange(emptyList(), RegressionChannelSettings()).first, 0.0)
+        assertEquals(1.0, RegressionPlotGeometry.fitRange(emptyList(), RegressionChannelSettings()).second, 0.0)
+    }
+
     @Test fun shortChartPeriodUsesAdaptiveRegressionWhenConfiguredWindowsDoNotFit() {
         val values = (0 until 21).map { 100.0 + it * 0.1 + kotlin.math.sin(it / 4.0) }
         val channels = RegressionPlotGeometry.channelsForPlot(values, RegressionChannelSettings())
