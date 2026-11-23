@@ -71,3 +71,25 @@ class SvgSafetyValidatorTest {
             }
         }
     }
+
+
+    @Test
+    fun certificateSignatureAndStampGeneratorsEscapeTextAndValidateColors() {
+        val signature = makeTextSignatureSvg("Fundacja <Aria> & partnerzy", "#183A63").toString(Charsets.UTF_8)
+        assertTrue(signature.contains("Fundacja &lt;Aria&gt; &amp; partnerzy"))
+        SvgSafetyValidator.validateMarkupSecurity(signature)
+
+        val stamp = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "F-2026/01", "#244B75").toString(Charsets.UTF_8)
+        assertTrue(stamp.contains("WZÓR GRAFICZNY"))
+        SvgSafetyValidator.validateMarkupSecurity(stamp)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun signatureGeneratorRejectsUnsafeColorValue() {
+        makeTextSignatureSvg("Jan Kowalski", "#112233;url(https://attacker.invalid)")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun stampGeneratorRejectsUnsafeColorValue() {
+        makeStampSvg("Fundacja", "PIECZĘĆ", "1", "url(#malicious)")
+    }
