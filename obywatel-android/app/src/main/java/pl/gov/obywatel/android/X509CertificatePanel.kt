@@ -100,9 +100,9 @@ internal fun X509CertificatePanel() {
         }, modifier = Modifier.fillMaxWidth()) { Text("Generuj klucz EC P-256 w Android Keystore") }
         OutlinedButton(onClick = {
             runCatching {
-                pendingCsr = X509CertificateService.createCsr(alias.trim(), subject.trim())
+                pendingCsr = X509CertificateService.csrPem(\n                    X509CertificateService.createCsr(alias.trim(), subject.trim())\n                ).toByteArray(Charsets.US_ASCII)
                 report = "Utworzono żądanie PKCS#10 CSR podpisane kluczem z Android Keystore."
-                csrSaver.launch("owd-${alias.trim()}.csr")
+                csrSaver.launch("owd-${alias.trim()}.csr.pem")
             }.onFailure { report = "Nie udało się utworzyć CSR: ${it.message}" }
         }, enabled = keyReady || alias.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
             Text("Utwórz i eksportuj CSR")
