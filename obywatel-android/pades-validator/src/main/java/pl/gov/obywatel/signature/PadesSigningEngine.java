@@ -17,6 +17,7 @@ import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -92,7 +93,7 @@ public final class PadesSigningEngine {
             byte[] originalPdf,
             X509Certificate signingCertificate,
             List<X509Certificate> certificateChain,
-            CommonCertificateVerifier certificateVerifier) throws IOException {
+            CommonCertificateVerifier certificateVerifier) throws IOException, GeneralSecurityException {
         requireOwner(authenticatedOwnerId);
         Objects.requireNonNull(originalPdf, "originalPdf");
         Objects.requireNonNull(signingCertificate, "signingCertificate");
@@ -132,7 +133,7 @@ public final class PadesSigningEngine {
         parameters.setDigestAlgorithm(DigestAlgorithm.SHA256);
         parameters.setSigningCertificate(signingToken);
         parameters.setCertificateChain(dssChain);
-        parameters.setSigningDate(new Date());
+        parameters.bLevel().setSigningDate(new Date());
 
         PAdESService service = new PAdESService(certificateVerifier);
         ToBeSigned dataToSign = service.getDataToSign(source, parameters);
@@ -170,6 +171,9 @@ public final class PadesSigningEngine {
         }
         if (!session.ownerId.equals(authenticatedOwnerId)) {
             throw new SecurityException("Signing session belongs to another authenticated user");
+        }
+        if (!sessions.remove(sessionId, session)) {
+            throw new IOException("Signing session has already been consumed");
         }
         if (System.currentTimeMillis() - session.createdAt > SESSION_TTL_MILLIS) {
             sessions.remove(sessionId, session);
