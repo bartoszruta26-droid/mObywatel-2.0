@@ -29,6 +29,18 @@ public class OfflineEvidenceStoreTest {
             assertTrue(evidence.fresh());
             assertArrayEquals(payload, evidence.payload());
             assertEquals(now, evidence.fetchedAtEpochMillis());
+            java.io.File cacheDirectory = new java.io.File(
+                    InstrumentationRegistry.getInstrumentation().getTargetContext().getNoBackupFilesDir(),
+                    "pades-evidence-v1");
+            java.io.File[] encryptedFiles = cacheDirectory.listFiles((dir, name) -> name.endsWith(".bin"));
+            assertNotNull(encryptedFiles);
+            assertTrue("Expected an encrypted cache entry", encryptedFiles.length > 0);
+            for (java.io.File encryptedFile : encryptedFiles) {
+                byte[] stored = java.nio.file.Files.readAllBytes(encryptedFile.toPath());
+                String raw = new String(stored, java.nio.charset.StandardCharsets.UTF_8);
+                assertFalse("Plaintext evidence must not be present on disk",
+                        raw.contains("signed-trusted-list-fixture"));
+            }
         } finally {
             store.delete(OfflineEvidenceStore.EvidenceType.EU_LOTL, key);
         }
