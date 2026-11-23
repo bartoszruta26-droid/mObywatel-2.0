@@ -35,7 +35,7 @@ import java.util.Locale
 @Composable
 internal fun X509CertificatePanel() {
     val context = LocalContext.current
-    var certificates by remember { mutableStateOf<List<X509Certificate>>(emptyList()) }
+    var certificates by remember { mutableStateOf<List<X509Certificate>>(emptyList()) }\n    var certificateBundleBytes by remember { mutableStateOf<ByteArray?>(null) }
     var selectedLeaf by remember { mutableStateOf(0) }
     var selectedAnchor by remember { mutableStateOf(-1) }
     var alias by remember { mutableStateOf("owd-signing-key") }
@@ -61,7 +61,7 @@ internal fun X509CertificatePanel() {
                 }
                 output.toByteArray()
             } ?: error("Nie można odczytać wybranego pliku.")
-            certificates = X509CertificateService.parseCertificates(bytes)
+            certificateBundleBytes = bytes\n            certificates = X509CertificateService.parseCertificates(bytes)
             selectedLeaf = 0
             selectedAnchor = -1
             issuedCertificateMatches = null
@@ -136,8 +136,21 @@ internal fun X509CertificatePanel() {
                         OutlinedButton(onClick = {
                             runCatching {
                                 X509CertificateService.requireIssuedCertificateMatchesKey(alias.trim(), certificate)
+                                val bundle = certificateBundleBytes ?: error("Zaimportuj ponownie plik certyfikatu CA.")
+                                val existing = DocumentBrandStore.list(context).firstOrNull {
+                                    it.kind == "Certyfikat" && it.owner == alias.trim() &&
+                                        it.label == "Łańcuch X.509 — ${alias.trim()}"
+                                }
+                                if (existing == null) {
+                                    DocumentBrandStore.importBytes(
+                                        context, alias.trim(), "Certyfikat",
+                                        "Łańcuch X.509 — ${alias.trim()}", bundle,
+                                        rights = "Pakiet certyfikatów CA powiązany z aliasem Android Keystore po porównaniu klucza publicznego. Zaufanie i unieważnienie wymagają osobnej walidacji.",
+                                        mimeType = "application/octet-stream"
+                                    )
+                                }
                                 issuedCertificateMatches = true
-                                report = "Certyfikat CA zawiera klucz publiczny odpowiadający kluczowi w Android Keystore."
+                                report = "Certyfikat CA odpowiada kluczowi publicznemu w Android Keystore. Pakiet certyfikatów zapisano w szyfrowanej bibliotece zasobów pod aliasem ${alias.trim()}."
                             }.onFailure {
                                 issuedCertificateMatches = false
                                 report = "Certyfikat nie odpowiada kluczowi albo klucz nie jest dostępny: ${it.message}"
