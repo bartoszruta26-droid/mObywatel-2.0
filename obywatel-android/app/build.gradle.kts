@@ -68,6 +68,8 @@ android {
             excludes += "META-INF/DEPENDENCIES"
             // Preserve and concatenate third-party license texts instead of dropping them.
             merges += "META-INF/LICENSE.md"
+            // Preserve the distinct upstream attribution notices in the packaged APK.
+            merges += "META-INF/NOTICE.md"
             // JAXB build-time binding descriptors are not needed by the Android runtime.
             // Exclude duplicate metadata rather than concatenate invalid XML documents.
             excludes += "xsd/bindings.xml"
