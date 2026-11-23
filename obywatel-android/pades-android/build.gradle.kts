@@ -21,6 +21,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    // The library's instrumentation APK packages the DSS/PDFBox dependency graph
+    // independently of the app module, so app-level resource rules do not apply.
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "xsd/bindings.xml"
+            excludes += "META-INF/sun-jaxb.episode"
+            merges += "META-INF/LICENSE.md"
+            merges += "META-INF/NOTICE.md"
+            merges += "xsd/catalog.cat"
+        }
+    }
 }
 
 dependencies {
