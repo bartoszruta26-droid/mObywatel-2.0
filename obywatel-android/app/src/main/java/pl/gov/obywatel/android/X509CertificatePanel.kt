@@ -35,7 +35,8 @@ import java.util.Locale
 @Composable
 internal fun X509CertificatePanel() {
     val context = LocalContext.current
-    var certificates by remember { mutableStateOf<List<X509Certificate>>(emptyList()) }\n    var certificateBundleBytes by remember { mutableStateOf<ByteArray?>(null) }
+    var certificates by remember { mutableStateOf<List<X509Certificate>>(emptyList()) }
+    var certificateBundleBytes by remember { mutableStateOf<ByteArray?>(null) }
     var selectedLeaf by remember { mutableStateOf(0) }
     var selectedAnchor by remember { mutableStateOf(-1) }
     var alias by remember { mutableStateOf("owd-signing-key") }
@@ -61,7 +62,8 @@ internal fun X509CertificatePanel() {
                 }
                 output.toByteArray()
             } ?: error("Nie można odczytać wybranego pliku.")
-            certificateBundleBytes = bytes\n            certificates = X509CertificateService.parseCertificates(bytes)
+            certificateBundleBytes = bytes
+            certificates = X509CertificateService.parseCertificates(bytes)
             selectedLeaf = 0
             selectedAnchor = -1
             issuedCertificateMatches = null
