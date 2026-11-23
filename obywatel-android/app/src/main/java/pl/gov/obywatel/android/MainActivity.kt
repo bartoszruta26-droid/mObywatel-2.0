@@ -1631,9 +1631,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     settingsDocumentEditor == "imported" -> CredentialAppearanceEditorEntry("imported", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         DocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
-                    settingsDocumentEditor == "signed_pdf" -> CredentialAppearanceEditorEntry("signed_pdf", onOpenAppearance = { credentialAppearanceTarget = it }) {
-                        SignedPdfDocumentsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, allowImport = true, readOnly = false)
-                    }
+                    settingsDocumentEditor == "signed_pdf" -> SignedPdfDocumentsScreen(onBack = { settingsDocumentEditor = null; showCertificates = true }, allowImport = true, readOnly = false)
                     settingsDocumentEditor == "professional" -> CredentialAppearanceEditorEntry("professional", onOpenAppearance = { credentialAppearanceTarget = it }) {
                         ProfessionalQualificationsScreen(onBack = { settingsDocumentEditor = null; showSettingsMenu = true }, readOnly = false)
                     }
