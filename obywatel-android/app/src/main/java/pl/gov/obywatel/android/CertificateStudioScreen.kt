@@ -256,7 +256,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 }
                 OutlinedTextField(resourceName, { resourceName = it }, label = { Text("Nazwa zasobu") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(resourceOwner, { resourceOwner = it }, label = { Text("Właściciel / organizacja") }, modifier = Modifier.fillMaxWidth())
-                OutlinedButton(onClick = { importPicker.launch(arrayOf("image/svg+xml", "image/png", "image/jpeg", "image/webp", "application/pdf")) },
+                OutlinedButton(onClick = { importPicker.launch(arrayOf("image/svg+xml", "image/png", "image/jpeg", "image/webp", "application/pdf", "application/pkix-cert", "application/x-x509-ca-cert", "application/x-pem-file", "application/xml", "text/xml", "text/plain", "application/octet-stream")) },
                     modifier = Modifier.fillMaxWidth()) { Text("Dodaj zasób z pliku") }
                 assets.forEach { asset ->
                     Card(Modifier.fillMaxWidth()) {
@@ -274,10 +274,14 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                                     .trim('-').take(48).ifBlank { "zasob" }
                                 val extension = when {
                                     asset.mimeType == "application/pdf" -> ".pdf"
-                                    asset.file.contains(".svg") -> ".svg"
+                                    asset.file.contains(".svg") || asset.mimeType == "image/svg+xml" -> ".svg"
                                     asset.mimeType == "image/png" -> ".png"
                                     asset.mimeType == "image/jpeg" -> ".jpg"
                                     asset.mimeType == "image/webp" -> ".webp"
+                                    asset.mimeType == "application/pkix-cert" || asset.mimeType == "application/x-x509-ca-cert" -> ".cer"
+                                    asset.mimeType == "application/x-pem-file" || asset.mimeType == "text/plain" && asset.kind == "Certyfikat" -> ".pem"
+                                    asset.mimeType == "application/xml" || asset.mimeType == "text/xml" -> ".xml"
+                                    asset.kind == "Certyfikat" -> ".cer"
                                     else -> ".bin"
                                 }
                                 exportPicker.launch(baseName + extension)
