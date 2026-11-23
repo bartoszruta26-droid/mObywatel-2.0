@@ -15,7 +15,7 @@ class LegitimacyPreviewSettingsTest {
         assertEquals("graphic-1", elements[0].id)
         assertEquals("graphic-2", elements[1].id)
         assertEquals("Rzeczpospolita\nPolska", elements[1].caption)
-        assertEquals("Po prawej", elements[1].captionPosition)
+        assertEquals("Pod herbem", elements[1].captionPosition)
     }
 
     @Test
