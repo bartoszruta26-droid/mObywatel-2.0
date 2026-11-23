@@ -95,7 +95,7 @@ private val certificateAssetKinds = setOf(
 )
 
 @Composable
-internal fun CertificateStudioScreen(onBack: () -> Unit) {
+internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificates: () -> Unit = {}) {
     val context = LocalContext.current
     var assets by remember { mutableStateOf(DocumentBrandStore.list(context).filter { it.kind in certificateAssetKinds }) }
     var section by remember { mutableStateOf("generator") }
@@ -226,6 +226,9 @@ internal fun CertificateStudioScreen(onBack: () -> Unit) {
                 }, enabled = issuer.isNotBlank() && recipient.isNotBlank() && course.isNotBlank() &&
                     runCatching { LocalDate.parse(issueDate) }.isSuccess,
                     modifier = Modifier.fillMaxWidth()) { Text("Generuj certyfikat PDF") }
+                OutlinedButton(onClick = onOpenDigitalCertificates, modifier = Modifier.fillMaxWidth()) {
+                    Text("Certyfikaty cyfrowe i podpisy elektroniczne")
+                }
             }
             "resources" -> {
                 Text("Baza zasobów", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
