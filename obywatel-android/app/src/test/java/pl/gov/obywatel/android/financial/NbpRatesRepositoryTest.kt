@@ -267,8 +267,8 @@ class NbpRatesRepositoryTest {
         assertEquals(2, requested.size)
         assertTrue(requested.all { it.contains("/exchangerates/tables/C/") })
         assertEquals(1, history.size)
-        assertEquals("4.20", history.single().bidPln.toPlainString())
-        assertEquals("4.30", history.single().askPln.toPlainString())
+        assertEquals(0, java.math.BigDecimal("4.20").compareTo(history.single().bidPln))
+        assertEquals(0, java.math.BigDecimal("4.30").compareTo(history.single().askPln))
     }
 
     @Test
