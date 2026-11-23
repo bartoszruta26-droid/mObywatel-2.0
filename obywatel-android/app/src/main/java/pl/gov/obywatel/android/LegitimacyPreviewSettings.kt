@@ -1001,6 +1001,7 @@ internal fun LegitimacyPreviewSettingsPanel(
     var logoMenu by remember { mutableStateOf(false) }
     var positionMenu by remember { mutableStateOf(false) }
     var importKind by remember { mutableStateOf("Herb") }
+    var selectedGraphicSlot by remember { mutableStateOf("graphic-1") }
     var message by remember { mutableStateOf("") }
 
     fun update(value: LegitimacyPreviewSettings) {
@@ -1044,8 +1045,23 @@ internal fun LegitimacyPreviewSettingsPanel(
         }.onFailure { message = "Nie udało się wczytać flagi: ${it.message ?: "błąd"}" }
     }
 
-    val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val genericGraphicPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
+            DocumentBrandStore.import(context, uri, "legitimacy:$documentKey", "Logo", "Element graficzny legitymacji")
+        }.onSuccess {
+            assets = DocumentBrandStore.list(context)
+            val imported = assets.lastOrNull { it.owner == "legitimacy:$documentKey" && it.kind == "Logo" }
+            if (imported != null) {
+                val current = defaultCredentialGraphicElements(settings).toMutableList()
+                val index = current.indexOfFirst { it.id == selectedGraphicSlot }.takeIf { it >= 0 } ?: 0
+                current[index] = current[index].copy(assetId = imported.id)
+                update(settings.copy(graphicElements = current))
+            }
+            message = "Dodano grafikę do wybranego elementu."
+        }.onFailure { message = "Nie udało się wczytać grafiki: ${it.message ?: "błąd"}" }
+    }
+
+    val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->        if (uri != null) runCatching {
             DocumentBrandStore.import(context, uri, "legitimacy:${documentKey}", "Logo", "Logo wystawcy")
         }.onSuccess {
             assets = DocumentBrandStore.list(context)
@@ -1158,6 +1174,60 @@ internal fun LegitimacyPreviewSettingsPanel(
                     Text(label, style = MaterialTheme.typography.bodyMedium)
                 }
             }
+            Text("Elementy graficzne legitymacji (od 1 do 4)", fontWeight = FontWeight.SemiBold)
+            Text("Każdy element może być dowolną grafiką z biblioteki — nie musi być flagą ani godłem. Podpis jest opcjonalny.", style = MaterialTheme.typography.bodySmall)
+            val editableGraphics = defaultCredentialGraphicElements(settings).take(4)
+            editableGraphics.forEachIndexed { index, element ->
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Element ${index + 1}", modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                            Checkbox(checked = element.visible, onCheckedChange = { checked ->
+                                update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(visible = checked) else it }))
+                            })
+                            Text("Widoczny")
+                            TextButton(onClick = { if (editableGraphics.size > 1) update(settings.copy(graphicElements = editableGraphics.filterNot { it.id == element.id })) },
+                                enabled = editableGraphics.size > 1) { Text("Usuń") }
+                        }
+                        GraphicAssetPreviewGrid(
+                            title = "Grafika — dowolny zasób", selectedId = element.assetId,
+                            choices = remember(documentKey, assets) {
+                                listOf(Triple("", "Bez grafiki", null)) + assets.filter { it.kind in setOf(
+                                    "Herb", "Godło", "Logo", "Flaga", "Symbol", "Pieczęć", "Wzór podpisu odręcznego",
+                                    "Pozostałe", "Fotografia", "Znak wodny", "Ikona", "Ikona wektorowa", "Ikona wektorowa kafelka")
+                                }.distinctBy { it.id }.map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                            },
+                            onSelect = { selected -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(assetId = selected) else it })) }
+                        )
+                        OutlinedButton(onClick = { selectedGraphicSlot = element.id; genericGraphicPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
+                            modifier = Modifier.fillMaxWidth()) { Text("Wczytaj dowolną grafikę lub SVG") }
+                        OutlinedTextField(value = element.caption,
+                            onValueChange = { caption -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(caption = caption) else it })) },
+                            label = { Text("Podpis — opcjonalny") }, modifier = Modifier.fillMaxWidth(), minLines = 1, maxLines = 3)
+                        Text("Rozmiar grafiki: ${"%.2f".format(element.scale)}")
+                        Slider(element.scale, { scale -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(scale = scale) else it })) }, valueRange = 0.25f..3f)
+                        Text("Przesunięcie poziome: ${element.x.toInt()} dp")
+                        Slider(element.x, { x -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(x = x) else it })) }, valueRange = -180f..360f)
+                        Text("Przesunięcie pionowe: ${element.y.toInt()} dp")
+                        Slider(element.y, { y -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(y = y) else it })) }, valueRange = -180f..240f)
+                        Text("Obrót: ${element.rotation.toInt()}°")
+                        Slider(element.rotation, { rotation -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(rotation = rotation) else it })) }, valueRange = -180f..180f)
+                        if (element.caption.isNotBlank()) {
+                            Text("Rozmiar podpisu: ${"%.2f".format(element.captionScale)}")
+                            Slider(element.captionScale, { scale -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(captionScale = scale) else it })) }, valueRange = 0.5f..3f)
+                            SimpleGraphicCaptionPosition(element.captionPosition) { position ->
+                                update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(captionPosition = position) else it }))
+                            }
+                        }
+                    }
+                }
+            }
+            OutlinedButton(onClick = {
+                if (editableGraphics.size < 4) {
+                    val id = "graphic-${java.util.UUID.randomUUID()}"
+                    update(settings.copy(graphicElements = editableGraphics + CredentialGraphicElement(id = id)))
+                }
+            }, enabled = editableGraphics.size < 4, modifier = Modifier.fillMaxWidth()) { Text("Dodaj element graficzny (${editableGraphics.size}/4)") }
             Text("Widoczność pól ustawiasz bezpośrednio przy odpowiednim polu danych.", style = MaterialTheme.typography.bodySmall)
             }
             if (assetSelectionOnly || documentKey != GLOBAL_LEGITIMACY_APPEARANCE_KEY) {
