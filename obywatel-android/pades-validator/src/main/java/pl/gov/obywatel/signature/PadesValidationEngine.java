@@ -50,6 +50,22 @@ public final class PadesValidationEngine {
                             .map(certificate -> certificate.getQualifiedName()
                                     + (certificate.isTrusted() ? " [trusted]" : " [not trusted]"))
                             .toList();
+                List<CertificateSummary> certificateDetails = reports.getDiagnosticData()
+                        .getSignatureCertificateChain(signatureId).stream()
+                        .map(certificate -> new CertificateSummary(
+                                certificate.getId(),
+                                certificate.getCertificateDN(),
+                                certificate.getCertificateIssuerDN(),
+                                certificate.getSerialNumber(),
+                                toIso(certificate.getNotBefore()),
+                                toIso(certificate.getNotAfter()),
+                                certificate.isTrusted(),
+                                Objects.toString(reports.getDiagnosticData()
+                                        .getCertificateRevocationStatus(certificate.getId()), "UNKNOWN"),
+                                Objects.toString(reports.getDiagnosticData()
+                                        .getCertificateRevocationSource(certificate.getId()), "UNKNOWN"),
+                                reports.getDiagnosticData().isValidCertificate(certificate.getId())))
+                        .toList();
                 signatures.add(new SignatureSummary(
                         signatureId,
                         simple.isValid(signatureId),
@@ -60,7 +76,8 @@ public final class PadesValidationEngine {
                         simple.getSignedBy(signatureId),
                         toIso(simple.getSigningTime(signatureId)),
                         toIso(simple.getBestSignatureTime(signatureId)),
-                        certificateNames));
+                        certificateNames,
+                        certificateDetails));
             }
             List<TimestampSummary> timestamps = new ArrayList<>();
             for (String timestampId : simple.getTimestampIdList()) {
@@ -142,11 +159,25 @@ public final class PadesValidationEngine {
             String signerIdentity,
             String signingTime,
             String bestSignatureTime,
-            List<String> certificateChainNames) {
+            List<String> certificateChainNames,
+            List<CertificateSummary> certificates) {
         public SignatureSummary {
             certificateChainNames = List.copyOf(certificateChainNames);
+            certificates = List.copyOf(certificates);
         }
     }
+
+    public record CertificateSummary(
+            String certificateId,
+            String subject,
+            String issuer,
+            String serialNumber,
+            String notBefore,
+            String notAfter,
+            boolean trusted,
+            String revocationStatus,
+            String revocationSource,
+            boolean certificateAndRevocationValid) {}
 
     public record TimestampSummary(
             String timestampId,
