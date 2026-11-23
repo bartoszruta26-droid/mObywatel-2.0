@@ -56,7 +56,8 @@ object RegressionPlotGeometry {
         values: List<Double>,
         settings: RegressionChannelSettings
     ): Pair<Double, Double> {
-        require(values.isNotEmpty() && values.all { it.isFinite() })
+        if (values.isEmpty()) return -1.0 to 1.0
+        require(values.all { it.isFinite() })
         val candidates = values.toMutableList()
         channelsForPlot(values, settings).filterNotNull().forEach { channel ->
             val band = channel.deviation * settings.deviationMultiplier
