@@ -1538,7 +1538,7 @@ internal fun LegitimacyHeraldry(
     Box(Modifier.fillMaxWidth().height(if (vertical) 132.dp else 112.dp)) {
         elements.forEachIndexed { index, element ->
             if (element.visible) {
-                val fallback = when (index) { 0 -> assignedFlag; 1 -> assignedCrest; else -> null }
+                val fallback = when (element.id) { "graphic-1" -> assignedFlag; "graphic-2" -> assignedCrest; else -> null }
                 val bitmap = remember(element.assetId, fallback, assetRevision) {
                     element.assetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: fallback
                 }
@@ -1562,7 +1562,7 @@ internal fun LegitimacyHeraldry(
                             if (bitmap != null) Image(bitmap.asImageBitmap(),
                                 contentDescription = "Element graficzny legitymacji ${index + 1}",
                                 modifier = Modifier.size((46f * element.scale).dp), contentScale = ContentScale.Fit,
-                                colorFilter = if (index == 1) imageFilter else null)
+                                colorFilter = if (element.id == "graphic-2") imageFilter else null)
                             if (element.captionPosition == "Pod grafiką" && element.caption.isNotBlank()) {
                                 Text(element.caption, fontSize = (10f * element.captionScale).sp,
                                     lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
@@ -1573,7 +1573,7 @@ internal fun LegitimacyHeraldry(
                         if (bitmap != null) Image(bitmap.asImageBitmap(),
                             contentDescription = "Element graficzny legitymacji ${index + 1}",
                             modifier = Modifier.size((46f * element.scale).dp), contentScale = ContentScale.Fit,
-                            colorFilter = if (index == 1) imageFilter else null)
+                            colorFilter = if (element.id == "graphic-2") imageFilter else null)
                         if (element.captionPosition != "Po lewej" && element.caption.isNotBlank()) {
                             Text(element.caption, fontSize = (10f * element.captionScale).sp,
                                 lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
