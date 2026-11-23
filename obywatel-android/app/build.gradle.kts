@@ -85,6 +85,7 @@ dependencies {
     implementation("info.guardianproject:tor-android:0.4.9.14")
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.caverock:androidsvg-aar:1.4")
+    implementation(project(":pades-validator"))
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
