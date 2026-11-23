@@ -383,10 +383,13 @@ private fun PairHistoryChart(
     val labelColor = MaterialTheme.colorScheme.onSurface.toArgb()
     val channels = LinearRegressionChannels.calculateAll(relativeValues, regression)
     val plotDateFormatter = remember { DateTimeFormatter.ofPattern("dd.MM.yy", Locale.getDefault()) }
+    val latestViewport by rememberUpdatedState(viewport)
+    val latestViewportCallback by rememberUpdatedState(onViewportChange)
+    val latestSelectionCallback by rememberUpdatedState(onSelect)
 
     Canvas(
         modifier
-            .pointerInput(points, viewport) {
+            .pointerInput(points) {
                 val widthPx = size.width.toFloat().coerceAtLeast(1f)
                 val heightPx = size.height.toFloat().coerceAtLeast(1f)
                 awaitEachGesture {
@@ -411,8 +414,8 @@ private fun PairHistoryChart(
                             val plotRight = widthPx - 10.dp.toPx()
                             val plotTop = 10.dp.toPx()
                             val plotBottom = heightPx - 30.dp.toPx()
-                            onViewportChange(
-                                viewport.transform(
+                            latestViewportCallback(
+                                latestViewport.transform(
                                     zoomX = zoomX,
                                     zoomY = zoomY,
                                     anchorX = ((centerX - plotLeft) / (plotRight - plotLeft)).toDouble(),
@@ -435,7 +438,7 @@ private fun PairHistoryChart(
                         val ratio = ((tap.x - left) / (right - left)).coerceIn(0f, 1f)
                         val index = viewport.startFraction +
                             ratio * (viewport.endFraction - viewport.startFraction)
-                        onSelect(points[(index * points.lastIndex).toInt().coerceIn(0, points.lastIndex)])
+                        latestSelectionCallback(points[(index * points.lastIndex).toInt().coerceIn(0, points.lastIndex)])
                     }
                 }
             }
