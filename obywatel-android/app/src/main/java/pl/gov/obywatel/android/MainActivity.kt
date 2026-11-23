@@ -1874,7 +1874,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             )
                         }
                     }
-                    showCertificates -> CertificatesScreen(onBack = { showCertificates = false })
+                    showCertificates -> CertificateStudioScreen(onBack = { showCertificates = false })
                     activeService == "Informacje prawne" -> LegalInformationScreen(
                         onBack = { activeService = null }
                     )
@@ -3168,7 +3168,7 @@ private fun MoreMenuScreen(
         Text("Więcej", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text("Informacje, bezpieczeństwo i ustawienia", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         ProfileActionCard("Historia działań", "Lista czynności w aplikacji", Icons.Filled.CalendarMonth, onOpenHistory)
-        ProfileActionCard("Wydane certyfikaty", "Informacje o certyfikatach urządzenia", Icons.Filled.Security, onOpenCertificates)
+        ProfileActionCard("Certyfikaty", "Biblioteka certyfikatów, generator, podpisy i pieczęcie", Icons.Filled.Security, onOpenCertificates)
         ProfileActionCard("Powiadomienia", "Ustawienia powiadomień", Icons.Filled.NotificationsNone, onOpenHelp)
         ProfileActionCard("Projektant dokumentów", "Tworzenie dokumentów, układ, podgląd i eksport PDF", Icons.Filled.Description, onOpenIdentityDesigner)
         ProfileActionCard("Pliki i załączniki", "Import i podgląd plików PDF, DOCX oraz obrazów", Icons.Filled.Description, onOpenImportedDocuments)
@@ -3216,7 +3216,7 @@ private fun ProfileLandingScreen(
             }
         }
         ProfileActionCard("Dokumenty i dane", "Przeglądaj dane i oświadczenia", Icons.Filled.CreditCard, onOpenDocuments)
-        ProfileActionCard("Zaświadczenia", "Zapisane dane dokumentów i zaświadczeń", Icons.Filled.Description, onOpenCertificates)
+        ProfileActionCard("Certyfikaty", "Generowanie certyfikatów oraz zarządzanie wzorami, podpisami i pieczęciami", Icons.Filled.Description, onOpenCertificates)
         ProfileActionCard("Ustawienia", "Otwórz menu zarządzania danymi", Icons.Filled.Settings, onOpenSettings)
         Text(
             "Dane profilu możesz uzupełniać i aktualizować w ustawieniach.",
