@@ -33,19 +33,35 @@ object PairRiskForecastEngine {
         require(values.size >= 2 && values.all { it.isFinite() && it > 0.0 }) {
             "Prognoza pary wymaga co najmniej dwóch dodatnich, skończonych obserwacji."
         }
-        val currentForecasts = CurrencyForecastEngine.forecast(values, settings, horizons)
-        val minimumWindow = settings.lengths.maxOrNull()
-            ?: return currentForecasts.map { empty(it) }
+        val current = values.last()
+        val currentChannels = LinearRegressionChannels.calculateAll(values, settings).filterNotNull()
+        require(currentChannels.isNotEmpty()) {
+            "Za mało danych do obliczenia kanałów regresji dla wybranej pary."
+        }
+        val activeLengths = settings.lengths.filter { it <= values.size }
+        val weightSum = currentChannels.sumOf { 1.0 / sqrt(it.length.toDouble()) }
+        val consensusSlope = currentChannels.sumOf {
+            it.slope / sqrt(it.length.toDouble())
+        } / weightSum
+        val minimumWindow = activeLengths.maxOrNull() ?: return horizons.map {
+            empty(it, 0.0, ForecastDirection.NEUTRAL)
+        }
 
-        return currentForecasts.map { current ->
-            val currentSignal = current.direction
-            if (currentSignal == ForecastDirection.NEUTRAL) return@map empty(current)
-            val lastOrigin = values.lastIndex - current.horizon.tradingSessions
-            if (lastOrigin < minimumWindow - 1) return@map empty(current)
+        return horizons.map { horizon ->
+            val projected = (current + consensusSlope * horizon.tradingSessions).coerceAtLeast(1e-12)
+            val expectedChange = (projected / current - 1.0) * 100.0
+            val currentSignal = direction(expectedChange)
+            if (currentSignal == ForecastDirection.NEUTRAL) {
+                return@map empty(horizon, expectedChange, currentSignal)
+            }
+            val lastOrigin = values.lastIndex - horizon.tradingSessions
+            if (lastOrigin < minimumWindow - 1) {
+                return@map empty(horizon, expectedChange, currentSignal)
+            }
 
             // Nie nakładamy na siebie okresów wyniku: ogranicza to zależność prób
             // i zapobiega sztucznemu zawyżaniu istotności statystycznej.
-            val step = current.horizon.tradingSessions
+            val step = horizon.tradingSessions
             var profit = 0
             var loss = 0
             var neutral = 0
@@ -55,19 +71,18 @@ object PairRiskForecastEngine {
             while (origin <= lastOrigin) {
                 val history = values.subList(0, origin + 1)
                 val channels = LinearRegressionChannels.calculateAll(history, settings).filterNotNull()
-                if (channels.size == settings.lengths.size) {
-                    val weightSum = channels.sumOf { 1.0 / sqrt(it.length.toDouble()) }
+                if (channels.size == activeLengths.size) {
+                    val historicalWeightSum = channels.sumOf { 1.0 / sqrt(it.length.toDouble()) }
                     val slope = channels.sumOf {
                         it.slope / sqrt(it.length.toDouble())
-                    } / weightSum
-                    val projected = (history.last() + slope * current.horizon.tradingSessions)
+                    } / historicalWeightSum
+                    val historicalProjected = (history.last() + slope * horizon.tradingSessions)
                         .coerceAtLeast(1e-12)
-                    val predictedPercent = (projected / history.last() - 1.0) * 100.0
+                    val predictedPercent = (historicalProjected / history.last() - 1.0) * 100.0
                     val predictedDirection = direction(predictedPercent)
-                    val matchesSignal = predictedDirection == currentSignal
 
-                    if (matchesSignal) {
-                        val actualPercent = (values[origin + current.horizon.tradingSessions] /
+                    if (predictedDirection == currentSignal) {
+                        val actualPercent = (values[origin + horizon.tradingSessions] /
                             values[origin] - 1.0) * 100.0
                         val actualDirection = direction(actualPercent)
                         when {
@@ -83,7 +98,7 @@ object PairRiskForecastEngine {
 
             if (samples < MIN_SAMPLES) {
                 PairHorizonRisk(
-                    current.horizon, current.expectedChangePercent, current.direction,
+                    horizon, expectedChange, currentSignal,
                     null, null, null, samples, PairRiskSignificance.INSUFFICIENT
                 )
             } else {
@@ -98,15 +113,19 @@ object PairRiskForecastEngine {
                     else -> PairRiskSignificance.INCONCLUSIVE
                 }
                 PairHorizonRisk(
-                    current.horizon, current.expectedChangePercent, current.direction,
+                    horizon, expectedChange, currentSignal,
                     pProfit, pLoss, pNeutral, samples, significance
                 )
             }
         }
     }
 
-    private fun empty(forecast: HorizonCurrencyForecast) = PairHorizonRisk(
-        forecast.horizon, forecast.expectedChangePercent, forecast.direction,
+    private fun empty(
+        horizon: ForecastHorizon,
+        expectedChange: Double,
+        direction: ForecastDirection
+    ) = PairHorizonRisk(
+        horizon, expectedChange, direction,
         null, null, null, 0, PairRiskSignificance.INSUFFICIENT
     )
 
