@@ -208,6 +208,7 @@ internal object DocumentBrandStore {
     private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
     private val kinds = listOf(
+        "Pieczęć graficzna (własna)", "Podpis wektorowy (tekst)",
         "Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona", "Tło wektorowe", "Tło graficzne",
         "Grafika wektorowa tła kafelków", "Animowany hologram", "Tło dokumentu", "Tło kafelka",
         "Herb", "Godło", "Logo", "Symbol", "Pozostałe", "Pieczęć", "Wzór podpisu odręcznego", "Certyfikat", "Flaga",
