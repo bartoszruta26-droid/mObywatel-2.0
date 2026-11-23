@@ -179,7 +179,8 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
         last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN)
     else null
     val relativeValues = remember(points) { pairRelativePerformance(points) }
-    val projectionBars = if (points.size > 1) maxOf(3, kotlin.math.ceil(points.size * 0.20).toInt()) else 0
+    val projectionBars = if (points.size > 1)
+        minOf(maxOf(3, kotlin.math.ceil(points.size * 0.20).toInt()), points.lastIndex * 2) else 0
     val projectionEndIndex = (points.lastIndex + projectionBars).coerceAtLeast(0)
     val projectionEndFraction = if (points.size > 1)
         projectionEndIndex.toDouble() / points.lastIndex.toDouble() else 1.0
@@ -323,7 +324,11 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 Text("●", color = MaterialTheme.colorScheme.primary)
                 Text("$base/$quote • zmiana relacji (%)", style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = { viewport = viewport.reset(regressionBounds.first, regressionBounds.second) }) {
+                TextButton(onClick = {
+                    viewport = viewport.reset(
+                        regressionBounds.first, regressionBounds.second, projectionEndFraction
+                    )
+                }) {
                     Text("Resetuj widok")
                 }
             }
