@@ -51,6 +51,30 @@ class SvgSafetyValidatorTest {
         )
     }
 
+
+    @Test
+    fun textSignatureGeneratorProducesSafeScalableSvgAndEscapesMarkup() {
+        val svg = makeTextSignatureSvg("Anna <script>alert(1)</script>", "#183A63").toString(Charsets.UTF_8)
+        assertTrue(svg.contains("<svg"))
+        assertTrue(svg.contains("&lt;script&gt;"))
+        SvgSafetyValidator.validateMarkupSecurity(svg)
+    }
+
+    @Test
+    fun customStampGeneratorProducesSafeSvgAndLabelsItAsAGraphicPattern() {
+        val svg = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "F-2026/01", "#244B75").toString(Charsets.UTF_8)
+        assertTrue(svg.contains("WZÓR GRAFICZNY"))
+        assertTrue(svg.contains("Fundacja Aria"))
+        SvgSafetyValidator.validateMarkupSecurity(svg)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun generatedSignatureRejectsExternalSvgReferencesThroughValidator() {
+        SvgSafetyValidator.validateMarkupSecurity(
+            """<svg xmlns="http://www.w3.org/2000/svg"><text href="https://example.org">x</text></svg>"""
+        )
+    }
+
     @Test
     fun recognizesSvgEvenWhenXmlDeclarationPrecedesRoot() {
         val bytes = """<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"/>""".toByteArray(Charsets.UTF_8)
