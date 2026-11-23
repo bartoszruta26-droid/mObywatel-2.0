@@ -82,7 +82,7 @@ class SvgSafetyValidatorTest {
         assertTrue(stamp.contains("textPath"))
         assertTrue(stamp.contains("stroke-dasharray"))
         assertTrue(signature.contains("Dancing Script"))
-        assertTrue(signature.contains("C 350 300"))
+        assertTrue(signature.contains("Segoe Script"))
         SvgSafetyValidator.validateMarkupSecurity(stamp)
     }
 
