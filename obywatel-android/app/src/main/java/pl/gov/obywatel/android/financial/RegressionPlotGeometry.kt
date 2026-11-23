@@ -32,6 +32,28 @@ object RegressionPlotGeometry {
         return listOf(LinearRegressionChannels.calculate(values, values.size, settings.deviationMultiplier))
     }
 
+    /** Odcinek prognozy liniowej wychodzący poza ostatnie rzeczywiste notowanie. */
+    fun forecastSegment(
+        channel: RegressionChannelResult,
+        projectionEndIndex: Double,
+        visibleStart: Double,
+        visibleEnd: Double,
+        offset: Double = 0.0
+    ): RegressionPlotSegment? {
+        require(projectionEndIndex.isFinite() && projectionEndIndex >= channel.endIndex)
+        require(visibleStart.isFinite() && visibleEnd.isFinite() && visibleStart <= visibleEnd)
+        require(offset.isFinite())
+        val start = max(channel.endIndex.toDouble(), visibleStart)
+        val end = min(projectionEndIndex, visibleEnd)
+        if (start > end || end <= channel.endIndex.toDouble()) return null
+        return RegressionPlotSegment(
+            startIndex = start,
+            endIndex = end,
+            startValue = channel.valueAt(start) + offset,
+            endValue = channel.valueAt(end) + offset
+        )
+    }
+
     fun visibleSegment(
         channel: RegressionChannelResult,
         visibleStart: Double,
@@ -54,7 +76,8 @@ object RegressionPlotGeometry {
     /** Zakres Y obejmujący dane oraz górne i dolne granice aktywnych kanałów. */
     fun fitRange(
         values: List<Double>,
-        settings: RegressionChannelSettings
+        settings: RegressionChannelSettings,
+        projectionEndIndex: Double? = null
     ): Pair<Double, Double> {
         if (values.isEmpty()) return -1.0 to 1.0
         require(values.all { it.isFinite() })
@@ -64,6 +87,10 @@ object RegressionPlotGeometry {
             val start = channel.valueAt(channel.startIndex.toDouble())
             val end = channel.valueAt(channel.endIndex.toDouble())
             candidates += listOf(start - band, start + band, end - band, end + band)
+            projectionEndIndex?.takeIf { it > channel.endIndex }?.let { projection ->
+                val projected = channel.valueAt(projection)
+                candidates += listOf(projected - band, projected + band)
+            }
         }
         return candidates.minOrNull()!! to candidates.maxOrNull()!!
     }

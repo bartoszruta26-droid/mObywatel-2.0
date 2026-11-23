@@ -32,6 +32,43 @@ class PairChartInteractionTest {
     }
 
 
+    @Test fun viewportCanReserveFutureSpaceAndPanIntoIt() {
+        val initial = PairChartViewport.fit(-4.0, 8.0, endFraction = 1.25)
+        assertEquals(1.25, initial.endFraction, 1e-9)
+        val movedIntoFuture = initial.transform(panX = -0.4)
+        assertTrue(movedIntoFuture.startFraction > 0.0)
+        assertTrue(movedIntoFuture.endFraction > 1.0)
+        val movedBack = movedIntoFuture.transform(panX = 0.4)
+        assertTrue(movedBack.startFraction < movedIntoFuture.startFraction)
+    }
+
+    @Test fun regressionForecastSegmentContinuesPastLastObservation() {
+        val values = (0 until 100).map { 5.0 + it * 0.03 + kotlin.math.sin(it / 9.0) * 0.1 }
+        val channel = LinearRegressionChannels.calculate(values, 55)!!
+        val forecast = RegressionPlotGeometry.forecastSegment(
+            channel,
+            projectionEndIndex = 130.0,
+            visibleStart = 99.0,
+            visibleEnd = 130.0
+        )!!
+        assertEquals(99.0, forecast.startIndex, 1e-9)
+        assertEquals(130.0, forecast.endIndex, 1e-9)
+        assertEquals(channel.valueAt(99.0), forecast.startValue, 1e-9)
+        assertEquals(channel.valueAt(130.0), forecast.endValue, 1e-9)
+        assertNull(RegressionPlotGeometry.forecastSegment(channel, 130.0, 0.0, 98.0))
+    }
+
+    @Test fun regressionFitRangeIncludesFutureProjection() {
+        val values = (0 until 100).map { it * 0.1 }
+        val settings = RegressionChannelSettings(
+            length1 = 55, length2 = 55, length3 = 55, length4 = 55,
+            length5 = 55, length6 = 55, length7 = 55
+        )
+        val current = RegressionPlotGeometry.fitRange(values, settings)
+        val projected = RegressionPlotGeometry.fitRange(values, settings, 150.0)
+        assertTrue(projected.second > current.second)
+    }
+
     @Test fun regressionSegmentsUseMatchingVisibleXAndYCoordinates() {
         val values = (0 until 100).map { 10.0 + it * 0.2 + kotlin.math.sin(it / 7.0) }
         val channel = LinearRegressionChannels.calculate(values, 55)!!
