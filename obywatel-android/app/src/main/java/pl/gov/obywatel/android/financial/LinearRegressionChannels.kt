@@ -173,4 +173,25 @@ object ExchangeProfitThreshold {
             else -> ForecastDirection.NEUTRAL
         }
     }
+    /**
+     * Klasyfikacja wyniku względem sygnału modelu:
+     * zysk wymaga ruchu korzystnego >2%, ruch przeciwny oznacza stratę,
+     * a ruch korzystny niepokrywający progu pozostaje neutralny.
+     */
+    fun classifyOutcome(changePercent: Double, signal: ForecastDirection): ForecastDirection {
+        require(changePercent.isFinite()) { "Zmiana procentowa musi być skończona." }
+        return when (signal) {
+            ForecastDirection.UP -> when {
+                changePercent > MIN_NET_PROFIT_PERCENT -> ForecastDirection.UP
+                changePercent < 0.0 -> ForecastDirection.DOWN
+                else -> ForecastDirection.NEUTRAL
+            }
+            ForecastDirection.DOWN -> when {
+                changePercent < -MIN_NET_PROFIT_PERCENT -> ForecastDirection.DOWN
+                changePercent > 0.0 -> ForecastDirection.UP
+                else -> ForecastDirection.NEUTRAL
+            }
+            ForecastDirection.NEUTRAL -> ForecastDirection.NEUTRAL
+        }
+    }
 }
