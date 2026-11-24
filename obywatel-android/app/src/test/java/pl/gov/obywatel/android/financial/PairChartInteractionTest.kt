@@ -113,9 +113,9 @@ class PairChartInteractionTest {
     }
 
     @Test fun selectedPairReportsMonthlyThroughAnnualRiskFromLongHistory() {
-        // 20 lat danych dziennych: roczny wynik ma mniej niż 20 prób niezależnych,
-        // ale można pokazać ostrożny szacunek z liczbą prób i bez etykiety przewagi.
-        val values = (0 until 5000).map { index -> kotlin.math.exp(index * 0.005) }
+        // Długa historia obejmująca wystarczająco dużo pełnych okien rocznych,
+        // aby uzyskać 10–19 niepokrywających się prób dla najdłuższego aktywnego kanału.
+        val values = (0 until 9500).map { index -> kotlin.math.exp(index * 0.005) }
         val horizons = listOf(
             ForecastHorizon.MONTH,
             ForecastHorizon.TWO_MONTHS,
