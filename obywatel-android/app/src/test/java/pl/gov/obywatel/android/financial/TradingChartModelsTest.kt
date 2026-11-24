@@ -148,9 +148,16 @@ class TradingChartModelsTest {
     }
     @Test fun currencyForecastProducesAllEightHorizonsAndWalkForwardProbability() {
         val values = (0 until 1300).map { index ->
-            kotlin.math.exp(index * 0.10 + kotlin.math.sin(index / 17.0) * 0.00002)
+            kotlin.math.exp(index * 0.03 + kotlin.math.sin(index / 17.0) * 0.00002)
         }
-        val forecasts = CurrencyForecastEngine.forecast(values, RegressionChannelSettings())
+        // Keep probability validation on a fully populated short regression window.
+                // The default multi-year channels correctly remain neutral for this
+                // short-horizon synthetic series.
+                val validationSettings = RegressionChannelSettings(
+                    length1 = 144, length2 = 144, length3 = 144, length4 = 144, length5 = 144,
+                    length6 = 144, length7 = 144, length8 = 144, length9 = 144, length10 = 144
+                )
+                val forecasts = CurrencyForecastEngine.forecast(values, validationSettings)
         assertEquals(8, forecasts.size)
         assertEquals(ForecastHorizon.WEEK, forecasts.first().horizon)
         assertTrue(forecasts.first().expectedChangePercent > 0.0)
