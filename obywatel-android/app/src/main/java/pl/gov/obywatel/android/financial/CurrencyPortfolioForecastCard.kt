@@ -271,7 +271,7 @@ fun CurrencyPortfolioForecastCard(
                                         color = MaterialTheme.colorScheme.secondary
                                     )
                                     Text(
-                                        "Zgodność kanałów: ${"%.0f".format(f.channelAgreement * 100)}% • aktywne: ${f.activeChannels}/7",
+                                        "Zgodność kanałów: ${"%.0f".format(f.channelAgreement * 100)}% • aktywne: ${f.activeChannels}/10",
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
@@ -281,9 +281,9 @@ fun CurrencyPortfolioForecastCard(
                 }
             }
             Text(
-                "Prawdopodobieństwo jest podawane wyłącznie po kroczącej walidacji historycznej (minimum 20 prób). " +
-                    "Dla długich horyzontów może go brakować. Projekcja liniowa nie uwzględnia zdarzeń makroekonomicznych " +
-                    "i nie stanowi gwarancji wyniku.",
+                "Zyskowna wymiana oznacza zmianę powyżej 2%; przedział od −2% do +2% jest neutralny i nie zwiększa " +
+                    "prawdopodobieństwa zysku, z uwagi na koszt wymiany walut. Prawdopodobieństwo pochodzi z kroczącej " +
+                    "walidacji historycznej (minimum 20 prób). Projekcja nie stanowi gwarancji wyniku.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary
             )
