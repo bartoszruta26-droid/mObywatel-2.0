@@ -29,7 +29,6 @@ data class PairHorizonRisk(
  * Próby wyników nie nakładają się na siebie.
  */
 object PairRiskForecastEngine {
-    private const val NEUTRAL_BAND_PERCENT = ExchangeProfitThreshold.MIN_NET_PROFIT_PERCENT
     // 10–19 prób daje wyłącznie wstępny szacunek bez etykiety przewagi.
     // Do oceny przewagi statystycznej nadal wymagamy co najmniej 20 prób.
     private const val MIN_ESTIMATE_SAMPLES = 10
@@ -88,7 +87,7 @@ object PairRiskForecastEngine {
                     if (predictedDirection == currentSignal) {
                         val actualPercent = (values[origin + horizon.tradingSessions] /
                             values[origin] - 1.0) * 100.0
-                        when (direction(actualPercent)) {
+                        when (ExchangeProfitThreshold.classifyOutcome(actualPercent, predictedDirection)) {
                             ForecastDirection.NEUTRAL -> neutral++
                             predictedDirection -> profit++
                             else -> loss++
