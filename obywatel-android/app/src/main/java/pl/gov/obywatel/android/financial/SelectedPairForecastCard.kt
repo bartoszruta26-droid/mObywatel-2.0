@@ -80,7 +80,7 @@ fun SelectedPairForecastCard(
             )
             Text(
                 "Walidacja wyłącznie dla tej pary: ${values.size} obserwacji historycznych. " +
-                    "Wykres może pokazywać krótszy zakres; szanse liczone są z dłuższej historii tej samej pary.",
+                    "Zmiana zakresu 5/10/20 lat ponownie uruchamia obliczenia; walidacja korzysta z dokładnie tych obserwacji, które obejmuje wybrany zakres.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -144,6 +144,13 @@ fun SelectedPairForecastCard(
                             )
                         }
                     }
+                    Text(
+                        "Kanały regresji: ${item.activeChannels}/10 • przedział kwantylowy kanałów: " +
+                            "${item.lowerQuantilePercent?.let { "%.2f".format(it) + "%" } ?: "—"} do " +
+                            "${item.upperQuantilePercent?.let { "%.2f".format(it) + "%" } ?: "—"}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                     Text(status, color = statusColor, style = MaterialTheme.typography.bodySmall)
                     Text(
                         "Próby walidacyjne: ${item.samples} • sygnał: ${when (item.direction) {
@@ -157,7 +164,7 @@ fun SelectedPairForecastCard(
                 }
             }
             Text(
-                "Walidacja wykorzystuje niepokrywające się okresy wyników; zysk wymaga ruchu zgodnego z sygnałem powyżej 2%. Szacunki od 10 do 19 prób " +
+                "Walidacja wykorzystuje niepokrywające się okresy wyników. Prognoza łączy ważoną medianę kanałów; przedział kwantylowy wyznaczają dolne i górne granice kanałów regresji (odchylenie RMS × mnożnik). Zysk wymaga ruchu zgodnego z sygnałem powyżej 2%. Szacunki od 10 do 19 prób " +
                     "są wstępne; kolor przewagi pojawia się od 20 prób i po rozdzieleniu 95-procentowych przedziałów Wilsona. " +
                     "To model referencyjny — nie uwzględnia indywidualnej marży banku ani podatków.",
                 style = MaterialTheme.typography.bodySmall,
