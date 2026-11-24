@@ -17,28 +17,28 @@ class TradingChartModelsTest {
         return TradingPriceBar(LocalDate.of(2026, 1, day), price, price, price, price)
     }
 
-    @Test fun sevenRegressionWindowsFollowFibonacciSequence() {
+    @Test fun tenRegressionWindowsFollowFibonacciSequence() {
         val settings = RegressionChannelSettings()
-        assertEquals(listOf(987, 610, 377, 233, 144, 89, 55), settings.lengths)
+        assertEquals(listOf(10946, 6765, 4181, 2584, 1597, 987, 610, 377, 233, 144), settings.lengths)
         assertEquals(settings.lengths, LinearRegressionChannels.fibonacciWindowLengths)
         val values = (0 until 1000).map { 50.0 + it * 0.03 + kotlin.math.sin(it / 13.0) }
         val channels = LinearRegressionChannels.calculateAll(values, settings)
-        assertEquals(7, channels.size)
-        assertEquals(settings.lengths, channels.mapNotNull { it?.length })
+        assertEquals(10, channels.size)
+        assertEquals(listOf(987, 610, 377, 233, 144), channels.mapNotNull { it?.length })
     }
 
     @Test fun fibonacciRegressionLengthsCanBeEditedAndWidthsRemainIndependent() {
         val settings = RegressionChannelSettings()
             .withLength(0, 900)
-            .withLength(6, 34)
+            .withLength(9, 34)
             .withWidth(0, 2.5f)
-            .withWidth(6, 3f)
+            .withWidth(9, 3f)
         assertEquals(900, settings.length1)
-        assertEquals(34, settings.length7)
+        assertEquals(34, settings.length10)
         assertEquals(2.5f, settings.width1)
-        assertEquals(3f, settings.width7)
-        assertEquals(987, RegressionChannelSettings().length1)
-        assertEquals(55, RegressionChannelSettings().length7)
+        assertEquals(3f, settings.width10)
+        assertEquals(10946, RegressionChannelSettings().length1)
+        assertEquals(144, RegressionChannelSettings().length10)
     }
 
     @Test fun regressionChannelFitsPerfectLinearSeries() {
@@ -148,7 +148,7 @@ class TradingChartModelsTest {
     }
     @Test fun currencyForecastProducesAllEightHorizonsAndWalkForwardProbability() {
         val values = (0 until 1300).map { index ->
-            4.0 + index * 0.0008 + kotlin.math.sin(index / 17.0) * 0.003
+            4.0 + index * 0.025 + kotlin.math.sin(index / 17.0) * 0.003
         }
         val forecasts = CurrencyForecastEngine.forecast(values, RegressionChannelSettings())
         assertEquals(8, forecasts.size)
