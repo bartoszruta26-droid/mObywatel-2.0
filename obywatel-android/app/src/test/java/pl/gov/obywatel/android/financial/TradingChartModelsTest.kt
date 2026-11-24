@@ -148,7 +148,7 @@ class TradingChartModelsTest {
     }
     @Test fun currencyForecastProducesAllEightHorizonsAndWalkForwardProbability() {
         val values = (0 until 1300).map { index ->
-            kotlin.math.exp(index * 0.01 + kotlin.math.sin(index / 17.0) * 0.00002)
+            kotlin.math.exp(index * 0.03 + kotlin.math.sin(index / 17.0) * 0.00002)
         }
         val forecasts = CurrencyForecastEngine.forecast(values, RegressionChannelSettings())
         assertEquals(8, forecasts.size)
