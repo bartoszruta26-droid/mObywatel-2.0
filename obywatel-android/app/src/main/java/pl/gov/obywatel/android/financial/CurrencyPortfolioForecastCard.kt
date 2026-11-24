@@ -281,8 +281,8 @@ fun CurrencyPortfolioForecastCard(
                 }
             }
             Text(
-                "Zyskowna wymiana oznacza zmianę powyżej 2%; przedział od −2% do +2% jest neutralny i nie zwiększa " +
-                    "prawdopodobieństwa zysku, z uwagi na koszt wymiany walut. Prawdopodobieństwo pochodzi z kroczącej " +
+                "Zyskowna wymiana oznacza ruch zgodny z prognozą powyżej 2%; mniejszy ruch zgodny z prognozą jest neutralny, " +
+                    "a ruch przeciwny oznacza stratę. Próg uwzględnia koszt wymiany walut. Prawdopodobieństwo pochodzi z kroczącej " +
                     "walidacji historycznej (minimum 20 prób). Projekcja nie stanowi gwarancji wyniku.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary
