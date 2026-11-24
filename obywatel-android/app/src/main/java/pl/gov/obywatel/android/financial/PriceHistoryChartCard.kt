@@ -650,6 +650,12 @@ private fun PairHistoryChart(
             }
         }
 
+        // Pozioma linia 0% wskazuje poziom ceny z wybranego punktu odniesienia.
+        if (0.0 in viewport.minPercent..viewport.maxPercent) {
+            val zeroY = yFor(0.0)
+            drawLine(marker.copy(alpha = 0.72f), Offset(left, zeroY), Offset(right, zeroY), 1.5.dp.toPx())
+        }
+
         val selectedIndex = selectedDate?.let { date -> points.indexOfFirst { it.date == date } } ?: -1
         if (selectedIndex >= 0 && selectedIndex.toDouble() in firstIndex..lastIndex) {
             val point = Offset(xFor(selectedIndex.toDouble()), yFor(relativeValues[selectedIndex]))
