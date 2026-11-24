@@ -73,8 +73,9 @@ fun SelectedPairForecastCard(
             Text("Ryzyko wybranej pary: $base/$quote", style = MaterialTheme.typography.titleMedium)
             Text(
                 "Prawdopodobieństwa dotyczą wyłącznie pary widocznej na wykresie. Zysk oznacza ruch zgodny z sygnałem modelu " +
-                    "(pozycja długa przy prognozie wzrostu lub krótka przy prognozie spadku); strata oznacza ruch przeciwny. " +
-                    "Nie uwzględniają spreadu, prowizji ani podatków.",
+                    "(pozycja długa przy prognozie wzrostu lub krótka przy prognozie spadku) musi przekroczyć 2%; " +
+                    "ruch przeciwny do sygnału jest stratą, a ruch zgodny z sygnałem do 2% pozostaje neutralny. " +
+                    "Próg uwzględnia koszt wymiany walut wynoszący 1%.",
                 style = MaterialTheme.typography.bodySmall
             )
             Text(
@@ -156,9 +157,9 @@ fun SelectedPairForecastCard(
                 }
             }
             Text(
-                "Walidacja wykorzystuje niepokrywające się okresy wyników. Szacunki od 10 do 19 prób są oznaczane jako wstępne; " +
-                    "kolor przewagi pojawia się dopiero od 20 prób i po rozdzieleniu 95-procentowych przedziałów Wilsona. " +
-                    "Wyniki nie uwzględniają spreadu, prowizji ani podatków.",
+                "Walidacja wykorzystuje niepokrywające się okresy wyników; zysk wymaga ruchu zgodnego z sygnałem powyżej 2%. Szacunki od 10 do 19 prób " +
+                    "są wstępne; kolor przewagi pojawia się od 20 prób i po rozdzieleniu 95-procentowych przedziałów Wilsona. " +
+                    "To model referencyjny — nie uwzględnia indywidualnej marży banku ani podatków.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary
             )

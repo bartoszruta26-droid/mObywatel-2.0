@@ -44,7 +44,6 @@ data class HorizonCurrencyForecast(
 
 object CurrencyForecastEngine {
     private const val MIN_VALIDATION_SAMPLES = 20
-    private const val NEUTRAL_BAND_PERCENT = 0.05
 
     fun forecast(
         values: List<Double>,
@@ -70,11 +69,7 @@ object CurrencyForecastEngine {
         return horizons.map { horizon ->
             val projected = (current + consensusSlope * horizon.tradingSessions).coerceAtLeast(0.00000001)
             val change = ((projected / current) - 1.0) * 100.0
-            val direction = when {
-                change > NEUTRAL_BAND_PERCENT -> ForecastDirection.UP
-                change < -NEUTRAL_BAND_PERCENT -> ForecastDirection.DOWN
-                else -> ForecastDirection.NEUTRAL
-            }
+            val direction = ExchangeProfitThreshold.classify(change)
             val validation = walkForwardValidation(values, settings, horizon.tradingSessions, direction, magnitude(abs(change)))
             HorizonCurrencyForecast(
                 horizon = horizon,
@@ -111,7 +106,8 @@ object CurrencyForecastEngine {
         targetDirection: ForecastDirection,
         targetMagnitude: ForecastMagnitude
     ): WalkForwardValidation {
-        val minimumWindow = settings.lengths.maxOrNull()
+        val activeLengths = settings.lengths.filter { it <= values.size }
+        val minimumWindow = activeLengths.maxOrNull()
             ?: return WalkForwardValidation(null, 0, null, 0)
         val lastOrigin = values.lastIndex - horizon
         if (lastOrigin < minimumWindow - 1) {
@@ -126,8 +122,8 @@ object CurrencyForecastEngine {
         var origin = minimumWindow - 1
         while (origin <= lastOrigin) {
             val historical = values.subList(0, origin + 1)
-            val slopes = LinearRegressionChannels.calculateAll(historical, settings).filterNotNull()
-            if (slopes.size == settings.lengths.size) {
+            val slopes = activeLengths.mapNotNull { LinearRegressionChannels.calculate(historical, it, settings.deviationMultiplier) }
+            if (slopes.size == activeLengths.size) {
                 val weightSum = slopes.sumOf { 1.0 / sqrt(it.length.toDouble()) }
                 val predictedSlope = slopes.sumOf {
                     it.slope / sqrt(it.length.toDouble())
@@ -135,17 +131,9 @@ object CurrencyForecastEngine {
                 val predictedRate = historical.last() + predictedSlope * horizon
                 val predictedPercent = ((predictedRate.coerceAtLeast(0.00000001) /
                     historical.last()) - 1.0) * 100.0
-                val predictedDirection = when {
-                    predictedPercent > NEUTRAL_BAND_PERCENT -> ForecastDirection.UP
-                    predictedPercent < -NEUTRAL_BAND_PERCENT -> ForecastDirection.DOWN
-                    else -> ForecastDirection.NEUTRAL
-                }
+                val predictedDirection = ExchangeProfitThreshold.classify(predictedPercent)
                 val actualPercent = ((values[origin + horizon] / values[origin]) - 1.0) * 100.0
-                val actualDirection = when {
-                    actualPercent > NEUTRAL_BAND_PERCENT -> ForecastDirection.UP
-                    actualPercent < -NEUTRAL_BAND_PERCENT -> ForecastDirection.DOWN
-                    else -> ForecastDirection.NEUTRAL
-                }
+                val actualDirection = ExchangeProfitThreshold.classifyOutcome(actualPercent, predictedDirection)
                 if (predictedDirection != ForecastDirection.NEUTRAL) {
                     // Ruch neutralny lub przeciwny jest błędem prognozy kierunku, nie pomijamy go.
                     directionTrials++

@@ -106,7 +106,7 @@ fun CurrencyPortfolioForecastCard(
                     val history = withContext(Dispatchers.IO) {
                         repository.currencyRateHistory(NbpTable.A, currency.code, start, end)
                     }
-                    val requiredObservations = settings.lengths.maxOrNull() ?: 987
+                    val requiredObservations = settings.lengths.minOrNull() ?: 144
                     require(history.size >= requiredObservations) {
                         "Za mało danych NBP dla ${currency.code}: ${history.size} obserwacji; wymagane jest okno $requiredObservations."
                     }
@@ -255,7 +255,7 @@ fun CurrencyPortfolioForecastCard(
                                     )
                                     Text(
                                         f.directionalProbability?.let {
-                                            "Historyczna trafność kierunku: ${"%.0f".format(it * 100)}% " +
+                                            "Historyczne prawdopodobieństwo zysku netto (>2%): ${"%.0f".format(it * 100)}% " +
                                                 "(${f.validationSamples} prób)"
                                         } ?: "Brak wiarygodnej próby dla tego horyzontu (${f.validationSamples} prób).",
                                         style = MaterialTheme.typography.bodySmall,
@@ -271,7 +271,7 @@ fun CurrencyPortfolioForecastCard(
                                         color = MaterialTheme.colorScheme.secondary
                                     )
                                     Text(
-                                        "Zgodność kanałów: ${"%.0f".format(f.channelAgreement * 100)}% • aktywne: ${f.activeChannels}/7",
+                                        "Zgodność kanałów: ${"%.0f".format(f.channelAgreement * 100)}% • aktywne: ${f.activeChannels}/10",
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
@@ -281,9 +281,9 @@ fun CurrencyPortfolioForecastCard(
                 }
             }
             Text(
-                "Prawdopodobieństwo jest podawane wyłącznie po kroczącej walidacji historycznej (minimum 20 prób). " +
-                    "Dla długich horyzontów może go brakować. Projekcja liniowa nie uwzględnia zdarzeń makroekonomicznych " +
-                    "i nie stanowi gwarancji wyniku.",
+                "Zyskowna wymiana oznacza ruch zgodny z prognozą powyżej 2%; mniejszy ruch zgodny z prognozą jest neutralny, " +
+                    "a ruch przeciwny oznacza stratę. Próg uwzględnia koszt wymiany walut. Prawdopodobieństwo pochodzi z kroczącej " +
+                    "walidacji historycznej (minimum 20 prób). Projekcja nie stanowi gwarancji wyniku.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.secondary
             )

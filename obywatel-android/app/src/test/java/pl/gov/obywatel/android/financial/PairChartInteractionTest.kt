@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: CC0-1.0
 package pl.gov.obywatel.android.financial
 
+import java.math.BigDecimal
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -111,9 +113,9 @@ class PairChartInteractionTest {
     }
 
     @Test fun selectedPairReportsMonthlyThroughAnnualRiskFromLongHistory() {
-        // 20 lat danych dziennych: roczny wynik ma mniej niż 20 prób niezależnych,
-        // ale można pokazać ostrożny szacunek z liczbą prób i bez etykiety przewagi.
-        val values = (0 until 5000).map { index -> kotlin.math.exp(index * 0.0001) }
+        // Długa historia obejmująca wystarczająco dużo pełnych okien rocznych,
+        // aby uzyskać 10–19 niepokrywających się prób dla najdłuższego aktywnego kanału.
+        val values = (0 until 9500).map { index -> kotlin.math.exp(index * 0.005) }
         val horizons = listOf(
             ForecastHorizon.MONTH,
             ForecastHorizon.TWO_MONTHS,
@@ -132,12 +134,12 @@ class PairChartInteractionTest {
         val annual = risks.last()
         assertEquals(PairRiskSignificance.LOW_SAMPLE, annual.significance)
         assertTrue(annual.samples in 10 until 20)
-        assertEquals(0.2102, risks.first().expectedChangePercent, 0.01)
+        assertTrue(risks.first().expectedChangePercent > 2.0)
     }
 
     @Test fun pairRiskReportsProfitAndLossForOneSelectedSeries() {
         val values = (0 until 1500).map { index ->
-            2.0 + index * 0.001 + kotlin.math.sin(index / 19.0) * 0.0002
+            kotlin.math.exp(index * 0.01 + kotlin.math.sin(index / 19.0) * 0.00002)
         }
         val risks = PairRiskForecastEngine.forecast(values, RegressionChannelSettings())
         assertEquals(8, risks.size)
@@ -149,4 +151,28 @@ class PairChartInteractionTest {
         assertNull(risks.last().profitProbability)
         assertEquals(PairRiskSignificance.INSUFFICIENT, risks.last().significance)
     }
+    @Test fun selectedPricePointBecomesZeroPercentReference() {
+        val dates = listOf(
+            LocalDate.parse("2026-01-01"),
+            LocalDate.parse("2026-01-02"),
+            LocalDate.parse("2026-01-03")
+        )
+        val points = listOf("100", "110", "90").mapIndexed { index, value ->
+            PairPricePoint(dates[index], BigDecimal(value))
+        }
+        val relative = pairRelativePerformance(points, anchorIndex = 1)
+        assertEquals(-100.0 / 11.0, relative[0], 1e-9)
+        assertEquals(0.0, relative[1], 1e-9)
+        assertEquals(-200.0 / 11.0, relative[2], 1e-9)
+    }
+
+    @Test fun referenceIndexIsClampedAndDefaultUsesFirstPrice() {
+        val points = listOf(
+            PairPricePoint(LocalDate.parse("2026-01-01"), BigDecimal("200")),
+            PairPricePoint(LocalDate.parse("2026-01-02"), BigDecimal("250"))
+        )
+        assertEquals(0.0, pairRelativePerformance(points)[0], 1e-9)
+        assertEquals(25.0, pairRelativePerformance(points, -1)[1], 1e-9)
+    }
+
 }

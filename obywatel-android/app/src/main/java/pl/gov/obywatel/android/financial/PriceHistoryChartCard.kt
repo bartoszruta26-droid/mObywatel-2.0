@@ -41,15 +41,19 @@ private data class ChartInstrument(val code: String, val label: String, val gold
 private enum class PriceChartPeriod(val label: String, val days: Long) {
     WEEK("1T", 7), MONTH("1M", 31), QUARTER("3M", 93),
     HALF_YEAR("6M", 183), YEAR("1R", 365), FIVE_YEARS("5R", 1825),
-    TEN_YEARS("10R", 3650), TWENTY_YEARS("20R", 7300)
+    TEN_YEARS("10R", 3650), TWENTY_YEARS("20R", 7300), THIRTY_YEARS("30R", 10950)
 }
 private enum class PriceChartStyle(val label: String) { LINE("Linia"), AREA("Obszar"), CANDLE("Świece") }
-private data class PairPricePoint(val date: LocalDate, val value: BigDecimal)
+internal data class PairPricePoint(val date: LocalDate, val value: BigDecimal)
 
-private fun pairRelativePerformance(points: List<PairPricePoint>): List<Double> {
-    val anchor = points.firstOrNull()?.value?.toDouble() ?: return emptyList()
-    if (anchor == 0.0) return emptyList()
-    return points.map { (it.value.toDouble() / anchor - 1.0) * 100.0 }
+internal fun pairRelativePerformance(
+    points: List<PairPricePoint>,
+    anchorIndex: Int = 0
+): List<Double> {
+    if (points.isEmpty()) return emptyList()
+    val anchor = points[anchorIndex.coerceIn(points.indices)].value.toDouble()
+    if (!anchor.isFinite() || anchor == 0.0) return emptyList()
+    return points.map { point -> (point.value.toDouble() / anchor - 1.0) * 100.0 }
 }
 
 @Composable
@@ -89,32 +93,47 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     var regressionPanel by remember { mutableStateOf(false) }
     var regression by remember {
         mutableStateOf(RegressionChannelSettings(
-            length1 = prefs.getInt("reg_fib_length_1", 987),
-            length2 = prefs.getInt("reg_fib_length_2", 610),
-            length3 = prefs.getInt("reg_fib_length_3", prefs.getInt("reg_length_1", 377)),
-            length4 = prefs.getInt("reg_fib_length_4", prefs.getInt("reg_length_2", 233)),
-            length5 = prefs.getInt("reg_fib_length_5", prefs.getInt("reg_length_3", 144)),
-            length6 = prefs.getInt("reg_fib_length_6", 89),
-            length7 = prefs.getInt("reg_fib_length_7", 55),
+            length1 = prefs.getInt("reg_v2_length_1", 10946),
+            length2 = prefs.getInt("reg_v2_length_2", 6765),
+            length3 = prefs.getInt("reg_v2_length_3", 4181),
+            length4 = prefs.getInt("reg_v2_length_4", 2584),
+            length5 = prefs.getInt("reg_v2_length_5", 1597),
+            length6 = prefs.getInt("reg_v2_length_6", prefs.getInt("reg_fib_length_1", 987)),
+            length7 = prefs.getInt("reg_v2_length_7", prefs.getInt("reg_fib_length_2", 610)),
+            length8 = prefs.getInt("reg_v2_length_8", prefs.getInt("reg_fib_length_3", 377)),
+            length9 = prefs.getInt("reg_v2_length_9", prefs.getInt("reg_fib_length_4", 233)),
+            length10 = prefs.getInt("reg_v2_length_10", prefs.getInt("reg_fib_length_5", 144)),
             deviationMultiplier = prefs.getFloat("reg_deviation", 2.41f).toDouble(),
             showFibonacci = prefs.getBoolean("reg_fibonacci", true),
             showBroken = prefs.getBoolean("reg_broken", false),
-            width1 = prefs.getFloat("reg_fib_width_1", 1f),
-            width2 = prefs.getFloat("reg_fib_width_2", 1f),
-            width3 = prefs.getFloat("reg_fib_width_3", 1f),
-            width4 = prefs.getFloat("reg_fib_width_4", 1f),
-            width5 = prefs.getFloat("reg_fib_width_5", 1f),
-            width6 = prefs.getFloat("reg_fib_width_6", 1f),
-            width7 = prefs.getFloat("reg_fib_width_7", 1f)
+            width1 = prefs.getFloat("reg_v2_width_1", 1f),
+            width2 = prefs.getFloat("reg_v2_width_2", 1f),
+            width3 = prefs.getFloat("reg_v2_width_3", 1f),
+            width4 = prefs.getFloat("reg_v2_width_4", 1f),
+            width5 = prefs.getFloat("reg_v2_width_5", 1f),
+            width6 = prefs.getFloat("reg_v2_width_6", prefs.getFloat("reg_fib_width_1", 1f)),
+            width7 = prefs.getFloat("reg_v2_width_7", prefs.getFloat("reg_fib_width_2", 1f)),
+            width8 = prefs.getFloat("reg_v2_width_8", prefs.getFloat("reg_fib_width_3", 1f)),
+            width9 = prefs.getFloat("reg_v2_width_9", prefs.getFloat("reg_fib_width_4", 1f)),
+            width10 = prefs.getFloat("reg_v2_width_10", prefs.getFloat("reg_fib_width_5", 1f))
         ))
     }
     val lengthTexts = remember { mutableStateListOf(*regression.lengths.map { it.toString() }.toTypedArray()) }
     val regressionColorIndices = remember {
-        mutableStateListOf(*List(7) { index -> (prefs.getInt("reg_fib_color_${index + 1}", index % 7)).mod(7) }.toTypedArray())
+        mutableStateListOf(*List(10) { index ->
+            val legacyIndex = index - 4
+            val fallback = if (index < 5) index % 10 else (legacyIndex - 1).mod(7)
+            val stored = if (prefs.contains("reg_v2_color_${index + 1}"))
+                prefs.getInt("reg_v2_color_${index + 1}", fallback)
+            else if (index >= 5) prefs.getInt("reg_fib_color_${legacyIndex}", fallback)
+            else fallback
+            stored.mod(10)
+        }.toTypedArray())
     }
     val regressionColors = listOf(
         Color(0xFF2EAD62), Color(0xFFE4B82E), Color(0xFFE05252),
-        Color(0xFF4385D8), Color(0xFF9B59B6), Color(0xFF16A6A6), Color(0xFFE67E22)
+        Color(0xFF4385D8), Color(0xFF9B59B6), Color(0xFF16A6A6), Color(0xFFE67E22),
+        Color(0xFF00A8E8), Color(0xFFD35400), Color(0xFF7F8C8D)
     )
 
     fun save() {
@@ -128,13 +147,13 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             .putBoolean("reg_fibonacci", regression.showFibonacci)
             .putBoolean("reg_broken", regression.showBroken)
         regression.lengths.forEachIndexed { index, value ->
-            editor.putInt("reg_fib_length_${index + 1}", value)
+            editor.putInt("reg_v2_length_${index + 1}", value)
         }
         regression.widths.forEachIndexed { index, value ->
-            editor.putFloat("reg_fib_width_${index + 1}", value)
+            editor.putFloat("reg_v2_width_${index + 1}", value)
         }
         regressionColorIndices.forEachIndexed { index, value ->
-            editor.putInt("reg_fib_color_${index + 1}", value)
+            editor.putInt("reg_v2_color_${index + 1}", value)
         }
         editor.apply()
     }
@@ -146,13 +165,14 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             try {
                 val end = LocalDate.now()
                 val start = end.minusDays(period.days - 1)
-                // Jedno pobranie 20-letniej historii zasila wykres i walidację prognoz.
-                // Widoczny wykres nadal pokazuje wyłącznie wybrany przez użytkownika okres.
+                // Maksymalny dostępny zakres (dostawca może udostępniać krótszą historię)
+                // pozwala aktywować długie kanały regresji aż do 10946 obserwacji.
                 val fullHistory = withContext(Dispatchers.IO) {
                     try {
-                        pairRepository.history(base, quote, end.minusYears(20), end)
+                        pairRepository.history(base, quote, end.minusYears(30), end)
                     } catch (_: Exception) {
-                        // Krótki wykres nadal działa, jeśli dostawca nie zwróci pełnych 20 lat.
+                        pairRepository.history(base, quote, end.minusYears(20), end)
+                    }.ifEmpty {
                         pairRepository.history(base, quote, start, end)
                     }
                 }
@@ -175,10 +195,16 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     val first = points.firstOrNull()?.value
     val last = points.lastOrNull()?.value
     val delta = if (first != null && last != null) last.subtract(first) else null
-    val pct = if (first != null && last != null && first.signum() != 0)
-        last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN)
-    else null
-    val relativeValues = remember(points) { pairRelativePerformance(points) }
+    // Wybrany punkt staje się kotwicą 0%; domyślnie kotwicą jest pierwszy punkt.
+    val referenceIndex = selected?.date?.let { date ->
+        points.indexOfFirst { it.date == date }.takeIf { it >= 0 }
+    } ?: 0
+    val relativeValues = remember(points, referenceIndex) {
+        pairRelativePerformance(points, referenceIndex)
+    }
+    val pct = relativeValues.lastOrNull()?.let {
+        BigDecimal.valueOf(it).setScale(4, RoundingMode.HALF_EVEN)
+    }
     val projectionBars = if (points.size > 1)
         minOf(maxOf(3, kotlin.math.ceil(points.size * 0.20).toInt()), points.lastIndex * 2) else 0
     val projectionEndIndex = (points.lastIndex + projectionBars).coerceAtLeast(0)
@@ -192,7 +218,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             projectionEndIndex.takeIf { it > points.lastIndex }?.toDouble()
         )
     }
-    var viewport by remember(points, regression) {
+    var viewport by remember(points, regression, referenceIndex) {
         mutableStateOf(
             PairChartViewport.fit(
                 regressionBounds.first, regressionBounds.second, projectionEndFraction
@@ -245,20 +271,20 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             }
         }
         OutlinedButton(onClick = { regressionPanel = !regressionPanel }) {
-            Text(if (regressionPanel) "Ukryj ustawienia regresji" else "Ustawienia regresji • 7 kanałów")
+            Text(if (regressionPanel) "Ukryj ustawienia regresji" else "Ustawienia regresji • 10 kanałów")
         }
         if (regressionPanel) {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Kanały regresji liniowej", style = MaterialTheme.typography.titleSmall)
-                    Text("Okna regresji według ciągu Fibonacciego (od najdłuższego do najkrótszego): 987, 610, 377, 233, 144, 89, 55")
+                    Text("Okna regresji od najdłuższego do najkrótszego: 10946, 6765, 4181, 2584, 1597, 987, 610, 377, 233, 144. Najkrótsze 89 i 55 zostały usunięte.")
                     lengthTexts.indices.toList().chunked(2).forEach { rowIndices ->
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             rowIndices.forEach { index ->
                                 OutlinedTextField(
                                     value = lengthTexts[index],
                                     onValueChange = { value ->
-                                        val filtered = value.filter(Char::isDigit).take(4)
+                                        val filtered = value.filter(Char::isDigit).take(5)
                                         lengthTexts[index] = filtered
                                         filtered.toIntOrNull()?.takeIf { it >= 10 }?.let { length ->
                                             regression = regression.withLength(index, length)
@@ -304,7 +330,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                             }
                         }
                     }
-                    Text("Kanał pojawia się po zebraniu pełnej liczby obserwacji. Dla okna 987 potrzeba co najmniej 987 punktów.",
+                    Text("Kanał pojawia się po zebraniu pełnej liczby obserwacji. Najdłuższe okno 10946 wymaga 10946 punktów; rzeczywista dostępność zależy od historii dostawcy.",
                         style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -319,7 +345,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 Text("Źródło nie udostępnia rzeczywistych danych OHLC. Pokazujemy kurs referencyjny jako linię, bez sztucznych świec i wolumenu.",
                     color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
             }
-            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote. Linia ciągła pokazuje regresję historyczną, a przerywana — jej projekcję poza ostatnie notowanie.")
+            Text("Oś X: daty • oś Y: zmiana procentowa względem wybranego punktu (0%). Dotknij innego notowania, aby przenieść punkt odniesienia. Linia ciągła pokazuje regresję historyczną, a przerywana — jej projekcję poza ostatnie notowanie.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("●", color = MaterialTheme.colorScheme.primary)
                 Text("$base/$quote • zmiana relacji (%)", style = MaterialTheme.typography.bodySmall)
@@ -345,7 +371,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 onViewportChange = { viewport = it },
                 modifier = Modifier.fillMaxWidth().height(340.dp)
             )
-            Text("Przeciągnij jednym palcem w lewo/prawo lub góra/dół, aby przesunąć wykres. Dwa palce służą do niezależnego skalowania osi dat i procentów.",
+            Text("Dotknięcie punktu ustawia go jako 0%. Przeciągnij poza punktami, aby przesunąć wykres; dwa palce służą do niezależnego skalowania osi dat i procentów.",
                 style = MaterialTheme.typography.bodySmall)
             val activeRegressionLengths = RegressionPlotGeometry.channelsForPlot(
                 relativeValues, regression
@@ -356,12 +382,8 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodySmall
             )
             selected?.let {
-                val selectedIndex = points.indexOf(it)
-                val relative = relativeValues.getOrNull(selectedIndex)
-                Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}" +
-                    (relative?.let { value -> " • ${if (value > 0) "+" else ""}${"%.2f".format(value)}%" } ?: ""))
-            }
-                ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
+                Text("Punkt odniesienia 0%: ${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}")
+            } ?: Text("Dotknij wykresu, aby ustawić punkt odniesienia 0%.")
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text("Minimum", style = MaterialTheme.typography.labelSmall)
@@ -626,6 +648,12 @@ private fun PairHistoryChart(
                     }
                 }
             }
+        }
+
+        // Pozioma linia 0% wskazuje poziom ceny z wybranego punktu odniesienia.
+        if (0.0 in viewport.minPercent..viewport.maxPercent) {
+            val zeroY = yFor(0.0)
+            drawLine(marker.copy(alpha = 0.72f), Offset(left, zeroY), Offset(right, zeroY), 1.5.dp.toPx())
         }
 
         val selectedIndex = selectedDate?.let { date -> points.indexOfFirst { it.date == date } } ?: -1
