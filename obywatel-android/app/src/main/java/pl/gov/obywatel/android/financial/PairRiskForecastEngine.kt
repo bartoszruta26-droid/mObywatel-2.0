@@ -29,7 +29,7 @@ data class PairHorizonRisk(
  * Próby wyników nie nakładają się na siebie.
  */
 object PairRiskForecastEngine {
-    private const val NEUTRAL_BAND_PERCENT = 0.05
+    private const val NEUTRAL_BAND_PERCENT = ExchangeProfitThreshold.MIN_NET_PROFIT_PERCENT
     // 10–19 prób daje wyłącznie wstępny szacunek bez etykiety przewagi.
     // Do oceny przewagi statystycznej nadal wymagamy co najmniej 20 prób.
     private const val MIN_ESTIMATE_SAMPLES = 10
@@ -149,11 +149,7 @@ object PairRiskForecastEngine {
         null, null, null, 0, PairRiskSignificance.INSUFFICIENT
     )
 
-    private fun direction(change: Double) = when {
-        change > NEUTRAL_BAND_PERCENT -> ForecastDirection.UP
-        change < -NEUTRAL_BAND_PERCENT -> ForecastDirection.DOWN
-        else -> ForecastDirection.NEUTRAL
-    }
+    private fun direction(change: Double) = ExchangeProfitThreshold.classify(change)
 
     /** 95% Wilson score interval; conservative overlap rule for color warnings. */
     private fun wilson(successes: Int, trials: Int): Pair<Double, Double> {
