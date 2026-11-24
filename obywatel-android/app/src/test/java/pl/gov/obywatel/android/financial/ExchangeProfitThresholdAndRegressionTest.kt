@@ -60,4 +60,40 @@ class ExchangeProfitThresholdAndRegressionTest {
         assertEquals(10, channels.size)
         assertEquals(listOf(1597, 987, 610, 377, 233, 144), channels.mapNotNull { it?.length })
     }
+    private fun risingSeries(size: Int): List<Double> = (0 until size).map { index ->
+        kotlin.math.exp(index * 0.0005 + kotlin.math.sin(index / 13.0) * 0.00005)
+    }
+
+    @Test
+    fun pairProbabilityUsesAdaptiveChannelsAndRegressionQuantileBandsForSelectedHistory() {
+        val result = PairRiskForecastEngine.forecast(
+            risingSeries(1260),
+            RegressionChannelSettings(),
+            listOf(ForecastHorizon.QUARTER)
+        ).single()
+
+        // Dla pięcioletniego szeregu i kwartału najdłuższe okno 610
+        // pozostawia dokładnie dziesięć niepokrywających się prób.
+        assertEquals(4, result.activeChannels)
+        assertEquals(10, result.samples)
+        assertNotNull(result.profitProbability)
+        assertNotNull(result.lowerQuantilePercent)
+        assertNotNull(result.upperQuantilePercent)
+        assertTrue(result.lowerQuantilePercent!! <= result.upperQuantilePercent!!)
+    }
+
+    @Test
+    fun pairProbabilityReportsInsufficientIndependentSamplesInsteadOfInventingConfidence() {
+        val result = PairRiskForecastEngine.forecast(
+            risingSeries(1260),
+            RegressionChannelSettings(),
+            listOf(ForecastHorizon.YEAR)
+        ).single()
+
+        assertEquals(3, result.activeChannels)
+        assertTrue(result.samples < 10)
+        assertNull(result.profitProbability)
+        assertNull(result.lossProbability)
+    }
+
 }
