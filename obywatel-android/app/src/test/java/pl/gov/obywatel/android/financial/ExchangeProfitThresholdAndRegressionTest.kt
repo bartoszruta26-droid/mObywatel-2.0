@@ -17,6 +17,12 @@ class ExchangeProfitThresholdAndRegressionTest {
         assertEquals(ForecastDirection.NEUTRAL, ExchangeProfitThreshold.classify(-2.0))
         assertEquals(ForecastDirection.DOWN, ExchangeProfitThreshold.classify(-2.000001))
         assertEquals(ForecastDirection.NEUTRAL, ExchangeProfitThreshold.classify(0.75))
+        assertEquals(ForecastDirection.DOWN, ExchangeProfitThreshold.classifyOutcome(-0.5, ForecastDirection.UP))
+        assertEquals(ForecastDirection.NEUTRAL, ExchangeProfitThreshold.classifyOutcome(1.0, ForecastDirection.UP))
+        assertEquals(ForecastDirection.UP, ExchangeProfitThreshold.classifyOutcome(2.01, ForecastDirection.UP))
+        assertEquals(ForecastDirection.DOWN, ExchangeProfitThreshold.classifyOutcome(-2.01, ForecastDirection.DOWN))
+        assertEquals(ForecastDirection.UP, ExchangeProfitThreshold.classifyOutcome(0.5, ForecastDirection.DOWN))
+        assertEquals(ForecastDirection.NEUTRAL, ExchangeProfitThreshold.classifyOutcome(-1.0, ForecastDirection.DOWN))
     }
 
     @Test
