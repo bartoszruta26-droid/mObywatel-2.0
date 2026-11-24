@@ -151,7 +151,7 @@ object LinearRegressionChannels {
 
     /** Zachowane dla zgodności ze starszymi wywołaniami i testami. */
     fun calculateThree(values: List<Double>, settings: RegressionChannelSettings) =
-        listOf(settings.length3, settings.length4, settings.length5).map {
+        listOf(settings.length8, settings.length9, settings.length10).map {
             calculate(values, it, settings.deviationMultiplier)
         }
 }
