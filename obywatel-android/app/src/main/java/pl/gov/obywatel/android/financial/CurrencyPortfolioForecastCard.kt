@@ -106,7 +106,7 @@ fun CurrencyPortfolioForecastCard(
                     val history = withContext(Dispatchers.IO) {
                         repository.currencyRateHistory(NbpTable.A, currency.code, start, end)
                     }
-                    val requiredObservations = settings.lengths.maxOrNull() ?: 987
+                    val requiredObservations = settings.lengths.minOrNull() ?: 144
                     require(history.size >= requiredObservations) {
                         "Za mało danych NBP dla ${currency.code}: ${history.size} obserwacji; wymagane jest okno $requiredObservations."
                     }
