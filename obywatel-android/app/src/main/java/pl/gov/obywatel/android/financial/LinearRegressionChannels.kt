@@ -42,7 +42,6 @@ data class RegressionChannelSettings(
 ) {
     init {
         require(lengths.all { it >= 10 })
-        require(lengths.distinct().size == lengths.size) { "Długości kanałów regresji muszą być różne." }
         require(deviationMultiplier >= 0.1 && deviationMultiplier.isFinite())
         require(widths.all { it in 1f..4f })
     }
