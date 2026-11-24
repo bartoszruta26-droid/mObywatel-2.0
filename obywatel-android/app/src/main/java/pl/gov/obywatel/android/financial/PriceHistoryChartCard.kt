@@ -44,7 +44,7 @@ private enum class PriceChartPeriod(val label: String, val days: Long) {
     TEN_YEARS("10R", 3650), TWENTY_YEARS("20R", 7300), THIRTY_YEARS("30R", 10950)
 }
 private enum class PriceChartStyle(val label: String) { LINE("Linia"), AREA("Obszar"), CANDLE("Świece") }
-private data class PairPricePoint(val date: LocalDate, val value: BigDecimal)
+internal data class PairPricePoint(val date: LocalDate, val value: BigDecimal)
 
 internal fun pairRelativePerformance(
     points: List<PairPricePoint>,
