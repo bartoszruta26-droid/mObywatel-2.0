@@ -115,7 +115,7 @@ class PairChartInteractionTest {
     @Test fun selectedPairReportsMonthlyThroughAnnualRiskFromLongHistory() {
         // 20 lat danych dziennych: roczny wynik ma mniej niż 20 prób niezależnych,
         // ale można pokazać ostrożny szacunek z liczbą prób i bez etykiety przewagi.
-        val values = (0 until 5000).map { index -> kotlin.math.exp(index * 0.003) }
+        val values = (0 until 5000).map { index -> kotlin.math.exp(index * 0.005) }
         val horizons = listOf(
             ForecastHorizon.MONTH,
             ForecastHorizon.TWO_MONTHS,
@@ -139,7 +139,7 @@ class PairChartInteractionTest {
 
     @Test fun pairRiskReportsProfitAndLossForOneSelectedSeries() {
         val values = (0 until 1500).map { index ->
-            2.0 + index * 0.02 + kotlin.math.sin(index / 19.0) * 0.0002
+            kotlin.math.exp(index * 0.01 + kotlin.math.sin(index / 19.0) * 0.00002)
         }
         val risks = PairRiskForecastEngine.forecast(values, RegressionChannelSettings())
         assertEquals(8, risks.size)
@@ -161,9 +161,9 @@ class PairChartInteractionTest {
             PairPricePoint(dates[index], BigDecimal(value))
         }
         val relative = pairRelativePerformance(points, anchorIndex = 1)
-        assertEquals(10.0, relative[0], 1e-9)
+        assertEquals(-100.0 / 11.0, relative[0], 1e-9)
         assertEquals(0.0, relative[1], 1e-9)
-        assertEquals(-100.0 / 11.0, relative[2], 1e-9)
+        assertEquals(-200.0 / 11.0, relative[2], 1e-9)
     }
 
     @Test fun referenceIndexIsClampedAndDefaultUsesFirstPrice() {
@@ -172,7 +172,7 @@ class PairChartInteractionTest {
             PairPricePoint(LocalDate.parse("2026-01-02"), BigDecimal("250"))
         )
         assertEquals(0.0, pairRelativePerformance(points)[0], 1e-9)
-        assertEquals(25.0, pairRelativePerformance(points, 99)[1], 1e-9)
+        assertEquals(25.0, pairRelativePerformance(points, -1)[1], 1e-9)
     }
 
 }
