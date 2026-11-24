@@ -55,6 +55,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.json.JSONArray
+import org.json.JSONObject
 
 // Visual parity: checkmark scan frame and horizontal gradient identity-card shortcut.
 internal data class CredentialFieldOption(val key: String, val label: String)
@@ -447,6 +449,49 @@ internal fun credentialValidityForDocument(documentKey: String, values: Map<Stri
     return !explicitlyInvalid && isCredentialValidByExpiry(expiry)
 }
 
+internal data class CredentialGraphicElement(
+    val id: String,
+    val assetId: String = "",
+    val caption: String = "",
+    val x: Float = 0f,
+    val y: Float = 0f,
+    val scale: Float = 1f,
+    val rotation: Float = 0f,
+    val captionScale: Float = 1f,
+    val captionPosition: String = "Po prawej",
+    val visible: Boolean = true
+)
+
+internal fun defaultCredentialGraphicElements(settings: LegitimacyPreviewSettings): List<CredentialGraphicElement> =
+    settings.graphicElements.take(4).takeIf { it.isNotEmpty() } ?: listOf(
+        CredentialGraphicElement("graphic-1", settings.flagAssetId, x = settings.flagOffsetX, y = settings.flagOffsetY,
+            scale = settings.flagScale, rotation = settings.flagRotation, visible = settings.showFlag),
+        CredentialGraphicElement("graphic-2", settings.crestAssetId,
+            caption = settings.crestCaption.ifBlank { "Rzeczpospolita\nPolska" },
+            x = 76f + settings.crestOffsetX, y = settings.crestOffsetY, scale = settings.crestScale,
+            rotation = settings.crestRotation, captionPosition = settings.captionPosition, visible = settings.showCrest)
+    )
+
+private fun encodeCredentialGraphicElements(elements: List<CredentialGraphicElement>): String =
+    JSONArray().apply { elements.take(4).forEach { e ->
+        put(JSONObject().put("id", e.id).put("assetId", e.assetId).put("caption", e.caption)
+            .put("x", e.x).put("y", e.y).put("scale", e.scale).put("rotation", e.rotation)
+            .put("captionScale", e.captionScale).put("captionPosition", e.captionPosition).put("visible", e.visible))
+    } }.toString()
+
+private fun decodeCredentialGraphicElements(raw: String?): List<CredentialGraphicElement> = runCatching {
+    val a = JSONArray(raw ?: "[]")
+    (0 until a.length()).mapNotNull { i ->
+        val e = a.optJSONObject(i) ?: return@mapNotNull null
+        CredentialGraphicElement(e.optString("id", "graphic-" + (i + 1)), e.optString("assetId"), e.optString("caption"),
+            e.optDouble("x", 0.0).toFloat().coerceIn(-180f, 360f),
+            e.optDouble("y", 0.0).toFloat().coerceIn(-180f, 240f),
+            e.optDouble("scale", 1.0).toFloat().coerceIn(0.25f, 3f),
+            e.optDouble("rotation", 0.0).toFloat().coerceIn(-180f, 180f),
+            e.optDouble("captionScale", 1.0).toFloat().coerceIn(0.5f, 3f),
+            e.optString("captionPosition", "Po prawej"), e.optBoolean("visible", true))
+    }.take(4)
+}.getOrDefault(emptyList())
 internal data class LegitimacyPreviewSettings(
     val showCard: Boolean = true,
     val showReverse: Boolean = false,
@@ -466,6 +511,7 @@ internal data class LegitimacyPreviewSettings(
     val flagAssetId: String = "",
     val backgroundAssetId: String = "",
     val logoAssetId: String = "",
+    val graphicElements: List<CredentialGraphicElement> = emptyList(),
     val crestCaption: String = "",
     val captionPosition: String = "Pod herbem",
     val orientation: String = "PIONOWA",
@@ -640,7 +686,8 @@ internal fun mergeSharedLegitimacyAppearance(
         valueOffsetY = shared.valueOffsetY,
         fontFamily = shared.fontFamily,
         fontColor = document.fontColor.ifBlank { shared.fontColor },
-        imageFilter = shared.imageFilter
+        imageFilter = shared.imageFilter,
+        graphicElements = shared.graphicElements
     )
 }
 
@@ -672,6 +719,7 @@ internal object LegitimacyPreviewSettingsStore {
             flagAssetId = p.getString("${key}_flag", "").orEmpty(),
             backgroundAssetId = p.getString("${key}_background", "").orEmpty(),
             logoAssetId = p.getString("${key}_logo", "").orEmpty(),
+            graphicElements = decodeCredentialGraphicElements(p.getString("${key}_graphic_elements", null)),
             crestCaption = p.getString("${key}_caption", "").orEmpty(),
             captionPosition = p.getString("${key}_caption_position", "Pod herbem").orEmpty(),
             orientation = p.getString("${key}_orientation", "PIONOWA").orEmpty(),
@@ -753,6 +801,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putFloat("${key}_value_y", value.valueOffsetY)
                 .putString("${key}_font_family", value.fontFamily)
                 .putString("${key}_font_color", value.fontColor)
+                .putString("${key}_graphic_elements", encodeCredentialGraphicElements(value.graphicElements))
                 .putString("${key}_image_filter", value.imageFilter)
             listOf("crest", "flag", "background", "logo", "caption", "caption_position").forEach {
                 editor.remove("${key}_$it")
@@ -774,6 +823,7 @@ internal object LegitimacyPreviewSettingsStore {
                 .putString("${key}_tile_vector_motif", value.tileVectorMotifId)
                 .putString("${key}_tile_gradient_palette", value.tileGradientPaletteId)
                 .putString("${key}_logo", value.logoAssetId)
+                .putString("${key}_graphic_elements", encodeCredentialGraphicElements(value.graphicElements))
                 .putString("${key}_caption", value.crestCaption)
                 .putString("${key}_caption_position", value.captionPosition)
                 .putStringSet("${key}_visible_fields", value.visibleFields)
@@ -951,6 +1001,7 @@ internal fun LegitimacyPreviewSettingsPanel(
     var logoMenu by remember { mutableStateOf(false) }
     var positionMenu by remember { mutableStateOf(false) }
     var importKind by remember { mutableStateOf("Herb") }
+    var selectedGraphicSlot by remember { mutableStateOf("graphic-1") }
     var message by remember { mutableStateOf("") }
 
     fun update(value: LegitimacyPreviewSettings) {
@@ -994,8 +1045,23 @@ internal fun LegitimacyPreviewSettingsPanel(
         }.onFailure { message = "Nie udało się wczytać flagi: ${it.message ?: "błąd"}" }
     }
 
-    val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+    val genericGraphicPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) runCatching {
+            DocumentBrandStore.import(context, uri, "legitimacy:$documentKey", "Logo", "Element graficzny legitymacji")
+        }.onSuccess {
+            assets = DocumentBrandStore.list(context)
+            val imported = assets.lastOrNull { it.owner == "legitimacy:$documentKey" && it.kind == "Logo" }
+            if (imported != null) {
+                val current = defaultCredentialGraphicElements(settings).toMutableList()
+                val index = current.indexOfFirst { it.id == selectedGraphicSlot }.takeIf { it >= 0 } ?: 0
+                current[index] = current[index].copy(assetId = imported.id)
+                update(settings.copy(graphicElements = current))
+            }
+            message = "Dodano grafikę do wybranego elementu."
+        }.onFailure { message = "Nie udało się wczytać grafiki: ${it.message ?: "błąd"}" }
+    }
+
+    val logoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->        if (uri != null) runCatching {
             DocumentBrandStore.import(context, uri, "legitimacy:${documentKey}", "Logo", "Logo wystawcy")
         }.onSuccess {
             assets = DocumentBrandStore.list(context)
@@ -1098,8 +1164,6 @@ internal fun LegitimacyPreviewSettingsPanel(
             Text("Elementy wzoru", fontWeight = FontWeight.SemiBold)
             listOf(
                 Triple(settings.showPhoto, "Fotografia", { v: Boolean -> update(settings.copy(showPhoto = v)) }),
-                Triple(settings.showFlag, "Flaga", { v: Boolean -> update(settings.copy(showFlag = v)) }),
-                Triple(settings.showCrest, "Godło / herb", { v: Boolean -> update(settings.copy(showCrest = v)) }),
                 Triple(settings.showLogo, "Logo wystawcy", { v: Boolean -> update(settings.copy(showLogo = v)) }),
                 Triple(settings.showBackground, "Tło dokumentu", { v: Boolean -> update(settings.copy(showBackground = v)) })
             ).forEach { (checked, label, onToggle) ->
@@ -1108,6 +1172,62 @@ internal fun LegitimacyPreviewSettingsPanel(
                     Text(label, style = MaterialTheme.typography.bodyMedium)
                 }
             }
+            Text("Elementy graficzne legitymacji (od 1 do 4)", fontWeight = FontWeight.SemiBold)
+            Text("Każdy element może być dowolną grafiką z biblioteki — nie musi być flagą ani godłem. Podpis jest opcjonalny.", style = MaterialTheme.typography.bodySmall)
+            val editableGraphics = defaultCredentialGraphicElements(settings).take(4)
+            editableGraphics.forEachIndexed { index, element ->
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Element ${index + 1}", modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                            Checkbox(checked = element.visible, onCheckedChange = { checked ->
+                                update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(visible = checked) else it }))
+                            })
+                            Text("Widoczny")
+                            TextButton(onClick = { if (editableGraphics.size > 1) update(settings.copy(graphicElements = editableGraphics.filterNot { it.id == element.id })) },
+                                enabled = editableGraphics.size > 1) { Text("Usuń") }
+                        }
+                        GraphicAssetPreviewGrid(
+                            title = "Grafika — dowolny zasób", selectedId = element.assetId,
+                            choices = remember(documentKey, assets) {
+                                listOf(Triple("", "Bez grafiki", null)) + assets.filter { it.kind in setOf(
+                                    "Herb", "Godło", "Logo", "Flaga", "Symbol", "Pieczęć", "Wzór podpisu odręcznego",
+                                    "Pozostałe", "Fotografia", "Znak wodny", "Ikona", "Ikona wektorowa", "Ikona wektorowa kafelka",
+                                    "Tło wektorowe", "Tło graficzne", "Grafika wektorowa tła kafelków",
+                                    "Animowany hologram", "Tło dokumentu", "Tło kafelka")
+                                }.distinctBy { it.id }.map { Triple(it.id, it.label, previewThumbnail(context, it.id)) }
+                            },
+                            onSelect = { selected -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(assetId = selected) else it })) }
+                        )
+                        OutlinedButton(onClick = { selectedGraphicSlot = element.id; genericGraphicPicker.launch(arrayOf("image/png", "image/jpeg", "image/webp", "image/svg+xml")) },
+                            modifier = Modifier.fillMaxWidth()) { Text("Wczytaj dowolną grafikę lub SVG") }
+                        OutlinedTextField(value = element.caption,
+                            onValueChange = { caption -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(caption = caption) else it })) },
+                            label = { Text("Podpis — opcjonalny") }, modifier = Modifier.fillMaxWidth(), minLines = 1, maxLines = 3)
+                        Text("Rozmiar grafiki: ${"%.2f".format(element.scale)}")
+                        Slider(element.scale, { scale -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(scale = scale) else it })) }, valueRange = 0.25f..3f)
+                        Text("Przesunięcie poziome: ${element.x.toInt()} dp")
+                        Slider(element.x, { x -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(x = x) else it })) }, valueRange = -180f..360f)
+                        Text("Przesunięcie pionowe: ${element.y.toInt()} dp")
+                        Slider(element.y, { y -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(y = y) else it })) }, valueRange = -180f..240f)
+                        Text("Obrót: ${element.rotation.toInt()}°")
+                        Slider(element.rotation, { rotation -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(rotation = rotation) else it })) }, valueRange = -180f..180f)
+                        if (element.caption.isNotBlank()) {
+                            Text("Rozmiar podpisu: ${"%.2f".format(element.captionScale)}")
+                            Slider(element.captionScale, { scale -> update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(captionScale = scale) else it })) }, valueRange = 0.5f..3f)
+                            SimpleGraphicCaptionPosition(element.captionPosition) { position ->
+                                update(settings.copy(graphicElements = editableGraphics.map { if (it.id == element.id) it.copy(captionPosition = position) else it }))
+                            }
+                        }
+                    }
+                }
+            }
+            OutlinedButton(onClick = {
+                if (editableGraphics.size < 4) {
+                    val id = "graphic-${java.util.UUID.randomUUID()}"
+                    update(settings.copy(graphicElements = editableGraphics + CredentialGraphicElement(id = id)))
+                }
+            }, enabled = editableGraphics.size < 4, modifier = Modifier.fillMaxWidth()) { Text("Dodaj element graficzny (${editableGraphics.size}/4)") }
             Text("Widoczność pól ustawiasz bezpośrednio przy odpowiednim polu danych.", style = MaterialTheme.typography.bodySmall)
             }
             if (assetSelectionOnly || documentKey != GLOBAL_LEGITIMACY_APPEARANCE_KEY) {
@@ -1360,7 +1480,7 @@ internal fun LegitimacyPreviewSettingsPanel(
                 }
             }
             OutlinedButton(onClick = {
-                update(settings.copy(graphicScale = 1f, graphicRotation = 0f, graphicOffsetX = 0f,
+                update(settings.copy(graphicElements = defaultCredentialGraphicElements(settings).mapIndexed { index, element -> element.copy(x = if (index == 1) 76f else 0f, y = 0f, scale = 1f, rotation = 0f, captionScale = 1f) }, graphicScale = 1f, graphicRotation = 0f, graphicOffsetX = 0f,
                     graphicOffsetY = 0f, crestScale = 1f, crestRotation = 0f, crestOffsetX = 0f,
                     crestOffsetY = 0f, flagScale = 1f, flagRotation = 0f, flagOffsetX = 0f,
                     flagOffsetY = 0f, labelScale = 1f, labelRotation = 0f, labelOffsetX = 0f,
@@ -1373,6 +1493,19 @@ internal fun LegitimacyPreviewSettingsPanel(
             }
             } else {
                 Text("Przypisanie grafiki dotyczy wyłącznie tego dokumentu i nie zmienia pozostałych legitymacji.", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SimpleGraphicCaptionPosition(value: String, onSelect: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) { Text("Położenie podpisu: $value") }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            listOf("Po prawej", "Po lewej", "Nad grafiką", "Pod grafiką").forEach { position ->
+                DropdownMenuItem(text = { Text(position) }, onClick = { onSelect(position); expanded = false })
             }
         }
     }
@@ -1394,74 +1527,60 @@ internal fun LegitimacyHeraldry(
             ?: defaultDocumentEmblem(context, title)
     }
     val assignedFlag = remember(documentKey, assetRevision, title) {
-        DocumentBrandStore.imageForDocument(context, documentKey, title, "Flaga")
-            ?: defaultDocumentFlag(context, title)
+        DocumentBrandStore.imageForDocument(context, documentKey, title, "Flaga") ?: defaultDocumentFlag(context, title)
     }
-    val selectedCrest = remember(settings.crestAssetId, assignedCrest) {
-        settings.crestAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedCrest
+    val elements = remember(settings.graphicElements, settings.crestAssetId, settings.flagAssetId, settings.crestCaption,
+        settings.showFlag, settings.showCrest, settings.flagScale, settings.crestScale, settings.flagOffsetX, settings.flagOffsetY,
+        settings.crestOffsetX, settings.crestOffsetY, settings.flagRotation, settings.crestRotation) {
+        defaultCredentialGraphicElements(settings)
     }
-    val selectedFlag = remember(settings.flagAssetId, assignedFlag) {
-        settings.flagAssetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: assignedFlag
-    }
-    val caption = settings.crestCaption.ifBlank { "Rzeczpospolita\nPolska" }
     val imageFilter = remember(settings.imageFilter) { credentialImageColorFilter(settings.imageFilter) }
-    Column(
-        Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(7.dp)
-    ) {
-        if (settings.showFlag && selectedFlag != null) {
-            Image(
-                selectedFlag.asImageBitmap(),
-                contentDescription = "Flaga dokumentu — wyrównana do lewego marginesu zdjęcia i godła",
-                alignment = Alignment.CenterStart,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .graphicsLayer {
-                        // Flaga jest elementem kolumny zdjęcia: pozostaje przy jej lewym
-                        // marginesie i nie dziedziczy przesunięć używanych dla godła.
-                        transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
-                        scaleX = settings.flagScale
-                        scaleY = settings.flagScale
-                        rotationZ = settings.flagRotation
-                        translationX = settings.flagOffsetX * density
-                        translationY = settings.flagOffsetY * density
-                    },
-                contentScale = androidx.compose.ui.layout.ContentScale.Fit
-            )
-        }
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (settings.showCrest && selectedCrest != null) {
-                Image(
-                    selectedCrest.asImageBitmap(),
-                    contentDescription = "Godło lub herb dokumentu",
-                    modifier = Modifier.size(68.dp).graphicsLayer {
-                        scaleX = settings.crestScale
-                        scaleY = settings.crestScale
-                        rotationZ = settings.crestRotation
-                        translationX = settings.crestOffsetX * density
-                        translationY = settings.crestOffsetY * density
-                    },
-                    contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                    colorFilter = imageFilter
-                )
-            }
-            if (settings.showCrest) Spacer(Modifier.width(6.dp))
-            if (settings.showCrest || caption.isNotBlank()) {
-                Text(
-                    caption,
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = credentialFontColor(settings.fontColor),
-                    maxLines = 2
-                )
+    Box(Modifier.fillMaxWidth().height(if (vertical) 132.dp else 112.dp)) {
+        elements.forEachIndexed { index, element ->
+            if (element.visible) {
+                val fallback = when (element.id) { "graphic-1" -> assignedFlag; "graphic-2" -> assignedCrest; else -> null }
+                val bitmap = remember(element.assetId, fallback, assetRevision) {
+                    element.assetId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) } ?: fallback
+                }
+                Row(
+                    modifier = Modifier.offset(x = element.x.dp, y = element.y.dp).graphicsLayer { rotationZ = element.rotation },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    if (element.captionPosition == "Po lewej" && element.caption.isNotBlank()) {
+                        Text(element.caption, fontSize = (10f * element.captionScale).sp,
+                            lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
+                            color = credentialFontColor(settings.fontColor))
+                    }
+                    if (element.captionPosition == "Nad grafiką" || element.captionPosition == "Pod grafiką") {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (element.captionPosition == "Nad grafiką" && element.caption.isNotBlank()) {
+                                Text(element.caption, fontSize = (10f * element.captionScale).sp,
+                                    lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
+                                    color = credentialFontColor(settings.fontColor))
+                            }
+                            if (bitmap != null) Image(bitmap.asImageBitmap(),
+                                contentDescription = "Element graficzny legitymacji ${index + 1}",
+                                modifier = Modifier.size((46f * element.scale).dp), contentScale = ContentScale.Fit,
+                                colorFilter = if (element.id == "graphic-2") imageFilter else null)
+                            if (element.captionPosition == "Pod grafiką" && element.caption.isNotBlank()) {
+                                Text(element.caption, fontSize = (10f * element.captionScale).sp,
+                                    lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
+                                    color = credentialFontColor(settings.fontColor))
+                            }
+                        }
+                    } else {
+                        if (bitmap != null) Image(bitmap.asImageBitmap(),
+                            contentDescription = "Element graficzny legitymacji ${index + 1}",
+                            modifier = Modifier.size((46f * element.scale).dp), contentScale = ContentScale.Fit,
+                            colorFilter = if (element.id == "graphic-2") imageFilter else null)
+                        if (element.captionPosition != "Po lewej" && element.caption.isNotBlank()) {
+                            Text(element.caption, fontSize = (10f * element.captionScale).sp,
+                                lineHeight = (12f * element.captionScale).sp, fontWeight = FontWeight.SemiBold,
+                                color = credentialFontColor(settings.fontColor))
+                        }
+                    }
+                }
             }
         }
     }
