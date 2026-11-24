@@ -64,7 +64,7 @@ object PairRiskForecastEngine {
         val logValues = values.map(::ln)
         return horizons.map { horizon ->
             val horizonBars = horizon.tradingSessions
-            val availableLengths = settings.lengths.distinct().filter { it <= values.size }
+            val availableLengths = settings.lengths.distinct().filter { it <= values.size }.sortedDescending()
             if (availableLengths.size < MIN_CHANNELS) {
                 return@map empty(horizon, 0.0, ForecastDirection.NEUTRAL, 0)
             }
