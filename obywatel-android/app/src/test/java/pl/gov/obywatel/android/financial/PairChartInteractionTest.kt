@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: CC0-1.0
 package pl.gov.obywatel.android.financial
 
+import java.math.BigDecimal
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -149,4 +151,28 @@ class PairChartInteractionTest {
         assertNull(risks.last().profitProbability)
         assertEquals(PairRiskSignificance.INSUFFICIENT, risks.last().significance)
     }
+    @Test fun selectedPricePointBecomesZeroPercentReference() {
+        val dates = listOf(
+            LocalDate.parse("2026-01-01"),
+            LocalDate.parse("2026-01-02"),
+            LocalDate.parse("2026-01-03")
+        )
+        val points = listOf("100", "110", "90").mapIndexed { index, value ->
+            PairPricePoint(dates[index], BigDecimal(value))
+        }
+        val relative = pairRelativePerformance(points, anchorIndex = 1)
+        assertEquals(10.0, relative[0], 1e-9)
+        assertEquals(0.0, relative[1], 1e-9)
+        assertEquals(-100.0 / 11.0, relative[2], 1e-9)
+    }
+
+    @Test fun referenceIndexIsClampedAndDefaultUsesFirstPrice() {
+        val points = listOf(
+            PairPricePoint(LocalDate.parse("2026-01-01"), BigDecimal("200")),
+            PairPricePoint(LocalDate.parse("2026-01-02"), BigDecimal("250"))
+        )
+        assertEquals(0.0, pairRelativePerformance(points)[0], 1e-9)
+        assertEquals(25.0, pairRelativePerformance(points, 99)[1], 1e-9)
+    }
+
 }
