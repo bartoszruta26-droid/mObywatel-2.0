@@ -113,7 +113,7 @@ class PairChartInteractionTest {
     @Test fun selectedPairReportsMonthlyThroughAnnualRiskFromLongHistory() {
         // 20 lat danych dziennych: roczny wynik ma mniej niż 20 prób niezależnych,
         // ale można pokazać ostrożny szacunek z liczbą prób i bez etykiety przewagi.
-        val values = (0 until 5000).map { index -> kotlin.math.exp(index * 0.0015) }
+        val values = (0 until 5000).map { index -> kotlin.math.exp(index * 0.003) }
         val horizons = listOf(
             ForecastHorizon.MONTH,
             ForecastHorizon.TWO_MONTHS,
@@ -137,7 +137,7 @@ class PairChartInteractionTest {
 
     @Test fun pairRiskReportsProfitAndLossForOneSelectedSeries() {
         val values = (0 until 1500).map { index ->
-            2.0 + index * 0.01 + kotlin.math.sin(index / 19.0) * 0.0002
+            2.0 + index * 0.02 + kotlin.math.sin(index / 19.0) * 0.0002
         }
         val risks = PairRiskForecastEngine.forecast(values, RegressionChannelSettings())
         assertEquals(8, risks.size)
