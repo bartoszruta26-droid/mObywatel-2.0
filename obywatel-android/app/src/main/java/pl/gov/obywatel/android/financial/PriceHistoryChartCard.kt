@@ -46,10 +46,14 @@ private enum class PriceChartPeriod(val label: String, val days: Long) {
 private enum class PriceChartStyle(val label: String) { LINE("Linia"), AREA("Obszar"), CANDLE("Świece") }
 private data class PairPricePoint(val date: LocalDate, val value: BigDecimal)
 
-private fun pairRelativePerformance(points: List<PairPricePoint>): List<Double> {
-    val anchor = points.firstOrNull()?.value?.toDouble() ?: return emptyList()
-    if (anchor == 0.0) return emptyList()
-    return points.map { (it.value.toDouble() / anchor - 1.0) * 100.0 }
+internal fun pairRelativePerformance(
+    points: List<PairPricePoint>,
+    anchorIndex: Int = 0
+): List<Double> {
+    if (points.isEmpty()) return emptyList()
+    val anchor = points[anchorIndex.coerceIn(points.indices)].value.toDouble()
+    if (!anchor.isFinite() || anchor == 0.0) return emptyList()
+    return points.map { point -> (point.value.toDouble() / anchor - 1.0) * 100.0 }
 }
 
 @Composable
@@ -191,10 +195,16 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
     val first = points.firstOrNull()?.value
     val last = points.lastOrNull()?.value
     val delta = if (first != null && last != null) last.subtract(first) else null
-    val pct = if (first != null && last != null && first.signum() != 0)
-        last.subtract(first).multiply(BigDecimal("100")).divide(first, 4, RoundingMode.HALF_EVEN)
-    else null
-    val relativeValues = remember(points) { pairRelativePerformance(points) }
+    // Wybrany punkt staje się kotwicą 0%; domyślnie kotwicą jest pierwszy punkt.
+    val referenceIndex = selected?.date?.let { date ->
+        points.indexOfFirst { it.date == date }.takeIf { it >= 0 }
+    } ?: 0
+    val relativeValues = remember(points, referenceIndex) {
+        pairRelativePerformance(points, referenceIndex)
+    }
+    val pct = relativeValues.lastOrNull()?.let {
+        BigDecimal.valueOf(it).setScale(4, RoundingMode.HALF_EVEN)
+    }
     val projectionBars = if (points.size > 1)
         minOf(maxOf(3, kotlin.math.ceil(points.size * 0.20).toInt()), points.lastIndex * 2) else 0
     val projectionEndIndex = (points.lastIndex + projectionBars).coerceAtLeast(0)
@@ -208,7 +218,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             projectionEndIndex.takeIf { it > points.lastIndex }?.toDouble()
         )
     }
-    var viewport by remember(points, regression) {
+    var viewport by remember(points, regression, referenceIndex) {
         mutableStateOf(
             PairChartViewport.fit(
                 regressionBounds.first, regressionBounds.second, projectionEndFraction
@@ -335,7 +345,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 Text("Źródło nie udostępnia rzeczywistych danych OHLC. Pokazujemy kurs referencyjny jako linię, bez sztucznych świec i wolumenu.",
                     color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
             }
-            Text("Oś X: daty • oś Y: procentowa zmiana relacji $base/$quote. Linia ciągła pokazuje regresję historyczną, a przerywana — jej projekcję poza ostatnie notowanie.")
+            Text("Oś X: daty • oś Y: zmiana procentowa względem wybranego punktu (0%). Dotknij innego notowania, aby przenieść punkt odniesienia. Linia ciągła pokazuje regresję historyczną, a przerywana — jej projekcję poza ostatnie notowanie.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("●", color = MaterialTheme.colorScheme.primary)
                 Text("$base/$quote • zmiana relacji (%)", style = MaterialTheme.typography.bodySmall)
@@ -361,7 +371,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 onViewportChange = { viewport = it },
                 modifier = Modifier.fillMaxWidth().height(340.dp)
             )
-            Text("Przeciągnij jednym palcem w lewo/prawo lub góra/dół, aby przesunąć wykres. Dwa palce służą do niezależnego skalowania osi dat i procentów.",
+            Text("Dotknięcie punktu ustawia go jako 0%. Przeciągnij poza punktami, aby przesunąć wykres; dwa palce służą do niezależnego skalowania osi dat i procentów.",
                 style = MaterialTheme.typography.bodySmall)
             val activeRegressionLengths = RegressionPlotGeometry.channelsForPlot(
                 relativeValues, regression
@@ -372,12 +382,8 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodySmall
             )
             selected?.let {
-                val selectedIndex = points.indexOf(it)
-                val relative = relativeValues.getOrNull(selectedIndex)
-                Text("${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}" +
-                    (relative?.let { value -> " • ${if (value > 0) "+" else ""}${"%.2f".format(value)}%" } ?: ""))
-            }
-                ?: Text("Dotknij wykresu, aby sprawdzić datę i wartość.")
+                Text("Punkt odniesienia 0%: ${it.date} • ${it.value.stripTrailingZeros().toPlainString()} ${quote} za 1 ${base}")
+            } ?: Text("Dotknij wykresu, aby ustawić punkt odniesienia 0%.")
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text("Minimum", style = MaterialTheme.typography.labelSmall)
