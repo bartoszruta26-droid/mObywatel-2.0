@@ -44,7 +44,6 @@ data class HorizonCurrencyForecast(
 
 object CurrencyForecastEngine {
     private const val MIN_VALIDATION_SAMPLES = 20
-    private const val NEUTRAL_BAND_PERCENT = ExchangeProfitThreshold.MIN_NET_PROFIT_PERCENT
 
     fun forecast(
         values: List<Double>,
@@ -134,7 +133,7 @@ object CurrencyForecastEngine {
                     historical.last()) - 1.0) * 100.0
                 val predictedDirection = ExchangeProfitThreshold.classify(predictedPercent)
                 val actualPercent = ((values[origin + horizon] / values[origin]) - 1.0) * 100.0
-                val actualDirection = ExchangeProfitThreshold.classify(actualPercent)
+                val actualDirection = ExchangeProfitThreshold.classifyOutcome(actualPercent, predictedDirection)
                 if (predictedDirection != ForecastDirection.NEUTRAL) {
                     // Ruch neutralny lub przeciwny jest błędem prognozy kierunku, nie pomijamy go.
                     directionTrials++
