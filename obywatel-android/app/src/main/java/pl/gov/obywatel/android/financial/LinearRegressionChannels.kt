@@ -8,18 +8,24 @@ package pl.gov.obywatel.android.financial
 import kotlin.math.sqrt
 
 /**
- * Siedem niezależnych kanałów opartych na kolejnych liczbach Fibonacciego:
- * 987, 610, 377, 233, 144, 89, 55 obserwacji.
- * Zachowano możliwość ręcznej zmiany każdego okna.
+ * Dziesięć niezależnych kanałów regresji, w tym pięć okien dłuższych niż 987 obserwacji.
+ */
+/**
+ * Dziesięć okien regresji: pięć dłuższych od poprzedniego maksimum 987
+ * oraz pięć dotychczasowych długich okien. Okno jest aktywne dopiero po
+ * zgromadzeniu odpowiedniej liczby obserwacji.
  */
 data class RegressionChannelSettings(
-    val length1: Int = 987,
-    val length2: Int = 610,
-    val length3: Int = 377,
-    val length4: Int = 233,
-    val length5: Int = 144,
-    val length6: Int = 89,
-    val length7: Int = 55,
+    val length1: Int = 10946,
+    val length2: Int = 6765,
+    val length3: Int = 4181,
+    val length4: Int = 2584,
+    val length5: Int = 1597,
+    val length6: Int = 987,
+    val length7: Int = 610,
+    val length8: Int = 377,
+    val length9: Int = 233,
+    val length10: Int = 144,
     val deviationMultiplier: Double = 2.41,
     val showFibonacci: Boolean = true,
     val showBroken: Boolean = false,
@@ -29,16 +35,26 @@ data class RegressionChannelSettings(
     val width4: Float = 1f,
     val width5: Float = 1f,
     val width6: Float = 1f,
-    val width7: Float = 1f
+    val width7: Float = 1f,
+    val width8: Float = 1f,
+    val width9: Float = 1f,
+    val width10: Float = 1f
 ) {
     init {
         require(lengths.all { it >= 10 })
+        require(lengths.distinct().size == lengths.size) { "Długości kanałów regresji muszą być różne." }
         require(deviationMultiplier >= 0.1 && deviationMultiplier.isFinite())
         require(widths.all { it in 1f..4f })
     }
 
-    val lengths: List<Int> get() = listOf(length1, length2, length3, length4, length5, length6, length7)
-    val widths: List<Float> get() = listOf(width1, width2, width3, width4, width5, width6, width7)
+    val lengths: List<Int> get() = listOf(
+        length1, length2, length3, length4, length5,
+        length6, length7, length8, length9, length10
+    )
+    val widths: List<Float> get() = listOf(
+        width1, width2, width3, width4, width5,
+        width6, width7, width8, width9, width10
+    )
 
     fun withLength(index: Int, value: Int): RegressionChannelSettings = when (index) {
         0 -> copy(length1 = value)
@@ -48,6 +64,9 @@ data class RegressionChannelSettings(
         4 -> copy(length5 = value)
         5 -> copy(length6 = value)
         6 -> copy(length7 = value)
+        7 -> copy(length8 = value)
+        8 -> copy(length9 = value)
+        9 -> copy(length10 = value)
         else -> throw IndexOutOfBoundsException("Kanał regresji: $index")
     }
 
@@ -59,6 +78,9 @@ data class RegressionChannelSettings(
         4 -> copy(width5 = value)
         5 -> copy(width6 = value)
         6 -> copy(width7 = value)
+        7 -> copy(width8 = value)
+        8 -> copy(width9 = value)
+        9 -> copy(width10 = value)
         else -> throw IndexOutOfBoundsException("Kanał regresji: $index")
     }
 }
@@ -85,7 +107,7 @@ data class RegressionChannelResult(
 
 object LinearRegressionChannels {
     val fibonacciRatios = listOf(0.236, 0.382, 0.618, 0.786)
-    val fibonacciWindowLengths = listOf(987, 610, 377, 233, 144, 89, 55)
+    val fibonacciWindowLengths = listOf(10946, 6765, 4181, 2584, 1597, 987, 610, 377, 233, 144)
 
     /** OLS na szeregu chronologicznym; odchylenie to RMS reszt regresji. */
     fun calculate(values: List<Double>, length: Int, deviationMultiplier: Double = 2.41): RegressionChannelResult? {
@@ -133,4 +155,23 @@ object LinearRegressionChannels {
         listOf(settings.length3, settings.length4, settings.length5).map {
             calculate(values, it, settings.deviationMultiplier)
         }
+}
+
+
+/**
+ * Próg wymiany walut w rachunku płatniczym: ruch musi przekroczyć 2%,
+ * aby był zaliczony jako zyskowny; analogiczny ruch przeciwny jest stratą.
+ * Przedział [-2%, +2%] pozostaje neutralny i nie podbija prawdopodobieństwa zysku.
+ */
+object ExchangeProfitThreshold {
+    const val MIN_NET_PROFIT_PERCENT = 2.0
+
+    fun classify(changePercent: Double): ForecastDirection {
+        require(changePercent.isFinite()) { "Zmiana procentowa musi być skończona." }
+        return when {
+            changePercent > MIN_NET_PROFIT_PERCENT -> ForecastDirection.UP
+            changePercent < -MIN_NET_PROFIT_PERCENT -> ForecastDirection.DOWN
+            else -> ForecastDirection.NEUTRAL
+        }
+    }
 }
