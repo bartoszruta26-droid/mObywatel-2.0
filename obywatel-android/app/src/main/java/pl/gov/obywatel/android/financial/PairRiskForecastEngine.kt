@@ -18,21 +18,40 @@ data class PairHorizonRisk(
     val lossProbability: Double?,
     val neutralProbability: Double?,
     val samples: Int,
-    val significance: PairRiskSignificance
+    val significance: PairRiskSignificance,
+    val activeChannels: Int = 0,
+    val lowerQuantilePercent: Double? = null,
+    val upperQuantilePercent: Double? = null
 )
 
 /**
- * Walidacja krocząca dla dokładnie jednego szeregu pary wybranej na wykresie.
+ * Walidacja krocząca dla wybranej pary. Dla każdego horyzontu dobiera
+ * najdłuższe dostępne kanały, które pozostawiają miejsce na próbę historyczną.
+ * Wynik jest liczony z niepokrywających się okresów, aby nie zawyżać liczby prób.
  *
- * Trend i prognoza procentowa są liczone w logarytmach cen (stopy składane),
- * a wynik historyczny jest mierzony na rzeczywistych ilorazach kursów.
- * Próby wyników nie nakładają się na siebie.
+ * Sygnał wykorzystuje ważoną medianę prognoz kanałów. Przedział kanałowy
+ * powstaje z ważonych kwantyli dolnych i górnych granic regresji (RMS reszt
+ * * mnożnik odchylenia). Prawdopodobieństwo jest kalibrowane historycznie
+ * dla tego samego kierunku i tej samej klasy położenia przedziału.
  */
 object PairRiskForecastEngine {
-    // 10–19 prób daje wyłącznie wstępny szacunek bez etykiety przewagi.
-    // Do oceny przewagi statystycznej nadal wymagamy co najmniej 20 prób.
     private const val MIN_ESTIMATE_SAMPLES = 10
     private const val MIN_SIGNIFICANCE_SAMPLES = 20
+    private const val MIN_CHANNELS = 3
+
+    private data class WeightedValue(val value: Double, val weight: Double)
+    private data class ForecastBand(
+        val medianPercent: Double,
+        val lowerQuantilePercent: Double,
+        val upperQuantilePercent: Double
+    )
+    private data class ValidationCounts(
+        val profit: Int = 0,
+        val loss: Int = 0,
+        val neutral: Int = 0
+    ) {
+        val total: Int get() = profit + loss + neutral
+    }
 
     fun forecast(
         values: List<Double>,
@@ -43,76 +62,79 @@ object PairRiskForecastEngine {
             "Prognoza pary wymaga co najmniej dwóch dodatnich, skończonych obserwacji."
         }
         val logValues = values.map(::ln)
-        val current = values.last()
-        val activeLengths = settings.lengths.filter { it <= values.size }
-        val minimumWindow = activeLengths.maxOrNull() ?: return horizons.map {
-            empty(it, 0.0, ForecastDirection.NEUTRAL)
-        }
-        val currentChannels = LinearRegressionChannels.calculateAll(logValues, settings).filterNotNull()
-        if (currentChannels.isEmpty()) return horizons.map {
-            empty(it, 0.0, ForecastDirection.NEUTRAL)
-        }
-        val consensusSlope = weightedSlope(currentChannels)
-
         return horizons.map { horizon ->
-            val expectedChange = compoundedPercent(consensusSlope, horizon.tradingSessions)
-            val currentSignal = direction(expectedChange)
+            val horizonBars = horizon.tradingSessions
+            val availableLengths = settings.lengths.distinct().filter { it <= values.size }
+            if (availableLengths.size < MIN_CHANNELS) {
+                return@map empty(horizon, 0.0, ForecastDirection.NEUTRAL, 0)
+            }
+
+            // Dobór okien per horyzont. Dłuższe regresje nie mogą zużyć całej
+            // historii i pozostawić zbyt mało punktów do walidacji kroczącej.
+            val maxLengthForTenSamples =
+                values.size - horizonBars - (MIN_ESTIMATE_SAMPLES - 1) * horizonBars
+            val validationLengths = availableLengths
+                .filter { it <= maxLengthForTenSamples }
+                .ifEmpty { availableLengths.takeLast(MIN_CHANNELS) }
+
+            val currentBand = forecastBand(logValues, validationLengths, settings, horizonBars)
+                ?: return@map empty(horizon, 0.0, ForecastDirection.NEUTRAL, 0)
+            val currentSignal = ExchangeProfitThreshold.classify(currentBand.medianPercent)
             if (currentSignal == ForecastDirection.NEUTRAL) {
-                return@map empty(horizon, expectedChange, currentSignal)
+                return@map PairHorizonRisk(
+                    horizon, currentBand.medianPercent, currentSignal,
+                    null, null, null, 0, PairRiskSignificance.INSUFFICIENT,
+                    validationLengths.size, currentBand.lowerQuantilePercent,
+                    currentBand.upperQuantilePercent
+                )
             }
 
-            val lastOrigin = values.lastIndex - horizon.tradingSessions
-            if (lastOrigin < minimumWindow - 1) {
-                return@map empty(horizon, expectedChange, currentSignal)
-            }
-
-            // Każdy wynik obejmuje osobny, niepokrywający się horyzont czasu.
-            var profit = 0
-            var loss = 0
-            var neutral = 0
-            var samples = 0
-            var origin = minimumWindow - 1
-            val step = horizon.tradingSessions
-
+            val lastOrigin = values.lastIndex - horizonBars
+            val firstOrigin = (validationLengths.maxOrNull() ?: values.size) - 1
+            var counts = ValidationCounts()
+            var origin = firstOrigin
             while (origin <= lastOrigin) {
                 val historicalLog = logValues.subList(0, origin + 1)
-                val channels = LinearRegressionChannels.calculateAll(historicalLog, settings).filterNotNull()
-                if (channels.size == activeLengths.size) {
-                    val historicalSlope = weightedSlope(channels)
-                    val predictedPercent = compoundedPercent(historicalSlope, horizon.tradingSessions)
-                    val predictedDirection = direction(predictedPercent)
-
-                    // Kalibrujemy prawdopodobieństwo dla tego samego sygnału,
-                    // który model wskazuje obecnie dla wybranej pary.
-                    if (predictedDirection == currentSignal) {
-                        val actualPercent = (values[origin + horizon.tradingSessions] /
-                            values[origin] - 1.0) * 100.0
-                        when (ExchangeProfitThreshold.classifyOutcome(actualPercent, predictedDirection)) {
-                            ForecastDirection.NEUTRAL -> neutral++
-                            predictedDirection -> profit++
-                            else -> loss++
-                        }
-                        samples++
+                val historicalBand = forecastBand(
+                    historicalLog, validationLengths, settings, horizonBars
+                )
+                if (historicalBand != null &&
+                    ExchangeProfitThreshold.classify(historicalBand.medianPercent) == currentSignal &&
+                    quantileRegime(
+                        historicalBand.lowerQuantilePercent,
+                        historicalBand.upperQuantilePercent
+                    ) == quantileRegime(
+                        currentBand.lowerQuantilePercent,
+                        currentBand.upperQuantilePercent
+                    )
+                ) {
+                    val actualPercent = (values[origin + horizonBars] / values[origin] - 1.0) * 100.0
+                    when (ExchangeProfitThreshold.classifyOutcome(actualPercent, currentSignal)) {
+                        currentSignal -> counts = counts.copy(profit = counts.profit + 1)
+                        ForecastDirection.NEUTRAL -> counts = counts.copy(neutral = counts.neutral + 1)
+                        else -> counts = counts.copy(loss = counts.loss + 1)
                     }
                 }
-                origin += step
+                origin += horizonBars
             }
 
-            if (samples < MIN_ESTIMATE_SAMPLES) {
+            if (counts.total < MIN_ESTIMATE_SAMPLES) {
                 PairHorizonRisk(
-                    horizon, expectedChange, currentSignal,
-                    null, null, null, samples, PairRiskSignificance.INSUFFICIENT
+                    horizon, currentBand.medianPercent, currentSignal,
+                    null, null, null, counts.total, PairRiskSignificance.INSUFFICIENT,
+                    validationLengths.size, currentBand.lowerQuantilePercent,
+                    currentBand.upperQuantilePercent
                 )
             } else {
-                // Smoothing zapobiega raportowaniu dokładnego 0% lub 100% przy małej próbie.
-                val pProfit = (profit + 1.0) / (samples + 3.0)
-                val pLoss = (loss + 1.0) / (samples + 3.0)
-                val pNeutral = (neutral + 1.0) / (samples + 3.0)
+                val samples = counts.total
+                val pProfit = (counts.profit + 1.0) / (samples + 3.0)
+                val pLoss = (counts.loss + 1.0) / (samples + 3.0)
+                val pNeutral = (counts.neutral + 1.0) / (samples + 3.0)
                 val significance = if (samples < MIN_SIGNIFICANCE_SAMPLES) {
                     PairRiskSignificance.LOW_SAMPLE
                 } else {
-                    val profitInterval = wilson(profit, samples)
-                    val lossInterval = wilson(loss, samples)
+                    val profitInterval = wilson(counts.profit, samples)
+                    val lossInterval = wilson(counts.loss, samples)
                     when {
                         profitInterval.first > lossInterval.second -> PairRiskSignificance.PROFIT_ADVANTAGE
                         lossInterval.first > profitInterval.second -> PairRiskSignificance.LOSS_ADVANTAGE
@@ -120,35 +142,94 @@ object PairRiskForecastEngine {
                     }
                 }
                 PairHorizonRisk(
-                    horizon, expectedChange, currentSignal,
-                    pProfit, pLoss, pNeutral, samples, significance
+                    horizon, currentBand.medianPercent, currentSignal,
+                    pProfit, pLoss, pNeutral, samples, significance,
+                    validationLengths.size, currentBand.lowerQuantilePercent,
+                    currentBand.upperQuantilePercent
                 )
             }
         }
     }
 
-    private fun weightedSlope(channels: List<RegressionChannelResult>): Double {
-        val weights = channels.sumOf { 1.0 / sqrt(it.length.toDouble()) }
-        require(weights > 0.0 && weights.isFinite())
-        return channels.sumOf { it.slope / sqrt(it.length.toDouble()) } / weights
+    private fun forecastBand(
+        logValues: List<Double>,
+        lengths: List<Int>,
+        settings: RegressionChannelSettings,
+        horizon: Int
+    ): ForecastBand? {
+        val channels = lengths.mapNotNull {
+            LinearRegressionChannels.calculate(logValues, it, settings.deviationMultiplier)
+        }
+        if (channels.size != lengths.size || channels.size < MIN_CHANNELS) return null
+        val currentLog = logValues.last()
+        val midValues = channels.map { channel ->
+            val weight = 1.0 / sqrt(channel.length.toDouble())
+            WeightedValue(
+                compoundedPercent(channel.endMid + channel.slope * horizon - currentLog),
+                weight
+            )
+        }
+        val lowerValues = channels.map { channel ->
+            val weight = 1.0 / sqrt(channel.length.toDouble())
+            WeightedValue(
+                compoundedPercent(
+                    channel.endMid + channel.slope * horizon -
+                        channel.deviation * settings.deviationMultiplier - currentLog
+                ),
+                weight
+            )
+        }
+        val upperValues = channels.map { channel ->
+            val weight = 1.0 / sqrt(channel.length.toDouble())
+            WeightedValue(
+                compoundedPercent(
+                    channel.endMid + channel.slope * horizon +
+                        channel.deviation * settings.deviationMultiplier - currentLog
+                ),
+                weight
+            )
+        }
+        return ForecastBand(
+            weightedQuantile(midValues, 0.50),
+            weightedQuantile(lowerValues, 0.25),
+            weightedQuantile(upperValues, 0.75)
+        )
     }
 
-    /** Logarytmiczny trend daje składany, a nie liniowo dodawany procent zmiany. */
-    private fun compoundedPercent(logSlope: Double, sessions: Int): Double {
-        val exponent = (logSlope * sessions).coerceIn(-50.0, 50.0)
+    private fun weightedQuantile(values: List<WeightedValue>, quantile: Double): Double {
+        require(values.isNotEmpty())
+        val ordered = values.sortedBy { it.value }
+        val totalWeight = ordered.sumOf { it.weight }
+        val target = totalWeight * quantile.coerceIn(0.0, 1.0)
+        var cumulative = 0.0
+        for (item in ordered) {
+            cumulative += item.weight
+            if (cumulative >= target) return item.value
+        }
+        return ordered.last().value
+    }
+
+    /** 0 = przedział niepotwierdzony, +1/-1 = przedział po jednej stronie progu. */
+    private fun quantileRegime(lower: Double, upper: Double): Int = when {
+        lower > ExchangeProfitThreshold.MIN_NET_PROFIT_PERCENT -> 1
+        upper < -ExchangeProfitThreshold.MIN_NET_PROFIT_PERCENT -> -1
+        else -> 0
+    }
+
+    private fun compoundedPercent(logChange: Double): Double {
+        val exponent = logChange.coerceIn(-50.0, 50.0)
         return (exp(exponent) - 1.0) * 100.0
     }
 
     private fun empty(
         horizon: ForecastHorizon,
         expectedChange: Double,
-        direction: ForecastDirection
+        direction: ForecastDirection,
+        activeChannels: Int
     ) = PairHorizonRisk(
         horizon, expectedChange, direction,
-        null, null, null, 0, PairRiskSignificance.INSUFFICIENT
+        null, null, null, 0, PairRiskSignificance.INSUFFICIENT, activeChannels
     )
-
-    private fun direction(change: Double) = ExchangeProfitThreshold.classify(change)
 
     /** 95% Wilson score interval; conservative overlap rule for color warnings. */
     private fun wilson(successes: Int, trials: Int): Pair<Double, Double> {
