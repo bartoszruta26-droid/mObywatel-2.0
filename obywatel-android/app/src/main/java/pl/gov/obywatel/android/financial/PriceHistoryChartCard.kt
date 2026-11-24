@@ -181,7 +181,8 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
                     "Brak wspólnych notowań dla ${base}/${quote} w wybranym okresie."
                 }
                 points = data
-                forecastValues = fullHistory.map { it.value.toDouble() }
+                // Prawdopodobieństwo przeliczamy na dokładnie tym samym zakresie, który wybrał użytkownik.
+                forecastValues = data.map { it.value.toDouble() }
                 source = "Źródło: Frankfurter • dane referencyjne banków centralnych i innych oficjalnych dostawców"
                 save()
             } catch (e: Exception) {
