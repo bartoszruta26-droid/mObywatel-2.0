@@ -255,7 +255,7 @@ fun CurrencyPortfolioForecastCard(
                                     )
                                     Text(
                                         f.directionalProbability?.let {
-                                            "Historyczna trafność kierunku: ${"%.0f".format(it * 100)}% " +
+                                            "Historyczne prawdopodobieństwo zysku netto (>2%): ${"%.0f".format(it * 100)}% " +
                                                 "(${f.validationSamples} prób)"
                                         } ?: "Brak wiarygodnej próby dla tego horyzontu (${f.validationSamples} prób).",
                                         style = MaterialTheme.typography.bodySmall,
