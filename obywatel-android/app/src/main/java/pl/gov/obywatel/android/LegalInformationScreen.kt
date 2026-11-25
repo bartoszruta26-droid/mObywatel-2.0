@@ -263,18 +263,21 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                 }
             }
         }
-    }
+    },
 
+REGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO
 
-REGULAMIN DOTACJI CELOWYCH — PROJEKT FUNDUSZU REHABILITACYJNO-OPIEKUŃCZEGO
+Status regulaminu i jego relacja do istniejącego Funduszu
 
-Status dokumentu i zastrzeżenie prawne
+Niniejszy regulamin dotyczy wyłącznie wyodrębnionego celu zadaniowego realizowanego w ramach już istniejącego państwowego funduszu celowego, dalej zwanego „Funduszem”. Nie przewiduje utworzenia nowego funduszu, nowej osoby prawnej ani odrębnego państwowego rachunku funduszu. Cel zadaniowy ma służyć gromadzeniu — o ile pozwalają na to przepisy regulujące dany Fundusz — darowizn celowych obywateli oraz przeznaczaniu środków przypisanych do tego celu na rehabilitację, pielęgnację, higienę i profilaktykę osób długotrwale chorych, osób z niepełnosprawnościami oraz osób w podeszłym wieku.
 
-Niniejszy dokument jest projektem zasad przyszłego programu finansowania zadań z zakresu rehabilitacji, pielęgnacji, higieny i profilaktyki zdrowotnej osób przewlekle chorych, osób z niepełnosprawnościami oraz osób w podeszłym wieku. Samo przyjęcie lub opublikowanie niniejszego regulaminu nie tworzy państwowego funduszu celowego, nie ustanawia organu administracji publicznej, nie nadaje dyspozytorowi statusu organu ustawowego i nie upoważnia do dysponowania środkami publicznymi. Używanie nazwy „państwowy fundusz celowy” w odniesieniu do projektu jest dopuszczalne wyłącznie jako opis zamierzonej konstrukcji prawnej, a nie jako stwierdzenie, że fundusz już został utworzony.
+Regulamin nie zmienia ustawy tworzącej Fundusz, jego ustawowych zadań, źródeł przychodów, dysponenta rachunku, planu finansowego ani trybu przyznawania dotacji. Nie stanowi samodzielnej podstawy przyjmowania darowizn przez Fundusz ani wydatkowania środków publicznych. Możliwość przyjmowania darowizn celowych na ten cel, przypisania ich do wyodrębnionego zadania i ich wykorzystania wymaga potwierdzenia w ustawie tworzącej Fundusz, przepisach szczególnych oraz planie finansowym. Sam art. 29 ustawy o finansach publicznych nie zastępuje tych szczególnych podstaw.
 
-Państwowy fundusz celowy może zostać utworzony wyłącznie odrębną ustawą. Ustawa ta musi określić co najmniej zadania funduszu i wskazać ministra albo inny organ uprawniony do dysponowania jego wyodrębnionym rachunkiem. Dopiero ustawa tworząca fundusz może powierzyć dyspozytorowi kompetencje organu państwowego, określić jego umocowanie, odpowiedzialność, nadzór i zakres samodzielności. Regulamin może doprecyzować tryb wykonywania kompetencji ustawowych, ale nie może ich samodzielnie ustanowić ani rozszerzyć.
+Zgodnie z art. 29 ust. 3 ustawy o finansach publicznych rachunkiem państwowego funduszu celowego dysponuje minister wskazany w ustawie tworzącej fundusz albo inny organ wskazany w tej ustawie. Darczyńcy mogą wskazywać cel darowizny w granicach prawa, ale sama ich wola nie ustanawia dysponenta rachunku ani organu administracji publicznej. Jeżeli właściwa ustawa wskazuje Dyspozytora jako organ lub dysponenta, albo upoważnia właściwego dysponenta do powierzenia określonych obowiązków konkretnej osobie, zakres jego kompetencji wynika wyłącznie z tego przepisu i prawidłowego aktu powierzenia.
 
-Do czasu wejścia w życie właściwej ustawy oraz zapewnienia zgodnej z prawem obsługi finansowej dokument ma charakter projektu regulaminu programu i nie jest podstawą przyznawania ani wypłacania dotacji ze środków publicznych. Środki przekazane przez darczyńców mogą być przyjmowane i wydatkowane wyłącznie przez podmiot mający do tego właściwą zdolność prawną, na podstawie prawidłowych umów, z poszanowaniem woli darczyńcy i przepisów o rachunkowości, podatkach, przeciwdziałaniu praniu pieniędzy oraz ochronie danych. Darowizna na rachunek prywatny lub organizacji pozarządowej nie staje się przez to przychodem państwowego funduszu celowego.
+W niniejszym regulaminie „Dyspozytor Celu” oznacza osobę wskazaną przez właściwy organ lub umocowaną na podstawie ustawy i imiennego upoważnienia do wykonywania konkretnych czynności związanych z realizacją Celu. Określenie to nie przesądza, że osoba ta jest ustawowym dysponentem rachunku Funduszu. Wszędzie tam, gdzie ustawa posługuje się pojęciem „dysponenta państwowego funduszu celowego”, regulamin zachowuje znaczenie nadane temu pojęciu w ustawie.
+
+Dokument jest regulaminem wykonawczym projektu Celu i może być stosowany operacyjnie dopiero po zatwierdzeniu przez organ właściwy dla Funduszu, potwierdzeniu zgodności z ustawą tworzącą Fundusz i planem finansowym oraz opublikowaniu w przewidzianym trybie. Do tego czasu ma charakter projektu informacyjnego. W aplikacji oznacza się go jako projekt regulaminu, a nie jako akt ustanawiający kompetencje publiczne.
 
 ROZDZIAŁ I. POSTANOWIENIA OGÓLNE
 
@@ -650,4 +653,98 @@ https://eli.gov.pl/api/acts/DU/2026/1447/text.html
 
 Projekt należy przed użyciem operacyjnym poddać opinii legislacyjnej i finansowo-księgowej, w szczególności po ustaleniu docelowego modelu prawnego, podmiotu przyjmującego darowizny, źródła środków oraz projektu Ustawy tworzącej Fundusz.
 
+"""
+
+@Composable
+fun LegalInformationScreen(onBack: () -> Unit) {
+    var showFundRegulation by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = showFundRegulation) { showFundRegulation = false }
+    BackHandler(enabled = !showFundRegulation) { onBack() }
+
+    val displayedText = if (showFundRegulation) {
+        LEGAL_INFORMATION_TEXT.substringAfter("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
+    } else {
+        LEGAL_INFORMATION_TEXT.substringBefore("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
+    }
+    val pageTitle = if (showFundRegulation) {
+        "Regulamin dotacji celowych państwowego funduszu celowego"
+    } else {
+        "Informacje prawne"
+    }
+    val sections = displayedText.trim().split("\n")
+
+    Surface(
+        modifier = Modifier.fillMaxSize().semantics { paneTitle = pageTitle },
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            androidx.compose.foundation.layout.Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = { if (showFundRegulation) showFundRegulation = false else onBack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
+                }
+                Text(
+                    pageTitle,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f).semantics { heading() }
+                )
+            }
+            if (!showFundRegulation) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable { showFundRegulation = true },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.AccountBalance,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "Regulamin dotacji celowych państwowego funduszu celowego",
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                "Cel rehabilitacyjno-opiekuńczy w ramach istniejącego funduszu",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                        Icon(Icons.Filled.Description, contentDescription = "Otwórz regulamin")
+                    }
+                }
+            }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    sections.forEach { line ->
+                        when {
+                            line.isBlank() -> Spacer(Modifier.height(3.dp))
+                            line == line.uppercase() && line.length < 110 ->
+                                Text(line, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            line.startsWith("• ") ->
+                                Text(line, style = MaterialTheme.typography.bodyMedium)
+                            else ->
+                                Text(line, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
