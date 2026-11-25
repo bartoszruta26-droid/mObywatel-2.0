@@ -698,7 +698,6 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                 }
             }
         }
-        }
         FinanceSection("bank-history", "Historia rachunku i wymiany", "Zapisy bankowe, transakcje powiązane oraz operacje wymiany walut.") {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
