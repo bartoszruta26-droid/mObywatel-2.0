@@ -13,7 +13,7 @@ class DocumentRouteRegistryTest {
     fun everyDocumentVisibilityTileHasAnExplicitRoute() {
         val visibleTileIds = setOf(
             "profile", "identity", "passport", "registry", "family", "parliament", "training",
-            "student", "disability", "church", "civil", "business", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts", "vaccines",
+            "student", "disability", "church", "civil", "business", "fund_purpose_disposition", "bank_accounts", "rod_bank_accounts", "entity_bank_accounts", "vaccines",
             "signed_pdf", "imported", "children", "branding", "loyalty", "birth_extract",
             "marriage_extract", "death_extract", "large_family", "blood_donor", "disability_card",
             "vehicle_registration", "insurance_vehicle", "insurance_professional", "insurance_private",
@@ -39,6 +39,25 @@ class DocumentRouteRegistryTest {
         visibleTileIds.forEach { id -> assertNotNull("Missing route for $id", DocumentRouteRegistry.find(id)) }
     }
 
+
+
+    @Test
+    fun fundPurposeDispositionIsInStateServiceGroupAndHasACompleteEvidenceSchema() {
+        val id = "fund_purpose_disposition"
+        assertEquals("Służba państwowa", documentVisibilityGroup(id))
+        assertEquals("hidden", defaultDocumentPlacements[id])
+        val route = requireNotNull(DocumentRouteRegistry.find(id))
+        assertEquals(DocumentRouteType.DOCUMENT, route.type)
+        assertEquals(id, route.documentId)
+        val keys = documentEditorFieldDefinitions(id).map { it.key }.toSet()
+        listOf(
+            "legalBasis", "fundName", "financialPlanReference", "purposeName",
+            "disponentName", "dispositionStartDate", "dispositionEndDate",
+            "fundingAmount", "fundTransferLegalInstrument", "paymentAccountNumber",
+            "paymentAccountEvidence", "accountSeparationRules", "disponentAuthority",
+            "recordKeepingRules", "reportingDeadlines", "unusedFundsRules", "legalEffectNotice"
+        ).forEach { key -> assertTrue("Missing field $key", key in keys) }
+    }
 
     @Test
     fun fourDonationLedgersRemainRegisteredButAreHiddenByDefaultInFinancialServiceGroup() {
