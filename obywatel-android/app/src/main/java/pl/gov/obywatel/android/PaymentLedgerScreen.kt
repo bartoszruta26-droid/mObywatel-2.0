@@ -1038,7 +1038,6 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
 
         }
     }
-}
 
 
 private const val MAX_IMPORT_BYTES = 10 * 1024 * 1024
