@@ -665,6 +665,46 @@ https://eli.gov.pl/api/acts/DU/2026/1447/text.html
 
 Projekt należy przed użyciem operacyjnym poddać opinii legislacyjnej i finansowo-księgowej, po wskazaniu konkretnego Funduszu, podstawy przyjmowania darowizn, organu zatwierdzającego Cel oraz prawnego umocowania Dyspozytora.
 
+
+PODSTAWY PRAWNE WSPARCIA MODELU OBYWATELSKIEGO — ANALIZA PRZEPISÓW
+
+Poniższe przepisy wspierają możliwość zgłoszenia Celu, ubiegania się o środki, realizacji zadania przez podmiot spoza administracji oraz przyjmowania darowizn. Należy odróżnić uprawnienie do ubiegania się o realizację zadania od kompetencji do samodzielnego dysponowania rachunkiem państwowego funduszu celowego.
+
+1. Art. 43 ustawy o finansach publicznych stanowi, że prawo realizacji zadań finansowanych ze środków publicznych przysługuje ogółowi podmiotów, chyba że odrębne ustawy stanowią inaczej. Jest to istotna podstawa obywatelskiego modelu zgłaszania się do realizacji zadań publicznych. Podmiot spoza sektora finansów publicznych może ubiegać się o realizację zadania, o ile przepisy szczególne nie ustanawiają ograniczeń, a wybór i finansowanie następują w odpowiednim trybie.
+
+2. Art. 47 ustawy o finansach publicznych przewiduje, że podmiot wnioskujący o przyznanie środków publicznych na realizację wyodrębnionego zadania przedstawia ofertę wykonania zadania zgodnie z zasadami uczciwej konkurencji, gwarantującą wykonanie efektywne, oszczędne i terminowe. Przepis wspiera konstrukcję wniosku o finansowanie konkretnego Celu wraz z budżetem, harmonogramem i sposobem rozliczenia. Nie ustanawia automatycznego prawa do dotacji ani nie przesądza, że wnioskodawca staje się dysponentem rachunku Funduszu.
+
+3. Art. 29 ust. 2, 3, 5, 6 i 7 ustawy o finansach publicznych określa status państwowego funduszu celowego, wskazuje organ dysponujący rachunkiem oraz przewiduje wyodrębnianie zadań w rocznym planie finansowym. Cel może być ujęty jako zadanie Funduszu, jeżeli mieści się w jego ustawowym zakresie i zostanie prawidłowo uwzględniony w planie finansowym. Brak osobowości prawnej Funduszu nie znosi jednak kompetencji organu wskazanego w art. 29 ust. 3. Sam art. 29 nie przyznaje każdemu obywatelowi prawa do samodzielnego tworzenia subkonta ani dysponowania częścią rachunku.
+
+4. Art. 44 ustawy o finansach publicznych wymaga, aby wydatki publiczne były dokonywane w granicach planu finansowego, zgodnie z przepisami dotyczącymi poszczególnych rodzajów wydatków, w sposób celowy i oszczędny oraz zapewniający najlepsze efekty z danych nakładów. Uzasadnia to budżet Celu, mierniki rezultatów, dokumentowanie wydatków i kontrolę.
+
+5. Art. 63 Konstytucji RP przyznaje każdemu prawo składania petycji, wniosków i skarg w interesie publicznym, własnym lub innej osoby za jej zgodą do organów władzy publicznej. Stanowi podstawę skierowania do ministra propozycji ustanowienia Celu, przedstawienia uzasadnienia i zwrócenia się o rozpatrzenie wniosku. Nie oznacza obowiązku przyjęcia propozycji ani przyznania żądanej kwoty.
+
+6. Art. 60 Konstytucji RP zapewnia obywatelom polskim korzystającym z pełni praw publicznych prawo dostępu do służby publicznej na jednakowych zasadach. Potwierdza zasadę równego dostępu, lecz nie jest samodzielnym tytułem do objęcia konkretnej funkcji dysponenta Funduszu ani do zarządzania rachunkiem państwowym.
+
+7. Art. 11 ustawy o działalności pożytku publicznego i o wolontariacie przewiduje wspieranie lub powierzanie realizacji zadań publicznych organizacjom pozarządowym oraz podmiotom wymienionym w art. 3 ust. 3, prowadzącym działalność statutową w danej dziedzinie. Co do zasady następuje to w trybie konkursu ofert albo w trybach szczególnych przewidzianych ustawą. Przepisy te mogą mieć zastosowanie, jeżeli Wnioskodawca lub realizator spełnia ustawowe warunki.
+
+8. Art. 888 i następne Kodeksu cywilnego regulują umowę darowizny. W relacji prywatnoprawnej darczyńca może przekazać środki na uzgodniony cel, a treść umowy może określać przeznaczenie świadczenia i obowiązki obdarowanego. Powierzenie konkretnej osobie zarządzania darowizną wymaga prawidłowego określenia stron, odbiorcy środków, treści zobowiązania i rachunku. Zasady te nie zmieniają ustawowego dysponenta rachunku państwowego funduszu celowego.
+
+9. Ostateczna możliwość przyjmowania darowizn na rachunek konkretnego Funduszu, przypisywania ich do oznaczonego zadania, tworzenia rachunków pomocniczych, udzielania dotacji i powierzania czynności Dyspozytorowi wymaga sprawdzenia ustawy tworzącej dany Fundusz, przepisów wykonawczych, planu finansowego oraz zasad obsługi rachunku. Ustawa szczególna może przewidywać konkursy, nabory, odrębny rachunek obsługujący dotację i szczegółowe rozliczenia — rozwiązania te obowiązują w granicach tej ustawy.
+
+WNIOSKI DLA PROJEKTU
+
+• Obywatelskie zgłoszenie Celu i wniosek o jego finansowanie można oprzeć przede wszystkim na art. 63 Konstytucji RP oraz art. 43 i 47 ustawy o finansach publicznych.
+• Wnioskodawca może wskazać siebie jako proponowanego realizatora i Dyspozytora Celu oraz wnosić o powierzenie konkretnych czynności w dopuszczalnym trybie.
+• Konstrukcję odrębnego zadania można oprzeć na art. 29 ust. 5–7 ustawy o finansach publicznych, pod warunkiem zgodności Celu z ustawą regulującą Fundusz i planem finansowym.
+• Darowizny prywatne można organizować w reżimie Kodeksu cywilnego, z wyraźnym wskazaniem celu i osoby odpowiedzialnej za ich wykorzystanie, przy prawidłowym określeniu odbiorcy i rachunku.
+• Z samych art. 29 ust. 2 ani art. 43 ustawy o finansach publicznych nie wynika bezwarunkowe prawo każdego obywatela do samodzielnego otwarcia subkonta państwowego Funduszu i wydawania zgromadzonych na nim środków. Taki skutek wymaga odpowiedniej podstawy w ustawie regulującej Fundusz lub prawnie skutecznego działania organu uprawnionego do dysponowania rachunkiem.
+
+ŹRÓDŁA URZĘDOWE
+
+• Ustawa o finansach publicznych, tekst jednolity Dz.U. 2026 poz. 1447: https://eli.gov.pl/api/acts/DU/2026/1447/text.html
+• Konstytucja RP, w szczególności art. 60 i 63: https://www.prezydent.pl/prawo/konstytucja-rp/rozdzial-ii-wolnosci-prawa-i-obowiazki-czlowieka-i-obywatela
+• Ustawa o działalności pożytku publicznego i o wolontariacie, tekst jednolity Dz.U. 2025 poz. 1338, z późniejszymi zmianami: https://eli.gov.pl/eli/DU/2025/1338/ogl
+• Kodeks cywilny, w szczególności art. 888 i następne: https://eli.gov.pl/eli/DU/1964/93/ogl
+
+Stan prawny i teksty źródeł należy ponownie sprawdzić w dniu składania wniosku, z uwzględnieniem późniejszych nowelizacji i ustawy regulującej konkretny Fundusz.
+
 """
 
 @Composable
