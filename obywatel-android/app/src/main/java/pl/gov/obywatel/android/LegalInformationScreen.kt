@@ -4,6 +4,8 @@ package pl.gov.obywatel.android
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -22,6 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
@@ -655,7 +663,7 @@ PODSTAWY PRAWNE I ŹRÓDŁA
 Tekst jednolity ustawy o finansach publicznych:
 https://eli.gov.pl/api/acts/DU/2026/1447/text.html
 
-Projekt należy przed użyciem operacyjnym poddać opinii legislacyjnej i finansowo-księgowej, w szczególności po ustaleniu docelowego modelu prawnego, podmiotu przyjmującego darowizny, źródła środków oraz projektu Ustawy tworzącej Fundusz.
+Projekt należy przed użyciem operacyjnym poddać opinii legislacyjnej i finansowo-księgowej, po wskazaniu konkretnego Funduszu, podstawy przyjmowania darowizn, organu zatwierdzającego Cel oraz prawnego umocowania Dyspozytora.
 
 """
 
