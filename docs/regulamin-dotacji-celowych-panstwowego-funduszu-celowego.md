@@ -480,7 +480,7 @@ Art. 151 ust. 1 stanowi, że dysponent części budżetowej może zlecić organi
 
 15. Art. 152 — wyodrębniona ewidencja dotacji i rozliczenie rzeczowo-finansowe
 
-Art. 152 ust. 1 nakłada na jednostki, którym udzielono dotacji na podstawie art. 150 lub art. 151 ust. 1, obowiązek prowadzenia wyodrębnionej ewidencji księgowej środków otrzymanych z dotacji oraz wydatków dokonywanych z tych środków. Ustępy 2–3 regulują zatwierdzanie rozliczenia rzeczowego i finansowego oraz ustalanie kwoty podlegającej zwrotowi w razie wykorzystania dotacji niezgodnie z przeznaczeniem lub pobrania jej w nadmiernej wysokości. Przepis ten wspiera projekt wyodrębnionej ewidencji Celu, oddzielnego przypisywania kosztów, dokumentowania rezultatów i przejrzystego rozliczania. Wyodrębniona ewidencja księgowa nie jest jednak tym samym co odrębny rachunek bankowy lub subkonto; utworzenie takiego rachunku wymaga odrębnej podstawy i działania uprawnionego dysponenta.
+Art. 152 ust. 1 nakłada na jednostki, którym udzielono dotacji na podstawie art. 150 lub art. 151 ust. 1, obowiązek prowadzenia wyodrębnionej ewidencji księgowej środków otrzymanych z dotacji oraz wydatków dokonywanych z tych środków. Ustępy 2–3 regulują zatwierdzanie rozliczenia rzeczowego i finansowego oraz ustalanie kwoty podlegającej zwrotowi w razie wykorzystania dotacji niezgodnie z przeznaczeniem lub pobrania jej w nadmiernej wysokości. Przepis ten wspiera projekt wyodrębnionej ewidencji Celu, oddzielnego przypisywania kosztów, dokumentowania rezultatów i przejrzystego rozliczania. Użyte w niniejszym regulaminie określenie „subkonto Celu” oznacza wyłącznie subkonto ewidencyjne (konto analityczne albo wyodrębniony segment ewidencji księgowej) prowadzone w ramach ksiąg rachunkowych Funduszu. Służy ono przypisywaniu wpływów, zobowiązań, kosztów i rozliczeń do konkretnego Celu oraz zachowaniu ścieżki audytu. Nie oznacza odrębnego rachunku bankowego ani samodzielnego rachunku płatniczego w rozumieniu przepisów o usługach płatniczych. Subkonto ewidencyjne nie tworzy odrębnego majątku, nie zmienia ustawowego dysponenta Funduszu i nie daje samoistnego prawa do autoryzowania płatności. Jego utworzenie w systemie księgowym, nadanie identyfikatora oraz określenie osób uprawnionych do wprowadzania, zatwierdzania i kontroli zapisów powinno nastąpić w ramach zasad rachunkowości i uprawnień właściwej jednostki.
 
 16. Art. 40 — rachunkowość i ewidencja państwowego funduszu celowego
 
@@ -511,5 +511,53 @@ DODATKOWE WNIOSKI DLA MODELU
 5. Żaden z omawianych przepisów samodzielnie nie znosi art. 29 ust. 3 ani nie przenosi na Wnioskodawcę kompetencji ustawowego dysponenta rachunku PFC. Wniosek powinien zatem żądać formalnego ustanowienia zakresu czynności Dyspozytora przez organ właściwy, a nie traktować samego regulaminu lub wskazania przez darczyńców jako źródła tej kompetencji.
 
 Urzędowe źródło tekstu jednolitego ustawy o finansach publicznych, Dz.U. z 2026 r. poz. 1447:
+https://eli.gov.pl/api/acts/DU/2026/1447/text.pdf
+https://eli.gov.pl/api/acts/DU/2026/1447/text.html
+
+
+UZUPEŁNIAJĄCA ANALIZA — EWIDENCJA CELU, DAROWIZNY I ROZLICZANIE ŚRODKÓW
+
+Korekta terminologiczna dotycząca subkonta
+Wnioskodawca posługuje się pojęciem „subkonto” w znaczeniu subkonta ewidencyjnego, czyli wyodrębnionej analitycznej ewidencji księgowej Celu w ramach ksiąg rachunkowych Funduszu. Nie chodzi o otwieranie dodatkowego rachunku bankowego ani o tworzenie odrębnego rachunku płatniczego. W dokumentacji księgowej subkonto powinno pozwalać na oddzielne identyfikowanie wpływów z poszczególnych źródeł, zapisów dotyczących dotacji i darowizn, zobowiązań, wydatków, kosztów, zwrotów, salda oraz dokumentów źródłowych. Powinno być prowadzone jako konto analityczne powiązane z właściwym kontem księgi głównej, zgodnie z zakładowym planem kont i zasadami rachunkowości jednostki prowadzącej księgi Funduszu.
+
+21. Art. 3 — gromadzenie, rozdysponowywanie i zarządzanie środkami
+Art. 3 ujmuje finanse publiczne jako proces obejmujący gromadzenie dochodów i przychodów, wydatkowanie, zaciąganie zobowiązań oraz zarządzanie środkami publicznymi. Wspiera to całościowe ujęcie Celu: od przyjęcia i zakwalifikowania wpływu, przez jego ewidencję i przypisanie do zadania, aż po wydatkowanie i rozliczenie. Sam przepis nie ustanawia jednak odrębnej kompetencji do dysponowania środkami Funduszu.
+
+22. Art. 5 ust. 2 pkt 5 — darowizny pieniężne jako dochody publiczne
+Przepis zalicza do dochodów publicznych spadki, zapisy i darowizny w postaci pieniężnej na rzecz jednostek sektora finansów publicznych. Jest to ważna podstawa dla rozważenia darowizn pieniężnych na rzecz właściwego podmiotu publicznego, z oznaczeniem celu i ich prawidłowym ujęciem w księgach. Nie oznacza to jednak, że każda darowizna przekazana osobie prywatnej lub dowolnej organizacji staje się dochodem PFC. Trzeba prawidłowo ustalić obdarowanego, tytuł prawny przyjęcia darowizny, możliwość jej przyjęcia przez dany Fundusz oraz zasady jej ujęcia w planie i księgach.
+
+23. Art. 11a — ustawowy przykład wyodrębniania darowizn i przeznaczania ich zgodnie z wolą darczyńcy
+Art. 11a przewiduje dla określonych państwowych jednostek budżetowych prowadzących działalność oświatową wydzielony rachunek dochodów, na którym mogą być gromadzone między innymi pieniężne darowizny; przepis wskazuje też, że dochody te mogą być przeznaczane na cele wskazane przez darczyńcę, a decyzję o utworzeniu rachunku podejmuje kierownik jednostki po uzyskaniu wymaganej zgody. Jest to konkretny przykład ustawowego modelu wyodrębnienia środków pochodzących z darowizn i respektowania celu określonego przez darczyńcę. Zakres art. 11a jest jednak ograniczony do wskazanych w nim jednostek i działalności oświatowej; nie stanowi on samodzielnej podstawy do stosowania takiego rachunku w każdym PFC. Dla niniejszego projektu ma znaczenie jako wzorzec konstrukcyjny i argument za wyraźnym uregulowaniem analogicznego mechanizmu w przepisach właściwych dla Funduszu.
+
+24. Art. 39 — klasyfikacja dochodów, wydatków i przychodów
+Art. 39 nakazuje klasyfikowanie dochodów publicznych, wydatków publicznych i określonych przychodów według działów, rozdziałów i paragrafów. W połączeniu z art. 29 ust. 7, art. 40 i art. 40a pozwala uzasadnić takie zaprojektowanie ewidencji analitycznej Celu, aby zapisy były zgodne z obowiązującą klasyfikacją i jednocześnie umożliwiały identyfikację konkretnego zadania. Subkonto analityczne nie zastępuje klasyfikacji budżetowej ani kont księgi głównej.
+
+25. Art. 40 ust. 1–4 oraz art. 40a — plany kont, etapy rozliczeń i jednolita ewidencja
+Art. 40 ust. 1 nakazuje jednostkom sektora finansów publicznych prowadzić rachunkowość zgodnie z przepisami o rachunkowości i ustawą o finansach publicznych. Ust. 2 pkt 2 wymaga, aby plany kont uwzględniały również etapy rozliczeń poprzedzające płatność dochodów i wydatków, a w zakresie wydatków i kosztów także zaangażowanie środków. Art. 40 ust. 4 stanowi podstawę określenia szczególnych zasad rachunkowości i planów kont. Art. 40a przewiduje wytyczne dotyczące przypisywania paragrafów klasyfikacji do kont księgowych w celu jednolitego ewidencjonowania gospodarowania środkami publicznymi. To przepisy szczególnie istotne dla postulowanego subkonta ewidencyjnego Celu: pozwalają oprzeć jego konstrukcję na planie kont, ewidencji analitycznej i ścieżce audytu, a nie na tworzeniu nowego rachunku bankowego.
+
+26. Art. 41 — sprawozdawczość z wykonania procesów finansowych
+Art. 41 przewiduje sporządzanie przez jednostki sektora finansów publicznych sprawozdań z wykonania procesów wskazanych w art. 3. Wspiera to postulat przygotowywania okresowych zestawień wykonania Celu, obejmujących wpływy, zaangażowanie środków, wydatki, koszty, rezultaty i saldo ewidencyjne, w zakresie i formie zgodnej z przepisami sprawozdawczymi właściwymi dla jednostki.
+
+27. Art. 162 pkt 4 — zlecanie zadań, art. 43 i art. 151
+Art. 162 pkt 4 stanowi, że w toku wykonywania budżetu państwa zlecanie zadań powinno następować na zasadzie wyboru najkorzystniejszej oferty, a w odniesieniu do organizacji pozarządowych — z odpowiednim zastosowaniem art. 43 i art. 151. Jest to dodatkowe, bezpośrednie powiązanie prawa realizacji zadań finansowanych publicznie z mechanizmem zlecania zadań organizacjom pozarządowym. Wzmacnia argument, że zadanie publiczne może być wykonywane przez podmiot spoza administracji, z zachowaniem właściwego trybu wyboru i umowy.
+
+28. Art. 168 i art. 169 — wykorzystanie dotacji i obowiązek zwrotu
+Art. 168 reguluje zwrot niewykorzystanych dotacji z budżetu państwa, a art. 169 — zwrot dotacji wykorzystanych niezgodnie z przeznaczeniem, nienależnie pobranych lub pobranych w nadmiernej wysokości, wraz z odpowiednimi odsetkami. Przepisy te wzmacniają potrzebę prowadzenia subkonta ewidencyjnego, które umożliwia ustalenie kwoty otrzymanej, wykorzystanej, niewykorzystanej i podlegającej zwrotowi. Do dotacji z PFC należy stosować właściwe przepisy dotyczące danego rodzaju dotacji i Funduszu, z uwzględnieniem zakresu zastosowania art. 168–169.
+
+29. Art. 174 i art. 175 — nadzór, kontrola i ocena efektów
+Art. 174 określa ogólną kontrolę Ministra Finansów nad finansami publicznymi, natomiast art. 175 reguluje nadzór i kontrolę dysponentów części budżetowych, w tym nad wykorzystaniem dotacji, realizacją zadań finansowanych z budżetu państwa oraz efektywnością i skutecznością realizacji planów w układzie zadaniowym. Przepisy te wspierają jawny system raportowania, mierniki realizacji Celu, dokumentowanie rezultatów i możliwość kontroli. Nie przenoszą jednak ustawowych kompetencji kontrolnych na prywatnego koordynatora.
+
+DOPRECYZOWANIE STATUSU WNIOSKODAWCY I OKREŚLENIA „POSEŁ”
+Wnioskodawca używa określenia „Poseł” w przyjętym przez siebie znaczeniu obywatelskiego powołania do służby interesowi publicznemu. W niniejszym projekcie jest to osobiste określenie misji i roli obywatelskiej, a nie twierdzenie o posiadaniu mandatu parlamentarnego ani o wykonywaniu konstytucyjnego urzędu posła na Sejm. Samo obywatelskie powołanie, używanie takiego określenia lub działanie w interesie publicznym nie zastępuje ustawowego umocowania do dysponowania środkami publicznymi. Nie ogranicza natomiast prawa obywatela do zgłaszania inicjatyw, składania wniosków i proponowania sposobu realizacji zadań publicznych na zasadach określonych prawem.
+
+ZAKTUALIZOWANE WNIOSKI DLA MODELU
+1. Art. 29 ust. 6–7 uzasadnia wyodrębnienie zadań finansowanych z PFC w rocznym planie finansowym. Art. 39, art. 40 i art. 40a uzasadniają prowadzenie szczegółowej ewidencji analitycznej Celu w ramach ksiąg Funduszu.
+2. „Subkonto Celu” w tym projekcie oznacza subkonto ewidencyjne, a nie rachunek bankowy. Jego funkcją jest identyfikacja księgowa wpływów, zobowiązań, kosztów i rozliczeń przypisanych do Celu.
+3. Art. 5 ust. 2 pkt 5 i art. 11a pokazują ustawowe uznanie darowizn pieniężnych na rzecz sektora finansów publicznych oraz przykład respektowania celu wskazanego przez darczyńcę w szczególnym modelu rachunku wydzielonego. Możliwość zastosowania tego mechanizmu w konkretnym PFC wymaga jednak sprawdzenia ustawy tworzącej Fundusz i zasad przyjmowania darowizn.
+4. Art. 126, art. 127, art. 150–152 oraz art. 162 pkt 4 wspierają konstrukcję zadania publicznego finansowanego dotacją i realizowanego przez uprawniony podmiot, z umową, ewidencją i rozliczeniem.
+5. Wnioskodawca może proponować swoją rolę jako inicjatora, koordynatora lub osoby odpowiedzialnej za merytoryczne prowadzenie Celu. Zakres formalnych uprawnień do zatwierdzania zapisów, podejmowania zobowiązań lub autoryzowania płatności musi wynikać z właściwego umocowania i procedur Funduszu.
+6. Obywatelskie rozumienie określenia „Poseł” jest w tym dokumencie opisem osobistej misji służby publicznej, a nie deklaracją mandatu parlamentarnego.
+
+Urzędowy tekst jednolity ustawy o finansach publicznych: Dz. U. z 2026 r. poz. 1447, stan prawny uwzględniony w obwieszczeniu z 2 października 2026 r.:
 https://eli.gov.pl/api/acts/DU/2026/1447/text.pdf
 https://eli.gov.pl/api/acts/DU/2026/1447/text.html
