@@ -754,6 +754,45 @@ ZAKTUALIZOWANE WNIOSKI DLA MODELU
 Urzędowy tekst jednolity ustawy o finansach publicznych: Dz. U. z 2026 r. poz. 1447, stan prawny uwzględniony w obwieszczeniu z 2 października 2026 r.:
 https://eli.gov.pl/api/acts/DU/2026/1447/text.pdf
 https://eli.gov.pl/api/acts/DU/2026/1447/text.html
+
+UZUPEŁNIAJĄCA ANALIZA — OSOBA FIZYCZNA JAKO PRYWATNY PODMIOT ZARZĄDZAJĄCY ŚRODKAMI NA CEL PUBLICZNY
+
+30. Art. 4 ust. 1 pkt 2 — podmiot prywatny wykorzystujący lub dysponujący środkami publicznymi
+Przepis stanowi, że ustawę o finansach publicznych stosuje się nie tylko do jednostek sektora finansów publicznych, lecz także do „innych podmiotów” w zakresie, w jakim wykorzystują środki publiczne lub nimi dysponują. Jest to istotna podstawa dla modelu, w którym osoba fizyczna pozostaje podmiotem prywatnym, ale na podstawie umowy, decyzji lub innego skutecznego tytułu prawnego wykonuje określone czynności dotyczące środków publicznych. Ustawa obejmuje wówczas tę osobę właściwymi regułami gospodarowania, rozliczania i kontroli. Przepis nie przesądza jednak, że taka osoba staje się przez to jednostką sektora finansów publicznych; przeciwnie, rozróżnia jednostki sektora od innych podmiotów. W projekcie należy zatem odróżnić status „prywatnego podmiotu zarządzającego lub realizatora zadania publicznego” od statusu „jednostki sektora finansów publicznych”.
+
+31. Art. 8 i art. 9 — ustawowe formy jednostek sektora finansów publicznych
+Art. 8 stanowi, że jednostki sektora finansów publicznych są tworzone w formach określonych w ustawie, a art. 9 wymienia kategorie podmiotów tworzących ten sektor. W katalogu znajdują się między innymi organy władzy publicznej, jednostki samorządu terytorialnego, jednostki budżetowe, państwowe fundusze celowe, agencje wykonawcze, uczelnie publiczne, publiczne zakłady opieki zdrowotnej i określone państwowe lub samorządowe osoby prawne. Sama osoba fizyczna działająca we własnym imieniu nie została wymieniona jako odrębna kategoria jednostki sektora. Nie wyklucza to jej udziału w realizacji zadań publicznych ani powierzenia jej określonych czynności, ale nie pozwala utożsamić osoby fizycznej z jednostką sektora wyłącznie z powodu publicznego celu działania lub społecznego charakteru wpływów.
+
+32. Art. 43 — powszechne prawo realizacji zadań finansowanych ze środków publicznych
+Art. 43 stanowi, że prawo realizacji zadań finansowanych ze środków publicznych przysługuje ogółowi podmiotów, chyba że odrębne ustawy stanowią inaczej. Jest to istotny argument przeciwko założeniu, że zadania publiczne mogą wykonywać wyłącznie organy administracji lub jednostki sektora finansów publicznych. Wniosek obywatela może więc przedstawiać go jako inicjatora, proponowanego realizatora, koordynatora lub osobę odpowiedzialną za wykonanie określonego zakresu zadania. Zakres podmiotów uprawnionych do uzyskania konkretnej dotacji oraz tryb jej przyznania mogą jednak wynikać z przepisów szczególnych, programu, konkursu i umowy. Art. 43 nie daje automatycznego prawa do otrzymania dotacji ani do dysponowania rachunkiem PFC.
+
+33. Art. 61 ust. 1 Konstytucji — jawność także u podmiotów spoza administracji
+Konstytucyjne prawo dostępu do informacji obejmuje działalność organów władzy publicznej, a także innych osób i jednostek organizacyjnych w zakresie, w jakim wykonują zadania władzy publicznej i gospodarują mieniem komunalnym lub majątkiem Skarbu Państwa. Przepis ten potwierdza, że wykonywanie zadań publicznych i gospodarowanie majątkiem publicznym może występować również po stronie podmiotów niebędących organami administracji. Wspiera to postulat jawności działań prywatnego realizatora lub zarządzającego zadaniem publicznym. Nie nadaje jednak samodzielnej kompetencji do przyjęcia ani wydatkowania środków.
+
+34. Art. 63 Konstytucji — obywatelska inicjatywa w interesie publicznym
+Każdy ma prawo składać do organów władzy publicznej petycje, wnioski i skargi w interesie publicznym, własnym lub innej osoby za jej zgodą. Przepis ten wspiera prawo obywatela do zgłoszenia Celu, przedstawienia propozycji jego organizacji, wskazania potrzeb społecznych i wnioskowania o powierzenie mu określonej roli. Jest podstawą udziału obywatelskiego w inicjowaniu spraw publicznych, a nie samoistnym źródłem kompetencji finansowych.
+
+35. Art. 888, art. 893 i art. 894 Kodeksu cywilnego — darowizna, polecenie i interes społeczny
+Art. 888 określa darowiznę jako bezpłatne świadczenie na rzecz obdarowanego kosztem majątku darczyńcy. Art. 893 pozwala darczyńcy nałożyć na obdarowanego obowiązek oznaczonego działania lub zaniechania (polecenie), a art. 894 reguluje żądanie wykonania polecenia; jeżeli polecenie ma na względzie interes społeczny, po śmierci darczyńcy jego wykonania może żądać także właściwy organ państwowy. Przepisy te mogą wspierać konstrukcję darowizny obciążonej poleceniem służącym określonemu interesowi społecznemu. Nie zmieniają jednak same przez się prywatnego obdarowanego w jednostkę sektora finansów publicznych ani darowizny na jego rzecz w dochód publiczny w rozumieniu art. 5 ust. 2 pkt 5 u.f.p. Status środków zależy od tego, kto jest rzeczywistym obdarowanym, jaki jest tytuł prawny wpłaty i czy środki zostały prawnie włączone do gospodarki finansowej właściwej jednostki publicznej.
+
+36. Art. 5 ust. 2 pkt 5 — zakres podmiotowy przepisu i możliwość jego zastosowania
+Wykładnia językowa przepisu wskazuje, że warunkiem zaliczenia pieniężnej darowizny do dochodów publicznych jest jej dokonanie „na rzecz jednostki sektora finansów publicznych”. Sam publiczny cel darowizny, obywatelska misja obdarowanego, prowadzenie ewidencji analitycznej lub nazwanie osoby „dysponentem” nie zastępuje tego warunku. Jeżeli darowizna jest prawnie dokonana na rzecz jednostki sektora finansów publicznych, a osoba fizyczna działa wyłącznie jako jej prawidłowo umocowany przedstawiciel, pełnomocnik, koordynator lub osoba wykonująca powierzone czynności, możliwe jest rozdzielenie obdarowanego (jednostki publicznej) od osoby wykonującej zadania zarządcze. To rozdzielenie może stanowić podstawę do dalszego projektowania roli obywatela bez fikcyjnego uznawania go za jednostkę sektora. Wymaga jednak wskazania konkretnej jednostki publicznej jako obdarowanego oraz ustalenia, czy ustawa regulująca dany Fundusz pozwala przyjąć i zaksięgować taką darowiznę.
+
+37. Rozróżnienie trzech modeli prawnych
+Dla uniknięcia niejasności regulamin powinien rozróżniać:
+a) model publicznego obdarowanego — darowizna jest przekazywana na rzecz jednostki sektora finansów publicznych, a osoba fizyczna wykonuje wyłącznie powierzone czynności w imieniu lub na rzecz tej jednostki; w takim przypadku należy zbadać zastosowanie art. 5 ust. 2 pkt 5 u.f.p.;
+b) model prywatnego realizatora — osoba fizyczna lub inny podmiot prywatny otrzymuje środki na podstawie dopuszczalnej prawem umowy lub procedury i realizuje zadanie publiczne; art. 4 ust. 1 pkt 2 u.f.p. obejmuje go zasadami finansowymi w zakresie wykorzystania lub dysponowania środkami publicznymi, lecz sam fakt realizacji celu publicznego nie czyni wpływów dochodem publicznym ani realizatora jednostką sektora;
+c) model PFC — środki pozostają środkami Funduszu, rachunek Funduszu pozostaje pod dyspozycją organu wskazanego w art. 29 ust. 3 i ustawie regulującej Fundusz, a osoba fizyczna może pełnić funkcję inicjatora, koordynatora, realizatora albo osobę wykonującą ściśle określone czynności, o ile istnieje odpowiednia podstawa prawna i umocowanie.
+
+38. Wniosek interpretacyjny dla projektu
+Najbardziej użyteczna prawnie postać postulatu nie polega na twierdzeniu, że osoba fizyczna już z samej definicji jest jednostką sektora finansów publicznych. Polega na wykazaniu, że prawo rozpoznaje udział podmiotów spoza sektora w realizacji zadań publicznych (art. 43), obejmuje podmioty prywatne wykorzystujące lub dysponujące środkami publicznymi odpowiednimi regułami (art. 4 ust. 1 pkt 2), przewiduje umowne powierzanie zadań i kontrolę ich wykonania (art. 126–152 w granicach zakresu zastosowania poszczególnych przepisów), a Konstytucja obejmuje jawnością także inne osoby i jednostki organizacyjne wykonujące zadania publiczne i gospodarujące majątkiem publicznym (art. 61 ust. 1). Na tej podstawie można wnosić o ustanowienie obywatela prywatnym Dyspozytorem/koordynatorem Celu lub realizatorem określonego zakresu zadania — pod warunkiem wskazania konkretnej podstawy ustawowej, prawidłowego obdarowanego, sposobu przyjęcia środków, granic kompetencji, odpowiedzialności, ewidencji i kontroli. Jest to konstrukcja odmienna od uznania osoby fizycznej za jednostkę sektora finansów publicznych.
+
+Źródła urzędowe:
+- Ustawa o finansach publicznych, Dz.U. z 2026 r. poz. 1447, w szczególności art. 4, 5, 8, 9, 29, 43, 126–152: https://eli.gov.pl/api/acts/DU/2026/1447/text.html
+- Konstytucja Rzeczypospolitej Polskiej, art. 61 i 63: https://www.prezydent.pl/prawo/konstytucja-rp/rozdzial-ii-wolnosci-prawa-i-obowiazki-czlowieka-i-obywatela
+- Kodeks cywilny, Dz.U. z 2026 r. poz. 795, art. 888, 893–895: https://eli.gov.pl/api/acts/DU/2026/795/text/I/D20260795.pdf
+
+
 """
 
 @Composable
