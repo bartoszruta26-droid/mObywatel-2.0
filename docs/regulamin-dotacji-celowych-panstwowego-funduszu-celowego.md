@@ -452,3 +452,64 @@ WNIOSKI DLA PROJEKTU
 • Kodeks cywilny — ustawa z dnia 23 kwietnia 1964 r., w szczególności art. 888 i następne: https://eli.gov.pl/eli/DU/1964/93/ogl
 
 Stan prawny i teksty źródeł należy ponownie sprawdzić w dniu składania wniosku, z uwzględnieniem późniejszych nowelizacji i ustawy regulującej konkretny Fundusz.
+
+
+UZUPEŁNIAJĄCA ANALIZA USTAWY O FINANSACH PUBLICZNYCH — DODATKOWE PRZEPISY
+
+Poniższe przepisy uzupełniają podstawy prawne projektu. Ich znaczenie należy odczytywać łącznie z art. 29, art. 43, art. 44 i art. 47 ustawy oraz z ustawą regulującą konkretny państwowy fundusz celowy.
+
+10. Art. 4 ust. 1 pkt 2 — stosowanie ustawy do podmiotów spoza sektora finansów publicznych
+
+Ustawa o finansach publicznych ma zastosowanie nie tylko do jednostek sektora finansów publicznych, lecz także do innych podmiotów w zakresie, w jakim wykorzystują one środki publiczne lub nimi dysponują. Przepis ten potwierdza, że podmiot niezaliczany do sektora finansów publicznych może uczestniczyć w wykonywaniu zadania finansowanego ze środków publicznych. Jednocześnie od chwili wykorzystania lub dysponowania takimi środkami podlega właściwym regułom finansowym, rozliczeniowym i kontrolnym. Nie jest to samodzielna podstawa przyznania dotacji ani przekazania uprawnień do rachunku Funduszu.
+
+11. Art. 126 — dotacje z państwowych funduszy celowych na zadania publiczne
+
+Art. 126 wprost zalicza do dotacji środki pochodzące z państwowych funduszy celowych, przeznaczone na podstawie ustawy o finansach publicznych, odrębnych ustaw lub umów międzynarodowych na finansowanie albo dofinansowanie realizacji zadań publicznych. Jest to bezpośrednia podstawa ustawowej konstrukcji dotacji pochodzącej z PFC. Konieczne pozostaje jednak wskazanie przepisu, który pozwala danemu Funduszowi finansować konkretny rodzaj zadania, oraz zachowanie właściwego trybu udzielenia dotacji.
+
+12. Art. 127 ust. 1 — katalog celów dotacji celowych
+
+Art. 127 ust. 1 określa dotacje celowe jako środki przeznaczone między innymi na finansowanie lub dofinansowanie ustawowo określonych zadań realizowanych przez jednostki inne niż jednostki samorządu terytorialnego (pkt 1 lit. b), zadań zleconych do realizacji organizacjom pozarządowym (pkt 1 lit. e) oraz kosztów realizacji inwestycji (pkt 1 lit. f). Przepis wspiera model, w którym zadanie publiczne może być wykonywane przez podmiot inny niż administracja, w tym — w zakresie określonym ustawą — przez organizację pozarządową. Nie oznacza jednak, że dowolny cel zdrowotno-opiekuńczy automatycznie staje się zadaniem danego Funduszu: zadanie musi mieć wymaganą podstawę ustawową, a możliwość finansowania musi wynikać z przepisów właściwych dla źródła dotacji.
+
+13. Art. 150 — umowa dotacji celowej i określenie odpowiedzialności
+
+Art. 150 przewiduje, że gdy odrębne przepisy lub umowa międzynarodowa nie określają trybu i zasad udzielania lub rozliczania dotacji celowej, właściwy dysponent zawiera umowę określającą w szczególności opis zadania i cel dotacji, termin wykonania, wysokość środków, termin wykorzystania, sposób rozliczenia, zwrot niewykorzystanej części oraz tryb kontroli. Przepis ten jest istotny dla projektu, ponieważ pozwala ująć relację finansowania w konkretnej umowie zadaniowej. W odniesieniu do środków PFC trzeba uwzględnić odesłanie w art. 150 do dysponenta środków, o których mowa w art. 127 ust. 2, oraz sprawdzić ustawę regulującą dany Fundusz.
+
+14. Art. 151 — zlecenie zadania organizacji pozarządowej wraz z dotacją celową
+
+Art. 151 ust. 1 stanowi, że dysponent części budżetowej może zlecić organizacji pozarządowej realizację swoich zadań na podstawie umowy, przyznając jednocześnie dotację celową. Umowa ma określać między innymi zadanie i jego cel, wysokość dotacji i tryb płatności, termin wykorzystania, kontrolę, rozliczenie oraz zwrot niewykorzystanych środków. To szczególnie istotna podstawa dla realizacji projektu przez Fundację Wspierania Rodzin „Aria”, o ile Fundacja spełnia definicję organizacji pozarządowej, zadanie należy do zadań właściwego dysponenta, a zastosowanie art. 151 jest dopuszczalne w danym stanie prawnym. Art. 151 nie ustanawia jednak uprawnienia osoby fizycznej do bezpośredniego dysponowania rachunkiem PFC. Osobiste wskazanie Wnioskodawcy jako koordynatora lub osoby odpowiedzialnej za wykonanie określonych czynności wymaga odrębnego, zgodnego z prawem uregulowania w umowie, statucie lub akcie właściwego organu.
+
+15. Art. 152 — wyodrębniona ewidencja dotacji i rozliczenie rzeczowo-finansowe
+
+Art. 152 ust. 1 nakłada na jednostki, którym udzielono dotacji na podstawie art. 150 lub art. 151 ust. 1, obowiązek prowadzenia wyodrębnionej ewidencji księgowej środków otrzymanych z dotacji oraz wydatków dokonywanych z tych środków. Ustępy 2–3 regulują zatwierdzanie rozliczenia rzeczowego i finansowego oraz ustalanie kwoty podlegającej zwrotowi w razie wykorzystania dotacji niezgodnie z przeznaczeniem lub pobrania jej w nadmiernej wysokości. Przepis ten wspiera projekt wyodrębnionej ewidencji Celu, oddzielnego przypisywania kosztów, dokumentowania rezultatów i przejrzystego rozliczania. Wyodrębniona ewidencja księgowa nie jest jednak tym samym co odrębny rachunek bankowy lub subkonto; utworzenie takiego rachunku wymaga odrębnej podstawy i działania uprawnionego dysponenta.
+
+16. Art. 40 — rachunkowość i ewidencja państwowego funduszu celowego
+
+Art. 40 określa obowiązek prowadzenia rachunkowości przez jednostki sektora finansów publicznych z uwzględnieniem szczególnych zasad ustawy. Wskazuje również szczególne zasady ujmowania dochodów, wydatków i etapów rozliczeń, które mają znaczenie dla ewidencji Funduszu. Przepis wspiera postulat prowadzenia dokumentacji pozwalającej odtworzyć źródło, przeznaczenie i przepływ każdej kwoty, ale nie ustanawia samodzielnego uprawnienia Dyspozytora do rachunku.
+
+17. Art. 52 — limity planu finansowego
+
+Art. 52 rozróżnia prognozowany charakter przychodów i nieprzekraczalny limit wydatków oraz reguluje zmiany planu finansowego. Dla projektu oznacza to, że Cel powinien być opisany kwotowo i zadaniowo w granicach właściwego planu, a jego finansowanie nie może prowadzić do zaciągania zobowiązań ponad dopuszczalne limity. Przepis wzmacnia potrzebę formalnego wyodrębnienia Celu w planie finansowym, lecz sam nie przyznaje wnioskodawcy prawa do dokonania takiego wpisu.
+
+18. Art. 53 i art. 54 — odpowiedzialność za gospodarkę finansową i wykonywanie dyspozycji pieniężnych
+
+Art. 53 ust. 1 przypisuje kierownikowi jednostki odpowiedzialność za całość gospodarki finansowej. Ustęp 2 pozwala powierzyć określone obowiązki pracownikom jednostki w formie imiennego upoważnienia lub wskazania w regulaminie organizacyjnym. Art. 54 określa zadania głównego księgowego, w tym wykonywanie dyspozycji środkami pieniężnymi oraz wstępną kontrolę zgodności operacji z planem finansowym i dokumentami. Przepisy te wspierają rozdzielenie funkcji merytorycznego prowadzenia Celu, zatwierdzania wydatków, księgowania i autoryzacji płatności. Jednocześnie art. 53 ust. 2 dotyczy pracowników jednostki i nie jest ogólną podstawą do nadania dowolnej osobie zewnętrznej prawa dysponowania rachunkiem PFC. W przypadku osoby spoza jednostki potrzebna jest właściwa podstawa ustawowa i prawidłowy akt umocowania.
+
+19. Art. 68 i art. 69 — kontrola zarządcza, skuteczność i zarządzanie ryzykiem
+
+Art. 68 definiuje kontrolę zarządczą jako ogół działań służących zapewnieniu realizacji celów i zadań zgodnie z prawem, efektywnie, oszczędnie i terminowo; wskazuje również między innymi na wiarygodność sprawozdań, ochronę zasobów i zarządzanie ryzykiem. Art. 69 określa osoby odpowiedzialne za zapewnienie funkcjonowania kontroli zarządczej. Przepisy te uzasadniają ustanowienie w regulaminie mierników rezultatów, kontroli dokumentów, rozdziału ról, rejestru ryzyk, procedur konfliktu interesów oraz monitorowania wykonania Celu. Nie tworzą jednak odrębnego stanowiska Dyspozytora ani nie przenoszą na niego ustawowej odpowiedzialności ministra lub kierownika jednostki.
+
+20. Art. 33 — jawność gospodarowania środkami publicznymi
+
+Art. 33 ustanawia zasadę jawności gospodarki środkami publicznymi. Wspiera publikowanie informacji o zasadach programu, podstawach prawnych, planowanych kwotach, wynikach naborów, sprawozdaniach i efektach Celu, z poszanowaniem przepisów o ochronie danych i tajemnic prawnie chronionych. Jawność wzmacnia społeczną kontrolę nad realizacją zadania, ale nie daje osobom prywatnym kompetencji do wydawania środków.
+
+DODATKOWE WNIOSKI DLA MODELU
+
+1. Najmocniejszym uzupełnieniem art. 43 i 47 jest zestawienie art. 126, art. 127 ust. 1, art. 150, art. 151 i art. 152: przepisy te pokazują ustawową konstrukcję dotacji celowej z PFC na zadanie publiczne, możliwość zlecenia zadania uprawnionej organizacji pozarządowej, umowne określenie celu i kontroli oraz obowiązek wyodrębnionej ewidencji.
+2. Art. 4 ust. 1 pkt 2 potwierdza, że podmiot spoza sektora finansów publicznych, który otrzyma środki publiczne do wykorzystania lub nimi dysponuje, podlega ustawie w odpowiednim zakresie.
+3. Wniosek może proponować, aby Wnioskodawca był realizatorem zadania, a wskazana osoba pełniła funkcję koordynatora lub Dyspozytora Celu w granicach kompetencji wyraźnie powierzonych przez właściwy organ i umowę. W przypadku realizacji przez Fundację należy odróżnić rolę Fundacji jako strony umowy i beneficjenta dotacji od osobistej funkcji Wnioskodawcy.
+4. Art. 152 pozwala uzasadnić wyodrębnioną ewidencję księgową Celu. Nie należy utożsamiać tej ewidencji z prawem do samodzielnego otwarcia subkonta bankowego.
+5. Żaden z omawianych przepisów samodzielnie nie znosi art. 29 ust. 3 ani nie przenosi na Wnioskodawcę kompetencji ustawowego dysponenta rachunku PFC. Wniosek powinien zatem żądać formalnego ustanowienia zakresu czynności Dyspozytora przez organ właściwy, a nie traktować samego regulaminu lub wskazania przez darczyńców jako źródła tej kompetencji.
+
+Urzędowe źródło tekstu jednolitego ustawy o finansach publicznych, Dz.U. z 2026 r. poz. 1447:
+https://eli.gov.pl/api/acts/DU/2026/1447/text.pdf
+https://eli.gov.pl/api/acts/DU/2026/1447/text.html
