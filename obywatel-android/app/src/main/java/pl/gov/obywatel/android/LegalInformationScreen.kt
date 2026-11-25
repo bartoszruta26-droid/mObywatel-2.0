@@ -1057,7 +1057,7 @@ Korekta precyzująca: art. 11a ustawy o finansach publicznych jest przepisem szc
 """
 
 private const val ENTRUSTMENT_DOCUMENT_TEXT = """
-WZÓR DOKUMENTU POWIERZENIA ŚRODKÓW DYSPozyTOROWI CELU SŁUŻBY NARODOWEJ
+WZÓR DOKUMENTU POWIERZENIA ŚRODKÓW Dyspozytorowi CELU SŁUŻBY NARODOWEJ
 
 STATUS I ZASTOSOWANIE
 Wzór wymaga dostosowania do ustawy tworzącej właściwy państwowy fundusz celowy (PFC), regulaminu Funduszu, trybu przyznania środków i umowy z realizatorem. Samo wypełnienie lub podpisanie dokumentu nie tworzy dotacji, nie przenosi kompetencji ustawowego dysponenta Funduszu i nie nadaje prawa do rachunku Funduszu.
@@ -1104,7 +1104,7 @@ Dokument potwierdzający rachunek: .............................................
 Rachunek jest rachunkiem płatniczym odbiorcy / realizatora, o ile taki sposób przekazania środków dopuszczają przepisy i umowa. Nie jest rachunkiem bankowym PFC ani jego subkontem i nie zmienia ustawowego dysponenta rachunku Funduszu. Uprawnienia do rachunku wynikają z umocowania udzielonego przez jego posiadacza i zaakceptowanego przez dostawcę usług płatniczych.
 Dla Celu prowadzi się odrębną ewidencję analityczną wpływów, wydatków, dokumentów, źródeł finansowania, zobowiązań, zwrotów i salda. Ewidencja nie jest rachunkiem płatniczym.
 
-5. ZAKRES UPRAWNIEŃ DYSPozyTORA
+5. ZAKRES UPRAWNIEŃ Dyspozytora
 W granicach Celu, kwoty, harmonogramu, planu, umowy i prawa Dyspozytor może:
 - koordynować merytoryczną realizację Celu;
 - organizować działania i ustalać kolejność czynności;
