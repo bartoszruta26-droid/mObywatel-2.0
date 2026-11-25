@@ -617,95 +617,129 @@ https://eli.gov.pl/api/acts/DU/2026/1447/text.html
 
 Projekt należy przed użyciem operacyjnym poddać opinii legislacyjnej i finansowo-księgowej, po wskazaniu konkretnego Funduszu, podstawy przyjmowania darowizn, organu zatwierdzającego Cel oraz prawnego umocowania Dyspozytora.
 
-
 PODSTAWY PRAWNE WSPARCIA MODELU OBYWATELSKIEGO — ANALIZA PRZEPISÓW
 
-Poniższe przepisy wspierają możliwość zgłoszenia Celu, ubiegania się o środki, realizacji zadania przez podmiot spoza administracji oraz przyjmowania darowizn. Należy odróżnić uprawnienie do ubiegania się o realizację zadania od kompetencji do samodzielnego dysponowania rachunkiem państwowego funduszu celowego.
+Poniższe przepisy stanowią podstawy prawne, na których można oprzeć zgłoszenie Celu, ubieganie się o środki, realizację zadania przez podmiot spoza administracji oraz przyjmowanie darowizn. Należy odróżnić uprawnienie do ubiegania się o realizację zadania od kompetencji do samodzielnego dysponowania rachunkiem państwowego funduszu celowego.
 
-1. Art. 43 ustawy o finansach publicznych stanowi, że prawo realizacji zadań finansowanych ze środków publicznych przysługuje ogółowi podmiotów, chyba że odrębne ustawy stanowią inaczej. Jest to istotna podstawa obywatelskiego modelu zgłaszania się do realizacji zadań publicznych. Podmiot spoza sektora finansów publicznych może ubiegać się o realizację zadania, o ile przepisy szczególne nie ustanawiają ograniczeń, a wybór i finansowanie następują w odpowiednim trybie.
+1. Art. 43 ustawy o finansach publicznych — prawo realizacji zadań finansowanych ze środków publicznych
 
-2. Art. 47 ustawy o finansach publicznych przewiduje, że podmiot wnioskujący o przyznanie środków publicznych na realizację wyodrębnionego zadania przedstawia ofertę wykonania zadania zgodnie z zasadami uczciwej konkurencji, gwarantującą wykonanie efektywne, oszczędne i terminowe. Przepis wspiera konstrukcję wniosku o finansowanie konkretnego Celu wraz z budżetem, harmonogramem i sposobem rozliczenia. Nie ustanawia automatycznego prawa do dotacji ani nie przesądza, że wnioskodawca staje się dysponentem rachunku Funduszu.
+Przepis stanowi: „Prawo realizacji zadań finansowanych ze środków publicznych przysługuje ogółowi podmiotów, chyba że odrębne ustawy stanowią inaczej”.
 
-3. Art. 29 ust. 2, 3, 5, 6 i 7 ustawy o finansach publicznych określa status państwowego funduszu celowego, wskazuje organ dysponujący rachunkiem oraz przewiduje wyodrębnianie zadań w rocznym planie finansowym. Cel może być ujęty jako zadanie Funduszu, jeżeli mieści się w jego ustawowym zakresie i zostanie prawidłowo uwzględniony w planie finansowym. Brak osobowości prawnej Funduszu nie znosi jednak kompetencji organu wskazanego w art. 29 ust. 3. Sam art. 29 nie przyznaje każdemu obywatelowi prawa do samodzielnego tworzenia subkonta ani dysponowania częścią rachunku.
+Jest to istotna podstawa dla obywatelskiego modelu zgłaszania się do realizacji zadań publicznych. Oznacza, że realizacja zadania finansowanego ze środków publicznych nie jest zastrzeżona co do zasady wyłącznie dla organów administracji. Podmiot spoza sektora finansów publicznych może ubiegać się o realizację zadania, o ile przepisy szczególne nie ustanawiają ograniczeń, a wybór i finansowanie następują w odpowiednim trybie.
 
-4. Art. 44 ustawy o finansach publicznych wymaga, aby wydatki publiczne były dokonywane w granicach planu finansowego, zgodnie z przepisami dotyczącymi poszczególnych rodzajów wydatków, w sposób celowy i oszczędny oraz zapewniający najlepsze efekty z danych nakładów. Uzasadnia to budżet Celu, mierniki rezultatów, dokumentowanie wydatków i kontrolę.
+2. Art. 47 ustawy o finansach publicznych — oferta wykonania wyodrębnionego zadania
 
-5. Art. 63 Konstytucji RP przyznaje każdemu prawo składania petycji, wniosków i skarg w interesie publicznym, własnym lub innej osoby za jej zgodą do organów władzy publicznej. Stanowi podstawę skierowania do ministra propozycji ustanowienia Celu, przedstawienia uzasadnienia i zwrócenia się o rozpatrzenie wniosku. Nie oznacza obowiązku przyjęcia propozycji ani przyznania żądanej kwoty.
+Przepis przewiduje, że podmiot wnioskujący o przyznanie środków publicznych na realizację wyodrębnionego zadania przedstawia ofertę wykonania zadania zgodnie z zasadami uczciwej konkurencji, gwarantującą wykonanie efektywne, oszczędne i terminowe.
 
-6. Art. 60 Konstytucji RP zapewnia obywatelom polskim korzystającym z pełni praw publicznych prawo dostępu do służby publicznej na jednakowych zasadach. Potwierdza zasadę równego dostępu, lecz nie jest samodzielnym tytułem do objęcia konkretnej funkcji dysponenta Funduszu ani do zarządzania rachunkiem państwowym.
+Przepis ten wspiera konstrukcję, w której Wnioskodawca przedstawia ministrowi konkretny Cel, plan jego wykonania, budżet, harmonogram i sposób rozliczenia oraz ubiega się o środki na jego realizację. Nie ustanawia jednak automatycznego prawa do dotacji ani nie przesądza, że wnioskodawca staje się dysponentem rachunku Funduszu.
 
-7. Art. 11 ustawy o działalności pożytku publicznego i o wolontariacie przewiduje wspieranie lub powierzanie realizacji zadań publicznych organizacjom pozarządowym oraz podmiotom wymienionym w art. 3 ust. 3, prowadzącym działalność statutową w danej dziedzinie. Co do zasady następuje to w trybie konkursu ofert albo w trybach szczególnych przewidzianych ustawą. Przepisy te mogą mieć zastosowanie, jeżeli Wnioskodawca lub realizator spełnia ustawowe warunki.
+3. Art. 29 ust. 2, 3, 5, 6 i 7 ustawy o finansach publicznych — państwowy fundusz celowy i wyodrębnione zadania
 
-8. Art. 888 i następne Kodeksu cywilnego regulują umowę darowizny. W relacji prywatnoprawnej darczyńca może przekazać środki na uzgodniony cel, a treść umowy może określać przeznaczenie świadczenia i obowiązki obdarowanego. Powierzenie konkretnej osobie zarządzania darowizną wymaga prawidłowego określenia stron, odbiorcy środków, treści zobowiązania i rachunku. Zasady te nie zmieniają ustawowego dysponenta rachunku państwowego funduszu celowego.
+Art. 29 ust. 2 potwierdza, że państwowy fundusz celowy nie posiada osobowości prawnej. Ustęp 3 określa jednak, że Fundusz stanowi wyodrębniony rachunek bankowy, którym dysponuje minister wskazany w ustawie tworzącej Fundusz albo inny organ wskazany w tej ustawie. Ustępy 5–7 wiążą przychody i koszty Funduszu z realizacją wyodrębnionych zadań państwowych oraz ustanawiają roczny plan finansowy jako podstawę gospodarki finansowej Funduszu, z wyodrębnieniem zadań finansowanych z jego środków.
 
-9. Ostateczna możliwość przyjmowania darowizn na rachunek konkretnego Funduszu, przypisywania ich do oznaczonego zadania, tworzenia rachunków pomocniczych, udzielania dotacji i powierzania czynności Dyspozytorowi wymaga sprawdzenia ustawy tworzącej dany Fundusz, przepisów wykonawczych, planu finansowego oraz zasad obsługi rachunku. Ustawa szczególna może przewidywać konkursy, nabory, odrębny rachunek obsługujący dotację i szczegółowe rozliczenia — rozwiązania te obowiązują w granicach tej ustawy.
+Wynika z tego, że Cel może być przedstawiony jako odrębne zadanie w ramach istniejącego Funduszu, jeśli mieści się w jego ustawowym zakresie i zostanie prawidłowo uwzględniony w planie finansowym. Brak osobowości prawnej Funduszu nie znosi jednak wskazanej w ust. 3 kompetencji organu dysponującego rachunkiem. Sam art. 29 nie przyznaje każdemu obywatelowi prawa do samodzielnego tworzenia subkonta ani do dysponowania częścią rachunku.
+
+4. Art. 44 ustawy o finansach publicznych — celowość i oszczędność wydatków
+
+Wydatki publiczne mogą być ponoszone na cele i w wysokościach ustalonych w odpowiednim planie finansowym. Jednostki sektora finansów publicznych dokonują wydatków zgodnie z przepisami dotyczącymi poszczególnych rodzajów wydatków, a wydatki powinny być celowe i oszczędne oraz zapewniać najlepsze efekty z danych nakładów. Zasady te uzasadniają szczegółowy budżet Celu, mierniki rezultatów, dokumentowanie wydatków i kontrolę.
+
+5. Art. 63 Konstytucji RP — prawo składania wniosków i petycji
+
+Każdy ma prawo składać petycje, wnioski i skargi w interesie publicznym, własnym lub innej osoby za jej zgodą do organów władzy publicznej. Przepis ten stanowi konstytucyjną podstawę skierowania do ministra propozycji ustanowienia Celu, przedstawienia uzasadnienia, wskazania proponowanego sposobu realizacji oraz zwrócenia się o rozpatrzenie wniosku. Nie oznacza obowiązku przyjęcia propozycji wnioskodawcy ani przyznania żądanej kwoty.
+
+6. Art. 60 Konstytucji RP — dostęp do służby publicznej
+
+Obywatele polscy korzystający z pełni praw publicznych mają prawo dostępu do służby publicznej na jednakowych zasadach. Przepis ten potwierdza zasadę równego dostępu do służby publicznej, lecz nie jest samodzielnym tytułem do objęcia konkretnego stanowiska, funkcji dysponenta Funduszu ani do zarządzania rachunkiem państwowym. Objęcie funkcji wymaga spełnienia przesłanek właściwych dla danego stanowiska lub umocowania.
+
+7. Ustawa o działalności pożytku publicznego i o wolontariacie — powierzanie zadań organizacjom
+
+Art. 11 tej ustawy przewiduje wspieranie lub powierzanie realizacji zadań publicznych organizacjom pozarządowym oraz podmiotom wymienionym w art. 3 ust. 3, prowadzącym działalność statutową w danej dziedzinie. Co do zasady odbywa się to w trybie otwartego konkursu ofert albo w trybach szczególnych przewidzianych ustawą. Przepisy te mogą mieć zastosowanie, jeżeli Wnioskodawcą lub realizatorem jest podmiot spełniający ustawowe warunki. Nie rozszerzają automatycznie kręgu uprawnionych na każdą osobę fizyczną działającą poza takim podmiotem.
+
+8. Kodeks cywilny — darowizna i wola darczyńcy
+
+Art. 888 i następne Kodeksu cywilnego regulują umowę darowizny. W relacji prywatnoprawnej darczyńca może przekazać środki na uzgodniony cel, a treść umowy może określać przeznaczenie świadczenia, sposób jego wykorzystania i obowiązki obdarowanego. Przyjęcie darowizny na oznaczony cel oraz powierzenie konkretnej osobie czynności związanych z jej wykorzystaniem wymaga prawidłowego określenia stron, odbiorcy środków, treści zobowiązania i rachunku. Zasady te nie zmieniają ustawowego dysponenta rachunku państwowego funduszu celowego.
+
+9. Przepis szczególny ustawy regulującej konkretny Fundusz
+
+Ostateczna możliwość przyjmowania darowizn na rachunek Funduszu, przypisywania ich do oznaczonego zadania, tworzenia rachunków pomocniczych, udzielania dotacji i powierzania czynności Dyspozytorowi wymaga każdorazowego sprawdzenia ustawy tworzącej konkretny Fundusz, jej przepisów wykonawczych, planu finansowego oraz zasad obsługi rachunku. Przykładowo, ustawa szczególna może wyraźnie przewidywać konkursy, nabory, odrębny rachunek obsługujący dotację i szczegółowe rozliczenia — takie rozwiązania obowiązują w granicach danej ustawy i nie mogą być automatycznie przenoszone na wszystkie Fundusze.
 
 WNIOSKI DLA PROJEKTU
 
-• Obywatelskie zgłoszenie Celu i wniosek o jego finansowanie można oprzeć przede wszystkim na art. 63 Konstytucji RP oraz art. 43 i 47 ustawy o finansach publicznych.
-• Wnioskodawca może wskazać siebie jako proponowanego realizatora i Dyspozytora Celu oraz wnosić o powierzenie konkretnych czynności w dopuszczalnym trybie.
-• Konstrukcję odrębnego zadania można oprzeć na art. 29 ust. 5–7 ustawy o finansach publicznych, pod warunkiem zgodności Celu z ustawą regulującą Fundusz i planem finansowym.
-• Darowizny prywatne można organizować w reżimie Kodeksu cywilnego, z wyraźnym wskazaniem celu i osoby odpowiedzialnej za ich wykorzystanie, przy prawidłowym określeniu odbiorcy i rachunku.
-• Z samych art. 29 ust. 2 ani art. 43 ustawy o finansach publicznych nie wynika bezwarunkowe prawo każdego obywatela do samodzielnego otwarcia subkonta państwowego Funduszu i wydawania zgromadzonych na nim środków. Taki skutek wymaga odpowiedniej podstawy w ustawie regulującej Fundusz lub prawnie skutecznego działania organu uprawnionego do dysponowania rachunkiem.
+1. Można oprzeć obywatelskie zgłoszenie Celu i wniosek o jego finansowanie przede wszystkim na art. 63 Konstytucji RP oraz art. 43 i 47 ustawy o finansach publicznych.
+2. Można wskazać siebie jako proponowanego realizatora i Dyspozytora Celu oraz wnosić o powierzenie konkretnych czynności w ramach dopuszczalnego trybu.
+3. Można oprzeć konstrukcję odrębnego zadania na art. 29 ust. 5–7 ustawy o finansach publicznych, pod warunkiem zgodności Celu z ustawą regulującą Fundusz i planem finansowym.
+4. Darowizny prywatne można organizować w reżimie Kodeksu cywilnego, z wyraźnym wskazaniem celu i osoby odpowiedzialnej za ich wykorzystanie, przy czym odbiorca i rachunek muszą być prawidłowo określeni.
+5. Nie można wywodzić z samego art. 29 ust. 2 ani z art. 43 ustawy o finansach publicznych, że każdy obywatel ma już obecnie bezwarunkowe prawo do samodzielnego otwarcia subkonta państwowego Funduszu i wydawania zgromadzonych na nim środków. Taki skutek wymagałby odpowiedniej podstawy w ustawie regulującej Fundusz lub prawnie skutecznego działania organu uprawnionego do dysponowania rachunkiem.
 
 ŹRÓDŁA URZĘDOWE
 
-• Ustawa o finansach publicznych, tekst jednolity Dz.U. 2026 poz. 1447: https://eli.gov.pl/api/acts/DU/2026/1447/text.html
-• Konstytucja RP, w szczególności art. 60 i 63: https://www.prezydent.pl/prawo/konstytucja-rp/rozdzial-ii-wolnosci-prawa-i-obowiazki-czlowieka-i-obywatela
-• Ustawa o działalności pożytku publicznego i o wolontariacie, tekst jednolity Dz.U. 2025 poz. 1338, z późniejszymi zmianami: https://eli.gov.pl/eli/DU/2025/1338/ogl
-• Kodeks cywilny, w szczególności art. 888 i następne: https://eli.gov.pl/eli/DU/1964/93/ogl
+• Ustawa o finansach publicznych — tekst jednolity: https://eli.gov.pl/api/acts/DU/2026/1447/text.html
+• Konstytucja Rzeczypospolitej Polskiej — tekst i rozdział II: https://www.prezydent.pl/prawo/konstytucja-rp/rozdzial-ii-wolnosci-prawa-i-obowiazki-czlowieka-i-obywatela
+• Ustawa o działalności pożytku publicznego i o wolontariacie — tekst jednolity Dz.U. 2025 poz. 1338 oraz nowelizacja Dz.U. 2026 poz. 1040: https://eli.gov.pl/eli/DU/2025/1338/ogl
+• Kodeks cywilny — ustawa z dnia 23 kwietnia 1964 r., w szczególności art. 888 i następne: https://eli.gov.pl/eli/DU/1964/93/ogl
 
 Stan prawny i teksty źródeł należy ponownie sprawdzić w dniu składania wniosku, z uwzględnieniem późniejszych nowelizacji i ustawy regulującej konkretny Fundusz.
 
 
 UZUPEŁNIAJĄCA ANALIZA USTAWY O FINANSACH PUBLICZNYCH — DODATKOWE PRZEPISY
 
-Poniższe przepisy uzupełniają podstawy prawne projektu. Należy je odczytywać łącznie z art. 29, art. 43, art. 44 i art. 47 ustawy oraz z ustawą regulującą konkretny państwowy fundusz celowy.
+Poniższe przepisy uzupełniają podstawy prawne projektu. Ich znaczenie należy odczytywać łącznie z art. 29, art. 43, art. 44 i art. 47 ustawy oraz z ustawą regulującą konkretny państwowy fundusz celowy.
 
 10. Art. 4 ust. 1 pkt 2 — stosowanie ustawy do podmiotów spoza sektora finansów publicznych
-Ustawa ma zastosowanie także do innych podmiotów w zakresie, w jakim wykorzystują środki publiczne lub nimi dysponują. Potwierdza to możliwość udziału podmiotu spoza sektora w realizacji zadania finansowanego publicznie, ale oznacza zarazem podleganie właściwym regułom finansowym, rozliczeniowym i kontrolnym. Nie jest to samodzielna podstawa przyznania dotacji ani przekazania uprawnień do rachunku Funduszu.
+
+Ustawa o finansach publicznych ma zastosowanie nie tylko do jednostek sektora finansów publicznych, lecz także do innych podmiotów w zakresie, w jakim wykorzystują one środki publiczne lub nimi dysponują. Przepis ten potwierdza, że podmiot niezaliczany do sektora finansów publicznych może uczestniczyć w wykonywaniu zadania finansowanego ze środków publicznych. Jednocześnie od chwili wykorzystania lub dysponowania takimi środkami podlega właściwym regułom finansowym, rozliczeniowym i kontrolnym. Nie jest to samodzielna podstawa przyznania dotacji ani przekazania uprawnień do rachunku Funduszu.
 
 11. Art. 126 — dotacje z państwowych funduszy celowych na zadania publiczne
-Art. 126 zalicza do dotacji środki z państwowych funduszy celowych przeznaczone na podstawie ustawy, odrębnych ustaw lub umów międzynarodowych na finansowanie albo dofinansowanie realizacji zadań publicznych. Jest to bezpośrednia podstawa konstrukcji dotacji pochodzącej z PFC. Konieczne pozostaje wskazanie przepisu pozwalającego danemu Funduszowi finansować konkretny rodzaj zadania i zachowanie właściwego trybu.
+
+Art. 126 wprost zalicza do dotacji środki pochodzące z państwowych funduszy celowych, przeznaczone na podstawie ustawy o finansach publicznych, odrębnych ustaw lub umów międzynarodowych na finansowanie albo dofinansowanie realizacji zadań publicznych. Jest to bezpośrednia podstawa ustawowej konstrukcji dotacji pochodzącej z PFC. Konieczne pozostaje jednak wskazanie przepisu, który pozwala danemu Funduszowi finansować konkretny rodzaj zadania, oraz zachowanie właściwego trybu udzielenia dotacji.
 
 12. Art. 127 ust. 1 — katalog celów dotacji celowych
-Art. 127 ust. 1 obejmuje między innymi finansowanie lub dofinansowanie ustawowo określonych zadań realizowanych przez jednostki inne niż jednostki samorządu terytorialnego (pkt 1 lit. b), zadań zleconych organizacjom pozarządowym (pkt 1 lit. e) oraz kosztów inwestycji (pkt 1 lit. f). Wspiera to model wykonywania zadania publicznego przez podmiot inny niż administracja, w tym organizację pozarządową, w granicach właściwych przepisów. Nie oznacza, że dowolny cel zdrowotno-opiekuńczy automatycznie staje się zadaniem danego Funduszu.
 
-13. Art. 150 — umowa dotacji celowej
-Jeżeli odrębne przepisy lub umowa międzynarodowa nie określają trybu i zasad udzielania lub rozliczania dotacji, art. 150 przewiduje umowę określającą w szczególności opis zadania i cel dotacji, termin wykonania, wysokość środków, termin wykorzystania, sposób rozliczenia, zwrot niewykorzystanej części oraz tryb kontroli. Dla środków PFC trzeba uwzględnić odesłanie do dysponenta środków, o których mowa w art. 127 ust. 2, oraz ustawę regulującą konkretny Fundusz.
+Art. 127 ust. 1 określa dotacje celowe jako środki przeznaczone między innymi na finansowanie lub dofinansowanie ustawowo określonych zadań realizowanych przez jednostki inne niż jednostki samorządu terytorialnego (pkt 1 lit. b), zadań zleconych do realizacji organizacjom pozarządowym (pkt 1 lit. e) oraz kosztów realizacji inwestycji (pkt 1 lit. f). Przepis wspiera model, w którym zadanie publiczne może być wykonywane przez podmiot inny niż administracja, w tym — w zakresie określonym ustawą — przez organizację pozarządową. Nie oznacza jednak, że dowolny cel zdrowotno-opiekuńczy automatycznie staje się zadaniem danego Funduszu: zadanie musi mieć wymaganą podstawę ustawową, a możliwość finansowania musi wynikać z przepisów właściwych dla źródła dotacji.
 
-14. Art. 151 — zlecenie zadania organizacji pozarządowej wraz z dotacją
-Art. 151 ust. 1 stanowi, że dysponent części budżetowej może zlecić organizacji pozarządowej realizację swoich zadań na podstawie umowy, przyznając jednocześnie dotację celową. Umowa określa m.in. zadanie i jego cel, wysokość dotacji, tryb płatności, termin wykorzystania, kontrolę, rozliczenie i zwrot niewykorzystanych środków. Jest to istotna podstawa dla realizacji projektu przez Fundację Wspierania Rodzin „Aria”, o ile Fundacja spełnia definicję organizacji pozarządowej, zadanie należy do zadań właściwego dysponenta, a art. 151 znajduje zastosowanie. Przepis nie daje osobie fizycznej prawa do bezpośredniego dysponowania rachunkiem PFC. Osobista funkcja Wnioskodawcy jako koordynatora lub Dyspozytora wymaga odrębnego, zgodnego z prawem umocowania.
+13. Art. 150 — umowa dotacji celowej i określenie odpowiedzialności
 
-15. Art. 152 — wyodrębniona ewidencja dotacji i rozliczenie
-Art. 152 ust. 1 nakłada na jednostki, którym udzielono dotacji na podstawie art. 150 lub art. 151 ust. 1, obowiązek prowadzenia wyodrębnionej ewidencji księgowej środków otrzymanych z dotacji i wydatków z nich finansowanych. Ustępy 2–3 regulują zatwierdzanie rozliczenia rzeczowego i finansowego oraz ustalanie kwoty podlegającej zwrotowi. Użyte w niniejszym regulaminie określenie „subkonto Celu” oznacza wyłącznie subkonto ewidencyjne (konto analityczne albo wyodrębniony segment ewidencji księgowej) prowadzone w ramach ksiąg rachunkowych Funduszu. Służy ono przypisywaniu wpływów, zobowiązań, kosztów i rozliczeń do konkretnego Celu oraz zachowaniu ścieżki audytu. Nie oznacza odrębnego rachunku bankowego ani samodzielnego rachunku płatniczego w rozumieniu przepisów o usługach płatniczych. Subkonto ewidencyjne nie tworzy odrębnego majątku, nie zmienia ustawowego dysponenta Funduszu i nie daje samoistnego prawa do autoryzowania płatności. Jego utworzenie w systemie księgowym, nadanie identyfikatora oraz określenie osób uprawnionych do wprowadzania, zatwierdzania i kontroli zapisów powinno nastąpić w ramach zasad rachunkowości i uprawnień właściwej jednostki.
+Art. 150 przewiduje, że gdy odrębne przepisy lub umowa międzynarodowa nie określają trybu i zasad udzielania lub rozliczania dotacji celowej, właściwy dysponent zawiera umowę określającą w szczególności opis zadania i cel dotacji, termin wykonania, wysokość środków, termin wykorzystania, sposób rozliczenia, zwrot niewykorzystanej części oraz tryb kontroli. Przepis ten jest istotny dla projektu, ponieważ pozwala ująć relację finansowania w konkretnej umowie zadaniowej. W odniesieniu do środków PFC trzeba uwzględnić odesłanie w art. 150 do dysponenta środków, o których mowa w art. 127 ust. 2, oraz sprawdzić ustawę regulującą dany Fundusz.
 
-16. Art. 40 — rachunkowość Funduszu
-Art. 40 określa obowiązek prowadzenia rachunkowości przez jednostki sektora finansów publicznych z uwzględnieniem szczególnych zasad ustawy. Wspiera postulat dokumentacji pozwalającej odtworzyć źródło, przeznaczenie i przepływ każdej kwoty, ale nie ustanawia samodzielnego uprawnienia Dyspozytora do rachunku.
+14. Art. 151 — zlecenie zadania organizacji pozarządowej wraz z dotacją celową
+
+Art. 151 ust. 1 stanowi, że dysponent części budżetowej może zlecić organizacji pozarządowej realizację swoich zadań na podstawie umowy, przyznając jednocześnie dotację celową. Umowa ma określać między innymi zadanie i jego cel, wysokość dotacji i tryb płatności, termin wykorzystania, kontrolę, rozliczenie oraz zwrot niewykorzystanych środków. To szczególnie istotna podstawa dla realizacji projektu przez Fundację Wspierania Rodzin „Aria”, o ile Fundacja spełnia definicję organizacji pozarządowej, zadanie należy do zadań właściwego dysponenta, a zastosowanie art. 151 jest dopuszczalne w danym stanie prawnym. Art. 151 nie ustanawia jednak uprawnienia osoby fizycznej do bezpośredniego dysponowania rachunkiem PFC. Osobiste wskazanie Wnioskodawcy jako koordynatora lub osoby odpowiedzialnej za wykonanie określonych czynności wymaga odrębnego, zgodnego z prawem uregulowania w umowie, statucie lub akcie właściwego organu.
+
+15. Art. 152 — wyodrębniona ewidencja dotacji i rozliczenie rzeczowo-finansowe
+
+Art. 152 ust. 1 nakłada na jednostki, którym udzielono dotacji na podstawie art. 150 lub art. 151 ust. 1, obowiązek prowadzenia wyodrębnionej ewidencji księgowej środków otrzymanych z dotacji oraz wydatków dokonywanych z tych środków. Ustępy 2–3 regulują zatwierdzanie rozliczenia rzeczowego i finansowego oraz ustalanie kwoty podlegającej zwrotowi w razie wykorzystania dotacji niezgodnie z przeznaczeniem lub pobrania jej w nadmiernej wysokości. Przepis ten wspiera projekt wyodrębnionej ewidencji Celu, oddzielnego przypisywania kosztów, dokumentowania rezultatów i przejrzystego rozliczania. Użyte w niniejszym regulaminie określenie „subkonto Celu” oznacza wyłącznie subkonto ewidencyjne (konto analityczne albo wyodrębniony segment ewidencji księgowej) prowadzone w ramach ksiąg rachunkowych Funduszu. Służy ono przypisywaniu wpływów, zobowiązań, kosztów i rozliczeń do konkretnego Celu oraz zachowaniu ścieżki audytu. Nie oznacza odrębnego rachunku bankowego ani samodzielnego rachunku płatniczego w rozumieniu przepisów o usługach płatniczych. Subkonto ewidencyjne nie tworzy odrębnego majątku, nie zmienia ustawowego dysponenta Funduszu i nie daje samoistnego prawa do autoryzowania płatności. Jego utworzenie w systemie księgowym, nadanie identyfikatora oraz określenie osób uprawnionych do wprowadzania, zatwierdzania i kontroli zapisów powinno nastąpić w ramach zasad rachunkowości i uprawnień właściwej jednostki.
+
+16. Art. 40 — rachunkowość i ewidencja państwowego funduszu celowego
+
+Art. 40 określa obowiązek prowadzenia rachunkowości przez jednostki sektora finansów publicznych z uwzględnieniem szczególnych zasad ustawy. Wskazuje również szczególne zasady ujmowania dochodów, wydatków i etapów rozliczeń, które mają znaczenie dla ewidencji Funduszu. Przepis wspiera postulat prowadzenia dokumentacji pozwalającej odtworzyć źródło, przeznaczenie i przepływ każdej kwoty, ale nie ustanawia samodzielnego uprawnienia Dyspozytora do rachunku.
 
 17. Art. 52 — limity planu finansowego
-Art. 52 rozróżnia prognozowany charakter przychodów i nieprzekraczalny limit wydatków oraz reguluje zmiany planu finansowego. Cel powinien być opisany kwotowo i zadaniowo w granicach właściwego planu; nie wolno zaciągać zobowiązań ponad dopuszczalne limity. Przepis wspiera formalne wyodrębnienie Celu w planie, ale sam nie przyznaje wnioskodawcy prawa do dokonania wpisu.
 
-18. Art. 53 i art. 54 — odpowiedzialność i dyspozycje pieniężne
-Art. 53 ust. 1 przypisuje kierownikowi jednostki odpowiedzialność za całość gospodarki finansowej, a ust. 2 pozwala powierzyć określone obowiązki pracownikom jednostki w formie imiennego upoważnienia lub wskazania w regulaminie organizacyjnym. Art. 54 określa zadania głównego księgowego, w tym wykonywanie dyspozycji środkami pieniężnymi i wstępną kontrolę operacji. Przepisy wspierają rozdzielenie prowadzenia merytorycznego Celu, zatwierdzania wydatków, księgowania i autoryzacji płatności. Art. 53 ust. 2 nie jest ogólną podstawą do nadania dowolnej osobie zewnętrznej prawa dysponowania rachunkiem PFC.
+Art. 52 rozróżnia prognozowany charakter przychodów i nieprzekraczalny limit wydatków oraz reguluje zmiany planu finansowego. Dla projektu oznacza to, że Cel powinien być opisany kwotowo i zadaniowo w granicach właściwego planu, a jego finansowanie nie może prowadzić do zaciągania zobowiązań ponad dopuszczalne limity. Przepis wzmacnia potrzebę formalnego wyodrębnienia Celu w planie finansowym, lecz sam nie przyznaje wnioskodawcy prawa do dokonania takiego wpisu.
 
-19. Art. 68 i art. 69 — kontrola zarządcza i zarządzanie ryzykiem
-Art. 68 definiuje kontrolę zarządczą jako działania służące realizacji celów i zadań zgodnie z prawem, efektywnie, oszczędnie i terminowo; obejmuje m.in. wiarygodność sprawozdań, ochronę zasobów i zarządzanie ryzykiem. Art. 69 określa osoby odpowiedzialne za zapewnienie kontroli zarządczej. Przepisy uzasadniają mierniki rezultatów, kontrolę dokumentów, rozdział ról, rejestr ryzyk, procedury konfliktu interesów i monitorowanie Celu, lecz nie tworzą stanowiska Dyspozytora ani nie przenoszą ustawowej odpowiedzialności ministra lub kierownika jednostki.
+18. Art. 53 i art. 54 — odpowiedzialność za gospodarkę finansową i wykonywanie dyspozycji pieniężnych
+
+Art. 53 ust. 1 przypisuje kierownikowi jednostki odpowiedzialność za całość gospodarki finansowej. Ustęp 2 pozwala powierzyć określone obowiązki pracownikom jednostki w formie imiennego upoważnienia lub wskazania w regulaminie organizacyjnym. Art. 54 określa zadania głównego księgowego, w tym wykonywanie dyspozycji środkami pieniężnymi oraz wstępną kontrolę zgodności operacji z planem finansowym i dokumentami. Przepisy te wspierają rozdzielenie funkcji merytorycznego prowadzenia Celu, zatwierdzania wydatków, księgowania i autoryzacji płatności. Jednocześnie art. 53 ust. 2 dotyczy pracowników jednostki i nie jest ogólną podstawą do nadania dowolnej osobie zewnętrznej prawa dysponowania rachunkiem PFC. W przypadku osoby spoza jednostki potrzebna jest właściwa podstawa ustawowa i prawidłowy akt umocowania.
+
+19. Art. 68 i art. 69 — kontrola zarządcza, skuteczność i zarządzanie ryzykiem
+
+Art. 68 definiuje kontrolę zarządczą jako ogół działań służących zapewnieniu realizacji celów i zadań zgodnie z prawem, efektywnie, oszczędnie i terminowo; wskazuje również między innymi na wiarygodność sprawozdań, ochronę zasobów i zarządzanie ryzykiem. Art. 69 określa osoby odpowiedzialne za zapewnienie funkcjonowania kontroli zarządczej. Przepisy te uzasadniają ustanowienie w regulaminie mierników rezultatów, kontroli dokumentów, rozdziału ról, rejestru ryzyk, procedur konfliktu interesów oraz monitorowania wykonania Celu. Nie tworzą jednak odrębnego stanowiska Dyspozytora ani nie przenoszą na niego ustawowej odpowiedzialności ministra lub kierownika jednostki.
 
 20. Art. 33 — jawność gospodarowania środkami publicznymi
-Art. 33 ustanawia zasadę jawności gospodarki środkami publicznymi. Wspiera publikowanie informacji o zasadach programu, podstawach prawnych, kwotach, wynikach naborów, sprawozdaniach i efektach Celu, z poszanowaniem ochrony danych i tajemnic prawnie chronionych. Jawność nie daje osobom prywatnym kompetencji do wydawania środków.
+
+Art. 33 ustanawia zasadę jawności gospodarki środkami publicznymi. Wspiera publikowanie informacji o zasadach programu, podstawach prawnych, planowanych kwotach, wynikach naborów, sprawozdaniach i efektach Celu, z poszanowaniem przepisów o ochronie danych i tajemnic prawnie chronionych. Jawność wzmacnia społeczną kontrolę nad realizacją zadania, ale nie daje osobom prywatnym kompetencji do wydawania środków.
 
 DODATKOWE WNIOSKI DLA MODELU
-1. Najmocniejszym uzupełnieniem art. 43 i 47 jest zestawienie art. 126, art. 127 ust. 1, art. 150, art. 151 i art. 152: przepisy te opisują konstrukcję dotacji z PFC na zadanie publiczne, możliwość zlecenia zadania uprawnionej organizacji pozarządowej, umowne określenie celu i kontroli oraz obowiązek wyodrębnionej ewidencji.
-2. Art. 4 ust. 1 pkt 2 potwierdza, że podmiot spoza sektora, który wykorzystuje środki publiczne lub nimi dysponuje, podlega ustawie w odpowiednim zakresie.
-3. Wniosek może proponować Wnioskodawcę jako realizatora, a wskazaną osobę jako koordynatora lub Dyspozytora Celu w granicach kompetencji wyraźnie powierzonych przez właściwy organ i umowę. Należy odróżnić Fundację jako stronę umowy i beneficjenta dotacji od osobistej funkcji Wnioskodawcy.
-4. Art. 152 uzasadnia wyodrębnioną ewidencję księgową, ale nie prawo do samodzielnego otwarcia subkonta bankowego.
-5. Żaden z tych przepisów samodzielnie nie znosi art. 29 ust. 3 ani nie przenosi na Wnioskodawcę kompetencji ustawowego dysponenta rachunku PFC. Zakres czynności Dyspozytora wymaga formalnego ustanowienia przez organ właściwy.
+
+1. Najmocniejszym uzupełnieniem art. 43 i 47 jest zestawienie art. 126, art. 127 ust. 1, art. 150, art. 151 i art. 152: przepisy te pokazują ustawową konstrukcję dotacji celowej z PFC na zadanie publiczne, możliwość zlecenia zadania uprawnionej organizacji pozarządowej, umowne określenie celu i kontroli oraz obowiązek wyodrębnionej ewidencji.
+2. Art. 4 ust. 1 pkt 2 potwierdza, że podmiot spoza sektora finansów publicznych, który otrzyma środki publiczne do wykorzystania lub nimi dysponuje, podlega ustawie w odpowiednim zakresie.
+3. Wniosek może proponować, aby Wnioskodawca był realizatorem zadania, a wskazana osoba pełniła funkcję koordynatora lub Dyspozytora Celu w granicach kompetencji wyraźnie powierzonych przez właściwy organ i umowę. W przypadku realizacji przez Fundację należy odróżnić rolę Fundacji jako strony umowy i beneficjenta dotacji od osobistej funkcji Wnioskodawcy.
+4. Art. 152 pozwala uzasadnić wyodrębnioną ewidencję księgową Celu. Nie należy utożsamiać tej ewidencji z prawem do samodzielnego otwarcia subkonta bankowego.
+5. Żaden z omawianych przepisów samodzielnie nie znosi art. 29 ust. 3 ani nie przenosi na Wnioskodawcę kompetencji ustawowego dysponenta rachunku PFC. Wniosek powinien zatem żądać formalnego ustanowienia zakresu czynności Dyspozytora przez organ właściwy, a nie traktować samego regulaminu lub wskazania przez darczyńców jako źródła tej kompetencji.
 
 Urzędowe źródło tekstu jednolitego ustawy o finansach publicznych, Dz.U. z 2026 r. poz. 1447:
 https://eli.gov.pl/api/acts/DU/2026/1447/text.pdf
 https://eli.gov.pl/api/acts/DU/2026/1447/text.html
-
 
 
 UZUPEŁNIAJĄCA ANALIZA — EWIDENCJA CELU, DAROWIZNY I ROZLICZANIE ŚRODKÓW
@@ -754,6 +788,7 @@ ZAKTUALIZOWANE WNIOSKI DLA MODELU
 Urzędowy tekst jednolity ustawy o finansach publicznych: Dz. U. z 2026 r. poz. 1447, stan prawny uwzględniony w obwieszczeniu z 2 października 2026 r.:
 https://eli.gov.pl/api/acts/DU/2026/1447/text.pdf
 https://eli.gov.pl/api/acts/DU/2026/1447/text.html
+
 
 UZUPEŁNIAJĄCA ANALIZA — OSOBA FIZYCZNA JAKO PRYWATNY PODMIOT ZARZĄDZAJĄCY ŚRODKAMI NA CEL PUBLICZNY
 
@@ -854,6 +889,170 @@ Mandat obywatelski i mandat z powołania określają źródło osobistego zobowi
 - Ustawa z dnia 9 maja 1996 r. o wykonywaniu mandatu posła i senatora, tekst jednolity Dz.U. z 2026 r. poz. 1282, art. 1–2: https://eli.gov.pl/eli/DU/2026/1282/ogl
 - Ustawa o finansach publicznych, tekst jednolity Dz.U. z 2026 r. poz. 1447, w szczególności art. 4, 29, 43–44, 126–152: https://eli.gov.pl/api/acts/DU/2026/1447/text.html
 - Kodeks cywilny, art. 888, 893–895: https://eli.gov.pl/api/acts/DU/2026/795/text/I/D20260795.pdf
+
+ZAŁĄCZNIK PRAWNY — KOMPLETNA MAPA PRZEPISÓW ISTOTNYCH DLA OBYWATELSKIEGO INICJOWANIA, PROWADZENIA I FINANSOWANIA CELU
+
+A. Ustawa o finansach publicznych — przepisy uwzględnione w projekcie
+
+Podstawą odniesienia jest tekst jednolity ustawy z dnia 27 sierpnia 2009 r. o finansach publicznych ogłoszony w Dz.U. z 2026 r. poz. 1447, według stanu prawnego wskazanego w obwieszczeniu. Poniższe zestawienie porządkuje przepisy omawiane wcześniej i wskazuje ich rzeczywiste znaczenie dla projektu. Przepisy te należy stosować łącznie z ustawą tworzącą konkretny PFC, jego planem finansowym oraz właściwym trybem przyznawania środków.
+
+1. Art. 3 — zakres procesów finansów publicznych
+Obejmuje gromadzenie i rozdysponowywanie środków publicznych, wydatkowanie, zaciąganie zobowiązań, zarządzanie środkami i rozliczenia. Potwierdza, że prowadzenie Celu finansowanego publicznie jest elementem procesu finansów publicznych, a nie wyłącznie czynnością organizacyjną. Sam nie wskazuje osoby uprawnionej do podejmowania decyzji.
+
+2. Art. 4 ust. 1 pkt 2 — podmioty spoza sektora finansów publicznych
+Ustawa ma zastosowanie również do innych podmiotów w zakresie, w jakim wykorzystują środki publiczne lub nimi dysponują. Jest to ważna podstawa dla udziału osoby fizycznej, fundacji lub innego realizatora spoza sektora w wykonywaniu zadania finansowanego publicznie i podlegania regułom tej ustawy w odpowiednim zakresie. Nie jest to samodzielny tytuł do dotacji, status jednostki sektora finansów publicznych ani upoważnienie do rachunku PFC.
+
+3. Art. 5 ust. 2 pkt 5 — pieniężne darowizny jako dochody publiczne
+Przepis zalicza do dochodów publicznych spadki, zapisy i darowizny pieniężne na rzecz jednostek sektora finansów publicznych. Ma znaczenie dla modelu darowizn, jeżeli prawidłowym obdarowanym jest jednostka sektora finansów publicznych i przepisy właściwe dla danego Funduszu pozwalają na przyjęcie takiej wpłaty. Nie przesądza, że darowizna dla osoby prywatnej, fundacji albo dowolnego realizatora staje się dochodem PFC. Trzeba ustalić odbiorcę, tytuł przyjęcia, rachunek, klasyfikację i sposób ujęcia w planie oraz księgach.
+
+4. Art. 8–10 — ustawowe kategorie sektora i zasady gospodarki finansowej
+Art. 8–9 określają sektor finansów publicznych i katalog należących do niego jednostek. Art. 10 nakazuje wskazanym jednostkom stosować zasady gospodarki finansowej ustawy. Przepisy te pozwalają odróżnić obywatela lub prywatnego realizatora od jednostki sektora. Obywatel może być realizatorem zadania lub podmiotem wykorzystującym środki publiczne, ale nie staje się przez to jednostką sektora finansów publicznych.
+
+5. Art. 11a — szczególny przykład wydzielonego rachunku darowizn
+Art. 11a dotyczy określonych państwowych jednostek budżetowych, dla których organem prowadzącym są organy administracji państwowej i które prowadzą działalność oświatową wskazaną w Prawie oświatowym. Pozwala tym jednostkom gromadzić na wydzielonym rachunku m.in. pieniężne darowizny oraz przeznaczać dochody na cele wskazane przez darczyńcę, na warunkach tego przepisu. Jest to przykład szczególnego ustawowego rozwiązania dla darowizn celowych, a nie ogólna podstawa do utworzenia rachunku dla każdego PFC, fundacji lub prywatnego Dyspozytora. Nie należy wywodzić z niego uprawnienia Dyspozytora w niniejszym projekcie bez spełnienia przesłanek art. 11a.
+
+6. Art. 29 ust. 1–3 — utworzenie i konstrukcja PFC oraz ustawowy dysponent
+PFC tworzy się na podstawie odrębnej ustawy, nie posiada osobowości prawnej i stanowi wyodrębniony rachunek bankowy, którym dysponuje minister lub inny organ wskazany w ustawie tworzącej Fundusz. To przepis rozstrzygający o konieczności sprawdzenia ustawy konkretnego Funduszu i o tym, kto jest ustawowym dysponentem rachunku. Nie wyklucza udziału innych podmiotów w realizacji zadań, lecz nie pozwala regulaminem projektu zmienić ustawowego dysponenta.
+
+7. Art. 29 ust. 5–8 — źródła, zadania, plan finansowy i wyodrębnienie Celu
+Art. 29 ust. 5 wiąże koszty PFC z realizacją wyodrębnionych zadań państwowych. Ust. 6 określa roczny plan finansowy, ust. 7 nakazuje wyodrębniać w nim zadania finansowane ze środków Funduszu, a ust. 8 przewiduje plan dochodów i wydatków ujmowanych kasowo. Jest to jedna z najważniejszych podstaw dla postulatu wyodrębnienia Celu jako zadania PFC w planie finansowym. Nie oznacza jednak, że samo zgłoszenie Celu przez obywatela automatycznie wpisuje go do planu.
+
+8. Art. 29 ust. 12–13 — zmiany planu finansowego PFC
+Przepisy określają zasady dokonywania w trakcie roku zmian przychodów, kosztów, dochodów i wydatków oraz wskazują rolę dysponenta PFC przy dokonywaniu tych zmian, w tym wymagane zgody w sytuacjach wskazanych ustawą. Wspierają postulat, aby akt powierzenia Dyspozytorowi określał jego udział w przygotowaniu propozycji przesunięć i decyzji dotyczących realizacji Celu. Nie ustanawiają jednak samodzielnej kompetencji Dyspozytora do zmiany planu Funduszu.
+
+9. Art. 32 — plany finansowe w układzie zadaniowym
+Dysponenci PFC sporządzają plany finansowe w układzie zadaniowym. Przepis wzmacnia możliwość opisywania Celu przez zadania, działania, mierniki i rezultaty, a także potrzebę mierzenia efektów wydatkowania środków. Nie nadaje samodzielnie obywatelowi prawa do zatwierdzania planu.
+
+10. Art. 33–34 oraz art. 34a — jawność i przejrzystość
+Art. 33 ustanawia zasadę jawności gospodarki środkami publicznymi, a art. 34 określa zasady udostępniania informacji o finansach publicznych. Art. 34a reguluje Centralny Rejestr Umów Jednostek Sektora Finansów Publicznych w zakresie umów objętych tym przepisem. Przepisy te uzasadniają jawne raportowanie Celu i udostępnianie informacji o wydatkowaniu środków publicznych w granicach prawa, z uwzględnieniem ochrony danych i tajemnic ustawowych. Nie każda umowa prywatnego realizatora automatycznie podlega wpisowi do tego Rejestru.
+
+11. Art. 39–41 oraz art. 40a — klasyfikacja, rachunkowość, konta i sprawozdawczość
+Art. 39 dotyczy klasyfikacji budżetowej. Art. 40 określa zasady rachunkowości i planów kont jednostek sektora finansów publicznych, w tym PFC. Art. 40a dotyczy wytycznych w sprawie przypisywania paragrafów klasyfikacji do kont księgowych. Art. 41 dotyczy sprawozdań z wykonania procesów finansów publicznych. Przepisy te uzasadniają wyodrębnioną analitykę Celu w księgach właściwej jednostki i zgodność ewidencji z planem kont. „Subkonto ewidencyjne Celu” oznacza tu konto analityczne, nie odrębny rachunek bankowy ani prawo dostępu do rachunku Funduszu. Art. 40–41 nakładają obowiązki na wskazane jednostki sektora; prywatny realizator podlega własnym obowiązkom rachunkowym i obowiązkom wynikającym z umowy oraz przepisów o dotacji.
+
+12. Art. 43 — prawo realizacji zadań finansowanych ze środków publicznych
+Prawo realizacji takich zadań przysługuje ogółowi podmiotów, chyba że odrębne ustawy stanowią inaczej. Jest to istotna podstawa dopuszczająca udział podmiotów spoza administracji, w tym podmiotów prywatnych, w realizacji zadań publicznych. Nie oznacza prawa do otrzymania dotacji na żądanie ani automatycznego prawa do samodzielnego dysponowania rachunkiem PFC.
+
+13. Art. 44 i 46 — zasady wydatkowania i zaciągania zobowiązań
+Art. 44 wiąże wydatki z właściwym planem i wymaga celowości, oszczędności, najlepszych efektów z nakładów i terminowości. Art. 46 ogranicza zaciąganie zobowiązań do odpowiednich limitów. Przepisy te wyznaczają granice samodzielności Dyspozytora przy środkach publicznych: jego decyzje powinny być realne w zakresie powierzonym, ale pozostają w granicach planu, celu, limitów i procedur.
+
+14. Art. 47 — oferta wykonania wyodrębnionego zadania
+Podmiot wnioskujący o środki publiczne na wyodrębnione zadanie przedstawia ofertę zapewniającą uczciwą konkurencję, efektywność, oszczędność i terminowość. Wspiera to model, w którym obywatel inicjuje Cel i przedstawia ministrowi jego opis, budżet, harmonogram, mierniki i sposób realizacji. Nie przesądza o wyborze wnioskodawcy ani o przyznaniu dotacji.
+
+15. Art. 51–52 — brak automatycznego roszczenia i limity planu
+Art. 51 stanowi, że samo zamieszczenie w budżecie dochodów z określonych źródeł lub wydatków na określone cele nie tworzy samo przez się roszczenia osób trzecich wobec państwa. Art. 52 określa charakter prognoz dochodów i limitów wydatków oraz zasady zmian planów. Przepisy te wymagają, aby wniosek obywatela był rozpatrywany w prawidłowym trybie i aby decyzja finansowa miała właściwą podstawę.
+
+16. Art. 53–54 — odpowiedzialność i obsługa finansowa
+Art. 53 ust. 1 przypisuje kierownikowi jednostki odpowiedzialność za całość gospodarki finansowej; ust. 2 pozwala powierzać określone obowiązki pracownikom jednostki w formie imiennego upoważnienia lub wskazania w regulaminie organizacyjnym. Art. 54 określa zadania głównego księgowego, w tym wykonywanie dyspozycji środkami pieniężnymi i wstępną kontrolę dokumentów oraz zgodności z planem. Są to przepisy o wewnętrznym podziale odpowiedzialności w jednostce. Art. 53 ust. 2 nie jest ogólną podstawą do upoważnienia dowolnej osoby zewnętrznej; dla Dyspozytora spoza jednostki potrzebna jest właściwa podstawa prawna i konstrukcja umowna lub ustawowa.
+
+17. Art. 68–69 — kontrola zarządcza
+Przepisy o kontroli zarządczej uzasadniają wyznaczenie celów, mierników, odpowiedzialności, procedur zarządzania ryzykiem, monitorowania i oceny realizacji Celu w jednostkach, do których przepisy te mają zastosowanie. Nie tworzą odrębnego stanowiska Dyspozytora ani nie przenoszą kompetencji finansowych.
+
+18. Art. 126–127 — pojęcie dotacji i dotacje celowe
+Art. 126 definiuje dotacje jako środki podlegające szczególnym zasadom rozliczania, przeznaczone na finansowanie lub dofinansowanie zadań publicznych. Art. 127 określa kategorie dotacji celowych, w tym finansowanie zadań ustawowych i zadań zleconych organizacjom pozarządowym. Przepisy te wspierają finansowanie wyodrębnionego zadania publicznego, jeżeli istnieje właściwa podstawa ustawowa i podmiot jest uprawniony w danym trybie. Nie każda inicjatywa obywatelska automatycznie mieści się w każdej kategorii dotacji celowej.
+
+19. Art. 150 — umowa dotacji celowej
+W przypadkach objętych tym przepisem dysponent zawiera umowę określającą m.in. opis zadania i cel, wysokość dotacji, termin wykorzystania, rozliczenie, zwrot i kontrolę. Jest to podstawa do postulowania, aby umowa precyzyjnie opisywała zakres samodzielności Dyspozytora, jego decyzje merytoryczne, sposób zatwierdzania wydatków i odpowiedzialność. Art. 150 stosuje się w granicach jego zakresu podmiotowego i przedmiotowego oraz z uwzględnieniem przepisów szczególnych.
+
+20. Art. 151 — zlecenie zadania organizacji pozarządowej
+Art. 151 pozwala dysponentowi części budżetowej zlecić organizacji pozarządowej realizację własnego zadania na podstawie umowy z dotacją celową. Ma znaczenie, jeżeli realizatorem jest Fundacja Wspierania Rodzin „Aria” lub inna organizacja spełniająca ustawowe warunki. Nie jest bezpośrednią podstawą udzielenia dotacji osobie fizycznej, która nie działa jako organizacja pozarządowa.
+
+21. Art. 152 — wyodrębniona ewidencja i zatwierdzanie rozliczenia
+Art. 152 wymaga wyodrębnionej ewidencji księgowej środków dotacji i wydatków z nich finansowanych oraz reguluje zatwierdzanie rozliczenia rzeczowego i finansowego. Wspiera prowadzenie odrębnej ewidencji Celu i dokumentowanie źródeł, wydatków, zobowiązań, rezultatów i salda. Obowiązek z tego przepisu dotyczy jednostek, którym udzielono dotacji na podstawie art. 150 lub art. 151 ust. 1; zakres obowiązków prywatnego realizatora trzeba odczytywać wraz z właściwą umową i przepisami.
+
+22. Art. 151a oraz art. 168–169 — zwrot dotacji i konsekwencje nieprawidłowości
+Przepisy określają skutki nieterminowego zwrotu, zwrot niewykorzystanych środków oraz zwrot dotacji wykorzystanych niezgodnie z przeznaczeniem, pobranych nienależnie lub w nadmiernej wysokości. Uzasadniają rygorystyczną dokumentację i rozliczalność Dyspozytora.
+
+23. Art. 162 pkt 3–4 — celowość wydatków i wybór wykonawców
+Art. 162 pkt 3 wymaga dokonywania wydatków w granicach planu, zgodnie z przeznaczeniem, celowo i oszczędnie, z uzyskiwaniem najlepszych efektów z danych nakładów. Art. 162 pkt 4 określa zasadę wyboru najkorzystniejszej oferty przy zlecaniu zadań, z uwzględnieniem przepisów o zamówieniach publicznych, partnerstwie publiczno-prywatnym i koncesjach, a wobec organizacji pozarządowych — odpowiedniego zastosowania art. 43 i 151. Przepis ten nie jest samodzielną podstawą przekazania obywatelowi kompetencji dysponenta; wyznacza reguły zlecania zadań w zakresie jego zastosowania.
+
+24. Art. 174–175 — kontrola i nadzór
+Art. 174 określa ogólną kontrolę Ministra Finansów, a art. 175 nadzór i kontrolę dysponentów części budżetowych nad określonymi jednostkami, dotacjami i zadaniami. Zakres zastosowania zależy od rodzaju środków, relacji organizacyjnej i podstawy finansowania. Przepisy te uzasadniają kontrolę wykorzystania środków publicznych, lecz nie oznaczają, że sądy sprawują nadzór finansowy nad każdym Dyspozytorem.
+
+B. Konstytucja Rzeczypospolitej Polskiej — przepisy istotne dla pozycji obywatela i Celu
+
+1. Preambuła — Naród jako podmiot ustanawiający Konstytucję
+Preambuła rozpoczyna się od słów „my, Naród Polski – wszyscy obywatele Rzeczypospolitej” i wskazuje na ustanowienie Konstytucji jako aktu wspólnoty politycznej. Wspiera opis Narodu jako pierwotnego podmiotu legitymacji konstytucyjnej i współodpowiedzialności za dobro wspólne. Nie ustanawia jednak cywilnoprawnych udziałów obywateli w majątku Skarbu Państwa.
+
+2. Art. 1 — dobro wspólne
+Rzeczpospolita Polska jest dobrem wspólnym wszystkich obywateli. Jest to podstawowa zasada uzasadniająca obywatelskie inicjowanie, współtworzenie i wspieranie przedsięwzięć służących wspólnocie.
+
+3. Art. 2 — demokratyczne państwo prawne
+Zasada demokratycznego państwa prawnego i sprawiedliwości społecznej wymaga, aby mechanizm Celu był przejrzysty, przewidywalny, oparty na prawie, równy i rozliczalny.
+
+4. Art. 4 ust. 1–2 — suwerenność Narodu i sprawowanie władzy
+Władza zwierzchnia należy do Narodu, który sprawuje ją przez przedstawicieli lub bezpośrednio. Jest to konstytucyjna podstawa Pana postulatu rozwijania rzeczywistego obywatelskiego współdecydowania o sprawach publicznych i realizacji Celu. Sam art. 4 ust. 2 nie określa jednak szczegółowej procedury wydatkowania środków PFC ani nie uchyla przepisów kompetencyjnych i finansowych. Regulamin przedstawia zatem model Dyspozytora jako proponowany mechanizm instytucjonalny bezpośredniego udziału obywatela, który wymaga osadzenia w prawie właściwym dla danego Funduszu.
+
+5. Art. 7–8 — legalizm i bezpośrednie stosowanie Konstytucji
+Art. 7 wymaga działania organów władzy publicznej na podstawie i w granicach prawa. Art. 8 ustanawia Konstytucję najwyższym prawem i przewiduje jej bezpośrednie stosowanie, chyba że Konstytucja stanowi inaczej. Przepisy te nakazują interpretować prawa obywatelskie i kompetencje organów łącznie: Konstytucja wyznacza zasady, a wykonywanie konkretnych czynności finansowych wymaga właściwej podstawy kompetencyjnej.
+
+6. Art. 10 — podział i równowaga władz
+Rozdzielenie władzy ustawodawczej, wykonawczej i sądowniczej jest ważne przy określaniu ról ministra, Sejmu, sądów i obywateli. Nie należy opisywać państwa jako spółki z zarządem i radą nadzorczą ani utożsamiać tych organów z organami osoby prawnej prawa prywatnego.
+
+7. Art. 12, 54 i 58 — społeczeństwo obywatelskie, wypowiedź i zrzeszanie się
+Art. 12 chroni tworzenie i działanie dobrowolnych zrzeszeń oraz innych form aktywności społeczeństwa obywatelskiego. Art. 54 chroni wolność wyrażania poglądów i rozpowszechniania informacji, a art. 58 wolność zrzeszania się. Przepisy te wspierają możliwość publicznego ogłoszenia Celu, pozyskiwania poparcia i darowizn oraz tworzenia struktur społecznych, z zachowaniem prawa.
+
+8. Art. 16 oraz art. 163 i 166 — wspólnoty samorządowe i zadania publiczne
+Przepisy te odnoszą się do samorządu terytorialnego: wspólnoty samorządowej, wykonywania zadań publicznych i decentralizacji władzy publicznej. Mogą stanowić kontekst dla lokalnych przedsięwzięć i współpracy z samorządem. Nie są bezpośrednią podstawą zarządzania państwowym funduszem celowym.
+
+9. Art. 30 i 32 — godność i równość
+Art. 30 chroni przyrodzoną i niezbywalną godność człowieka. Art. 32 ustanawia równość wobec prawa i zakaz dyskryminacji. Wspierają humanitarny cel projektu oraz potrzebę równych, jawnych i niedyskryminujących kryteriów przyznawania pomocy i wyboru beneficjentów.
+
+10. Art. 60–63 — służba publiczna, informacja, udział i petycje
+Art. 60 gwarantuje obywatelom korzystającym z pełni praw publicznych dostęp do służby publicznej na jednakowych zasadach; nie jest samodzielnym tytułem do konkretnej funkcji. Art. 61 zapewnia dostęp do informacji o działalności władz i podmiotów wykonujących zadania publiczne lub gospodarujących majątkiem publicznym. Art. 62 reguluje prawa wyborcze i udział w referendum. Art. 63 daje każdemu prawo składania petycji, wniosków i skarg w interesie publicznym. Wspólnie uzasadniają obywatelską inicjatywę, jawność, możliwość zgłoszenia Celu i kontrolę społeczną, lecz nie tworzą same przez się prawa do dotacji.
+
+11. Art. 68–69 — ochrona zdrowia i pomoc osobom z niepełnosprawnościami
+Art. 68 ustanawia prawo do ochrony zdrowia i określa obowiązki władz publicznych w zakresie zapewnienia równego dostępu do świadczeń opieki zdrowotnej finansowanej ze środków publicznych oraz szczególnej opieki m.in. nad dziećmi, kobietami ciężarnymi, osobami niepełnosprawnymi i osobami w podeszłym wieku. Art. 69 przewiduje pomoc osobom niepełnosprawnym w zabezpieczeniu egzystencji, przysposobieniu do pracy i komunikacji społecznej. Są to szczególnie istotne przepisy materialne dla rehabilitacyjno-opiekuńczego celu projektu. Nie wskazują jednak same w sobie konkretnego PFC ani trybu dotacji.
+
+12. Art. 82–83 — obowiązki obywatelskie
+Art. 82 określa obowiązek wierności Rzeczypospolitej Polskiej i troski o dobro wspólne, a art. 83 obowiązek przestrzegania prawa. Wspierają etyczne uzasadnienie mandatu obywatelskiego i odpowiedzialności Dyspozytora, przy czym nie tworzą odrębnego mandatu publicznego ani kompetencji finansowych.
+
+13. Art. 104 — mandat i ślubowanie poselskie
+Art. 104 reguluje mandat posła na Sejm, jego przedstawicielski charakter i ślubowanie składane przez parlamentarzystę przed Sejmem. Obywatel może dobrowolnie wypowiedzieć tekst ślubowania jako własną przysięgę służby Narodowi, ale nie jest to czynność parlamentarna i nie nadaje mandatu poselskiego w rozumieniu Konstytucji. Regulamin rozróżnia zatem Posła parlamentarnego, Posła obywatelskiego i Posła powołanego oraz odpowiadające im rodzaje mandatów.
+
+14. Art. 118 — obywatelska inicjatywa ustawodawcza
+Art. 118 ust. 2 przyznaje grupie co najmniej 100 000 obywateli mających prawo wybierania do Sejmu prawo wniesienia obywatelskiego projektu ustawy na zasadach określonych w ustawie. Jest to konstytucyjny instrument wpływania na prawo i tworzenia podstaw ustawowych dla nowych rozwiązań, w tym postulowanego mechanizmu obywatelskiego decydowania o Celach. Nie jest to bezpośrednia podstawa wydatkowania środków przez pojedynczego obywatela.
+
+15. Art. 125 — referendum ogólnokrajowe
+Przepis przewiduje referendum w sprawach o szczególnym znaczeniu dla państwa. Jest jedną z konstytucyjnych form demokracji bezpośredniej, ale decyzja o zarządzeniu referendum należy do organów wskazanych w Konstytucji. Nie stanowi indywidualnej procedury przydzielania środków PFC.
+
+16. Art. 170 — referendum lokalne
+Członkowie wspólnoty samorządowej mogą rozstrzygać w referendum sprawy dotyczące tej wspólnoty. Przepis pokazuje konstytucyjne miejsce bezpośredniego rozstrzygania spraw lokalnych, ale nie dotyczy bezpośrednio zarządzania państwowym funduszem celowym.
+
+C. Pozostałe podstawy ustawowe i cywilnoprawne
+
+1. Ustawa o działalności pożytku publicznego i o wolontariacie, w szczególności art. 3 ust. 3 i art. 11 — może regulować udział organizacji pozarządowej w realizacji zadań publicznych, w tym wspieranie lub powierzanie zadań, o ile spełnione są przesłanki ustawowe i właściwy tryb.
+2. Kodeks cywilny, art. 34 i 38 — określa status Skarbu Państwa jako podmiotu praw i obowiązków dotyczących mienia państwowego oraz działanie osób prawnych przez ich organy. Przepisy te nie ustanawiają indywidualnych udziałów majątkowych obywateli w Skarbie Państwa.
+3. Kodeks cywilny, art. 888 i 893–895 — reguluje darowiznę i polecenie darczyńcy. Polecenie może określać społeczny cel świadczenia w granicach prawa, ale samo nie zmienia obdarowanego w jednostkę sektora finansów publicznych i nie daje dostępu do rachunku PFC.
+4. Ustawa o rachunkowości — określa obowiązki rachunkowe podmiotów, do których ma zastosowanie, z uwzględnieniem szczególnych zasad rachunkowości sektora finansów publicznych.
+5. Prawo zamówień publicznych — stosuje się, gdy podmiot, przedmiot i wartość zamówienia spełniają ustawowe przesłanki; samo otrzymanie darowizny nie przesądza automatycznie o statusie zamawiającego.
+
+D. Wnioski prawne dla interpretacji i dalszego kształtowania Celu
+
+1. Obywatel może z własnej inicjatywy rozpoznać potrzebę, ustanowić społeczny Cel, ogłosić go, pozyskiwać poparcie i darowizny oraz rozpocząć realizację ze środków własnych. Nie wymaga to uprzedniego przyznania dotacji.
+2. Obywatel lub podmiot spoza sektora może ubiegać się o realizację zadania finansowanego publicznie, ponieważ art. 4 ust. 1 pkt 2 i art. 43 ustawy o finansach publicznych obejmują podmioty wykorzystujące środki publiczne oraz ogół podmiotów uprawnionych do realizacji zadań, z zastrzeżeniem przepisów szczególnych.
+3. Art. 47 wspiera przedłożenie ministrowi oferty realizacji wyodrębnionego zadania. O przyznaniu środków rozstrzyga właściwy organ w trybie określonym prawem, ustawą tworzącą Fundusz i planem finansowym.
+4. Art. 29 ust. 7 pozwala wyodrębnić zadanie w planie finansowym PFC. Ust. 3 zachowuje jednak kompetencję do dysponowania rachunkiem przy organie wskazanym w ustawie tworzącej Fundusz. Ust. 12–13 regulują zmiany planu.
+5. Po przyznaniu środków zakres samodzielności Dyspozytora powinien być możliwie konkretny i rzeczywisty, ale musi wynikać z odpowiedniej podstawy prawnej, umowy, decyzji lub aktu umocowania. Art. 4 ust. 2 Konstytucji jest zasadą ustrojową i podstawą postulatu rozwoju bezpośredniego współdecydowania, nie zastępuje jednak szczegółowych przepisów kompetencyjnych.
+6. Darowizny obywateli i środki PFC należy rozdzielać według tytułu prawnego, odbiorcy, rachunku, warunków i ewidencji. Art. 5 ust. 2 pkt 5 ustawy o finansach publicznych dotyczy darowizn pieniężnych na rzecz jednostek sektora finansów publicznych, a art. 11a — tylko szczególnej kategorii państwowych jednostek budżetowych prowadzących działalność oświatową.
+7. Obywatelski mandat deklaracyjny i mandat z powołania mogą stanowić podstawę osobistego zobowiązania do służby oraz kryterium społecznego zaufania. Nie są jednak konstytucyjnym mandatem parlamentarnym ani same nie stanowią umocowania do wykonywania kompetencji dysponenta PFC.
+8. Najmocniejszą drogą realizacji postulatu jest wniosek o ustanowienie Celu jako wyodrębnionego zadania PFC oraz o zaprojektowanie w ustawie właściwej dla Funduszu lub w dopuszczalnym akcie wykonawczym/umowie takiego modelu, w którym Dyspozytor otrzyma jasno określone uprawnienia decyzyjne, zakres odpowiedzialności, dostęp do informacji, tryb kontroli i mechanizm rozliczenia.
+
+E. Weryfikacja zakresu wcześniej omawianych przepisów
+
+W regulaminie uwzględniono wcześniej omawiane przepisy ustawy o finansach publicznych: art. 3, art. 4 ust. 1 pkt 2, art. 5 ust. 2 pkt 5, art. 8–9, art. 11a, art. 29, art. 32–34a, art. 39–41, art. 43–47, art. 51–54, art. 68–69, art. 126–127, art. 150–152, art. 162, art. 168–169 oraz art. 174–175. Uwzględniono również omawiane przepisy Konstytucji: preambułę oraz art. 1, 2, 4, 7, 8, 10, 12, 16, 30, 32, 54, 58, 60–63, 68–69, 82–83, 104, 118, 125, 163, 166 i 170.
+
+Korekta precyzująca: art. 11a ustawy o finansach publicznych jest przepisem szczególnym dotyczącym określonych państwowych jednostek budżetowych prowadzących działalność oświatową; nie jest ogólną podstawą dla PFC ani dla osoby prywatnej. Art. 162 pkt 4 dotyczy wyboru najkorzystniejszej oferty przy zlecaniu zadań, a art. 162 pkt 3 — celowości i oszczędności wydatków. Art. 53 ust. 2 dotyczy powierzania obowiązków pracownikom jednostki. Art. 40, 40a i 41 dotyczą obowiązków i systemów ewidencyjnych jednostek sektora finansów publicznych. Te ograniczenia nie przekreślają postulatu obywatelskiego prowadzenia Celu; wskazują, jakie rozwiązania należy ustanowić w przepisach właściwych dla Funduszu.
+
+Źródła urzędowe i pomocnicze:
+- Ustawa o finansach publicznych, tekst jednolity Dz.U. 2026 poz. 1447, stan prawny na 27 września 2026 r.: https://eli.gov.pl/eli/DU/2026/1447/ogl
+- Konstytucja Rzeczypospolitej Polskiej, tekst ujednolicony: https://eli.gov.pl/eli/DU/1997/483/ogl
+- Konstytucja RP, rozdział I: https://www.prezydent.pl/prawo/konstytucja-rp/rozdzial-i-rzeczpospolita
+- Konstytucja RP, rozdział II: https://www.prezydent.pl/prawo/konstytucja-rp/rozdzial-ii-wolnosci-prawa-i-obowiazki-czlowieka-i-obywatela
+- Konstytucja RP, art. 104: https://www.prezydent.pl/prawo/konstytucja-rp/rozdzial-iv-sejm-i-senat
+- Ustawa o wykonywaniu mandatu posła i senatora, Dz.U. 2026 poz. 1282: https://eli.gov.pl/eli/DU/2026/1282/ogl
+- Kodeks cywilny, tekst jednolity Dz.U. 2026 poz. 795: https://eli.gov.pl/api/acts/DU/2026/795/text.html
+- Ustawa o działalności pożytku publicznego i o wolontariacie: https://eli.gov.pl/eli/DU/2003/873/ogl
+- Opracowanie Biura Analiz Sejmowych dotyczące instytucji demokracji bezpośredniej: https://orka.sejm.gov.pl/petycje.nsf/nazwa/IX-789bas/%24file/IX-789bas.pdf
 
 """
 
