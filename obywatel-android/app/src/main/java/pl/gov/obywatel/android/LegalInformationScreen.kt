@@ -223,55 +223,7 @@ PODSTAWOWE ŹRÓDŁA PRAWNE
 • Kodeks cywilny — https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19640160093 — w szczególności art. 8 i przepisy o zdolności do czynności prawnych.
 
 Treść przepisów należy odczytywać w aktualnym brzmieniu, łącznie z właściwymi ustawami szczególnymi i orzecznictwem.
-"""
 
-@Composable
-fun LegalInformationScreen(onBack: () -> Unit) {
-    BackHandler(onBack = onBack)
-    val sections = LEGAL_INFORMATION_TEXT.trim().split("\n")
-    Surface(
-        modifier = Modifier.fillMaxSize().semantics { paneTitle = "Informacje prawne" },
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            androidx.compose.foundation.layout.Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
-                }
-                Text(
-                    "Informacje prawne",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f).semantics { heading() }
-                )
-            }
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    sections.forEach { line ->
-                        when {
-                            line.isBlank() -> Spacer(Modifier.height(3.dp))
-                            line == line.uppercase() && line.length < 110 ->
-                                Text(line, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            line.startsWith("• ") ->
-                                Text(line, style = MaterialTheme.typography.bodyMedium)
-                            else ->
-                                Text(line, style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                }
-            }
-        }
-    },
 
 REGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO
 
