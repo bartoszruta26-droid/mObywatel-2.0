@@ -3180,6 +3180,7 @@ private fun MoreMenuScreen(
         ProfileActionCard("Pomoc i informacje", "Instrukcje korzystania z aplikacji", Icons.Filled.Info, onOpenHelp)
         ProfileActionCard("Ustawienia", "Dane, wygląd i preferencje", Icons.Filled.Settings, onOpenSettings)
         ProfileActionCard("Informacje prawne", "Podstawy prawne, prawa obywatelskie i zasady działania aplikacji", Icons.Filled.Description, onOpenLegalInformation)
+        ProfileActionCard("Regulamin dotacji celowych państwowego funduszu celowego", "Projekt zasad wsparcia rehabilitacji, pielęgnacji, higieny i profilaktyki", Icons.Filled.AccountBalance, onOpenLegalInformation)
     }
 }
 
