@@ -793,6 +793,39 @@ Najbardziej użyteczna prawnie postać postulatu nie polega na twierdzeniu, że 
 - Kodeks cywilny, Dz.U. z 2026 r. poz. 795, art. 888, 893–895: https://eli.gov.pl/api/acts/DU/2026/795/text/I/D20260795.pdf
 
 
+
+UZUPEŁNIENIE — TRZY ZNACZENIA OKREŚLENIA „POSEŁ” W PROJEKCIE
+
+39. Poseł na Sejm Rzeczypospolitej Polskiej — mandat konstytucyjny
+Posełem na Sejm RP w znaczeniu ustrojowym jest osoba wybrana do Sejmu w wyborach parlamentarnych, której mandat został uzyskany i jest wykonywany zgodnie z Konstytucją oraz ustawami. Zgodnie z art. 104 ust. 1 Konstytucji RP posłowie są przedstawicielami Narodu. Przed rozpoczęciem sprawowania mandatu składają przed Sejmem ślubowanie określone w art. 104 ust. 2 Konstytucji. Odmowa złożenia ślubowania oznacza zrzeczenie się mandatu (art. 104 ust. 3). Ustawa o wykonywaniu mandatu posła i senatora, w szczególności art. 1 i art. 2, rozwija tę regulację: poseł wykonuje mandat, kierując się dobrem Narodu, a ślubowanie składa na posiedzeniu Sejmu. Jest to mandat przedstawicielski wynikający z wyborów i przepisów prawa, a nie z samego aktu osobistego oświadczenia.
+
+40. Poseł obywatelski z mandatem deklaracyjnym — kategoria projektowana
+Na potrzeby niniejszego Regulaminu projekt wprowadza odrębną kategorię „Posła obywatelskiego z mandatem deklaracyjnym”. Oznacza ona obywatela, który dobrowolnie rozpoznał w sobie powołanie do służenia Narodowi i dobru wspólnemu, a następnie publicznie złożył deklarację lub uroczystą przysięgę służby narodowi, w szczególności podczas ceremonii zorganizowanej przed budynkiem Sejmu RP. W projekcie akt ten jest rozumiany jako publiczne przyjęcie zobowiązania moralnego, obywatelskiego i społecznego do działania w interesie narodowym, z poszanowaniem praw człowieka, godności każdej osoby, Konstytucji i obowiązującego prawa. Określenie „mandat deklaracyjny” ma w tym Regulaminie znaczenie wewnętrzne, obywatelskie i programowe. Nie jest mandatem posła na Sejm w rozumieniu Konstytucji, nie daje immunitetu, praw parlamentarzysty, kompetencji organu władzy publicznej ani samoistnego prawa do dysponowania środkami państwowymi. Złożenie deklaracji przed budynkiem Sejmu nie jest ślubowaniem konstytucyjnym składanym przez posła na posiedzeniu Sejmu.
+
+41. Poseł powołany — obywatelskie rozpoznanie powołania do służby
+„Posłem powołanym” w języku niniejszego projektu jest obywatel, który rozpoznał w sobie powołanie do służenia Narodowi, wspólnocie obywateli i dobru wspólnemu, niezależnie od tego, czy złożył już publiczną deklarację, o której mowa w pkt 40. Jest to określenie misji, postawy i gotowości do służby. Nie oznacza uzyskania mandatu parlamentarnego ani jakiegokolwiek ustawowego umocowania finansowego lub administracyjnego.
+
+42. Relacja między trzema kategoriami
+W Regulaminie należy konsekwentnie odróżniać:
+a) Posła na Sejm RP — przedstawiciela Narodu wybranego w wyborach i wykonującego mandat konstytucyjny po złożeniu ślubowania przed Sejmem;
+b) Posła obywatelskiego z mandatem deklaracyjnym — obywatela, który złożył publiczną deklarację lub przysięgę służby narodowi, w tym podczas ceremonii przed budynkiem Sejmu; kategoria ta istnieje na potrzeby projektu i nie jest mandatem parlamentarnym;
+c) Posła powołanego — obywatela, który rozpoznał w sobie powołanie do służby narodowi, bez wymogu wcześniejszego złożenia deklaracji.
+
+43. Poseł obywatelski jako proponowany Dyspozytor Celu
+Zgodnie z założeniem organizacyjnym projektu, Poseł obywatelski z mandatem deklaracyjnym ma być preferowanym kandydatem do pełnienia funkcji Dyspozytora Celu Państwowego Funduszu Celowego. W tej koncepcji przysięga stanowi publiczne potwierdzenie przyjęcia odpowiedzialności za służbę dobru narodowemu, a nie źródło kompetencji do wykonywania operacji finansowych. Funkcja Dyspozytora Celu może obejmować inicjowanie i opracowywanie Celu, przygotowanie planu rzeczowego i finansowego, koordynację realizacji, proponowanie sposobu wykorzystania środków, monitorowanie rezultatów, prowadzenie lub nadzorowanie analitycznej ewidencji Celu oraz składanie sprawozdań — w zakresie, w jakim czynności te zostaną dopuszczone przez ustawę, plan finansowy, umowę, decyzję lub prawidłowe umocowanie właściwego organu. Samo rozpoznanie powołania ani złożenie przysięgi obywatelskiej przed Sejmem nie przenosi na tę osobę ustawowej kompetencji dysponenta Funduszu ani prawa do autoryzowania płatności z rachunku PFC.
+
+44. Podstawa i granice proponowanej funkcji
+Art. 4 ust. 1 pkt 2 oraz art. 43 ustawy o finansach publicznych mogą wspierać postulat udziału osoby prywatnej w wykorzystaniu środków publicznych i realizacji zadań publicznych. Art. 29 ust. 3 tej ustawy stanowi jednak, że rachunkiem państwowego funduszu celowego dysponuje minister wskazany w ustawie tworzącej Fundusz albo inny organ wskazany w tej ustawie. W konsekwencji Regulamin może ustanawiać obywatelski sposób zgłaszania kandydatury, kryteria etyczne i merytoryczne Dyspozytora Celu, zakres zadań koordynacyjnych oraz procedurę rekomendowania i umocowania tej osoby. Nie może natomiast samodzielnie przenieść na nią kompetencji ustawowego dysponenta PFC ani zmienić ustawowego kręgu podmiotów uprawnionych do zarządzania rachunkiem Funduszu. Właściwy organ powinien określić zakres powierzonych czynności, odpowiedzialność, kontrolę, zasady konfliktu interesów, dostęp do dokumentacji i sposób rozliczania.
+
+45. Znaczenie ślubowania parlamentarnego dla idei służby narodowi
+Konstytucyjne ślubowanie poselskie oraz ustawowe określenie, że posłowie wykonują mandat kierując się dobrem Narodu (art. 1 ustawy o wykonywaniu mandatu posła i senatora), mogą być przywołane jako wzorzec wartości i odpowiedzialności publicznej dla obywatelskiej deklaracji służby. Nie należy jednak utożsamiać obu aktów. Ślubowanie parlamentarzysty jest elementem procedury objęcia mandatu uzyskanego w wyborach; obywatelska przysięga projektowa jest dobrowolną deklaracją etyczną i społeczną. Regulamin nie przypisuje tej drugiej skutków prawnych zastrzeżonych dla pierwszej.
+
+Źródła urzędowe:
+- Konstytucja Rzeczypospolitej Polskiej, art. 104: https://www.prezydent.pl/prawo/konstytucja-rp/rozdzial-iv-sejm-i-senat
+- Ustawa z dnia 9 maja 1996 r. o wykonywaniu mandatu posła i senatora, tekst jednolity Dz.U. z 2026 r. poz. 1282, w szczególności art. 1–2: https://eli.gov.pl/eli/DU/2026/1282/ogl
+- Ustawa o finansach publicznych, tekst jednolity Dz.U. z 2026 r. poz. 1447, w szczególności art. 4, 29 i 43: https://eli.gov.pl/api/acts/DU/2026/1447/text.html
+
+
 """
 
 @Composable
