@@ -1056,21 +1056,122 @@ Korekta precyzująca: art. 11a ustawy o finansach publicznych jest przepisem szc
 
 """
 
+private const val ENTRUSTMENT_DOCUMENT_TEXT = """
+WZÓR DOKUMENTU POWIERZENIA ŚRODKÓW DYSPozyTOROWI CELU SŁUŻBY NARODOWEJ
+
+STATUS I ZASTOSOWANIE
+Wzór wymaga dostosowania do ustawy tworzącej właściwy państwowy fundusz celowy (PFC), regulaminu Funduszu, trybu przyznania środków i umowy z realizatorem. Samo wypełnienie lub podpisanie dokumentu nie tworzy dotacji, nie przenosi kompetencji ustawowego dysponenta Funduszu i nie nadaje prawa do rachunku Funduszu.
+
+1. STRONY I PODSTAWA POWIERZENIA
+Podmiot powierzający: ................................................................
+Forma prawna / status: ............................................................
+Adres / siedziba: ..................................................................
+Reprezentacja i umocowanie: ......................................................
+Dyspozytor Celu: ..................................................................
+Adres / siedziba: ..................................................................
+Identyfikator (jeżeli wymagany): .................................................
+Regulamin projektu PFC, wersja/data: .............................................
+Ustawa i przepisy właściwe dla Funduszu: .........................................
+Decyzja / umowa dotacji / umowa powierzenia / inny akt finansowania: .............
+Zatwierdzony opis Celu i plan rzeczowo-finansowy: ................................
+
+2. OZNACZENIE CELU SŁUŻBY NARODOWEJ
+Nazwa Celu: ......................................................................
+Opis potrzeby publicznej i uzasadnienie:
+..................................................................................
+Beneficjenci i kryteria dostępu: .................................................
+Zakres działań i oczekiwane rezultaty: ...........................................
+Mierniki wykonania: ................................................................
+Miejsce realizacji: ..............................................................
+Cel musi pozostawać zgodny z regulaminem projektu PFC, ustawą tworzącą Fundusz, zatwierdzonym planem finansowym i dokumentem przyznania środków.
+
+3. POWIERZENIE I KWOTA
+Podmiot powierzający powierza Dyspozytorowi realizację oznaczonego Celu w granicach właściwej podstawy prawnej, umowy i zatwierdzonego planu.
+Kwota: ........................ zł (słownie: ....................................)
+Źródło: [ ] dotacja PFC  [ ] darowizny celowe  [ ] środki własne  [ ] inne
+Harmonogram przekazania: ........................................................
+Okres wykorzystania: od ........................ do ........................
+Termin rozliczenia: ..............................................................
+Każde źródło zachowuje odrębny tytuł prawny, warunki wykorzystania i ewidencję. Wpis w aplikacji jest ewidencyjny i nie zastępuje decyzji, umowy ani czynności wymaganych prawem.
+
+4. WYODRĘBNIONY RACHUNEK PŁATNICZY
+Posiadacz rachunku: ................................................................
+Bank / dostawca usług płatniczych: ..............................................
+Numer rachunku: ..................................................................
+Waluta: ............  Data potwierdzenia: ......................................
+Dokument potwierdzający rachunek: ................................................
+
+Rachunek jest rachunkiem płatniczym odbiorcy / realizatora, o ile taki sposób przekazania środków dopuszczają przepisy i umowa. Nie jest rachunkiem bankowym PFC ani jego subkontem i nie zmienia ustawowego dysponenta rachunku Funduszu. Uprawnienia do rachunku wynikają z umocowania udzielonego przez jego posiadacza i zaakceptowanego przez dostawcę usług płatniczych.
+Dla Celu prowadzi się odrębną ewidencję analityczną wpływów, wydatków, dokumentów, źródeł finansowania, zobowiązań, zwrotów i salda. Ewidencja nie jest rachunkiem płatniczym.
+
+5. ZAKRES UPRAWNIEŃ DYSPozyTORA
+W granicach Celu, kwoty, harmonogramu, planu, umowy i prawa Dyspozytor może:
+- koordynować merytoryczną realizację Celu;
+- organizować działania i ustalać kolejność czynności;
+- podejmować decyzje wykonawcze o sposobie realizacji zadania;
+- zatwierdzać wydatki i zlecać płatności tylko w zakresie skutecznego umocowania;
+- dobierać wykonawców zgodnie z właściwymi przepisami i zasadami konkurencyjności;
+- prowadzić dokumentację, monitorować rezultaty i składać raporty;
+- wnioskować o zmiany planu, uzyskując uprzednią zgodę, jeżeli jest wymagana.
+Decyzje wymagające zgody podmiotu powierzającego:
+..................................................................................
+Dokument nie nadaje Dyspozytorowi statusu dysponenta PFC ani nie przenosi kompetencji organu wskazanego w ustawie.
+
+6. OBOWIĄZKI I ODPOWIEDZIALNOŚĆ
+Dyspozytor wykorzystuje środki zgodnie z przeznaczeniem i terminem, przestrzega prawa i regulaminu, prowadzi rzetelną dokumentację, zapobiega podwójnemu finansowaniu wydatków, ujawnia konflikt interesów, chroni dane osobowe, informuje o ryzyku i nieprawidłowościach, zwraca środki na zasadach określonych prawem i umową oraz udostępnia dokumenty uprawnionym kontrolującym.
+Dokument nie wyłącza ustawowej odpowiedzialności innych podmiotów ani osób.
+
+7. JAWNOŚĆ, KONTROLA I SPRAWOZDAWCZOŚĆ
+Dyspozytor prowadzi zestawienie wpływów według źródeł, rejestr wydatków z dokumentami źródłowymi, raporty postępu, zestawienie rezultatów i końcowe rozliczenie rzeczowo-finansowe.
+Częstotliwość raportowania: ......................................................
+Podmiot przyjmujący raporty: ....................................................
+Tryb kontroli: ..................................................................
+Publikacja informacji uwzględnia jawność finansów publicznych, ochronę danych i tajemnic prawnie chronionych.
+
+8. OKRES, ZMIANY I ZAKOŃCZENIE
+Powierzenie obowiązuje od ........................ do ........................
+Zmiana Celu, kwoty, terminu lub istotnych warunków wymaga formy i zgód określonych w prawie i dokumencie finansowania. Powierzenie kończy się po wykonaniu Celu, zatwierdzeniu rozliczenia oraz rozliczeniu lub zwrocie pozostałych środków.
+
+9. ZAŁĄCZNIKI
+1. Dokument przyznania środków / umowa finansowania.
+2. Opis Celu i zatwierdzony plan rzeczowo-finansowy.
+3. Potwierdzenie danych rachunku.
+4. Pełnomocnictwo lub upoważnienie, jeżeli wymagane.
+5. Zasady ewidencji, kontroli i raportowania.
+6. Oświadczenie o konflikcie interesów.
+
+10. PODPISY
+Podmiot powierzający / osoba uprawniona:
+Imię, nazwisko, funkcja, podstawa umocowania, data i podpis:
+..................................................................................
+Dyspozytor Celu — imię, nazwisko, data i podpis:
+..................................................................................
+Potwierdzenie umocowania do rachunku przez posiadacza rachunku / bank, jeżeli wymagane:
+..................................................................................
+
+INFORMACJA
+To projekt dokumentu prywatnego lub umownego, a nie decyzja o dotacji, promesa, polecenie przelewu, pełnomocnictwo bankowe ani urzędowe potwierdzenie salda. Przed użyciem należy ustalić stronę umowy, prawnego odbiorcę środków, posiadacza rachunku oraz osobę uprawnioną do zatwierdzania płatności.
+""";
+
 @Composable
 fun LegalInformationScreen(onBack: () -> Unit) {
     var showFundRegulation by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = showFundRegulation) { showFundRegulation = false }
-    BackHandler(enabled = !showFundRegulation) { onBack() }
-
-    val displayedText = if (showFundRegulation) {
-        LEGAL_INFORMATION_TEXT.substringAfter("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
-    } else {
-        LEGAL_INFORMATION_TEXT.substringBefore("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
+    var showEntrustmentDocument by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = showFundRegulation || showEntrustmentDocument) {
+        showFundRegulation = false
+        showEntrustmentDocument = false
     }
-    val pageTitle = if (showFundRegulation) {
-        "Regulamin dotacji celowych państwowego funduszu celowego"
-    } else {
-        "Informacje prawne"
+    BackHandler(enabled = !showFundRegulation && !showEntrustmentDocument) { onBack() }
+
+    val displayedText = when {
+        showEntrustmentDocument -> ENTRUSTMENT_DOCUMENT_TEXT
+        showFundRegulation -> LEGAL_INFORMATION_TEXT.substringAfter("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
+        else -> LEGAL_INFORMATION_TEXT.substringBefore("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
+    }
+    val pageTitle = when {
+        showEntrustmentDocument -> "Powierzenie środków Dyspozytorowi Celu"
+        showFundRegulation -> "Regulamin dotacji celowych państwowego funduszu celowego"
+        else -> "Informacje prawne"
     }
     val sections = displayedText.trim().split("\n")
 
@@ -1087,7 +1188,12 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                IconButton(onClick = { if (showFundRegulation) showFundRegulation = false else onBack() }) {
+                IconButton(onClick = {
+                    if (showFundRegulation || showEntrustmentDocument) {
+                        showFundRegulation = false
+                        showEntrustmentDocument = false
+                    } else onBack()
+                }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
                 }
                 Text(
@@ -1097,7 +1203,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                     modifier = Modifier.weight(1f).semantics { heading() }
                 )
             }
-            if (!showFundRegulation) {
+            if (!showFundRegulation && !showEntrustmentDocument) {
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { showFundRegulation = true },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
@@ -1125,6 +1231,25 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                             )
                         }
                         Icon(Icons.Filled.Description, contentDescription = "Otwórz regulamin")
+                    }
+                }
+                }
+                Spacer(Modifier.height(2.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable { showEntrustmentDocument = true },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(Icons.Filled.Description, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Column(Modifier.weight(1f)) {
+                            Text("Dokument powierzenia środków Dyspozytorowi Celu", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            Text("Wzór dla Celu Służby Narodowej — rachunek płatniczy i rozliczenie", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
+                        Icon(Icons.Filled.Description, contentDescription = "Otwórz dokument")
                     }
                 }
             }
