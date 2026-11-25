@@ -267,17 +267,21 @@ fun LegalInformationScreen(onBack: () -> Unit) {
 
 REGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO
 
-Status regulaminu i jego relacja do istniejącego Funduszu
+Status regulaminu i model prawny Celu
 
-Niniejszy regulamin dotyczy wyłącznie wyodrębnionego celu zadaniowego realizowanego w ramach już istniejącego państwowego funduszu celowego, dalej zwanego „Funduszem”. Nie przewiduje utworzenia nowego funduszu, nowej osoby prawnej ani odrębnego państwowego rachunku funduszu. Cel zadaniowy ma służyć gromadzeniu — o ile pozwalają na to przepisy regulujące dany Fundusz — darowizn celowych obywateli oraz przeznaczaniu środków przypisanych do tego celu na rehabilitację, pielęgnację, higienę i profilaktykę osób długotrwale chorych, osób z niepełnosprawnościami oraz osób w podeszłym wieku.
+Niniejszy regulamin opisuje projekt wyodrębnionego Celu zadaniowego w ramach istniejącego państwowego funduszu celowego (dalej: „Fundusz”). Nie zakłada tworzenia nowego funduszu, nowej osoby prawnej ani nowego rachunku państwowego funduszu celowego. Celem jest finansowanie rehabilitacji, pielęgnacji, higieny i profilaktyki osób długotrwale chorych, osób z niepełnosprawnościami oraz osób w podeszłym wieku.
 
-Regulamin nie zmienia ustawy tworzącej Fundusz, jego ustawowych zadań, źródeł przychodów, dysponenta rachunku, planu finansowego ani trybu przyznawania dotacji. Nie stanowi samodzielnej podstawy przyjmowania darowizn przez Fundusz ani wydatkowania środków publicznych. Możliwość przyjmowania darowizn celowych na ten cel, przypisania ich do wyodrębnionego zadania i ich wykorzystania wymaga potwierdzenia w ustawie tworzącej Fundusz, przepisach szczególnych oraz planie finansowym. Sam art. 29 ustawy o finansach publicznych nie zastępuje tych szczególnych podstaw.
+Projekt Celu może zostać opracowany i przedłożony ministrowi właściwemu dla Funduszu przez osobę fizyczną, osobę prawną albo jednostkę organizacyjną, której przepisy przyznają zdolność prawną. Wniosek powinien zawierać opis potrzeby publicznej, cele, grupę beneficjentów, katalog działań, kryteria przyznawania wsparcia, mierniki rezultatów, budżet, sposób kontroli i rozliczenia oraz propozycję osoby lub podmiotu odpowiedzialnego za realizację. Złożenie projektu nie oznacza jego przyjęcia; o dopuszczalności i trybie jego realizacji rozstrzyga minister lub inny właściwy organ w granicach ustawy regulującej Fundusz, jego zadań i planu finansowego.
 
-Zgodnie z art. 29 ust. 3 ustawy o finansach publicznych rachunkiem państwowego funduszu celowego dysponuje minister wskazany w ustawie tworzącej fundusz albo inny organ wskazany w tej ustawie. Darczyńcy mogą wskazywać cel darowizny w granicach prawa, ale sama ich wola nie ustanawia dysponenta rachunku ani organu administracji publicznej. Jeżeli właściwa ustawa wskazuje Dyspozytora jako organ lub dysponenta, albo upoważnia właściwego dysponenta do powierzenia określonych obowiązków konkretnej osobie, zakres jego kompetencji wynika wyłącznie z tego przepisu i prawidłowego aktu powierzenia.
+Osoby fizyczne, osoby prawne i inne podmioty mogą deklarować lub dokonywać darowizn na wskazany Cel, o ile przepisy regulujące Fundusz dopuszczają przyjmowanie takich darowizn oraz wskazują prawidłowy rachunek i tryb ich przyjmowania. Wpłata musi być kierowana do uprawnionego odbiorcy na oficjalny rachunek, a nie na rachunek prywatny Dyspozytora. Darczyńca może wskazać przeznaczenie darowizny w granicach prawa i warunków jej przyjęcia. Samo wskazanie osoby przez darczyńcę nie przenosi na nią kompetencji do dysponowania rachunkiem państwowego funduszu celowego ani nie wiąże organu publicznego wbrew ustawie.
 
-W niniejszym regulaminie „Dyspozytor Celu” oznacza osobę wskazaną przez właściwy organ lub umocowaną na podstawie ustawy i imiennego upoważnienia do wykonywania konkretnych czynności związanych z realizacją Celu. Określenie to nie przesądza, że osoba ta jest ustawowym dysponentem rachunku Funduszu. Wszędzie tam, gdzie ustawa posługuje się pojęciem „dysponenta państwowego funduszu celowego”, regulamin zachowuje znaczenie nadane temu pojęciu w ustawie.
+Zgodnie z art. 29 ust. 3 ustawy o finansach publicznych rachunkiem państwowego funduszu celowego dysponuje minister wskazany w ustawie tworzącej Fundusz albo inny organ wskazany w tej ustawie. Jednocześnie art. 29 ust. 7 przewiduje wyodrębnianie w planie finansowym zadań finansowanych ze środków Funduszu. W konsekwencji Cel może być ujmowany jako zadanie Funduszu, jeżeli mieści się w jego ustawowym zakresie, zostanie zaakceptowany przez właściwy organ i prawidłowo ujęty w planie finansowym. Sam regulamin ani wola darczyńców nie mogą rozszerzyć ustawowych zadań Funduszu.
 
-Dokument jest regulaminem wykonawczym projektu Celu i może być stosowany operacyjnie dopiero po zatwierdzeniu przez organ właściwy dla Funduszu, potwierdzeniu zgodności z ustawą tworzącą Fundusz i planem finansowym oraz opublikowaniu w przewidzianym trybie. Do tego czasu ma charakter projektu informacyjnego. W aplikacji oznacza się go jako projekt regulaminu, a nie jako akt ustanawiający kompetencje publiczne.
+W regulaminie określenie „Dyspozytor Celu” oznacza osobę wskazaną w zaakceptowanym projekcie Celu i ustanowioną lub upoważnioną przez właściwy organ do wykonywania ściśle określonych czynności. Jeżeli ustawa wskazuje tę osobę jako organ lub dysponenta, działa ona w granicach kompetencji ustawowej. Jeżeli jest osobą upoważnioną, wykonuje wyłącznie obowiązki objęte skutecznym upoważnieniem, w szczególności na zasadach art. 53 ustawy o finansach publicznych. Wybór Dyspozytora przez darczyńców może stanowić element wniosku i warunek proponowany przy darowiźnie, lecz wymaga zaakceptowania przez organ właściwy i nie zastępuje ustawowego umocowania.
+
+Projekt zakłada, że Dyspozytor Celu odpowiada za merytoryczne prowadzenie Celu, przygotowanie naborów, ocenę potrzeb, rekomendowanie lub podejmowanie rozstrzygnięć w zakresie powierzonych kompetencji, nadzór nad realizatorami, monitorowanie efektów i rozliczenie zadania. Zakres ten musi zostać skonkretyzowany w akcie właściwego organu i nie może obejmować kompetencji zastrzeżonych ustawowo dla ministra lub dysponenta Funduszu, jeżeli przepisy nie pozwalają na ich przekazanie.
+
+Niniejszy dokument jest projektem regulaminu Celu. Może być stosowany operacyjnie dopiero po zatwierdzeniu przez organ właściwy dla Funduszu, potwierdzeniu dopuszczalności darowizn i zakresu zadania, ujęciu zadania w planie finansowym oraz ustanowieniu Dyspozytora w prawnie skutecznym trybie. Nie stanowi samodzielnej podstawy przyjmowania wpłat ani wydatkowania środków publicznych.
 
 ROZDZIAŁ I. POSTANOWIENIA OGÓLNE
 
@@ -294,9 +298,9 @@ ROZDZIAŁ I. POSTANOWIENIA OGÓLNE
 § 2. Definicje
 
 Ilekroć w regulaminie jest mowa o:
-1) Funduszu — rozumie się przez to projektowany państwowy fundusz celowy, który może powstać wyłącznie na podstawie odrębnej ustawy; do tego czasu określenie odnosi się do projektu programu;
-2) Ustawie tworzącej — rozumie się przez to przyszłą odrębną ustawę ustanawiającą Fundusz, wskazującą jego dysponenta, zadania, źródła przychodów i zasady gospodarki finansowej;
-3) Dysponencie Funduszu — rozumie się przez to ministra albo inny organ wskazany w Ustawie tworzącej, któremu art. 29 ustawy o finansach publicznych oraz Ustawa tworząca powierzają kompetencję dysponowania rachunkiem Funduszu;
+1) Funduszu — rozumie się przez to istniejący państwowy fundusz celowy, w ramach którego właściwy organ może zaakceptować i finansować Cel, w granicach ustawy regulującej Fundusz;
+2) Ustawie regulującej Fundusz — rozumie się przez to obowiązującą ustawę ustanawiającą i regulującą dany państwowy fundusz celowy, określającą jego dysponenta, zadania, źródła przychodów i zasady gospodarki finansowej;
+3) Dysponencie Funduszu — rozumie się przez to ministra albo inny organ wskazany w Ustawie regulującej Fundusz, któremu art. 29 ustawy o finansach publicznych oraz Ustawa tworząca powierzają kompetencję dysponowania rachunkiem Funduszu;
 4) Dyspozytorze — rozumie się przez to osobę lub organ, któremu Ustawa tworząca bezpośrednio albo na podstawie wyraźnego upoważnienia powierzy wykonywanie określonych czynności w zakresie rozdysponowania środków; sama nazwa „dyspozytor” nie tworzy kompetencji publicznoprawnej;
 5) Dotacji — rozumie się przez to bezzwrotne środki publiczne udzielane na podstawie właściwego przepisu prawa i umowy lub aktu stanowiącego podstawę finansowania, na realizację określonego zadania;
 6) Darowiźnie celowej — rozumie się przez to przysporzenie dokonane przez darczyńcę z oznaczeniem przeznaczenia, przyjęte przez podmiot uprawniony na warunkach zgodnych z prawem; darowizna nie jest automatycznie dotacją ani środkiem publicznym;
@@ -307,7 +311,7 @@ Ilekroć w regulaminie jest mowa o:
 
 § 3. Zasady podstawowe
 
-1. Środki Funduszu mogą być wykorzystywane wyłącznie na cele i w ramach limitów określonych w Ustawie tworzącej oraz rocznym planie finansowym.
+1. Środki Funduszu mogą być wykorzystywane wyłącznie na cele i w ramach limitów określonych w Ustawie regulującej Fundusz oraz rocznym planie finansowym.
 2. Każde rozstrzygnięcie o przyznaniu środków wymaga wskazania podstawy prawnej, dostępności środków, zgodności zadania z celem Funduszu i zachowania właściwej procedury.
 3. Gospodarowanie środkami odbywa się z zachowaniem legalności, celowości, oszczędności, efektywności, terminowości, przejrzystości, równego traktowania, bezstronności, rozliczalności i ochrony danych.
 4. Nie wolno zaciągać zobowiązań ponad limit planu finansowego ani finansować wydatków bez dostępnych środków.
@@ -370,7 +374,7 @@ ROZDZIAŁ III. ŹRÓDŁA ŚRODKÓW I GOSPODARKA FINANSOWA
 
 § 8. Plan finansowy i limity
 
-1. Podstawą gospodarki finansowej państwowego funduszu celowego jest roczny plan finansowy sporządzany i zmieniany w trybie określonym w ustawie o finansach publicznych i Ustawie tworzącej.
+1. Podstawą gospodarki finansowej państwowego funduszu celowego jest roczny plan finansowy sporządzany i zmieniany w trybie określonym w ustawie o finansach publicznych i Ustawie regulującej Fundusz.
 2. Plan wyodrębnia zadania Funduszu i określa co najmniej stan środków na początek i koniec roku, przychody, dotacje, koszty zadań, wynagrodzenia, należności i zobowiązania oraz plan dochodów i wydatków ujmowanych w terminie zapłaty.
 3. Koszty mogą być ponoszone wyłącznie w granicach planowanych przychodów i dostępnych środków z poprzednich okresów, zgodnie z ustawą o finansach publicznych.
 4. Regulamin nie upoważnia do zaciągania zobowiązań, dokonywania przesunięć w planie ani uruchamiania środków w sposób odmienny od ustawowego trybu.
@@ -389,7 +393,7 @@ ROZDZIAŁ IV. ORGANY, KOMPETENCJE I ODPOWIEDZIALNOŚĆ
 
 § 10. Dysponent Funduszu
 
-1. Dysponentem Funduszu jest organ wskazany w Ustawie tworzącej.
+1. Dysponentem Funduszu jest organ wskazany w Ustawie regulującej Fundusz.
 2. Dysponent wykonuje kompetencje określone w ustawie, w szczególności zapewnia realizację zadań Funduszu, gospodarkę finansową, zgodność wydatków z planem, prowadzenie sprawozdawczości i wykonywanie obowiązków jawności.
 3. Dysponent nie może przekazać kompetencji dalej, jeżeli ustawa nie dopuszcza takiego przekazania.
 4. Dysponent odpowiada za legalność i prawidłowość czynności w zakresie wynikającym z przepisów prawa.
@@ -498,7 +502,7 @@ ROZDZIAŁ VI. UMOWA, PRZEKAZANIE I WYKORZYSTANIE ŚRODKÓW
 
 § 18. Podstawa przekazania środków
 
-1. Środki przekazuje się wyłącznie na podstawie właściwej podstawy prawnej, w szczególności decyzji, umowy lub innego aktu przewidzianego w Ustawie tworzącej.
+1. Środki przekazuje się wyłącznie na podstawie właściwej podstawy prawnej, w szczególności decyzji, umowy lub innego aktu przewidzianego w Ustawie regulującej Fundusz.
 2. Umowa określa co najmniej:
    1) strony i podstawę prawną;
    2) cel i opis zadania;
@@ -549,7 +553,7 @@ ROZDZIAŁ VII. ROZLICZENIE, ZWROT I ODPOWIEDZIALNOŚĆ
 
 § 22. Zwrot środków
 
-1. Środki niewykorzystane, pobrane nienależnie, w nadmiernej wysokości lub wykorzystane niezgodnie z przeznaczeniem podlegają zwrotowi na zasadach i w trybie określonym w ustawie o finansach publicznych, Ustawie tworzącej i właściwych przepisach szczególnych.
+1. Środki niewykorzystane, pobrane nienależnie, w nadmiernej wysokości lub wykorzystane niezgodnie z przeznaczeniem podlegają zwrotowi na zasadach i w trybie określonym w ustawie o finansach publicznych, Ustawie regulującej Fundusz i właściwych przepisach szczególnych.
 2. Ustalenie obowiązku zwrotu wymaga wskazania podstawy prawnej, kwoty, terminu i sposobu zapłaty.
 3. Nie można w regulaminie ustanawiać własnych sankcji publicznoprawnych ani odsetek w oderwaniu od podstawy ustawowej.
 4. W przypadku podejrzenia nadużycia sprawę przekazuje się właściwym organom zgodnie z prawem.
@@ -617,24 +621,24 @@ ROZDZIAŁ XI. PRZEPISY KOŃCOWE I WARUNKI URUCHOMIENIA
 2. Zmiany nie mogą działać wstecz na niekorzyść beneficjenta ani naruszać praw nabytych, z uwzględnieniem przepisów powszechnie obowiązujących i warunków umów.
 3. Zmiany ogłasza się w sposób zapewniający ich dostępność adresatom.
 
-§ 31. Warunki rozpoczęcia działania jako państwowy fundusz celowy
+§ 31. Warunki uruchomienia Celu w ramach istniejącego Funduszu
 
-Przed rozpoczęciem działalności Funduszu jako państwowego funduszu celowego należy:
-1) uchwalić i ogłosić odrębną ustawę tworzącą Fundusz;
-2) wskazać w ustawie ministra albo inny organ, który będzie dysponentem rachunku;
-3) jeżeli przewidziano Dyspozytora działającego w zastępstwie ministra — nadać mu w ustawie wyraźną właściwość, kompetencje, tryb działania, odpowiedzialność i podległość;
-4) określić ustawowe zadania, źródła przychodów, zasady darowizn celowych i ewidencjonowania wpłat;
-5) zapewnić wyodrębniony rachunek bankowy oraz prawidłową obsługę księgową;
-6) opracować i uzgodnić roczny plan finansowy w trybie przewidzianym ustawą o finansach publicznych;
-7) określić tryb udzielania dotacji i podstawę prawną rozstrzygnięć;
-8) zapewnić system kontroli zarządczej, audytu i sprawozdawczości;
-9) przygotować wzory umów, formularzy, oświadczeń, zasad kwalifikowalności i zwrotów;
-10) przeprowadzić analizę zgodności z przepisami o ochronie danych, zamówieniach publicznych, rachunkowości, pomocy publicznej i świadczeniach zdrowotnych — w zakresie, w jakim mają zastosowanie.
+Przed rozpoczęciem przyjmowania darowizn i finansowania zadań w ramach Celu należy:
+1) wskazać konkretny państwowy fundusz celowy oraz obowiązującą ustawę regulującą ten Fundusz;
+2) potwierdzić, że ustawowe zadania Funduszu obejmują działania odpowiadające Celowi albo że istnieje prawna możliwość ich objęcia;
+3) potwierdzić podstawę prawną i tryb przyjmowania darowizn, w tym darowizn z oznaczeniem Celu, wskazać uprawnionego odbiorcę oraz oficjalny rachunek;
+4) przedłożyć ministrowi lub innemu właściwemu organowi projekt Celu wraz z budżetem, kryteriami, wskaźnikami, zasadami kontroli i rozliczenia;
+5) uzyskać formalną akceptację Celu przez właściwy organ i ująć zadanie w planie finansowym Funduszu w trybie przewidzianym prawem;
+6) określić sposób ewidencjonowania darowizn oraz ich przypisania do Celu, bez tworzenia nieprzewidzianych prawem rachunków lub subfunduszy;
+7) ustanowić Dyspozytora Celu w prawnie skutecznym trybie, określając zakres zadań, upoważnień, odpowiedzialności, nadzoru i zastępstwa;
+8) określić, które rozstrzygnięcia podejmuje minister lub dysponent Funduszu, a które może podejmować Dyspozytor;
+9) ustalić podstawę prawną udzielania dotacji, katalog uprawnionych beneficjentów i realizatorów, procedurę naboru, wzory umów i zasady zwrotu środków;
+10) zapewnić obsługę księgową, kontrolę zarządczą, audyt, sprawozdawczość, ochronę danych i dostępność procedur.
 
 § 32. Wejście w życie
 
-1. Niniejszy dokument w zakresie projektu programu ma charakter projektowy i informacyjny.
-2. Nie stanowi on samodzielnej podstawy tworzenia państwowego funduszu celowego, przyjmowania środków publicznych, udzielania dotacji ani wykonywania kompetencji organu administracji.
+1. Niniejszy dokument opisuje projekt Celu w ramach istniejącego państwowego funduszu celowego i ma charakter projektowy do czasu jego zatwierdzenia przez właściwy organ.
+2. Nie stanowi on samodzielnej podstawy przyjmowania darowizn przez Fundusz, udzielania dotacji ani wykonywania kompetencji organu administracji.
 3. Postanowienia regulaminu mogą stać się regulaminem wykonawczym państwowego funduszu celowego po wejściu w życie Ustawy tworzącej, w zakresie zgodnym z jej przepisami, po formalnym przyjęciu przez właściwy organ i ogłoszeniu w przewidzianym prawem trybie.
 4. W razie sprzeczności regulaminu z ustawą lub innym przepisem powszechnie obowiązującym stosuje się przepis wyższego rzędu.
 
