@@ -926,6 +926,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("registry", "Odpis z rejestru podmiotów", R.drawable.court_registry_icon),
     Triple("family", "Dokument rodowy", R.drawable.documents_family_record),
     Triple("parliament", "Legitymacja poselska", R.drawable.documents_deputy_legitimacy),
+    Triple("fund_purpose_disposition", "Akt powierzenia środków Dyspozytorowi Celu", R.drawable.lib_ic_wallet),
     Triple("training", "Legitymacja kursanta", R.drawable.documents_course_legitimacy),
     Triple("student", "Legitymacja ucznia/studenta", R.drawable.tile_ic_student_outline),
     Triple("disability", "Orzeczenia i zaświadczenia", R.drawable.tile_ic_disability_outline),
@@ -1028,6 +1029,7 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    id == "fund_purpose_disposition" -> "Służba państwowa"
     id == "financial_service" || DonationLedgerCatalog.find(id) != null -> "Służba finansowa"
     id == "payment_account_foundation" -> "Służba fundacyjna"
     id == "payment_account_association" -> "Służba stowarzyszeniowa"
