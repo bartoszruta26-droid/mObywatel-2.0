@@ -85,6 +85,43 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
 private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<DocumentEditorFieldDefinition> = when (documentId) {
         in paymentAccountDocumentTargets().map { it.first }.toSet() -> fields(*paymentAccountDocumentFields(documentId).toTypedArray())
         in internationalDocumentCatalogIds -> internationalDocumentEditorFields(documentId)
+        "fund_purpose_disposition" -> fields(
+            Triple("documentNumber", "Numer aktu powierzenia", ""),
+            Triple("issueDate", "Data sporządzenia aktu", "RRRR-MM-DD"),
+            Triple("issuingAuthority", "Organ / podmiot powierzający środki", ""),
+            Triple("authorityRepresentative", "Osoba uprawniona do reprezentacji powierzającego", ""),
+            Triple("legalBasis", "Podstawa prawna i kompetencja do powierzenia", ""),
+            Triple("fundName", "Nazwa państwowego funduszu celowego", ""),
+            Triple("fundCreatingAct", "Ustawa tworząca Fundusz / właściwe przepisy", ""),
+            Triple("financialPlanReference", "Pozycja planu finansowego / wyodrębnione zadanie", ""),
+            Triple("purposeName", "Nazwa Celu służby Narodowi", ""),
+            Triple("purposeDescription", "Opis Celu, rezultatów i grupy odbiorców", ""),
+            Triple("purposeScope", "Zakres rzeczowy i terytorialny realizacji", ""),
+            Triple("disponentName", "Imię i nazwisko Dyspozytora Celu", ""),
+            Triple("disponentIdentifier", "Dane identyfikacyjne Dyspozytora (opcjonalnie)", ""),
+            Triple("dispositionStartDate", "Początek okresu powierzenia", "RRRR-MM-DD"),
+            Triple("dispositionEndDate", "Koniec okresu powierzenia", "RRRR-MM-DD"),
+            Triple("fundingAmount", "Kwota powierzonych środków", "PLN"),
+            Triple("fundingSource", "Źródło środków: PFC / darowizny / inne", ""),
+            Triple("transferDate", "Data przekazania środków", "RRRR-MM-DD"),
+            Triple("paymentAccountHolder", "Posiadacz wyodrębnionego rachunku płatniczego", ""),
+            Triple("paymentAccountBank", "Bank / dostawca usług płatniczych", ""),
+            Triple("paymentAccountNumber", "Numer rachunku / IBAN", ""),
+            Triple("paymentAccountCurrency", "Waluta rachunku", "PLN"),
+            Triple("paymentAccountEvidence", "Dowód prowadzenia rachunku / identyfikator dokumentu", ""),
+            Triple("accountSeparationRules", "Zasady oddzielenia środków Celu od innych środków", ""),
+            Triple("disponentAuthority", "Zakres powierzonych uprawnień decyzyjnych", ""),
+            Triple("eligibleCosts", "Koszty kwalifikowalne i ograniczenia wydatkowania", ""),
+            Triple("procurementRules", "Zasady wyboru wykonawców i dokonywania zakupów", ""),
+            Triple("recordKeepingRules", "Zasady ewidencji, dokumentowania i kontroli", ""),
+            Triple("reportingDeadlines", "Terminy i zakres sprawozdań", ""),
+            Triple("unusedFundsRules", "Zasady zwrotu środków niewykorzystanych", ""),
+            Triple("conflictOfInterest", "Zasady konfliktu interesów i jawności", ""),
+            Triple("attachments", "Załączniki: plan, umowa, potwierdzenie rachunku, harmonogram", ""),
+            Triple("signingStatus", "Status aktu: projekt / podpisany / wykonany / zakończony", "projekt"),
+            Triple("issuerSignature", "Podpis osoby uprawnionej po stronie powierzającego", ""),
+            Triple("disponentSignature", "Podpis Dyspozytora Celu", "")
+        )
         "international_medical_certificate" -> fields(
             Triple("documentNumber", "Document Number", ""),
             Triple("issueDate", "Issue Date", "YYYY-MM-DD"),
