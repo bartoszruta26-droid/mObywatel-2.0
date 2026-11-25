@@ -35,6 +35,7 @@ object DocumentRouteRegistry {
         specialized("registry", "registry_extract"),
         document("family"),
         document("parliament"),
+        document("fund_purpose_disposition"),
         document("training"),
         document("student"),
         document("disability"),
