@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+
 # Wzór dokumentu powierzenia środków Dyspozytorowi Celu Służby Narodowej
 
 > **Status wzoru:** projekt dokumentu do wykorzystania po dostosowaniu do ustawy tworzącej właściwy państwowy fundusz celowy, regulaminu Funduszu, trybu przyznania środków i umowy z realizatorem. Samo wypełnienie lub podpisanie tego wzoru nie tworzy dotacji, nie przenosi kompetencji ustawowego dysponenta Funduszu i nie upoważnia do dysponowania rachunkiem Funduszu.
