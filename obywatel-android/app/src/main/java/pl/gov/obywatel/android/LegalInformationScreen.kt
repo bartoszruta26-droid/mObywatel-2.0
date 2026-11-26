@@ -55,7 +55,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
         showEntrustmentDocument = false
         showCompanyFinancingAgreement = false
     }
-    BackHandler(enabled = !showFundRegulation && !showEntrustmentDocument && !showCompanyFinancingAgreement) { onBack() }
+    BackHandler(enabled = !showFundRegulation && !showPfcProjectDocument && !showEntrustmentDocument && !showCompanyFinancingAgreement) { onBack() }
 
     val displayedText = when {
         showPfcProjectDocument -> markdownToDisplayText(PFC_PROJECT_DOCUMENT_TEXT)
@@ -193,15 +193,19 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    sections.forEach { line ->
-                        when {
-                            line.isBlank() -> Spacer(Modifier.height(3.dp))
-                            line == line.uppercase() && line.length < 110 ->
-                                Text(line, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            line.startsWith("• ") ->
-                                Text(line, style = MaterialTheme.typography.bodyMedium)
-                            else ->
-                                Text(line, style = MaterialTheme.typography.bodyMedium)
+                    if (showPfcProjectDocument) {
+                        Text(displayedText, style = MaterialTheme.typography.bodyMedium)
+                    } else {
+                        sections.forEach { line ->
+                            when {
+                                line.isBlank() -> Spacer(Modifier.height(3.dp))
+                                line == line.uppercase() && line.length < 110 ->
+                                    Text(line, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                line.startsWith("• ") ->
+                                    Text(line, style = MaterialTheme.typography.bodyMedium)
+                                else ->
+                                    Text(line, style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
                     }
                 }
