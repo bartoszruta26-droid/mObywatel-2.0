@@ -162,7 +162,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-private fun DocumentsWalletScreen(
+internal fun DocumentsWalletScreen(
     onBack: () -> Unit,
     onAddDocuments: () -> Unit,
     documentPlacements: Map<String, String>,
