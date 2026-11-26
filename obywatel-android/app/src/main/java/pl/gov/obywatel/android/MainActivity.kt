@@ -850,6 +850,7 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         defaultDocumentIcon = defaultDocumentIcon,
                         documentIconOverrides = documentIconOverrides,
                         onOpenDetails = { openDocumentCard(it) },
+                        onEditDocument = { openSettingsDocumentEditor(it) },
                         onOpenService = { title ->
                             when (title) { "Konta bankowe" -> showBankAccounts = true; "Dokumenty własne — pliki" -> showImportedDocuments = true; else -> activeService = title }
                         }
