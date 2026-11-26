@@ -51,11 +51,15 @@ internal fun DocumentVisibilitySettingsScreen(
     onDefaultDocumentIconChange: (String) -> Unit,
     documentIconOverrides: Map<String, String>,
     onDocumentIconOverridesChange: (Map<String, String>) -> Unit,
+    documentGroups: List<String>,
+    documentGroupAssignments: Map<String, String>,
+    onDocumentGroupAssignmentsChange: (Map<String, String>) -> Unit,
     onBack: () -> Unit
 ) {
     var defaultIconMenu by remember { mutableStateOf(false) }
     var expandedDocumentIcon by remember { mutableStateOf<String?>(null) }
     var expandedVisibilityGroups by remember { mutableStateOf(emptySet<String>()) }
+    var expandedGroupDocument by remember { mutableStateOf<String?>(null) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -102,8 +106,8 @@ internal fun DocumentVisibilitySettingsScreen(
         }
         val groupedVisibilityDocuments = documentDisplayOptions
             .distinctBy { it.first }
-            .groupBy { (id, _, _) -> documentVisibilityGroup(id) }
-        val visibilityGroupOrder = documentVisibilityGroupOrder
+            .groupBy { (id, _, _) -> documentGroupAssignments[id] ?: documentVisibilityGroup(id) }
+        val visibilityGroupOrder = documentGroups
         visibilityGroupOrder.forEach { groupTitle ->
             val groupDocuments = groupedVisibilityDocuments[groupTitle].orEmpty()
             if (groupDocuments.isEmpty()) return@forEach
@@ -158,6 +162,22 @@ internal fun DocumentVisibilitySettingsScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.weight(1f)
                                 )
+                                Box {
+                                    TextButton(onClick = {
+                                        expandedGroupDocument = if (expandedGroupDocument == id) null else id
+                                    }) { Text("Grupa", style = MaterialTheme.typography.labelSmall) }
+                                    DropdownMenu(
+                                        expanded = expandedGroupDocument == id,
+                                        onDismissRequest = { expandedGroupDocument = null }
+                                    ) {
+                                        documentGroups.forEach { group ->
+                                            DropdownMenuItem(text = { Text(group) }, onClick = {
+                                                onDocumentGroupAssignmentsChange(documentGroupAssignments + (id to group))
+                                                expandedGroupDocument = null
+                                            })
+                                        }
+                                    }
+                                }
                                 Box {
                                     TextButton(
                                         onClick = { expandedDocumentIcon = if (expandedDocumentIcon == id) null else id },
