@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 internal fun DocumentEditorCatalogScreen(
+    documentGroups: List<String>,
+    documentGroupAssignments: Map<String, String>,
     onOpenDocument: (String) -> Unit,
     onBack: () -> Unit
 ) {
@@ -51,10 +53,10 @@ internal fun DocumentEditorCatalogScreen(
             fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Edytuj dane dokumentów", style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-        Text("Dokumenty są uporządkowane według ich przeznaczenia. Każdy dokument ma przypisaną stałą grupę.",
+        Text("Dokumenty są uporządkowane według aktualnych przypisań grup. Podgląd i edycja korzystają z tego samego identyfikatora dokumentu.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        documentVisibilityGroupOrder.forEach { group ->
-            val entries = documents.filter { documentVisibilityGroup(it.first) == group }
+        documentGroups.forEach { group ->
+            val entries = documents.filter { (id, _, _) -> (documentGroupAssignments[id] ?: documentVisibilityGroup(id)) == group }
                 .sortedBy { it.second.lowercase(java.util.Locale("pl", "PL")) }
             if (entries.isNotEmpty()) {
                 val expanded = group in expandedGroups
