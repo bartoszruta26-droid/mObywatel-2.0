@@ -65,10 +65,10 @@ fun LegalInformationScreen(onBack: () -> Unit) {
 
     val displayedText = when {
         showPfcProjectDocument -> markdownToDisplayText(pfcProjectDocumentText)
-        showCompanyFinancingAgreement -> COMPANY_FINANCING_AGREEMENT_TEXT
-        showEntrustmentDocument -> ENTRUSTMENT_DOCUMENT_TEXT
-        showFundRegulation -> LEGAL_INFORMATION_TEXT.substringAfter("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
-        else -> LEGAL_INFORMATION_TEXT.substringBefore("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
+        showCompanyFinancingAgreement -> markdownToDisplayText(COMPANY_FINANCING_AGREEMENT_TEXT)
+        showEntrustmentDocument -> markdownToDisplayText(ENTRUSTMENT_DOCUMENT_TEXT)
+        showFundRegulation -> markdownToDisplayText(FUND_REGULATION_MARKDOWN)
+        else -> LEGAL_INFORMATION_TEXT
     }
     val pageTitle = when {
         showPfcProjectDocument -> "Pakiet dokumentów Celu PFC"
