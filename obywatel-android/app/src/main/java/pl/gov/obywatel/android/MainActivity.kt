@@ -163,39 +163,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-private fun OcrRoundAction(
-    label: String,
-    icon: ImageVector,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier.width(68.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(5.dp)
-    ) {
-        Surface(
-            modifier = Modifier.size(56.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick),
-            shape = CircleShape,
-            color = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(26.dp))
-            }
-        }
-        Text(
-            text = label,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.labelSmall,
-            maxLines = 2,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
 internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<String, String>, context: Context, saveMessage: (String) -> Unit) {
     var processing by remember { mutableStateOf(false) }
     var recognizedText by remember { mutableStateOf(fields["${categoryId}OcrText"].orEmpty()) }
