@@ -5,7 +5,6 @@ package pl.gov.obywatel.android
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -1273,4 +1272,3 @@ fun LegalInformationScreen(onBack: () -> Unit) {
             }
         }
     }
-}
