@@ -56,10 +56,10 @@ fun LegalInformationScreen(onBack: () -> Unit) {
     BackHandler(enabled = !showFundRegulation && !showEntrustmentDocument && !showCompanyFinancingAgreement) { onBack() }
 
     val displayedText = when {
-        showCompanyFinancingAgreement -> COMPANY_FINANCING_AGREEMENT_TEXT
+        showCompanyFinancingAgreement -> markdownToDisplayText(COMPANY_FINANCING_AGREEMENT_TEXT)
         showEntrustmentDocument -> ENTRUSTMENT_DOCUMENT_TEXT
-        showFundRegulation -> LEGAL_INFORMATION_TEXT.substringAfter("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
-        else -> LEGAL_INFORMATION_TEXT.substringBefore("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
+        showFundRegulation -> markdownToDisplayText(FUND_REGULATION_MARKDOWN)
+        else -> LEGAL_INFORMATION_TEXT
     }
     val pageTitle = when {
         showCompanyFinancingAgreement -> "Umowa odpłatnego współfinansowania Celu"
@@ -186,3 +186,26 @@ fun LegalInformationScreen(onBack: () -> Unit) {
         }
     }
 }
+
+
+/**
+ * Converts the source Markdown of legal documents into readable text for the
+ * Compose screen. The original Markdown remains intact in its dedicated file.
+ */
+private fun markdownToDisplayText(markdown: String): String =
+    markdown.lineSequence()
+        .map { line ->
+            line.trimEnd()
+                .replace(Regex("^#{1,6}\\s+"), "")
+                .replace(Regex("^>\\s?"), "")
+                .replace(Regex("^[-*]\\s+"), "• ")
+                .replace(Regex("\\*\\*(.*?)\\*\\*"), "\\$1")
+                .replace(Regex("(?<!\\*)\\*([^*]+)\\*(?!\\*)"), "\\$1")
+                .replace(Regex("`([^`]+)`"), "\\$1")
+                .replace(Regex("\\[([^]]+)]\\(([^)]+)\\)"), "\\$1 (\\$2)")
+                .takeUnless { it.trim() == "---" }
+                .orEmpty()
+        }
+        .joinToString("\\n")
+        .replace(Regex("\\n{3,}"), "\\n\\n")
+        .trim()
