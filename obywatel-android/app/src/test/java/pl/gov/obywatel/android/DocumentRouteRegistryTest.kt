@@ -79,7 +79,7 @@ class DocumentRouteRegistryTest {
     @Test
     fun concreteDocumentTilesKeepTheirOwnIdsForDirectFormEditing() {
         val concreteDocumentIds = setOf(
-            "birth_extract", "marriage_extract", "death_extract", "insurance_vehicle",
+            "birth_extract", "marriage_extract", "death_extract", "company_financing_agreement", "insurance_vehicle",
             "insurance_professional", "insurance_private", "insurance_business",
             "vehicle_registration", "criminal_record", "mission_travel", "ehic", "eu_education",
             "military_book", "martial_arts", "shooting_sport", "archery", "tactical_training",
