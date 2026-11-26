@@ -169,6 +169,8 @@ internal fun DocumentsWalletScreen(
     documentCardStyle: String,
     defaultDocumentIcon: String,
     documentIconOverrides: Map<String, String>,
+    documentGroups: List<String>,
+    documentGroupAssignments: Map<String, String>,
     onOpenDetails: (String) -> Unit,
     onEditDocument: (String) -> Unit,
     onOpenService: (String) -> Unit
@@ -184,9 +186,9 @@ internal fun DocumentsWalletScreen(
         val icon: ImageVector = Icons.Filled.Description
     )
 
-    val catalogGroupOrder = documentVisibilityGroupOrder + "Inne dokumenty"
+    val catalogGroupOrder = (documentGroups + "Inne dokumenty").distinct()
     val documents = documentDisplayOptions.distinctBy { it.first }.map { (id, title, _) ->
-        val group = documentVisibilityGroup(id)
+        val group = documentGroupAssignments[id] ?: documentVisibilityGroup(id)
         val service = when {
             id == "financial_service" -> "Służba finansowa"
             id == "bank_accounts" || id == "rod_bank_accounts" || id == "entity_bank_accounts" -> "Konta bankowe"
