@@ -583,35 +583,6 @@ private fun LoyaltyCardsEditor(
 }
 
 @Composable
-private fun LoyaltyGeneratedCodes(barcodeValue: String, qrValue: String) {
-    val barcode = remember(barcodeValue) { generateLoyaltyCodeBitmap(barcodeValue, BarcodeFormat.CODE_128) }
-    val qr = remember(qrValue) { generateLoyaltyCodeBitmap(qrValue, BarcodeFormat.QR_CODE) }
-    if (barcode != null || qr != null) {
-        Text("Podgląd kodów", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-        if (barcode != null) Image(barcode.asImageBitmap(), contentDescription = "Kod kreskowy karty lojalnościowej",
-            modifier = Modifier.fillMaxWidth().height(64.dp), contentScale = ContentScale.Fit)
-        if (qr != null) Image(qr.asImageBitmap(), contentDescription = "Kod QR karty lojalnościowej",
-            modifier = Modifier.size(170.dp), contentScale = ContentScale.Fit)
-    }
-}
-
-private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bitmap? {
-    if (value.isBlank()) return null
-    return runCatching {
-        val width = if (format == BarcodeFormat.QR_CODE) 480 else 900
-        val height = if (format == BarcodeFormat.QR_CODE) 480 else 220
-        val matrix = MultiFormatWriter().encode(value, format, width, height,
-            mapOf(EncodeHintType.MARGIN to 2, EncodeHintType.CHARACTER_SET to "UTF-8"))
-        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
-            for (y in 0 until height) for (x in 0 until width) {
-                bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
-            }
-        }
-    }.getOrNull()
-}
-
-
-@Composable
 private fun ApplicationEntryFlow(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var stage by rememberSaveable { mutableIntStateOf(0) }
     // The welcome screen is the first in-app screen; do not show a separate
