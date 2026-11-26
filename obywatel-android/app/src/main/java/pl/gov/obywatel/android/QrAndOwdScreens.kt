@@ -391,7 +391,7 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
 
 
 @Composable
-private fun DocumentDetailsScreen(
+internal fun DocumentDetailsScreen(
     documentId: String,
     onBack: () -> Unit
 ) {
