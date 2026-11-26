@@ -219,12 +219,9 @@ private fun markdownToDisplayText(markdown: String): String =
                 .replace(Regex("^#{1,6}\\s+"), "")
                 .replace(Regex("^>\\s?"), "")
                 .replace(Regex("^[-*]\\s+"), "• ")
-                .replace(Regex("\\*\\*(.*?)\\*\\*"), "\\$1")
-                .replace(Regex("(?<!\\*)\\*([^*]+)\\*(?!\\*)"), "\\$1")
-                .replace(Regex("\\[([^]]+)]\\(([^)]+)\\)"), "\\$1 (\\$2)")
                 .takeUnless { it.trim() == "---" }
                 .orEmpty()
         }
         .joinToString("\n")
-        .replace(Regex("\\n{3,}"), "\n\n")
+        .replace(Regex("\n{3,}"), "\n\n")
         .trim()
