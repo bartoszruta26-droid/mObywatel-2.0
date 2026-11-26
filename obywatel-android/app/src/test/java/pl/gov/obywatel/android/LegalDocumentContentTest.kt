@@ -15,6 +15,13 @@ class LegalDocumentContentTest {
     }
 
     @Test
+    fun entrustmentDocumentContainsFullSourceTerms() {
+        assertTrue(ENTRUSTMENT_DOCUMENT_TEXT.contains("Podmiot powierzający środki"))
+        assertTrue(ENTRUSTMENT_DOCUMENT_TEXT.contains("rachunek"))
+        assertTrue(ENTRUSTMENT_DOCUMENT_TEXT.contains("rozliczenie"))
+    }
+
+    @Test
     fun detailedPfcModelPreservesFullLegalAnalysis() {
         assertTrue(DETAILED_PFC_MODEL_TEXT.length > 100_000)
         assertTrue(DETAILED_PFC_MODEL_TEXT.contains("Art. 29 ust. 3"))
