@@ -170,6 +170,7 @@ internal fun DocumentsWalletScreen(
     defaultDocumentIcon: String,
     documentIconOverrides: Map<String, String>,
     onOpenDetails: (String) -> Unit,
+    onEditDocument: (String) -> Unit,
     onOpenService: (String) -> Unit
 ) {
     val context = LocalContext.current
@@ -240,7 +241,7 @@ internal fun DocumentsWalletScreen(
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
         Text("Dokumenty", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(
-            "Wybierz dokument. Grupy porządkują katalog, a każda pozycja otwiera bezpośrednio formularz edycji. Podgląd i edycja graficzna są dostępne w formularzu.",
+            "Wybierz pozycję, aby otworzyć podgląd dokumentu. Polecenie „Edytuj” otwiera powiązany formularz; obie czynności dotyczą tego samego identyfikatora dokumentu.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
         )
         categories.forEach { category ->
@@ -290,7 +291,7 @@ internal fun DocumentsWalletScreen(
                                             style = MaterialTheme.typography.bodyMedium)
                                         Text(document.subtitle, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodySmall)
                                     }
-                                    Text("Edytuj  ›", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                    TextButton(onClick = { onEditDocument(document.id) }) { Text("Edytuj") }
                                 }
                             }
                         }
@@ -340,6 +341,10 @@ internal fun DocumentsWalletScreen(
                                                 .size(if (documentCardStyle == "small") 22.dp else 26.dp),
                                             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
                                         )
+                                        TextButton(
+                                            onClick = { onEditDocument(document.id) },
+                                            modifier = Modifier.align(Alignment.BottomEnd).padding(2.dp)
+                                        ) { Text("Edytuj") }
                                     }
                                 }
                             }
