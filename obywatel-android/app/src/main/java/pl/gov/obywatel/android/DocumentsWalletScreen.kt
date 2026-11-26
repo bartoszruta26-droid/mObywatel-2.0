@@ -188,7 +188,7 @@ internal fun DocumentsWalletScreen(
 
     val catalogGroupOrder = (documentGroups + "Inne dokumenty").distinct()
     val documents = documentDisplayOptions.distinctBy { it.first }.map { (id, title, _) ->
-        val group = documentGroupAssignments[id] ?: documentVisibilityGroup(id)
+        val group = resolveDocumentGroup(id, documentGroupAssignments)
         val service = when {
             id == "financial_service" -> "Służba finansowa"
             id == "bank_accounts" || id == "rod_bank_accounts" || id == "entity_bank_accounts" -> "Konta bankowe"
