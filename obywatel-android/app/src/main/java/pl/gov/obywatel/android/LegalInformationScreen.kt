@@ -59,7 +59,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
 
     val displayedText = when {
         showCompanyFinancingAgreement -> markdownToDisplayText(COMPANY_FINANCING_AGREEMENT_TEXT)
-        showEntrustmentDocument -> ENTRUSTMENT_DOCUMENT_TEXT
+        showEntrustmentDocument -> markdownToDisplayText(ENTRUSTMENT_DOCUMENT_TEXT)
         showDetailedPfcModel -> DETAILED_PFC_MODEL_TEXT
         showFundRegulation -> markdownToDisplayText(FUND_REGULATION_MARKDOWN)
         else -> LEGAL_INFORMATION_TEXT
