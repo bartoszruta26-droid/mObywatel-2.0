@@ -15,6 +15,14 @@ class LegalDocumentContentTest {
     }
 
     @Test
+    fun detailedPfcModelPreservesFullLegalAnalysis() {
+        assertTrue(DETAILED_PFC_MODEL_TEXT.length > 100_000)
+        assertTrue(DETAILED_PFC_MODEL_TEXT.contains("Art. 29 ust. 3"))
+        assertTrue(DETAILED_PFC_MODEL_TEXT.contains("art. 43 ustawy o finansach publicznych"))
+        assertTrue(DETAILED_PFC_MODEL_TEXT.contains("Art. 104"))
+    }
+
+    @Test
     fun companyAgreementContainsPaidModelAndAllThreeAnnexes() {
         assertTrue(COMPANY_FINANCING_AGREEMENT_TEXT.contains("Nie jest to darowizna"))
         assertTrue(COMPANY_FINANCING_AGREEMENT_TEXT.contains("§ 9. Wynagrodzenie Dyspozytora i rozliczenia podatkowe"))
