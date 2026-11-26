@@ -1,0 +1,47 @@
+// SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+// SPDX-License-Identifier: CC0-1.0
+
+package pl.gov.obywatel.android
+
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.MultiFormatWriter
+
+@Composable
+internal fun LoyaltyGeneratedCodes(barcodeValue: String, qrValue: String) {
+    val barcode = remember(barcodeValue) { generateLoyaltyCodeBitmap(barcodeValue, BarcodeFormat.CODE_128) }
+    val qr = remember(qrValue) { generateLoyaltyCodeBitmap(qrValue, BarcodeFormat.QR_CODE) }
+    if (barcode != null || qr != null) {
+        androidx.compose.material3.Text("Podgląd kodów", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+        if (barcode != null) Image(barcode.asImageBitmap(), contentDescription = "Kod kreskowy karty lojalnościowej",
+            modifier = Modifier.fillMaxWidth().height(64.dp), contentScale = ContentScale.Fit)
+        if (qr != null) Image(qr.asImageBitmap(), contentDescription = "Kod QR karty lojalnościowej",
+            modifier = Modifier.size(170.dp), contentScale = ContentScale.Fit)
+    }
+}
+
+internal fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bitmap? {
+    if (value.isBlank()) return null
+    return runCatching {
+        val width = if (format == BarcodeFormat.QR_CODE) 480 else 900
+        val height = if (format == BarcodeFormat.QR_CODE) 480 else 220
+        val matrix = MultiFormatWriter().encode(value, format, width, height,
+            mapOf(EncodeHintType.MARGIN to 2, EncodeHintType.CHARACTER_SET to "UTF-8"))
+        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+            for (y in 0 until height) for (x in 0 until width) {
+                bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+            }
+        }
+    }.getOrNull()
+}
