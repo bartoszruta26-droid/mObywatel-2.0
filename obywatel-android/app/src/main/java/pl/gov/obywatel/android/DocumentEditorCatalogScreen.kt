@@ -56,7 +56,7 @@ internal fun DocumentEditorCatalogScreen(
         Text("Dokumenty są uporządkowane według aktualnych przypisań grup. Podgląd i edycja korzystają z tego samego identyfikatora dokumentu.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         documentGroups.forEach { group ->
-            val entries = documents.filter { (id, _, _) -> (documentGroupAssignments[id] ?: documentVisibilityGroup(id)) == group }
+            val entries = documents.filter { (id, _, _) -> (resolveDocumentGroup(id, documentGroupAssignments)) == group }
                 .sortedBy { it.second.lowercase(java.util.Locale("pl", "PL")) }
             if (entries.isNotEmpty()) {
                 val expanded = group in expandedGroups
