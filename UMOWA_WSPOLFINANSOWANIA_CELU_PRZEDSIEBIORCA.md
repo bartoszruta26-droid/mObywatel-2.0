@@ -192,7 +192,7 @@ Tabela do wypełnienia przed podpisaniem:
 ## Lista kontrolna przed podpisaniem
 
 - [ ] Ustalić, czy Dyspozytor działa prywatnie, na podstawie umowy cywilnoprawnej, czy w ramach działalności gospodarczej.
-- [ ] Ustalić, czy finansowanie jest wynagrodzeniem, zwrotem kosztów, zaliczką, czy darowizną; nie łączyć różnych tytułów w jednej nieopisanej wpłacie.
+- [ ] Potwierdzić odpłatny tytuł każdej płatności oraz rozdzielić wynagrodzenie Dyspozytora od zaliczek lub zwrotów uzgodnionych kosztów wykonania Umowy; nie kwalifikować płatności z tej Umowy jako darowizny.
 - [ ] Wypełnić Załącznik nr 1 konkretnymi faktami dotyczącymi działalności Finansującego i jego źródła przychodów.
 - [ ] Ustalić rzeczywisty zakres świadczeń, stawki, mierniki i dowody wykonania.
 - [ ] Sprawdzić obowiązki PIT/CIT, VAT, składkowe i ewentualne obowiązki płatnika.
