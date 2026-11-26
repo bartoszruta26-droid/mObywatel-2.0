@@ -5,7 +5,6 @@ package pl.gov.obywatel.android
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -1056,146 +1055,9 @@ Korekta precyzująca: art. 11a ustawy o finansach publicznych jest przepisem szc
 
 """
 
-private const val ENTRUSTMENT_DOCUMENT_TEXT = """
-WZÓR DOKUMENTU POWIERZENIA ŚRODKÓW Dyspozytorowi CELU SŁUŻBY NARODOWEJ
 
-STATUS I ZASTOSOWANIE
-Wzór wymaga dostosowania do ustawy tworzącej właściwy państwowy fundusz celowy (PFC), regulaminu Funduszu, trybu przyznania środków i umowy z realizatorem. Samo wypełnienie lub podpisanie dokumentu nie tworzy dotacji, nie przenosi kompetencji ustawowego dysponenta Funduszu i nie nadaje prawa do rachunku Funduszu.
 
-1. STRONY I PODSTAWA POWIERZENIA
-Podmiot powierzający: ................................................................
-Forma prawna / status: ............................................................
-Adres / siedziba: ..................................................................
-Reprezentacja i umocowanie: ......................................................
-Dyspozytor Celu: ..................................................................
-Adres / siedziba: ..................................................................
-Identyfikator (jeżeli wymagany): .................................................
-Regulamin projektu PFC, wersja/data: .............................................
-Ustawa i przepisy właściwe dla Funduszu: .........................................
-Decyzja / umowa dotacji / umowa powierzenia / inny akt finansowania: .............
-Zatwierdzony opis Celu i plan rzeczowo-finansowy: ................................
 
-2. OZNACZENIE CELU SŁUŻBY NARODOWEJ
-Nazwa Celu: ......................................................................
-Opis potrzeby publicznej i uzasadnienie:
-..................................................................................
-Beneficjenci i kryteria dostępu: .................................................
-Zakres działań i oczekiwane rezultaty: ...........................................
-Mierniki wykonania: ................................................................
-Miejsce realizacji: ..............................................................
-Cel musi pozostawać zgodny z regulaminem projektu PFC, ustawą tworzącą Fundusz, zatwierdzonym planem finansowym i dokumentem przyznania środków.
-
-3. POWIERZENIE I KWOTA
-Podmiot powierzający powierza Dyspozytorowi realizację oznaczonego Celu w granicach właściwej podstawy prawnej, umowy i zatwierdzonego planu.
-Kwota: ........................ zł (słownie: ....................................)
-Źródło: [ ] dotacja PFC  [ ] darowizny celowe  [ ] środki własne  [ ] inne
-Harmonogram przekazania: ........................................................
-Okres wykorzystania: od ........................ do ........................
-Termin rozliczenia: ..............................................................
-Każde źródło zachowuje odrębny tytuł prawny, warunki wykorzystania i ewidencję. Wpis w aplikacji jest ewidencyjny i nie zastępuje decyzji, umowy ani czynności wymaganych prawem.
-
-4. WYODRĘBNIONY RACHUNEK PŁATNICZY
-Posiadacz rachunku: ................................................................
-Bank / dostawca usług płatniczych: ..............................................
-Numer rachunku: ..................................................................
-Waluta: ............  Data potwierdzenia: ......................................
-Dokument potwierdzający rachunek: ................................................
-
-Rachunek jest rachunkiem płatniczym odbiorcy / realizatora, o ile taki sposób przekazania środków dopuszczają przepisy i umowa. Nie jest rachunkiem bankowym PFC ani jego subkontem i nie zmienia ustawowego dysponenta rachunku Funduszu. Uprawnienia do rachunku wynikają z umocowania udzielonego przez jego posiadacza i zaakceptowanego przez dostawcę usług płatniczych.
-Dla Celu prowadzi się odrębną ewidencję analityczną wpływów, wydatków, dokumentów, źródeł finansowania, zobowiązań, zwrotów i salda. Ewidencja nie jest rachunkiem płatniczym.
-
-5. ZAKRES UPRAWNIEŃ Dyspozytora
-W granicach Celu, kwoty, harmonogramu, planu, umowy i prawa Dyspozytor może:
-- koordynować merytoryczną realizację Celu;
-- organizować działania i ustalać kolejność czynności;
-- podejmować decyzje wykonawcze o sposobie realizacji zadania;
-- zatwierdzać wydatki i zlecać płatności tylko w zakresie skutecznego umocowania;
-- dobierać wykonawców zgodnie z właściwymi przepisami i zasadami konkurencyjności;
-- prowadzić dokumentację, monitorować rezultaty i składać raporty;
-- wnioskować o zmiany planu, uzyskując uprzednią zgodę, jeżeli jest wymagana.
-Decyzje wymagające zgody podmiotu powierzającego:
-..................................................................................
-Dokument nie nadaje Dyspozytorowi statusu dysponenta PFC ani nie przenosi kompetencji organu wskazanego w ustawie.
-
-6. OBOWIĄZKI I ODPOWIEDZIALNOŚĆ
-Dyspozytor wykorzystuje środki zgodnie z przeznaczeniem i terminem, przestrzega prawa i regulaminu, prowadzi rzetelną dokumentację, zapobiega podwójnemu finansowaniu wydatków, ujawnia konflikt interesów, chroni dane osobowe, informuje o ryzyku i nieprawidłowościach, zwraca środki na zasadach określonych prawem i umową oraz udostępnia dokumenty uprawnionym kontrolującym.
-Dokument nie wyłącza ustawowej odpowiedzialności innych podmiotów ani osób.
-
-7. JAWNOŚĆ, KONTROLA I SPRAWOZDAWCZOŚĆ
-Dyspozytor prowadzi zestawienie wpływów według źródeł, rejestr wydatków z dokumentami źródłowymi, raporty postępu, zestawienie rezultatów i końcowe rozliczenie rzeczowo-finansowe.
-Częstotliwość raportowania: ......................................................
-Podmiot przyjmujący raporty: ....................................................
-Tryb kontroli: ..................................................................
-Publikacja informacji uwzględnia jawność finansów publicznych, ochronę danych i tajemnic prawnie chronionych.
-
-8. OKRES, ZMIANY I ZAKOŃCZENIE
-Powierzenie obowiązuje od ........................ do ........................
-Zmiana Celu, kwoty, terminu lub istotnych warunków wymaga formy i zgód określonych w prawie i dokumencie finansowania. Powierzenie kończy się po wykonaniu Celu, zatwierdzeniu rozliczenia oraz rozliczeniu lub zwrocie pozostałych środków.
-
-9. ZAŁĄCZNIKI
-1. Dokument przyznania środków / umowa finansowania.
-2. Opis Celu i zatwierdzony plan rzeczowo-finansowy.
-3. Potwierdzenie danych rachunku.
-4. Pełnomocnictwo lub upoważnienie, jeżeli wymagane.
-5. Zasady ewidencji, kontroli i raportowania.
-6. Oświadczenie o konflikcie interesów.
-
-10. PODPISY
-Podmiot powierzający / osoba uprawniona:
-Imię, nazwisko, funkcja, podstawa umocowania, data i podpis:
-..................................................................................
-Dyspozytor Celu — imię, nazwisko, data i podpis:
-..................................................................................
-Potwierdzenie umocowania do rachunku przez posiadacza rachunku / bank, jeżeli wymagane:
-..................................................................................
-
-INFORMACJA
-To projekt dokumentu prywatnego lub umownego, a nie decyzja o dotacji, promesa, polecenie przelewu, pełnomocnictwo bankowe ani urzędowe potwierdzenie salda. Przed użyciem należy ustalić stronę umowy, prawnego odbiorcę środków, posiadacza rachunku oraz osobę uprawnioną do zatwierdzania płatności.
-""";
-
-private const val COMPANY_FINANCING_AGREEMENT_TEXT = """
-UMOWA ODPŁATNEGO WSPÓŁFINANSOWANIA I REALIZACJI DZIAŁAŃ NA RZECZ CELU
-
-CHARAKTER DOKUMENTU
-Jest to wzór prywatnej umowy pomiędzy Finansującym a Dyspozytorem / Realizatorem, który został wcześniej ustanowiony w ramach Projektu na podstawie jego Regulaminu. Umowa nie ustanawia Dyspozytora, nie nadaje mandatu publicznoprawnego i nie przenosi kompetencji ustawowego dysponenta państwowego funduszu celowego (PFC).
-
-ODPŁATNY CHARAKTER WSPÓŁPRACY
-Finansowanie na podstawie Umowy ma charakter odpłatny. Finansujący płaci za rzeczywiście wykonywane, określone i dokumentowane czynności Dyspozytora oraz uzgodnione, niezbędne koszty wykonania tych czynności. Nie jest to darowizna. Każda pozycja finansowania musi mieć określony tytuł, zakres, sposób kalkulacji, okres i dowód rozliczenia. Sama nazwa przelewu ani samo postanowienie umowy nie zastępują faktycznego wykonania świadczenia.
-
-PRZEDMIOT I ZAKRES DZIAŁAŃ
-Przedmiotem współpracy jest organizowanie, koordynowanie i wykonywanie działań na rzecz Celu obejmującego profilaktykę, higienę, pielęgnację i rehabilitację osób długotrwale chorych, osób z niepełnosprawnościami oraz osób w podeszłym wieku. Działania mogą wspierać także samodzielność, uczestnictwo społeczne, aktywność zawodową i sytuację ekonomiczną beneficjentów. Czynności wymagające kwalifikacji lub uprawnień wykonują osoby spełniające wymagania prawa.
-
-UZASADNIENIE GOSPODARCZE FINANSUJĄCEGO
-Finansujący opisuje własną działalność, źródła przychodów, grupę osób pozostających w rzeczywistym związku z jego działalnością oraz konkretny mechanizm, przez który finansowane działania mogą służyć osiąganiu przychodów albo zachowaniu lub zabezpieczeniu ich źródła. Ogólne twierdzenie, że poprawa zdrowia dowolnej osoby automatycznie zwiększa przychody przedsiębiorcy, nie jest wystarczającym uzasadnieniem. Uzasadnienie powinno opierać się na faktach, racjonalnej kalkulacji i dokumentach.
-
-WYNAGRODZENIE I KOSZTY
-Umowa rozdziela:
-- wynagrodzenie Dyspozytora za rzeczywiste czynności;
-- koszty bezpośrednie działań;
-- koszty organizacyjne niezbędne do wykonania Umowy;
-- materiały, wyposażenie i usługi zewnętrzne;
-- monitoring, dokumentowanie i sprawozdawczość.
-Plan finansowania określa kwoty kwartalne i łączne, jednostki rozliczeniowe, stawki, sposób kalkulacji, dokumenty księgowe oraz zasady rozliczania zaliczek i niewykorzystanych środków.
-
-TRZY ZAŁĄCZNIKI WYMAGANE DO UZUPEŁNIENIA
-1. Uzasadnienie gospodarcze Finansującego — dane przedsiębiorcy, źródła przychodów, grupa powiązana z działalnością, mechanizm gospodarczy, dowody i kalkulacja racjonalności wydatku.
-2. Plan działań i mierników — konkretne czynności, harmonogram, liczby, wykonawcy, mierniki produktu i rezultatu, zasady dokumentowania oraz ochrony danych.
-3. Plan finansowania i rozliczeń — wynagrodzenie, koszty bezpośrednie i organizacyjne, stawki, kwoty kwartalne i roczne, zaliczki, dokumenty rozliczeniowe i rozdzielenie źródeł finansowania.
-
-RAPORTOWANIE I KONTROLA
-Dyspozytor dokumentuje daty, zakres i liczbę wykonanych czynności, nakład pracy, koszty, mierniki oraz rezultaty. Sporządza raport kwartalny i roczny. Finansujący otrzymuje informacje konieczne do kontroli wykonania Umowy, z poszanowaniem prywatności beneficjentów. Dane o zdrowiu nie powinny być przekazywane Finansującemu bez odrębnej podstawy prawnej i niezbędności.
-
-ROZDZIELENIE FINANSOWANIA PRYWATNEGO I PUBLICZNEGO
-Projekt może korzystać z finansowania prywatnego oraz — jeżeli zostanie prawidłowo przyznane — publicznego. Źródła prowadzi się w odrębnej ewidencji. Ten sam koszt nie może być rozliczony dwukrotnie. Środki prywatne przekazane na Cel nie stają się środkami PFC wyłącznie z powodu zbieżności przeznaczenia.
-
-INFORMACJA PODATKOWA
-Odpłatny charakter Umowy nie oznacza automatycznego uznania całej płatności za koszt uzyskania przychodów. Finansujący ocenia spełnienie przesłanek właściwej ustawy podatkowej, w szczególności rzeczywiste poniesienie wydatku, jego związek z działalnością i źródłem przychodów, prawidłowe udokumentowanie oraz brak ustawowego wyłączenia. Sposób rozliczenia zależy również od statusu Dyspozytora, podstawy prawnej świadczeń, VAT, PIT lub CIT oraz ewentualnych składek i obowiązków płatnika. Umowa nie gwarantuje wyniku kontroli podatkowej.
-
-STATUS W APLIKACJI
-Wpis i podgląd dokumentu w aplikacji służą przygotowaniu oraz ewidencji danych. Nie zastępują zawarcia umowy, podpisów stron, faktury, rachunku, dowodu księgowego ani wymaganych aktów publicznoprawnych. Dokument sporządzony w aplikacji nie staje się dokumentem urzędowym przez samo zapisanie lub wydrukowanie.
-
-Przed podpisaniem należy uzupełnić wszystkie dane, uzgodnić trzy załączniki, wybrać prawidłową podstawę prawną odpłatnych świadczeń oraz zweryfikować skutki podatkowe i składkowe dla konkretnego stanu faktycznego.
-""";
 
 @Composable
 fun LegalInformationScreen(onBack: () -> Unit) {
