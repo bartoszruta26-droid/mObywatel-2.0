@@ -24,7 +24,7 @@ class LegalDocumentContentTest {
     @Test
     fun detailedPfcModelPreservesFullLegalAnalysis() {
         assertTrue(DETAILED_PFC_MODEL_TEXT.length > 100_000)
-        assertTrue(DETAILED_PFC_MODEL_TEXT.contains("Art. 29 ust. 3"))
+        assertTrue(DETAILED_PFC_MODEL_TEXT.contains("art. 29 ust. 3"))
         assertTrue(DETAILED_PFC_MODEL_TEXT.contains("art. 43 ustawy o finansach publicznych"))
         assertTrue(DETAILED_PFC_MODEL_TEXT.contains("Art. 104"))
     }
