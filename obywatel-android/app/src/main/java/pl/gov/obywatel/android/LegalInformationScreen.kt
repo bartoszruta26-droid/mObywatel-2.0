@@ -46,24 +46,28 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun LegalInformationScreen(onBack: () -> Unit) {
     var showFundRegulation by rememberSaveable { mutableStateOf(false) }
+    var showDetailedPfcModel by rememberSaveable { mutableStateOf(false) }
     var showEntrustmentDocument by rememberSaveable { mutableStateOf(false) }
     var showCompanyFinancingAgreement by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = showFundRegulation || showEntrustmentDocument || showCompanyFinancingAgreement) {
+    BackHandler(enabled = showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement) {
         showFundRegulation = false
+        showDetailedPfcModel = false
         showEntrustmentDocument = false
         showCompanyFinancingAgreement = false
     }
-    BackHandler(enabled = !showFundRegulation && !showEntrustmentDocument && !showCompanyFinancingAgreement) { onBack() }
+    BackHandler(enabled = !showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement) { onBack() }
 
     val displayedText = when {
         showCompanyFinancingAgreement -> markdownToDisplayText(COMPANY_FINANCING_AGREEMENT_TEXT)
         showEntrustmentDocument -> ENTRUSTMENT_DOCUMENT_TEXT
+        showDetailedPfcModel -> DETAILED_PFC_MODEL_TEXT
         showFundRegulation -> markdownToDisplayText(FUND_REGULATION_MARKDOWN)
         else -> LEGAL_INFORMATION_TEXT
     }
     val pageTitle = when {
         showCompanyFinancingAgreement -> "Umowa odpłatnego współfinansowania Celu"
         showEntrustmentDocument -> "Powierzenie środków Dyspozytorowi Celu"
+        showDetailedPfcModel -> "Szczegółowy model prawny Celu"
         showFundRegulation -> "Regulamin dotacji celowych państwowego funduszu celowego"
         else -> "Informacje prawne"
     }
@@ -83,8 +87,9 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(onClick = {
-                    if (showFundRegulation || showEntrustmentDocument || showCompanyFinancingAgreement) {
+                    if (showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement) {
                         showFundRegulation = false
+                        showDetailedPfcModel = false
                         showEntrustmentDocument = false
                         showCompanyFinancingAgreement = false
                     } else onBack()
@@ -98,7 +103,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                     modifier = Modifier.weight(1f).semantics { heading() }
                 )
             }
-            if (!showFundRegulation && !showEntrustmentDocument && !showCompanyFinancingAgreement) {
+            if (!showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement) {
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { showFundRegulation = true },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
@@ -126,6 +131,24 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                             )
                         }
                         Icon(Icons.Filled.Description, contentDescription = "Otwórz regulamin")
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable { showDetailedPfcModel = true },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(Icons.Filled.Description, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(Modifier.weight(1f)) {
+                            Text("Szczegółowy model prawny Celu", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Rozwinięcie podstaw prawnych, modelu finansowania i odpowiedzialności Dyspozytora", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Icon(Icons.Filled.Description, contentDescription = "Otwórz szczegółowy model")
                     }
                 }
                 Spacer(Modifier.height(2.dp))
