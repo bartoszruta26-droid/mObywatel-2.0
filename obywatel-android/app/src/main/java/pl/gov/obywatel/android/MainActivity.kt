@@ -2219,7 +2219,7 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
 }
 
 @Composable
-private fun CivicIllustrationBanner(imageRes: Int, description: String) {
+internal fun CivicIllustrationBanner(imageRes: Int, description: String) {
     Image(
         painter = painterResource(imageRes),
         contentDescription = description,
