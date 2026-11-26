@@ -106,7 +106,7 @@ internal fun DocumentVisibilitySettingsScreen(
         }
         val groupedVisibilityDocuments = documentDisplayOptions
             .distinctBy { it.first }
-            .groupBy { (id, _, _) -> documentGroupAssignments[id] ?: documentVisibilityGroup(id) }
+            .groupBy { (id, _, _) -> resolveDocumentGroup(id, documentGroupAssignments) }
         val visibilityGroupOrder = documentGroups
         visibilityGroupOrder.forEach { groupTitle ->
             val groupDocuments = groupedVisibilityDocuments[groupTitle].orEmpty()
