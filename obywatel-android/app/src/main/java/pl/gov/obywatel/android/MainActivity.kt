@@ -1794,8 +1794,7 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 }
 
-@Composable
-private fun DisabilitySettingsScreen(onBack: () -> Unit, onEditGraphic: () -> Unit = {}) {
+) {
     val context = LocalContext.current
     val fields = remember {
         mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
