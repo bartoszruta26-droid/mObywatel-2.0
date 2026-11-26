@@ -32,6 +32,9 @@ private val legacyDocumentGroupNames = mapOf(
 internal fun migrateDocumentGroupName(name: String): String =
     legacyDocumentGroupNames[name] ?: name
 
+internal fun resolveDocumentGroup(documentId: String, assignments: Map<String, String>): String =
+    assignments[documentId]?.takeIf { it.isNotBlank() } ?: documentVisibilityGroup(documentId)
+
 internal fun migrateDocumentGroupAssignment(documentId: String, group: String): String = when {
     documentId == "payment_account_foundation" && group == "Służba gospodarcza" -> "Służba fundacyjna"
     documentId == "payment_account_association" && group == "Służba gospodarcza" -> "Służba stowarzyszeniowa"
