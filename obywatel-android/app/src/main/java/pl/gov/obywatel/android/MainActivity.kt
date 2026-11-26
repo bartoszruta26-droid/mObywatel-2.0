@@ -363,6 +363,7 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         }
     }
     var documentPlacements by remember(context) { mutableStateOf(loadDocumentPlacements(context)) }
+    var documentGroupConfiguration by remember(context) { mutableStateOf(loadDocumentGroupConfiguration(context)) }
     var documentCardStyle by remember(context) { mutableStateOf(loadDocumentCardStyle(context)) }
     var defaultDocumentIcon by remember(context) { mutableStateOf(loadDefaultDocumentIcon(context)) }
     var documentIconOverrides by remember(context) { mutableStateOf(loadDocumentIconOverrides(context)) }
@@ -717,6 +718,13 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                             defaultDocumentIcon = selected
                         },
                         documentIconOverrides = documentIconOverrides,
+                        documentGroups = documentGroupConfiguration.groups,
+                        documentGroupAssignments = documentGroupConfiguration.assignments,
+                        onDocumentGroupAssignmentsChange = { updated ->
+                            val next = documentGroupConfiguration.copy(assignments = updated)
+                            saveDocumentGroupConfiguration(context, next)
+                            documentGroupConfiguration = loadDocumentGroupConfiguration(context)
+                        },
                         onDocumentIconOverridesChange = { updated ->
                             saveDocumentIconOverrides(context, updated)
                             documentIconOverrides = updated
@@ -724,6 +732,8 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onBack = { showDocumentVisibilitySettings = false; showSettingsMenu = true }
                     )
                     showDocumentEditorCatalog -> DocumentEditorCatalogScreen(
+                        documentGroups = documentGroupConfiguration.groups,
+                        documentGroupAssignments = documentGroupConfiguration.assignments,
                         onOpenDocument = ::openSettingsDocumentEditor,
                         onBack = { showDocumentEditorCatalog = false; showSettingsMenu = true }
                     )
@@ -849,6 +859,8 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         documentCardStyle = documentCardStyle,
                         defaultDocumentIcon = defaultDocumentIcon,
                         documentIconOverrides = documentIconOverrides,
+                        documentGroups = documentGroupConfiguration.groups,
+                        documentGroupAssignments = documentGroupConfiguration.assignments,
                         onOpenDetails = { openDocumentCard(it) },
                         onEditDocument = { openSettingsDocumentEditor(it) },
                         onOpenService = { title ->
