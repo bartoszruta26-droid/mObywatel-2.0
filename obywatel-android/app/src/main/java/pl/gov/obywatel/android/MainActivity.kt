@@ -967,7 +967,7 @@ internal val documentVisibilityGroupOrder = listOf(
     "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
-private fun documentGroupIconResource(group: String): Int = when (group) {
+internal fun documentGroupIconResource(group: String): Int = when (group) {
     "Służba osobista" -> R.drawable.lib_ic_account
     "Służba rodowa" -> R.drawable.lib_ic_group
     "Służba cywilna", "Służba państwowa" -> R.drawable.tile_ic_civil_outline
@@ -1013,7 +1013,7 @@ private fun saveDocumentCardStyle(context: Context, style: String) {
 
 private const val DOCUMENT_DEFAULT_ICON_KEY = "default_document_icon"
 private const val DOCUMENT_ICON_OVERRIDE_PREFIX = "document_icon_"
-private val documentIconChoices = listOf(
+internal val documentIconChoices = listOf(
     "lib_ic_document" to "Dokument",
     "lib_ic_account" to "Osoba",
     "lib_ic_credit_card" to "Karta",
@@ -2564,180 +2564,6 @@ private fun ServiceCard(
 }
 
 
-
-@Composable
-private fun DocumentVisibilitySettingsScreen(
-    documentPlacements: Map<String, String>,
-    onDocumentPlacementsChange: (Map<String, String>) -> Unit,
-    documentCardStyle: String,
-    onDocumentCardStyleChange: (String) -> Unit,
-    defaultDocumentIcon: String,
-    onDefaultDocumentIconChange: (String) -> Unit,
-    documentIconOverrides: Map<String, String>,
-    onDocumentIconOverridesChange: (Map<String, String>) -> Unit,
-    onBack: () -> Unit
-) {
-    var defaultIconMenu by remember { mutableStateOf(false) }
-    var expandedDocumentIcon by remember { mutableStateOf<String?>(null) }
-    var expandedVisibilityGroups by remember { mutableStateOf(emptySet<String>()) }
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Text("‹  Powrót do ustawień", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Widoczność dokumentów", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold)
-        Text("Dla każdego dokumentu wybierz miejsce wyświetlania. Ukrycie dokumentu nie usuwa jego danych ani załączników.",
-            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-        Text("Wygląd kafelków w oknie Dokumenty", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-        Text("Wybierz sposób prezentacji dokumentów.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        Text("Domyślna ikona dokumentów", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-        Text("Ustawienie obejmuje wszystkie dokumenty. Ikona indywidualna wybrana niżej ma pierwszeństwo.", color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall)
-        Box {
-            OutlinedButton(onClick = { defaultIconMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(if (defaultDocumentIcon == "automatic") "Automatycznie — ikona przypisana do dokumentu"
-                    else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second ?: "Wybierz ikonę")
-            }
-            DropdownMenu(expanded = defaultIconMenu, onDismissRequest = { defaultIconMenu = false }) {
-                DropdownMenuItem(text = { Text("Automatycznie — ikona przypisana do dokumentu") }, onClick = {
-                    onDefaultDocumentIconChange("automatic"); defaultIconMenu = false
-                })
-                documentIconChoices.forEach { (resource, label) ->
-                    DropdownMenuItem(text = { Text(label) }, onClick = {
-                        onDefaultDocumentIconChange(resource); defaultIconMenu = false
-                    })
-                }
-            }
-        }
-        listOf("large" to "Duże kafelki", "small" to "Małe kafelki", "list" to "Kafelki listy").forEach { (value, label) ->
-            Row(
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                    .background(if (documentCardStyle == value) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-                    .clickable { onDocumentCardStyleChange(value) }
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(selected = documentCardStyle == value, onClick = { onDocumentCardStyleChange(value) })
-                Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
-            }
-        }
-        val groupedVisibilityDocuments = documentDisplayOptions
-            .distinctBy { it.first }
-            .groupBy { (id, _, _) -> documentVisibilityGroup(id) }
-        val visibilityGroupOrder = documentVisibilityGroupOrder
-        visibilityGroupOrder.forEach { groupTitle ->
-            val groupDocuments = groupedVisibilityDocuments[groupTitle].orEmpty()
-            if (groupDocuments.isEmpty()) return@forEach
-            val expanded = groupTitle in expandedVisibilityGroups
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                            .clickable {
-                                expandedVisibilityGroups = if (expanded) expandedVisibilityGroups - groupTitle
-                                else expandedVisibilityGroups + groupTitle
-                            }
-                            .padding(horizontal = 8.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(documentGroupIconResource(groupTitle)),
-                            contentDescription = "Ikona grupy: $groupTitle",
-                            modifier = Modifier.size(34.dp)
-                        )
-                        Text(groupTitle, color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                        Text("${groupDocuments.size} dokumentów", color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelMedium)
-                        Text(if (expanded) "⌃" else "⌄", color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.titleLarge)
-                    }
-                    if (expanded) {
-                        groupDocuments.forEach { (id, title, iconRes) ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                                    .padding(horizontal = 8.dp, vertical = 5.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                Image(
-                                    painter = painterResource(resolveDocumentIconResource(
-                                        LocalContext.current, id, defaultDocumentIcon, documentIconOverrides
-                                    )),
-                                    contentDescription = "Ikona: $title",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                                Text(
-                                    title,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Medium,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Box {
-                                    TextButton(
-                                        onClick = { expandedDocumentIcon = if (expandedDocumentIcon == id) null else id },
-                                        modifier = Modifier.testTag("document-icon-selector-$id")
-                                    ) {
-                                        val selectedIconLabel = documentIconChoices.firstOrNull {
-                                            it.first == documentIconOverrides[id]
-                                        }?.second
-                                        Text(selectedIconLabel ?: "Ikona", style = MaterialTheme.typography.labelSmall)
-                                    }
-                                    DropdownMenu(
-                                        expanded = expandedDocumentIcon == id,
-                                        onDismissRequest = { expandedDocumentIcon = null }
-                                    ) {
-                                        DropdownMenuItem(
-                                            text = { Text("Automatycznie — ikona przypisana do dokumentu") },
-                                            onClick = {
-                                                onDocumentIconOverridesChange(documentIconOverrides - id)
-                                                expandedDocumentIcon = null
-                                            }
-                                        )
-                                        documentIconChoices.forEach { (resource, label) ->
-                                            DropdownMenuItem(
-                                                text = { Text(label) },
-                                                onClick = {
-                                                    onDocumentIconOverridesChange(documentIconOverrides + (id to resource))
-                                                    expandedDocumentIcon = null
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                                listOf("dashboard" to "Dokument", "other" to "Inny dokument", "hidden" to "Ukryj").forEach { (value, label) ->
-                                    Row(
-                                        modifier = Modifier.testTag("document-placement-$id-$value")
-                                            .clickable { onDocumentPlacementsChange(documentPlacements + (id to value)) },
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(0.dp)
-                                    ) {
-                                        RadioButton(
-                                            selected = documentPlacements[id] == value,
-                                            onClick = { onDocumentPlacementsChange(documentPlacements + (id to value)) },
-                                            modifier = Modifier.size(34.dp)
-                                        )
-                                        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            style = MaterialTheme.typography.labelSmall)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun DocumentEditorCatalogScreen(
