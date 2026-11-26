@@ -46,22 +46,26 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun LegalInformationScreen(onBack: () -> Unit) {
     var showFundRegulation by rememberSaveable { mutableStateOf(false) }
+    var showPfcProjectDocument by rememberSaveable { mutableStateOf(false) }
     var showEntrustmentDocument by rememberSaveable { mutableStateOf(false) }
     var showCompanyFinancingAgreement by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = showFundRegulation || showEntrustmentDocument || showCompanyFinancingAgreement) {
+    BackHandler(enabled = showFundRegulation || showPfcProjectDocument || showEntrustmentDocument || showCompanyFinancingAgreement) {
         showFundRegulation = false
+        showPfcProjectDocument = false
         showEntrustmentDocument = false
         showCompanyFinancingAgreement = false
     }
     BackHandler(enabled = !showFundRegulation && !showEntrustmentDocument && !showCompanyFinancingAgreement) { onBack() }
 
     val displayedText = when {
+        showPfcProjectDocument -> markdownToDisplayText(PFC_PROJECT_DOCUMENT_TEXT)
         showCompanyFinancingAgreement -> COMPANY_FINANCING_AGREEMENT_TEXT
         showEntrustmentDocument -> ENTRUSTMENT_DOCUMENT_TEXT
         showFundRegulation -> LEGAL_INFORMATION_TEXT.substringAfter("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
         else -> LEGAL_INFORMATION_TEXT.substringBefore("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
     }
     val pageTitle = when {
+        showPfcProjectDocument -> "Pakiet dokumentów Celu PFC"
         showCompanyFinancingAgreement -> "Umowa odpłatnego współfinansowania Celu"
         showEntrustmentDocument -> "Powierzenie środków Dyspozytorowi Celu"
         showFundRegulation -> "Regulamin dotacji celowych państwowego funduszu celowego"
@@ -83,8 +87,9 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(onClick = {
-                    if (showFundRegulation || showEntrustmentDocument || showCompanyFinancingAgreement) {
+                    if (showFundRegulation || showPfcProjectDocument || showEntrustmentDocument || showCompanyFinancingAgreement) {
                         showFundRegulation = false
+                        showPfcProjectDocument = false
                         showEntrustmentDocument = false
                         showCompanyFinancingAgreement = false
                     } else onBack()
@@ -98,7 +103,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                     modifier = Modifier.weight(1f).semantics { heading() }
                 )
             }
-            if (!showFundRegulation && !showEntrustmentDocument && !showCompanyFinancingAgreement) {
+            if (!showFundRegulation && !showPfcProjectDocument && !showEntrustmentDocument && !showCompanyFinancingAgreement) {
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { showFundRegulation = true },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
@@ -126,6 +131,24 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                             )
                         }
                         Icon(Icons.Filled.Description, contentDescription = "Otwórz regulamin")
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable { showPfcProjectDocument = true },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(Icons.Filled.Description, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column(Modifier.weight(1f)) {
+                            Text("Pakiet regulaminu i podstaw prawnych Celu PFC", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("Regulamin, wyjaśnienia dotyczące Posła i organów państwa oraz wzór powierzenia środków", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Icon(Icons.Filled.Description, contentDescription = "Otwórz pakiet dokumentów")
                     }
                 }
                 Spacer(Modifier.height(2.dp))
@@ -186,3 +209,23 @@ fun LegalInformationScreen(onBack: () -> Unit) {
         }
     }
 }
+
+
+/** Renders source Markdown as readable text while preserving the complete content. */
+private fun markdownToDisplayText(markdown: String): String =
+    markdown.lineSequence()
+        .map { line ->
+            line.trimEnd()
+                .replace(Regex("^#{1,6}\\s+"), "")
+                .replace(Regex("^>\\s?"), "")
+                .replace(Regex("^[-*]\\s+"), "• ")
+                .replace(Regex("\\*\\*(.*?)\\*\\*"), "$1")
+                .replace(Regex("(?<!\\*)\\*([^*]+)\\*(?!\\*)"), "$1")
+                .replace(Regex("`([^`]+)`"), "$1")
+                .replace(Regex("\\[([^]]+)]\\(([^)]+)\\)"), "$1 ($2)")
+                .takeUnless { it.trim() == "---" }
+                .orEmpty()
+        }
+        .joinToString("\\n")
+        .replace(Regex("\\n{3,}"), "\\n\\n")
+        .trim()
