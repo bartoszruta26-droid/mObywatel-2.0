@@ -1231,7 +1231,7 @@ private fun saveDocumentIconOverrides(context: Context, values: Map<String, Stri
     }
     check(editor.commit()) { "Nie udało się zapisać indywidualnych ikon dokumentów." }
 }
-private fun resolveDocumentIconResource(
+internal fun resolveDocumentIconResource(
     context: Context,
     documentId: String,
     defaultIcon: String,
@@ -3206,204 +3206,6 @@ private fun CertificatesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DocumentsWalletScreen(
-    onBack: () -> Unit,
-    onAddDocuments: () -> Unit,
-    documentPlacements: Map<String, String>,
-    documentCardStyle: String,
-    defaultDocumentIcon: String,
-    documentIconOverrides: Map<String, String>,
-    onOpenDetails: (String) -> Unit,
-    onOpenService: (String) -> Unit
-) {
-    val context = LocalContext.current
-    data class CatalogDocument(
-        val id: String,
-        val title: String,
-        val subtitle: String,
-        val categories: List<String>,
-        val detailsIndex: String? = null,
-        val service: String? = null,
-        val icon: ImageVector = Icons.Filled.Description
-    )
-
-    val catalogGroupOrder = documentVisibilityGroupOrder + "Inne dokumenty"
-    val documents = documentDisplayOptions.distinctBy { it.first }.map { (id, title, _) ->
-        val group = documentVisibilityGroup(id)
-        val service = when {
-            id == "financial_service" -> "Służba finansowa"
-            id == "bank_accounts" || id == "rod_bank_accounts" || id == "entity_bank_accounts" -> "Konta bankowe"
-            id == "imported" -> "Dokumenty własne — pliki"
-            id == "signed_pdf" -> "Dokumenty PDF i podpisy elektroniczne"
-            id == "receipts" -> "Rachunki"
-            id == "branding" -> "Zasoby identyfikacji dokumentów"
-            id == "children" -> "Dane dzieci"
-            id == "vaccines" -> "eKarta Szczepień"
-            id == "church" || id.startsWith("church_") || id == "organization_church" -> "Dokumenty Kościelne"
-            id == "professional" || id.startsWith("professional_") -> "Dokumenty kwalifikacji zawodowych"
-            id == "business" || id == "entity" || id.startsWith("organization_") || id.startsWith("entity_") -> "Dokumenty rejestru podmiotów"
-            id == "civil" || id == "official" || id in setOf("birth_extract", "marriage_extract", "death_extract") -> "Formularze dokumentów"
-            else -> "Pozostałe dokumenty"
-        }
-        val icon = when (group) {
-            "Służba kościelna" -> Icons.Filled.AccountBalance
-            "Służba rodowa" -> Icons.Filled.Fingerprint
-            "Służba gospodarcza" -> Icons.Filled.Business
-            "Służba zawodowa" -> Icons.Filled.Badge
-            "Służba zdrowotna" -> Icons.Filled.HealthAndSafety
-            "Zasoby i dokumenty własne" -> Icons.Filled.Description
-            "Służba cywilna" -> Icons.Filled.Description
-            "Służba zbrojna" -> Icons.Filled.Shield
-            "Służba finansowa" -> Icons.Filled.Payments
-            "Służba państwowa" -> Icons.Filled.Public
-            else -> Icons.Filled.CreditCard
-        }
-        CatalogDocument(
-            id = id,
-            title = title,
-            subtitle = "Dane dokumentu i ewidencja: $title",
-            categories = listOf(group),
-            service = service,
-            icon = icon
-        )
-    }
-    val allDocuments = documents
-    val visibleDocuments = allDocuments.filter { documentPlacements[it.id] != "hidden" }
-    val categories = catalogGroupOrder
-
-    fun openDocument(document: CatalogDocument) {
-        onOpenDetails(document.id)
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("‹  Pulpit", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 5.dp))
-        Text("Dokumenty", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(
-            "Wybierz dokument. Grupy porządkują katalog, a każda pozycja otwiera bezpośrednio formularz edycji. Podgląd i edycja graficzna są dostępne w formularzu.",
-            color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall
-        )
-        categories.forEach { category ->
-            val entries = if (category == "Inne dokumenty") {
-                visibleDocuments.filter { documentPlacements[it.id] == "other" }
-            } else {
-                visibleDocuments.filter { documentPlacements[it.id] == "dashboard" && category in it.categories }
-            }
-            if (entries.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (category == "Służba zbrojna") {
-                        Image(painterResource(R.drawable.tile_ic_armed_service_outline),
-                            contentDescription = null, modifier = Modifier.size(34.dp))
-                    }
-                    Text(category, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(top = 5.dp))
-                }
-                if (documentCardStyle == "list") {
-                    entries.forEach { document ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().clickable { openDocument(document) },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.dp, if (documentPlacements[document.id] == "dashboard") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                            )
-                        ) {
-                            Box(Modifier.fillMaxWidth()) {
-                                DocumentTileArtwork(document.id, Modifier.matchParentSize())
-                                Row(
-                                    Modifier.fillMaxWidth().padding(13.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(11.dp)
-                                ) {
-                                    Image(
-                                        painter = painterResource(documentTileIconResource(context, document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
-                                        contentDescription = document.title,
-                                        modifier = Modifier.size(30.dp),
-                                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
-                                    )
-                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                        Text(document.title, color = Color.White, fontWeight = FontWeight.SemiBold,
-                                            style = MaterialTheme.typography.bodyMedium)
-                                        Text(document.subtitle, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodySmall)
-                                    }
-                                    Text("Edytuj  ›", color = Color.White, style = MaterialTheme.typography.labelSmall)
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    val columns = if (documentCardStyle == "small") 3 else 2
-                    entries.chunked(columns).forEach { rowDocuments ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            rowDocuments.forEach { document ->
-                                Card(
-                                    modifier = Modifier.weight(1f)
-                                        .height(if (documentCardStyle == "small") 112.dp else 148.dp)
-                                        .clickable { openDocument(document) },
-                                    shape = RoundedCornerShape(13.dp),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                    border = androidx.compose.foundation.BorderStroke(
-                                        1.dp, if (documentPlacements[document.id] == "dashboard") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                    )
-                                ) {
-                                    Box(Modifier.fillMaxSize()) {
-                                        DocumentTileArtwork(document.id, Modifier.fillMaxSize())
-                                        Text(
-                                            document.title,
-                                            color = Color.White,
-                                            fontWeight = FontWeight.SemiBold,
-                                            style = if (documentCardStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.align(Alignment.TopStart)
-                                                .fillMaxWidth(0.78f).padding(10.dp)
-                                        )
-                                        if (documentCardStyle == "large") {
-                                            Text(
-                                                document.subtitle,
-                                                color = Color.White.copy(alpha = 0.84f),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis,
-                                                modifier = Modifier.align(Alignment.BottomStart).padding(10.dp)
-                                            )
-                                        }
-                                        Image(
-                                            painter = painterResource(documentTileIconResource(context, document.id, resolveDocumentIconResource(context, document.id, defaultDocumentIcon, documentIconOverrides))),
-                                            contentDescription = "Ikona wektorowa: " + document.title,
-                                            modifier = Modifier.align(Alignment.TopEnd)
-                                                .padding(8.dp)
-                                                .size(if (documentCardStyle == "small") 22.dp else 26.dp),
-                                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color.White)
-                                        )
-                                    }
-                                }
-                            }
-                            repeat(columns - rowDocuments.size) { Spacer(Modifier.weight(1f)) }
-                        }
-                    }
-                }
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        Button(onClick = onAddDocuments, modifier = Modifier.fillMaxWidth()) {
-            Icon(painter = painterResource(R.drawable.lib_ic_plus), contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text("Dodaj dokument")
-        }
-    }
-}
-
-
-@Composable
 private fun DashboardDocumentGrid(
     documents: List<Triple<String, String, Int>>,
     tileStyle: String,
@@ -3471,7 +3273,7 @@ private fun DashboardDocumentGrid(
     }
 }
 
-private fun documentTileIconResource(context: Context, documentKey: String, fallback: Int): Int {
+internal fun documentTileIconResource(context: Context, documentKey: String, fallback: Int): Int {
     val selected = context.getSharedPreferences("legitimacy_preview_preferences", Context.MODE_PRIVATE)
         .getString("${documentKey}_tile_icon", "").orEmpty()
     if (selected.isNotBlank()) context.resources.getIdentifier(selected, "drawable", context.packageName)
@@ -3549,7 +3351,7 @@ private fun documentTileWatermarkResource(documentKey: String): Int = when {
 }
 
 @Composable
-private fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifier) {
+internal fun DocumentTileArtwork(documentKey: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val tilePreferences = context.getSharedPreferences("legitimacy_preview_preferences", Context.MODE_PRIVATE)
     val tileBackgroundAssetId = tilePreferences.getString("${documentKey}_tile_background", "").orEmpty()
