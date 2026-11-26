@@ -1282,7 +1282,6 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                         Icon(Icons.Filled.Description, contentDescription = "Otwórz regulamin")
                     }
                 }
-                }
                 Spacer(Modifier.height(2.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { showEntrustmentDocument = true },
