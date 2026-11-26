@@ -26,11 +26,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
@@ -49,6 +51,10 @@ fun LegalInformationScreen(onBack: () -> Unit) {
     var showPfcProjectDocument by rememberSaveable { mutableStateOf(false) }
     var showEntrustmentDocument by rememberSaveable { mutableStateOf(false) }
     var showCompanyFinancingAgreement by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
+    val pfcProjectDocumentText = remember(context, showPfcProjectDocument) {
+        if (showPfcProjectDocument) loadPfcProjectDocumentText(context) else ""
+    }
     BackHandler(enabled = showFundRegulation || showPfcProjectDocument || showEntrustmentDocument || showCompanyFinancingAgreement) {
         showFundRegulation = false
         showPfcProjectDocument = false
@@ -58,7 +64,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
     BackHandler(enabled = !showFundRegulation && !showPfcProjectDocument && !showEntrustmentDocument && !showCompanyFinancingAgreement) { onBack() }
 
     val displayedText = when {
-        showPfcProjectDocument -> markdownToDisplayText(PFC_PROJECT_DOCUMENT_TEXT)
+        showPfcProjectDocument -> markdownToDisplayText(pfcProjectDocumentText)
         showCompanyFinancingAgreement -> COMPANY_FINANCING_AGREEMENT_TEXT
         showEntrustmentDocument -> ENTRUSTMENT_DOCUMENT_TEXT
         showFundRegulation -> LEGAL_INFORMATION_TEXT.substringAfter("\nREGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO")
@@ -71,7 +77,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
         showFundRegulation -> "Regulamin dotacji celowych państwowego funduszu celowego"
         else -> "Informacje prawne"
     }
-    val sections = displayedText.trim().split("\n")
+    val sections = if (showPfcProjectDocument) emptyList() else displayedText.trim().split("\n")
 
     Surface(
         modifier = Modifier.fillMaxSize().semantics { paneTitle = pageTitle },
