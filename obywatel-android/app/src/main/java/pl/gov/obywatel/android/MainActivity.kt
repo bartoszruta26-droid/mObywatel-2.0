@@ -1890,55 +1890,7 @@ private fun DisabilitySettingsScreen(onBack: () -> Unit, onEditGraphic: () -> Un
     }
 }
 
-@Composable
-private fun CertificatesScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    val fields = remember {
-        mutableStateMapOf<String, String>().apply { putAll(DemoIdentityStore.load(context)) }
-    }
-    val hasDisabilityData = listOf("disabilityPersonName", "disabilityDecisionNumber", "disabilityDecisionDate",
-        "disabilityDegree", "disabilityAuthorityName").any { !fields[it].isNullOrBlank() }
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("‹  Powrót", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
-        Text("Zaświadczenia", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold)
-        Text("Zapisane dane dokumentów i zaświadczeń", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        if (hasDisabilityData) {
-            Text("Orzeczenie / zaświadczenie o niepełnosprawności", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            DisabilityDecisionPreview(fields)
-            listOf(
-                "Organ / wystawca" to "disabilityAuthorityName",
-                "Numer dokumentu" to "disabilityDecisionNumber",
-                "Data wydania" to "disabilityDecisionDate",
-                "Stopień" to "disabilityDegree",
-                "Okres obowiązywania" to "disabilityValidity",
-                "Podstawa prawna / regulacyjna" to "disabilityLegalBasis"
-            ).forEach { (label, key) ->
-                val value = fields[key].orEmpty()
-                if (value.isNotBlank()) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                        Text(value, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold, modifier = Modifier.width(190.dp))
-                    }
-                }
-            }
-        } else {
-            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                    Icon(Icons.Filled.Description, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(30.dp))
-                    Text("Brak zapisanych danych", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                    Text("Dodaj dane o niepełnosprawności w Ustawieniach. Po zapisaniu pojawią się tutaj.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-     }
-}
+
 
 
 internal fun documentTileIconResource(context: Context, documentKey: String, fallback: Int): Int {
