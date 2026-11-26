@@ -16,6 +16,22 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun savedGroupAssignmentOverridesDefaultConsistentlyForPreviewAndEditorCatalogs() {
+        val assignments = mapOf(
+            "identity" to "Moje dokumenty osobiste",
+            "birth_extract" to "Dokumenty urzędowe"
+        )
+        assertEquals("Moje dokumenty osobiste", resolveDocumentGroup("identity", assignments))
+        assertEquals("Dokumenty urzędowe", resolveDocumentGroup("birth_extract", assignments))
+        assertEquals("Służba kościelna", resolveDocumentGroup("church_bishop", assignments))
+        val documents = documentDisplayOptions.distinctBy { it.first }
+        documents.forEach { (id, _, _) ->
+            assertTrue("Every document must resolve to one non-empty group: $id",
+                resolveDocumentGroup(id, assignments).isNotBlank())
+        }
+    }
+
+    @Test
     fun serviceGroupNamesAreUsedAndLegacyNamesMigrateToTheirNewCounterparts() {
         assertEquals("Służba rodowa", documentVisibilityGroup("family"))
         assertEquals("Służba osobista", documentVisibilityGroup("identity"))
