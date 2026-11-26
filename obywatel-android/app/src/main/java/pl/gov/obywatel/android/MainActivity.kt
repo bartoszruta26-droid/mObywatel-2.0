@@ -901,7 +901,7 @@ private fun saveDocumentPlacements(context: Context, placements: Map<String, Str
 }
 
 @Composable
-private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
+internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     val context = LocalContext.current
     var pendingImport by remember { mutableStateOf<Map<String, String>?>(null) }
     var importStatus by remember { mutableStateOf("") }
