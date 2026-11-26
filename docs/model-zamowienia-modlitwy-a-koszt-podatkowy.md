@@ -282,3 +282,53 @@ Podpis: [___]
 - Ordynacja podatkowa: https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19971370926
 
 **Zastrzeżenie końcowe:** To opracowanie jest projektem dokumentacyjnym, a nie indywidualną opinią podatkową. Najbardziej ryzykownym elementem nie jest samo zamówienie modlitwy, lecz próba wykazania, że każda dowolnie ustalona kwota przekazana za taką czynność automatycznie zabezpiecza źródło przychodów i staje się kosztem podatkowym. Tego regulamin nie może przesądzić.
+
+
+---
+
+## 9. Uzupełnienie: nieosiągnięcie zamierzonego przychodu a kwalifikacja wydatku
+
+Należy wyraźnie rozdzielić **cel poniesienia wydatku** od **rezultatu gospodarczego**. Jeżeli podatnik w chwili ponoszenia wydatku działał w sposób rzeczywisty, racjonalny i gospodarczo uzasadniony w celu osiągnięcia przychodu albo zachowania lub zabezpieczenia jego źródła, brak późniejszego przychodu lub niepowodzenie podjętej próby nie przekreśla samo przez się możliwości uznania wydatku za koszt. Ocenie podlegają okoliczności istniejące w chwili poniesienia wydatku, racjonalność decyzji oraz obiektywna możliwość osiągnięcia zamierzonego celu. Nie jest wymagane, aby cel został faktycznie osiągnięty.
+
+Potwierdzają to m.in.:
+- wyrok NSA z 12 czerwca 2012 r., II FSK 2374/10, przywołany w uzasadnieniu wyroku WSA w Warszawie z 18 lutego 2014 r., III SA/Wa 1983/13 — cel wydatku ocenia się przez pryzmat zamierzonego działania i obiektywnej możliwości wpływu na przychód, co nie oznacza konieczności osiągnięcia celu;
+- wyrok NSA z 9 stycznia 2020 r., II FSK 1330/19 — zasadnicze znaczenie ma rzeczywisty zamiar podatnika oraz obiektywna ocena okoliczności istniejących w chwili ponoszenia kosztu; brak oczekiwanego efektu gospodarczego nie dyskwalifikuje automatycznie wydatku.
+
+Źródła orzeczeń:
+- https://orzeczenia.nsa.gov.pl/doc/DA3A0ED610
+- https://orzeczenia.nsa.gov.pl/doc/BC113916ED
+
+Powyższa zasada **nie przesądza jednak**, że każde świadczenie religijne lub każda ofiara staje się kosztem. Najpierw trzeba ustalić, czy wydatek mieści się w pozytywnej definicji kosztu z art. 22 ust. 1 PIT albo art. 15 ust. 1 CIT, a następnie zbadać wyłączenia ustawowe, w szczególności art. 23 ust. 1 pkt 11 PIT albo art. 16 ust. 1 pkt 14 CIT.
+
+## 10. Ofiara celowa, darowizna i odpłatne zamówienie — trzy odrębne kwalifikacje
+
+Na potrzeby dalszego opracowania przyjmuje się, że nie wolno utożsamiać bez dalszej analizy następujących sytuacji:
+
+1. **Nieudokumentowana ofiara na tacę** — spontaniczna, dobrowolna wpłata bez indywidualnego zamówienia, szczegółowego określenia świadczenia i rozliczenia. Zwykle brak dokumentacji pozwalającej wykazać związek z działalnością gospodarczą; jej charakter należy oceniać według rzeczywistej treści.
+2. **Udokumentowana ofiara celowa** — wpłata przeznaczona na oznaczony cel religijny lub praktykę religijną, której przekazanie i przeznaczenie są potwierdzone dokumentami. Dokumentacja może wykazać fakt, wysokość, adresata i cel wpłaty, lecz sama nie zmienia prawnego charakteru ofiary. W PIT art. 23 ust. 1 pkt 11 wprost wyłącza „darowizny i ofiary wszelkiego rodzaju” z kosztów, z wyjątkiem wskazanym w tym przepisie; analogiczne wyłączenie zawiera art. 16 ust. 1 pkt 14 CIT. Dlatego samo nazwanie wpłaty „ofiarą celową”, jej udokumentowanie ani powiązanie w treści z zachowaniem źródła przychodów nie usuwa ryzyka zastosowania wyłączenia.
+3. **Odpłatne zamówienie rzeczywistych czynności religijnych** — stosunek, w którym istnieje prawnie i faktycznie odrębne świadczenie wzajemne: wykonawca przyjmuje zobowiązanie do wykonania oznaczonych czynności religijnych, zamawiający zobowiązuje się do zapłaty z góry określonego wynagrodzenia, a wykonanie jest rzeczywiste i możliwe do wykazania. Jeżeli stosunek jest rzeczywiście odpłatny, nie jest automatycznie darowizną ani ofiarą tylko dlatego, że dotyczy praktyki religijnej. Nadal jednak trzeba zbadać, czy wydatek spełnia art. 22 ust. 1 PIT lub art. 15 ust. 1 CIT, czy nie ma charakteru osobistego lub reprezentacyjnego, czy nie jest w istocie przysporzeniem bez ekwiwalentu oraz czy nie zachodzi inne wyłączenie.
+
+**Wniosek konstrukcyjny:** jeśli zamiarem stron jest odpłatne zamówienie czynności, dokument powinien opisywać i regulować właśnie odpłatne zamówienie, a nie nazywać go „zleceniem ofiary”. Jeżeli zaś rzeczywistą treścią jest ofiara, należy ją tak uczciwie kwalifikować. Nie należy tworzyć pozornej odpłatności ani sztucznego ekwiwalentu.
+
+## 11. Dowody celu gospodarczego — dokumentacja podejmowanej próby
+
+Dla oceny, czy wydatek został poniesiony w celu zachowania lub zabezpieczenia źródła przychodów, przydatna może być dokumentacja sporządzona przed poniesieniem wydatku, w szczególności:
+- notatka przedsiębiorcy opisująca konkretne zagrożenie dla źródła przychodów, ciągłość działalności lub zdolność do wykonywania zobowiązań;
+- opis związku zamówienia z konkretną działalnością, jej ciągłością i odpowiedzialnością za pracowników lub kontrahentów;
+- decyzja o zamówieniu, uzasadnienie gospodarcze i zatwierdzenie wydatku;
+- umowa określająca konkretne czynności, czas, częstotliwość, wynagrodzenie i zasady wykonania;
+- kalkulacja wynagrodzenia oraz dowód zapłaty;
+- potwierdzenie faktycznego wykonania uzgodnionych czynności;
+- dowody, że cena nie jest dowolnym transferem zysku ani ukrytą darowizną.
+
+Dokumentacja ta nie gwarantuje uznania wydatku za koszt. Ma umożliwić odtworzenie rzeczywistego przebiegu zdarzeń i wykazanie, jaki cel przyświecał przedsiębiorcy w chwili podejmowania decyzji.
+
+## 12. Zasada redakcyjna dla dalszych regulaminów
+
+W kolejnych dokumentach należy konsekwentnie:
+- uznawać, że brak osiągnięcia przychodu nie jest samodzielną przesłanką wykluczającą koszt;
+- badać cel i racjonalność wydatku w chwili jego poniesienia;
+- odróżniać ofiarę celową od ofiary spontanicznej, ale nie zakładać, że samo udokumentowanie usuwa ustawowe wyłączenie ofiar;
+- odróżniać rzeczywistą odpłatną czynność religijną od ofiary/darowizny;
+- nie zapewniać o automatycznej podatkowej kwalifikacji żadnej z tych kategorii;
+- nie ustalać wynagrodzenia jako procentu przychodu ani jako zapłaty za nadprzyrodzony rezultat.
