@@ -33,6 +33,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
 
+@Composable
 internal fun OcrRoundAction(
     label: String,
     icon: ImageVector,
@@ -65,6 +66,7 @@ internal fun OcrRoundAction(
     }
 }
 
+@Composable
 internal fun LoyaltyGeneratedCodes(barcodeValue: String, qrValue: String) {
     val barcode = remember(barcodeValue) { generateLoyaltyCodeBitmap(barcodeValue, BarcodeFormat.CODE_128) }
     val qr = remember(qrValue) { generateLoyaltyCodeBitmap(qrValue, BarcodeFormat.QR_CODE) }
