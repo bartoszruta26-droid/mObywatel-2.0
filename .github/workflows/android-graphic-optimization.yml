@@ -8,6 +8,7 @@ on:
       - integration/graphic-optimization-mainline
     paths:
       - "scripts/optimize_android_graphics.py"
+      - "graphic-originals/**"
       - "scripts/test_optimize_android_graphics.py"
       - ".github/workflows/android-graphic-optimization.yml"
       - "obywatel-android/app/src/main/res/**"
@@ -16,6 +17,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - "scripts/optimize_android_graphics.py"
+      - "graphic-originals/**"
       - "scripts/test_optimize_android_graphics.py"
       - ".github/workflows/android-graphic-optimization.yml"
       - "obywatel-android/app/src/main/res/**"
