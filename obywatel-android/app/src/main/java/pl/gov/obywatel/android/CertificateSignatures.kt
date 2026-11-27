@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.onSizeChanged
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -34,6 +35,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +47,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.Image
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -168,6 +174,8 @@ internal fun CertificateSignaturesManager() {
     var message by remember { mutableStateOf("") }
     val strokes = remember { mutableStateListOf<List<Offset>>() }
     var activeStroke by remember { mutableStateOf<List<Offset>>(emptyList()) }
+    var padWidth by remember { mutableFloatStateOf(1f) }
+    var padHeight by remember { mutableFloatStateOf(1f) }
 
     fun refresh() {
         entries = CertificateSignatureStore.list(context)
@@ -232,6 +240,7 @@ internal fun CertificateSignaturesManager() {
                     style = MaterialTheme.typography.bodySmall)
                 Canvas(
                     Modifier.fillMaxWidth().height(150.dp)
+                        .onSizeChanged { padWidth = it.width.toFloat().coerceAtLeast(1f); padHeight = it.height.toFloat().coerceAtLeast(1f) }
                         .background(Color.White, RoundedCornerShape(8.dp))
                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
                         .pointerInput(Unit) {
@@ -292,21 +301,21 @@ internal fun CertificateSignaturesManager() {
                             strokes.forEach { points ->
                                 if (points.isEmpty()) return@forEach
                                 val first = points.first()
-                                path.moveTo(first.x / size.width * 1120f + 40f, first.y / size.height * 340f + 40f)
+                                path.moveTo(first.x / padWidth * 1120f + 40f, first.y / padHeight * 340f + 40f)
                                 for (i in 1 until points.size) {
                                     val previous = points[i - 1]
                                     val current = points[i]
                                     val midX = (previous.x + current.x) / 2f
                                     val midY = (previous.y + current.y) / 2f
                                     path.quadTo(
-                                        previous.x / size.width * 1120f + 40f,
-                                        previous.y / size.height * 340f + 40f,
-                                        midX / size.width * 1120f + 40f,
-                                        midY / size.height * 340f + 40f
+                                        previous.x / padWidth * 1120f + 40f,
+                                        previous.y / padHeight * 340f + 40f,
+                                        midX / padWidth * 1120f + 40f,
+                                        midY / padHeight * 340f + 40f
                                     )
                                 }
                                 val last = points.last()
-                                path.lineTo(last.x / size.width * 1120f + 40f, last.y / size.height * 340f + 40f)
+                                path.lineTo(last.x / padWidth * 1120f + 40f, last.y / padHeight * 340f + 40f)
                             }
                             canvas.drawPath(path, paint)
                             CertificateSignatureStore.save(context, signatureName, bitmap)
@@ -351,5 +360,21 @@ internal fun CertificateSignaturesManager() {
                 refresh()
             }, modifier = Modifier.fillMaxWidth()) { Text("Nie używaj podpisu na zaświadczeniach") }
         }
+    }
+}
+
+
+@Composable
+internal fun CertificateSignatureImage(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val selectedId = CertificateSignatureStore.selectedId(context)
+    val bitmap = remember(selectedId) { CertificateSignatureStore.selectedBitmap(context) }
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = "Zapisany podpis wystawcy",
+            modifier = modifier,
+            contentScale = ContentScale.Fit
+        )
     }
 }
