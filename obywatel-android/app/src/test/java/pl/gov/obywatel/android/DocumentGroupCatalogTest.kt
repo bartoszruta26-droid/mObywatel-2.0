@@ -201,4 +201,37 @@ class DocumentGroupCatalogTest {
         assertTrue(keys.all { it.startsWith("doc_") })
         assertTrue(keys.all { it.length <= 96 && it.matches(Regex("[A-Za-z0-9_-]+")) })
     }
+    @Test
+    fun everyVisibleDocumentHasExactlyOneRegisteredRoute() {
+        val ids = documentDisplayOptions.map { it.first }
+        assertTrue("Document catalog must not be empty", ids.isNotEmpty())
+        assertEquals("Document identifiers must be unique", ids.size, ids.toSet().size)
+        ids.forEach { id ->
+            assertTrue("Missing navigation route for document: $id", DocumentRouteRegistry.find(id) != null)
+        }
+    }
+
+    @Test
+    fun groupRoutesAlwaysDeclareTheirDestination() {
+        DocumentRouteRegistry.routes.forEach { (id, route) ->
+            if (route.type == DocumentRouteType.GROUP) {
+                assertTrue("Group route $id must declare a destination", !route.destination.isNullOrBlank())
+            }
+        }
+    }
+
+    @Test
+    fun legacyAliasesResolveToCanonicalDocumentIdentifiers() {
+        assertEquals("identity", DocumentRouteRegistry.find("identity_card")?.documentId)
+        assertEquals("loyalty", DocumentRouteRegistry.find("loyalty_cards")?.documentId)
+    }
+
+    @Test
+    fun routeMapKeysAndDocumentIdentifiersAreNotBlank() {
+        DocumentRouteRegistry.routes.forEach { (key, route) ->
+            assertTrue("Route key must not be blank", key.isNotBlank())
+            assertTrue("Route document ID must not be blank for $key", route.documentId.isNotBlank())
+        }
+    }
+
 }
