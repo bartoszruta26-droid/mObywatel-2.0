@@ -282,7 +282,7 @@ class InstitutionalSvgDownloadAccountingTest {
         val candidates = parseExternalCommonsSvgList(catalog.readText(Charsets.UTF_8))
         assertEquals(800, candidates.size)
         assertEquals(800, candidates.map { it.title }.distinct().size)
-        assertTrue(candidates.all { it.url.endsWith(".svg", ignoreCase = true) })
+        assertTrue(candidates.all { java.net.URI(it.url).path.endsWith(".svg", ignoreCase = true) })
         assertTrue(candidates.all { it.page.isNotBlank() && it.license.isNotBlank() })
         assertTrue(candidates.any { it.title.contains("COA", true) })
     }
