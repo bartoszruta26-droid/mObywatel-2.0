@@ -2535,7 +2535,7 @@ internal fun CredentialAppearanceDefaultsScreen(onBack: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text("‹  Powrót do zakładki Więcej", color = MaterialTheme.colorScheme.primary,
+        Text("‹  Powrót do domyślnego wyglądu dokumentów", color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable(onClick = onBack).padding(vertical = 6.dp))
         Text("Wspólny wygląd legitymacji", style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold)
