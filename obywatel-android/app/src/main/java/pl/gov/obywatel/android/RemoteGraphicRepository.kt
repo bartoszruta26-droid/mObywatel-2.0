@@ -66,8 +66,9 @@ internal object RemoteGraphicRepository {
             val bytes = item.getLong("full_bytes")
             val thumbnailPath = item.getString("thumbnail_asset_path")
             require(name.matches(Regex("[A-Za-z0-9_]+"))) { "Nieprawidłowa nazwa zasobu." }
-            require(path.startsWith("obywatel-android/app/src/main/res/") &&
-                path.split('/').none { it == ".." } &&
+            require(path.startsWith("graphic-originals/full-webp/") &&
+                path.endsWith(".webp") &&
+                path.split('/').none { it.isEmpty() || it == "." || it == ".." } &&
                 path.matches(Regex("[A-Za-z0-9_./-]+"))) { "Niedozwolona ścieżka zasobu." }
             require(thumbnailPath.startsWith("obywatel-android/app/src/main/assets/graphic-thumbnails/") && thumbnailPath.matches(Regex("[A-Za-z0-9_./-]+")) && thumbnailPath.split('/').none { it == ".." }) { "Nieprawidłowa ścieżka miniatury." }
             require(digest.matches(Regex("[a-f0-9]{64}"))) { "Nieprawidłowy skrót SHA-256." }
