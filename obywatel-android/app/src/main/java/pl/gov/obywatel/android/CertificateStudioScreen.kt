@@ -737,11 +737,27 @@ private fun renderCertificatePdf(
                 savedSignature.recycle()
             }
         } else if (savedSignatures.isEmpty()) {
-            signatureId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-                ?.let { drawCertificateImage(canvas, it, Rect(115, 465, 285, 510), signatureRotation) }
+            signatureId.takeIf { it.isNotBlank() }?.let { id ->
+                DocumentBrandStore.preview(context, id)?.let { bitmap ->
+                    try {
+                        drawCertificateImage(canvas, bitmap, Rect(115, 465, 285, 510), signatureRotation)
+                    } finally {
+                        // preview() returns a decoded bitmap owned by this PDF export.
+                        bitmap.recycle()
+                    }
+                }
+            }
         }
-        stampId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-            ?.let { drawCertificateImage(canvas, it, Rect(width - 245, 435, width - 95, 555), stampRotation) }
+        stampId.takeIf { it.isNotBlank() }?.let { id ->
+            DocumentBrandStore.preview(context, id)?.let { bitmap ->
+                try {
+                    drawCertificateImage(canvas, bitmap, Rect(width - 245, 435, width - 95, 555), stampRotation)
+                } finally {
+                    // Release the decoded stamp after embedding it into the PDF page.
+                    bitmap.recycle()
+                }
+            }
+        }
         pdf.finishPage(page)
         context.contentResolver.openOutputStream(uri)?.use { pdf.writeTo(it) } ?: error("Nie można zapisać PDF.")
     } finally { pdf.close() }
