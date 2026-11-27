@@ -123,8 +123,11 @@ internal object RemoteGraphicRepository {
             destination
         }
 
+    fun remoteResourceNames(context: Context): Set<String> =
+        runCatching { manifest(context).keys }.getOrDefault(emptySet())
+
     fun isRemoteResource(context: Context, resourceName: String): Boolean =
-        runCatching { resourceName in manifest(context) }.getOrDefault(false)
+        resourceName in remoteResourceNames(context)
 
     fun thumbnailBitmap(context: Context, resourceName: String): Bitmap? = runCatching {
         val entry = manifest(context)[resourceName] ?: return null
