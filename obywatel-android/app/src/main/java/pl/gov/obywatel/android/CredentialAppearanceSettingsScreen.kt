@@ -307,6 +307,6 @@ internal fun CredentialAppearanceSettingsScreen(
         val previewValues = savedValues.toMap() + (
             "photo" to (savedValues[documentPhotoKey] ?: savedValues["photo"].orEmpty())
         )
-        CredentialTemplatePreview(documentKey, state.value, values = previewValues)
+        CredentialTemplatePreview(documentKey, state.value, values = previewValues, forceLegitimacy = true)
     }
 }
