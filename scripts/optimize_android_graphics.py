@@ -19,6 +19,8 @@ from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "obywatel-android/app/src/main/res"
+FULL_ROOT = ROOT / "graphic-originals/full-webp"
+SOURCE_ROOT = ROOT / "graphic-originals/source-png"
 THUMB_ROOT = ROOT / "obywatel-android/app/src/main/assets/graphic-thumbnails"
 MANIFEST = THUMB_ROOT / "manifest.json"
 MIN_SOURCE_BYTES = 96 * 1024
@@ -34,9 +36,10 @@ def sha256(path: Path) -> str:
 
 
 def resource_dirs():
+    """Yield full-resolution source directories kept outside the APK."""
     for name in ("drawable", "drawable-nodpi", "drawable-hdpi", "drawable-xhdpi",
                  "drawable-xxhdpi", "drawable-xxxhdpi"):
-        folder = RES / name
+        folder = FULL_ROOT / name
         if folder.is_dir():
             yield folder
 
@@ -103,7 +106,8 @@ def main() -> None:
                 continue
             if path.name.endswith(".9.png") or path.stat().st_size < MIN_SOURCE_BYTES:
                 continue
-            original_path = path
+            source_candidate = SOURCE_ROOT / path.parent.name / f"{path.stem}.png"
+            original_path = source_candidate if source_candidate.is_file() else path
             if is_animated(path):
                 continue
             full_path = webp_candidate(path) if path.suffix.lower() in {".png", ".jpg", ".jpeg"} else path
@@ -120,7 +124,7 @@ def main() -> None:
                     continue
                 thumb = image.copy()
                 thumb.thumbnail((THUMB_MAX_EDGE, THUMB_MAX_EDGE), Image.Resampling.LANCZOS)
-                relative = full_path.relative_to(RES).as_posix()
+                relative = full_path.relative_to(FULL_ROOT).as_posix()
                 key = hashlib.sha256(relative.encode("utf-8")).hexdigest()[:12]
                 thumb_name = f"{full_path.stem}-{key}.webp"
                 thumb_path = THUMB_ROOT / thumb_name
@@ -152,7 +156,10 @@ def main() -> None:
             "minimum_source_bytes": MIN_SOURCE_BYTES,
             "png_conversion": "lossless WebP only when at least 2% smaller",
             "jpeg_conversion": "quality 92 WebP only when at least 2% smaller",
-            "nine_patch_and_animated_images": "excluded"
+            "nine_patch_and_animated_images": "excluded",
+            "full_graphics_location": "graphic-originals/full-webp/",
+            "original_sources_location": "graphic-originals/source-png/",
+            "apk_resources": "thumbnail-only WebP"
         },
         "count": len(entries),
         "items": entries
