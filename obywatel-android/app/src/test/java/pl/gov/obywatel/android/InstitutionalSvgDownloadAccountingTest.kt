@@ -275,4 +275,16 @@ class InstitutionalSvgDownloadAccountingTest {
         assertFalse(commonsCandidateCanBeDownloaded(valid.copy(url = "https://upload.wikimedia.org/a/logo.png")))
         assertFalse(commonsCandidateCanBeDownloaded(valid.copy(url = "https://user@upload.wikimedia.org/a/logo.svg")))
     }
+    @Test
+    fun bundledCatalogContains800UniqueSvgCandidatesWithPerFileRightsMetadata() {
+        val catalog = java.io.File("src/main/assets/institutions/institutional-symbol-catalog.csv")
+        assertTrue("Wbudowany katalog SVG musi istnieć.", catalog.isFile)
+        val candidates = parseExternalCommonsSvgList(catalog.readText(Charsets.UTF_8))
+        assertEquals(800, candidates.size)
+        assertEquals(800, candidates.map { it.title }.distinct().size)
+        assertTrue(candidates.all { it.url.endsWith(".svg", ignoreCase = true) })
+        assertTrue(candidates.all { it.page.isNotBlank() && it.license.isNotBlank() })
+        assertTrue(candidates.any { it.title.contains("COA", true) })
+    }
+
 }
