@@ -172,7 +172,7 @@ def main() -> None:
             "nine_patch_and_animated_images": "excluded",
             "full_graphics_location": "graphic-originals/full-webp/",
             "original_sources_location": "graphic-originals/source-png/",
-            "app_resources": "thumbnail WebP except the single full-resolution horizontal eagle credential background",
+            "app_resources": "thumbnail WebP except the two full-resolution default credential backgrounds (eagle and episcopal coat of arms)",
             "bundled_full_resolution_exceptions": sorted(BUNDLED_FULL_RESOURCES)
         },
         "count": len(entries),
