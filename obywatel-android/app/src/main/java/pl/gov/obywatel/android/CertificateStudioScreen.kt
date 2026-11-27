@@ -147,6 +147,7 @@ private val certificateAssetKinds = setOf(
 @Composable
 internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificates: () -> Unit = {}) {
     val context = LocalContext.current
+    val globalAppearanceSettings = rememberLegitimacyPreviewSettings(GLOBAL_LEGITIMACY_APPEARANCE_KEY)
     var assets by remember { mutableStateOf(DocumentBrandStore.list(context).filter { it.kind in certificateAssetKinds }) }
     var section by remember { mutableStateOf("generator") }
     var status by remember { mutableStateOf("") }
@@ -227,7 +228,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
         Text("Pracownia certyfikatów, baza wzorów, podpisów graficznych i pieczęci.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            listOf("generator" to "Generator", "resources" to "Baza", "signatures" to "Podpisy", "signature" to "TXT → SVG", "stamp" to "Pieczęć", "x509" to "X.509")
+            listOf("generator" to "Generator", "resources" to "Baza", "signatures" to "Podpisy", "appearance" to "Wygląd", "signature" to "TXT → SVG", "stamp" to "Pieczęć", "x509" to "X.509")
                 .forEachIndexed { index, item ->
                     SegmentedButton(section == item.first, { section = item.first },
                         SegmentedButtonDefaults.itemShape(index, 4)) { Text(item.second) }
@@ -292,6 +293,21 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                     Text("Certyfikaty cyfrowe i podpisy elektroniczne")
                 }
             }
+            "appearance" -> DefaultDocumentAppearanceSettingsScreen(
+                onBack = { section = "generator" },
+                onOpenLegitimacy = { section = "legitimacy" },
+                onOpenCertificate = { section = "certificateAppearance" }
+            )
+            "legitimacy" -> {
+                TextButton(onClick = { section = "appearance" }) { Text("‹  Powrót do wyglądu dokumentów") }
+                LegitimacyPreviewSettingsPanel(
+                    documentKey = GLOBAL_LEGITIMACY_APPEARANCE_KEY,
+                    settings = globalAppearanceSettings.value,
+                    onChange = { globalAppearanceSettings.value = it },
+                    showCredentialPreview = false
+                )
+            }
+            "certificateAppearance" -> CertificateAppearanceSettingsScreen(onBack = { section = "appearance" })
             "signatures" -> {
                 Text("Podpisy do zaświadczeń", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 Text("Zarządzaj zaszyfrowanymi podpisami graficznymi i wybieraj wzór do wykorzystania w dokumentach.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
