@@ -391,6 +391,8 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var showCertificates by remember { mutableStateOf(false) }
     var showIdentityDesigner by remember { mutableStateOf(false) }
     var showCredentialAppearanceEditor by remember { mutableStateOf(false) }
+    var showDefaultDocumentAppearanceSettings by remember { mutableStateOf(false) }
+    var showCertificateAppearanceSettings by remember { mutableStateOf(false) }
     var showImportedDocuments by remember { mutableStateOf(false) }
     var showReceipts by remember { mutableStateOf(false) }
     var showPaymentLedger by remember { mutableStateOf(false) }
@@ -466,7 +468,9 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         when {
             selectedMedicalCertificateRecordId != null -> selectedMedicalCertificateRecordId = null
             credentialAppearanceTarget != null -> credentialAppearanceTarget = null
-            showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showSettingsMenu = true }
+            showCertificateAppearanceSettings -> { showCertificateAppearanceSettings = false; showDefaultDocumentAppearanceSettings = true }
+            showDefaultDocumentAppearanceSettings -> { showDefaultDocumentAppearanceSettings = false; showSettingsMenu = true }
+            showCredentialAppearanceEditor -> { showCredentialAppearanceEditor = false; showDefaultDocumentAppearanceSettings = true }
             showTranslationLanguageSettings -> { showTranslationLanguageSettings = false; showSettingsMenu = true }
             showTorClientSettings -> { showTorClientSettings = false; showSettingsMenu = true }
             showStudiaOnlineBulkDownload -> { showStudiaOnlineBulkDownload = false; selectedTab = 4 }
@@ -497,7 +501,7 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 
     BackHandler(
-        enabled = credentialAppearanceTarget != null || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showTorClientSettings || showStudiaOnlineBulkDownload || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || activeDonationLedgerId != null || showPaymentLedger || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
+        enabled = credentialAppearanceTarget != null || showDefaultDocumentAppearanceSettings || showCertificateAppearanceSettings || showCredentialAppearanceEditor || showApplicationAppearanceSettings || showTranslationLanguageSettings || showTorClientSettings || showStudiaOnlineBulkDownload || showIdentityDesigner || showPublicServicesBrowser || showImportedDocuments || showReceipts || activeDonationLedgerId != null || showPaymentLedger || showBankAccounts || showDocumentsEditor || showSettingsMenu || showDocumentEditorCatalog || showDocumentVisibilitySettings || showDocumentBrandAssets || documentBrandTarget != null || showRegistryEditor || settingsDocumentEditor != null || selectedDocumentId != null ||
             showDemoDocuments || showDisabilitySettings || showCertificates ||
             activeService != null || selectedTab != 0,
         onBack = ::handleSystemBack
@@ -564,6 +568,14 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 when {
+                    showDefaultDocumentAppearanceSettings -> DefaultDocumentAppearanceSettingsScreen(
+                        onBack = { showDefaultDocumentAppearanceSettings = false; showSettingsMenu = true },
+                        onOpenLegitimacy = { showDefaultDocumentAppearanceSettings = false; showCredentialAppearanceEditor = true },
+                        onOpenCertificate = { showDefaultDocumentAppearanceSettings = false; showCertificateAppearanceSettings = true }
+                    )
+                    showCertificateAppearanceSettings -> CertificateAppearanceSettingsScreen(
+                        onBack = { showCertificateAppearanceSettings = false; showDefaultDocumentAppearanceSettings = true }
+                    )
                     credentialAppearanceTarget != null -> CredentialAppearanceSettingsScreen(
                         documentKey = credentialAppearanceTarget!!,
                         onBack = { credentialAppearanceTarget = null },
@@ -574,9 +586,7 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                     )
                     showCredentialAppearanceEditor -> CredentialAppearanceDefaultsScreen(onBack = {
                         showCredentialAppearanceEditor = false
-                        if (!showDocumentsEditor && settingsDocumentEditor == null && !showRegistryEditor && !showDisabilitySettings) {
-                            showSettingsMenu = true
-                        }
+                        showDefaultDocumentAppearanceSettings = true
                     })
                     showTranslationLanguageSettings -> MedicalTranslationLanguagesSettingsScreen(onBack = { showTranslationLanguageSettings = false; showSettingsMenu = true })
                     showTorClientSettings -> TorClientSettingsScreen(onBack = { showTorClientSettings = false; showSettingsMenu = true })
@@ -747,7 +757,7 @@ internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
                         onManageApplicationAppearance = { showSettingsMenu = false; showApplicationAppearanceSettings = true },
                         onManageTranslationLanguages = { showSettingsMenu = false; showTranslationLanguageSettings = true },
                         onManageTorClients = { showSettingsMenu = false; showTorClientSettings = true },
-                        onManageCredentialAppearance = { showSettingsMenu = false; showCredentialAppearanceEditor = true },
+                        onManageCredentialAppearance = { showSettingsMenu = false; showDefaultDocumentAppearanceSettings = true },
                         onManageDocumentEditing = { showSettingsMenu = false; showDocumentEditorCatalog = true },
                         onManageDocumentVisibility = { openDocumentVisibilityCatalog() },
                         onManageDocumentBrandAssets = { showSettingsMenu = false; showDocumentBrandAssets = true },
