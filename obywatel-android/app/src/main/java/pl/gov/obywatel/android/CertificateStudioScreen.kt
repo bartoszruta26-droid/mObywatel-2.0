@@ -4,6 +4,7 @@ package pl.gov.obywatel.android
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -195,6 +197,37 @@ $motifSvg$centerSvg$sideSvg
     return svg.toByteArray(Charsets.UTF_8)
 }
 
+
+/** Rasterizes a validated SVG on a transparent ARGB canvas for portable PNG export. */
+internal fun renderCertificateAssetSvgToPng(svgBytes: ByteArray, scale: Int = 2): ByteArray {
+    require(SvgSafetyValidator.looksLikeSvg(svgBytes)) { "Plik źródłowy nie jest SVG." }
+    require(scale in 1..4) { "Nieprawidłowa skala eksportu." }
+    SvgSafetyValidator.validate(svgBytes)
+    val raw = Charsets.UTF_8.newDecoder()
+        .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+        .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+        .decode(java.nio.ByteBuffer.wrap(svgBytes)).toString()
+    val vector = com.caverock.androidsvg.SVG.getFromString(SvgSafetyValidator.sanitizeMarkup(raw))
+    val picture = vector.renderToPicture()
+    val sourceWidth = picture.width.coerceAtLeast(1)
+    val sourceHeight = picture.height.coerceAtLeast(1)
+    val width = (sourceWidth * scale).coerceAtMost(4096)
+    val height = (sourceHeight * scale).coerceAtMost(4096)
+    require(width.toLong() * height.toLong() <= 16_000_000L) { "Obraz przekracza limit rozdzielczości eksportu." }
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    return try {
+        val canvas = Canvas(bitmap)
+        canvas.scale(width.toFloat() / sourceWidth, height.toFloat() / sourceHeight)
+        canvas.drawPicture(picture)
+        ByteArrayOutputStream().use { output ->
+            check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) { "Nie udało się zakodować PNG." }
+            output.toByteArray()
+        }
+    } finally {
+        bitmap.recycle()
+    }
+}
+
 private val certificateAssetKinds = setOf(
     "Certyfikat", "Wzór podpisu odręcznego", "Podpis wektorowy (tekst)",
     "Pieczęć", "Pieczęć graficzna (własna)"
@@ -229,6 +262,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
     var editVersion by remember { mutableStateOf("1") }
     var deleteAsset by remember { mutableStateOf<BrandAsset?>(null) }
     var exportAsset by remember { mutableStateOf<BrandAsset?>(null) }
+    var pendingGeneratedExport by remember { mutableStateOf<ByteArray?>(null) }
     var signatureId by remember { mutableStateOf("") }
     var stampId by remember { mutableStateOf("") }
     var signatureMenu by remember { mutableStateOf(false) }
@@ -269,6 +303,24 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
             status = "Wyeksportowano: ${asset.label}"
         }.onFailure { status = "Eksport nie powiódł się: ${it.message ?: "błąd"}" }
         exportAsset = null
+    }
+    val generatedSvgPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/svg+xml")) { uri ->
+        val bytes = pendingGeneratedExport
+        if (uri != null && bytes != null) runCatching {
+            context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+                ?: error("Nie można zapisać pliku SVG.")
+            status = "Wyeksportowano plik SVG."
+        }.onFailure { status = "Eksport SVG nie powiódł się: ${it.message ?: "błąd"}" }
+        pendingGeneratedExport = null
+    }
+    val generatedPngPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
+        val bytes = pendingGeneratedExport
+        if (uri != null && bytes != null) runCatching {
+            context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+                ?: error("Nie można zapisać pliku PNG.")
+            status = "Wyeksportowano plik PNG z przezroczystym tłem."
+        }.onFailure { status = "Eksport PNG nie powiódł się: ${it.message ?: "błąd"}" }
+        pendingGeneratedExport = null
     }
     val pdfPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         if (uri != null) runCatching {
@@ -430,6 +482,18 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 OutlinedTextField(signatureColor, { signatureColor = it }, label = { Text("Kolor #RRGGBB") }, modifier = Modifier.fillMaxWidth())
                 Text("To wektorowa grafika tekstowa. Nie jest odręcznym podpisem ani podpisem elektronicznym.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { runCatching {
+                        pendingGeneratedExport = makeTextSignatureSvg(signatureText, signatureColor)
+                        generatedSvgPicker.launch("podpis-${signatureText.take(24).replace(Regex("[^A-Za-z0-9_-]"), "-")}.svg")
+                    }.onFailure { status = "Eksport SVG nie powiódł się: ${it.message ?: "błąd"}" } },
+                        enabled = signatureText.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Eksportuj SVG") }
+                    OutlinedButton(onClick = { runCatching {
+                        pendingGeneratedExport = renderCertificateAssetSvgToPng(makeTextSignatureSvg(signatureText, signatureColor))
+                        generatedPngPicker.launch("podpis-graficzny.png")
+                    }.onFailure { status = "Eksport PNG nie powiódł się: ${it.message ?: "błąd"}" } },
+                        enabled = signatureText.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Eksportuj PNG") }
+                }
                 Button(onClick = { runCatching {
                     val svg = makeTextSignatureSvg(signatureText, signatureColor)
                     DocumentBrandStore.importBytes(context, "Podpisy własne", "Podpis wektorowy (tekst)",
@@ -492,6 +556,20 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 }
                 Text("Generator tworzy własny wzór graficzny SVG, nie odtwarza pieczęci urzędowych, państwowych ani notarialnych.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { runCatching {
+                        pendingGeneratedExport = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed)
+                        generatedSvgPicker.launch("pieczec-${stampShape}.svg")
+                    }.onFailure { status = "Eksport SVG nie powiódł się: ${it.message ?: "błąd"}" } },
+                        enabled = stampOrganization.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Eksportuj SVG") }
+                    OutlinedButton(onClick = { runCatching {
+                        pendingGeneratedExport = renderCertificateAssetSvgToPng(
+                            makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed)
+                        )
+                        generatedPngPicker.launch("pieczec-${stampShape}.png")
+                    }.onFailure { status = "Eksport PNG nie powiódł się: ${it.message ?: "błąd"}" } },
+                        enabled = stampOrganization.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Eksportuj PNG") }
+                }
                 Button(onClick = { runCatching {
                     val svg = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed)
                     DocumentBrandStore.importBytes(context, "Pieczęcie własne", "Pieczęć graficzna (własna)",
