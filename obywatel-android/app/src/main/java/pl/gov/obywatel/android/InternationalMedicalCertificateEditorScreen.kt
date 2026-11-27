@@ -352,10 +352,16 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                 val key = fieldKey(definition.key)
                 OutlinedTextField(
                     value = values[key].orEmpty(),
-                    onValueChange = { values[key] = it },
+                    onValueChange = { updated ->
+                        values[key] = if (isIsoDateField(definition.key, definition.label, definition.placeholder))
+                            formatIsoDateInput(updated) else updated
+                    },
                     label = { Text(definition.label) },
                     placeholder = {
-                        if (definition.placeholder.isNotBlank()) Text(definition.placeholder)
+                        if (definition.placeholder.isNotBlank()) Text(
+                            if (isIsoDateField(definition.key, definition.label, definition.placeholder))
+                                isoDateInputPlaceholder(definition.placeholder) else definition.placeholder
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = if (
@@ -382,7 +388,7 @@ internal fun InternationalMedicalCertificateEditorScreen(recordId: String, onBac
                     }
                 }
                 OutlinedTextField(value = imagingBodyRegion, onValueChange = { imagingBodyRegion = it }, label = { Text("Body Region") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = imagingDate, onValueChange = { imagingDate = it }, label = { Text("Examination Date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth(), isError = imagingDate.isNotBlank() && !isValidMedicalStudyDate(imagingDate))
+                OutlinedTextField(value = imagingDate, onValueChange = { imagingDate = formatIsoDateInput(it) }, label = { Text("Examination Date (YYYY-MM-DD)") }, placeholder = { Text("RRRR-MM-DD") }, modifier = Modifier.fillMaxWidth(), isError = imagingDate.isNotBlank() && !isValidMedicalStudyDate(imagingDate))
                 if (imagingDate.isNotBlank() && !isValidMedicalStudyDate(imagingDate)) {
                     Text("Enter a real date in YYYY-MM-DD format.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }

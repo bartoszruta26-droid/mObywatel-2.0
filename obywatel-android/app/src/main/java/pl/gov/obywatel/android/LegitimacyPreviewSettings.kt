@@ -2229,6 +2229,35 @@ private fun AnimatedHologram(assetId: String, modifier: Modifier = Modifier) {
     }
 }
 
+internal fun formatIsoDateInput(input: String): String {
+    // Keep special values such as "bezterminowo" intact; format numeric date entry only.
+    if (input.any { !it.isDigit() && it != '-' }) return input
+    val digits = input.filter(Char::isDigit).take(8)
+    return buildString {
+        append(digits.take(4))
+        if (digits.length >= 4) append('-')
+        if (digits.length > 4) append(digits.drop(4).take(2))
+        if (digits.length >= 6) append('-')
+        if (digits.length > 6) append(digits.drop(6))
+    }
+}
+
+internal fun isIsoDateField(fieldKey: String, label: String, placeholder: String = ""): Boolean {
+    val key = fieldKey.lowercase()
+    val caption = label.trim().lowercase()
+    val hint = placeholder.trim().lowercase()
+    return hint.startsWith("yyyy-mm-dd") || hint.startsWith("dd-mm-rrrr") ||
+        caption.contains("data ") || caption.startsWith("data") ||
+        caption.startsWith("date ") || caption.contains(" date") || caption.endsWith("date") ||
+        key.contains("date") || key.contains("birth") || key.contains("expiry") ||
+        key.contains("validto") || key.contains("validuntil") ||
+        key.contains("issuedate") || key.contains("startdate") || key.contains("enddate")
+}
+
+internal fun isoDateInputPlaceholder(placeholder: String): String =
+    if (placeholder.contains("bezterminowo", ignoreCase = true)) "RRRR-MM-DD / bezterminowo"
+    else "RRRR-MM-DD"
+
 @Composable
 internal fun DocumentFieldEditor(
     documentKey: String,
@@ -2304,9 +2333,11 @@ internal fun DocumentFieldEditor(
         ) {
             OutlinedTextField(
                 value = value,
-                onValueChange = onValueChange,
+                onValueChange = { updated ->
+                    onValueChange(if (isIsoDateField(fieldKey, label, placeholder)) formatIsoDateInput(updated) else updated)
+                },
                 label = { Text(label) },
-                placeholder = { Text(placeholder) },
+                placeholder = { Text(if (isIsoDateField(fieldKey, label, placeholder)) isoDateInputPlaceholder(placeholder) else placeholder) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = minLines,
                 maxLines = maxLines
@@ -2321,9 +2352,11 @@ internal fun DocumentFieldEditor(
         ) {
             OutlinedTextField(
                 value = value,
-                onValueChange = onValueChange,
+                onValueChange = { updated ->
+                    onValueChange(if (isIsoDateField(fieldKey, label, placeholder)) formatIsoDateInput(updated) else updated)
+                },
                 label = { Text(label) },
-                placeholder = { Text(placeholder) },
+                placeholder = { Text(if (isIsoDateField(fieldKey, label, placeholder)) isoDateInputPlaceholder(placeholder) else placeholder) },
                 modifier = Modifier.weight(1f),
                 minLines = minLines,
                 maxLines = maxLines
