@@ -9,6 +9,11 @@ on:
     paths:
       - "scripts/optimize_android_graphics.py"
       - ".github/workflows/android-graphic-optimization.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "scripts/optimize_android_graphics.py"
+      - ".github/workflows/android-graphic-optimization.yml"
   workflow_dispatch:
 
 permissions:
@@ -25,7 +30,7 @@ jobs:
       - name: Checkout optimization branch
         uses: actions/checkout@v4
         with:
-          ref: perf/android-graphic-webp-thumbnails
+          ref: ${{ github.head_ref || 'perf/android-graphic-webp-thumbnails' }}
           fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -47,4 +52,4 @@ jobs:
             exit 0
           fi
           git commit -m "[asset optimization] Convert large Android images and add thumbnails"
-          git push origin HEAD:perf/android-graphic-webp-thumbnails
+          git push origin HEAD:${{ github.head_ref || 'perf/android-graphic-webp-thumbnails' }}
