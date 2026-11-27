@@ -8,8 +8,11 @@ import org.junit.Test
 class DocumentGroupCatalogTest {
     @Test
     fun everyDocumentHasExactlyOneFixedGroup() {
-        val documents = documentDisplayOptions.distinctBy { it.first }
+        val documents = documentDisplayOptions
+        val ids = documents.map { it.first }
         assertTrue(documents.isNotEmpty())
+        assertTrue("Document identifiers must not be blank", ids.all { it.isNotBlank() })
+        assertEquals("Document catalog must not contain duplicate identifiers", ids.size, ids.toSet().size)
         documents.forEach { (id, _, _) ->
             assertTrue("Missing group for $id", documentVisibilityGroup(id) in documentVisibilityGroupOrder)
         }
