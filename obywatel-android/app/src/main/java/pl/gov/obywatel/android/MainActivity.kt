@@ -2382,6 +2382,36 @@ private fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     }
 }
 
+
+
+@Composable
+private fun CivicIllustrationBanner(imageRes: Int, description: String) {
+    Image(
+        painter = painterResource(imageRes),
+        contentDescription = description,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(112.dp)
+            .clip(RoundedCornerShape(18.dp)),
+        contentScale = ContentScale.Crop
+    )
+}
+
+@Composable
+private fun MoreMenuScreen(
+    onOpenSettings: () -> Unit,
+    onOpenCertificates: () -> Unit,
+    onOpenHelp: () -> Unit,
+    onOpenHistory: () -> Unit,
+    onOpenIdentityDesigner: () -> Unit,
+    onOpenImportedDocuments: () -> Unit,
+    onOpenPaymentLedger: () -> Unit,
+    onOpenLegalInformation: () -> Unit,
+    onOpenStudiaOnlineArchive: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Więcej", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -2510,52 +2540,50 @@ private fun ServiceDetailScreen(title: String, onBack: () -> Unit, onOpenDocumen
     }
 }
 
+
 @Composable
-private fun Header(
-    onOpenAssistant: () -> Unit,
-    onOpenMessages: () -> Unit,
-    onOpenNotifications: () -> Unit
+internal fun BrandMark() {
+    val context = LocalContext.current
+    val appearance = LocalApplicationAppearance.current
+    Image(
+        painter = painterResource(applicationDrawable(context, appearance.headerEmblem,
+            R.drawable.file_00000000532082108d561dcd2385f8f9)),
+        contentDescription = "Godło aplikacji",
+        modifier = Modifier.size(48.dp),
+        contentScale = ContentScale.Fit
+    )
+}
+
+
+@Composable
+private fun SectionHeading(title: String, subtitle: String) {
+    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Text(title, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+        Text("ZOBACZ", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+    }
+}
+
+
+
+
+@Composable
+private fun DocumentVisibilitySettingsScreen(
+    documentPlacements: Map<String, String>,
+    onDocumentPlacementsChange: (Map<String, String>) -> Unit,
+    documentCardStyle: String,
+    onDocumentCardStyleChange: (String) -> Unit,
+    defaultDocumentIcon: String,
+    onDefaultDocumentIconChange: (String) -> Unit,
+    documentIconOverrides: Map<String, String>,
+    onDocumentIconOverridesChange: (Map<String, String>) -> Unit,
+    onBack: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        BrandMark()
-        Text(
-            "Dokumenty",
-            modifier = Modifier.weight(1f).padding(start = 10.dp),
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        IconButton(onClick = onOpenAssistant) {
-            Icon(painterResource(R.drawable.ic_header_robot_head), contentDescription = "Asystent",
-                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(30.dp))
-        }
-        IconButton(onClick = onOpenMessages) {
-            Icon(painterResource(R.drawable.ic_header_mail), contentDescription = "Wiadomości",
-                tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(30.dp))
-        }
-        Box(
-            modifier = Modifier.size(36.dp).clickable(onClick = onOpenNotifications),
-            contentAlignment = Alignment.Center
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF078FE9)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB9E8FF)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Box(Modifier.fillMaxSize()) {
-            DocumentTileArtwork("identity", Modifier.fillMaxSize())
-            Text(
-                "mDowód",
-                modifier = Modifier.align(Alignment.TopStart).padding(
-                    start = if (tileStyle == "small") 10.dp else 20.dp,
-                    top = if (tileStyle == "small") 10.dp else 18.dp
-                ),
-                color = Color.White,
-                style = if (tileStyle == "small") MaterialTheme.typography.labelMedium else MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+    var defaultIconMenu by remember { mutableStateOf(false) }
+    var expandedDocumentIcon by remember { mutableStateOf<String?>(null) }
+    var expandedVisibilityGroups by remember { mutableStateOf(emptySet<String>()) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
@@ -2568,6 +2596,65 @@ private fun Header(
         Text("Dla każdego dokumentu wybierz miejsce wyświetlania. Ukrycie dokumentu nie usuwa jego danych ani załączników.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         Text("Wygląd kafelków w oknie Dokumenty", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Text("Wybierz sposób prezentacji dokumentów.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text("Domyślna ikona dokumentów", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+        Text("Ustawienie obejmuje wszystkie dokumenty. Ikona indywidualna wybrana niżej ma pierwszeństwo.", color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall)
+        Box {
+            OutlinedButton(onClick = { defaultIconMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(if (defaultDocumentIcon == "automatic") "Automatycznie — ikona przypisana do dokumentu"
+                    else documentIconChoices.firstOrNull { it.first == defaultDocumentIcon }?.second ?: "Wybierz ikonę")
+            }
+            DropdownMenu(expanded = defaultIconMenu, onDismissRequest = { defaultIconMenu = false }) {
+                DropdownMenuItem(text = { Text("Automatycznie — ikona przypisana do dokumentu") }, onClick = {
+                    onDefaultDocumentIconChange("automatic"); defaultIconMenu = false
+                })
+                documentIconChoices.forEach { (resource, label) ->
+                    DropdownMenuItem(text = { Text(label) }, onClick = {
+                        onDefaultDocumentIconChange(resource); defaultIconMenu = false
+                    })
+                }
+            }
+        }
+        listOf("large" to "Duże kafelki", "small" to "Małe kafelki", "list" to "Kafelki listy").forEach { (value, label) ->
+            Row(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                    .background(if (documentCardStyle == value) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+                    .clickable { onDocumentCardStyleChange(value) }
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(selected = documentCardStyle == value, onClick = { onDocumentCardStyleChange(value) })
+                Text(label, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        val groupedVisibilityDocuments = documentDisplayOptions
+            .distinctBy { it.first }
+            .groupBy { (id, _, _) -> documentVisibilityGroup(id) }
+        val visibilityGroupOrder = documentVisibilityGroupOrder
+        visibilityGroupOrder.forEach { groupTitle ->
+            val groupDocuments = groupedVisibilityDocuments[groupTitle].orEmpty()
+            if (groupDocuments.isEmpty()) return@forEach
+            val expanded = groupTitle in expandedVisibilityGroups
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                            .clickable {
+                                expandedVisibilityGroups = if (expanded) expandedVisibilityGroups - groupTitle
+                                else expandedVisibilityGroups + groupTitle
+                            }
+                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(documentGroupIconResource(groupTitle)),
+                            contentDescription = "Ikona grupy: $groupTitle",
+                            modifier = Modifier.size(34.dp)
                         )
                         Text(groupTitle, color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
