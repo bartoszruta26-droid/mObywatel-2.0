@@ -117,32 +117,68 @@ internal object SvgSafetyValidator {
      * CDATA are excluded so literal angle brackets there are not counted.
      */
     private fun validateComplexity(markup: String) {
-        val structuralMarkup = markup
-            .replace(Regex("(?s)<!--.*?-->"), "")
-            .replace(Regex("(?s)<!\\[CDATA\\[.*?]]>"), "")
-        val tagPattern = Regex("<[^>]*>")
         var elements = 0
         var depth = 0
-        for (match in tagPattern.findAll(structuralMarkup)) {
-            val tag = match.value
-            require(tag.length <= MAX_TAG_BYTES) {
-                "SVG zawiera nadmiernie duży znacznik lub zestaw atrybutów."
-            }
-            if (tag.startsWith("</") || tag.startsWith("<!")) {
-                if (tag.startsWith("</")) depth = (depth - 1).coerceAtLeast(0)
+        var index = 0
+
+        while (index < markup.length) {
+            if (markup.startsWith("<!--", index)) {
+                val end = markup.indexOf("-->", index + 4)
+                require(end >= 0) { "SVG zawiera niedomknięty komentarz XML." }
+                index = end + 3
                 continue
             }
-            if (tag.length < 2 || tag[1].isWhitespace() || tag[1] == '?') continue
-            elements++
-            require(elements <= MAX_ELEMENTS) {
-                "SVG zawiera zbyt wiele elementów (limit: $MAX_ELEMENTS)."
+            if (markup.startsWith("<![CDATA[", index)) {
+                val end = markup.indexOf("]]>", index + 9)
+                require(end >= 0) { "SVG zawiera niedomkniętą sekcję CDATA." }
+                index = end + 3
+                continue
             }
-            if (!tag.dropLast(1).trimEnd().endsWith("/")) {
-                depth++
-                require(depth <= MAX_NESTING_DEPTH) {
-                    "SVG przekracza dopuszczalną głębokość zagnieżdżenia (limit: $MAX_NESTING_DEPTH)."
+            if (markup[index] != '<') {
+                index++
+                continue
+            }
+
+            val start = index
+            index++
+            var quote: Char? = null
+            while (index < markup.length) {
+                val character = markup[index]
+                if (quote != null) {
+                    if (character == quote) quote = null
+                } else {
+                    when (character) {
+                        '\'', '"' -> quote = character
+                        '>' -> break
+                    }
+                }
+                index++
+            }
+            require(index < markup.length && markup[index] == '>') {
+                "SVG zawiera niedomknięty znacznik XML."
+            }
+
+            val tag = markup.substring(start, index + 1)
+            require(tag.toByteArray(Charsets.UTF_8).size <= MAX_TAG_BYTES) {
+                "SVG zawiera nadmiernie duży znacznik lub zestaw atrybutów."
+            }
+            when {
+                tag.startsWith("</") -> depth = (depth - 1).coerceAtLeast(0)
+                tag.startsWith("<!") || tag.startsWith("<?") -> Unit
+                else -> {
+                    elements++
+                    require(elements <= MAX_ELEMENTS) {
+                        "SVG zawiera zbyt wiele elementów (limit: $MAX_ELEMENTS)."
+                    }
+                    if (!tag.dropLast(1).trimEnd().endsWith("/")) {
+                        depth++
+                        require(depth <= MAX_NESTING_DEPTH) {
+                            "SVG przekracza dopuszczalną głębokość zagnieżdżenia (limit: $MAX_NESTING_DEPTH)."
+                        }
+                    }
                 }
             }
+            index++
         }
     }
 
