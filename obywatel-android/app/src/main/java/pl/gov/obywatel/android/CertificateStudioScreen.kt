@@ -444,6 +444,14 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 OutlinedTextField(stampCenter, { stampCenter = it }, label = { Text("Tekst środkowy") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(stampNumber, { stampNumber = it }, label = { Text("Numer / identyfikator") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(stampColor, { stampColor = it }, label = { Text("Kolor pieczęci #RRGGBB") }, modifier = Modifier.fillMaxWidth())
+                Text("Szybki wybór koloru", style = MaterialTheme.typography.bodySmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("#244B75", "#B22222", "#176B45", "#4B3F72", "#202020").forEach { color ->
+                        OutlinedButton(onClick = { stampColor = color }, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)) {
+                            Text(color.removePrefix("#"))
+                        }
+                    }
+                }
                 Box {
                     OutlinedButton(onClick = { stampShapeMenu = true }, modifier = Modifier.fillMaxWidth()) {
                         Text("Kształt: " + when (stampShape) { "oval" -> "Owalna pozioma"; "rectangle" -> "Prostokątna pozioma"; else -> "Okrągła" })
@@ -469,7 +477,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                         Text("Położenie grafiki: " + if (stampMotifPosition == "side") "Z boku" else "W środku")
                     }
                     DropdownMenu(stampPositionMenu, { stampPositionMenu = false }) {
-                        DropdownMenuItem(text = { Text("W środku pieczęci okrągłej") }, onClick = { stampMotifPosition = "center"; stampPositionMenu = false })
+                        if (stampShape == "circle") DropdownMenuItem(text = { Text("W środku pieczęci okrągłej") }, onClick = { stampMotifPosition = "center"; stampPositionMenu = false })
                         DropdownMenuItem(text = { Text("Z boku pieczęci poziomej") }, onClick = { stampMotifPosition = "side"; stampPositionMenu = false })
                     }
                 }
