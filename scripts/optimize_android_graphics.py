@@ -65,7 +65,7 @@ def webp_candidate(source: Path) -> Path | None:
             if is_animated(target):
                 target.unlink(missing_ok=True)
             elif target.stat().st_size <= source.stat().st_size * 0.98:
-                source.unlink()
+                # Preserve the original source in GitHub; WebP is an additional optimized copy.
                 return target
         except Exception:
             target.unlink(missing_ok=True)
@@ -79,7 +79,7 @@ def webp_candidate(source: Path) -> Path | None:
             else:
                 image.convert("RGB").save(target, "WEBP", quality=92, method=6)
         if target.stat().st_size <= source.stat().st_size * 0.98:
-            source.unlink()
+            # Preserve the original source in GitHub; WebP is an additional optimized copy.
             return target
         target.unlink(missing_ok=True)
         return source
