@@ -875,7 +875,7 @@ private val armedServiceDocumentIds = setOf(
 )
 internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id, _, _) ->
     id to when {
-        id in setOf("identity", "receipts", "foreign_prescription", "payment_transactions") -> "dashboard"
+        id in setOf("identity", "receipts", "foreign_prescription", "payment_transactions", INTERNATIONAL_MEDICAL_CERTIFICATE_ID) -> "dashboard"
         id == "financial_service" -> "other"
         // Donation ledger cards are available in the catalog but never shown by default.
         id in setOf(DonationLedgerCatalog.PERSON, DonationLedgerCatalog.FOUNDATION,
@@ -884,6 +884,7 @@ internal val defaultDocumentPlacements = documentDisplayOptions.associate { (id,
     }
 }
 private const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identity_v1"
+private const val INTERNATIONAL_MEDICAL_CERTIFICATE_VISIBILITY_MIGRATION_KEY = "international_medical_certificate_dashboard_v1"
 private const val DONATION_LEDGER_VISIBILITY_MIGRATION_KEY = "donation_ledgers_hidden_by_default_v1"
 private const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
 private const val ARMED_SERVICE_DASHBOARD_CLEANUP_MIGRATION_KEY = "armed_service_dashboard_cleanup_v1"
@@ -996,6 +997,20 @@ private fun loadDocumentPlacements(context: Context): Map<String, String> {
         }
         editor.putBoolean(DONATION_LEDGER_VISIBILITY_MIGRATION_KEY, true)
         check(editor.commit()) { "Nie udało się zastosować domyślnej widoczności ewidencji darowizn." }
+    }
+    if (!prefs.getBoolean(INTERNATIONAL_MEDICAL_CERTIFICATE_VISIBILITY_MIGRATION_KEY, false)) {
+        // Udostępnij kafelek zaświadczenia medycznego również na istniejących instalacjach.
+        // Zachowaj jawny wybór użytkownika, np. przeniesienie dokumentu do sekcji „Inne”.
+        val key = DOCUMENT_DISPLAY_KEY_PREFIX + INTERNATIONAL_MEDICAL_CERTIFICATE_ID
+        val savedPlacement = prefs.getString(key, null)
+        if (savedPlacement == null || savedPlacement == "hidden") {
+            check(prefs.edit().putString(key, "dashboard").commit()) {
+                "Nie udało się udostępnić kafelka zaświadczenia medycznego."
+            }
+        }
+        check(prefs.edit().putBoolean(INTERNATIONAL_MEDICAL_CERTIFICATE_VISIBILITY_MIGRATION_KEY, true).commit()) {
+            "Nie udało się zapisać migracji widoczności zaświadczenia medycznego."
+        }
     }
     if (!prefs.getBoolean(ARMED_SERVICE_VISIBILITY_MIGRATION_KEY, false)) {
         // Dodanie grupy do katalogu nie oznacza zgody na publikację jej kafelków.
