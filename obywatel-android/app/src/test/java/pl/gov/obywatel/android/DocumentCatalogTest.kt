@@ -71,11 +71,16 @@ class DocumentCatalogTest {
     }
 
     @Test
+    fun internationalMedicalCertificateIsVisibleOnDashboardByDefault() {
+        assertEquals("dashboard", defaultDocumentPlacements[INTERNATIONAL_MEDICAL_CERTIFICATE_ID])
+    }
+
+    @Test
     fun internationalMedicalCertificateIsCataloguedInHealthService() {
         val item = documentDisplayOptions.single { it.first == INTERNATIONAL_MEDICAL_CERTIFICATE_ID }
         assertEquals("International Medical Certificate", item.second)
         assertEquals("Służba zdrowotna", documentVisibilityGroup(item.first))
-        assertEquals("hidden", defaultDocumentPlacements[item.first])
+        assertEquals("dashboard", defaultDocumentPlacements[item.first])
         assertTrue(DocumentRouteRegistry.find(item.first) != null)
         assertTrue(documentEditorFieldDefinitions(item.first).all { it.label.all { ch -> ch.code < 128 } })
     }
