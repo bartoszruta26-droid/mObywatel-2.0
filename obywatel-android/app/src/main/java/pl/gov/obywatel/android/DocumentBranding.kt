@@ -207,6 +207,10 @@ internal object DocumentBrandStore {
     private const val INDEX = "document-brand-assets.enc"
     private const val ASSIGNMENTS_INDEX = "document-brand-assignments.enc"
     private const val MAX_IMAGE = 12 * 1024 * 1024
+    private const val MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
+    private const val MAX_ARCHIVE_ASSET_BYTES = 48L * 1024 * 1024
+    private const val MAX_ARCHIVE_ASSETS = 256
+    private const val MAX_ARCHIVE_ASSIGNMENTS = 1024
     private val kinds = listOf(
         "Pieczęć graficzna (własna)", "Podpis wektorowy (tekst)",
         "Ikona wektorowa", "Ikona wektorowa kafelka", "Ikona", "Tło wektorowe", "Tło graficzne",
@@ -645,26 +649,58 @@ internal object DocumentBrandStore {
 
     @Synchronized
     fun importArchive(context: Context, raw: String) {
+        // Ograniczamy rozmiar całego dokumentu przed utworzeniem drzewa JSONObject.
+        require(raw.toByteArray(Charsets.UTF_8).size <= MAX_ARCHIVE_BYTES) {
+            "Archiwum biblioteki przekracza limit 64 MB."
+        }
         val root = JSONObject(raw)
         require(root.optInt("version") == 1) { "Nieobsługiwana wersja biblioteki zasobów." }
-        val restored = list(context).filter { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
-            .associateBy { it.id }.toMutableMap()
-        list(context).filter { !it.file.startsWith("builtin:") && !it.file.startsWith("resource:") }
-            .forEach { restored[it.id] = it }
+        val existingAssets = list(context)
+        val reservedIds = existingAssets.filter {
+            it.file.startsWith("builtin:") || it.file.startsWith("resource:")
+        }.mapTo(HashSet()) { it.id }
+
+        data class PreparedAsset(val asset: BrandAsset, val bytes: ByteArray)
         val assets = root.optJSONArray("assets") ?: JSONArray()
+        require(assets.length() <= MAX_ARCHIVE_ASSETS) { "Archiwum zawiera zbyt wiele zasobów." }
+        val prepared = ArrayList<PreparedAsset>(assets.length())
+        val seenIds = HashSet<String>()
+        var totalBytes = 0L
+
+        // Najpierw walidujemy CAŁE archiwum. Żaden plik ani indeks nie jest
+        // modyfikowany, dopóki wszystkie zasoby i przypisania nie przejdą kontroli.
         for (index in 0 until assets.length()) {
             val item = assets.getJSONObject(index)
             val id = item.getString("id")
-            require(id.matches(Regex("[A-Za-z0-9_-]{1,80}"))) { "Nieprawidłowy identyfikator zasobu." }
+            require(
+                id.matches(Regex("[A-Za-z0-9_-]{1,80}")) &&
+                    id !in reservedIds && seenIds.add(id)
+            ) {
+                "Nieprawidłowy, zarezerwowany lub powtórzony identyfikator zasobu."
+            }
             val kind = normalizeAssetKind(item.getString("kind"))
-            val bytes = java.util.Base64.getDecoder().decode(item.getString("bytes"))
-            require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) { "Zasób przekracza limit 12 MB." }
+            val encoded = item.getString("bytes")
+            // Base64 zwiększa rozmiar o około 1/3; odrzucamy zbyt duży tekst
+            // zanim zostanie zdekodowany do kolejnej kopii danych.
+            require(encoded.length <= ((MAX_IMAGE + 2) / 3) * 4) {
+                "Zasób przekracza limit 12 MB."
+            }
+            val bytes = java.util.Base64.getDecoder().decode(encoded)
+            require(bytes.isNotEmpty() && bytes.size <= MAX_IMAGE) {
+                "Zasób przekracza limit 12 MB."
+            }
+            totalBytes += bytes.size
+            require(totalBytes <= MAX_ARCHIVE_ASSET_BYTES) {
+                "Łączny rozmiar zasobów archiwum przekracza limit 48 MB."
+            }
+            val mimeType = item.optString("mimeType").take(120)
             val isSvg = SvgSafetyValidator.looksLikeSvg(bytes)
-            val mimeType = item.optString("mimeType")
             val isXml = mimeType == "application/xml" || mimeType == "text/xml"
             if (isSvg) SvgSafetyValidator.validate(bytes)
             if (isXml) validateInstitutionalSymbolXml(bytes)
-            if (kind in imageKinds && mimeType != "application/pdf" && !isXml) decodeImage(bytes).recycle()
+            if (kind in imageKinds && mimeType != "application/pdf" && !isXml) {
+                decodeImage(bytes).recycle()
+            }
             val extension = when {
                 isSvg -> ".svg.enc"
                 isXml -> ".xml.enc"
@@ -673,16 +709,23 @@ internal object DocumentBrandStore {
                 kind == "Załącznik" -> ".bin.enc"
                 else -> ".asset.enc"
             }
-            val file = "$id$extension"
-            atomicWrite(File(dir(context), file), crypt(bytes, true))
-            restored[id] = BrandAsset(id, item.optString("owner").take(120), kind,
-                item.optString("label").take(180), file, item.optString("rights").take(2048),
-                item.optInt("version", 1), item.optLong("createdAt", System.currentTimeMillis()),
-                item.optString("mimeType").take(120))
+            val asset = BrandAsset(
+                id, item.optString("owner").take(120), kind,
+                item.optString("label").take(180), "$id$extension",
+                item.optString("rights").take(2048), item.optInt("version", 1).coerceAtLeast(1),
+                item.optLong("createdAt", System.currentTimeMillis()), mimeType
+            )
+            prepared += PreparedAsset(asset, bytes)
         }
-        save(context, restored.values.toList())
+
+        val restored = existingAssets.associateBy { it.id }.toMutableMap()
+        prepared.forEach { restored[it.asset.id] = it.asset }
+
         val validIds = restored.keys
         val assigned = root.optJSONArray("assignments") ?: JSONArray()
+        require(assigned.length() <= MAX_ARCHIVE_ASSIGNMENTS) {
+            "Archiwum zawiera zbyt wiele przypisań zasobów."
+        }
         val next = assignments(context).associateBy { it.documentType to it.kind }.toMutableMap()
         for (index in 0 until assigned.length()) {
             val item = assigned.getJSONObject(index)
@@ -692,11 +735,22 @@ internal object DocumentBrandStore {
             require(documentBrandTargets.any { it.first == documentType } && assetId in validIds) {
                 "Nieprawidłowe przypisanie zasobu do dokumentu."
             }
+            require(restored[assetId]?.kind == kind) {
+                "Rodzaj przypisanego zasobu nie jest zgodny z kategorią."
+            }
             next[documentType to kind] = BrandAssignment(documentType, kind, assetId)
         }
+
+        // Po zakończeniu pełnej walidacji zapisujemy zasoby i indeksy.
+        prepared.forEach { item ->
+            atomicWrite(File(dir(context), item.asset.file), crypt(item.bytes, true))
+        }
+        save(context, restored.values.toList())
         val array = JSONArray()
-        next.values.forEach { item -> array.put(JSONObject().put("documentType", item.documentType)
-            .put("kind", item.kind).put("assetId", item.assetId)) }
+        next.values.forEach { item ->
+            array.put(JSONObject().put("documentType", item.documentType)
+                .put("kind", item.kind).put("assetId", item.assetId))
+        }
         atomicWrite(File(dir(context), ASSIGNMENTS_INDEX), crypt(array.toString().toByteArray(Charsets.UTF_8), true))
     }
 
@@ -715,8 +769,16 @@ internal object DocumentBrandStore {
 
     private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
         if (!SvgSafetyValidator.looksLikeSvg(bytes)) {
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { return it }
-            throw IllegalArgumentException("Nieobsługiwany format obrazu. Wybierz PNG, JPEG, WebP lub poprawny SVG.")
+            // Limit dimensions before allocating pixel storage. A small compressed
+            // image can otherwise expand into an unexpectedly large bitmap.
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+            require(bounds.outWidth in 1..4096 && bounds.outHeight in 1..4096 &&
+                bounds.outWidth.toLong() * bounds.outHeight <= 16_000_000L) {
+                "Obraz ma zbyt duże wymiary. Maksymalnie 4096 × 4096 pikseli i 16 megapikseli."
+            }
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                ?: throw IllegalArgumentException("Nieobsługiwany lub uszkodzony obraz. Wybierz PNG, JPEG, WebP lub poprawny SVG.")
         }
         SvgSafetyValidator.validate(bytes)
         val raw = Charsets.UTF_8.newDecoder()
