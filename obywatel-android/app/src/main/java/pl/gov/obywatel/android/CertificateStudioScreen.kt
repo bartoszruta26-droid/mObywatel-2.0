@@ -183,7 +183,7 @@ internal fun makeStampSvg(
         }
         append("</mask>")
     }
-    val maskAttribute = if (distressed) """mask="url(#inkWear)" opacity="0.78"""" else ""
+    val maskAttribute = if (distressed) "mask=\"url(#inkWear)\" opacity=\"0.78\"" else ""
     val svg = """<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720">
 <defs>$wearMask<path id="topArc" d="M 105,360 A 255,255 0 0 1 615,360"/><path id="bottomArc" d="M 615,360 A 255,255 0 0 1 105,360"/></defs>
 <rect width="720" height="720" fill="none"/><g $maskAttribute>$frame
