@@ -124,4 +124,41 @@ class SvgSafetyValidatorTest {
         makeStampSvg("Fundacja", "PIECZĘĆ", "1", "url(#malicious)")
     }
 
+    @Test
+    fun signatureGeneratorPreservesPolishCharactersAndSelectedFont() {
+        val svg = makeTextSignatureSvg("Łukasz Żółć & partnerzy № 7 ©", "#183A63", "serif")
+            .toString(Charsets.UTF_8)
+        assertTrue(svg.contains("Łukasz Żółć &amp; partnerzy № 7 ©"))
+        assertTrue(svg.contains("Georgia"))
+        assertTrue(svg.contains("Noto Sans Symbols 2"))
+        SvgSafetyValidator.validateMarkupSecurity(svg)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun signatureGeneratorRejectsUnknownFont() {
+        makeTextSignatureSvg("Jan Kowalski", "#183A63", "url(javascript:alert(1))")
+    }
+
+    @Test
+    fun advancedStampGeneratorSupportsShapesMotifsAndDistressedInk() {
+        val round = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "A-1", "#244B75",
+            "circle", "rosette", "center", true).toString(Charsets.UTF_8)
+        assertTrue(round.contains("<circle"))
+        assertTrue(round.contains("<mask id=\"inkWear\""))
+        assertTrue(round.contains("translate(360 390)"))
+
+        val horizontal = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "A-2", "#B22222",
+            "rectangle", "star", "side", false).toString(Charsets.UTF_8)
+        assertTrue(horizontal.contains("<rect"))
+        assertTrue(horizontal.contains("translate(555 390)"))
+        assertFalse(horizontal.contains("<mask id=\"inkWear\""))
+        SvgSafetyValidator.validateMarkupSecurity(round)
+        SvgSafetyValidator.validateMarkupSecurity(horizontal)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun advancedStampGeneratorRejectsUnsupportedShape() {
+        makeStampSvg("Fundacja", "PIECZĘĆ", "1", "#244B75", "triangle", "star", "side", true)
+    }
+
 }
