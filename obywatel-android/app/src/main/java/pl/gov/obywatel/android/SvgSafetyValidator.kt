@@ -16,6 +16,10 @@ import java.nio.charset.CodingErrorAction
 internal object SvgSafetyValidator {
     private const val MAX_BYTES = 12 * 1024 * 1024
     private const val DETECTION_BYTES = 16 * 1024
+    // Limits structural complexity before the SVG renderer allocates its scene graph.
+    private const val MAX_ELEMENTS = 20_000
+    private const val MAX_NESTING_DEPTH = 64
+    private const val MAX_TAG_BYTES = 256 * 1024
     private val HEX_COLOR = Regex("#[0-9A-Fa-f]{6}")
 
     /** Restrict dynamic SVG paint values to a single opaque RGB color. */
@@ -44,13 +48,36 @@ internal object SvgSafetyValidator {
         runCatching { parser.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false) }
         parser.setInput(StringReader(safeMarkup))
         var rootSeen = false
+        var elementCount = 0
+        var depth = 0
         var event = parser.eventType
         while (event != XmlPullParser.END_DOCUMENT) {
-            if (event == XmlPullParser.START_TAG && !rootSeen) {
-                require(parser.name.equals("svg", ignoreCase = true)) {
-                    "Dokument XML nie ma elementu głównego SVG."
+            when (event) {
+                XmlPullParser.START_TAG -> {
+                    if (!rootSeen) {
+                        require(parser.name.equals("svg", ignoreCase = true)) {
+                            "Dokument XML nie ma elementu głównego SVG."
+                        }
+                        rootSeen = true
+                    }
+                    elementCount++
+                    require(elementCount <= MAX_ELEMENTS) {
+                        "SVG zawiera zbyt wiele elementów (limit: $MAX_ELEMENTS)."
+                    }
+                    depth++
+                    require(depth <= MAX_NESTING_DEPTH) {
+                        "SVG przekracza dopuszczalną głębokość zagnieżdżenia (limit: $MAX_NESTING_DEPTH)."
+                    }
+                    var attributeBytes = parser.name.length
+                    for (index in 0 until parser.attributeCount) {
+                        attributeBytes += parser.getAttributeName(index).length
+                        attributeBytes += parser.getAttributeValue(index).length
+                        require(attributeBytes <= MAX_TAG_BYTES) {
+                            "SVG zawiera nadmiernie duży znacznik lub zestaw atrybutów."
+                        }
+                    }
                 }
-                rootSeen = true
+                XmlPullParser.END_TAG -> depth--
             }
             event = parser.next()
         }
@@ -80,6 +107,78 @@ internal object SvgSafetyValidator {
         }
         require(!safeMarkup.contains("<?")) {
             "SVG zawiera niedozwoloną instrukcję przetwarzania XML."
+        }
+        validateComplexity(safeMarkup)
+    }
+
+    /**
+     * Bound element count, nesting and individual tag size before handing
+     * untrusted markup to the platform parser or SVG renderer. Comments and
+     * CDATA are excluded so literal angle brackets there are not counted.
+     */
+    private fun validateComplexity(markup: String) {
+        var elements = 0
+        var depth = 0
+        var index = 0
+
+        while (index < markup.length) {
+            if (markup.startsWith("<!--", index)) {
+                val end = markup.indexOf("-->", index + 4)
+                require(end >= 0) { "SVG zawiera niedomknięty komentarz XML." }
+                index = end + 3
+                continue
+            }
+            if (markup.startsWith("<![CDATA[", index)) {
+                val end = markup.indexOf("]]>", index + 9)
+                require(end >= 0) { "SVG zawiera niedomkniętą sekcję CDATA." }
+                index = end + 3
+                continue
+            }
+            if (markup[index] != '<') {
+                index++
+                continue
+            }
+
+            val start = index
+            index++
+            var quote: Char? = null
+            while (index < markup.length) {
+                val character = markup[index]
+                if (quote != null) {
+                    if (character == quote) quote = null
+                } else {
+                    when (character) {
+                        '\'', '"' -> quote = character
+                        '>' -> break
+                    }
+                }
+                index++
+            }
+            require(index < markup.length && markup[index] == '>') {
+                "SVG zawiera niedomknięty znacznik XML."
+            }
+
+            val tag = markup.substring(start, index + 1)
+            require(tag.toByteArray(Charsets.UTF_8).size <= MAX_TAG_BYTES) {
+                "SVG zawiera nadmiernie duży znacznik lub zestaw atrybutów."
+            }
+            when {
+                tag.startsWith("</") -> depth = (depth - 1).coerceAtLeast(0)
+                tag.startsWith("<!") || tag.startsWith("<?") -> Unit
+                else -> {
+                    elements++
+                    require(elements <= MAX_ELEMENTS) {
+                        "SVG zawiera zbyt wiele elementów (limit: $MAX_ELEMENTS)."
+                    }
+                    if (!tag.dropLast(1).trimEnd().endsWith("/")) {
+                        depth++
+                        require(depth <= MAX_NESTING_DEPTH) {
+                            "SVG przekracza dopuszczalną głębokość zagnieżdżenia (limit: $MAX_NESTING_DEPTH)."
+                        }
+                    }
+                }
+            }
+            index++
         }
     }
 
