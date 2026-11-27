@@ -518,9 +518,8 @@ internal object DocumentBrandStore {
         val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
         if (asset.file.startsWith("remote:")) {
             val name = asset.file.removePrefix("remote:")
-            val cached = RemoteGraphicRepository.cachedGraphicFile(context, name)
-            if (cached != null) return BitmapFactory.decodeFile(cached.absolutePath)
-            return RemoteGraphicRepository.thumbnailBitmap(context, name)
+            RemoteGraphicRepository.cachedGraphicBitmap(context, name)
+                ?: RemoteGraphicRepository.thumbnailBitmap(context, name)
         }
         if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
@@ -619,14 +618,20 @@ internal object DocumentBrandStore {
         return imageById(context, asset.id)
     }
     suspend fun ensureFullGraphicsForPdf(context: Context, documentType: String, owner: String) {
-        val assigned = assignments(context)
-        val candidateKeys = assignmentKeys(documentType, owner).toSet()
-        val remoteNames = assigned.filter { it.documentType in candidateKeys }
-            .mapNotNull { assignment ->
-                val asset = list(context).firstOrNull { it.id == assignment.assetId } ?: return@mapNotNull null
-                asset.file.takeIf { it.startsWith("remote:") }?.removePrefix("remote:")
-            }.distinct()
-        remoteNames.forEach { name -> RemoteGraphicRepository.fullGraphicFile(context, name) }
+        val assets = list(context)
+        val assignedIds = assignments(context)
+            .filter { it.documentType in assignmentKeys(documentType, owner).toSet() }
+            .map { it.assetId }
+            .toSet()
+        val assignedRemoteNames = assets.filter { it.id in assignedIds }
+            .mapNotNull { it.file.takeIf { file -> file.startsWith("remote:") }?.removePrefix("remote:") }
+        val ownerFallbackNames = assets.filter {
+            it.owner.equals(owner, ignoreCase = true) &&
+                it.kind in setOf("Flaga", "Logo", "Herb", "Godło", "Tło dokumentu", "Znak wodny", "Pieczęć") &&
+                it.file.startsWith("remote:")
+        }.map { it.file.removePrefix("remote:") }
+        (assignedRemoteNames + ownerFallbackNames).distinct()
+            .forEach { name -> RemoteGraphicRepository.fullGraphicFile(context, name) }
     }
     fun preview(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? =
         imageById(context, assetId, knownAsset)
@@ -866,6 +871,11 @@ internal object DocumentBrandStore {
     }
     fun image(context: Context, owner: String, kind: String) : android.graphics.Bitmap? = runCatching {
         val asset=list(context).lastOrNull { it.owner.equals(owner,true) && it.kind==kind } ?: return null
+        if (asset.file.startsWith("remote:")) {
+            val name = asset.file.removePrefix("remote:")
+            return RemoteGraphicRepository.cachedGraphicBitmap(context, name)
+                ?: RemoteGraphicRepository.thumbnailBitmap(context, name)
+        }
         if (asset.file.startsWith("resource:")) {
             val resourceId = context.resources.getIdentifier(asset.file.removePrefix("resource:"), "drawable", context.packageName)
             if (resourceId == 0) return null
