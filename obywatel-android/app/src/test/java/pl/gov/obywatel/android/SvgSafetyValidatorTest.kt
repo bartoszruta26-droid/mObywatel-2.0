@@ -96,14 +96,14 @@ class SvgSafetyValidatorTest {
         val round = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "A-1", "#244B75",
             "circle", "rosette", "center", true).toString(Charsets.UTF_8)
         assertTrue(round.contains("<circle"))
-        assertTrue(round.contains("<mask id=\"inkWear\">"))
-        assertTrue(round.contains("translate(360 360)"))
+        assertTrue(round.contains("<mask id=\"inkWear\""))
+        assertTrue(round.contains("translate(360 390)"))
 
         val horizontal = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "A-2", "#B22222",
             "rectangle", "star", "side", false).toString(Charsets.UTF_8)
         assertTrue(horizontal.contains("<rect"))
-        assertTrue(horizontal.contains("translate(555 360)"))
-        assertTrue(!horizontal.contains("<mask id=\"inkWear\">"))
+        assertTrue(horizontal.contains("translate(555 390)"))
+        assertTrue(!horizontal.contains("<mask id=\"inkWear\""))
         SvgSafetyValidator.validateMarkupSecurity(round)
         SvgSafetyValidator.validateMarkupSecurity(horizontal)
     }
