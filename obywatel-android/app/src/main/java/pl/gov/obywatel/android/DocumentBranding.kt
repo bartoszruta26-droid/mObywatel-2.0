@@ -579,7 +579,10 @@ internal object DocumentBrandStore {
             all.lastOrNull { it.documentType == key && it.kind == kind }
         }
         return assigned?.let { imageById(context, it.assetId) }
-            ?: if (documentType == "identity" && kind == "Tło dokumentu") {
+            ?: if (kind == "Tło dokumentu" && documentType.startsWith("church_")) {
+                imageById(context, "builtin_drawable_file_00000000d588820a9b141a8f2f8df7c5")
+                    ?: image(context, owner, kind)
+            } else if (documentType == "identity" && kind == "Tło dokumentu") {
                 imageById(context, "builtin_drawable_file_00000000f5b0820a9499b70ab02da04b")
                     ?: image(context, owner, kind)
             } else image(context, owner, kind)

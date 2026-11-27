@@ -9,9 +9,10 @@
     "nine_patch_and_animated_images": "excluded",
     "full_graphics_location": "graphic-originals/full-webp/",
     "original_sources_location": "graphic-originals/source-png/",
-    "app_resources": "thumbnail WebP except the single full-resolution horizontal eagle credential background",
+    "app_resources": "thumbnail WebP except the two full-resolution default credential backgrounds (eagle and episcopal coat of arms)",
     "bundled_full_resolution_exceptions": [
-      "drawable-nodpi/tlo_poziome_oryginal.webp"
+      "drawable-nodpi/tlo_poziome_oryginal.webp",
+      "drawable-nodpi/file_00000000d588820a9b141a8f2f8df7c5.webp"
     ]
   },
   "count": 85,
@@ -884,7 +885,8 @@
       "full_sha256": "fb85843f95d7060d56516c786eb475b826d2db5db37a568a6f86a3f2ae49e11f",
       "thumbnail_sha256": "5683dfd0729fe70b5c8599755626f40f1d1cfe0a5bd31ac425df5702b3dc3a17",
       "full_format": "WEBP",
-      "thumbnail_format": "WEBP"
+      "thumbnail_format": "WEBP",
+      "bundled_full_resource_path": "obywatel-android/app/src/main/res/drawable-nodpi/file_00000000d588820a9b141a8f2f8df7c5.webp"
     },
     {
       "resource_name": "file_00000000e0e4820a839fa3184993f41b",

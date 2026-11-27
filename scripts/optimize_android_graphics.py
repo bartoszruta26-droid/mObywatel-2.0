@@ -27,7 +27,10 @@ MANIFEST = THUMB_ROOT / "manifest.json"
 MIN_SOURCE_BYTES = 96 * 1024
 THUMB_MAX_EDGE = 360
 # One full-resolution horizontal eagle background remains bundled for the default credential.
-BUNDLED_FULL_RESOURCES = {"drawable-nodpi/tlo_poziome_oryginal.webp"}
+BUNDLED_FULL_RESOURCES = {
+    "drawable-nodpi/tlo_poziome_oryginal.webp",
+    "drawable-nodpi/file_00000000d588820a9b141a8f2f8df7c5.webp",
+}
 
 
 def sha256(path: Path) -> str:
@@ -170,7 +173,7 @@ def main() -> None:
             "full_graphics_location": "graphic-originals/full-webp/",
             "original_sources_location": "graphic-originals/source-png/",
             "app_resources": "thumbnail WebP except the single full-resolution horizontal eagle credential background",
-            "bundled_full_resolution_exceptions": ["drawable-nodpi/tlo_poziome_oryginal.webp"]
+            "bundled_full_resolution_exceptions": sorted(BUNDLED_FULL_RESOURCES)
         },
         "count": len(entries),
         "items": entries
