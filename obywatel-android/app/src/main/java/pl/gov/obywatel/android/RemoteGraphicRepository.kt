@@ -44,7 +44,8 @@ internal object RemoteGraphicRepository {
         val resourceName: String,
         val fullPath: String,
         val sha256: String,
-        val fullBytes: Long
+        val fullBytes: Long,
+        val thumbnailAssetPath: String
     )
 
     private fun manifest(context: Context): Map<String, Entry> {
@@ -59,13 +60,15 @@ internal object RemoteGraphicRepository {
             val path = item.getString("full_path")
             val digest = item.getString("full_sha256").lowercase()
             val bytes = item.getLong("full_bytes")
+            val thumbnailPath = item.getString("thumbnail_asset_path")
             require(name.matches(Regex("[A-Za-z0-9_]+"))) { "Nieprawidłowa nazwa zasobu." }
             require(path.startsWith("obywatel-android/app/src/main/res/") &&
                 path.split('/').none { it == ".." } &&
                 path.matches(Regex("[A-Za-z0-9_./-]+"))) { "Niedozwolona ścieżka zasobu." }
+            require(thumbnailPath.startsWith("obywatel-android/app/src/main/assets/graphic-thumbnails/") && thumbnailPath.matches(Regex("[A-Za-z0-9_./-]+")) && thumbnailPath.split('/').none { it == ".." }) { "Nieprawidłowa ścieżka miniatury." }
             require(digest.matches(Regex("[a-f0-9]{64}"))) { "Nieprawidłowy skrót SHA-256." }
             require(bytes in 1..MAX_DOWNLOAD_BYTES) { "Nieprawidłowy rozmiar grafiki." }
-            require(result.put(name, Entry(name, path, digest, bytes)) == null) {
+            require(result.put(name, Entry(name, path, digest, bytes, thumbnailPath.removePrefix("obywatel-android/app/src/main/assets/"))) == null) {
                 "Powielona nazwa zasobu w manifeście: $name"
             }
         }
@@ -119,6 +122,20 @@ internal object RemoteGraphicRepository {
             }
             destination
         }
+
+    fun isRemoteResource(context: Context, resourceName: String): Boolean =
+        runCatching { resourceName in manifest(context) }.getOrDefault(false)
+
+    fun thumbnailBitmap(context: Context, resourceName: String): Bitmap? = runCatching {
+        val entry = manifest(context)[resourceName] ?: return null
+        context.assets.open(entry.thumbnailAssetPath).use { BitmapFactory.decodeStream(it) }
+    }.getOrNull()
+
+    fun cachedGraphicFile(context: Context, resourceName: String): File? = runCatching {
+        val entry = manifest(context)[resourceName] ?: return null
+        File(File(context.noBackupFilesDir, CACHE_DIR), "${entry.sha256}.webp")
+            .takeIf { it.isFile && it.length() == entry.fullBytes && sha256(it) == entry.sha256 }
+    }.getOrNull()
 
     suspend fun fullGraphicBitmap(
         context: Context,
