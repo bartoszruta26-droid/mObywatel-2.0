@@ -88,4 +88,11 @@ PR #186 został scalony do main (commit ddec1e75945427232f1e6b19f80dcc374e9669fe
 
 ## Zmiany funkcjonalne po audycie — aktualizacja
 
-W gałęzi PR #184 dodano platform-neutralne kontrakty silnika oraz adapter `DocumentOcrFieldExtractor`, który wykorzystuje istniejący `DocumentOcrParser` i zwraca pola jako niezweryfikowane sugestie wymagające akceptacji. Kontrola REUSE dla aktualnego commitu zakończyła się sukcesem, kompilacja Android również; testy GUI na emulatorze pozostają w toku. Nie zmienia to wyników audytu zależności: nie dodano nowych bibliotek ani nie usunięto istniejących. PR #188 rozszerzono o zachowanie hierarchii bloków i linii OCR, dostępnej pewności rozpoznania i prostokątów ograniczających oraz parametr obrotu obrazu. Najnowsze kontrole PR #188 pozostają w toku; adapter nadal nie jest połączony z kontraktem `TextRecognizerEngine` ani interfejsem użytkownika.
+W PR #184 dodano platform-neutralne kontrakty silnika oraz adapter `DocumentOcrFieldExtractor`, który wykorzystuje istniejący `DocumentOcrParser` i zwraca pola jako niezweryfikowane sugestie wymagające akceptacji. PR #184 został następnie scalony do `main` (commit `54f7bb817b93037787d2dfde7ea33d5785a83767`). Nie dodano nowych bibliotek ani nie usunięto istniejących.
+
+PR #188 dodaje wykonawcę ML Kit oraz adaptery `MlKitTextRecognizerEngine` i `MlKitBarcodeReaderEngine` implementujące wspólne kontrakty `TextRecognizerEngine` i `BarcodeReaderEngine`. Zachowuje hierarchię bloków i linii OCR, pewność rozpoznania, współrzędne i obrót obrazu. Adapter działa na dostarczonej bitmapie; jej cykl życia pozostaje po stronie wywołującego. Nie obejmuje jeszcze wyboru źródła (aparat/galeria/SAF), wielostronicowych PDF, ekranu akceptacji ani zapisu do portfela. Dla aktualnego commitu PR #188 kontrola REUSE zakończyła się sukcesem, natomiast kompilacja Android i testy GUI/emulatora nadal trwają.
+
+
+## Stan PR audytowego
+
+PR #183 pozostaje dokumentacyjnym PR-em i nie powinien być scalany jako zmiana funkcjonalna ani wykorzystywany do usuwania zależności. Gałąź audytowa jest oparta na starszym punkcie `main` (merge-base `0a06b07d74548a43170685173571b976a91d4515`), dlatego przed scaleniem należy uwzględnić różnicę historii względem aktualnego `main`. Treść audytu zachowuje rozróżnienie między migawką historyczną a aktualnym stanem implementacji.
