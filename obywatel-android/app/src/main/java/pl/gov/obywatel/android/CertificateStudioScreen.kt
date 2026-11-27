@@ -730,7 +730,12 @@ private fun renderCertificatePdf(
         val savedSignatures = CertificateSignatureStore.list(context)
         val savedSignature = CertificateSignatureStore.selectedBitmap(context)
         if (savedSignature != null) {
-            drawCertificateImage(canvas, savedSignature, Rect(115, 465, 285, 510), signatureRotation)
+            try {
+                drawCertificateImage(canvas, savedSignature, Rect(115, 465, 285, 510), signatureRotation)
+            } finally {
+                // selectedBitmap() decodes a fresh, caller-owned bitmap for this export.
+                savedSignature.recycle()
+            }
         } else if (savedSignatures.isEmpty()) {
             signatureId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
                 ?.let { drawCertificateImage(canvas, it, Rect(115, 465, 285, 510), signatureRotation) }
