@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -65,11 +66,11 @@ private fun safeSvgText(value: String): String = value
 
 /** Stałe stosy czcionek — nie przyjmujemy dowolnego CSS od użytkownika. */
 internal fun certificateSvgFontStack(style: String): String = when (style) {
-    "script" -> "'Dancing Script','Segoe Script','URW Chancery L',cursive"
-    "serif" -> "Georgia,'Times New Roman',serif"
-    "sans" -> "Arial,'Noto Sans',sans-serif"
-    "mono" -> "'DejaVu Sans Mono',monospace"
-    "calligraphy" -> "'URW Chancery L','Segoe Script',cursive"
+    "script" -> "'Dancing Script','Segoe Script','URW Chancery L','Noto Sans Symbols 2','Noto Sans',cursive"
+    "serif" -> "Georgia,'Times New Roman','Noto Sans Symbols 2','Noto Sans',serif"
+    "sans" -> "Arial,'Noto Sans','Noto Sans Symbols 2',sans-serif"
+    "mono" -> "'DejaVu Sans Mono','Noto Sans Symbols 2',monospace"
+    "calligraphy" -> "'URW Chancery L','Segoe Script','Noto Sans Symbols 2','Noto Sans',cursive"
     else -> throw IllegalArgumentException("Nieobsługiwany krój pisma.")
 }
 
