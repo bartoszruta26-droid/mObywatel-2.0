@@ -208,6 +208,8 @@ internal object CertificateSignatureStore {
     }
 
     fun removeBackground(source: Bitmap, colorHex: String, tolerance: Int): Bitmap {
+        require(tolerance in 0..255) { "Tolerancja koloru musi mieścić się w zakresie 0–255." }
+        require(!source.isRecycled && source.width > 0 && source.height > 0) { "Obraz źródłowy jest niedostępny." }
         val target = android.graphics.Color.parseColor(colorHex)
         val targetR = android.graphics.Color.red(target)
         val targetG = android.graphics.Color.green(target)
