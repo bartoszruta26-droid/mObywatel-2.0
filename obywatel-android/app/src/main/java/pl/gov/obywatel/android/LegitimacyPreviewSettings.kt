@@ -2235,14 +2235,10 @@ internal fun formatIsoDateInput(input: String): String {
     val digits = input.filter(Char::isDigit).take(8)
     return buildString {
         append(digits.take(4))
-        if (digits.length > 4) {
-            append('-')
-            append(digits.drop(4).take(2))
-        }
-        if (digits.length > 6) {
-            append('-')
-            append(digits.drop(6))
-        }
+        if (digits.length >= 4) append('-')
+        if (digits.length > 4) append(digits.drop(4).take(2))
+        if (digits.length >= 6) append('-')
+        if (digits.length > 6) append(digits.drop(6))
     }
 }
 
