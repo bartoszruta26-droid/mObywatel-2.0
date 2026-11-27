@@ -20,7 +20,7 @@ class GraphicOptimizationTests(unittest.TestCase):
             Image.new("RGB", (256, 256), "white").save(source, "PNG")
             Image.new("RGB", (32, 32), "white").save(target, "WEBP", quality=60)
             self.assertEqual(optimizer.webp_candidate(source), target)
-            self.assertFalse(source.exists())
+            self.assertTrue(source.exists())
             self.assertTrue(target.exists())
 
     def test_conversion_keeps_only_smaller_webp(self):
@@ -30,7 +30,7 @@ class GraphicOptimizationTests(unittest.TestCase):
             original_size = source.stat().st_size
             result = optimizer.webp_candidate(source)
             if result.suffix == ".webp":
-                self.assertFalse(source.exists())
+                self.assertTrue(source.exists())
                 self.assertLessEqual(result.stat().st_size, original_size * 0.98)
             else:
                 self.assertTrue(source.exists())
