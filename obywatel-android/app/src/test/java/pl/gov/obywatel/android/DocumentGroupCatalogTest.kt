@@ -51,8 +51,8 @@ class DocumentGroupCatalogTest {
     @Test
     fun customGroupCreationRejectsBlankAndDuplicateNames() {
         val initial = DocumentGroupConfiguration(documentVisibilityGroupOrder, emptyMap())
-        assertTrue(addDocumentGroup(initial, "  ").isFailure)
-        assertTrue(addDocumentGroup(initial, "Służba osobista").isFailure)
+        assertTrue(runCatching { addDocumentGroup(initial, "  ") }.isFailure)
+        assertTrue(runCatching { addDocumentGroup(initial, "Służba osobista") }.isFailure)
     }
 
     @Test
