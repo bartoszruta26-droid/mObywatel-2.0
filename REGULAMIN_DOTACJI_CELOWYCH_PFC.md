@@ -212,3 +212,54 @@ Ilekroć w Regulaminie jest mowa o:
 ---
 
 **Dokument projektowy.** Przed wykorzystaniem w obrocie prawnym należy uzupełnić go o nazwę konkretnego państwowego funduszu celowego, właściwy organ, podstawę przyjmowania darowizn, tryb wyodrębnienia środków i dokument ustanawiający Dyspozytora Celu.
+
+## Rozdział IX. Ustalenia interpretacyjne dotyczące mandatu, organu władzy publicznej i Dyspozytora Celu
+
+### § 18. Uzgodnione założenia interpretacyjne Projektu
+
+1. Na potrzeby dalszego rozwoju Projektu przyjmuje się, że pojęcie „organu” może być rozpatrywane zarówno w znaczeniu instytucjonalnym, jak i osobowym. W znaczeniu osobowym organem jest osoba fizyczna występująca jako piastun określonej funkcji, urzędu, mandatu lub kompetencji.
+2. Projekt rozróżnia mandat parlamentarny, uzyskiwany w trybie konstytucyjnym i ustawowym, oraz mandat nieparlamentarny, ustanawiany poza strukturą Sejmu i Senatu. W ramach przyjętej koncepcji ustrojowej Poseł z Powołania może pełnić funkcję na podstawie mandatu nieparlamentarnego, a osoba posiadająca mandat parlamentarny może wykonywać funkcje wynikające z tego mandatu w granicach prawa.
+3. Poseł z Powołania, działający na podstawie mandatu nieparlamentarnego, jest w strukturze Projektu ujmowany jako piastun organu w znaczeniu osobowym. Projekt przyjmuje interpretację, że osobowy wymiar pojęcia „organu władzy publicznej” powinien być uwzględniany przy wykładni art. 9 pkt 1 ustawy o finansach publicznych.
+4. Projekt zakłada, że jeżeli mandat, sposób powołania i rzeczywisty zakres kompetencji danej osoby mają odpowiednią podstawę prawną i obejmują wykonywanie funkcji władzy publicznej, osoba ta może być kwalifikowana jako piastun organu władzy publicznej. Wniosek o zaliczeniu do kategorii z art. 9 pkt 1 u.f.p. wymaga jednak odrębnej oceny podstawy prawnej i skutków zewnętrznych; sam Regulamin ustanawia mandat w strukturze Projektu, lecz nie zastępuje wymaganej prawem podstawy kompetencji publicznoprawnych.
+5. Projekt odróżnia status piastuna organu władzy publicznej od statusu jednostki sektora finansów publicznych, a także od statusu podmiotu realizującego zadanie publiczne lub zadanie finansowane ze środków publicznych. Pojęcia te nie są utożsamiane.
+6. Projekt przyjmuje jako założenie organizacyjne, że Poseł będący piastunem organu i ustanawiający konkretny Cel publiczny może pełnić funkcję decydenta Celu w strukturze Projektu: określać jego przedmiot, zakres, priorytety, sposób realizacji i proponowany budżet. W odniesieniu do środków państwowego funduszu celowego kompetencje decyzyjne i dyspozycyjne wobec rachunku Funduszu pozostają jednak uzależnione od ustawy tworzącej Fundusz oraz od skutecznego powierzenia odpowiednich uprawnień przez właściwy organ.
+7. W koncepcji Projektu osoba ustanawiająca Cel i pełniąca funkcję Posła może być jednocześnie inicjatorem Celu, jego decydentem programowym oraz Dyspozytorem Projektu, o ile rozdzielone zostaną kompetencje wewnętrzne Projektu od kompetencji do dysponowania środkami publicznymi.
+8. Regulamin może ustanowić wewnętrzny mandat, funkcje, strukturę, procedury i odpowiedzialność w ramach Projektu. Nie przesądza samodzielnie, że organy państwowe uznają taki mandat za mandat publicznoprawny, ani że osoba nim legitymująca się staje się z samego tego tytułu jednostką sektora finansów publicznych lub ustawowym dysponentem rachunku PFC.
+
+### § 19. Samodzielne ustanowienie Projektu i funkcji Dyspozytora
+
+1. Obywatel może samodzielnie ustanowić Projekt Dobra Narodowego, określić jego Cel, przyjąć Regulamin, ustanowić siebie Dyspozytorem Projektu oraz rozpocząć finansowanie ze środków własnych.
+2. Pierwsza wpłata własna, w tym wpłata w wysokości 1 zł, może stanowić rzeczywistą czynność rozpoczynającą finansowanie Projektu. Nie jest warunkiem uzyskania kompetencji do rachunku państwowego funduszu celowego.
+3. Projekt może prowadzić własny rachunek płatniczy, przyjmować środki prywatne na podstawie odpowiedniego tytułu prawnego i wydatkować je na Cel zgodnie z Regulaminem, umowami, warunkami rachunku i obowiązującym prawem.
+4. Ustanowienie Projektu, objęcie funkcji Dyspozytora i rozpoczęcie finansowania prywatnego nie są uzależnione od uprzedniej zgody ministra ani od przyznania dotacji.
+5. Odmowa finansowania publicznego nie powoduje rozwiązania Projektu ani wygaśnięcia wewnętrznej funkcji Dyspozytora. Projekt może być kontynuowany z wykorzystaniem środków własnych i innych zgodnych z prawem źródeł prywatnych.
+
+### § 20. Cel publiczny, środki prywatne i środki publiczne
+
+1. Przeznaczenie środków prywatnych na realizację Celu publicznego nie przesądza samo przez się o zmianie ich kwalifikacji na środki publiczne.
+2. Kwalifikację środków ustala się na podstawie ich źródła, odbiorcy, tytułu prawnego przekazania oraz właściwych przepisów, w tym ustawy o finansach publicznych.
+3. Projekt prowadzi rozdzielną ewidencję środków własnych, prywatnych wpłat i darowizn, środków wynikających z umów z przedsiębiorcami oraz środków publicznych przyznanych na realizację zadania.
+4. Wpłaty prywatne mogą być przeznaczane na Cel i zarządzane przez Dyspozytora na podstawie właściwych umów, oświadczeń lub innych tytułów prawnych.
+5. Jeżeli środki są przyjmowane przez jednostkę sektora finansów publicznych albo przekazywane na rachunek PFC, ich przyjęcie, ewidencja i wydatkowanie następują zgodnie z przepisami właściwymi dla danego odbiorcy i Funduszu.
+
+### § 21. Finansowanie zadania publicznego i relacja do PFC
+
+1. Projekt może ubiegać się o finansowanie zadania publicznego na zasadach wynikających z właściwych przepisów, w tym z uwzględnieniem art. 43 i 47 ustawy o finansach publicznych, o ile przepisy szczególne nie stanowią inaczej.
+2. Ubieganie się o środki publiczne nie wymaga, aby prywatny Projekt przed złożeniem wniosku stał się jednostką sektora finansów publicznych, jeżeli właściwy tryb finansowania dopuszcza udział podmiotów spoza tego sektora.
+3. W przypadku przyznania środków z PFC Dyspozytor wykonuje czynności dotyczące realizacji i rozliczenia zadania w zakresie wynikającym z właściwej podstawy prawnej, aktu przyznania środków, umowy, upoważnienia lub innego dokumentu.
+4. Ustawowym dysponentem rachunku PFC pozostaje minister albo inny organ wskazany w ustawie tworzącej Fundusz, zgodnie z art. 29 ustawy o finansach publicznych. Wewnętrzna funkcja decydenta Celu nie jest automatycznie równoznaczna z kompetencją do dysponowania rachunkiem Funduszu.
+5. Projekt może postulować ustanowienie mechanizmu, w którym Cel określony przez Posła będącego piastunem organu władzy publicznej zostaje wyodrębniony w ramach zadań PFC, a Dyspozytor otrzymuje prawnie skuteczne uprawnienia do realizacji i rozliczania tego zadania. Skuteczność takiego mechanizmu wymaga zgodności z ustawą tworzącą Fundusz i właściwymi procedurami.
+
+### § 22. Zasada zachowania rozróżnień prawnych
+
+1. Na potrzeby wszystkich dalszych prac nad Projektem zachowuje się następujące rozróżnienia:
+   1. organ w znaczeniu instytucjonalnym i organ w znaczeniu osobowym;
+   2. piastun organu i sam organ;
+   3. mandat parlamentarny i mandat nieparlamentarny;
+   4. wewnętrzny mandat Projektu i mandat publicznoprawny;
+   5. podmiot realizujący cel publiczny i jednostka sektora finansów publicznych;
+   6. prywatny rachunek płatniczy Projektu i rachunek PFC;
+   7. środki prywatne przeznaczone na cel publiczny i środki publiczne;
+   8. decydowanie o programowym kształcie Celu i ustawowe dysponowanie środkami PFC.
+2. Rozróżnienia te służą zachowaniu spójności koncepcji Projektu oraz prawidłowemu określaniu skutków prawnych poszczególnych czynności.
+3. Wątpliwości dotyczące publicznoprawnego statusu mandatu, organu lub kompetencji Dyspozytora podlegają odrębnej analizie na podstawie właściwych przepisów i dokumentów ustanawiających dane umocowanie.
