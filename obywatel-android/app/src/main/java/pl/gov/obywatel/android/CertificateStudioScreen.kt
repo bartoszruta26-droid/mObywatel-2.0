@@ -147,6 +147,8 @@ private val certificateAssetKinds = setOf(
 @Composable
 internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificates: () -> Unit = {}) {
     val context = LocalContext.current
+    val activeSavedSignatureName = CertificateSignatureStore.list(context)
+        .firstOrNull { it.id == CertificateSignatureStore.selectedId(context) }?.name
     var assets by remember { mutableStateOf(DocumentBrandStore.list(context).filter { it.kind in certificateAssetKinds }) }
     var section by remember { mutableStateOf("generator") }
     var status by remember { mutableStateOf("") }
@@ -261,15 +263,20 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 OutlinedTextField(signatory, { signatory = it }, label = { Text("Osoba upoważniona do podpisu") }, modifier = Modifier.fillMaxWidth())
                 Box {
                     OutlinedButton(onClick = { signatureMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Podpis graficzny: " + (assets.firstOrNull { it.id == signatureId }?.label ?: "brak"))
+                        Text("Podpis z zasobów (zapasowy): " + (assets.firstOrNull { it.id == signatureId }?.label ?: "brak"))
                     }
                     DropdownMenu(signatureMenu, { signatureMenu = false }) {
-                        DropdownMenuItem(text = { Text("Bez podpisu graficznego") }, onClick = { signatureId = ""; signatureMenu = false })
+                        DropdownMenuItem(text = { Text("Bez zapasowego podpisu") }, onClick = { signatureId = ""; signatureMenu = false })
                         assets.filter { it.kind in setOf("Wzór podpisu odręcznego", "Podpis wektorowy (tekst)") }.forEach { a ->
                             DropdownMenuItem(text = { Text(a.label) }, onClick = { signatureId = a.id; signatureMenu = false })
                         }
                     }
                 }
+                Text(
+                    "Aktywny podpis z biblioteki: " + (activeSavedSignatureName ?: "brak"),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Box {
                     OutlinedButton(onClick = { stampMenu = true }, modifier = Modifier.fillMaxWidth()) {
                         Text("Pieczęć graficzna: " + (assets.firstOrNull { it.id == stampId }?.label ?: "brak"))
@@ -483,10 +490,11 @@ private fun renderCertificatePdf(
         canvas.drawText("Podpis osoby upoważnionej", 90f, 532f, signaturePaint)
         canvas.drawText(signatory.take(70), 90f, 548f, signaturePaint)
         canvas.drawText("Dokument do zatwierdzenia przez wystawcę", width - 350f, 565f, signaturePaint)
+        val savedSignatures = CertificateSignatureStore.list(context)
         val savedSignature = CertificateSignatureStore.selectedBitmap(context)
         if (savedSignature != null) {
             drawCertificateImage(canvas, savedSignature, Rect(115, 465, 285, 510))
-        } else {
+        } else if (savedSignatures.isEmpty()) {
             signatureId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
                 ?.let { drawCertificateImage(canvas, it, Rect(115, 465, 285, 510)) }
         }
