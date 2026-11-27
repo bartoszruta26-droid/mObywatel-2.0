@@ -177,13 +177,18 @@ internal object CertificateSignatureStore {
         check(edit.commit()) { "Nie udało się zaktualizować biblioteki podpisów." }
     }
 
-    fun selectedBitmap(context: Context): Bitmap? {
-        val id = selectedId(context) ?: return null
+    fun bitmap(context: Context, id: String): Bitmap? {
+        require(id.matches(Regex("[A-Za-z0-9-]{1,80}"))) { "Nieprawidłowy identyfikator podpisu." }
         val file = File(directory(context), "$id.enc")
         return if (file.isFile) runCatching {
             val bytes = readEncrypted(file)
             BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
         }.getOrNull() else null
+    }
+
+    fun selectedBitmap(context: Context): Bitmap? {
+        val id = selectedId(context) ?: return null
+        return bitmap(context, id)
     }
 
     fun decode(context: Context, uri: Uri): Bitmap {
@@ -233,11 +238,31 @@ internal fun CertificateSignaturesManager(onSelectionChanged: () -> Unit = {}) {
     var activeStroke by remember { mutableStateOf<List<Offset>>(emptyList()) }
     var padWidth by remember { mutableFloatStateOf(1f) }
     var padHeight by remember { mutableFloatStateOf(1f) }
+    var exportingSignatureId by remember { mutableStateOf<String?>(null) }
 
     fun refresh() {
         entries = CertificateSignatureStore.list(context)
         selected = CertificateSignatureStore.selectedId(context)
         onSelectionChanged()
+    }
+
+    val signatureExportPicker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
+        val id = exportingSignatureId
+        if (uri != null && id != null) runCatching {
+            val bitmap = CertificateSignatureStore.bitmap(context, id)
+                ?: error("Nie można odczytać podpisu z biblioteki.")
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { output ->
+                    check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
+                        "Nie udało się przygotować pliku PNG."
+                    }
+                } ?: error("Nie można zapisać wybranego pliku.")
+            } finally {
+                bitmap.recycle()
+            }
+            message = "Wyeksportowano podpis jako PNG z przezroczystym tłem."
+        }.onFailure { message = "Eksport podpisu nie powiódł się: ${it.message ?: "błąd"}" }
+        exportingSignatureId = null
     }
 
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -413,6 +438,12 @@ internal fun CertificateSignaturesManager(onSelectionChanged: () -> Unit = {}) {
                         }
                     )
                     Text(entry.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                    OutlinedButton(onClick = {
+                        exportingSignatureId = entry.id
+                        signatureExportPicker.launch(
+                            "podpis-${entry.name.lowercase().replace(Regex("[^a-z0-9ąćęłńóśźż_-]+"), "-").take(36).trim('-').ifBlank { "odreczny" }}.png"
+                        )
+                    }) { Text("Eksportuj PNG") }
                     OutlinedButton(onClick = {
                         CertificateSignatureStore.delete(context, entry.id)
                         refresh()
