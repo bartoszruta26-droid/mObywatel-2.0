@@ -31,6 +31,14 @@ class DocumentProcessingContractsTest {
     }
 
     @Test
+    fun fieldValidationRequiresFieldExtraction() {
+        val error = runCatching {
+            ProcessingRequest(source, setOf(ProcessingOperation.FIELD_VALIDATION))
+        }.exceptionOrNull()
+        assertTrue(error is IllegalArgumentException)
+    }
+
+    @Test
     fun translationRequestAcceptsTargetLanguage() {
         val request = ProcessingRequest(
             source = source,
