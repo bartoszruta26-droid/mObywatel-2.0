@@ -9,7 +9,7 @@
     "nine_patch_and_animated_images": "excluded",
     "full_graphics_location": "graphic-originals/full-webp/",
     "original_sources_location": "graphic-originals/source-png/",
-    "app_resources": "miniatury WebP, z wyjątkiem jednego pełnowymiarowego poziomego tła legitymacji z orłem",
+    "app_resources": "thumbnail WebP except the single full-resolution horizontal eagle credential background",
     "bundled_full_resolution_exceptions": [
       "drawable-nodpi/tlo_poziome_oryginal.webp"
     ]
@@ -1146,6 +1146,7 @@
       "resource_directory": "drawable-nodpi",
       "full_path": "graphic-originals/full-webp/drawable-nodpi/tlo_poziome_oryginal.webp",
       "thumbnail_asset_path": "obywatel-android/app/src/main/assets/graphic-thumbnails/tlo_poziome_oryginal-ad239689bdb5.webp",
+      "bundled_full_resource_path": "obywatel-android/app/src/main/res/drawable-nodpi/tlo_poziome_oryginal.webp",
       "source_path_before_optimization": "graphic-originals/source-png/drawable-nodpi/tlo_poziome_oryginal.png",
       "width": 1076,
       "height": 542,
@@ -1154,8 +1155,7 @@
       "full_sha256": "9521e769dd268e1d49536d80c12107dffad14cfadbf35fde0a6f306b944c60f1",
       "thumbnail_sha256": "3bd30d7619dcd9f5cda5af040df0103201e2d6eda0d6f951635b23f3d7ce79a5",
       "full_format": "WEBP",
-      "thumbnail_format": "WEBP",
-      "bundled_full_resource_path": "obywatel-android/app/src/main/res/drawable-nodpi/tlo_poziome_oryginal.webp"
+      "thumbnail_format": "WEBP"
     },
     {
       "resource_name": "tlo_znak_wodny_pionowe",
