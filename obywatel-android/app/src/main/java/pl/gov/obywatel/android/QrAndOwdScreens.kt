@@ -390,7 +390,7 @@ private fun owdDocumentGroups(): List<OwdDocumentGroup> = listOf(
 
 
 @Composable
-private fun DocumentDetailsScreen(
+internal fun DocumentDetailsScreen(
     documentId: String,
     onBack: () -> Unit
 ) {
@@ -918,4 +918,3 @@ private fun parseVCardContact(raw: String): Map<String, String> {
 private fun buildVCardPayload(fields: Map<String, String>): String =
     VCardCodec.encodeContact(fields)
 
-@Composable

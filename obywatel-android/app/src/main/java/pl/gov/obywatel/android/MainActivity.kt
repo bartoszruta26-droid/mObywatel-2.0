@@ -2414,6 +2414,7 @@ private fun categoryIconFor(category: String): Int? = when (category) {
 }
 
 
+@Composable
 private fun CivicIllustrationBanner(imageRes: Int, description: String) {
     Image(
         painter = painterResource(imageRes),
