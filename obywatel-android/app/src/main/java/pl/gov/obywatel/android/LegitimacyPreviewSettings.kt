@@ -595,7 +595,7 @@ private val tileIconChoices = listOf(
     "service_profile" to "Profil", "service_ticket" to "Bilet"
 )
 
-private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
+internal const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
 
 private const val BUILTIN_BACKGROUND_PREFIX = "builtin:"
 private val builtInCredentialBackgrounds = listOf(
