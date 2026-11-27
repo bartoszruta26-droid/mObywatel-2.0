@@ -550,9 +550,6 @@ private fun LoyaltyCardsEditor(
 }
 
 @Composable
-
-
-@Composable
 private fun ApplicationEntryFlow(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     var stage by rememberSaveable { mutableIntStateOf(0) }
     // The welcome screen is the first in-app screen; do not show a separate
