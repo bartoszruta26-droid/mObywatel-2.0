@@ -595,7 +595,7 @@ private val tileIconChoices = listOf(
     "service_profile" to "Profil", "service_ticket" to "Bilet"
 )
 
-private const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
+internal const val GLOBAL_LEGITIMACY_APPEARANCE_KEY = "credential_template_global"
 
 private const val BUILTIN_BACKGROUND_PREFIX = "builtin:"
 private val builtInCredentialBackgrounds = listOf(
@@ -2231,7 +2231,7 @@ private fun AnimatedHologram(assetId: String, modifier: Modifier = Modifier) {
 
 internal fun formatIsoDateInput(input: String): String {
     // Keep special values such as "bezterminowo" intact; format numeric date entry only.
-    if (input.any { !it.isDigit() && it != '-' }) return input
+    if (input.any { !it.isDigit() && it !in setOf('-', '/', '.') && !it.isWhitespace() }) return input
     val digits = input.filter(Char::isDigit).take(8)
     return buildString {
         append(digits.take(4))
@@ -2378,6 +2378,17 @@ internal fun CredentialCardSides(
     assetRevision: Int = 0,
     validity: Boolean? = null
 ) {
+    val presentationMode = loadDefaultDocumentPresentationMode(LocalContext.current)
+    if (presentationMode != DocumentPresentationMode.LEGITIMACY) {
+        when (presentationMode) {
+            DocumentPresentationMode.CERTIFICATE -> DocumentCertificatePreview(
+                documentKey, title, subtitle, holderName, fields, validity
+            )
+            DocumentPresentationMode.CSV -> DocumentCsvPreview(title, fields)
+            DocumentPresentationMode.LEGITIMACY -> Unit
+        }
+        return
+    }
     val (frontFields, reverseFields) = splitCredentialFieldsForSides(
         fields, settings.orientation, settings.visibleFieldsConfigured,
         settings.visibleFields, settings.fieldSides

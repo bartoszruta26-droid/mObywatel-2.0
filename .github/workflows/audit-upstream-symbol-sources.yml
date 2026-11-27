@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 mObywatel-2.0 contributors
+# SPDX-License-Identifier: EUPL-1.2
+name: Audit external institutional symbol repositories
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["feat/**"]
+    paths:
+      - "scripts/audit-upstream-symbol-sources.mjs"
+      - "docs/identity-assets/external-repository-sources.csv"
+      - ".github/workflows/audit-upstream-symbol-sources.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Fetch public upstream repository indexes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/audit-upstream-symbol-sources.mjs
+      - name: Upload source inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-institutional-symbol-inventory
+          path: |
+            build/upstream-symbol-audit.json
+            build/upstream-symbol-candidates.csv
+          if-no-files-found: error
+          retention-days: 30
+      - name: Push generated candidate index branch for review
+        run: |
+          git fetch origin automation/upstream-symbol-index-only || true
+          git checkout -B automation/upstream-symbol-index-only origin/automation/upstream-symbol-index-only
+          mkdir -p docs/identity-assets/generated
+          cp build/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-audit.json
+          cp build/upstream-symbol-candidates.csv docs/identity-assets/generated/upstream-symbol-candidates.csv
+          printf '%s\\n' 'SPDX-FileCopyrightText: 2026 bartoszruta26-droid' 'SPDX-License-Identifier: CC0-1.0' > docs/identity-assets/generated/upstream-symbol-audit.json.license
+          printf '%s\\n' 'SPDX-FileCopyrightText: 2026 bartoszruta26-droid' 'SPDX-License-Identifier: CC0-1.0' > docs/identity-assets/generated/upstream-symbol-candidates.csv.license
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/identity-assets/generated/upstream-symbol-audit.json docs/identity-assets/generated/upstream-symbol-candidates.csv docs/identity-assets/generated/upstream-symbol-audit.json.license docs/identity-assets/generated/upstream-symbol-candidates.csv.license
+          if git diff --cached --quiet; then
+            echo "Generated candidate index is unchanged."
+            exit 0
+          fi
+          git commit -m "Add generated upstream symbol candidate index"
+          git push origin automation/upstream-symbol-index-only
