@@ -35,6 +35,27 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
+    fun customGroupsCanBeAddedAndDocumentsCanBeReassignedWithoutChangingOtherAssignments() {
+        val initial = DocumentGroupConfiguration(
+            groups = documentVisibilityGroupOrder,
+            assignments = mapOf("identity" to "Służba osobista", "birth_extract" to "Służba cywilna")
+        )
+        val withCustomGroup = addDocumentGroup(initial, "Dokumenty własne")
+        val reassigned = assignDocumentToGroup(withCustomGroup, "identity", "Dokumenty własne")
+
+        assertTrue("Custom group should be appended", reassigned.groups.last() == "Dokumenty własne")
+        assertEquals("Dokumenty własne", reassigned.assignments["identity"])
+        assertEquals("Służba cywilna", reassigned.assignments["birth_extract"])
+    }
+
+    @Test
+    fun customGroupCreationRejectsBlankAndDuplicateNames() {
+        val initial = DocumentGroupConfiguration(documentVisibilityGroupOrder, emptyMap())
+        assertTrue(addDocumentGroup(initial, "  ").isFailure)
+        assertTrue(addDocumentGroup(initial, "Służba osobista").isFailure)
+    }
+
+    @Test
     fun serviceGroupNamesAreUsedAndLegacyNamesMigrateToTheirNewCounterparts() {
         assertEquals("Służba rodowa", documentVisibilityGroup("family"))
         assertEquals("Służba osobista", documentVisibilityGroup("identity"))
