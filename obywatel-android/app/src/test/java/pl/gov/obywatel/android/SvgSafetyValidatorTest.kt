@@ -91,6 +91,34 @@ class SvgSafetyValidatorTest {
         makeTextSignatureSvg("Jan Kowalski", "#112233;url(https://attacker.invalid)")
     }
 
+    @Test
+    fun acceptsGreaterThanCharacterInsideQuotedAttributeValue() {
+        SvgSafetyValidator.validateMarkupSecurity(
+            """<svg xmlns="http://www.w3.org/2000/svg" data-note="left > right"><g><path d="M0 0h1v1z"/></g></svg>"""
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsSvgWithMoreThanTwentyThousandElements() {
+        val children = buildString { repeat(20_001) { append("<path/>") } }
+        SvgSafetyValidator.validateMarkupSecurity("<svg>$children</svg>")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsSvgNestingDeeperThanSixtyFourLevels() {
+        val nested = buildString {
+            repeat(65) { append("<g>") }
+            repeat(65) { append("</g>") }
+        }
+        SvgSafetyValidator.validateMarkupSecurity("<svg>$nested</svg>")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsSvgTagWithMoreThan256KiBOfAttributes() {
+        val oversizedAttribute = "a".repeat(256 * 1024)
+        SvgSafetyValidator.validateMarkupSecurity("<svg data-value=\"$oversizedAttribute\"/>")
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun stampGeneratorRejectsUnsafeColorValue() {
         makeStampSvg("Fundacja", "PIECZĘĆ", "1", "url(#malicious)")
