@@ -48,7 +48,11 @@ internal object RemoteGraphicRepository {
         val thumbnailAssetPath: String
     )
 
+    @Volatile private var manifestCache: Map<String, Entry>? = null
+
+    @Synchronized
     private fun manifest(context: Context): Map<String, Entry> {
+        manifestCache?.let { return it }
         val json = context.assets.open(MANIFEST_ASSET).bufferedReader(Charsets.UTF_8).use { it.readText() }
         val root = JSONObject(json)
         require(root.optInt("schema_version") == 1) { "Nieobsługiwana wersja manifestu grafik." }
@@ -72,7 +76,7 @@ internal object RemoteGraphicRepository {
                 "Powielona nazwa zasobu w manifeście: $name"
             }
         }
-        return result
+        return result.also { manifestCache = it }
     }
 
     suspend fun fullGraphicFile(context: Context, resourceName: String): File =
@@ -139,6 +143,22 @@ internal object RemoteGraphicRepository {
         File(File(context.noBackupFilesDir, CACHE_DIR), "${entry.sha256}.webp")
             .takeIf { it.isFile && it.length() == entry.fullBytes && sha256(it) == entry.sha256 }
     }.getOrNull()
+
+    fun cachedGraphicBitmap(context: Context, resourceName: String, maxEdgePx: Int = 2400): Bitmap? =
+        runCatching {
+            require(maxEdgePx in 128..4096)
+            val file = cachedGraphicFile(context, resourceName) ?: return null
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(file.absolutePath, bounds)
+            require(bounds.outWidth > 0 && bounds.outHeight > 0 &&
+                bounds.outWidth.toLong() * bounds.outHeight <= MAX_PIXELS)
+            var sample = 1
+            while (bounds.outWidth / sample > maxEdgePx || bounds.outHeight / sample > maxEdgePx) sample *= 2
+            BitmapFactory.decodeFile(file.absolutePath, BitmapFactory.Options().apply {
+                inSampleSize = sample
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            })
+        }.getOrNull()
 
     suspend fun fullGraphicBitmap(
         context: Context,
