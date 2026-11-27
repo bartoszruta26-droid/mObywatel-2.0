@@ -1048,6 +1048,9 @@ internal fun defaultDocumentBackgroundResourceId(title: String): Int {
             normalized.contains("profil") || normalized.contains("obywatel") ->
             R.drawable.doc_01_dowod_tozsamosci_obywatelski
 
+        // Domyślne poziome tło legitymacji pozostaje w pełnej rozdzielczości w APK.
+        normalized.contains("legitymacj") -> R.drawable.tlo_poziome_oryginal
+
         // Dokumenty służby zbrojnej — legitymacje i certyfikaty otrzymują
         // tła odpowiadające rodzajowi dokumentu zamiast ogólnego baneru.
         normalized.contains("wojskow") || normalized.contains("sztuk walki") ||

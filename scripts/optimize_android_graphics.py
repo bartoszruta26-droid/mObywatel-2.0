@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
 from pathlib import Path
 
 from PIL import Image, ImageOps
@@ -25,6 +26,8 @@ THUMB_ROOT = ROOT / "obywatel-android/app/src/main/assets/graphic-thumbnails"
 MANIFEST = THUMB_ROOT / "manifest.json"
 MIN_SOURCE_BYTES = 96 * 1024
 THUMB_MAX_EDGE = 360
+# One full-resolution horizontal eagle background remains bundled for the default credential.
+BUNDLED_FULL_RESOURCES = {"drawable-nodpi/tlo_poziome_oryginal.webp"}
 
 
 def sha256(path: Path) -> str:
@@ -114,6 +117,12 @@ def main() -> None:
             if full_path is None or is_animated(full_path):
                 continue
             full_relative = full_path.relative_to(ROOT).as_posix()
+            resource_relative = full_path.relative_to(FULL_ROOT).as_posix()
+            bundled_resource = resource_relative in BUNDLED_FULL_RESOURCES
+            if bundled_resource:
+                bundled_target = RES / resource_relative
+                bundled_target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(full_path, bundled_target)
             if full_relative in seen_full_paths:
                 continue
             seen_full_paths.add(full_relative)
@@ -137,6 +146,7 @@ def main() -> None:
                 "resource_directory": full_path.parent.name,
                 "full_path": full_path.relative_to(ROOT).as_posix(),
                 "thumbnail_asset_path": thumb_path.relative_to(ROOT).as_posix(),
+                **({"bundled_full_resource_path": (RES / resource_relative).relative_to(ROOT).as_posix()} if bundled_resource else {}),
                 "source_path_before_optimization": original_path.relative_to(ROOT).as_posix(),
                 "width": width,
                 "height": height,
@@ -159,7 +169,8 @@ def main() -> None:
             "nine_patch_and_animated_images": "excluded",
             "full_graphics_location": "graphic-originals/full-webp/",
             "original_sources_location": "graphic-originals/source-png/",
-            "app_resources": "thumbnail-only WebP; original full-resolution files are not packaged in the APK"
+            "app_resources": "thumbnail WebP except the single full-resolution horizontal eagle credential background",
+            "bundled_full_resolution_exceptions": ["drawable-nodpi/tlo_poziome_oryginal.webp"]
         },
         "count": len(entries),
         "items": entries
