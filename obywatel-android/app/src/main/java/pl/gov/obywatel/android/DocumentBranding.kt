@@ -323,6 +323,7 @@ internal object DocumentBrandStore {
         "file_00000000c0f081f5990d08be15bbf139",
         "file_00000000e92482108cb3b56796451794",
         "file_00000000f5b0820a9499b70ab02da04b",
+        "file_00000000d588820a9b141a8f2f8df7c5",
         "tlo_pionowe_oryginal",
         "tlo_poziome_oryginal",
         "tlo_znak_wodny_pionowe",
@@ -343,6 +344,7 @@ internal object DocumentBrandStore {
     )
     private val opaqueBackgroundLabels = mapOf(
         "file_00000000f5b0820a9499b70ab02da04b" to "Tło dowodu tożsamości",
+        "file_00000000d588820a9b141a8f2f8df7c5" to "Tło legitymacji kościelnej — godło biskupie",
         "tlo_pionowe_oryginal" to "Tło dokumentu — układ pionowy",
         "tlo_poziome_oryginal" to "Tło dokumentu — układ poziomy",
         "tlo_znak_wodny_pionowe" to "Tło dokumentu — znak wodny pionowy",
@@ -564,7 +566,7 @@ internal object DocumentBrandStore {
             else -> ""
         }
         val fallback = when {
-            documentType.startsWith("church_") || documentType.startsWith("ecumenical_") || documentType.startsWith("missionary_") -> "church"
+            (documentType == "church" || documentType.startsWith("church_") || documentType.startsWith("ecumenical_") || documentType.startsWith("missionary_")) || documentType.startsWith("ecumenical_") || documentType.startsWith("missionary_") -> "church"
             documentType.startsWith("organization_") -> "entity"
             else -> ""
         }
