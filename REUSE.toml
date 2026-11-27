@@ -44,3 +44,10 @@ path = ["security/android-signing/mobywatel-android-signing-private.zip.enc.b64"
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 bartoszruta26-droid"
 SPDX-License-Identifier = "LicenseRef-Proprietary"
+
+
+[[annotations]]
+path = ["docs/audits/ARCHIWUM_DZIENNIKA_REALIZACJI_RACHUNKOW_PLATNICZYCH_PR68_2026-11-14.md", "docs/audits/UZUPELNIENIE_AUDYTU_RACHUNKI_PLATNICZE_ETAP_70_2026-11-15.md"]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 bartoszruta26-droid"
+SPDX-License-Identifier = "CC0-1.0"
