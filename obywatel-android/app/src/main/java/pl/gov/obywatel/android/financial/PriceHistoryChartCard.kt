@@ -3,6 +3,9 @@
 package pl.gov.obywatel.android.financial
 
 import androidx.compose.foundation.Canvas
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
@@ -14,6 +17,7 @@ import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
 import java.io.IOException
+import java.io.File
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -402,6 +406,7 @@ fun PriceHistoryChartCard(modifier: Modifier = Modifier) {
             Text("${points.size} punktów • ${points.first().date} – ${points.last().date}",
                 style = MaterialTheme.typography.bodySmall)
             SelectedPairForecastCard(base, quote, forecastValues, regression, Modifier.fillMaxWidth())
+            FinancialChartAnalyticsPanel(base, quote, points)
         } else if (!loading) Text("Wybierz dwa różne instrumenty i naciśnij „Pokaż”.")
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(source, style = MaterialTheme.typography.bodySmall)
@@ -732,5 +737,77 @@ private class FrankfurterChartRepository {
             if (basePerUsd == null || quotePerUsd == null || basePerUsd.signum() == 0) null
             else PairPricePoint(date, TradingPairMath.crossRate(basePerUsd, quotePerUsd))
         }.sortedBy { it.date }
+    }
+}
+
+
+@Composable
+private fun FinancialChartAnalyticsPanel(
+    base: String,
+    quote: String,
+    points: List<PairPricePoint>
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val values = remember(points) { points.map { it.value } }
+    val indicators = remember(values) {
+        values.takeIf { it.isNotEmpty() }?.let(FinancialChartAnalytics::calculate)
+    }
+    val nbpRepository = remember(context) {
+        NbpRatesRepository(cacheDirectory = File(context.filesDir, "nbp-rates-cache"))
+    }
+    var bidAsk by remember(base, quote, points) { mutableStateOf<List<NbpCurrencyBidAskQuote>>(emptyList()) }
+    var bidAskLoading by remember { mutableStateOf(false) }
+    var bidAskError by remember { mutableStateOf<String?>(null) }
+    val supportsNbpBidAsk = quote == "PLN" && base.matches(Regex("[A-Z]{3}")) && base != "PLN"
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        indicators?.let { data ->
+            Text("Wskaźniki techniczne", style = MaterialTheme.typography.titleSmall)
+            Text("SMA 20: ${data.sma20.lastOrNull()?.toPlainString() ?: "za mało danych"} • SMA 50: ${data.sma50.lastOrNull()?.toPlainString() ?: "za mało danych"}")
+            Text("RSI 14: ${data.rsi14.lastOrNull()?.toPlainString() ?: "za mało danych"} • MACD: ${data.macd.lastOrNull()?.toPlainString() ?: "za mało danych"} • sygnał: ${data.macdSignal.lastOrNull()?.toPlainString() ?: "za mało danych"}")
+            Text("Bollinger 20/2: dolne ${data.bollingerLower.lastOrNull()?.toPlainString() ?: "—"} • górne ${data.bollingerUpper.lastOrNull()?.toPlainString() ?: "—"}")
+            Button(onClick = {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Pine Script v6", FinancialChartAnalytics.pineScriptTemplate()))
+            }) { Text("Kopiuj szablon Pine Script v6") }
+        }
+        if (supportsNbpBidAsk && points.isNotEmpty()) {
+            Button(
+                enabled = !bidAskLoading,
+                onClick = {
+                    scope.launch {
+                        bidAskLoading = true
+                        bidAskError = null
+                        try {
+                            bidAsk = withContext(Dispatchers.IO) {
+                                nbpRepository.currencyBidAskHistory(base, points.first().date, points.last().date)
+                            }
+                            if (bidAsk.isEmpty()) bidAskError = "NBP nie udostępnił tabeli C dla tej waluty w wybranym okresie."
+                        } catch (exception: Exception) {
+                            bidAsk = emptyList()
+                            bidAskError = exception.message ?: "Nie udało się pobrać tabeli C NBP."
+                        } finally {
+                            bidAskLoading = false
+                        }
+                    }
+                }
+            ) { Text(if (bidAsk.isEmpty()) "Pobierz historyczne kursy kupna/sprzedaży NBP" else "Odśwież kursy kupna/sprzedaży NBP") }
+            if (bidAskLoading) CircularProgressIndicator()
+            bidAsk.lastOrNull()?.let { latest ->
+                val first = bidAsk.first()
+                val spread = latest.askPln.subtract(latest.bidPln)
+                val hypothetical = latest.bidPln.subtract(first.askPln)
+                val hypotheticalPercent = if (first.askPln.signum() > 0)
+                    hypothetical.multiply(BigDecimal("100")).divide(first.askPln, 4, RoundingMode.HALF_EVEN)
+                else BigDecimal.ZERO
+                Text("Tabela C NBP • ${bidAsk.size} notowań • ${first.date}–${latest.date}")
+                Text("Ostatni kurs kupna: ${latest.bidPln.toPlainString()} PLN • sprzedaży: ${latest.askPln.toPlainString()} PLN • spread: ${spread.toPlainString()} PLN")
+                Text("Wynik referencyjny 1 jednostki: zakup po ask ${first.askPln.toPlainString()} PLN (${first.date}) → sprzedaż po bid ${latest.bidPln.toPlainString()} PLN (${latest.date}): ${hypothetical.toPlainString()} PLN (${hypotheticalPercent.toPlainString()}%). Bez prowizji i marży konkretnego banku/kantoru.")
+            }
+            bidAskError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        }
+        Text("Wskaźniki i kursy NBP mają charakter analityczny. Kursy referencyjne nie są kursem wykonania transakcji ani rekomendacją inwestycyjną.",
+            style = MaterialTheme.typography.bodySmall)
     }
 }
