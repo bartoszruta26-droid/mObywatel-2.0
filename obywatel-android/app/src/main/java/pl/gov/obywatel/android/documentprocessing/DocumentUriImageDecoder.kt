@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
-import pl.gov.obywatel.android.ui.documents.calculateInSampleSize
 
 /**
  * Bounded decoder for image documents selected through the existing SAF import flow.
@@ -55,7 +54,7 @@ internal class DocumentUriImageDecoder(
         } ?: ExifInterface.ORIENTATION_NORMAL
 
         val options = BitmapFactory.Options().apply {
-            inSampleSize = calculateInSampleSize(width, height, maxDimension)
+            inSampleSize = calculateImageSampleSize(width, height, maxDimension)
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
         val decoded = contentResolver.openInputStream(uri)?.use { input ->
