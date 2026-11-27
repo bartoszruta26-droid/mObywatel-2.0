@@ -655,6 +655,10 @@ internal object DocumentBrandStore {
         }
         val root = JSONObject(raw)
         require(root.optInt("version") == 1) { "Nieobsługiwana wersja biblioteki zasobów." }
+        val existingAssets = list(context)
+        val reservedIds = existingAssets.filter {
+            it.file.startsWith("builtin:") || it.file.startsWith("resource:")
+        }.mapTo(HashSet()) { it.id }
 
         data class PreparedAsset(val asset: BrandAsset, val bytes: ByteArray)
         val assets = root.optJSONArray("assets") ?: JSONArray()
@@ -668,8 +672,11 @@ internal object DocumentBrandStore {
         for (index in 0 until assets.length()) {
             val item = assets.getJSONObject(index)
             val id = item.getString("id")
-            require(id.matches(Regex("[A-Za-z0-9_-]{1,80}")) && seenIds.add(id)) {
-                "Nieprawidłowy lub powtórzony identyfikator zasobu."
+            require(
+                id.matches(Regex("[A-Za-z0-9_-]{1,80}")) &&
+                    id !in reservedIds && seenIds.add(id)
+            ) {
+                "Nieprawidłowy, zarezerwowany lub powtórzony identyfikator zasobu."
             }
             val kind = normalizeAssetKind(item.getString("kind"))
             val encoded = item.getString("bytes")
@@ -711,12 +718,7 @@ internal object DocumentBrandStore {
             prepared += PreparedAsset(asset, bytes)
         }
 
-        val restored = list(context).filter {
-            it.file.startsWith("builtin:") || it.file.startsWith("resource:")
-        }.associateBy { it.id }.toMutableMap()
-        list(context).filter {
-            !it.file.startsWith("builtin:") && !it.file.startsWith("resource:")
-        }.forEach { restored[it.id] = it }
+        val restored = existingAssets.associateBy { it.id }.toMutableMap()
         prepared.forEach { restored[it.asset.id] = it.asset }
 
         val validIds = restored.keys
