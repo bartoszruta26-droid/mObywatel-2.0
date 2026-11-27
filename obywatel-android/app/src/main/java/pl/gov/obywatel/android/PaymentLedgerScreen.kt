@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -527,53 +528,52 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
         onDispose { repository.close() }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    var expandedFinanceSections by remember { mutableStateOf(setOf("charts")) }
+
+    @Composable
+    fun FinanceSection(
+        id: String,
+        title: String,
+        description: String? = null,
+        content: @Composable ColumnScope.() -> Unit
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Rachunki płatnicze", style = MaterialTheme.typography.headlineSmall)
-            Button(onClick = onBack) { Text("Wróć") }
-        }
-        Text(
-            "Lokalny rejestr transakcji walutowych, kruszcowych i darowizn gotówkowych.",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        val expanded = id in expandedFinanceSections
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Wykresy NBP i wycena rachunku", style = MaterialTheme.typography.titleMedium)
-                pl.gov.obywatel.android.financial.PriceHistoryChartCard(
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(10.dp))
-                pl.gov.obywatel.android.financial.BankStatementNbpChartCard(
-                    entries = entries,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(10.dp))
-                pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Ewidencja darowizn", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Wybierz ewidencję, aby wprowadzać, przeglądać i aktualizować wpisy darowizn.",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                DonationLedgerCatalog.all.values.forEach { definition ->
-                    Button(
-                        onClick = { onOpenDonationLedger(definition.id) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) { Text(definition.title) }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(title, style = MaterialTheme.typography.titleMedium)
+                        description?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    }
+                    Button(onClick = {
+                        expandedFinanceSections = if (expanded) expandedFinanceSections - id else expandedFinanceSections + id
+                    }) { Text(if (expanded) "Zwiń" else "Rozwiń") }
                 }
+                if (expanded) Column(verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
             }
         }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Import i eksport danych", style = MaterialTheme.typography.titleMedium)
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Rachunki finansowe", style = MaterialTheme.typography.headlineSmall)
+            Button(onClick = onBack) { Text("Wróć") }
+        }
+        Text("Lokalny rejestr rachunków, transakcji, wymiany walut i kruszców oraz darowizn.", style = MaterialTheme.typography.bodyLarge)
+        FinanceSection("charts", "Wykresy, wycena i przelicznik", "Notowania instrumentów, historia rachunku oraz przeliczanie walut.") {
+            pl.gov.obywatel.android.financial.PriceHistoryChartCard(modifier = Modifier.fillMaxWidth())
+            pl.gov.obywatel.android.financial.BankStatementNbpChartCard(entries = entries, modifier = Modifier.fillMaxWidth())
+            pl.gov.obywatel.android.financial.NbpCurrencyConverterCard(modifier = Modifier.fillMaxWidth())
+        }
+        FinanceSection("donation-catalog", "Rejestry darowizn", "Wybór ewidencji darowizn i zbiórek.") {
+            DonationLedgerCatalog.all.values.forEach { definition ->
+                Button(onClick = { onOpenDonationLedger(definition.id) }, modifier = Modifier.fillMaxWidth()) { Text(definition.title) }
+            }
+        }
+        FinanceSection("data-transfer", "Import, eksport i raporty", "Wczytywanie wyciągów, kopie danych oraz raporty CSV i PDF.") {
                 OutlinedTextField(
                     value = accountScopeId,
                     onValueChange = { accountScopeId = it },
@@ -698,332 +698,346 @@ fun PaymentLedgerScreen(onBack: () -> Unit, onOpenDonationLedger: (String) -> Un
                 }
             }
         }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Historia zapisów bankowych", style = MaterialTheme.typography.titleMedium)
-                Text("Liczba zapisów: ${entries.size}")
-                Button(onClick = { reload() }, enabled = !loading) { Text("Odśwież rejestr") }
-                if (loading) CircularProgressIndicator()
-                error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            }
-        }
-        if (!loading && entries.isEmpty() && error == null) {
-            Text("Rejestr jest pusty. Możesz zaimportować archiwum JSON.")
-        }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Słownik walut i kruszców", style = MaterialTheme.typography.titleMedium)
-                Text("Definicje używane w transakcjach. Parametry ilościowe aktywa są chronione po użyciu w historii.")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { assetKindInput = AssetKind.CURRENCY }) { Text(if (assetKindInput == AssetKind.CURRENCY) "✓ Waluta" else "Waluta") }
-                    Button(onClick = { assetKindInput = AssetKind.PRECIOUS_METAL }) { Text(if (assetKindInput == AssetKind.PRECIOUS_METAL) "✓ Kruszec" else "Kruszec") }
-                }
-                OutlinedTextField(value = assetCodeInput, onValueChange = { assetCodeInput = it }, label = { Text("Kod aktywa") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = assetNameInput, onValueChange = { assetNameInput = it }, label = { Text("Nazwa") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = assetUnitInput, onValueChange = { assetUnitInput = it }, label = { Text("Jednostka (np. PLN, g)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = assetPrecisionInput, onValueChange = { assetPrecisionInput = it }, label = { Text("Miejsca dziesiętne (0–12)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                if (assetKindInput == AssetKind.PRECIOUS_METAL) {
-                    OutlinedTextField(value = assetPurityInput, onValueChange = { assetPurityInput = it }, label = { Text("Próba (opcjonalnie, 1–1000)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                }
-                Button(onClick = { saveAssetForm() }, enabled = !loading && assetCodeInput.isNotBlank() && assetNameInput.isNotBlank()) { Text("Zapisz definicję aktywa") }
-                if (assets.isEmpty()) Text("Słownik jest pusty. Dodaj walutę lub kruszec przed rejestrowaniem transakcji.")
-                assets.forEach { asset ->
-                    Text("${asset.code} — ${asset.name} • ${asset.unit} • ${asset.decimalPlaces} miejsc${asset.purity?.let { " • próba $it" }.orEmpty()}")
+        FinanceSection("bank-history", "Historia rachunku i wymiany", "Zapisy bankowe, transakcje powiązane oraz operacje wymiany walut.") {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Historia zapisów bankowych", style = MaterialTheme.typography.titleMedium)
+                    Text("Liczba zapisów: ${entries.size}")
+                    Button(onClick = { reload() }, enabled = !loading) { Text("Odśwież rejestr") }
+                    if (loading) CircularProgressIndicator()
+                    error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             }
+            if (!loading && entries.isEmpty() && error == null) {
+                Text("Rejestr jest pusty. Możesz zaimportować archiwum JSON.")
+            }
+
         }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(if (editingTransactionId == null) "Ręczne dodawanie transakcji" else "Edycja transakcji", style = MaterialTheme.typography.titleMedium)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(FinancialTransactionType.values().toList(), key = { it.name }) { type ->
-                        Button(onClick = { transactionType = type }) {
-                            Text(if (transactionType == type) "✓ $type" else type.name)
-                        }
+        FinanceSection("asset-dictionary", "Słownik walut i kruszców", "Definicje aktywów, jednostki, precyzja oraz próby kruszców.") {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Słownik walut i kruszców", style = MaterialTheme.typography.titleMedium)
+                    Text("Definicje używane w transakcjach. Parametry ilościowe aktywa są chronione po użyciu w historii.")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { assetKindInput = AssetKind.CURRENCY }) { Text(if (assetKindInput == AssetKind.CURRENCY) "✓ Waluta" else "Waluta") }
+                        Button(onClick = { assetKindInput = AssetKind.PRECIOUS_METAL }) { Text(if (assetKindInput == AssetKind.PRECIOUS_METAL) "✓ Kruszec" else "Kruszec") }
+                    }
+                    OutlinedTextField(value = assetCodeInput, onValueChange = { assetCodeInput = it }, label = { Text("Kod aktywa") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = assetNameInput, onValueChange = { assetNameInput = it }, label = { Text("Nazwa") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = assetUnitInput, onValueChange = { assetUnitInput = it }, label = { Text("Jednostka (np. PLN, g)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = assetPrecisionInput, onValueChange = { assetPrecisionInput = it }, label = { Text("Miejsca dziesiętne (0–12)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    if (assetKindInput == AssetKind.PRECIOUS_METAL) {
+                        OutlinedTextField(value = assetPurityInput, onValueChange = { assetPurityInput = it }, label = { Text("Próba (opcjonalnie, 1–1000)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    }
+                    Button(onClick = { saveAssetForm() }, enabled = !loading && assetCodeInput.isNotBlank() && assetNameInput.isNotBlank()) { Text("Zapisz definicję aktywa") }
+                    if (assets.isEmpty()) Text("Słownik jest pusty. Dodaj walutę lub kruszec przed rejestrowaniem transakcji.")
+                    assets.forEach { asset ->
+                        Text("${asset.code} — ${asset.name} • ${asset.unit} • ${asset.decimalPlaces} miejsc${asset.purity?.let { " • próba $it" }.orEmpty()}")
                     }
                 }
-                OutlinedTextField(value = executedAtText, onValueChange = { executedAtText = it }, label = { Text("Data i czas ISO-8601") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                if (transactionType != FinancialTransactionType.DEPOSIT) {
-                    OutlinedTextField(value = fromAssetText, onValueChange = { fromAssetText = it }, label = { Text("Aktywo oddane") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            }
+
+        }
+        FinanceSection("transactions-form", "Dodawanie i edycja transakcji", "Wprowadzanie operacji wpłat, wypłat i wymiany aktywów.") {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(if (editingTransactionId == null) "Ręczne dodawanie transakcji" else "Edycja transakcji", style = MaterialTheme.typography.titleMedium)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(FinancialTransactionType.values().toList(), key = { it.name }) { type ->
+                            Button(onClick = { transactionType = type }) {
+                                Text(if (transactionType == type) "✓ $type" else type.name)
+                            }
+                        }
+                    }
+                    OutlinedTextField(value = executedAtText, onValueChange = { executedAtText = it }, label = { Text("Data i czas ISO-8601") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    if (transactionType != FinancialTransactionType.DEPOSIT) {
+                        OutlinedTextField(value = fromAssetText, onValueChange = { fromAssetText = it }, label = { Text("Aktywo oddane") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(assets, key = { it.code }) { asset ->
+                                Button(onClick = { fromAssetText = asset.code }) { Text(if (fromAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
+                            }
+                        }
+                        OutlinedTextField(value = fromAmountText, onValueChange = { fromAmountText = it }, label = { Text("Ilość oddana") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    }
+                    if (transactionType != FinancialTransactionType.WITHDRAWAL) {
+                        OutlinedTextField(value = toAssetText, onValueChange = { toAssetText = it }, label = { Text("Aktywo otrzymane") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(assets, key = { it.code }) { asset ->
+                                Button(onClick = { toAssetText = asset.code }) { Text(if (toAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
+                            }
+                        }
+                        OutlinedTextField(value = toAmountText, onValueChange = { toAmountText = it }, label = { Text("Ilość otrzymana") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    }
+                    OutlinedTextField(value = feeAssetText, onValueChange = { feeAssetText = it }, label = { Text("Aktywo prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(assets, key = { it.code }) { asset ->
-                            Button(onClick = { fromAssetText = asset.code }) { Text(if (fromAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
+                            Button(onClick = { feeAssetText = asset.code }) { Text(if (feeAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
                         }
                     }
-                    OutlinedTextField(value = fromAmountText, onValueChange = { fromAmountText = it }, label = { Text("Ilość oddana") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                }
-                if (transactionType != FinancialTransactionType.WITHDRAWAL) {
-                    OutlinedTextField(value = toAssetText, onValueChange = { toAssetText = it }, label = { Text("Aktywo otrzymane") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(assets, key = { it.code }) { asset ->
-                            Button(onClick = { toAssetText = asset.code }) { Text(if (toAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
-                        }
+                    OutlinedTextField(value = feeAmountText, onValueChange = { feeAmountText = it }, label = { Text("Kwota prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    Text("Wybierz zapisy bankowe do powiązania")
+                    val availableEntries = entries.filter { bankEntry ->
+                        val ownerId = bankEntryOwners[bankEntry.accountingEntryId()]
+                        ownerId == null || ownerId == editingTransactionId
                     }
-                    OutlinedTextField(value = toAmountText, onValueChange = { toAmountText = it }, label = { Text("Ilość otrzymana") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                }
-                OutlinedTextField(value = feeAssetText, onValueChange = { feeAssetText = it }, label = { Text("Aktywo prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(assets, key = { it.code }) { asset ->
-                        Button(onClick = { feeAssetText = asset.code }) { Text(if (feeAssetText == asset.code) "✓ ${asset.code}" else asset.code) }
-                    }
-                }
-                OutlinedTextField(value = feeAmountText, onValueChange = { feeAmountText = it }, label = { Text("Kwota prowizji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                Text("Wybierz zapisy bankowe do powiązania")
-                val availableEntries = entries.filter { bankEntry ->
-                    val ownerId = bankEntryOwners[bankEntry.accountingEntryId()]
-                    ownerId == null || ownerId == editingTransactionId
-                }
-                if (availableEntries.isEmpty()) {
-                    Text("Brak wolnych zapisów bankowych zgodnych z zasadą jednego powiązania na zapis.")
-                } else {
-                    availableEntries.forEach { bankEntry ->
-                        val entryId = bankEntry.accountingEntryId()
-                        val selected = entryId in selectedBankEntryIds
-                        Button(onClick = {
-                            selectedBankEntryIds = if (selected) selectedBankEntryIds - entryId else selectedBankEntryIds + entryId
-                        }) {
-                            Text((if (selected) "✓ " else "") + "${bankEntry.bookingDate} • ${bankEntry.signedAmount.toPlainString()} ${bankEntry.currencyCode}")
-                        }
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { saveTransactionForm() }, enabled = !loading) {
-                        Text(if (editingTransactionId == null) "Zapisz transakcję" else "Zapisz zmiany")
-                    }
-                    if (editingTransactionId != null) Button(onClick = { resetTransactionForm() }) { Text("Anuluj") }
-                }
-            }
-        }
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth().height(320.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            if (financialTransactions.isNotEmpty()) {
-                item {
-                    Text("Transakcje finansowe", style = MaterialTheme.typography.titleMedium)
-                }
-                items(financialTransactions, key = { "financial-${it.transaction.id}" }) { stored ->
-                    val transaction = stored.transaction
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                "${transaction.type} • ${transaction.executedAt}",
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            transaction.fromAssetCode?.let { code ->
-                                Text("Oddano: ${transaction.fromAmount?.toPlainString()} $code")
-                            }
-                            transaction.toAssetCode?.let { code ->
-                                Text("Otrzymano: ${transaction.toAmount?.toPlainString()} $code")
-                            }
-                            transaction.fee?.let { fee ->
-                                Text("Prowizja: ${fee.amount.toPlainString()} ${fee.assetCode}")
-                            }
-                            Text(
-                                "Zapisy bankowe powiązane: ${stored.accountingEntryIds.size}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                    if (availableEntries.isEmpty()) {
+                        Text("Brak wolnych zapisów bankowych zgodnych z zasadą jednego powiązania na zapis.")
+                    } else {
+                        availableEntries.forEach { bankEntry ->
+                            val entryId = bankEntry.accountingEntryId()
+                            val selected = entryId in selectedBankEntryIds
                             Button(onClick = {
-                                editingTransactionId = transaction.id
-                                transactionType = transaction.type
-                                executedAtText = transaction.executedAt.toString()
-                                fromAssetText = transaction.fromAssetCode.orEmpty()
-                                fromAmountText = transaction.fromAmount?.toPlainString().orEmpty()
-                                toAssetText = transaction.toAssetCode.orEmpty()
-                                toAmountText = transaction.toAmount?.toPlainString().orEmpty()
-                                feeAssetText = transaction.fee?.assetCode.orEmpty()
-                                feeAmountText = transaction.fee?.amount?.toPlainString().orEmpty()
-                                selectedBankEntryIds = stored.accountingEntryIds.toSet()
-                            }) { Text("Edytuj") }
+                                selectedBankEntryIds = if (selected) selectedBankEntryIds - entryId else selectedBankEntryIds + entryId
+                            }) {
+                                Text((if (selected) "✓ " else "") + "${bankEntry.bookingDate} • ${bankEntry.signedAmount.toPlainString()} ${bankEntry.currencyCode}")
+                            }
                         }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { saveTransactionForm() }, enabled = !loading) {
+                            Text(if (editingTransactionId == null) "Zapisz transakcję" else "Zapisz zmiany")
+                        }
+                        if (editingTransactionId != null) Button(onClick = { resetTransactionForm() }) { Text("Anuluj") }
                     }
                 }
             }
-            if (exchangeOperations.isNotEmpty()) {
-                item {
-                    Text("Operacje wymiany walut", style = MaterialTheme.typography.titleMedium)
-                }
-                items(exchangeOperations, key = { it.operationId }) { operation ->
-                    val expanded = operation.operationId in expandedExchangeIds
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                when (operation.status) {
-                                    ExchangeOperationStatus.COMPLETE -> "Wymiana kompletna"
-                                    ExchangeOperationStatus.SINGLE_LEG -> "Wymiana niepełna — jedna noga"
-                                    ExchangeOperationStatus.REVIEW_REQUIRED -> "Wymiana wymaga weryfikacji"
-                                },
-                                style = MaterialTheme.typography.titleSmall,
-                                color = if (operation.status == ExchangeOperationStatus.REVIEW_REQUIRED) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.primary
-                                }
-                            )
-                            Text(
-                                "Zapisy: ${operation.legs.size} • Waluty: ${operation.currencies.sorted().joinToString(", ")}"
-                            )
-                            Button(
-                                onClick = {
-                                    expandedExchangeIds = if (expanded) {
-                                        expandedExchangeIds - operation.operationId
-                                    } else {
-                                        expandedExchangeIds + operation.operationId
-                                    }
-                                }
+
+        }
+        FinanceSection("ledger-details", "Szczegóły zapisów i transakcji", "Lista transakcji, operacji wymiany oraz pozostałych zapisów księgowych.") {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().height(320.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (financialTransactions.isNotEmpty()) {
+                    item {
+                        Text("Transakcje finansowe", style = MaterialTheme.typography.titleMedium)
+                    }
+                    items(financialTransactions, key = { "financial-${it.transaction.id}" }) { stored ->
+                        val transaction = stored.transaction
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                Text(if (expanded) "Ukryj zapisy źródłowe" else "Pokaż zapisy źródłowe")
-                            }
-                            if (expanded) {
-                                operation.legs.forEach { leg ->
-                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        Text(
-                                            "${leg.bookingDate} • ${leg.currencyCode}",
-                                            style = MaterialTheme.typography.titleSmall
-                                        )
-                                        Text(
-                                            "${if (leg.signedAmount.signum() > 0) "+" else ""}${leg.signedAmount.toPlainString()} ${leg.currencyCode}",
-                                            style = MaterialTheme.typography.bodyLarge
-                                        )
-                                        Text(leg.operationType, style = MaterialTheme.typography.bodySmall)
-                                    }
+                                Text(
+                                    "${transaction.type} • ${transaction.executedAt}",
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                transaction.fromAssetCode?.let { code ->
+                                    Text("Oddano: ${transaction.fromAmount?.toPlainString()} $code")
                                 }
-                            }
-                        }
-                    }
-                }
-            }
-            item {
-                Text("Pozostałe zapisy księgowe", style = MaterialTheme.typography.titleMedium)
-            }
-            items(entries.filterNot { it.accountingEntryId() in groupedEntryIds }, key = { it.accountingEntryId() }) { entry ->
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("${entry.bookingDate} • ${entry.currencyCode}", style = MaterialTheme.typography.titleSmall)
-                        Text(
-                            "${if (entry.signedAmount.signum() > 0) "+" else ""}${entry.signedAmount.toPlainString()} ${entry.currencyCode}",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(entry.operationType, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-        }
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Darowizny gotówkowe", style = MaterialTheme.typography.titleMedium)
-                Text("Rejestr przyjętych środków z nazwą organizacji-beneficjenta, celem i rozliczeniem przekazania.")
-                OutlinedTextField(value = donationAmountText, onValueChange = { donationAmountText = it }, label = { Text("Kwota przyjęta") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = donationCurrencyText, onValueChange = { donationCurrencyText = it }, label = { Text("Waluta (kod ISO)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = donationOrganizationText, onValueChange = { donationOrganizationText = it }, label = { Text("Nazwa organizacji-beneficjenta *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = donationPurposeText, onValueChange = { donationPurposeText = it }, label = { Text("Cel darowizny *") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = donationDonorText, onValueChange = { donationDonorText = it }, label = { Text("Darczyńca (opcjonalnie)") }, singleLine = true, enabled = !donationAnonymous, modifier = Modifier.fillMaxWidth())
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { donationAnonymous = !donationAnonymous; if (donationAnonymous) donationDonorText = "" }) {
-                        Text(if (donationAnonymous) "✓ Darczyńca anonimowy" else "Darczyńca anonimowy")
-                    }
-                }
-                OutlinedTextField(value = donationCampaignText, onValueChange = { donationCampaignText = it }, label = { Text("Nazwa zbiórki / kampanii (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = donationCollectedByText, onValueChange = { donationCollectedByText = it }, label = { Text("Osoba przyjmująca (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = donationReceiptText, onValueChange = { donationReceiptText = it }, label = { Text("Numer pokwitowania (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(DonationCustodyStatus.values().toList(), key = { it.name }) { status ->
-                        Button(onClick = { donationStatus = status }) {
-                            Text(if (donationStatus == status) "✓ $status" else status.name)
-                        }
-                    }
-                }
-                OutlinedTextField(value = donationTransferredAmountText, onValueChange = { donationTransferredAmountText = it }, label = { Text("Kwota przekazana organizacji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = donationTransferredAtText, onValueChange = { donationTransferredAtText = it }, label = { Text("Data przekazania ISO-8601 (wymagana z kwotą)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = donationNoteText, onValueChange = { donationNoteText = it }, label = { Text("Uwagi (opcjonalnie)") }, modifier = Modifier.fillMaxWidth())
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = { saveDonationForm() },
-                        enabled = !loading && donationAmountText.isNotBlank() &&
-                            donationCurrencyText.isNotBlank() && donationOrganizationText.isNotBlank() &&
-                            donationPurposeText.isNotBlank()
-                    ) { Text(if (editingDonationId == null) "Zapisz darowiznę" else "Zapisz zmiany") }
-                    if (editingDonationId != null) Button(onClick = { resetDonationForm() }) { Text("Anuluj") }
-                }
-                donations.forEach { donation ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("${donation.amount.toPlainString()} ${donation.currencyCode} • ${donation.beneficiaryOrganizationName}", style = MaterialTheme.typography.titleSmall)
-                            Text("Cel: ${donation.purpose}")
-                            Text("Przyjęto: ${donation.receivedAt} • ${donation.custodyStatus}")
-                            donation.transferredAmount?.let { amount ->
-                                Text("Przekazano: ${amount.toPlainString()} ${donation.currencyCode}")
-                            }
-                            val attached = donationAttachments.filter { it.donationId == donation.id }
-                            Text("Pokwitowania i załączniki: ${attached.size}")
-                            attached.forEach { attachment ->
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text("${attachment.fileName} • ${attachment.sizeBytes} B • ${attachment.mimeType}", style = MaterialTheme.typography.bodySmall)
-                                    Text("SHA-256: ${attachment.sha256}", style = MaterialTheme.typography.labelSmall)
-                                    Button(onClick = {
-                                        scope.launch {
-                                            try {
-                                                val uri = repository.getDonationAttachmentUri(attachment.id)
-                                                val viewIntent = Intent(Intent.ACTION_VIEW)
-                                                    .setDataAndType(uri, attachment.mimeType)
-                                                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                                context.startActivity(
-                                                    Intent.createChooser(viewIntent, "Otwórz załącznik")
-                                                )
-                                                message = "Przekazano bezpieczny podgląd załącznika do wybranej aplikacji."
-                                                error = null
-                                            } catch (exception: Exception) {
-                                                error = exception.message ?: "Nie udało się otworzyć załącznika."
-                                            }
-                                        }
-                                    }) { Text("Otwórz") }
-                                    Button(onClick = {
-                                        scope.launch {
-                                            try {
-                                                repository.deleteDonationAttachment(attachment.id)
-                                                donationAttachments = repository.getDonationAttachments()
-                                                message = "Usunięto załącznik."
-                                                error = null
-                                            } catch (exception: Exception) {
-                                                error = exception.message ?: "Nie udało się usunąć załącznika."
-                                            }
-                                        }
-                                    }) { Text("Usuń załącznik") }
+                                transaction.toAssetCode?.let { code ->
+                                    Text("Otrzymano: ${transaction.toAmount?.toPlainString()} $code")
                                 }
-                            }
-                            Button(onClick = {
-                                pendingDonationAttachmentId = donation.id
-                                donationAttachmentLauncher.launch(arrayOf("application/pdf", "image/jpeg", "image/png"))
-                            }) { Text("Dodaj pokwitowanie / załącznik") }
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = { editDonation(donation) }) { Text("Edytuj") }
+                                transaction.fee?.let { fee ->
+                                    Text("Prowizja: ${fee.amount.toPlainString()} ${fee.assetCode}")
+                                }
+                                Text(
+                                    "Zapisy bankowe powiązane: ${stored.accountingEntryIds.size}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                                 Button(onClick = {
-                                    scope.launch {
-                                        try {
-                                            repository.deleteCashDonationWithAttachments(donation.id)
-                                            donations = repository.getCashDonations()
-                                            donationAttachments = repository.getDonationAttachments()
-                                            message = "Usunięto darowiznę i jej załączniki."
-                                            error = null
-                                        } catch (exception: Exception) {
-                                            error = exception.message ?: "Nie udało się usunąć darowizny."
+                                    editingTransactionId = transaction.id
+                                    transactionType = transaction.type
+                                    executedAtText = transaction.executedAt.toString()
+                                    fromAssetText = transaction.fromAssetCode.orEmpty()
+                                    fromAmountText = transaction.fromAmount?.toPlainString().orEmpty()
+                                    toAssetText = transaction.toAssetCode.orEmpty()
+                                    toAmountText = transaction.toAmount?.toPlainString().orEmpty()
+                                    feeAssetText = transaction.fee?.assetCode.orEmpty()
+                                    feeAmountText = transaction.fee?.amount?.toPlainString().orEmpty()
+                                    selectedBankEntryIds = stored.accountingEntryIds.toSet()
+                                }) { Text("Edytuj") }
+                            }
+                        }
+                    }
+                }
+                if (exchangeOperations.isNotEmpty()) {
+                    item {
+                        Text("Operacje wymiany walut", style = MaterialTheme.typography.titleMedium)
+                    }
+                    items(exchangeOperations, key = { it.operationId }) { operation ->
+                        val expanded = operation.operationId in expandedExchangeIds
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    when (operation.status) {
+                                        ExchangeOperationStatus.COMPLETE -> "Wymiana kompletna"
+                                        ExchangeOperationStatus.SINGLE_LEG -> "Wymiana niepełna — jedna noga"
+                                        ExchangeOperationStatus.REVIEW_REQUIRED -> "Wymiana wymaga weryfikacji"
+                                    },
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = if (operation.status == ExchangeOperationStatus.REVIEW_REQUIRED) {
+                                        MaterialTheme.colorScheme.error
+                                    } else {
+                                        MaterialTheme.colorScheme.primary
+                                    }
+                                )
+                                Text(
+                                    "Zapisy: ${operation.legs.size} • Waluty: ${operation.currencies.sorted().joinToString(", ")}"
+                                )
+                                Button(
+                                    onClick = {
+                                        expandedExchangeIds = if (expanded) {
+                                            expandedExchangeIds - operation.operationId
+                                        } else {
+                                            expandedExchangeIds + operation.operationId
                                         }
                                     }
-                                }) { Text("Usuń") }
+                                ) {
+                                    Text(if (expanded) "Ukryj zapisy źródłowe" else "Pokaż zapisy źródłowe")
+                                }
+                                if (expanded) {
+                                    operation.legs.forEach { leg ->
+                                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                            Text(
+                                                "${leg.bookingDate} • ${leg.currencyCode}",
+                                                style = MaterialTheme.typography.titleSmall
+                                            )
+                                            Text(
+                                                "${if (leg.signedAmount.signum() > 0) "+" else ""}${leg.signedAmount.toPlainString()} ${leg.currencyCode}",
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
+                                            Text(leg.operationType, style = MaterialTheme.typography.bodySmall)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                item {
+                    Text("Pozostałe zapisy księgowe", style = MaterialTheme.typography.titleMedium)
+                }
+                items(entries.filterNot { it.accountingEntryId() in groupedEntryIds }, key = { it.accountingEntryId() }) { entry ->
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("${entry.bookingDate} • ${entry.currencyCode}", style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                "${if (entry.signedAmount.signum() > 0) "+" else ""}${entry.signedAmount.toPlainString()} ${entry.currencyCode}",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(entry.operationType, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+
+        }
+        FinanceSection("cash-donations", "Rejestr darowizn gotówkowych", "Przyjmowanie środków, rozliczanie przekazań, pokwitowania i załączniki.") {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Darowizny gotówkowe", style = MaterialTheme.typography.titleMedium)
+                    Text("Rejestr przyjętych środków z nazwą organizacji-beneficjenta, celem i rozliczeniem przekazania.")
+                    OutlinedTextField(value = donationAmountText, onValueChange = { donationAmountText = it }, label = { Text("Kwota przyjęta") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = donationCurrencyText, onValueChange = { donationCurrencyText = it }, label = { Text("Waluta (kod ISO)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = donationOrganizationText, onValueChange = { donationOrganizationText = it }, label = { Text("Nazwa organizacji-beneficjenta *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = donationPurposeText, onValueChange = { donationPurposeText = it }, label = { Text("Cel darowizny *") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = donationDonorText, onValueChange = { donationDonorText = it }, label = { Text("Darczyńca (opcjonalnie)") }, singleLine = true, enabled = !donationAnonymous, modifier = Modifier.fillMaxWidth())
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { donationAnonymous = !donationAnonymous; if (donationAnonymous) donationDonorText = "" }) {
+                            Text(if (donationAnonymous) "✓ Darczyńca anonimowy" else "Darczyńca anonimowy")
+                        }
+                    }
+                    OutlinedTextField(value = donationCampaignText, onValueChange = { donationCampaignText = it }, label = { Text("Nazwa zbiórki / kampanii (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = donationCollectedByText, onValueChange = { donationCollectedByText = it }, label = { Text("Osoba przyjmująca (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = donationReceiptText, onValueChange = { donationReceiptText = it }, label = { Text("Numer pokwitowania (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(DonationCustodyStatus.values().toList(), key = { it.name }) { status ->
+                            Button(onClick = { donationStatus = status }) {
+                                Text(if (donationStatus == status) "✓ $status" else status.name)
+                            }
+                        }
+                    }
+                    OutlinedTextField(value = donationTransferredAmountText, onValueChange = { donationTransferredAmountText = it }, label = { Text("Kwota przekazana organizacji (opcjonalnie)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = donationTransferredAtText, onValueChange = { donationTransferredAtText = it }, label = { Text("Data przekazania ISO-8601 (wymagana z kwotą)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = donationNoteText, onValueChange = { donationNoteText = it }, label = { Text("Uwagi (opcjonalnie)") }, modifier = Modifier.fillMaxWidth())
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { saveDonationForm() },
+                            enabled = !loading && donationAmountText.isNotBlank() &&
+                                donationCurrencyText.isNotBlank() && donationOrganizationText.isNotBlank() &&
+                                donationPurposeText.isNotBlank()
+                        ) { Text(if (editingDonationId == null) "Zapisz darowiznę" else "Zapisz zmiany") }
+                        if (editingDonationId != null) Button(onClick = { resetDonationForm() }) { Text("Anuluj") }
+                    }
+                    donations.forEach { donation ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("${donation.amount.toPlainString()} ${donation.currencyCode} • ${donation.beneficiaryOrganizationName}", style = MaterialTheme.typography.titleSmall)
+                                Text("Cel: ${donation.purpose}")
+                                Text("Przyjęto: ${donation.receivedAt} • ${donation.custodyStatus}")
+                                donation.transferredAmount?.let { amount ->
+                                    Text("Przekazano: ${amount.toPlainString()} ${donation.currencyCode}")
+                                }
+                                val attached = donationAttachments.filter { it.donationId == donation.id }
+                                Text("Pokwitowania i załączniki: ${attached.size}")
+                                attached.forEach { attachment ->
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text("${attachment.fileName} • ${attachment.sizeBytes} B • ${attachment.mimeType}", style = MaterialTheme.typography.bodySmall)
+                                        Text("SHA-256: ${attachment.sha256}", style = MaterialTheme.typography.labelSmall)
+                                        Button(onClick = {
+                                            scope.launch {
+                                                try {
+                                                    val uri = repository.getDonationAttachmentUri(attachment.id)
+                                                    val viewIntent = Intent(Intent.ACTION_VIEW)
+                                                        .setDataAndType(uri, attachment.mimeType)
+                                                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                    context.startActivity(
+                                                        Intent.createChooser(viewIntent, "Otwórz załącznik")
+                                                    )
+                                                    message = "Przekazano bezpieczny podgląd załącznika do wybranej aplikacji."
+                                                    error = null
+                                                } catch (exception: Exception) {
+                                                    error = exception.message ?: "Nie udało się otworzyć załącznika."
+                                                }
+                                            }
+                                        }) { Text("Otwórz") }
+                                        Button(onClick = {
+                                            scope.launch {
+                                                try {
+                                                    repository.deleteDonationAttachment(attachment.id)
+                                                    donationAttachments = repository.getDonationAttachments()
+                                                    message = "Usunięto załącznik."
+                                                    error = null
+                                                } catch (exception: Exception) {
+                                                    error = exception.message ?: "Nie udało się usunąć załącznika."
+                                                }
+                                            }
+                                        }) { Text("Usuń załącznik") }
+                                    }
+                                }
+                                Button(onClick = {
+                                    pendingDonationAttachmentId = donation.id
+                                    donationAttachmentLauncher.launch(arrayOf("application/pdf", "image/jpeg", "image/png"))
+                                }) { Text("Dodaj pokwitowanie / załącznik") }
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(onClick = { editDonation(donation) }) { Text("Edytuj") }
+                                    Button(onClick = {
+                                        scope.launch {
+                                            try {
+                                                repository.deleteCashDonationWithAttachments(donation.id)
+                                                donations = repository.getCashDonations()
+                                                donationAttachments = repository.getDonationAttachments()
+                                                message = "Usunięto darowiznę i jej załączniki."
+                                                error = null
+                                            } catch (exception: Exception) {
+                                                error = exception.message ?: "Nie udało się usunąć darowizny."
+                                            }
+                                        }
+                                    }) { Text("Usuń") }
+                                }
                             }
                         }
                     }
                 }
             }
+
         }
     }
-}
 
 
 private const val MAX_IMPORT_BYTES = 10 * 1024 * 1024
