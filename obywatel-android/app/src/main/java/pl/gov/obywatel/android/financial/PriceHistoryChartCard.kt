@@ -759,7 +759,7 @@ private fun FinancialChartAnalyticsPanel(
     var bidAsk by remember(base, quote, points) { mutableStateOf<List<NbpCurrencyBidAskQuote>>(emptyList()) }
     var bidAskLoading by remember { mutableStateOf(false) }
     var bidAskError by remember { mutableStateOf<String?>(null) }
-    val supportsNbpBidAsk = quote == "PLN" && base.matches(Regex("[A-Z]{3}")) && base != "PLN"
+    val supportsNbpBidAsk = quote == "PLN" && base.matches(Regex("[A-Z]{3}")) && base !in setOf("PLN", "XAU", "XAG", "XPT", "XPD")
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         indicators?.let { data ->
