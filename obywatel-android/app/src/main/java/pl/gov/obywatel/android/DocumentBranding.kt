@@ -477,9 +477,10 @@ internal object DocumentBrandStore {
                 } }
             }
         }.getOrDefault(emptyList())
+        val remoteNames = RemoteGraphicRepository.remoteResourceNames(context)
         return builtInAssets + generatedDrawableAssets.map { asset ->
             val name = asset.file.removePrefix("resource:")
-            if (asset.file.startsWith("resource:") && RemoteGraphicRepository.isRemoteResource(context, name)) asset.copy(file = "remote:$name") else asset
+            if (asset.file.startsWith("resource:") && name in remoteNames) asset.copy(file = "remote:$name") else asset
         } + stored
     }
     private fun save(context: Context, assets: List<BrandAsset>) {
