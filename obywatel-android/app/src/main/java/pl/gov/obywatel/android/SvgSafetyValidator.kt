@@ -48,13 +48,36 @@ internal object SvgSafetyValidator {
         runCatching { parser.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false) }
         parser.setInput(StringReader(safeMarkup))
         var rootSeen = false
+        var elementCount = 0
+        var depth = 0
         var event = parser.eventType
         while (event != XmlPullParser.END_DOCUMENT) {
-            if (event == XmlPullParser.START_TAG && !rootSeen) {
-                require(parser.name.equals("svg", ignoreCase = true)) {
-                    "Dokument XML nie ma elementu głównego SVG."
+            when (event) {
+                XmlPullParser.START_TAG -> {
+                    if (!rootSeen) {
+                        require(parser.name.equals("svg", ignoreCase = true)) {
+                            "Dokument XML nie ma elementu głównego SVG."
+                        }
+                        rootSeen = true
+                    }
+                    elementCount++
+                    require(elementCount <= MAX_ELEMENTS) {
+                        "SVG zawiera zbyt wiele elementów (limit: $MAX_ELEMENTS)."
+                    }
+                    depth++
+                    require(depth <= MAX_NESTING_DEPTH) {
+                        "SVG przekracza dopuszczalną głębokość zagnieżdżenia (limit: $MAX_NESTING_DEPTH)."
+                    }
+                    var attributeBytes = parser.name.length
+                    for (index in 0 until parser.attributeCount) {
+                        attributeBytes += parser.getAttributeName(index).length
+                        attributeBytes += parser.getAttributeValue(index).length
+                        require(attributeBytes <= MAX_TAG_BYTES) {
+                            "SVG zawiera nadmiernie duży znacznik lub zestaw atrybutów."
+                        }
+                    }
                 }
-                rootSeen = true
+                XmlPullParser.END_TAG -> depth--
             }
             event = parser.next()
         }
