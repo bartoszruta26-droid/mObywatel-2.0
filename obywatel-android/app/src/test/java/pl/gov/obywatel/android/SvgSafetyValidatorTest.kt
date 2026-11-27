@@ -92,6 +92,32 @@ class SvgSafetyValidatorTest {
     }
 
     @Test
+    fun signatureGeneratorPreservesPolishAndSpecialCharactersAndSelectedFont() {
+        val svg = makeTextSignatureSvg("Łukasz Żółć & partnerzy № 7 ©", "#183A63", "serif")
+            .toString(Charsets.UTF_8)
+        assertTrue(svg.contains("Łukasz Żółć &amp; partnerzy № 7 ©"))
+        assertTrue(svg.contains("Georgia"))
+        assertTrue(svg.contains("Noto Sans Symbols 2"))
+        SvgSafetyValidator.validateMarkupSecurity(svg)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun signatureGeneratorRejectsUnknownFont() {
+        makeTextSignatureSvg("Jan Kowalski", "#183A63", "url(javascript:alert(1))")
+    }
+
+    @Test
+    fun stampGeneratorPreservesPolishAndSpecialCharactersAndSelectedFont() {
+        val svg = makeStampSvg("Ród Łódź & Synowie", "§ 12 ©", "№ 7/2026", "#244B75",
+            "oval", "leaf", "side", true, "mono").toString(Charsets.UTF_8)
+        assertTrue(svg.contains("Ród Łódź &amp; Synowie"))
+        assertTrue(svg.contains("§ 12 ©"))
+        assertTrue(svg.contains("№ 7/2026"))
+        assertTrue(svg.contains("DejaVu Sans Mono"))
+        SvgSafetyValidator.validateMarkupSecurity(svg)
+    }
+
+    @Test
     fun advancedStampGeneratorSupportsShapesMotifsAndDistressedInk() {
         val round = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "A-1", "#244B75",
             "circle", "rosette", "center", true).toString(Charsets.UTF_8)
