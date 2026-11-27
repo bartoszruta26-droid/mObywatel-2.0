@@ -76,7 +76,7 @@ internal fun certificateSvgFontStack(style: String): String = when (style) {
 
 private fun requireCertificateText(value: String, field: String): String {
     require(value.any { !it.isWhitespace() }) { "Wpisz $field." }
-    require(value.none { it.code < 0x20 && it != '\\t' }) { "Tekst zawiera niedozwolone znaki sterujące." }
+    require(value.none { it.code < 0x20 }) { "Tekst zawiera niedozwolone znaki sterujące." }
     return value
 }
 
@@ -513,7 +513,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                     }
                 }
                 Text("Znaki specjalne — wybierz, aby wstawić do tekstu:")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf("Ł", "Ż", "Ź", "Ą", "Ę", "Ć", "Ń", "Ó", "Ś", "★", "♥", "№", "§", "€", "©", "®", "™", "±", "—").forEach { symbol ->
                         TextButton(onClick = { signatureText += symbol }) { Text(symbol) }
                     }
