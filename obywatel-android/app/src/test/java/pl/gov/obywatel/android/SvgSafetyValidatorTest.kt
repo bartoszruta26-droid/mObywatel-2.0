@@ -91,6 +91,28 @@ class SvgSafetyValidatorTest {
         makeTextSignatureSvg("Jan Kowalski", "#112233;url(https://attacker.invalid)")
     }
 
+    @Test
+    fun advancedStampGeneratorSupportsShapesMotifsAndDistressedInk() {
+        val round = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "A-1", "#244B75",
+            "circle", "rosette", "center", true).toString(Charsets.UTF_8)
+        assertTrue(round.contains("<circle"))
+        assertTrue(round.contains("<mask id=\"inkWear\">"))
+        assertTrue(round.contains("translate(360 360)"))
+
+        val horizontal = makeStampSvg("Fundacja Aria", "PIECZĘĆ", "A-2", "#B22222",
+            "rectangle", "star", "side", false).toString(Charsets.UTF_8)
+        assertTrue(horizontal.contains("<rect"))
+        assertTrue(horizontal.contains("translate(555 360)"))
+        assertTrue(!horizontal.contains("<mask id=\"inkWear\">"))
+        SvgSafetyValidator.validateMarkupSecurity(round)
+        SvgSafetyValidator.validateMarkupSecurity(horizontal)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun advancedStampGeneratorRejectsUnsupportedShape() {
+        makeStampSvg("Fundacja", "PIECZĘĆ", "1", "#244B75", "triangle", "star", "side", true)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun stampGeneratorRejectsUnsafeColorValue() {
         makeStampSvg("Fundacja", "PIECZĘĆ", "1", "url(#malicious)")
