@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.onSizeChanged
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -49,7 +49,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.material3.Icon
 import androidx.compose.foundation.Image
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -301,6 +300,11 @@ internal fun CertificateSignaturesManager(onSelectionChanged: () -> Unit = {}) {
                             val path = AndroidPath()
                             strokes.forEach { points ->
                                 if (points.isEmpty()) return@forEach
+                                if (points.size == 1) {
+                                    val point = points.first()
+                                    canvas.drawCircle(point.x / padWidth * 1120f + 40f, point.y / padHeight * 340f + 40f, 7f, paint)
+                                    return@forEach
+                                }
                                 val first = points.first()
                                 path.moveTo(first.x / padWidth * 1120f + 40f, first.y / padHeight * 340f + 40f)
                                 for (i in 1 until points.size) {
