@@ -133,3 +133,7 @@ Pozostają do wykonania:
 5. Orkiestrator pipeline'u z anulowaniem i błędami częściowymi.
 6. Adapter parsera `DocumentOcrParser` do `DocumentFieldExtractor` oraz walidatory.
 7. Testy instrumentacyjne i UI przed integracją z portfelem.
+
+### Dodatkowy postęp po pierwszej implementacji
+
+W PR #184 dodano także `DocumentOcrFieldExtractor`, adapter istniejącego parsera dokumentów do kontraktu `DocumentFieldExtractor`, oraz testy JVM mapowania pól i przypadków pustych. Najbliższa bramka: zakończenie CI dla gałęzi architektury, a następnie implementacja adaptera ML Kit zgodnego z `TextRecognizerEngine` i testy instrumentacyjne.
