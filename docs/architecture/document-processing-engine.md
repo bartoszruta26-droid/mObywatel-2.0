@@ -132,3 +132,14 @@ Istnieje prototyp adaptera w osobnym PR #188: DocumentImageRecognition.kt opakow
 Nie ma jeszcze kompletnego wejścia SAF/PDF, wielostronicowego pipeline'u, ekstrakcji i walidacji w jednym przebiegu ani ekranu podglądu z zatwierdzeniem. Nie deklarować gotowości silnika, dopóki te granice nie zostaną zaimplementowane i przetestowane. PR #186 wydziela generowanie QR z ekranu, lecz nie realizuje jeszcze warstwy BarcodeReaderEngine.
 
 Kolejność techniczna: (1) doprowadzić do zielonego build/testy dla ekstrakcji QR i adaptera obrazu, (2) dodać testy adaptera i modelu wyniku, (3) zdefiniować stabilne kontrakty niezależne od Android/ML Kit, (4) zintegrować wejście obrazu i parser, (5) dopiero potem UI zatwierdzania i repozytorium dokumentów.
+
+## Pierwsza implementacja kontraktów — 2026-11-27
+
+W tej gałęzi dodano pierwszy kod funkcjonalny:
+- `documentprocessing/DocumentProcessingContracts.kt` — platform-neutralne modele żądań i wyników, operacje, metadane źródła, bloki/linie OCR, prostokąty, wartości kodów, pola, walidacje, tłumaczenie i pochodzenie wyniku.
+- Interfejsy dostawców: `TextRecognizerEngine`, `BarcodeReaderEngine`, `TextTranslator`, `DocumentFieldExtractor`, `FieldValidator`.
+- Kontrakty nie importują Android SDK, ML Kit, ZXing ani Compose. `ProcessingInput` jest nieprzezroczystym wejściem dostarczanym przez warstwę platformową.
+- Domyślnie każde pole ekstrakcji wymaga ręcznego sprawdzenia; confidence jest ograniczone do zakresu 0..1; wynik walidacji nie oznacza autentyczności dokumentu.
+- Test JVM `DocumentProcessingContractsTest` obejmuje walidację pustych operacji, wymóg języka docelowego, confidence, granice, ręczny przegląd pól i pochodzenie.
+
+To jest warstwa kontraktów, nie jeszcze orkiestrator ani integracja z adapterem ML Kit. Nie należy deklarować działającego przepływu end-to-end. Testy zostały zapisane w repozytorium, ale ich wykonanie wymaga CI/Gradle; brak jeszcze potwierdzonego wyniku kompilacji po tym commicie.
