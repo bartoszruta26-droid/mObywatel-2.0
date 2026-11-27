@@ -143,3 +143,13 @@ W tej gałęzi dodano pierwszy kod funkcjonalny:
 - Test JVM `DocumentProcessingContractsTest` obejmuje walidację pustych operacji, wymóg języka docelowego, confidence, granice, ręczny przegląd pól i pochodzenie.
 
 To jest warstwa kontraktów, nie jeszcze orkiestrator ani integracja z adapterem ML Kit. Nie należy deklarować działającego przepływu end-to-end. Testy zostały zapisane w repozytorium, ale ich wykonanie wymaga CI/Gradle; brak jeszcze potwierdzonego wyniku kompilacji po tym commicie.
+
+### Adapter istniejącego parsera
+
+Dodano `DocumentOcrFieldExtractor`, który implementuje `DocumentFieldExtractor` i mapuje wyniki istniejącego `DocumentOcrParser` na listę `ExtractedField`. Adapter:
+- wymaga podpowiedzi typu dokumentu,
+- zwraca pustą listę dla braku typu lub pustego OCR,
+- nie przypisuje sztucznego confidence ani bounding boxes, których obecny parser nie dostarcza,
+- zawsze oznacza pola jako wymagające ręcznej weryfikacji.
+
+Dodano test JVM mapowania pól, braku typu dokumentu i pustego tekstu. Nadal nie jest to pełny pipeline: adapter OCR ML Kit z PR #188 nie implementuje jeszcze kontraktu `TextRecognizerEngine`, a wejście obrazu i orkiestracja pozostają do wykonania.
