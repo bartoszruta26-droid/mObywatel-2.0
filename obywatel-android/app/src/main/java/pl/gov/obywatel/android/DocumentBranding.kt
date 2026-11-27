@@ -617,6 +617,16 @@ internal object DocumentBrandStore {
         if (!InstitutionalAssetPolicy.mayRender(kind, authorizationFor(asset))) return null
         return imageById(context, asset.id)
     }
+    suspend fun ensureFullGraphicsForPdf(context: Context, documentType: String, owner: String) {
+        val assigned = assignments(context)
+        val candidateKeys = assignmentKeys(documentType, owner).toSet()
+        val remoteNames = assigned.filter { it.documentType in candidateKeys }
+            .mapNotNull { assignment ->
+                val asset = list(context).firstOrNull { it.id == assignment.assetId } ?: return@mapNotNull null
+                asset.file.takeIf { it.startsWith("remote:") }?.removePrefix("remote:")
+            }.distinct()
+        remoteNames.forEach { name -> RemoteGraphicRepository.fullGraphicFile(context, name) }
+    }
     fun preview(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? =
         imageById(context, assetId, knownAsset)
     fun fileBytes(context: Context, assetId: String, knownAsset: BrandAsset? = null): ByteArray? = runCatching {
@@ -1692,15 +1702,29 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
 @Composable
 internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, modifier: Modifier = Modifier, documentType: String = "official", ownerDefault: String = "") {
     val context= LocalContext.current
+    val scope = rememberCoroutineScope()
     var owner by remember(title, ownerDefault) { mutableStateOf(ownerDefault) }
     var status by remember { mutableStateOf("") }
+    var exporting by remember { mutableStateOf(false) }
     val create= rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         if(uri!=null) runCatching { DocumentPdfRenderer.write(context,uri,title,owner,documentType,values) }
             .onSuccess { status="Utworzono PDF. Plik można teraz podpisać obsługiwanym podpisem elektronicznym." }
             .onFailure { status="Eksport PDF nie powiódł się: "+(it.message ?: "błąd") }
     }
     OutlinedTextField(owner,{owner=it},label={Text("Zestaw identyfikacji podmiotu (nazwa)")},modifier=Modifier.fillMaxWidth())
-    Button(onClick={create.launch(title.replace(Regex("[^A-Za-z0-9_-]"),"_").take(50).ifBlank { "dokument" }+".pdf")},modifier=modifier.fillMaxWidth()) { Text("Eksportuj dokument do PDF") }
+    Button(onClick={
+        scope.launch {
+            exporting = true
+            status = "Sprawdzanie przypisanych grafik i pobieranie pełnych plików…"
+            runCatching { DocumentBrandStore.ensureFullGraphicsForPdf(context, documentType, owner) }
+                .onSuccess {
+                    status = "Grafiki gotowe. Wybierz miejsce zapisu PDF."
+                    create.launch(title.replace(Regex("[^A-Za-z0-9_-]"),"_").take(50).ifBlank { "dokument" }+".pdf")
+                }
+                .onFailure { status = "Nie można przygotować grafik do PDF: "+(it.message ?: "błąd") }
+            exporting = false
+        }
+    },modifier=modifier.fillMaxWidth(), enabled=!exporting) { Text(if(exporting) "Przygotowywanie…" else "Eksportuj dokument do PDF") }
     if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)
 }
 
