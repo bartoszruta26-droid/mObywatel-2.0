@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+SPDX-License-Identifier: EUPL-1.2
+-->
+
 # Regulamin dotacji celowych i darowizn na realizację obywatelskiego celu publicznego w ramach państwowego funduszu celowego
 
 ## Preambuła
