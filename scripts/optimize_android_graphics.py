@@ -159,7 +159,7 @@ def main() -> None:
             "nine_patch_and_animated_images": "excluded",
             "full_graphics_location": "graphic-originals/full-webp/",
             "original_sources_location": "graphic-originals/source-png/",
-            "apk_resources": "thumbnail-only WebP"
+            "app_resources": "thumbnail-only WebP; original full-resolution files are not packaged in the APK"
         },
         "count": len(entries),
         "items": entries
