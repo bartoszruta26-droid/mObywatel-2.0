@@ -389,11 +389,47 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 OutlinedTextField(stampOrganization, { stampOrganization = it }, label = { Text("Nazwa organizacji") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(stampCenter, { stampCenter = it }, label = { Text("Tekst środkowy") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(stampNumber, { stampNumber = it }, label = { Text("Numer / identyfikator") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(stampColor, { stampColor = it }, label = { Text("Kolor #RRGGBB") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(stampColor, { stampColor = it }, label = { Text("Kolor pieczęci #RRGGBB") }, modifier = Modifier.fillMaxWidth())
+                Box {
+                    OutlinedButton(onClick = { stampShapeMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Kształt: " + when (stampShape) { "oval" -> "Owalna pozioma"; "rectangle" -> "Prostokątna pozioma"; else -> "Okrągła" })
+                    }
+                    DropdownMenu(stampShapeMenu, { stampShapeMenu = false }) {
+                        listOf("circle" to "Okrągła", "oval" to "Owalna pozioma", "rectangle" to "Prostokątna pozioma").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { stampShape = id; stampShapeMenu = false; if (id != "circle") stampMotifPosition = "side" })
+                        }
+                    }
+                }
+                Box {
+                    OutlinedButton(onClick = { stampMotifMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Grafika wektorowa: " + when (stampMotif) { "star" -> "Gwiazda"; "leaf" -> "Liść"; "cross" -> "Krzyż ozdobny"; "none" -> "Brak"; else -> "Rozeta" })
+                    }
+                    DropdownMenu(stampMotifMenu, { stampMotifMenu = false }) {
+                        listOf("rosette" to "Rozeta", "star" to "Gwiazda", "leaf" to "Liść", "cross" to "Krzyż ozdobny", "none" to "Brak").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { stampMotif = id; stampMotifMenu = false })
+                        }
+                    }
+                }
+                Box {
+                    OutlinedButton(onClick = { stampPositionMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Położenie grafiki: " + if (stampMotifPosition == "side") "Z boku" else "W środku")
+                    }
+                    DropdownMenu(stampPositionMenu, { stampPositionMenu = false }) {
+                        DropdownMenuItem(text = { Text("W środku pieczęci okrągłej") }, onClick = { stampMotifPosition = "center"; stampPositionMenu = false })
+                        DropdownMenuItem(text = { Text("Z boku pieczęci poziomej") }, onClick = { stampMotifPosition = "side"; stampPositionMenu = false })
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = stampDistressed, onCheckedChange = { stampDistressed = it })
+                    Column {
+                        Text("Efekt niedokładnego odbicia")
+                        Text("Nierównomierne krycie i drobne ubytki tuszu imitujące zużyte odbicie.", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 Text("Generator tworzy własny wzór graficzny SVG, nie odtwarza pieczęci urzędowych, państwowych ani notarialnych.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(onClick = { runCatching {
-                    val svg = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor)
+                    val svg = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed)
                     DocumentBrandStore.importBytes(context, "Pieczęcie własne", "Pieczęć graficzna (własna)",
                         "Pieczęć — ${stampOrganization.take(45)}", svg,
                         rights = "Własny wzór graficzny użytkownika; nie jest pieczęcią urzędową ani poświadczeniem.")
