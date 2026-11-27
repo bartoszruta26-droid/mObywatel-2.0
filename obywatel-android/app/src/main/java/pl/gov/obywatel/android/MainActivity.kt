@@ -297,6 +297,20 @@ internal const val DOCUMENT_VISIBILITY_MIGRATION_KEY = "all_hidden_except_identi
 internal const val DONATION_LEDGER_VISIBILITY_MIGRATION_KEY = "donation_ledgers_hidden_by_default_v1"
 internal const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
 internal const val ARMED_SERVICE_DASHBOARD_CLEANUP_MIGRATION_KEY = "armed_service_dashboard_cleanup_v1"
+
+/** Wspólny katalog usług używany przez wyszukiwarkę i ekran usług w MainActivity. */
+internal val services = listOf(
+    ServiceItem("Dokumenty", "Import i podgląd plików", R.drawable.nav_documents, category = "Dokumenty"),
+    ServiceItem("Zarządzanie dokumentami", "Podmioty, logo, herby, pieczęcie i PDF", R.drawable.nav_documents, category = "Dokumenty"),
+    ServiceItem("Rejestr dokumentów", "Lokalny wykaz i kody QR", R.drawable.service_ticket, category = "Dokumenty"),
+    ServiceItem("Weryfikacja QR", "Odczyt identyfikatora rejestru", R.drawable.nav_scan, category = "Bezpieczeństwo"),
+    ServiceItem("Moje dane", "Dane profilu aplikacji", R.drawable.service_profile, category = "Profil"),
+    ServiceItem("Bezpieczeństwo", "Ustawienia ochrony danych", R.drawable.service_pesel_lock, category = "Bezpieczeństwo"),
+    ServiceItem("Płatności", "Moduł informacyjny", R.drawable.service_ticket, category = "Finanse"),
+    ServiceItem("Zdrowie", "Moduł informacyjny", R.drawable.service_prescription, category = "Zdrowie"),
+    ServiceItem("Więcej", "Informacje o aplikacji", R.drawable.nav_more, category = "Pozostałe")
+)
+
 @Composable
 internal fun HomeScreen(onAppearanceChange: (ApplicationAppearance) -> Unit) {
     val context = LocalContext.current
