@@ -162,38 +162,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@Composable
-private fun OcrRoundAction(
-    label: String,
-    icon: ImageVector,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier.width(68.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(5.dp)
-    ) {
-        Surface(
-            modifier = Modifier.size(56.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick),
-            shape = CircleShape,
-            color = if (enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = if (enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(26.dp))
-            }
-        }
-        Text(
-            text = label,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.labelSmall,
-            maxLines = 2,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
+
 
 @Composable
 internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<String, String>, context: Context, saveMessage: (String) -> Unit) {
@@ -582,33 +551,9 @@ private fun LoyaltyCardsEditor(
     }
 }
 
-@Composable
-private fun LoyaltyGeneratedCodes(barcodeValue: String, qrValue: String) {
-    val barcode = remember(barcodeValue) { generateLoyaltyCodeBitmap(barcodeValue, BarcodeFormat.CODE_128) }
-    val qr = remember(qrValue) { generateLoyaltyCodeBitmap(qrValue, BarcodeFormat.QR_CODE) }
-    if (barcode != null || qr != null) {
-        Text("Podgląd kodów", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
-        if (barcode != null) Image(barcode.asImageBitmap(), contentDescription = "Kod kreskowy karty lojalnościowej",
-            modifier = Modifier.fillMaxWidth().height(64.dp), contentScale = ContentScale.Fit)
-        if (qr != null) Image(qr.asImageBitmap(), contentDescription = "Kod QR karty lojalnościowej",
-            modifier = Modifier.size(170.dp), contentScale = ContentScale.Fit)
-    }
-}
 
-private fun generateLoyaltyCodeBitmap(value: String, format: BarcodeFormat): Bitmap? {
-    if (value.isBlank()) return null
-    return runCatching {
-        val width = if (format == BarcodeFormat.QR_CODE) 480 else 900
-        val height = if (format == BarcodeFormat.QR_CODE) 480 else 220
-        val matrix = MultiFormatWriter().encode(value, format, width, height,
-            mapOf(EncodeHintType.MARGIN to 2, EncodeHintType.CHARACTER_SET to "UTF-8"))
-        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
-            for (y in 0 until height) for (x in 0 until width) {
-                bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
-            }
-        }
-    }.getOrNull()
-}
+
+
 
 
 @Composable
