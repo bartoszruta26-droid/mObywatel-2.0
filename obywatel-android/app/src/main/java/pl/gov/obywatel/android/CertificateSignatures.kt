@@ -192,13 +192,19 @@ internal object CertificateSignatureStore {
     }
 
     fun decode(context: Context, uri: Uri): Bitmap {
-        val bitmap = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
-            ?: error("Nie można odczytać wybranego pliku graficznego.")
-        require(bitmap.width <= 4096 && bitmap.height <= 4096 &&
-            bitmap.width.toLong() * bitmap.height <= 16_000_000L) {
+        // Najpierw odczytaj wyłącznie nagłówek obrazu. Limit wymiarów musi być
+        // sprawdzony przed alokacją bitmapy, a nie dopiero po pełnym dekodowaniu.
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it, null, bounds)
+        } ?: error("Nie można odczytać wybranego pliku graficznego.")
+        require(bounds.outWidth in 1..4096 && bounds.outHeight in 1..4096 &&
+            bounds.outWidth.toLong() * bounds.outHeight <= 16_000_000L) {
             "Plik ma zbyt duże wymiary. Maksymalnie 4096 × 4096 pikseli i 16 megapikseli."
         }
-        return bitmap
+        return context.contentResolver.openInputStream(uri)?.use {
+            BitmapFactory.decodeStream(it)
+        } ?: error("Nie można zdekodować wybranego obrazu.")
     }
 
     fun removeBackground(source: Bitmap, colorHex: String, tolerance: Int): Bitmap {
@@ -269,12 +275,20 @@ internal fun CertificateSignaturesManager(onSelectionChanged: () -> Unit = {}) {
         if (uri != null) {
             runCatching {
                 val source = CertificateSignatureStore.decode(context, uri)
-                val color = backgroundColor.trim()
-                require(runCatching { android.graphics.Color.parseColor(color) }.isSuccess) {
-                    "Podaj poprawny kolor tła, np. #FFFFFF."
+                try {
+                    val color = backgroundColor.trim()
+                    require(runCatching { android.graphics.Color.parseColor(color) }.isSuccess) {
+                        "Podaj poprawny kolor tła, np. #FFFFFF."
+                    }
+                    val transparent = CertificateSignatureStore.removeBackground(source, color, tolerance.toInt())
+                    try {
+                        CertificateSignatureStore.save(context, signatureName, transparent)
+                    } finally {
+                        transparent.recycle()
+                    }
+                } finally {
+                    source.recycle()
                 }
-                val transparent = CertificateSignatureStore.removeBackground(source, color, tolerance.toInt())
-                CertificateSignatureStore.save(context, signatureName, transparent)
             }.onSuccess {
                 refresh()
                 message = "Dodano podpis graficzny do biblioteki."
@@ -372,41 +386,45 @@ internal fun CertificateSignaturesManager(onSelectionChanged: () -> Unit = {}) {
                         runCatching {
                             require(strokes.isNotEmpty()) { "Najpierw narysuj podpis." }
                             val bitmap = Bitmap.createBitmap(1200, 420, Bitmap.Config.ARGB_8888)
-                            val canvas = AndroidCanvas(bitmap)
-                            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                                color = android.graphics.Color.rgb(23, 32, 42)
-                                style = Paint.Style.STROKE
-                                strokeWidth = 7f
-                                strokeCap = Paint.Cap.ROUND
-                                strokeJoin = Paint.Join.ROUND
-                            }
-                            val path = AndroidPath()
-                            strokes.forEach { points ->
-                                if (points.isEmpty()) return@forEach
-                                if (points.size == 1) {
-                                    val point = points.first()
-                                    canvas.drawCircle(point.x / padWidth * 1120f + 40f, point.y / padHeight * 340f + 40f, 7f, paint)
-                                    return@forEach
+                            try {
+                                val canvas = AndroidCanvas(bitmap)
+                                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                                    color = android.graphics.Color.rgb(23, 32, 42)
+                                    style = Paint.Style.STROKE
+                                    strokeWidth = 7f
+                                    strokeCap = Paint.Cap.ROUND
+                                    strokeJoin = Paint.Join.ROUND
                                 }
-                                val first = points.first()
-                                path.moveTo(first.x / padWidth * 1120f + 40f, first.y / padHeight * 340f + 40f)
-                                for (i in 1 until points.size) {
-                                    val previous = points[i - 1]
-                                    val current = points[i]
-                                    val midX = (previous.x + current.x) / 2f
-                                    val midY = (previous.y + current.y) / 2f
-                                    path.quadTo(
-                                        previous.x / padWidth * 1120f + 40f,
-                                        previous.y / padHeight * 340f + 40f,
-                                        midX / padWidth * 1120f + 40f,
-                                        midY / padHeight * 340f + 40f
-                                    )
+                                val path = AndroidPath()
+                                strokes.forEach { points ->
+                                    if (points.isEmpty()) return@forEach
+                                    if (points.size == 1) {
+                                        val point = points.first()
+                                        canvas.drawCircle(point.x / padWidth * 1120f + 40f, point.y / padHeight * 340f + 40f, 7f, paint)
+                                        return@forEach
+                                    }
+                                    val first = points.first()
+                                    path.moveTo(first.x / padWidth * 1120f + 40f, first.y / padHeight * 340f + 40f)
+                                    for (i in 1 until points.size) {
+                                        val previous = points[i - 1]
+                                        val current = points[i]
+                                        val midX = (previous.x + current.x) / 2f
+                                        val midY = (previous.y + current.y) / 2f
+                                        path.quadTo(
+                                            previous.x / padWidth * 1120f + 40f,
+                                            previous.y / padHeight * 340f + 40f,
+                                            midX / padWidth * 1120f + 40f,
+                                            midY / padHeight * 340f + 40f
+                                        )
+                                    }
+                                    val last = points.last()
+                                    path.lineTo(last.x / padWidth * 1120f + 40f, last.y / padHeight * 340f + 40f)
                                 }
-                                val last = points.last()
-                                path.lineTo(last.x / padWidth * 1120f + 40f, last.y / padHeight * 340f + 40f)
+                                canvas.drawPath(path, paint)
+                                CertificateSignatureStore.save(context, signatureName, bitmap)
+                            } finally {
+                                bitmap.recycle()
                             }
-                            canvas.drawPath(path, paint)
-                            CertificateSignatureStore.save(context, signatureName, bitmap)
                         }.onSuccess {
                             strokes.clear()
                             refresh()
