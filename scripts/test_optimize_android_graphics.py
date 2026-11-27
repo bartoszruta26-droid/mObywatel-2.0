@@ -58,5 +58,24 @@ class GraphicOptimizationTests(unittest.TestCase):
             self.assertTrue(source.exists())
 
 
+    def test_remote_manifest_paths_match_repository_and_resolver_allowlist(self):
+        import json
+
+        root = Path(__file__).resolve().parents[1]
+        manifest_path = root / "obywatel-android/app/src/main/assets/graphic-thumbnails/manifest.json"
+        resolver_path = root / "obywatel-android/app/src/main/java/pl/gov/obywatel/android/RemoteGraphicRepository.kt"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        resolver = resolver_path.read_text(encoding="utf-8")
+
+        self.assertIn('path.startsWith("graphic-originals/full-webp/")', resolver)
+        self.assertIn('path.endsWith(".webp")', resolver)
+        self.assertEqual(manifest["count"], len(manifest["items"]))
+        for item in manifest["items"]:
+            full_path = item["full_path"]
+            self.assertTrue(full_path.startswith("graphic-originals/full-webp/"), full_path)
+            self.assertTrue(full_path.endswith(".webp"), full_path)
+            self.assertTrue((root / full_path).is_file(), full_path)
+
+
 if __name__ == "__main__":
     unittest.main()
