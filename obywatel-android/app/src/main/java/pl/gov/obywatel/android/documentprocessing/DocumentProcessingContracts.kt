@@ -44,6 +44,10 @@ data class ProcessingRequest(
             ProcessingOperation.TRANSLATION !in operations ||
                 (!targetLanguage.isNullOrBlank())
         ) { "Target language is required for translation." }
+        require(
+            ProcessingOperation.FIELD_VALIDATION !in operations ||
+                ProcessingOperation.FIELD_EXTRACTION in operations
+        ) { "Field validation requires field extraction in the same request." }
     }
 }
 
