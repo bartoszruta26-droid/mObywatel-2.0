@@ -485,7 +485,7 @@ internal object DocumentBrandStore {
     }
     private fun save(context: Context, assets: List<BrandAsset>) {
         val a = JSONArray()
-        assets.filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
+        assets.filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") || it.file.startsWith("remote:") }
             .forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file); put("rights",x.rights); put("version",x.version); put("createdAt",x.createdAt); put("mimeType",x.mimeType) }) }
         atomicWrite(File(dir(context), INDEX), crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
@@ -652,7 +652,7 @@ internal object DocumentBrandStore {
     fun exportArchive(context: Context): String {
         val root = JSONObject().put("version", 1)
         val assets = JSONArray()
-        list(context).filter { !it.file.startsWith("builtin:") && !it.file.startsWith("resource:") }.forEach { asset ->
+        list(context).filter { !it.file.startsWith("builtin:") && !it.file.startsWith("resource:") && !it.file.startsWith("remote:") }.forEach { asset ->
             val file = File(dir(context), asset.file)
             require(file.isFile) { "Brak pliku zasobu: ${asset.label}" }
             val bytes = crypt(atomicRead(file), false)
@@ -889,7 +889,7 @@ internal object DocumentBrandStore {
     @Synchronized fun delete(context: Context, id: String) {
         val old=list(context)
         val selected=old.firstOrNull { it.id==id } ?: return
-        if (selected.file.startsWith("builtin:")) return
+        if (selected.file.startsWith("builtin:") || selected.file.startsWith("remote:")) return
         File(dir(context),selected.file).delete()
         save(context,old.filterNot { it.id==id || it.file.startsWith("builtin:") })
         val retained = assignments(context).filterNot { it.assetId == id }
@@ -1676,6 +1676,13 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                         Text("Wbudowany", color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             style = MaterialTheme.typography.labelSmall,
                                             modifier = Modifier.padding(top = 10.dp))
+                                    } else if (asset.file.startsWith("remote:")) {
+                                        Text(
+                                            if (RemoteGraphicRepository.cachedGraphicFile(context, asset.file.removePrefix("remote:")) != null) "Pełny plik pobrany — dostępny offline" else "Miniatura lokalna — pełny plik pobierany przy użyciu",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.padding(top = 10.dp)
+                                        )
                                     } else if (!readOnly) {
                                         TextButton(onClick = {
                                             DocumentBrandStore.delete(context, asset.id)
