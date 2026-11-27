@@ -167,11 +167,12 @@ internal fun makeStampSvg(
     val motifX = if (motifPosition == "side" || shape != "circle") 555 else 360
     val motifScale = if (motifPosition == "side" || shape != "circle") 0.52 else 1.0
     val motifSvg = if (motif == "none") "" else """<g transform="translate($motifX 390) scale($motifScale)" fill="$safeColor" stroke="$safeColor" stroke-width="5">$motifPath</g>"""
-    val centerSvg = if (motif != "none" && motifPosition == "center" && shape == "circle")
-        """<text x="360" y="265" text-anchor="middle" font-family="serif" font-size="32" font-weight="bold" fill="$safeColor">$center</text>"""
-    else """<text x="360" y="375" text-anchor="middle" font-family="serif" font-size="38" font-weight="bold" fill="$safeColor">$center</text>"""
-    val sideSvg = if (motif != "none" && (motifPosition == "side" || shape != "circle"))
-        """<text x="310" y="355" text-anchor="middle" font-family="serif" font-size="30" font-weight="bold" fill="$safeColor">$center</text>""" else ""
+    val centerSvg = when {
+        motif == "none" -> """<text x="360" y="375" text-anchor="middle" font-family="serif" font-size="38" font-weight="bold" fill="$safeColor">$center</text>"""
+        motifPosition == "center" && shape == "circle" -> """<text x="360" y="265" text-anchor="middle" font-family="serif" font-size="32" font-weight="bold" fill="$safeColor">$center</text>"""
+        else -> """<text x="310" y="355" text-anchor="middle" font-family="serif" font-size="30" font-weight="bold" fill="$safeColor">$center</text>"""
+    }
+    val sideSvg = ""
     val wearMask = if (!distressed) "" else buildString {
         append("""<mask id="inkWear" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="720" height="720"><rect width="720" height="720" fill="white"/>""")
         for (i in 0 until 110) {
