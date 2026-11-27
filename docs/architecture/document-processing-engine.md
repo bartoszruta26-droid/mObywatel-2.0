@@ -1,0 +1,123 @@
+# Document Processing Engine — architektura docelowa
+
+## Cel
+
+Wspólny, testowalny moduł aplikacji Android obsługujący wejścia: aparat, zdjęcie, PDF i tekst; oraz operacje OCR, odczytu kodów, ekstrakcji pól, walidacji i tłumaczenia. Moduły domenowe nie mogą bezpośrednio zależeć od ML Kit, ZXing ani UI.
+
+## Granice modułów
+
+Proponowany pakiet: `pl.gov.obywatel.android.documentprocessing`.
+
+- `api/`: publiczne kontrakty, modele wejścia/wyjścia, błędy.
+- `core/`: orkiestracja pipeline'u, polityka prywatności, limity i anulowanie.
+- `image/`: przygotowanie obrazu i metadane; bez nowej biblioteki w pierwszym etapie.
+- `ocr/`: adapter ML Kit Text Recognition.
+- `barcode/`: jeden wybrany adapter skanowania; generowanie kodów pozostaje osobnym przypadkiem użycia.
+- `translation/`: adapter obecnego ML Kit Translation i mapowanie języków.
+- `extraction/`: obecny parser dokumentów jako logika domenowa bez zależności od Android UI.
+- `validation/`: walidatory pól, MRZ, PESEL, IBAN, dat i reguł specyficznych dla dokumentu.
+- `storage/`: wyłącznie interfejsy; integracja z istniejącym repozytorium dokumentów po zatwierdzeniu użytkownika.
+- `ui/`: Compose screens i komponenty, wydzielone z dużych plików.
+
+Nie tworzyć nowego modułu Gradle, dopóki granice pakietów i zależności nie zostaną ustabilizowane. Pierwszy etap może pozostać w istniejącym module app, ale z czystymi granicami pakietów.
+
+## Kontrakty
+
+```kotlin
+data class ProcessingRequest(
+    val source: DocumentSource,
+    val operations: Set<ProcessingOperation>,
+    val documentTypeHint: String? = null,
+    val sourceLanguage: String? = null,
+    val targetLanguage: String? = null
+)
+
+sealed interface DocumentSource {
+    data class ImageUri(val uri: Uri) : DocumentSource
+    data class PdfUri(val uri: Uri) : DocumentSource
+    data class PlainText(val value: String) : DocumentSource
+}
+
+enum class ProcessingOperation { OCR, BARCODE, EXTRACT_FIELDS, VALIDATE, TRANSLATE }
+
+data class ProcessingResult(
+    val text: OcrText? = null,
+    val barcodes: List<BarcodeValue> = emptyList(),
+    val fields: List<ExtractedField> = emptyList(),
+    val validations: List<FieldValidation> = emptyList(),
+    val translation: TranslationResult? = null,
+    val provenance: ProcessingProvenance
+)
+
+data class ExtractedField(
+    val key: String,
+    val value: String,
+    val confidence: Float?,
+    val sourceRegion: BoundingBox?,
+    val requiresReview: Boolean = true
+)
+```
+
+Powyższe to kontrakt projektowy; typy `Uri`, prostokąt i modele wynikowe należy dopasować do istniejących abstrakcji. Warstwa czysta JVM nie może importować Android SDK. W takim przypadku źródło powinno mieć abstrakcyjny identyfikator/strumień dostarczany przez adapter Android.
+
+## Interfejsy adapterów
+
+- `TextRecognizerEngine.recognize(input): ProcessingTask<OcrText>`
+- `BarcodeReaderEngine.read(input): ProcessingTask<List<BarcodeValue>>`
+- `TextTranslator.translate(text, source, target): ProcessingTask<TranslationResult>`
+- `DocumentFieldExtractor.extract(text, typeHint): List<ExtractedField>`
+- `FieldValidator.validate(fields, typeHint): List<FieldValidation>`
+
+Adaptery ML Kit i ZXing implementują interfejsy; domena nie zna klas dostawców. Zadania muszą wspierać anulowanie, timeout, kontrolowane zamykanie zasobów i jednoznaczne błędy.
+
+## Pipeline
+
+1. Przyjęcie pliku przez SAF/URI i kontrola MIME/rozmiaru.
+2. Odczyt strumienia bez niepotrzebnego kopiowania całego pliku do pamięci.
+3. Normalizacja orientacji i ograniczenie rozdzielczości do wymagań silnika.
+4. Równoległe OCR/barcode tylko wtedy, gdy użytkownik wybrał obie operacje i urządzenie ma zasoby.
+5. Zachowanie bloków, linii, bounding boxes i confidence z OCR.
+6. Ekstrakcja pól wg typu dokumentu.
+7. Walidacja składniowa i kontrolna; nie deklarować autentyczności.
+8. Opcjonalne tłumaczenie tekstu z zachowaniem oryginału.
+9. Podgląd oryginału, wyniku i niepewnych pól.
+10. Jawna akceptacja użytkownika, dopiero potem przekazanie do istniejącego repozytorium dokumentów.
+
+## Prywatność i bezpieczeństwo
+
+- Przetwarzanie lokalne jako ustawienie domyślne.
+- Żadnego automatycznego wysyłania zdjęć lub tekstu dokumentów do API.
+- URI permissions ograniczone do czasu potrzebnego przetwarzania.
+- Pliki tymczasowe usuwane po zakończeniu/anulowaniu.
+- Brak treści dokumentów w logach, crash reports i analityce.
+- Wynik OCR i tłumaczenie oznaczone jako niezweryfikowane.
+- Nie nadpisywać oryginału.
+- Użytkownik zatwierdza zapis danych do portfela.
+- Szyfrowanie i uprawnienia wykorzystują istniejący mechanizm aplikacji; nie wprowadzać drugiego magazynu kluczy.
+
+## Refaktoryzacja Kotlin
+
+Najpierw rozdzielić odpowiedzialności w `QrAndOwdScreens.kt` i `OcrAndBarcodeComponents.kt`:
+
+- `QrToolsScreen.kt`: routing i stan ekranu.
+- `QrGenerationUseCase.kt`: generowanie QR i ustawienia brandingowe.
+- `BarcodeGenerationUseCase.kt`: generowanie kodów 1D.
+- `BarcodeScanLauncher.kt`: integracja kontraktu skanera z Activity Result.
+- `DocumentProcessingScreen.kt`: UI procesu dokumentu.
+- `OcrEngine.kt` i `MlKitTextRecognizer.kt`: kontrakt i adapter.
+- `BarcodeReader.kt` i wybrany adapter.
+- `DocumentOcrParser.kt`: pozostaje czystą logiką ekstrakcji; podzielić reguły na katalogi typów dokumentów dopiero po testach zgodności.
+- `MlKitMedicalTranslationProvider.kt`: zachować jako adapter; wspólny kontrakt nie powinien wymuszać nazwy medycznej.
+
+Nie wykonywać wielkiego przeniesienia plików ani zmian nazw publicznych symboli w jednym PR. Po każdym wydzieleniu sprawdzić wszystkie referencje, kompilację i testy.
+
+## Integracja z modułami
+
+Wyniki silnika przekazywać przez przypadki użycia do:
+- portfela dokumentów,
+- kontaktów i vCard,
+- rachunków płatniczych (paragony/faktury/wyciągi),
+- certyfikatów i dokumentów podpisanych,
+- tłumaczenia dokumentów medycznych.
+
+Nie wiązać silnika bezpośrednio z ekranami tych modułów. Każda integracja osobno i po akceptacji użytkownika.
