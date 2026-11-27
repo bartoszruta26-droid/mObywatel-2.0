@@ -139,6 +139,60 @@ internal fun makeStampSvg(organization: String, centerText: String, identifier: 
 </svg>""".toByteArray(Charsets.UTF_8)
 }
 
+
+internal fun makeStampSvg(
+    organization: String, centerText: String, identifier: String, color: String,
+    shape: String, motif: String, motifPosition: String, distressed: Boolean
+): ByteArray {
+    val safeColor = SvgSafetyValidator.requireSafeHexColor(color)
+    val org = safeSvgText(organization.trim().take(70))
+    val center = safeSvgText(centerText.trim().take(50))
+    val number = safeSvgText(identifier.trim().take(40))
+    require(org.isNotBlank()) { "Wpisz nazwę organizacji." }
+    require(shape in setOf("circle", "oval", "rectangle"))
+    require(motif in setOf("none", "rosette", "star", "leaf", "cross"))
+    require(motifPosition in setOf("center", "side"))
+    val frame = when (shape) {
+        "oval" -> """<ellipse cx="360" cy="360" rx="310" ry="220" fill="none" stroke="$safeColor" stroke-width="4"/><ellipse cx="360" cy="360" rx="288" ry="198" fill="none" stroke="$safeColor" stroke-width="12"/><ellipse cx="360" cy="360" rx="268" ry="178" fill="none" stroke="$safeColor" stroke-width="2"/>"""
+        "rectangle" -> """<rect x="48" y="190" width="624" height="340" rx="28" fill="none" stroke="$safeColor" stroke-width="4"/><rect x="66" y="208" width="588" height="304" rx="20" fill="none" stroke="$safeColor" stroke-width="12"/><rect x="88" y="230" width="544" height="260" rx="12" fill="none" stroke="$safeColor" stroke-width="2"/>"""
+        else -> """<circle cx="360" cy="360" r="315" fill="none" stroke="$safeColor" stroke-width="4"/><circle cx="360" cy="360" r="294" fill="none" stroke="$safeColor" stroke-width="12"/><circle cx="360" cy="360" r="275" fill="none" stroke="$safeColor" stroke-width="2.5"/><circle cx="360" cy="360" r="238" fill="none" stroke="$safeColor" stroke-width="2" stroke-dasharray="2 9"/><circle cx="360" cy="360" r="205" fill="none" stroke="$safeColor" stroke-width="4"/>"""
+    }
+    val motifPath = when (motif) {
+        "star" -> """<path d="M0 -62 L15 -18 62 -18 24 10 38 55 0 28 -38 55 -24 10 -62 -18 -15 -18Z"/>"""
+        "leaf" -> """<path d="M-55 28 C-48 -45 28 -65 58 -58 C56 14 14 58 -55 28Z M-48 38 Q-5 -5 42 -45" fill="none" stroke-width="7"/>"""
+        "cross" -> """<path d="M-17 -58 H17 V-17 H58 V17 H17 V58 H-17 V17 H-58 V-17 H-17Z"/>"""
+        "rosette" -> """<path d="M0 -62 Q18 -32 48 -48 Q32 -18 62 0 Q32 18 48 48 Q18 32 0 62 Q-18 32 -48 48 Q-32 18 -62 0 Q-32 -18 -48 -48 Q-18 -32 0 -62Z"/>"""
+        else -> ""
+    }
+    val motifX = if (motifPosition == "side" || shape != "circle") 555 else 360
+    val motifScale = if (motifPosition == "side" || shape != "circle") 0.52 else 1.0
+    val motifSvg = if (motif == "none") "" else """<g transform="translate($motifX 360) scale($motifScale)" fill="$safeColor" stroke="$safeColor" stroke-width="5">$motifPath</g>"""
+    val centerSvg = if (motif != "none" && motifPosition == "center" && shape == "circle") "" else
+        """<text x="360" y="375" text-anchor="middle" font-family="serif" font-size="38" font-weight="bold" fill="$safeColor">$center</text>"""
+    val sideSvg = if (motif != "none" && (motifPosition == "side" || shape != "circle"))
+        """<text x="310" y="355" text-anchor="middle" font-family="serif" font-size="30" font-weight="bold" fill="$safeColor">$center</text>""" else ""
+    val wearMask = if (!distressed) "" else buildString {
+        append("""<mask id="inkWear"><rect width="720" height="720" fill="white"/>""")
+        for (i in 0 until 110) {
+            val x = (i * 73 + 29) % 650 + 35
+            val y = (i * 131 + 17) % 650 + 35
+            val radius = 1 + i % 4
+            append("""<circle cx="$x" cy="$y" r="$radius" fill="black"/>""")
+        }
+        append("</mask>")
+    }
+    val maskAttribute = if (distressed) """mask="url(#inkWear)" opacity="0.78"""" else ""
+    val svg = """<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720">
+<defs>$wearMask<path id="topArc" d="M 105,360 A 255,255 0 0 1 615,360"/><path id="bottomArc" d="M 615,360 A 255,255 0 0 1 105,360"/></defs>
+<rect width="720" height="720" fill="none"/><g $maskAttribute>$frame
+<text fill="$safeColor" font-family="serif" font-size="27" font-weight="bold" letter-spacing="2"><textPath href="#topArc" startOffset="50%" text-anchor="middle">$org</textPath></text>
+<text fill="$safeColor" font-family="serif" font-size="20" font-weight="bold" letter-spacing="2"><textPath href="#bottomArc" startOffset="50%" text-anchor="middle">$number</textPath></text>
+$motifSvg$centerSvg$sideSvg
+<path d="M245 410 Q360 435 475 410" fill="none" stroke="$safeColor" stroke-width="2.5"/>
+<text x="360" y="455" text-anchor="middle" font-family="sans-serif" font-size="13" letter-spacing="1" fill="$safeColor">WZÓR WŁASNY</text></g></svg>"""
+    return svg.toByteArray(Charsets.UTF_8)
+}
+
 private val certificateAssetKinds = setOf(
     "Certyfikat", "Wzór podpisu odręcznego", "Podpis wektorowy (tekst)",
     "Pieczęć", "Pieczęć graficzna (własna)"
