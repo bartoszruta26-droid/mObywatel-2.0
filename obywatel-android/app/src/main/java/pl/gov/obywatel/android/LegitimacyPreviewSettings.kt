@@ -2231,7 +2231,7 @@ private fun AnimatedHologram(assetId: String, modifier: Modifier = Modifier) {
 
 internal fun formatIsoDateInput(input: String): String {
     // Keep special values such as "bezterminowo" intact; format numeric date entry only.
-    if (input.any { !it.isDigit() && it != '-' }) return input
+    if (input.any { !it.isDigit() && it !in setOf('-', '/', '.') && !it.isWhitespace() }) return input
     val digits = input.filter(Char::isDigit).take(8)
     return buildString {
         append(digits.take(4))
