@@ -41,6 +41,27 @@ import org.json.JSONObject
 internal const val FOREIGN_PRESCRIPTION_ID = "foreign_prescription"
 private const val FPR_RECORD_ID = "foreign-prescription-single"
 
+/** Stable Polish labels for the prescription PDF. */
+internal fun foreignPrescriptionPolishLabel(key: String): String? = mapOf(
+    "patientName" to "Pełne imię i nazwisko pacjenta",
+    "patientAddress" to "Adres pacjenta",
+    "medicineInn" to "Nazwa powszechnie stosowana (INN)",
+    "medicineBrand" to "Nazwa handlowa (jeżeli przepisano)",
+    "medicineForm" to "Postać farmaceutyczna",
+    "medicineStrength" to "Dawka",
+    "medicineQuantity" to "Ilość",
+    "medicineDosage" to "Dawkowanie i sposób stosowania",
+    "issueDate" to "Data wystawienia",
+    "prescriberName" to "Pełne imię i nazwisko osoby przepisującej",
+    "prescriberQualifications" to "Tytuł zawodowy / kwalifikacje",
+    "prescriberSpecialty" to "Specjalizacja",
+    "prescriberPractice" to "Nazwa praktyki / placówki",
+    "prescriberContact" to "Dane kontaktowe wystawcy",
+    "prescriberAddress" to "Adres wystawcy / praktyki",
+    "prescriberCountry" to "Państwo wystawienia",
+    "prescriberRegister" to "Numer prawa wykonywania zawodu / numer w rejestrze"
+)[key]
+
 private val foreignPrescriptionFields = listOf(
     Triple("patientName", "Patient full name", "Full name as shown on identity document"),
     Triple("patientAddress", "Patient address", "Street, house number, postal code, city, country"),
@@ -83,6 +104,16 @@ internal fun isValidForeignPrescriptionContact(value: String): Boolean {
     if (Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(contact)) return true
     val normalizedPhone = contact.replace(Regex("[\\s().-]"), "")
     return Regex("^\\+[1-9]\\d{6,14}$").matches(normalizedPhone)
+}
+
+/** Formats a partially entered ISO date as YYYY-MM-DD without inventing missing digits. */
+internal fun formatIsoDateInput(raw: String): String {
+    val digits = raw.filter(Char::isDigit).take(8)
+    return when {
+        digits.length <= 4 -> digits
+        digits.length <= 6 -> digits.substring(0, 4) + "-" + digits.substring(4)
+        else -> digits.substring(0, 4) + "-" + digits.substring(4, 6) + "-" + digits.substring(6)
+    }
 }
 
 internal fun isValidForeignPrescriptionIssueDate(value: String): Boolean = runCatching {
@@ -184,8 +215,8 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
         foreignPrescriptionFields.forEach { (key, label, hint) ->
             OutlinedTextField(
                 value = values["fpr_$key"].orEmpty(),
-                onValueChange = { values["fpr_$key"] = it; translations.remove("$targetLanguage|$key") },
-                label = { Text(label) }, placeholder = { if (hint.isNotBlank()) Text(hint) },
+                onValueChange = { values["fpr_$key"] = if (key == "issueDate") formatIsoDateInput(it) else it; translations.remove("$targetLanguage|$key") },
+                label = { Text(if (targetLanguage.equals("pl", ignoreCase = true)) foreignPrescriptionPolishLabel(key) ?: label else label) }, placeholder = { if (hint.isNotBlank()) Text(hint) },
                 modifier = Modifier.fillMaxWidth(), minLines = if (key == "medicineDosage") 2 else 1
             )
         }
@@ -247,8 +278,9 @@ internal fun ForeignPrescriptionEditorScreen(onBack: () -> Unit) {
         }, modifier = Modifier.fillMaxWidth()) { Text("Zapisz receptę") }
         Button(enabled = missing.isEmpty() && validDate && !busy, onClick = {
             val pdfFields = foreignPrescriptionFields.map { (key, label, _) ->
-                MedicalCertificatePdfField(label, values["fpr_$key"].orEmpty(),
-                    translations["$targetLanguage|label:$key"] ?: label,
+                val sourceLabel = if (targetLanguage.equals("pl", ignoreCase = true)) foreignPrescriptionPolishLabel(key) ?: label else label
+                MedicalCertificatePdfField(sourceLabel, values["fpr_$key"].orEmpty(),
+                    translations["$targetLanguage|label:$key"] ?: sourceLabel,
                     translations["$targetLanguage|$key"].orEmpty())
             }
             pendingPdf = createBilingualMedicalCertificatePdf(
