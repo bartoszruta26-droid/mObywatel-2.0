@@ -19,7 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.Icons as ComposeIcons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.MaterialTheme
@@ -235,8 +235,8 @@ private fun EntryLoginScreen(onDemo: () -> Unit, onBack: () -> Unit) {
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
-                                imageVector = if (passwordVisible) Icons.Filled.VisibilityOff
-                                    else Icons.Filled.Visibility,
+                                imageVector = if (passwordVisible) ComposeIcons.Filled.VisibilityOff
+                                    else ComposeIcons.Filled.Visibility,
                                 contentDescription = if (passwordVisible) "Ukryj hasło" else "Pokaż hasło",
                                 tint = cream
                             )
