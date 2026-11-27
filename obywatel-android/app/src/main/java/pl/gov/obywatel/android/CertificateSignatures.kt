@@ -164,7 +164,7 @@ internal object CertificateSignatureStore {
 }
 
 @Composable
-internal fun CertificateSignaturesManager() {
+internal fun CertificateSignaturesManager(onSelectionChanged: () -> Unit = {}) {
     val context = LocalContext.current
     var entries by remember { mutableStateOf(CertificateSignatureStore.list(context)) }
     var selected by remember { mutableStateOf(CertificateSignatureStore.selectedId(context)) }
@@ -180,6 +180,7 @@ internal fun CertificateSignaturesManager() {
     fun refresh() {
         entries = CertificateSignatureStore.list(context)
         selected = CertificateSignatureStore.selectedId(context)
+        onSelectionChanged()
     }
 
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -346,6 +347,7 @@ internal fun CertificateSignaturesManager() {
                         onClick = {
                             CertificateSignatureStore.select(context, entry.id)
                             selected = entry.id
+                            onSelectionChanged()
                         }
                     )
                     Text(entry.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
