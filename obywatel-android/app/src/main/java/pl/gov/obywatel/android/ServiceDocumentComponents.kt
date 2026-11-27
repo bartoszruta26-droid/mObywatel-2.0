@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 
+@Composable
 internal fun Header(
     onOpenAssistant: () -> Unit,
     onOpenMessages: () -> Unit,
@@ -77,6 +78,7 @@ internal fun Header(
     }
 }
 
+@Composable
 internal fun IdentityDashboardCard(
     onOpen: () -> Unit,
     tileStyle: String = "large",
