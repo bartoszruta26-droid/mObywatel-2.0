@@ -74,7 +74,8 @@ internal fun RecognizedBarcode.toBarcodeValue(): BarcodeValue = BarcodeValue(
     rawValue = rawValue,
     displayValue = displayValue,
     format = format.toBarcodeFormatName(),
-    valueType = valueType.toBarcodeValueTypeName()
+    valueType = valueType.toBarcodeValueTypeName(),
+    bounds = bounds?.toTextBounds()
 )
 
 private fun ProcessingInput.requireBitmapInput(): BitmapProcessingInput =

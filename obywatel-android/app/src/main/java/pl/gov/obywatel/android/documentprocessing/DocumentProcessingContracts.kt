@@ -94,7 +94,8 @@ data class BarcodeValue(
     val rawValue: String,
     val displayValue: String? = null,
     val format: String,
-    val valueType: String? = null
+    val valueType: String? = null,
+    val bounds: TextBounds? = null
 ) {
     init {
         require(rawValue.isNotBlank()) { "Barcode raw value must not be blank." }
