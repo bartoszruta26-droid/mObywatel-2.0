@@ -196,7 +196,6 @@ internal fun DefaultDocumentAppearanceSettingsScreen(
 internal fun CertificateAppearanceSettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     var appearance by remember { mutableStateOf(CertificateAppearanceStore.load(context)) }
-    var signatureRevision by remember { mutableStateOf(0) }
     val accentOptions = listOf(
         "#245A43" to "Zielony",
         "#173B63" to "Granatowy",
@@ -258,7 +257,6 @@ internal fun CertificateAppearanceSettingsScreen(onBack: () -> Unit) {
         CertificateAppearanceSwitch("Pokazuj miejsce na podpis", appearance.showSignature) {
             update(appearance.copy(showSignature = it))
         }
-        CertificateSignaturesManager(onSelectionChanged = { signatureRevision++ })
         CertificateAppearanceSwitch("Pokazuj miejsce na pieczęć", appearance.showSeal) {
             update(appearance.copy(showSeal = it))
         }
@@ -283,7 +281,6 @@ internal fun CertificateAppearanceSettingsScreen(onBack: () -> Unit) {
             ),
             validity = true,
             appearanceOverride = appearance,
-            signatureRevision = signatureRevision
         )
         OutlinedButton(onClick = { update(CertificateAppearance()) }, modifier = Modifier.fillMaxWidth()) {
             Text("Przywróć ustawienia domyślne")
@@ -308,12 +305,11 @@ internal fun DocumentCertificatePreview(
     fields: List<Triple<String, String, String>>,
     validity: Boolean? = null,
     appearanceOverride: CertificateAppearance? = null,
-    signatureRevision: Int = 0
 ) {
     val context = LocalContext.current
     val appearance = appearanceOverride ?: remember(documentKey) { CertificateAppearanceStore.load(context) }
     val accent = Color(android.graphics.Color.parseColor(appearance.accentColor))
-    val selectedSignatureId = remember(documentKey, signatureRevision) { CertificateSignatureStore.selectedId(context) }
+    val selectedSignatureId = CertificateSignatureStore.selectedId(context)
     val issueDate = fields.firstOrNull { (key, label, _) ->
         key.contains("date", true) || label.contains("data wystawienia", true) || label.contains("data wydania", true)
     }?.third
