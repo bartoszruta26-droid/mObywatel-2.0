@@ -227,7 +227,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
         Text("Pracownia certyfikatów, baza wzorów, podpisów graficznych i pieczęci.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            listOf("generator" to "Generator", "resources" to "Baza", "signature" to "TXT → SVG", "stamp" to "Pieczęć", "x509" to "X.509")
+            listOf("generator" to "Generator", "resources" to "Baza", "signatures" to "Podpisy", "signature" to "TXT → SVG", "stamp" to "Pieczęć", "x509" to "X.509")
                 .forEachIndexed { index, item ->
                     SegmentedButton(section == item.first, { section = item.first },
                         SegmentedButtonDefaults.itemShape(index, 4)) { Text(item.second) }
@@ -293,6 +293,11 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 }
             }
             "x509" -> X509CertificatePanel()
+            "signatures" -> {
+                Text("Podpisy do zaświadczeń", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                Text("Zarządzaj podpisami, które można automatycznie umieszczać na generowanych zaświadczeniach. Wybór aktywnego podpisu dotyczy kolejnych dokumentów.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                CertificateSignaturesManager()
+            }
             "resources" -> {
                 Text("Baza zasobów", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 Text("Zasoby przechowywane są w istniejącym szyfrowanym magazynie aplikacji. Dołączaj własne wzory PDF i grafiki SVG, PNG, JPEG lub WebP.",
@@ -478,8 +483,13 @@ private fun renderCertificatePdf(
         canvas.drawText("Podpis osoby upoważnionej", 90f, 532f, signaturePaint)
         canvas.drawText(signatory.take(70), 90f, 548f, signaturePaint)
         canvas.drawText("Dokument do zatwierdzenia przez wystawcę", width - 350f, 565f, signaturePaint)
-        signatureId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-            ?.let { drawCertificateImage(canvas, it, Rect(115, 465, 285, 510)) }
+        val savedSignature = CertificateSignatureStore.selectedBitmap(context)
+        if (savedSignature != null) {
+            drawCertificateImage(canvas, savedSignature, Rect(115, 465, 285, 510))
+        } else {
+            signatureId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
+                ?.let { drawCertificateImage(canvas, it, Rect(115, 465, 285, 510)) }
+        }
         stampId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
             ?.let { drawCertificateImage(canvas, it, Rect(width - 245, 435, width - 95, 555)) }
         pdf.finishPage(page)
