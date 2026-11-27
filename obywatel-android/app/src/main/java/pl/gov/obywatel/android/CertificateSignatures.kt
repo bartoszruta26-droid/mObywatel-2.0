@@ -10,6 +10,9 @@ import android.graphics.Paint
 import android.graphics.Path as AndroidPath
 import android.graphics.Canvas as AndroidCanvas
 import android.net.Uri
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import android.util.AtomicFile
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -56,6 +59,12 @@ import androidx.compose.ui.unit.dp
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.io.ByteArrayOutputStream
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 import java.util.UUID
 import kotlin.math.abs
 
@@ -65,9 +74,50 @@ internal object CertificateSignatureStore {
     private const val PREFS = "certificate_signature_library"
     private const val ENTRIES = "entries"
     private const val SELECTED = "selected"
+    private const val KEY_ALIAS = "certificate_signature_assets_aes"
 
     private fun directory(context: Context): File =
-        File(context.filesDir, "certificate-signatures").apply { mkdirs() }
+        File(context.noBackupFilesDir, "certificate-signatures").apply { mkdirs() }
+
+    private fun key(): SecretKey {
+        val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+        (store.getKey(KEY_ALIAS, null) as? SecretKey)?.let { return it }
+        return KeyGenerator.getInstance("AES", "AndroidKeyStore").apply {
+            init(KeyGenParameterSpec.Builder(KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setRandomizedEncryptionRequired(true).build())
+        }.generateKey()
+    }
+
+    private fun encrypt(plain: ByteArray): ByteArray {
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, key())
+        return cipher.iv + cipher.doFinal(plain)
+    }
+
+    private fun decrypt(encrypted: ByteArray): ByteArray {
+        require(encrypted.size > 28) { "Zaszyfrowany podpis jest uszkodzony." }
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, encrypted.copyOfRange(0, 12)))
+        return cipher.doFinal(encrypted.copyOfRange(12, encrypted.size))
+    }
+
+    private fun writeEncrypted(file: File, plain: ByteArray) {
+        val atomic = AtomicFile(file)
+        val output = atomic.startWrite()
+        try {
+            output.write(encrypt(plain))
+            atomic.finishWrite(output)
+        } catch (failure: Throwable) {
+            atomic.failWrite(output)
+            throw failure
+        }
+    }
+
+    private fun readEncrypted(file: File): ByteArray =
+        decrypt(AtomicFile(file).openRead().use { it.readBytes() })
 
     fun list(context: Context): List<CertificateSignatureEntry> {
         val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(ENTRIES, "[]")
@@ -77,7 +127,7 @@ internal object CertificateSignatureStore {
                 val item = json.optJSONObject(index) ?: return@mapNotNull null
                 val id = item.optString("id")
                 val name = item.optString("name")
-                if (id.isBlank() || name.isBlank() || !File(directory(context), "$id.png").isFile) null
+                if (id.isBlank() || name.isBlank() || !File(directory(context), "$id.enc").isFile) null
                 else CertificateSignatureEntry(id, name)
             }
         }.getOrDefault(emptyList())
@@ -96,10 +146,12 @@ internal object CertificateSignatureStore {
         require(name.isNotBlank()) { "Podaj nazwę podpisu." }
         require(bitmap.width <= 4096 && bitmap.height <= 4096 && bitmap.width.toLong() * bitmap.height <= 16_000_000L) { "Obraz podpisu ma zbyt duże wymiary." }
         val id = UUID.randomUUID().toString()
-        val file = File(directory(context), "$id.png")
-        check(file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }) {
-            "Nie udało się zapisać obrazu podpisu."
+        val output = ByteArrayOutputStream()
+        check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
+            "Nie udało się przygotować obrazu podpisu."
         }
+        val file = File(directory(context), "$id.enc")
+        writeEncrypted(file, output.toByteArray())
         val entries = list(context) + CertificateSignatureEntry(id, name.trim().take(60))
         val json = JSONArray().apply {
             entries.forEach { put(JSONObject().put("id", it.id).put("name", it.name)) }
@@ -112,7 +164,7 @@ internal object CertificateSignatureStore {
     }
 
     fun delete(context: Context, id: String) {
-        File(directory(context), "$id.png").delete()
+        File(directory(context), "$id.enc").delete()
         val entries = list(context).filterNot { it.id == id }
         val json = JSONArray().apply {
             entries.forEach { put(JSONObject().put("id", it.id).put("name", it.name)) }
@@ -127,8 +179,11 @@ internal object CertificateSignatureStore {
 
     fun selectedBitmap(context: Context): Bitmap? {
         val id = selectedId(context) ?: return null
-        val file = File(directory(context), "$id.png")
-        return if (file.isFile) BitmapFactory.decodeFile(file.absolutePath) else null
+        val file = File(directory(context), "$id.enc")
+        return if (file.isFile) runCatching {
+            val bytes = readEncrypted(file)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        }.getOrNull() else null
     }
 
     fun decode(context: Context, uri: Uri): Bitmap {
