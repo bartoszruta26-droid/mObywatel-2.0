@@ -100,3 +100,23 @@ PR można scalać dopiero, gdy:
 ## Status
 
 Ten dokument określa plan. Nie deklaruje, że opisane etapy implementacji zostały już wykonane ani że testy zostały uruchomione.
+
+## Aktualizacja kolejności i statusu PR — 2026-11-27
+
+- PR #183 — audyt zależności: dokumentacja przygotowana; kontrola zgodności repozytorium zakończona powodzeniem. PR nadal otwarty jako wersja robocza.
+- PR #184 — architektura: dokumentacja przygotowana; kontrola zgodności repozytorium zakończona powodzeniem. PR nadal otwarty jako wersja robocza.
+- PR #185 — niniejszy plan: kontrola zgodności repozytorium zakończona powodzeniem. PR nadal otwarty jako wersja robocza.
+- PR #186 — wydzielenie generowania QR: testy JVM zakończone powodzeniem; kompilacja APK i testy GUI/emulatora były w toku przy ostatnim odczycie. Nie uznawać PR za gotowy do scalenia przed zakończeniem wszystkich wymaganych zadań.
+- PR #188 — adapter OCR/barcode ML Kit: kod prototypowy dodany, ale wymaga testów, kompilacji i integracji. Nie ma potwierdzonego zielonego przebiegu CI.
+
+### Doprecyzowane bramki dla adaptera OCR/barcode
+
+1. Test odrzuconego, zwolnionego bitmapu oraz poprawnej obsługi anulowania.
+2. Testy mapowania wyników barcode i pustych/nieczytelnych danych.
+3. Test OCR na kontrolowanym obrazie z tekstem, z uwzględnieniem dostępności modelu ML Kit na urządzeniu testowym.
+4. Testy instrumentacyjne na emulatorze/urządzeniu; samo przejście testów JVM nie potwierdza działania ML Kit.
+5. Weryfikacja zamykania recognizera/scannera także przy wyjątku.
+6. Test obrotu obrazu/EXIF i limitów rozdzielczości przed podłączeniem do importu plików.
+7. Integracja z parserem ma zwracać propozycje pól, a zapis do dokumentów musi wymagać jawnej akceptacji użytkownika.
+
+Statusy powyżej są migawką, nie automatycznym potwierdzeniem aktualnego stanu CI. Przed każdym scaleniem ponownie odczytać wszystkie wymagane kontrole i ich logi.
