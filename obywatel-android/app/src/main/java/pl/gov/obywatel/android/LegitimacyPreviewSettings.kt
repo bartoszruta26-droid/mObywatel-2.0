@@ -2378,6 +2378,17 @@ internal fun CredentialCardSides(
     assetRevision: Int = 0,
     validity: Boolean? = null
 ) {
+    val presentationMode = loadDefaultDocumentPresentationMode(LocalContext.current)
+    if (presentationMode != DocumentPresentationMode.LEGITIMACY) {
+        when (presentationMode) {
+            DocumentPresentationMode.CERTIFICATE -> DocumentCertificatePreview(
+                documentKey, title, subtitle, holderName, fields, validity
+            )
+            DocumentPresentationMode.CSV -> DocumentCsvPreview(title, fields)
+            DocumentPresentationMode.LEGITIMACY -> Unit
+        }
+        return
+    }
     val (frontFields, reverseFields) = splitCredentialFieldsForSides(
         fields, settings.orientation, settings.visibleFieldsConfigured,
         settings.visibleFields, settings.fieldSides
