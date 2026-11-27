@@ -227,7 +227,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
         Text("Pracownia certyfikatów, baza wzorów, podpisów graficznych i pieczęci.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-            listOf("generator" to "Generator", "resources" to "Baza", "signature" to "TXT → SVG", "stamp" to "Pieczęć", "x509" to "X.509")
+            listOf("generator" to "Generator", "resources" to "Baza", "signatures" to "Podpisy", "signature" to "TXT → SVG", "stamp" to "Pieczęć", "x509" to "X.509")
                 .forEachIndexed { index, item ->
                     SegmentedButton(section == item.first, { section = item.first },
                         SegmentedButtonDefaults.itemShape(index, 4)) { Text(item.second) }
@@ -291,6 +291,11 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 OutlinedButton(onClick = onOpenDigitalCertificates, modifier = Modifier.fillMaxWidth()) {
                     Text("Certyfikaty cyfrowe i podpisy elektroniczne")
                 }
+            }
+            "signatures" -> {
+                Text("Podpisy do zaświadczeń", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                Text("Zarządzaj zaszyfrowanymi podpisami graficznymi i wybieraj wzór do wykorzystania w dokumentach.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                CertificateSignaturesManager()
             }
             "x509" -> X509CertificatePanel()
             "resources" -> {
