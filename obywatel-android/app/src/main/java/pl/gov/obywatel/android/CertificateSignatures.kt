@@ -94,7 +94,7 @@ internal object CertificateSignatureStore {
 
     fun save(context: Context, name: String, bitmap: Bitmap): CertificateSignatureEntry {
         require(name.isNotBlank()) { "Podaj nazwę podpisu." }
-        require(bitmap.width <= 4096 && bitmap.height <= 2048) { "Obraz podpisu ma zbyt duże wymiary." }
+        require(bitmap.width <= 4096 && bitmap.height <= 4096 && bitmap.width.toLong() * bitmap.height <= 16_000_000L) { "Obraz podpisu ma zbyt duże wymiary." }
         val id = UUID.randomUUID().toString()
         val file = File(directory(context), "$id.png")
         check(file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }) {
@@ -134,8 +134,9 @@ internal object CertificateSignatureStore {
     fun decode(context: Context, uri: Uri): Bitmap {
         val bitmap = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
             ?: error("Nie można odczytać wybranego pliku graficznego.")
-        require(bitmap.width <= 4096 && bitmap.height <= 4096) {
-            "Plik ma zbyt duże wymiary. Maksymalny rozmiar to 4096 × 4096 pikseli."
+        require(bitmap.width <= 4096 && bitmap.height <= 4096 &&
+            bitmap.width.toLong() * bitmap.height <= 16_000_000L) {
+            "Plik ma zbyt duże wymiary. Maksymalnie 4096 × 4096 pikseli i 16 megapikseli."
         }
         return bitmap
     }
@@ -145,19 +146,21 @@ internal object CertificateSignatureStore {
         val targetR = android.graphics.Color.red(target)
         val targetG = android.graphics.Color.green(target)
         val targetB = android.graphics.Color.blue(target)
-        val result = source.copy(Bitmap.Config.ARGB_8888, true)
-        val pixels = IntArray(result.width * result.height)
-        result.getPixels(pixels, 0, result.width, 0, 0, result.width, result.height)
-        for (i in pixels.indices) {
-            val pixel = pixels[i]
-            val distance = maxOf(
-                abs(android.graphics.Color.red(pixel) - targetR),
-                abs(android.graphics.Color.green(pixel) - targetG),
-                abs(android.graphics.Color.blue(pixel) - targetB)
-            )
-            if (distance <= tolerance) pixels[i] = pixel and 0x00FFFFFF
+        val result = Bitmap.createBitmap(source.width, source.height, Bitmap.Config.ARGB_8888)
+        val row = IntArray(source.width)
+        for (y in 0 until source.height) {
+            source.getPixels(row, 0, source.width, 0, y, source.width, 1)
+            for (x in row.indices) {
+                val pixel = row[x]
+                val distance = maxOf(
+                    abs(android.graphics.Color.red(pixel) - targetR),
+                    abs(android.graphics.Color.green(pixel) - targetG),
+                    abs(android.graphics.Color.blue(pixel) - targetB)
+                )
+                if (distance <= tolerance) row[x] = pixel and 0x00FFFFFF
+            }
+            result.setPixels(row, 0, result.width, 0, y, result.width, 1)
         }
-        result.setPixels(pixels, 0, result.width, 0, 0, result.width, result.height)
         return result
     }
 }
