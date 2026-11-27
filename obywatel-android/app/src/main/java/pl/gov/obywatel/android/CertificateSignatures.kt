@@ -70,6 +70,9 @@ import kotlin.math.abs
 
 internal data class CertificateSignatureEntry(val id: String, val name: String)
 
+internal fun isValidCertificateSignatureId(id: String): Boolean =
+    id.matches(Regex("[A-Za-z0-9-]{1,80}"))
+
 internal object CertificateSignatureStore {
     private const val PREFS = "certificate_signature_library"
     private const val ENTRIES = "entries"
@@ -127,14 +130,16 @@ internal object CertificateSignatureStore {
                 val item = json.optJSONObject(index) ?: return@mapNotNull null
                 val id = item.optString("id")
                 val name = item.optString("name")
-                if (id.isBlank() || name.isBlank() || !File(directory(context), "$id.enc").isFile) null
+                if (!isValidCertificateSignatureId(id) || name.isBlank() ||
+                    !File(directory(context), "$id.enc").isFile) null
                 else CertificateSignatureEntry(id, name)
             }
         }.getOrDefault(emptyList())
     }
 
     fun selectedId(context: Context): String? =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(SELECTED, null)
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(SELECTED, null)?.takeIf(::isValidCertificateSignatureId)
 
     fun select(context: Context, id: String?) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().apply {
@@ -164,6 +169,7 @@ internal object CertificateSignatureStore {
     }
 
     fun delete(context: Context, id: String) {
+        require(isValidCertificateSignatureId(id)) { "Nieprawidłowy identyfikator podpisu." }
         File(directory(context), "$id.enc").delete()
         val entries = list(context).filterNot { it.id == id }
         val json = JSONArray().apply {
@@ -178,7 +184,7 @@ internal object CertificateSignatureStore {
     }
 
     fun bitmap(context: Context, id: String): Bitmap? {
-        require(id.matches(Regex("[A-Za-z0-9-]{1,80}"))) { "Nieprawidłowy identyfikator podpisu." }
+        require(isValidCertificateSignatureId(id)) { "Nieprawidłowy identyfikator podpisu." }
         val file = File(directory(context), "$id.enc")
         return if (file.isFile) runCatching {
             val bytes = readEncrypted(file)
