@@ -75,6 +75,10 @@ class MlKitDocumentProcessingAdaptersTest {
         assertEquals("example", mapped.displayValue)
         assertEquals("QR_CODE", mapped.format)
         assertEquals("URL", mapped.valueType)
+        assertEquals(4f, mapped.bounds?.left)
+        assertEquals(5f, mapped.bounds?.top)
+        assertEquals(40f, mapped.bounds?.right)
+        assertEquals(45f, mapped.bounds?.bottom)
     }
 
     @Test
