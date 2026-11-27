@@ -62,10 +62,27 @@ private fun safeSvgText(value: String): String = value
     .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     .replace("\"", "&quot;").replace("'", "&apos;")
 
-internal fun makeTextSignatureSvg(name: String, color: String): ByteArray {
+
+/** Stałe stosy czcionek — nie przyjmujemy dowolnego CSS od użytkownika. */
+internal fun certificateSvgFontStack(style: String): String = when (style) {
+    "script" -> "'Dancing Script','Segoe Script','URW Chancery L',cursive"
+    "serif" -> "Georgia,'Times New Roman',serif"
+    "sans" -> "Arial,'Noto Sans',sans-serif"
+    "mono" -> "'DejaVu Sans Mono',monospace"
+    "calligraphy" -> "'URW Chancery L','Segoe Script',cursive"
+    else -> throw IllegalArgumentException("Nieobsługiwany krój pisma.")
+}
+
+private fun requireCertificateText(value: String, field: String): String {
+    require(value.any { !it.isWhitespace() }) { "Wpisz $field." }
+    require(value.none { it.code < 0x20 && it != '\\t' }) { "Tekst zawiera niedozwolone znaki sterujące." }
+    return value
+}
+
+internal fun makeTextSignatureSvg(name: String, color: String, fontStyle: String = "script"): ByteArray {
     val safeColor = SvgSafetyValidator.requireSafeHexColor(color)
-    val safeName = safeSvgText(name.trim().take(90))
-    require(safeName.isNotBlank()) { "Wpisz tekst podpisu." }
+    val safeName = safeSvgText(requireCertificateText(name.trim().take(90), "tekst podpisu"))
+    val fontStack = certificateSvgFontStack(fontStyle)
     return """<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340">
 <defs>
   <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
@@ -77,7 +94,7 @@ internal fun makeTextSignatureSvg(name: String, color: String): ByteArray {
 <rect width="1200" height="340" fill="none"/>
 <path d="M90 250 C190 220 220 285 320 248 S470 226 545 248" fill="none" stroke="$safeColor" stroke-width="2.4" stroke-linecap="round" opacity=".72"/>
 <text x="600" y="188" text-anchor="middle"
-  font-family="Dancing Script, Segoe Script, Brush Script MT, URW Chancery L, cursive"
+  font-family="$fontStack"
   font-size="118" font-style="italic" font-weight="500" letter-spacing="-3"
   fill="url(#ink)">$safeName</text>
 <path d="M210 224 C350 300 540 275 700 226 C835 185 945 205 1040 244
@@ -144,13 +161,14 @@ internal fun makeStampSvg(organization: String, centerText: String, identifier: 
 
 internal fun makeStampSvg(
     organization: String, centerText: String, identifier: String, color: String,
-    shape: String, motif: String, motifPosition: String, distressed: Boolean
+    shape: String, motif: String, motifPosition: String, distressed: Boolean, fontStyle: String = "serif"
 ): ByteArray {
     val safeColor = SvgSafetyValidator.requireSafeHexColor(color)
     val org = safeSvgText(organization.trim().take(70))
     val center = safeSvgText(centerText.trim().take(50))
     val number = safeSvgText(identifier.trim().take(40))
-    require(org.isNotBlank()) { "Wpisz nazwę organizacji." }
+    val fontStack = certificateSvgFontStack(fontStyle)
+    requireCertificateText(organization.trim().take(70), "nazwę organizacji")
     require(shape in setOf("circle", "oval", "rectangle"))
     require(motif in setOf("none", "rosette", "star", "leaf", "cross"))
     require(motifPosition in setOf("center", "side"))
@@ -170,9 +188,9 @@ internal fun makeStampSvg(
     val motifScale = if (motifPosition == "side" || shape != "circle") 0.52 else 1.0
     val motifSvg = if (motif == "none") "" else """<g transform="translate($motifX 390) scale($motifScale)" fill="$safeColor" stroke="$safeColor" stroke-width="5">$motifPath</g>"""
     val centerSvg = when {
-        motif == "none" -> """<text x="360" y="375" text-anchor="middle" font-family="serif" font-size="38" font-weight="bold" fill="$safeColor">$center</text>"""
-        motifPosition == "center" && shape == "circle" -> """<text x="360" y="265" text-anchor="middle" font-family="serif" font-size="32" font-weight="bold" fill="$safeColor">$center</text>"""
-        else -> """<text x="310" y="355" text-anchor="middle" font-family="serif" font-size="30" font-weight="bold" fill="$safeColor">$center</text>"""
+        motif == "none" -> """<text x="360" y="375" text-anchor="middle" font-family="$fontStack" font-size="38" font-weight="bold" fill="$safeColor">$center</text>"""
+        motifPosition == "center" && shape == "circle" -> """<text x="360" y="265" text-anchor="middle" font-family="$fontStack" font-size="32" font-weight="bold" fill="$safeColor">$center</text>"""
+        else -> """<text x="310" y="355" text-anchor="middle" font-family="$fontStack" font-size="30" font-weight="bold" fill="$safeColor">$center</text>"""
     }
     val sideSvg = ""
     val wearMask = if (!distressed) "" else buildString {
@@ -189,8 +207,8 @@ internal fun makeStampSvg(
     val svg = """<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720">
 <defs>$wearMask<path id="topArc" d="M 105,360 A 255,255 0 0 1 615,360"/><path id="bottomArc" d="M 615,360 A 255,255 0 0 1 105,360"/></defs>
 <rect width="720" height="720" fill="none"/><g $maskAttribute>$frame
-<text fill="$safeColor" font-family="serif" font-size="27" font-weight="bold" letter-spacing="2"><textPath href="#topArc" startOffset="50%" text-anchor="middle">$org</textPath></text>
-<text fill="$safeColor" font-family="serif" font-size="20" font-weight="bold" letter-spacing="2"><textPath href="#bottomArc" startOffset="50%" text-anchor="middle">$number</textPath></text>
+<text fill="$safeColor" font-family="$fontStack" font-size="27" font-weight="bold" letter-spacing="2"><textPath href="#topArc" startOffset="50%" text-anchor="middle">$org</textPath></text>
+<text fill="$safeColor" font-family="$fontStack" font-size="20" font-weight="bold" letter-spacing="2"><textPath href="#bottomArc" startOffset="50%" text-anchor="middle">$number</textPath></text>
 $motifSvg$centerSvg$sideSvg
 <path d="M245 410 Q360 435 475 410" fill="none" stroke="$safeColor" stroke-width="2.5"/>
 <text x="360" y="455" text-anchor="middle" font-family="sans-serif" font-size="13" letter-spacing="1" fill="$safeColor">WZÓR WŁASNY</text></g></svg>"""
@@ -270,6 +288,8 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
 
     var signatureText by remember { mutableStateOf("") }
     var signatureColor by remember { mutableStateOf("#183A63") }
+    var signatureFont by remember { mutableStateOf("script") }
+    var signatureFontMenu by remember { mutableStateOf(false) }
     var stampOrganization by remember { mutableStateOf("") }
     var stampCenter by remember { mutableStateOf("PIECZĘĆ") }
     var stampNumber by remember { mutableStateOf("") }
@@ -278,6 +298,8 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
     var stampMotif by remember { mutableStateOf("rosette") }
     var stampMotifPosition by remember { mutableStateOf("center") }
     var stampDistressed by remember { mutableStateOf(true) }
+    var stampFont by remember { mutableStateOf("serif") }
+    var stampFontMenu by remember { mutableStateOf(false) }
     var signatureRotation by remember { mutableFloatStateOf(0f) }
     var stampRotation by remember { mutableFloatStateOf(0f) }
     var stampShapeMenu by remember { mutableStateOf(false) }
@@ -479,23 +501,39 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
             "signature" -> {
                 Text("Generator tekstu do wektorowego SVG", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 OutlinedTextField(signatureText, { signatureText = it }, label = { Text("Imię, nazwisko lub tekst") }, modifier = Modifier.fillMaxWidth())
+                Box {
+                    OutlinedButton(onClick = { signatureFontMenu = true }) {
+                        Text("Krój pisma: " + mapOf("script" to "Odręczny", "serif" to "Szeryfowy", "sans" to "Bezszeryfowy", "mono" to "Maszynowy", "calligraphy" to "Kaligraficzny")[signatureFont])
+                    }
+                    DropdownMenu(signatureFontMenu, { signatureFontMenu = false }) {
+                        listOf("script" to "Odręczny", "serif" to "Szeryfowy", "sans" to "Bezszeryfowy", "mono" to "Maszynowy", "calligraphy" to "Kaligraficzny").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { signatureFont = id; signatureFontMenu = false })
+                        }
+                    }
+                }
+                Text("Znaki specjalne — wybierz, aby wstawić do tekstu:")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("Ł", "Ż", "Ź", "Ą", "Ę", "Ć", "Ń", "Ó", "Ś", "★", "♥", "№", "§", "€", "©", "®", "™", "±", "—").forEach { symbol ->
+                        TextButton(onClick = { signatureText += symbol }) { Text(symbol) }
+                    }
+                }
                 OutlinedTextField(signatureColor, { signatureColor = it }, label = { Text("Kolor #RRGGBB") }, modifier = Modifier.fillMaxWidth())
                 Text("To wektorowa grafika tekstowa. Nie jest odręcznym podpisem ani podpisem elektronicznym.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { runCatching {
-                        pendingGeneratedExport = makeTextSignatureSvg(signatureText, signatureColor)
+                        pendingGeneratedExport = makeTextSignatureSvg(signatureText, signatureColor, signatureFont)
                         generatedSvgPicker.launch("podpis-${signatureText.take(24).replace(Regex("[^A-Za-z0-9_-]"), "-")}.svg")
                     }.onFailure { status = "Eksport SVG nie powiódł się: ${it.message ?: "błąd"}" } },
                         enabled = signatureText.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Eksportuj SVG") }
                     OutlinedButton(onClick = { runCatching {
-                        pendingGeneratedExport = renderCertificateAssetSvgToPng(makeTextSignatureSvg(signatureText, signatureColor))
+                        pendingGeneratedExport = renderCertificateAssetSvgToPng(makeTextSignatureSvg(signatureText, signatureColor, signatureFont))
                         generatedPngPicker.launch("podpis-graficzny.png")
                     }.onFailure { status = "Eksport PNG nie powiódł się: ${it.message ?: "błąd"}" } },
                         enabled = signatureText.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Eksportuj PNG") }
                 }
                 Button(onClick = { runCatching {
-                    val svg = makeTextSignatureSvg(signatureText, signatureColor)
+                    val svg = makeTextSignatureSvg(signatureText, signatureColor, signatureFont)
                     DocumentBrandStore.importBytes(context, "Podpisy własne", "Podpis wektorowy (tekst)",
                         "Podpis — ${signatureText.take(45)}", svg,
                         rights = "Autorska grafika tekstowa; nie jest podpisem elektronicznym.")
@@ -509,6 +547,17 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 OutlinedTextField(stampOrganization, { stampOrganization = it }, label = { Text("Nazwa organizacji") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(stampCenter, { stampCenter = it }, label = { Text("Tekst środkowy") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(stampNumber, { stampNumber = it }, label = { Text("Numer / identyfikator") }, modifier = Modifier.fillMaxWidth())
+                Box {
+                    OutlinedButton(onClick = { stampFontMenu = true }) {
+                        Text("Krój pisma pieczęci: " + mapOf("script" to "Odręczny", "serif" to "Szeryfowy", "sans" to "Bezszeryfowy", "mono" to "Maszynowy", "calligraphy" to "Kaligraficzny")[stampFont])
+                    }
+                    DropdownMenu(stampFontMenu, { stampFontMenu = false }) {
+                        listOf("script" to "Odręczny", "serif" to "Szeryfowy", "sans" to "Bezszeryfowy", "mono" to "Maszynowy", "calligraphy" to "Kaligraficzny").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { stampFont = id; stampFontMenu = false })
+                        }
+                    }
+                }
+                Text("Tekst pieczęci obsługuje polskie litery i znaki specjalne (np. №, §, &, ©, ®, ™).", style = MaterialTheme.typography.bodySmall)
                 OutlinedTextField(stampColor, { stampColor = it }, label = { Text("Kolor pieczęci #RRGGBB") }, modifier = Modifier.fillMaxWidth())
                 Text("Szybki wybór koloru", style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -558,20 +607,20 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { runCatching {
-                        pendingGeneratedExport = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed)
+                        pendingGeneratedExport = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed, stampFont)
                         generatedSvgPicker.launch("pieczec-${stampShape}.svg")
                     }.onFailure { status = "Eksport SVG nie powiódł się: ${it.message ?: "błąd"}" } },
                         enabled = stampOrganization.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Eksportuj SVG") }
                     OutlinedButton(onClick = { runCatching {
                         pendingGeneratedExport = renderCertificateAssetSvgToPng(
-                            makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed)
+                            makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed, stampFont)
                         )
                         generatedPngPicker.launch("pieczec-${stampShape}.png")
                     }.onFailure { status = "Eksport PNG nie powiódł się: ${it.message ?: "błąd"}" } },
                         enabled = stampOrganization.isNotBlank(), modifier = Modifier.weight(1f)) { Text("Eksportuj PNG") }
                 }
                 Button(onClick = { runCatching {
-                    val svg = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed)
+                    val svg = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed, stampFont)
                     DocumentBrandStore.importBytes(context, "Pieczęcie własne", "Pieczęć graficzna (własna)",
                         "Pieczęć — ${stampOrganization.take(45)}", svg,
                         rights = "Własny wzór graficzny użytkownika; nie jest pieczęcią urzędową ani poświadczeniem.")
