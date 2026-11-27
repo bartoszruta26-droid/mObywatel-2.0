@@ -89,8 +89,8 @@ internal fun SettingsMenuScreen(
             onManageTranslationLanguages
         )
         ProfileActionCard(
-            "Wspólny wygląd legitymacji",
-            "Jeden układ, rozmieszczenie, skala i typografia dla wszystkich legitymacji",
+            "Domyślny wygląd dokumentów",
+            "Wybór postaci dokumentu oraz osobne ustawienia wzoru legitymacji i zaświadczenia",
             Icons.Filled.Badge,
             onManageCredentialAppearance
         )
