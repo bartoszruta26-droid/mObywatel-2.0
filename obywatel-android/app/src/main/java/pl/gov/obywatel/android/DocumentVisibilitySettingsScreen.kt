@@ -165,7 +165,13 @@ internal fun DocumentVisibilitySettingsScreen(
                                 Box {
                                     TextButton(onClick = {
                                         expandedGroupDocument = if (expandedGroupDocument == id) null else id
-                                    }) { Text("Grupa", style = MaterialTheme.typography.labelSmall) }
+                                    }) {
+                                        Text(
+                                            documentGroupAssignments[id] ?: resolveDocumentGroup(id, documentGroupAssignments),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            maxLines = 1
+                                        )
+                                    }
                                     DropdownMenu(
                                         expanded = expandedGroupDocument == id,
                                         onDismissRequest = { expandedGroupDocument = null }
