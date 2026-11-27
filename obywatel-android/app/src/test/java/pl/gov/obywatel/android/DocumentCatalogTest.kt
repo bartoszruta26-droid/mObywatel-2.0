@@ -71,6 +71,11 @@ class DocumentCatalogTest {
     }
 
     @Test
+    fun internationalMedicalCertificateIsVisibleOnDashboardByDefault() {
+        assertEquals("dashboard", defaultDocumentPlacements[INTERNATIONAL_MEDICAL_CERTIFICATE_ID])
+    }
+
+    @Test
     fun internationalMedicalCertificateIsCataloguedInHealthService() {
         val item = documentDisplayOptions.single { it.first == INTERNATIONAL_MEDICAL_CERTIFICATE_ID }
         assertEquals("International Medical Certificate", item.second)
