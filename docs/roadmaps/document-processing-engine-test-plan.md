@@ -120,3 +120,16 @@ Ten dokument określa plan. Nie deklaruje, że opisane etapy implementacji zosta
 7. Integracja z parserem ma zwracać propozycje pól, a zapis do dokumentów musi wymagać jawnej akceptacji użytkownika.
 
 Statusy powyżej są migawką, nie automatycznym potwierdzeniem aktualnego stanu CI. Przed każdym scaleniem ponownie odczytać wszystkie wymagane kontrole i ich logi.
+
+## Wykonane prace funkcjonalne — 2026-11-27
+
+W PR #184 dodano pierwszą warstwę kontraktów platform-neutralnych w `documentprocessing/DocumentProcessingContracts.kt` oraz testy JVM `DocumentProcessingContractsTest.kt`. Zakres testów obejmuje wymagane operacje, język docelowy tłumaczenia, zakres confidence, poprawność prostokątów, domyślną konieczność ręcznego sprawdzenia pól i metadane pochodzenia.
+
+Pozostają do wykonania:
+1. Uruchomienie Gradle i testów JVM w CI.
+2. Adapter wejścia obrazu/URI i adapter ML Kit implementujący `TextRecognizerEngine`.
+3. Mapowanie bloków, linii, bounding boxes i confidence z ML Kit do `OcrText`.
+4. Adapter barcode implementujący `BarcodeReaderEngine`.
+5. Orkiestrator pipeline'u z anulowaniem i błędami częściowymi.
+6. Adapter parsera `DocumentOcrParser` do `DocumentFieldExtractor` oraz walidatory.
+7. Testy instrumentacyjne i UI przed integracją z portfelem.
