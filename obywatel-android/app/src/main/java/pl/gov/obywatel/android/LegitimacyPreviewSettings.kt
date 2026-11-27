@@ -2345,6 +2345,17 @@ internal fun CredentialCardSides(
     assetRevision: Int = 0,
     validity: Boolean? = null
 ) {
+    val presentationMode = loadDefaultDocumentPresentationMode(LocalContext.current)
+    if (presentationMode != DocumentPresentationMode.LEGITIMACY) {
+        when (presentationMode) {
+            DocumentPresentationMode.CERTIFICATE -> DocumentCertificatePreview(
+                documentKey, title, subtitle, holderName, fields, validity
+            )
+            DocumentPresentationMode.CSV -> DocumentCsvPreview(title, fields)
+            DocumentPresentationMode.LEGITIMACY -> Unit
+        }
+        return
+    }
     val (frontFields, reverseFields) = splitCredentialFieldsForSides(
         fields, settings.orientation, settings.visibleFieldsConfigured,
         settings.visibleFields, settings.fieldSides
@@ -2387,7 +2398,8 @@ internal fun CredentialTemplatePreview(
     documentKey: String,
     settings: LegitimacyPreviewSettings,
     assetRevision: Int = 0,
-    values: Map<String, String>? = null
+    values: Map<String, String>? = null,
+    forceLegitimacy: Boolean = false
 ) {
     val title = if (documentKey == GLOBAL_LEGITIMACY_APPEARANCE_KEY) "Wspólny wzór legitymacji"
         else documentBrandTargets.firstOrNull { it.first == documentKey }?.second ?: "Dokument"
@@ -2407,6 +2419,8 @@ internal fun CredentialTemplatePreview(
     val selectedCardFields = options.map { (key, label) ->
         Triple(key, label, values?.get(key).orEmpty().ifBlank { "—" })
     }
+    val presentationMode = if (forceLegitimacy) DocumentPresentationMode.LEGITIMACY
+        else loadDefaultDocumentPresentationMode(LocalContext.current)
     val (frontFields, reverseFields) = splitCredentialFieldsForSides(
         selectedCardFields, settings.orientation, settings.visibleFieldsConfigured, settings.visibleFields, settings.fieldSides
     )
@@ -2422,6 +2436,17 @@ internal fun CredentialTemplatePreview(
                 }
             }
         }
+    }
+    if (presentationMode != DocumentPresentationMode.LEGITIMACY) {
+        when (presentationMode) {
+            DocumentPresentationMode.CERTIFICATE -> DocumentCertificatePreview(
+                documentKey, title, "", holderName, selectedCardFields,
+                validity = values?.let { credentialValidityForDocument(documentKey, it) } ?: true
+            )
+            DocumentPresentationMode.CSV -> DocumentCsvPreview(title, selectedCardFields)
+            DocumentPresentationMode.LEGITIMACY -> Unit
+        }
+        return
     }
     val photo = remember(values?.get("photo")) {
         runCatching {
