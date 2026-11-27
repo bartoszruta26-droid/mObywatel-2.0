@@ -163,8 +163,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-
-@Composable
 internal fun GeneralDocumentOcrEditor(categoryId: String, fields: MutableMap<String, String>, context: Context, saveMessage: (String) -> Unit) {
     var processing by remember { mutableStateOf(false) }
     var recognizedText by remember { mutableStateOf(fields["${categoryId}OcrText"].orEmpty()) }
