@@ -124,3 +124,11 @@ Wyniki silnika przekazywać przez przypadki użycia do:
 - tłumaczenia dokumentów medycznych.
 
 Nie wiązać silnika bezpośrednio z ekranami tych modułów. Każda integracja osobno i po akceptacji użytkownika.
+
+## Stan wdrożenia i zgodność prototypu — 2026-11-27
+
+Istnieje prototyp adaptera w osobnym PR #188: DocumentImageRecognition.kt opakowuje ML Kit Text Recognition i Barcode Scanning dla wejściowego Bitmap. Jest to pierwszy adapter techniczny, nie kompletna realizacja kontraktów z niniejszego dokumentu. Obecny interfejs zwraca surowy tekst oraz listę podstawowych wartości kodów; nie zachowuje jeszcze bloków, linii, współrzędnych, confidence ani pochodzenia wyniku. Przed integracją należy rozszerzyć model OCR i dodać jawny parametr obrotu obrazu lub udokumentować wymaganie wejściowego obrazu ustawionego pionowo.
+
+Nie ma jeszcze kompletnego wejścia SAF/PDF, wielostronicowego pipeline'u, ekstrakcji i walidacji w jednym przebiegu ani ekranu podglądu z zatwierdzeniem. Nie deklarować gotowości silnika, dopóki te granice nie zostaną zaimplementowane i przetestowane. PR #186 wydziela generowanie QR z ekranu, lecz nie realizuje jeszcze warstwy BarcodeReaderEngine.
+
+Kolejność techniczna: (1) doprowadzić do zielonego build/testy dla ekstrakcji QR i adaptera obrazu, (2) dodać testy adaptera i modelu wyniku, (3) zdefiniować stabilne kontrakty niezależne od Android/ML Kit, (4) zintegrować wejście obrazu i parser, (5) dopiero potem UI zatwierdzania i repozytorium dokumentów.
