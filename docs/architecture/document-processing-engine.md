@@ -153,3 +153,17 @@ Dodano `DocumentOcrFieldExtractor`, który implementuje `DocumentFieldExtractor`
 - zawsze oznacza pola jako wymagające ręcznej weryfikacji.
 
 Dodano test JVM mapowania pól, braku typu dokumentu i pustego tekstu. Nadal nie jest to pełny pipeline: adapter OCR ML Kit z PR #188 nie implementuje jeszcze kontraktu `TextRecognizerEngine`, a wejście obrazu i orkiestracja pozostają do wykonania.
+
+
+### Orkiestrator pipeline'u — 2026-11-27
+
+Dodano `DocumentProcessingEngine` jako pierwszą wykonywalną warstwę orkiestracji:
+- dobiera kroki na podstawie `ProcessingOperation` i uruchamia OCR, odczyt kodów, ekstrakcję, walidację oraz tłumaczenie przez wstrzyknięte interfejsy;
+- uruchamia OCR także jako zależność ekstrakcji i tłumaczenia, ale nie zwraca OCR w wyniku, jeśli użytkownik nie zażądał operacji OCR;
+- sprawdza zgodność źródła wejściowego ze źródłem żądania;
+- nie zapisuje danych i nie zarządza cyklem życia pliku/Bitmap; odpowiedzialność pozostaje po stronie adaptera platformowego;
+- tworzy pochodzenie wyniku z nazwą dostawcy, czasem i informacją o lokalnym przetwarzaniu.
+
+Dodano testy JVM z atrapami dostawców: ekstrakcja i walidacja po OCR, odczyt kodu bez uruchamiania OCR, tłumaczenie tekstu OCR oraz odrzucenie niezgodnego źródła. Testy zostały zapisane, ale ich wykonanie należy uznać za niepotwierdzone do czasu zakończenia CI dla aktualnego commitu.
+
+Ograniczenie etapu: nie ma jeszcze adaptera ML Kit implementującego `TextRecognizerEngine` i `BarcodeReaderEngine`; PR #188 nadal jest osobnym prototypem. Nie ma również wejścia SAF/PDF ani interfejsu akceptacji wyniku.
