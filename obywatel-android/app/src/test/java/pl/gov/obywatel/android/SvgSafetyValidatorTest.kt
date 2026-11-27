@@ -139,6 +139,13 @@ class SvgSafetyValidatorTest {
         makeStampSvg("Fundacja", "PIECZĘĆ", "1", "#244B75", "triangle", "star", "side", true)
     }
 
+    @Test
+    fun acceptsGreaterThanCharacterInsideQuotedAttributeValue() {
+        SvgSafetyValidator.validateMarkupSecurity(
+            """<svg xmlns="http://www.w3.org/2000/svg" data-note="left > right"><g><path d="M0 0h1v1z"/></g></svg>"""
+        )
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsSvgWithMoreThanTwentyThousandElements() {
         val children = buildString {
