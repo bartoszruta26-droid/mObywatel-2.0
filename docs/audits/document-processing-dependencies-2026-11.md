@@ -85,3 +85,7 @@ Importy ML Kit OCR i Barcode w `QrAndOwdScreens.kt` wymagają weryfikacji kompil
 Audyt powyżej jest migawką stanu main z commitu wskazanego w sekcji zakresu. Po tej migawce powstał osobny, nadal nie scalony PR #188 (feature/document-image-recognition-adapter), który dodaje DocumentImageRecognition.kt i faktyczne wywołania ML Kit Text Recognition oraz Barcode Scanning. Adapter przyjmuje gotowy Bitmap, zwraca tekst OCR i podstawowe dane kodów; nie jest jeszcze podłączony do wyboru pliku/aparatu, parsera dokumentów ani zapisu do portfela. Nie należy zatem zmieniać historycznego wniosku audytu dla bazowego commitu, ale bieżący stan gałęzi roboczych uwzględnia już prototyp adaptera.
 
 PR #186 wydziela generowanie QR do QrCodeGeneration.kt; jest to refaktoryzacja kodu generującego, a nie ukończenie wspólnego skanera ani OCR. Oba PR-y pozostają nie scalone, a testy urządzeniowe/emulatorowe nie zostały potwierdzone jako zakończone sukcesem.
+
+## Zmiany funkcjonalne po audycie — aktualizacja
+
+W gałęzi PR #184 dodano platform-neutralne kontrakty silnika oraz adapter `DocumentOcrFieldExtractor`, który wykorzystuje istniejący `DocumentOcrParser` i zwraca pola jako niezweryfikowane sugestie wymagające akceptacji. Nie zmienia to wyników audytu zależności: nie dodano nowych bibliotek ani nie usunięto istniejących. Adapter ML Kit obrazu z PR #188 nadal pozostaje osobną implementacją i nie jest jeszcze połączony z kontraktem `TextRecognizerEngine`.
