@@ -1,3 +1,6 @@
+SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+SPDX-License-Identifier: CC0-1.0
+
 # Document Processing Engine — etapy wdrożenia i plan testów
 
 ## Zasady prowadzenia prac
