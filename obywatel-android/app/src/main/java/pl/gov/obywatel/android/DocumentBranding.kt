@@ -37,6 +37,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -476,7 +477,10 @@ internal object DocumentBrandStore {
                 } }
             }
         }.getOrDefault(emptyList())
-        return builtInAssets + generatedDrawableAssets + stored
+        return builtInAssets + generatedDrawableAssets.map { asset ->
+            val name = asset.file.removePrefix("resource:")
+            if (asset.file.startsWith("resource:") && RemoteGraphicRepository.isRemoteResource(context, name)) asset.copy(file = "remote:$name") else asset
+        } + stored
     }
     private fun save(context: Context, assets: List<BrandAsset>) {
         val a = JSONArray()
@@ -511,6 +515,12 @@ internal object DocumentBrandStore {
     }
     private fun imageById(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? = runCatching {
         val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
+        if (asset.file.startsWith("remote:")) {
+            val name = asset.file.removePrefix("remote:")
+            val cached = RemoteGraphicRepository.cachedGraphicFile(context, name)
+            if (cached != null) return BitmapFactory.decodeFile(cached.absolutePath)
+            return RemoteGraphicRepository.thumbnailBitmap(context, name)
+        }
         if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
             val resourceId = context.resources.getIdentifier(name, "drawable", context.packageName)
@@ -611,7 +621,11 @@ internal object DocumentBrandStore {
         imageById(context, assetId, knownAsset)
     fun fileBytes(context: Context, assetId: String, knownAsset: BrandAsset? = null): ByteArray? = runCatching {
         val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
-        if (asset.file.startsWith("resource:")) {
+        if (asset.file.startsWith("remote:")) {
+            val name = asset.file.removePrefix("remote:")
+            val cached = RemoteGraphicRepository.cachedGraphicFile(context, name) ?: return null
+            return cached.readBytes()
+        } else if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
             val id = context.resources.getIdentifier(name, "drawable", context.packageName)
             if (id == 0) return null
@@ -1362,6 +1376,7 @@ internal fun DocumentIdentityTemplate(
 @Composable
 internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null, readOnly: Boolean = false) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var assignments by remember { mutableStateOf(DocumentBrandStore.assignments(context)) }
     var owner by remember(fixedTarget) {
         mutableStateOf(if (fixedTarget == null) "Biblioteka użytkownika" else "legitymacja:$fixedTarget")
@@ -1628,13 +1643,22 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     if (fixedTarget != null && !readOnly) {
                                         TextButton(onClick = {
-                                            runCatching { DocumentBrandStore.assign(context, fixedTarget, asset.kind, asset.id) }
-                                                .onSuccess {
+                                            scope.launch {
+                                                status = if (asset.file.startsWith("remote:")) "Pobieranie pełnej grafiki i weryfikacja pliku…" else "Przypisywanie zasobu…"
+                                                runCatching {
+                                                    if (asset.file.startsWith("remote:")) {
+                                                        RemoteGraphicRepository.fullGraphicFile(context, asset.file.removePrefix("remote:"))
+                                                    }
+                                                    DocumentBrandStore.assign(context, fixedTarget, asset.kind, asset.id)
+                                                }.onSuccess {
                                                     assignments = DocumentBrandStore.assignments(context)
                                                     assetRevision++
-                                                    status = "Przypisano zasób do dokumentu."
+                                                    assets = DocumentBrandStore.list(context)
+                                                    status = "Przypisano zasób. Pełna grafika jest dostępna także offline."
+                                                }.onFailure {
+                                                    status = "Nie udało się przypisać zasobu: ${it.message ?: "błąd"}"
                                                 }
-                                                .onFailure { status = "Nie udało się przypisać zasobu: ${it.message ?: "błąd"}" }
+                                            }
                                         }) { Text("Przypisz") }
                                     }
                                     if (asset.file.startsWith("builtin:")) {
