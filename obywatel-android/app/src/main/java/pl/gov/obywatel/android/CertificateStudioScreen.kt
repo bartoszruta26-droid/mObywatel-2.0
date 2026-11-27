@@ -114,7 +114,7 @@ internal fun makeTextSignatureSvg(name: String, color: String, fontStyle: String
 
 internal fun makeStampSvg(
     organization: String, centerText: String, identifier: String, color: String,
-    shape: String, motif: String, motifPosition: String, distressed: Boolean, fontStyle: String = "serif"
+    shape: String = "circle", motif: String = "rosette", motifPosition: String = "center", distressed: Boolean = true, fontStyle: String = "serif"
 ): ByteArray {
     val safeColor = SvgSafetyValidator.requireSafeHexColor(color)
     val org = safeSvgText(organization.trim().take(70))
@@ -211,6 +211,17 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
 
     var signatureText by remember { mutableStateOf("") }
     var signatureColor by remember { mutableStateOf("#183A63") }
+    var signatureFont by remember { mutableStateOf("script") }
+    var signatureFontMenu by remember { mutableStateOf(false) }
+    var stampShape by remember { mutableStateOf("circle") }
+    var stampShapeMenu by remember { mutableStateOf(false) }
+    var stampMotif by remember { mutableStateOf("rosette") }
+    var stampMotifMenu by remember { mutableStateOf(false) }
+    var stampMotifPosition by remember { mutableStateOf("center") }
+    var stampPositionMenu by remember { mutableStateOf(false) }
+    var stampDistressed by remember { mutableStateOf(true) }
+    var stampFont by remember { mutableStateOf("serif") }
+    var stampFontMenu by remember { mutableStateOf(false) }
     var stampOrganization by remember { mutableStateOf("") }
     var stampCenter by remember { mutableStateOf("PIECZĘĆ") }
     var stampNumber by remember { mutableStateOf("") }
@@ -404,10 +415,20 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 Text("Generator tekstu do wektorowego SVG", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 OutlinedTextField(signatureText, { signatureText = it }, label = { Text("Imię, nazwisko lub tekst") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(signatureColor, { signatureColor = it }, label = { Text("Kolor #RRGGBB") }, modifier = Modifier.fillMaxWidth())
+                Box {
+                    OutlinedButton(onClick = { signatureFontMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Krój podpisu: " + mapOf("script" to "Odręczny", "calligraphy" to "Kaligraficzny", "serif" to "Szeryfowy", "sans" to "Bezszeryfowy", "mono" to "Maszynowy")[signatureFont])
+                    }
+                    DropdownMenu(signatureFontMenu, { signatureFontMenu = false }) {
+                        listOf("script" to "Odręczny", "calligraphy" to "Kaligraficzny", "serif" to "Szeryfowy", "sans" to "Bezszeryfowy", "mono" to "Maszynowy").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { signatureFont = id; signatureFontMenu = false })
+                        }
+                    }
+                }
                 Text("To wektorowa grafika tekstowa. Nie jest odręcznym podpisem ani podpisem elektronicznym.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(onClick = { runCatching {
-                    val svg = makeTextSignatureSvg(signatureText, signatureColor)
+                    val svg = makeTextSignatureSvg(signatureText, signatureColor, signatureFont)
                     DocumentBrandStore.importBytes(context, "Podpisy własne", "Podpis wektorowy (tekst)",
                         "Podpis — ${signatureText.take(45)}", svg,
                         rights = "Autorska grafika tekstowa; nie jest podpisem elektronicznym.")
@@ -422,10 +443,53 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                 OutlinedTextField(stampCenter, { stampCenter = it }, label = { Text("Tekst środkowy") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(stampNumber, { stampNumber = it }, label = { Text("Numer / identyfikator") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(stampColor, { stampColor = it }, label = { Text("Kolor #RRGGBB") }, modifier = Modifier.fillMaxWidth())
+                Box {
+                    OutlinedButton(onClick = { stampShapeMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Kształt: " + mapOf("circle" to "Okrągły", "oval" to "Owalny", "rectangle" to "Prostokątny")[stampShape])
+                    }
+                    DropdownMenu(stampShapeMenu, { stampShapeMenu = false }) {
+                        listOf("circle" to "Okrągły", "oval" to "Owalny", "rectangle" to "Prostokątny").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { stampShape = id; stampShapeMenu = false })
+                        }
+                    }
+                }
+                Box {
+                    OutlinedButton(onClick = { stampMotifMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Ornament: " + mapOf("none" to "Bez ornamentu", "rosette" to "Rozeta", "star" to "Gwiazda", "leaf" to "Liść", "cross" to "Krzyż")[stampMotif])
+                    }
+                    DropdownMenu(stampMotifMenu, { stampMotifMenu = false }) {
+                        listOf("none" to "Bez ornamentu", "rosette" to "Rozeta", "star" to "Gwiazda", "leaf" to "Liść", "cross" to "Krzyż").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { stampMotif = id; stampMotifMenu = false })
+                        }
+                    }
+                }
+                Box {
+                    OutlinedButton(onClick = { stampPositionMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Położenie ornamentu: " + mapOf("center" to "Środek", "side" to "Bok")[stampMotifPosition])
+                    }
+                    DropdownMenu(stampPositionMenu, { stampPositionMenu = false }) {
+                        listOf("center" to "Środek", "side" to "Bok").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { stampMotifPosition = id; stampPositionMenu = false })
+                        }
+                    }
+                }
+                Box {
+                    OutlinedButton(onClick = { stampFontMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Krój pieczęci: " + mapOf("script" to "Odręczny", "calligraphy" to "Kaligraficzny", "serif" to "Szeryfowy", "sans" to "Bezszeryfowy", "mono" to "Maszynowy")[stampFont])
+                    }
+                    DropdownMenu(stampFontMenu, { stampFontMenu = false }) {
+                        listOf("script" to "Odręczny", "calligraphy" to "Kaligraficzny", "serif" to "Szeryfowy", "sans" to "Bezszeryfowy", "mono" to "Maszynowy").forEach { (id, label) ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { stampFont = id; stampFontMenu = false })
+                        }
+                    }
+                }
+                OutlinedButton(onClick = { stampDistressed = !stampDistressed }, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (stampDistressed) "Efekt tuszu: postarzana odbitka" else "Efekt tuszu: czysta odbitka")
+                }
                 Text("Generator tworzy własny wzór graficzny SVG, nie odtwarza pieczęci urzędowych, państwowych ani notarialnych.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(onClick = { runCatching {
-                    val svg = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor)
+                    val svg = makeStampSvg(stampOrganization, stampCenter, stampNumber, stampColor, stampShape, stampMotif, stampMotifPosition, stampDistressed, stampFont)
                     DocumentBrandStore.importBytes(context, "Pieczęcie własne", "Pieczęć graficzna (własna)",
                         "Pieczęć — ${stampOrganization.take(45)}", svg,
                         rights = "Własny wzór graficzny użytkownika; nie jest pieczęcią urzędową ani poświadczeniem.")
