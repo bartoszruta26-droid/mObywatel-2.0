@@ -715,8 +715,16 @@ internal object DocumentBrandStore {
 
     private fun decodeImage(bytes: ByteArray): android.graphics.Bitmap {
         if (!SvgSafetyValidator.looksLikeSvg(bytes)) {
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.let { return it }
-            throw IllegalArgumentException("Nieobsługiwany format obrazu. Wybierz PNG, JPEG, WebP lub poprawny SVG.")
+            // Limit dimensions before allocating pixel storage. A small compressed
+            // image can otherwise expand into an unexpectedly large bitmap.
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+            require(bounds.outWidth in 1..4096 && bounds.outHeight in 1..4096 &&
+                bounds.outWidth.toLong() * bounds.outHeight <= 16_000_000L) {
+                "Obraz ma zbyt duże wymiary. Maksymalnie 4096 × 4096 pikseli i 16 megapikseli."
+            }
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                ?: throw IllegalArgumentException("Nieobsługiwany lub uszkodzony obraz. Wybierz PNG, JPEG, WebP lub poprawny SVG.")
         }
         SvgSafetyValidator.validate(bytes)
         val raw = Charsets.UTF_8.newDecoder()
