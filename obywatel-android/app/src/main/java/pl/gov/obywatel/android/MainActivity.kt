@@ -298,14 +298,6 @@ internal const val DONATION_LEDGER_VISIBILITY_MIGRATION_KEY = "donation_ledgers_
 internal const val ARMED_SERVICE_VISIBILITY_MIGRATION_KEY = "armed_service_group_visible_v1"
 internal const val ARMED_SERVICE_DASHBOARD_CLEANUP_MIGRATION_KEY = "armed_service_dashboard_cleanup_v1"
 
-internal data class ServiceItem(
-    val title: String,
-    val subtitle: String,
-    val icon: Int? = null,
-    val fallbackIcon: ImageVector? = null,
-    val category: String = "Pozostałe"
-)
-
 internal val services = listOf(
     ServiceItem("Portfel", "Wszystkie dokumenty i ewidencje", icon = R.drawable.service_folder, fallbackIcon = Icons.Filled.CreditCard, category = "Dokumenty"),
     ServiceItem("Odpis z rejestru podmiotów", "Dane spółki, fundacji, kościoła i instytucji szkoleniowej", fallbackIcon = Icons.Filled.AccountBalance, category = "Rejestry"),
