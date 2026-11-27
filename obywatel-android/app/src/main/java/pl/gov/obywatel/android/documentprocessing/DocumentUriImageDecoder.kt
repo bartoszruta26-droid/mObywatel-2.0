@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
+import pl.gov.obywatel.android.ui.documents.calculateInSampleSize
 
 /**
  * Bounded decoder for image documents selected through the existing SAF import flow.
