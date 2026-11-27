@@ -184,6 +184,15 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
     var stampCenter by remember { mutableStateOf("PIECZĘĆ") }
     var stampNumber by remember { mutableStateOf("") }
     var stampColor by remember { mutableStateOf("#244B75") }
+    var stampShape by remember { mutableStateOf("circle") }
+    var stampMotif by remember { mutableStateOf("rosette") }
+    var stampMotifPosition by remember { mutableStateOf("center") }
+    var stampDistressed by remember { mutableStateOf(true) }
+    var signatureRotation by remember { mutableFloatStateOf(0f) }
+    var stampRotation by remember { mutableFloatStateOf(0f) }
+    var stampShapeMenu by remember { mutableStateOf(false) }
+    var stampMotifMenu by remember { mutableStateOf(false) }
+    var stampPositionMenu by remember { mutableStateOf(false) }
 
     val importPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) runCatching {
@@ -209,7 +218,7 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
         if (uri != null) runCatching {
             val profile = certificateProfiles.first { it.id == standardId }
             renderCertificatePdf(context, uri, profile, issuer, recipient, course, scope,
-                hours, issueDate, number, signatory, signatureId, stampId)
+                hours, issueDate, number, signatory, signatureId, stampId, signatureRotation, stampRotation)
             val pdfBytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
                 ?: error("Nie można odczytać wygenerowanego PDF.")
             DocumentBrandStore.importBytes(context, issuer.ifBlank { "Wystawca" }, "Certyfikat",
@@ -272,11 +281,11 @@ internal fun CertificateStudioScreen(onBack: () -> Unit, onOpenDigitalCertificat
                         }
                     }
                 }
-                Text(
-                    "Aktywny podpis z biblioteki: " + (activeSavedSignatureName ?: "brak"),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text("Aktywny podpis z biblioteki: " + (activeSavedSignatureName ?: "brak"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Obrót podpisu: " + signatureRotation.toInt() + "°", style = MaterialTheme.typography.bodySmall)
+                Slider(value = signatureRotation, onValueChange = { signatureRotation = it }, valueRange = -180f..180f)
+                Text("Obrót pieczęci: " + stampRotation.toInt() + "°", style = MaterialTheme.typography.bodySmall)
+                Slider(value = stampRotation, onValueChange = { stampRotation = it }, valueRange = -180f..180f)
                 Box {
                     OutlinedButton(onClick = { stampMenu = true }, modifier = Modifier.fillMaxWidth()) {
                         Text("Pieczęć graficzna: " + (assets.firstOrNull { it.id == stampId }?.label ?: "brak"))
@@ -433,7 +442,7 @@ private fun renderCertificatePdf(
     context: Context, uri: Uri, profile: CertificateStandardProfile,
     issuer: String, recipient: String, course: String, scope: String,
     hours: String, issueDate: String, number: String, signatory: String,
-    signatureId: String, stampId: String
+    signatureId: String, stampId: String, signatureRotation: Float = 0f, stampRotation: Float = 0f
 ) {
     val pdf = PdfDocument()
     try {
@@ -493,24 +502,27 @@ private fun renderCertificatePdf(
         val savedSignatures = CertificateSignatureStore.list(context)
         val savedSignature = CertificateSignatureStore.selectedBitmap(context)
         if (savedSignature != null) {
-            drawCertificateImage(canvas, savedSignature, Rect(115, 465, 285, 510))
+            drawCertificateImage(canvas, savedSignature, Rect(115, 465, 285, 510), signatureRotation)
         } else if (savedSignatures.isEmpty()) {
             signatureId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-                ?.let { drawCertificateImage(canvas, it, Rect(115, 465, 285, 510)) }
+                ?.let { drawCertificateImage(canvas, it, Rect(115, 465, 285, 510), signatureRotation) }
         }
         stampId.takeIf { it.isNotBlank() }?.let { DocumentBrandStore.preview(context, it) }
-            ?.let { drawCertificateImage(canvas, it, Rect(width - 245, 435, width - 95, 555)) }
+            ?.let { drawCertificateImage(canvas, it, Rect(width - 245, 435, width - 95, 555), stampRotation) }
         pdf.finishPage(page)
         context.contentResolver.openOutputStream(uri)?.use { pdf.writeTo(it) } ?: error("Nie można zapisać PDF.")
     } finally { pdf.close() }
 }
 
-private fun drawCertificateImage(canvas: android.graphics.Canvas, bitmap: Bitmap, target: Rect) {
+private fun drawCertificateImage(canvas: android.graphics.Canvas, bitmap: Bitmap, target: Rect, rotationDegrees: Float = 0f) {
     val scale = minOf(target.width().toFloat() / bitmap.width.coerceAtLeast(1),
         target.height().toFloat() / bitmap.height.coerceAtLeast(1))
     val width = (bitmap.width * scale).toInt()
     val height = (bitmap.height * scale).toInt()
     val dest = Rect(target.centerX() - width / 2, target.centerY() - height / 2,
         target.centerX() + width / 2, target.centerY() + height / 2)
+    val saveCount = canvas.save()
+    canvas.rotate(rotationDegrees, target.exactCenterX(), target.exactCenterY())
     canvas.drawBitmap(bitmap, null, dest, Paint(Paint.ANTI_ALIAS_FLAG))
+    canvas.restoreToCount(saveCount)
 }
