@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2026 bartoszruta26-droid
+SPDX-License-Identifier: EUPL-1.2
+-->
+
 REGULAMIN DOTACJI CELOWYCH — CEL REHABILITACYJNO-OPIEKUŃCZY W RAMACH ISTNIEJĄCEGO PAŃSTWOWEGO FUNDUSZU CELOWEGO
 
 Status regulaminu i model prawny Celu
