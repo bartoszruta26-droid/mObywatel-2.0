@@ -41,6 +41,18 @@ data class NbpRateTable(
 
 data class NbpGoldPrice(val date: LocalDate, val pricePerGramPln: BigDecimal)
 
+/** Historyczna para kursów kupna/sprzedaży z tabeli C NBP. */
+data class NbpCurrencyBidAskQuote(
+    val date: LocalDate,
+    val bidPln: BigDecimal,
+    val askPln: BigDecimal
+) {
+    init {
+        require(bidPln > BigDecimal.ZERO && askPln > BigDecimal.ZERO)
+        require(askPln >= bidPln) { "Kurs sprzedaży nie może być niższy od kursu kupna." }
+    }
+}
+
 interface NbpHttpTransport {
     @Throws(IOException::class)
     fun get(url: String): String
@@ -134,6 +146,35 @@ class NbpRatesRepository(
             cursor = chunkEnd.plusDays(1)
         }
         return result.distinctBy { it.first }.sortedBy { it.first }
+    }
+
+    /**
+     * Historyczne kursy kupna i sprzedaży waluty z tabeli C NBP.
+     * Nie zastępuje kursu transakcyjnego konkretnego banku lub kantoru.
+     */
+    fun currencyBidAskHistory(
+        currencyCode: String,
+        start: LocalDate,
+        end: LocalDate
+    ): List<NbpCurrencyBidAskQuote> {
+        require(currencyCode.matches(Regex("[A-Z]{3}"))) { "Kod waluty musi mieć trzy litery ISO." }
+        require(!end.isBefore(start)) { "Data końcowa musi przypadać po dacie początkowej." }
+        val result = mutableListOf<NbpCurrencyBidAskQuote>()
+        var cursor = start
+        while (!cursor.isAfter(end)) {
+            val chunkEnd = minOf(cursor.plusDays(92), end)
+            tableRange(NbpTable.C, cursor, chunkEnd).forEach { table ->
+                table.rate(currencyCode)?.let { rate ->
+                    val bid = rate.bid
+                    val ask = rate.ask
+                    if (bid != null && ask != null) {
+                        result += NbpCurrencyBidAskQuote(table.effectiveDate, bid, ask)
+                    }
+                }
+            }
+            cursor = chunkEnd.plusDays(1)
+        }
+        return result.distinctBy { it.date }.sortedBy { it.date }
     }
 
     /** Historyczny szereg cen złota w PLN/g z automatycznym dzieleniem zakresu. */
