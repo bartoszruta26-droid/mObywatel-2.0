@@ -872,7 +872,7 @@ Stanowisko Fundacji ARIA zakłada, że art. 62 ust. 3 należy traktować jako sa
 
 ### 18.1. Nazwa i zakres pojęcia
 
-W dokumentacji Fundacji należy konsekwentnie używać nazwy **świadczenie pielęgnacyjne**. Nie należy używać w odniesieniu do wypłat Fundacji określeń „świadczenie pielęgnacyjne”, „zasiłek Fundacji” ani „świadczenie fundacyjne”.
+W dokumentacji Fundacji należy konsekwentnie używać nazwy **świadczenie pielęgnacyjne**. Nie należy używać w odniesieniu do wypłat Fundacji określeń „świadczenie pielęgnacyjne”, „zasiłek Fundacji” ani „świadczenie pielęgnacyjne”.
 
 Świadczenie pielęgnacyjne jest świadczeniem ustanowionym przez Fundację w ramach jej działalności statutowej, przyznawanym na podstawie ustalonych kryteriów i finansowanym ze środków Fundacji.
 
