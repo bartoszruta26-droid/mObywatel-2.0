@@ -185,4 +185,15 @@ class DocumentGroupCatalogTest {
     }
 
 
+
+    @Test
+    fun unifiedFamilyAndCivicDeclarationHasOneVisibleCommonRightsDocumentRoute() {
+        val id = "common_rights_unified_family_and_civic_declaration"
+        assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+        assertTrue(documentDisplayOptions.any { it.first == id })
+        assertTrue(officialGraphicDocumentFields(id).size >= 50)
+        assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+    }
+
+
 }
