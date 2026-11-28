@@ -318,4 +318,25 @@ class DocumentCatalogTest {
         }
     
     
+
+    @Test
+    fun integratedDeclarationOfWillCombinesAllCommonRightsThemesWithExplicitLegalBoundaries() {
+        val id = "common_rights_integrated_declaration_of_will"
+        assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+        assertTrue(documentDisplayOptions.any { it.first == id })
+        val fields = officialGraphicDocumentFields(id)
+        assertTrue(fields.size >= 30)
+        val labels = fields.map { it.second }.joinToString(" ")
+        listOf("samostanowienia", "samoograniczenia", "religijnej", "niepełnosprawności", "mandat", "osób trzecich", "odpowiedzialności karnej").forEach {
+            assertTrue("Missing integrated topic: $it", labels.contains(it, ignoreCase = true))
+        }
+        val note = officialDocTypes.first { it.id == id }.note
+        assertTrue(note.contains("art. 233"))
+        assertTrue(note.contains("nie nadaje mandatu publicznego"))
+        assertTrue(note.contains("praw osób trzecich"))
+        val preview = credentialFieldOptions(id).toMap()
+        fields.forEach { (key, label) -> assertEquals(label, preview[key]) }
+    }
+
+
 }
