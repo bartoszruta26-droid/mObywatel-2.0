@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 bartoszruta26-droid -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+
 # Audyt informacji prawnych dotyczących Fundacji Wspierania Rodzin „Aria”, Kolegium Orzekającego i świadczeń pielęgnacyjnych
 
 **Data audytu:** 28 listopada 2026 r.  
