@@ -510,6 +510,15 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
+                if (document.mimeType == "application/pdf") {
+                    PdfOcrReviewPanel(
+                        uri = document.uri,
+                        displayName = document.title,
+                        currentPage = page,
+                        pageCount = preview!!.pageCount,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
     }
