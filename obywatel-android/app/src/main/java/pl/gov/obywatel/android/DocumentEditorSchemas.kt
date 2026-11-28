@@ -297,6 +297,95 @@ private fun documentEditorFieldDefinitionsForCatalog(documentId: String): List<D
             Triple("awardingOrganization", "Organizacja / jednostka nadająca tytuł", ""),
             Triple("awardDate", "Data nadania tytułu", "DD-MM-RRRR")
         )
+        "foundation_care_member_card" -> fields(
+            Triple("foundationName", "Fundacja wydająca", "Fundacja Wspierania Rodzin „Aria”"),
+            Triple("holderName", "Imię i nazwisko beneficjenta", ""),
+            Triple("cardNumber", "Numer legitymacji", ""),
+            Triple("caseNumber", "Numer sprawy / ewidencyjny", ""),
+            Triple("statusScope", "Zakres potwierdzenia statusu", "beneficjent Fundacji / osoba korzystająca ze wsparcia"),
+            Triple("statuteBasis", "Podstawa statutowa i regulaminowa", "konkretne paragrafy"),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR"),
+            Triple("validFrom", "Ważna od", "DD-MM-RRRR"),
+            Triple("validTo", "Ważna do", "DD-MM-RRRR / bezterminowo"),
+            Triple("verificationContact", "Kontakt do weryfikacji wystawcy", ""),
+            Triple("authorizedSigner", "Osoba upoważniona do podpisu", "")
+        )
+        "foundation_farm_work_incapacity_certificate" -> fields(
+            Triple("documentNumber", "Numer zaświadczenia / znak sprawy", ""),
+            Triple("foundationName", "Fundacja wydająca", "Fundacja Wspierania Rodzin „Aria”"),
+            Triple("assessedPerson", "Imię i nazwisko osoby ocenianej", ""),
+            Triple("dateOfBirth", "Data urodzenia", "DD-MM-RRRR"),
+            Triple("identityDocument", "Rodzaj i numer dokumentu tożsamości (minimalny zakres)", ""),
+            Triple("assessmentDate", "Data badania / oceny", "DD-MM-RRRR"),
+            Triple("medicalEvidence", "Dokumentacja medyczna i funkcjonalna uwzględniona w ocenie", ""),
+            Triple("panelMembers", "Skład zespołu: imię, nazwisko, zawód i kwalifikacje", ""),
+            Triple("functionalLimitations", "Ograniczenia funkcjonalne istotne dla pracy w gospodarstwie rolnym", ""),
+            Triple("farmTasks", "Czynności rolnicze niemożliwe lub istotnie ograniczone", ""),
+            Triple("assessmentOutcome", "Ustalenie zespołu", "stała / długotrwała / czasowa / brak podstaw"),
+            Triple("assessmentReasoning", "Uzasadnienie merytoryczne", ""),
+            Triple("effectiveFrom", "Data początkowa ustalenia", "DD-MM-RRRR"),
+            Triple("expectedDuration", "Przewidywany okres utrzymywania się ograniczeń", ""),
+            Triple("statuteBasis", "Podstawa statutowa i regulaminowa – paragrafy", ""),
+            Triple("legalEffectNotice", "Charakter dokumentu i zastrzeżenie skutków prawnych", "Ocena ekspercka Fundacji; dokument nie jest orzeczeniem KRUS ani ZUS."),
+            Triple("panelSignatures", "Podpisy członków zespołu", ""),
+            Triple("authorizedSigner", "Osoba upoważniona do podpisu", ""),
+            Triple("issueDate", "Data wydania", "DD-MM-RRRR")
+        )
+        "foundation_care_allowance_award" -> fields(
+            Triple("foundationName", "Fundacja przyznająca świadczenie", "Fundacja Wspierania Rodzin „Aria”"),
+            Triple("decisionNumber", "Numer i data rozstrzygnięcia", ""),
+            Triple("decisionBody", "Organ Fundacji / osoba przyznająca świadczenie", ""),
+            Triple("beneficiaryName", "Imię i nazwisko beneficjenta", ""),
+            Triple("beneficiaryId", "Numer ewidencyjny beneficjenta", ""),
+            Triple("statuteBasis", "Podstawa statutowa i regulaminowa – paragrafy", ""),
+            Triple("benefitType", "Rodzaj świadczenia", "własne świadczenie pieniężne Fundacji"),
+            Triple("benefitPurpose", "Cel i uzasadnienie przyznania", ""),
+            Triple("benefitAmount", "Kwota i waluta", ""),
+            Triple("paymentFrequency", "Częstotliwość wypłaty", ""),
+            Triple("benefitPeriod", "Okres przyznania", ""),
+            Triple("conditions", "Warunki zmiany, zawieszenia i zakończenia", ""),
+            Triple("fundingSource", "Źródło finansowania", ""),
+            Triple("reviewProcedure", "Tryb ponownego rozpatrzenia – jeżeli przewidziany", ""),
+            Triple("deliveryDate", "Data doręczenia", "DD-MM-RRRR"),
+            Triple("authorizedSigner", "Osoba upoważniona do podpisu", ""),
+            Triple("deliveryConfirmation", "Potwierdzenie odbioru / doręczenia", "")
+        )
+        "foundation_care_allowance_payment_confirmation" -> fields(
+            Triple("foundationName", "Fundacja wypłacająca", "Fundacja Wspierania Rodzin „Aria”"),
+            Triple("confirmationNumber", "Numer potwierdzenia", ""),
+            Triple("awardReference", "Numer i data rozstrzygnięcia o przyznaniu", ""),
+            Triple("beneficiaryName", "Imię i nazwisko beneficjenta", ""),
+            Triple("coveredPeriod", "Okres, którego dotyczy wypłata", ""),
+            Triple("paidAmount", "Kwota przekazana i waluta", ""),
+            Triple("paymentDate", "Data wypłaty", "DD-MM-RRRR"),
+            Triple("paymentMethod", "Sposób wypłaty", "przelew / gotówka / inny dopuszczony regulaminem"),
+            Triple("transactionReference", "Identyfikator transakcji / dowód kasowy", ""),
+            Triple("beneficiaryAccountMasked", "Zamaskowany rachunek beneficjenta", ""),
+            Triple("fundingSource", "Źródło finansowania", ""),
+            Triple("preparedBy", "Osoba sporządzająca potwierdzenie", ""),
+            Triple("authorizedSigner", "Osoba upoważniona do podpisu", ""),
+            Triple("issueDate", "Data wystawienia", "DD-MM-RRRR")
+        )
+        "foundation_care_allowance_third_party_certificate" -> fields(
+            Triple("foundationName", "Nazwa, adres i dane rejestrowe Fundacji", "Fundacja Wspierania Rodzin „Aria”"),
+            Triple("certificateNumber", "Numer zaświadczenia", ""),
+            Triple("issueDate", "Data wystawienia", "DD-MM-RRRR"),
+            Triple("addressee", "Adresat zaświadczenia", ""),
+            Triple("beneficiaryName", "Imię i nazwisko beneficjenta", ""),
+            Triple("beneficiaryIdentifier", "Minimalny identyfikator beneficjenta", ""),
+            Triple("awardReference", "Numer i data rozstrzygnięcia Fundacji", ""),
+            Triple("awardingBody", "Organ Fundacji / osoba przyznająca świadczenie", ""),
+            Triple("statuteBasis", "Podstawa statutowa i regulaminowa – paragrafy", ""),
+            Triple("benefitName", "Nazwa świadczenia", "własne świadczenie pielęgnacyjne Fundacji"),
+            Triple("awardDate", "Data przyznania", "DD-MM-RRRR"),
+            Triple("benefitPeriod", "Okres przyznania", ""),
+            Triple("benefitAmount", "Wysokość i częstotliwość – ujawnić w niezbędnym zakresie", ""),
+            Triple("paymentEvidence", "Informacja o wypłatach / okresy / kwoty", ""),
+            Triple("benefitStatus", "Status na dzień wystawienia", "aktywne / zakończone / zawieszone"),
+            Triple("beneficiaryConsent", "Zakres danych ujawnionych i podstawa ich udostępnienia", ""),
+            Triple("verificationContact", "Kontakt / sposób weryfikacji autentyczności", ""),
+            Triple("authorizedSigner", "Osoba upoważniona do podpisu", "")
+        )
         "disability_card" -> fields(
             Triple("cardHolder", "Posiadacz legitymacji", ""),
             Triple("cardNumber", "Numer legitymacji", ""),
