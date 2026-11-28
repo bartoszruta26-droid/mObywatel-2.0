@@ -333,7 +333,7 @@ W szczególności należy sprawdzić:
 
 Bez tej analizy nie należy kategorycznie twierdzić, że ustawodawca chciał objąć przepisem wyłącznie jedną, historycznie określoną grupę dokumentów ani że zamierzał nadać skutki każdemu świadczeniu o podobnej nazwie.
 
-### 7.6. Argumenty przemawiające za uwzględnieniem własnego świadczenia Fundacji
+### 7.6. Argumenty przemawiające za uwzględnieniem świadczenia pielęgnacyjnego
 
 W dalszej analizie należy rozważyć następujące argumenty:
 
@@ -397,13 +397,13 @@ Zalecane nazwy:
 - „Świadczenie pielęgnacyjne Fundacji – decyzja/rozstrzygnięcie o przyznaniu”;
 - „Świadczenie pielęgnacyjne”;
 - „Potwierdzenie wypłaty świadczenia pielęgnacyjnego Fundacji”;
-- „Zaświadczenie Fundacji o przyznaniu własnego świadczenia pieniężnego”.
+- „Zaświadczenie Fundacji o przyznaniu świadczenia pielęgnacyjnego”.
 
 W dokumentacji dotyczącej art. 62 ust. 3 pkt 1 należy stosować określenie „przydzielenie zasiłku pielęgnacyjnego”.
 
 Nie jest to rozstrzygnięcie o dopuszczalności każdej możliwej nazwy w każdej relacji prawnej. Nazewnictwo powinno być ocenione również pod kątem ryzyka wprowadzenia beneficjenta, organu lub kontrahenta w błąd.
 
-### 8.3. Przesłanki przyznania własnego świadczenia
+### 8.3. Przesłanki przyznania świadczenia pielęgnacyjnego
 
 Regulamin świadczenia Fundacji powinien określać:
 
@@ -528,7 +528,7 @@ Wzory są ostrożne i wyraźnie oddzielają dokument Fundacji od orzeczenia orga
 |---|---|---|
 | Legitymacja osoby uprawnionej | Identyfikacja beneficjenta programu Fundacji | Wystawca, numer, dane niezbędne do identyfikacji, okres ważności, podstawa wewnętrzna |
 | Orzeczenie Kolegium | Udokumentowanie ustaleń Kolegium na potrzeby Fundacji | Podstawa statutowa, skład, dowody, ustalenia funkcjonalne, sentencja, uzasadnienie, okres |
-| Rozstrzygnięcie o przyznaniu świadczenia | Ustanowienie prawa do własnego świadczenia Fundacji | Podstawa, kwota, okres, warunki, sposób wypłaty, tryb weryfikacji |
+| Rozstrzygnięcie o przyznaniu świadczenia | Ustanowienie prawa do świadczenia pielęgnacyjnego | Podstawa, kwota, okres, warunki, sposób wypłaty, tryb weryfikacji |
 | Potwierdzenie wypłaty | Potwierdzenie wykonania płatności | Kwota, data, okres, tytuł, identyfikator transakcji |
 | Zaświadczenie dla podmiotu trzeciego | Potwierdzenie określonych faktów z ewidencji Fundacji | Zakres potwierdzanych faktów, data, wystawca, podstawa, ograniczenie danych |
 
@@ -578,7 +578,7 @@ Rozstrzygnięcie Kolegium jest dokumentem Fundacji i wywołuje skutki w zakresie
 
 ### 12.3. Świadczenie pielęgnacyjne
 
-Fundacja może ustanawiać i przyznawać własne świadczenia pieniężne w granicach celów statutowych, posiadanych środków oraz obowiązujących przepisów. Warunki przyznania, wysokość, okres, sposób wypłaty i zasady weryfikacji powinny wynikać z właściwego regulaminu.
+Fundacja ustanawia i przyznaje świadczenie pielęgnacyjne w ramach celów statutowych, finansując je ze swoich środków. Warunki przyznania, wysokość, okres, sposób wypłaty i zasady weryfikacji określa właściwy regulamin.
 
 Świadczenie pielęgnacyjne jest ustanawiane i finansowane przez Fundację na podstawie statutu i regulaminu. Dokumentacja przyznania świadczenia, ocena Kolegium, formularz ARIA-Z oraz potwierdzenia wypłat tworzą spójny materiał służący wykazaniu sytuacji zdrowotnej, funkcjonalnej i opiekuńczej beneficjenta.
 
@@ -622,7 +622,7 @@ Po otrzymaniu tych dokumentów należy wykonać audyt paragraf po paragrafie i w
 
 - [ ] Zmienić kategoryczne sformułowanie o art. 62 ust. 3 pkt 1 na opis wymagający wykładni i oceny konkretnego przypadku.
 - [ ] Dodać art. 76 k.p.a. i rozróżnić dokument prywatny od dokumentu urzędowego.
-- [ ] Wyraźnie oddzielić ustawowy zasiłek pielęgnacyjny od własnego świadczenia Fundacji.
+- [ ] Konsekwentnie stosować nazwę „świadczenie pielęgnacyjne” dla świadczenia przyznawanego przez Fundację oraz określenie „przydzielenie zasiłku pielęgnacyjnego” w analizie art. 62 ust. 3 pkt 1.
 - [ ] Dodać zastrzeżenie, że kompetencje Kolegium muszą wynikać z aktualnego Statutu i regulaminu.
 - [ ] Nie wpisywać numerów paragrafów Statutu bez weryfikacji źródła.
 - [ ] Oznaczyć dokumenty Fundacji jako dokumenty własne Fundacji, bez sugerowania ich państwowego wystawienia.
