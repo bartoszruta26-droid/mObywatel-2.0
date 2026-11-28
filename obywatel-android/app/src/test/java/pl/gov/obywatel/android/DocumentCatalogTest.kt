@@ -29,6 +29,38 @@ class DocumentCatalogTest {
         assertTrue(stateIds.all { id -> documentDisplayOptions.any { it.first == id } })
     }
 
+
+    @Test
+    fun nobleTitleCertificatesAndLegitimaciesHaveGenealogicalEvidenceFieldsAndFamilyRoutes() {
+        val expectedTitles = setOf(
+            "Zaświadczenie o udokumentowanym tytule szlacheckim",
+            "Zaświadczenie o pochodzeniu szlacheckim",
+            "Świadectwo genealogiczne rodu szlacheckiego",
+            "Zaświadczenie o linii sukcesji i następstwie tytułu",
+            "Zaświadczenie o herbie i tradycji heraldycznej Rodu",
+            "Legitymacja szlachecka",
+            "Legitymacja tytułu książęcego",
+            "Legitymacja tytułu hrabiowskiego",
+            "Legitymacja tytułu wicehrabiowskiego",
+            "Legitymacja tytułu baronowskiego",
+            "Legitymacja tytułu baronetowskiego",
+            "Legitymacja tytułu rycerskiego",
+            "Legitymacja szlachcica / szlachcianki",
+            "Rejestr tytułów, linii sukcesji i dokumentów heraldycznych"
+        )
+        val nobleDocuments = familyEntityGraphicDocumentTargets().filter { (_, title) -> title in expectedTitles }
+        assertEquals(expectedTitles, nobleDocuments.map { it.second }.toSet())
+        nobleDocuments.forEach { (id, title) ->
+            assertTrue("Brak kafelka dla $title", documentDisplayOptions.any { it.first == id })
+            assertEquals("Dokument $title musi należeć do grupy rodowej", "Służba rodowa", documentVisibilityGroup(id))
+            assertEquals("Brak trasy dla $title", DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+            val labels = familyEntityGraphicDocumentFields(id).map { it.second }
+            assertTrue("Brak pól edycyjnych dla $title", labels.isNotEmpty())
+            assertTrue("Brak identyfikacji tytułu dla $title", labels.any { it.contains("tytuł", ignoreCase = true) || it.contains("stopień", ignoreCase = true) })
+            assertTrue("Brak źródła lub podstawy dla $title", labels.any { it.contains("źródł", ignoreCase = true) || it.contains("podstaw", ignoreCase = true) })
+        }
+    }
+
     @Test
     fun groupOrderDoesNotContainDuplicates() {
         assertEquals(documentVisibilityGroupOrder.size, documentVisibilityGroupOrder.toSet().size)
@@ -166,7 +198,7 @@ class DocumentCatalogTest {
             assertTrue("Brak pól wystawcy, organu, procedury lub wzoru dla $id",
                 schema.map { it.key }.containsAll(workflowKeys))
         }
-        assertEquals(15, existingGroups.size)
+        assertEquals(14, existingGroups.size)
         val passportFields = documentEditorFieldDefinitions("holy_see_passport_service").map { it.key }.toSet()
         assertTrue(passportFields.containsAll(setOf("passportTypeCode", "passportTypeDescription", "issuingEntity")))
         val passportCodes = documentEditorFieldDefinitions("vatican_passport_ordinary").associate { it.key to it.placeholder }
@@ -268,22 +300,22 @@ class DocumentCatalogTest {
 
 
     @Test
-    fun selfDeterminationDocumentsHaveSafetyBoundariesAndEditablePreviewFields() {
-        val expected = setOf("common_rights_self_determination_declaration", "common_rights_self_limitation", "common_rights_third_party_safeguards", "common_rights_accessibility_needs", "common_rights_faith_conscience_declaration", "common_rights_declaration_of_will", "common_rights_nonparliamentary_mandate", "common_rights_civil_service_legitimacy", "common_rights_personal_integrity_certificate")
-        expected.forEach { id ->
-            assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
-            assertTrue("Missing tile: $id", documentDisplayOptions.any { it.first == id })
-            val fields = officialGraphicDocumentFields(id)
-            assertTrue("Missing form fields: $id", fields.isNotEmpty())
-            val previewFields = credentialFieldOptions(id).toMap()
-            fields.forEach { (key, label) -> assertEquals(label, previewFields[key]) }
+        fun selfDeterminationDocumentsHaveSafetyBoundariesAndEditablePreviewFields() {
+            val expected = setOf("common_rights_self_determination_declaration", "common_rights_self_limitation", "common_rights_third_party_safeguards", "common_rights_accessibility_needs", "common_rights_faith_conscience_declaration", "common_rights_declaration_of_will", "common_rights_nonparliamentary_mandate", "common_rights_civil_service_legitimacy", "common_rights_personal_integrity_certificate")
+            expected.forEach { id ->
+                assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+                assertTrue("Missing tile: $id", documentDisplayOptions.any { it.first == id })
+                val fields = officialGraphicDocumentFields(id)
+                assertTrue("Missing form fields: $id", fields.isNotEmpty())
+                val previewFields = credentialFieldOptions(id).toMap()
+                fields.forEach { (key, label) -> assertEquals(label, previewFields[key]) }
+            }
+            val statement = officialDocTypes.first { it.id == "common_rights_declaration_of_will" }
+            assertTrue(statement.note.contains("art. 233"))
+            assertTrue(statement.note.contains("przepis szczególny"))
+            assertTrue(officialDocTypes.first { it.id == "common_rights_third_party_safeguards" }.fields.any { it.contains("osoby trzecie") })
+            assertTrue(officialDocTypes.first { it.id == "common_rights_accessibility_needs" }.fields.any { it.contains("znaczny") })
         }
-        val statement = officialDocTypes.first { it.id == "common_rights_declaration_of_will" }
-        assertTrue(statement.note.contains("art. 233"))
-        assertTrue(statement.note.contains("przepis szczególny"))
-        assertTrue(officialDocTypes.first { it.id == "common_rights_third_party_safeguards" }.fields.any { it.contains("osoby trzecie") })
-        assertTrue(officialDocTypes.first { it.id == "common_rights_accessibility_needs" }.fields.any { it.contains("znaczny") })
-    }
-
-
+    
+    
 }
