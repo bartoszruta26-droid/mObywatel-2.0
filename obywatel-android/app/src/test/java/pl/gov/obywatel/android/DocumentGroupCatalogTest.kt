@@ -174,4 +174,15 @@ class DocumentGroupCatalogTest {
         }
     
     
+
+    @Test
+    fun integratedDeclarationOfWillHasAVisibleDocumentRouteInTheCommonRightsGroup() {
+        val id = "common_rights_integrated_declaration_of_will"
+        assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+        assertTrue(documentDisplayOptions.any { it.first == id })
+        assertTrue(officialGraphicDocumentFields(id).size >= 30)
+        assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+    }
+
+
 }
