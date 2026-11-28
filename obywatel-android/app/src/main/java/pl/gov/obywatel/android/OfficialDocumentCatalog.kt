@@ -346,7 +346,7 @@ internal val officialDocTypes = listOf(
         "Deklarowany mandat społeczny / nieparlamentarny — rodzaj, podmiot powierzający, dokument źródłowy, data, zakres i ograniczenia; jeśli dotyczy",
         "Nazwa inicjatywy / NGO / wspólnoty / organizacji oraz rola osoby — jeśli dotyczy",
         "Zakres reprezentacji i wyraźne wyłączenie kompetencji, których nie potwierdza dokument źródłowy",
-        "Zasady poszanowania praw, wolności, godności, prywatności i bezpieczeństwa osób trzecich",
+        "Zasady poszanowania praw osób trzecich, ich wolności, godności, prywatności i bezpieczeństwa",
         "Ocena ryzyka szkody oraz środki zapobiegawcze i zasady reagowania na zagrożenie",
         "Zasady dobrowolnego udziału innych osób, ich zgody i możliwości wycofania się",
         "Zasady pokojowego działania, powstrzymania się od przemocy, gróźb, nękania, przymusu i samowoli",
