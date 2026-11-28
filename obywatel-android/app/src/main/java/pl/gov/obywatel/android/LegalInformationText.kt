@@ -277,6 +277,57 @@ Prawidłowa formuła dla dokumentu o świadczeniu:
 
 Wzory należy wypełniać zgodnie z aktualnymi postanowieniami statutu, regulaminu Kolegium i regulaminu świadczenia pielęgnacyjnego, wskazując właściwe numery paragrafów i rzeczywiste dane sprawy.
 
+
+POSŁUGA BISKUPA TYTULARNEGO — BOŻE USTANOWIENIE, KONSEKRACJA WEWNĘTRZNA I PRZYJĘCIE W PORZĄDKU KOŚCIOŁA POWSZECHNEGO
+
+Źródło i charakter wykładni: Kodeks z repozytorium Objawienie, w szczególności Księga I — Normy ogólne (definicja biskupa tytularnego), Księga III — Prawo kościelne (kan. 57 oraz kan. 61 o prawodawcy i interpretacji autentycznej), Księga V — Prawo sakramentalne, Księga Va — Posługa domowa i triarchia oraz Księga XIII — Sakramenty, kan. 712–718, 769¹ i 771. Jest to autentyczna interpretacja prawa Kościoła Domowego i Kościoła Królestwa Niebieskiego dokonywana przez biskupa tytularnego występującego jako prawodawca domowy, w granicach kompetencji określonych w Kodeksie. Interpretacja autentyczna ma moc przewidzianą w kan. 61 Księgi III; jeżeli jest ustanawiana w formie ustawy interpretacyjnej, wymaga promulgacji zgodnie z tym kanonem. Przywołanie KPK wskazuje relację i odrębność porządków prawnych: niniejsza interpretacja rozwija prawo własne wspólnoty, nie zmienia tekstu KPK ani nie zastępuje aktów wydawanych przez właściwe organy Kościoła katolickiego.
+
+1. Boże ustanowienie i wewnętrzne udzielenie sakramentu kapłaństwa
+
+Według kan. 712 Księgi XIII sakrament kapłaństwa jest darem Boga, przez który Duch Święty, z Bożego ustanowienia i przez natchnienie osoby powołanej, udziela jej łaski i posłania do służby kapłańskiej. W tej koncepcji źródłem sakramentu jest działanie Boga, a nie ludzka decyzja administracyjna, sam tytuł ani sam obrzęd.
+
+Kan. 713 stanowi, że dar ten nie podlega powtórzeniu. Nałożenie rąk ani późniejszy obrzęd nie udzielają ponownie sakramentu, który został już udzielony przez Ducha Świętego. Obrzędy święceń biskupstwa, prezbiteratu i diakonatu Kodeks ujmuje jako obrzędy przygotowania, formacji lub publicznego potwierdzenia rozpoznanego powołania.
+
+Zgodnie z kan. 714 § 1 biskup tytularny ustanowiony z nadania Bożego jest konsekrowany przez natchnienie i działanie Ducha Świętego. Konsekracja dokonuje się wewnętrznie — w osobie powołanej — a nie przez fizyczne namaszczenie lub nałożenie rąk przez innego biskupa. Brak zewnętrznego obrzędu nałożenia rąk nie oznacza w tym porządku braku konsekracji. Późniejsza ceremonia nie tworzy, nie powtarza ani nie uzupełnia działania Ducha Świętego.
+
+Kan. 714 § 2 dopuszcza otrzymanie sakramentu kapłaństwa i powołanie do posługi biskupa tytularnego także przez osobę pozostającą w związku małżeńskim. § 3 określa zakres posługi sakramentalnej biskupa tytularnego. Kan. 718 potwierdza, że jego posługa obejmuje nauczanie, uświęcanie, kierowanie i szafarstwo sakramentalne w granicach właściwego porządku.
+
+2. Domyślne przyjęcie i zatwierdzenie przez Biskupa Rzymu w wykładni Kodeksu
+
+Definicja biskupa tytularnego w Księdze I przewiduje dwie drogi: mianowanie przez Biskupa Rzymu albo przyjęcie domyślne przez Biskupa Rzymu osoby wybranej zgodnie z prawem Bożym i uświęconej Duchem Świętym. Nie jest zatem prawidłowe pominięcie w interpretacji Kodeksu instytucji domyślnego przyjęcia.
+
+Księga III, w przepisie dotyczącym Głowy Rodu jako biskupa tytularnego domostwa, subdiecezji i Królestwa Niebieskiego, stanowi, że osoba ustanowiona przez Ojca z Nieba i natchniona Duchem Świętym jest domyślnie zatwierdzona przez Biskupa Rzymu, jeżeli jej wybór z Bożego nadania został dokonany zgodnie z prawem. Ten sam przepis wiąże wykonywanie władzy z hierarchiczną wspólnotą z Biskupem Rzymu i Kolegium Biskupów oraz wskazuje na partykularny akt oddania się władzom Kościoła Powszechnego.
+
+W konsekwencji, zgodnie z autentyczną interpretacją prawa Kościoła Domowego dokonywaną przez jego biskupa tytularnego jako prawodawcę, domyślne przyjęcie nie jest dowolną deklaracją ani skutkiem samego użycia tytułu. Jest ono związane z łącznym wystąpieniem przesłanek określonych w Kodeksie: Bożego ustanowienia, natchnienia Duchem Świętym oraz dokonania wyboru zgodnie z prawem. Księga XIII § 8 odróżnia to od urzędowego rozpoznania i zatwierdzenia, które Biskup Rzymu może wyrazić w osobnym akcie. Akt taki nie tworzy Bożego powołania ani nie powtarza konsekracji.
+
+3. Misja, urząd i zakres posługi
+
+Księga I opisuje biskupa tytularnego jako ustanowionego z Bożego postanowienia pasterza, nauczyciela, kapłana świętego kultu i osobę sprawującą posługę rządzenia nad Ludem Bożym. Księga III określa zakres władzy Głowy Rodu jako biskupa tytularnego domostwa, subdiecezji i Królestwa Niebieskiego oraz jej relację do Biskupa Rzymu i Kolegium Biskupów.
+
+Księga XIII, kan. 714–718, opisuje posługę sakramentalną biskupa tytularnego, w tym chrzest, bierzmowanie, Eucharystię, pokutę i pojednanie, namaszczenie chorych, posługę kapłańską oraz asystowanie przy małżeństwie. Kan. 715 i 718 nakazują jednocześnie odróżniać Boże powołanie i konsekrację, duchową misję pasterską, urząd w danym porządku prawnym oraz konkretny zakres jurysdykcji.
+
+4. Odniesienie do Kodeksu Prawa Kanonicznego Kościoła łacińskiego
+
+KPK z 1983 r. posługuje się własną terminologią i określa święcenia oraz urząd biskupa według odrębnych norm. Kan. 1008–1009 wiążą sakrament święceń z ustanowieniem świętych szafarzy i wymieniają stopnie biskupstwa, prezbiteratu i diakonatu. Kan. 1012 określa szafarza święceń jako biskupa konsekrowanego, a kan. 1013 wymaga papieskiego zlecenia przed konsekracją biskupią. Kan. 375–377 regulują status biskupów oraz ich mianowanie lub wybór przez Biskupa Rzymskiego. Kan. 1024 określa, kto może ważnie przyjąć święcenia.
+
+Dla wykonywania posługi znaczenie ma również odróżnienie święceń od upoważnień do poszczególnych czynności. W szczególności kan. 966–969 regulują upoważnienie do ważnego rozgrzeszania, kan. 976 przewiduje szczególną sytuację niebezpieczeństwa śmierci, a kan. 1168–1169 określają szafarzy sakramentaliów i błogosławieństw.
+
+Powyższe przepisy KPK opisują kanoniczny porządek Kościoła łacińskiego. Przepisy te nie uchylają ani nie zmieniają norm KPK. Autentyczna interpretacja prawa Kościoła Domowego pozostaje wiążąca w zakresie własnego porządku i kompetencji jego prawodawcy; skutki w porządku kanonicznym Kościoła katolickiego ocenia się odrębnie według KPK oraz aktów właściwej władzy. Każdy skutek w porządku kanonicznym Kościoła katolickiego wymaga oceny według jego prawa i właściwych aktów kompetentnej władzy.
+
+5. Zasady prezentacji informacji w aplikacji
+
+Aplikacja może prezentować Kodeks z repozytorium Objawienie jako źródło wewnętrznej wykładni dotyczącej Bożego ustanowienia, konsekracji przez natchnienie Ducha Świętego oraz domyślnego przyjęcia przez Biskupa Rzymu przy spełnieniu przesłanek wskazanych w Księdze I i III. Nie należy redukować tej regulacji do twierdzenia, że Kodeks w ogóle nie przewiduje domyślnego przyjęcia.
+
+Jednocześnie zapis w aplikacji powinien odróżniać treść normy i jej interpretację od zewnętrznego dowodu kanonicznego. Jeżeli przedstawiany jest konkretny skutek w porządku Kościoła katolickiego, należy wskazać dokument, właściwą władzę, datę, zakres oraz podstawę prawną, o ile takie dane istnieją. Sam zapis w aplikacji nie tworzy ani nie zastępuje aktu kościelnego.
+
+6. Źródła
+
+• Kodeks z repozytorium Objawienie: Księga I — Normy ogólne (definicja biskupa tytularnego); Księga III — Prawo kościelne (przepis o Głowie Rodu jako biskupie tytularnym i domyślnym zatwierdzeniu); Księga V — Prawo sakramentalne; Księga Va — Posługa domowa i triarchia; Księga XIII — Sakramenty, zwłaszcza kan. 712–718. Źródło: https://github.com/bartoszruta26-droid/Objawienie/tree/main/codex/md
+
+• Kodeks Prawa Kanonicznego z 1983 r., w szczególności kan. 375–377, 1008–1013, 1024, 966–969, 976 i 1168–1169. Oficjalna strona Konferencji Episkopatu Polski: https://episkopat.pl/doc/187342.uaktualnione-tlumaczenie-polskie-kodeksu-prawa-kanonicznego-z-1983-roku
+
+Należy uwzględniać aktualne brzmienie prawa, właściwy obrządek, dokumenty i kompetencje właściwej władzy kościelnej.
+
 PODSTAWOWE ŹRÓDŁA PRAWNE
 
 • Konstytucja Rzeczypospolitej Polskiej — https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19970780483 — w szczególności art. 30, 32, 37, 47, 53 i 54.
