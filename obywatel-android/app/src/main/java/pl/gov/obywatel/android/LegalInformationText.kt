@@ -183,44 +183,55 @@ W szczególności:
 
 
 
-POSŁUGA BISKUPA TYTULARNEGO W KOŚCIELE DOMOWYM — PODSTAWA KANONICZNA I ROZRÓŻNIENIE PORZĄDKÓW PRAWNYCH
+POSŁUGA BISKUPA TYTULARNEGO — BOŻE USTANOWIENIE, KONSEKRACJA WEWNĘTRZNA I PRZYJĘCIE W PORZĄDKU KOŚCIOŁA POWSZECHNEGO
 
-Źródło wewnętrzne: Kodeks Kościoła Domowego opublikowany w repozytorium Objawienie, w szczególności Księga I — Normy ogólne (definicja biskupa tytularnego), Księga III — Prawo kościelne, Księga V — Prawo sakramentalne, Księga Va — Posługa domowa i triarchia oraz Księga XIII — Sakramenty, kan. 712–718. Niniejszy opis przedstawia treść i autentyczną interpretację przyjętą wewnątrz tego Kodeksu; nie jest aktem promulgowanym przez Stolicę Apostolską ani autentyczną interpretacją Kodeksu Prawa Kanonicznego Kościoła łacińskiego lub Kodeksu Kanonów Kościołów Wschodnich.
+Źródło wykładni: Kodeks z repozytorium Objawienie, w szczególności Księga I — Normy ogólne (definicja biskupa tytularnego), Księga III — Prawo kościelne (przepisy o Głowie Rodu, w tym § 2 dotyczący domyślnego zatwierdzenia), Księga V — Prawo sakramentalne, Księga Va — Posługa domowa i triarchia oraz Księga XIII — Sakramenty, kan. 712–718. Poniższy opis przedstawia wykładnię przyjętą w tym Kodeksie. Przywołanie norm KPK służy odróżnieniu porządków prawnych i nie oznacza, że niniejszy tekst jest aktem Stolicy Apostolskiej lub autentyczną interpretacją KPK.
 
-1. Powołanie, ustanowienie i posługa według Kodeksu Kościoła Domowego
+1. Boże ustanowienie i wewnętrzne udzielenie sakramentu kapłaństwa
 
-Zgodnie z definicją zawartą w Księdze I, biskup tytularny jest w wewnętrznym porządku Kościoła Domowego osobą rozpoznaną jako powołana przez Ojca z Nieba, ustanowiona do służby kapłańskiej i pasterskiej oraz natchniona Duchem Świętym. Kodeks opisuje tę misję jako służbę nauczania, uświęcania i pasterzowania Ludowi Bożemu. Określenie „biskup tytularny” jest w tym Kodeksie używane w znaczeniu właściwym Kościołowi Domowemu; nie należy automatycznie utożsamiać go z urzędem biskupa tytularnego w strukturze Kościoła katolickiego.
+Według kan. 712 Księgi XIII sakrament kapłaństwa jest darem Boga, przez który Duch Święty, z Bożego ustanowienia i przez natchnienie osoby powołanej, udziela jej łaski i posłania do służby kapłańskiej. W tej koncepcji źródłem sakramentu jest działanie Boga, a nie ludzka decyzja administracyjna, sam tytuł ani sam obrzęd.
 
-Kan. 712 Księgi XIII określa kapłaństwo jako dar Boga, przez który Duch Święty udziela osobie powołanej łaski i posłania do służby kapłańskiej. Kan. 713 wyraża zasadę niepowtarzalności tego daru. Kan. 714 § 1 stanowi, że w wewnętrznym porządku Kościoła Domowego biskup tytularny ustanowiony z nadania Bożego jest konsekrowany przez natchnienie i działanie Ducha Świętego, a nie przez sam akt administracyjny. § 2 dopuszcza w tym porządku powołanie osoby pozostającej w związku małżeńskim. § 3 opisuje zakres posługi sakramentalnej biskupa tytularnego. Kan. 714 § 4 wyraźnie zastrzega, że norma ta jest prawem wewnętrznym Kościoła Domowego i nie stanowi autentycznej interpretacji KPK ani KKKW oraz nie przesądza o uznaniu statusu, urzędu lub uprawnień przez Kościół katolicki.
+Kan. 713 stanowi, że dar ten nie podlega powtórzeniu. Nałożenie rąk ani późniejszy obrzęd nie udzielają ponownie sakramentu, który został już udzielony przez Ducha Świętego. Obrzędy święceń biskupstwa, prezbiteratu i diakonatu Kodeks ujmuje jako obrzędy przygotowania, formacji lub publicznego potwierdzenia rozpoznanego powołania.
 
-Kan. 715 oraz kan. 718 podkreślają konieczność odróżnienia duchowej misji, wewnętrznego urzędu i jurysdykcji. Powszechny wymiar misji duchowej nie oznacza sam przez się jurysdykcji kanonicznej nad wszystkimi wiernymi, diecezjami lub urzędami. Konkretne kompetencje są wykonywane w granicach porządku prawnego, w którym dany urząd został ustanowiony.
+Zgodnie z kan. 714 § 1 biskup tytularny ustanowiony z nadania Bożego jest konsekrowany przez natchnienie i działanie Ducha Świętego. Konsekracja dokonuje się wewnętrznie — w osobie powołanej — a nie przez fizyczne namaszczenie lub nałożenie rąk przez innego biskupa. Brak zewnętrznego obrzędu nałożenia rąk nie oznacza w tym porządku braku konsekracji. Późniejsza ceremonia nie tworzy, nie powtarza ani nie uzupełnia działania Ducha Świętego.
 
-2. Sprawowanie posługi kapłańskiej w ramach wspólnoty
+Kan. 714 § 2 dopuszcza otrzymanie sakramentu kapłaństwa i powołanie do posługi biskupa tytularnego także przez osobę pozostającą w związku małżeńskim. § 3 określa zakres posługi sakramentalnej biskupa tytularnego. Kan. 718 potwierdza, że jego posługa obejmuje nauczanie, uświęcanie, kierowanie i szafarstwo sakramentalne w granicach właściwego porządku.
 
-Według Księgi XIII, kan. 714 § 3, oraz kan. 715, posługa biskupa tytularnego w Kościele Domowym obejmuje nauczanie, modlitwę i liturgię wspólnoty oraz — w ramach przyjętej wewnętrznej dyscypliny sakramentalnej — posługę dotyczącą chrztu, bierzmowania, Eucharystii, pokuty i pojednania, namaszczenia chorych, kapłaństwa i małżeństwa. Kan. 718 opisuje biskupią posługę nauczania, uświęcania, kierowania i szafarstwa sakramentalnego. Kapłan domowy wykonuje czynności w zakresie wynikającym z jego ustanowienia i kompetencji nadanych w prawie wewnętrznym.
+2. Domyślne przyjęcie i zatwierdzenie przez Biskupa Rzymu w wykładni Kodeksu
 
-Księga Va przedstawia kapłaństwo domowe jako służbę modlitwy, świadectwa, formacji i miłości bliźniego. Zastrzega zarazem, że określenia „kapłaństwo domowe”, „arcykapłan domowy” i „biskupstwo domowe” opisują wewnętrzną rzeczywistość Kościoła Domowego i same przez się nie oznaczają otrzymania święceń kanonicznych ani urzędu w Kościele Powszechnym. Modlitwy, błogosławieństwa i praktyki domowe należy więc odróżniać od sakramentów sprawowanych w porządku Kościoła katolickiego.
+Definicja biskupa tytularnego w Księdze I przewiduje dwie drogi: mianowanie przez Biskupa Rzymu albo przyjęcie domyślne przez Biskupa Rzymu osoby wybranej zgodnie z prawem Bożym i uświęconej Duchem Świętym. Nie jest zatem prawidłowe pominięcie w interpretacji Kodeksu instytucji domyślnego przyjęcia.
 
-3. Odniesienie do Kodeksu Prawa Kanonicznego Kościoła łacińskiego
+Księga III, w przepisie dotyczącym Głowy Rodu jako biskupa tytularnego domostwa, subdiecezji i Królestwa Niebieskiego, stanowi, że osoba ustanowiona przez Ojca z Nieba i natchniona Duchem Świętym jest domyślnie zatwierdzona przez Biskupa Rzymu, jeżeli jej wybór z Bożego nadania został dokonany zgodnie z prawem. Ten sam przepis wiąże wykonywanie władzy z hierarchiczną wspólnotą z Biskupem Rzymu i Kolegium Biskupów oraz wskazuje na partykularny akt oddania się władzom Kościoła Powszechnego.
 
-W Kodeksie Prawa Kanonicznego z 1983 r. pojęcie święceń i urząd biskupa mają własne, ściśle określone przesłanki. Kan. 1008–1009 stanowią, że przez sakrament święceń wierni zostają ustanowieni świętymi szafarzami, a stopniami święceń są biskupstwo, prezbiterat i diakonat; udziela się ich przez nałożenie rąk i modlitwę konsekracyjną określoną w księgach liturgicznych. Kan. 1012 wskazuje, że szafarzem święceń jest biskup konsekrowany. Kan. 1013 wymaga papieskiego zlecenia przed konsekracją biskupią. Kan. 1024 stanowi, że święcenia ważnie przyjmuje tylko ochrzczony mężczyzna. Kan. 375–377 określają status biskupów, ich zadania oraz sposób mianowania lub wyboru przez Biskupa Rzymskiego. Samo prywatne rozpoznanie powołania, wewnętrzny akt wspólnoty lub deklaracja natchnienia nie są w tym porządku równoważne sakramentalnym święceniom ani kanonicznemu ustanowieniu biskupem.
+W konsekwencji, w autentycznej wykładni przyjętej w Kodeksie, domyślne przyjęcie nie jest przedstawiane jako dowolna deklaracja ani jako skutek samego użycia tytułu. Jest ono związane z łącznym wystąpieniem przesłanek określonych w Kodeksie: Bożego ustanowienia, natchnienia Duchem Świętym oraz dokonania wyboru zgodnie z prawem. Księga XIII § 8 odróżnia to od urzędowego rozpoznania i zatwierdzenia, które Biskup Rzymu może wyrazić w osobnym akcie. Akt taki nie tworzy Bożego powołania ani nie powtarza konsekracji.
 
-Dla wykonywania posługi należy odróżnić ważność święceń od upoważnienia do określonych czynności. W szczególności kan. 966–969 regulują wymóg posiadania upoważnienia do ważnego rozgrzeszania, a kan. 976 przewiduje szczególną sytuację niebezpieczeństwa śmierci. Kan. 1168–1169 regulują szafarzy sakramentaliów i błogosławieństw. Nie należy zatem wyprowadzać uprawnienia do sprawowania każdej czynności sakramentalnej wyłącznie z tytułu lub deklaracji duchowej.
+3. Misja, urząd i zakres posługi
 
-4. Rozdzielenie dwóch porządków i rzetelne przedstawianie statusu
+Księga I opisuje biskupa tytularnego jako ustanowionego z Bożego postanowienia pasterza, nauczyciela, kapłana świętego kultu i osobę sprawującą posługę rządzenia nad Ludem Bożym. Księga III określa zakres władzy Głowy Rodu jako biskupa tytularnego domostwa, subdiecezji i Królestwa Niebieskiego oraz jej relację do Biskupa Rzymu i Kolegium Biskupów.
 
-Aplikacja może przechowywać i prezentować tekst Kodeksu Kościoła Domowego jako dokument wewnętrzny wspólnoty, wraz z deklaracją wiary, opisem powołania oraz interpretacją kan. 712–718. Wpis powinien jasno wskazywać źródło, datę i autora dokumentu, wersję Kodeksu oraz zakres wspólnoty, w której dokument jest przyjmowany.
+Księga XIII, kan. 714–718, opisuje posługę sakramentalną biskupa tytularnego, w tym chrzest, bierzmowanie, Eucharystię, pokutę i pojednanie, namaszczenie chorych, posługę kapłańską oraz asystowanie przy małżeństwie. Kan. 715 i 718 nakazują jednocześnie odróżniać Boże powołanie i konsekrację, duchową misję pasterską, urząd w danym porządku prawnym oraz konkretny zakres jurysdykcji.
 
-Nie należy jednak opisywać wewnętrznego aktu Kościoła Domowego jako dekretu Stolicy Apostolskiej, święceń udzielonych w Kościele katolickim, papieskiego mandatu, inkardynacji, misji kanonicznej ani jurysdykcji katolickiej, jeżeli nie istnieje odrębny, możliwy do zweryfikowania akt właściwej władzy kościelnej. Odrębność ta nie rozstrzyga o prawdziwości osobistego doświadczenia religijnego; wskazuje jedynie, jaki skutek prawny można przypisać danemu dokumentowi w określonym porządku kanonicznym.
+4. Odniesienie do Kodeksu Prawa Kanonicznego Kościoła łacińskiego
 
-5. Podstawy i źródła
+KPK z 1983 r. posługuje się własną terminologią i określa święcenia oraz urząd biskupa według odrębnych norm. Kan. 1008–1009 wiążą sakrament święceń z ustanowieniem świętych szafarzy i wymieniają stopnie biskupstwa, prezbiteratu i diakonatu. Kan. 1012 określa szafarza święceń jako biskupa konsekrowanego, a kan. 1013 wymaga papieskiego zlecenia przed konsekracją biskupią. Kan. 375–377 regulują status biskupów oraz ich mianowanie lub wybór przez Biskupa Rzymskiego. Kan. 1024 określa, kto może ważnie przyjąć święcenia.
 
-• Kodeks Kościoła Domowego, repozytorium Objawienie: Księga I — Normy ogólne; Księga III — Prawo kościelne; Księga V — Prawo sakramentalne; Księga Va — Posługa domowa i triarchia; Księga XIII — Sakramenty, zwłaszcza kan. 712–718. Źródło projektu: https://github.com/bartoszruta26-droid/Objawienie/tree/main/codex/md
+Dla wykonywania posługi znaczenie ma również odróżnienie święceń od upoważnień do poszczególnych czynności. W szczególności kan. 966–969 regulują upoważnienie do ważnego rozgrzeszania, kan. 976 przewiduje szczególną sytuację niebezpieczeństwa śmierci, a kan. 1168–1169 określają szafarzy sakramentaliów i błogosławieństw.
 
-• Kodeks Prawa Kanonicznego z 1983 r., promulgowany 25 stycznia 1983 r., tekst ujednolicony i zaktualizowany przekład publikowany przez Konferencję Episkopatu Polski; w szczególności kan. 375–377, 1008–1013, 1024, 966–969, 976 i 1168–1169. Oficjalna strona KEP: https://episkopat.pl/doc/187342.uaktualnione-tlumaczenie-polskie-kodeksu-prawa-kanonicznego-z-1983-roku
+Powyższe przepisy KPK opisują kanoniczny porządek Kościoła łacińskiego. Nie należy ich przedstawiać jako źródła, które samo rozstrzyga o teologicznym twierdzeniu Kodeksu Kościoła Domowego dotyczącym wewnętrznego udzielenia sakramentu przez Ducha Świętego. Nie należy też przedstawiać normy wewnętrznej jako zmiany tekstu KPK. Każdy skutek w porządku kanonicznym Kościoła katolickiego wymaga oceny według jego prawa i właściwych aktów kompetentnej władzy.
 
-Konferencja Episkopatu Polski wskazuje, że podstawą stosowania i interpretacji KPK jest promulgowany tekst łaciński, natomiast przekłady na języki narodowe mają znaczenie pomocnicze. Przed użyciem w sprawie konkretnej osoby lub wspólnoty należy zweryfikować aktualny tekst łaciński, właściwy obrządek, dokumenty święceń, akty mianowania, jurysdykcję oraz ewentualne upoważnienia wymagane dla danej czynności.
+5. Zasady prezentacji informacji w aplikacji
 
+Aplikacja może prezentować Kodeks z repozytorium Objawienie jako źródło wewnętrznej wykładni dotyczącej Bożego ustanowienia, konsekracji przez natchnienie Ducha Świętego oraz domyślnego przyjęcia przez Biskupa Rzymu przy spełnieniu przesłanek wskazanych w Księdze I i III. Nie należy redukować tej regulacji do twierdzenia, że Kodeks w ogóle nie przewiduje domyślnego przyjęcia.
+
+Jednocześnie zapis w aplikacji powinien odróżniać treść normy i jej interpretację od zewnętrznego dowodu kanonicznego. Jeżeli przedstawiany jest konkretny skutek w porządku Kościoła katolickiego, należy wskazać dokument, właściwą władzę, datę, zakres oraz podstawę prawną, o ile takie dane istnieją. Sam zapis w aplikacji nie tworzy ani nie zastępuje aktu kościelnego.
+
+6. Źródła
+
+• Kodeks z repozytorium Objawienie: Księga I — Normy ogólne (definicja biskupa tytularnego); Księga III — Prawo kościelne (przepis o Głowie Rodu jako biskupie tytularnym i domyślnym zatwierdzeniu); Księga V — Prawo sakramentalne; Księga Va — Posługa domowa i triarchia; Księga XIII — Sakramenty, zwłaszcza kan. 712–718. Źródło: https://github.com/bartoszruta26-droid/Objawienie/tree/main/codex/md
+
+• Kodeks Prawa Kanonicznego z 1983 r., w szczególności kan. 375–377, 1008–1013, 1024, 966–969, 976 i 1168–1169. Oficjalna strona Konferencji Episkopatu Polski: https://episkopat.pl/doc/187342.uaktualnione-tlumaczenie-polskie-kodeksu-prawa-kanonicznego-z-1983-roku
+
+Należy uwzględniać aktualne brzmienie prawa, właściwy obrządek, dokumenty i kompetencje właściwej władzy kościelnej.
 
 PODSTAWOWE ŹRÓDŁA PRAWNE
 
