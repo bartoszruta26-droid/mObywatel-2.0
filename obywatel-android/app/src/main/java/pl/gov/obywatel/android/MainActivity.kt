@@ -877,7 +877,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
     else -> "Służba osobista"
 }
 internal val documentVisibilityGroupOrder = listOf(
-    "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
+    "Bez szczególnej formy prawnej", "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
     "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
     "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
