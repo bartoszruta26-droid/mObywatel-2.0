@@ -97,7 +97,7 @@ internal object GraphicDocumentCatalog {
         "church_minister_card", "missionary_identity", "professional",
         "professional_medical", "professional_education", "professional_therapeutic",
         "professional_other", "large_family", "blood_donor", "disability_card",
-        "ehic", "loyalty", "loyalty_cards", "profile"
+        "ehic", "foundation_care_member_card", "foundation_care_allowance_award", "loyalty_cards", "profile"
     )
 
     val definitions: List<GraphicDocumentDefinition> by lazy {
