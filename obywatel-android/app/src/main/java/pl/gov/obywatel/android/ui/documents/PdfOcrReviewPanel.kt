@@ -115,7 +115,8 @@ internal fun PdfOcrReviewPanel(
                             isProcessing = true
                             processingJob = scope.launch {
                                 try {
-                                    ImportedPdfDocumentProcessor(context.contentResolver).process(
+                                    withContext(Dispatchers.IO) {
+                                        ImportedPdfDocumentProcessor(context.contentResolver).process(
                                         uri = uri,
                                         displayName = displayName,
                                         pageNumbers = currentPage..currentPage
@@ -124,6 +125,7 @@ internal fun PdfOcrReviewPanel(
                                             completed = done
                                             total = count
                                             results.add(result)
+                                        }
                                         }
                                     }
                                 } catch (cancelled: CancellationException) {
@@ -147,7 +149,8 @@ internal fun PdfOcrReviewPanel(
                             isProcessing = true
                             processingJob = scope.launch {
                                 try {
-                                    ImportedPdfDocumentProcessor(context.contentResolver).process(
+                                    withContext(Dispatchers.IO) {
+                                        ImportedPdfDocumentProcessor(context.contentResolver).process(
                                         uri = uri,
                                         displayName = displayName,
                                         pageNumbers = 0 until pageCount
@@ -156,6 +159,7 @@ internal fun PdfOcrReviewPanel(
                                             completed = done
                                             total = count
                                             results.add(result)
+                                        }
                                         }
                                     }
                                 } catch (cancelled: CancellationException) {
