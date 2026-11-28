@@ -266,4 +266,24 @@ class DocumentCatalogTest {
         }
     }
 
+
+    @Test
+    fun selfDeterminationDocumentsHaveSafetyBoundariesAndEditablePreviewFields() {
+        val expected = setOf("common_rights_self_determination_declaration", "common_rights_self_limitation", "common_rights_third_party_safeguards", "common_rights_accessibility_needs", "common_rights_faith_conscience_declaration", "common_rights_declaration_of_will", "common_rights_nonparliamentary_mandate", "common_rights_civil_service_legitimacy", "common_rights_personal_integrity_certificate")
+        expected.forEach { id ->
+            assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+            assertTrue("Missing tile: $id", documentDisplayOptions.any { it.first == id })
+            val fields = officialGraphicDocumentFields(id)
+            assertTrue("Missing form fields: $id", fields.isNotEmpty())
+            val previewFields = credentialFieldOptions(id).toMap()
+            fields.forEach { (key, label) -> assertEquals(label, previewFields[key]) }
+        }
+        val statement = officialDocTypes.first { it.id == "common_rights_declaration_of_will" }
+        assertTrue(statement.note.contains("art. 233"))
+        assertTrue(statement.note.contains("przepis szczególny"))
+        assertTrue(officialDocTypes.first { it.id == "common_rights_third_party_safeguards" }.fields.any { it.contains("osoby trzecie") })
+        assertTrue(officialDocTypes.first { it.id == "common_rights_accessibility_needs" }.fields.any { it.contains("znaczny") })
+    }
+
+
 }
