@@ -30,7 +30,7 @@ class NonParliamentaryMandateInterpretationTest {
         assertTrue(text.contains("Dyspozytora Celu"))
         assertTrue(text.contains("wniosek do ministra"))
         assertTrue(text.contains("obywateli"))
-        assertTrue(text.contains("rozdzielną ewidencję"))
+        assertTrue(text.contains("Ewidencja powinna oddzielać"))
         assertTrue(text.contains("art. 29"))
     }
 
