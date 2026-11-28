@@ -502,6 +502,14 @@ private fun DocumentPreviewPane(document: ImportedDocument, modifier: Modifier =
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp)
                 )
+                if (document.mimeType.startsWith("image/")) {
+                    DocumentOcrReviewPanel(
+                        uri = document.uri,
+                        mimeType = document.mimeType,
+                        displayName = document.title,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
     }
