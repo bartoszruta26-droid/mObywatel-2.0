@@ -6,8 +6,8 @@ package pl.gov.obywatel.android.documentprocessing
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.content.FileProvider
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -17,8 +17,10 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class DocumentUriImageDecoderInstrumentedTest {
+    // Use the target application's context: the FileProvider authority is declared
+    // in the app manifest, not in the separate instrumentation-test APK.
     private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
+        get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun decodesContentUriImageWithBoundedDimensionsAndCallerOwnership() {
