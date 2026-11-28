@@ -21,6 +21,20 @@ class NonParliamentaryMandateInterpretationTest {
     }
 
     @Test
+    fun publicAuthorityAndPfcInterpretationCoversAppointmentGoalAndFunding() {
+        val text = PUBLIC_AUTHORITY_PFC_INTERPRETATION
+        assertTrue(text.length > 12_000)
+        assertTrue(text.contains("piastuna organu"))
+        assertTrue(text.contains("art. 9 pkt 1"))
+        assertTrue(text.contains("państwowego funduszu celowego"))
+        assertTrue(text.contains("Dyspozytora Celu"))
+        assertTrue(text.contains("wniosek do ministra"))
+        assertTrue(text.contains("obywateli"))
+        assertTrue(text.contains("rozdzielną ewidencję"))
+        assertTrue(text.contains("art. 29"))
+    }
+
+    @Test
     fun interpretationHasOfficialLegalSourceReferences() {
         val text = NON_PARLIAMENTARY_MANDATE_INTERPRETATION
         assertTrue(text.contains("https://www.sejm.gov.pl/prawo/konst/polski/1.htm"))
