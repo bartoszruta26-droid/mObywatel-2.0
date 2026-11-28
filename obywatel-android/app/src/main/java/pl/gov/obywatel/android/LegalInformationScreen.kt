@@ -59,7 +59,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
         showNonParliamentaryMandate = false
         showPublicAuthorityPfc = false
     }
-    BackHandler(enabled = !showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement && !showNonParliamentaryMandate) { onBack() }
+    BackHandler(enabled = !showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement && !showNonParliamentaryMandate && !showPublicAuthorityPfc) { onBack() }
 
     val displayedText = when {
         showCompanyFinancingAgreement -> markdownToDisplayText(COMPANY_FINANCING_AGREEMENT_TEXT)
@@ -113,7 +113,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                     modifier = Modifier.weight(1f).semantics { heading() }
                 )
             }
-            if (!showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement && !showNonParliamentaryMandate) {
+            if (!showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement && !showNonParliamentaryMandate && !showPublicAuthorityPfc) {
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { showNonParliamentaryMandate = true },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
