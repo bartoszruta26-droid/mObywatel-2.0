@@ -669,17 +669,634 @@ Poniższe źródła należy traktować jako podstawowy punkt odniesienia. Przed 
 - Orzeczenia sądów należy analizować z uwzględnieniem stanu prawnego i faktów konkretnej sprawy.
 - Wzory dokumentów Fundacji należy opierać na rzeczywistym Statucie i regulaminach, a nie na samych opisach funkcji aplikacji.
 
+
 ---
 
-## 16. Końcowa ocena audytowa
+## 16. Rozszerzona wykładnia konstytucyjna: Naród jako suweren, mandat przedstawicielski i mandat nieparlamentarny
 
-Obecny rozdział informacji prawnych stanowi użyteczną podstawę, ale wymaga dopracowania w zakresie art. 62 ust. 3 pkt 1 ustawy rehabilitacyjnej, art. 76 k.p.a. oraz rozróżnienia ustawowego zasiłku pielęgnacyjnego od świadczenia własnego Fundacji.
+### 16.1. Suwerenność Narodu jako zasada ustrojowa
 
-Najważniejszą zasadą dalszych prac powinno być jednoczesne zachowanie dwóch prawidłowych założeń:
+Punktem wyjścia jest art. 4 Konstytucji RP: władza zwierzchnia w Rzeczypospolitej Polskiej należy do Narodu, a Naród sprawuje ją przez swoich przedstawicieli lub bezpośrednio. Nie jest to wyłącznie deklaracja symboliczna. Jest to zasada ustrojowa, która wyznacza źródło legitymacji władzy publicznej, a zarazem nakazuje odczytywać ustrój w sposób uwzględniający podmiotowość obywateli, wspólnot i mechanizmów bezpośredniego udziału w sprawach publicznych.
 
-1. **Fundacja ma prawo do samodzielnej działalności statutowej**, w tym do organizowania pomocy, ustanawiania własnych organów, prowadzenia oceny beneficjentów i przyznawania własnych świadczeń – w granicach prawa i Statutu.
-2. **Skutek w systemie prawa publicznego wymaga odrębnej podstawy**, a jego zakres należy ustalać na podstawie konkretnego przepisu, jego wykładni i stanu faktycznego; nie wynika on wyłącznie z nazwy dokumentu ani z uchwały Fundacji.
+Wykładnię art. 4 należy łączyć z:
+- art. 1 Konstytucji – Rzeczpospolita Polska jest dobrem wspólnym wszystkich obywateli;
+- art. 2 – państwo jest demokratycznym państwem prawnym urzeczywistniającym zasady sprawiedliwości społecznej;
+- art. 7 – organy władzy publicznej działają na podstawie i w granicach prawa;
+- art. 8 – Konstytucja jest najwyższym prawem Rzeczypospolitej;
+- art. 10 – zasada podziału i równowagi władz;
+- art. 11 – wolność tworzenia i działania partii politycznych;
+- art. 12 – wolność tworzenia i działania zrzeszeń, ruchów obywatelskich, stowarzyszeń, fundacji i innych dobrowolnych zrzeszeń;
+- art. 30 i 32 – godność człowieka, równość i zakaz dyskryminacji;
+- art. 54, 57 i 58 – wolność wyrażania poglądów, pokojowych zgromadzeń i zrzeszania się;
+- art. 60 – równy dostęp obywateli korzystających z pełni praw publicznych do służby publicznej;
+- art. 61 – prawo do informacji o działalności organów władzy publicznej i osób pełniących funkcje publiczne;
+- art. 63 – prawo składania petycji, wniosków i skarg;
+- art. 67, 68 i 69 – zabezpieczenie społeczne, ochrona zdrowia i pomoc osobom z niepełnosprawnościami;
+- art. 82 – obowiązek wierności Rzeczypospolitej Polskiej oraz troski o dobro wspólne;
+- art. 83 – obowiązek przestrzegania prawa Rzeczypospolitej Polskiej;
+- art. 104 – konstytucyjny status posłów jako przedstawicieli Narodu;
+- art. 118 – inicjatywa ustawodawcza;
+- art. 125 – referendum ogólnokrajowe.
 
-Nie należy zatem ani pomniejszać prawnej samodzielności Fundacji, ani przypisywać jej automatycznie kompetencji organów państwowych. Prawidłowy audyt powinien wykazać rzeczywisty zakres autonomii Fundacji, zbadać możliwe skutki jej dokumentów oraz uczciwie opisać kwestie, których nie da się przesądzić bez Statutu, regulaminów i pełnej analizy art. 62.
+Takie odczytanie pokazuje, że dobro Narodu nie jest wyłącznie hasłem politycznym. Jest wartością ustrojową, która znajduje odzwierciedlenie w obowiązkach organów państwa, w prawach obywateli i w społecznych formach samoorganizacji.
 
-**Status audytu:** opracowanie wstępne, oparte na treści pliku aplikacji i wskazanych aktach prawnych; wymaga uzupełnienia o dokumenty wewnętrzne Fundacji i dalszą analizę orzecznictwa przed przyjęciem ostatecznej wykładni art. 62 ust. 3 pkt 1.
+### 16.2. Przedstawicielstwo Narodu i mandat parlamentarny
+
+Art. 104 ust. 1 Konstytucji stanowi, że posłowie są przedstawicielami Narodu i nie wiążą ich instrukcje wyborców. Ustawa z 9 maja 1996 r. o wykonywaniu mandatu posła i senatora w art. 1 ust. 1 nakazuje posłom i senatorom wykonywać mandat, kierując się dobrem Narodu. Art. 2 ustawy ustanawia obowiązek ślubowania, którego treść odwołuje się do sumiennego wykonywania obowiązków wobec Narodu, strzeżenia suwerenności Ojczyzny i dobra obywateli oraz przestrzegania porządku prawnego. Art. 3 wskazuje czynne uczestnictwo w pracach Sejmu, Senatu i Zgromadzenia Narodowego jako podstawowe prawo i obowiązek parlamentarzysty. <Źródła: Konstytucja RP, art. 4, 10, 104; ustawa o wykonywaniu mandatu posła i senatora, art. 1–6, tekst jednolity Dz.U. z 2026 r. poz. 1282.>
+
+Mandat parlamentarny jest zatem szczególną, konstytucyjnie i ustawowo ukształtowaną funkcją przedstawicielską. Ma określony sposób uzyskania, treść, czas trwania, zakres praw i obowiązków, zasady odpowiedzialności oraz ochronę właściwą dla wykonywania mandatu. Nie jest jedynie deklaracją moralną ani samą gotowością do służby. Jego źródłem są wybory i procedury określone w Konstytucji oraz ustawach.
+
+### 16.3. Mandat nieparlamentarny – konstrukcja społeczna i publiczna przyjmowana w koncepcji ARIA
+
+W koncepcji przedstawionej przez Fundatora pojęcie „mandatu nieparlamentarnego” oznacza odrębny rodzaj powołania do służby Narodowi i obywatelom, niewywodzący się z wyboru do Sejmu albo Senatu. Jego treścią jest odpowiedzialność za dobro wspólne, podejmowanie działań w interesie obywateli, inicjowanie przedsięwzięć społecznych, organizowanie pomocy oraz sprawowanie funkcji służebnej wobec Narodu.
+
+W tym znaczeniu mandat nieparlamentarny jest rozumiany jako:
+- powołanie do służby dobru narodowemu;
+- przyjęcie odpowiedzialności za konkretne dobro wspólne;
+- zobowiązanie do działania na rzecz obywateli;
+- samodzielne podejmowanie inicjatyw w ramach posiadanych kompetencji;
+- gotowość do występowania w obronie praw i godności człowieka;
+- organizowanie wspólnoty, instytucji i działań służących dobru społecznemu;
+- odpowiedzialność za uczciwe, jawne i rozliczalne wykonywanie powierzonych zadań.
+
+W języku audytu należy wyraźnie opisać, że jest to **autorska koncepcja mandatu służby Narodowi**, rozwijana w ramach obywatelskiej i społecznej aktywności Fundatora. Jej legitymacja moralna, społeczna lub organizacyjna może być wyrażana w deklaracji, akcie powołania, statucie, regulaminie, uchwale albo zobowiązaniu do służby. Taka konstrukcja może porządkować działalność Fundacji i określać etos osób pełniących w niej funkcje.
+
+Nie należy jednak utożsamiać tej koncepcji z formalnym mandatem posła w rozumieniu art. 104 Konstytucji ani z mandatem do reprezentowania państwa lub wydawania decyzji administracyjnych. Właściwe dla niej znaczenie polega na społecznej legitymacji, zobowiązaniu do służby i wykonywaniu konkretnych zadań w granicach prawa oraz umocowania organizacyjnego.
+
+### 16.4. Poseł z mandatem nieparlamentarnym – pojęcie używane w dokumentacji Fundatora
+
+W materiałach Fundatora może być używane określenie „poseł z mandatem nieparlamentarnym” lub „poseł z powołania” jako nazwa roli społecznej, służebnej i reprezentacyjnej w przyjętym przez niego porządku organizacyjnym. Należy je definiować przez treść obowiązków, a nie przez podobieństwo do tytułu konstytucyjnego.
+
+W tej koncepcji „poseł” oznacza osobę, która:
+1. przyjmuje powołanie do służby Narodowi i obywatelom;
+2. reprezentuje potrzeby i interesy powierzonych jej osób lub wspólnoty w granicach udzielonego umocowania;
+3. podejmuje działania służące dobru wspólnemu;
+4. przedstawia postulaty, wnioski i rozwiązania właściwym organom;
+5. organizuje działania pomocowe i społeczne;
+6. odpowiada za rzetelność i uczciwość wykonywanych zadań;
+7. nie wykorzystuje funkcji dla prywatnej korzyści;
+8. działa z poszanowaniem Konstytucji i ustaw.
+
+Konstytucyjny punkt odniesienia dla etosu tej służby stanowią art. 1, 4, 30, 32, 60, 63 i 82 Konstytucji, a także art. 1 ustawy o wykonywaniu mandatu posła i senatora, który wyraża zasadę kierowania się dobrem Narodu. W dokumentach należy jednak zaznaczyć, że odwołanie do tych zasad ma charakter wartościujący i programowy; nie oznacza uzyskania mandatu parlamentarnego, immunitetu, prawa głosu w Sejmie ani ustawowej kompetencji przedstawiciela organu państwa.
+
+### 16.5. Bezpośrednie sprawowanie władzy przez Suwerena – wykładnia i formy konstytucyjne
+
+Art. 4 ust. 2 Konstytucji stanowi, że Naród sprawuje władzę przez przedstawicieli lub bezpośrednio. Bezpośrednie formy sprawowania władzy są rozwijane między innymi przez:
+- referendum ogólnokrajowe – art. 125 Konstytucji;
+- referendum lokalne – art. 170 Konstytucji i ustawa o referendum lokalnym;
+- inicjatywę ustawodawczą grupy obywateli – art. 118 ust. 2 Konstytucji i ustawa o wykonywaniu inicjatywy ustawodawczej przez obywateli;
+- udział w wyborach i referendach – art. 62 Konstytucji oraz właściwe przepisy prawa wyborczego;
+- petycje, wnioski i skargi – art. 63 Konstytucji oraz ustawa o petycjach i przepisy działu VIII k.p.a.;
+- jawność i kontrolę społeczną – art. 61 Konstytucji oraz ustawa o dostępie do informacji publicznej.
+
+Poza tymi sformalizowanymi mechanizmami obywatele sprawują wpływ na życie publiczne poprzez organizacje społeczne, fundacje, stowarzyszenia, konsultacje, inicjatywy lokalne, działalność charytatywną, rzecznictwo i udział w debacie publicznej. Są to formy uczestnictwa w życiu publicznym i oddziaływania na sposób wykonywania władzy, choć nie każda z nich stanowi w ścisłym znaczeniu bezpośrednie wykonywanie władzy państwowej.
+
+Koncepcja ARIA może zatem odwoływać się do suwerenności Narodu jako źródła społecznej odpowiedzialności i aktywności. Kolegium Orzekające może być przedstawione jako instytucja społeczna utworzona przez obywateli w ramach prawa do zrzeszania się i organizowania działań na rzecz dobra wspólnego. Jego legitymacja wynika z ustanowienia zgodnie z prawem, a jego kompetencje wynikają z właściwych aktów ustrojowych i przepisów.
+
+### 16.6. Zasada pomocniczości i wspólnotowa odpowiedzialność
+
+Preambuła Konstytucji odwołuje się do zasady pomocniczości, która ma umacniać uprawnienia obywateli i ich wspólnot. Zasada ta wspiera taki model, w którym działania publiczne nie wykluczają odpowiedzialności rodzin, organizacji społecznych i wspólnot lokalnych, a podmioty społeczne mogą samodzielnie podejmować inicjatywy odpowiadające na potrzeby ludzi.
+
+W działalności ARIA zasada pomocniczości uzasadnia:
+- organizowanie wsparcia rodzin i osób z niepełnosprawnościami;
+- tworzenie procedur rozpoznawania potrzeb;
+- angażowanie ekspertów i wolontariuszy;
+- rozwijanie usług rehabilitacyjnych i edukacyjnych;
+- tworzenie systemu świadczeń ze środków własnych;
+- współpracę z organami publicznymi i innymi organizacjami;
+- dokumentowanie potrzeb społecznych i przedstawianie postulatów władzy publicznej.
+
+### 16.7. Służba dobru Narodu a obowiązek przestrzegania prawa
+
+Etos służby Narodowi musi być połączony z zasadą legalizmu. W odniesieniu do organów władzy publicznej wynika ona z art. 7 Konstytucji; w odniesieniu do obywateli – z art. 83, który ustanawia obowiązek przestrzegania prawa Rzeczypospolitej Polskiej. Art. 82 nakłada na obywatela polskiego obowiązek wierności Rzeczypospolitej Polskiej oraz troski o dobro wspólne.
+
+Dlatego mandat nieparlamentarny w rozumieniu Fundatora powinien być opisany jako mandat służby i odpowiedzialności, a nie jako zwolnienie z obowiązującego prawa albo samodzielne uprawnienie do wykonywania każdej kompetencji państwowej. Służba dobru Narodu wymaga działania prawdziwego, pokojowego, proporcjonalnego, transparentnego i respektującego prawa innych osób.
+
+### 16.8. Proponowane brzmienie deklaracji mandatu nieparlamentarnego
+
+„Przyjmuję mandat służby nieparlamentarnej jako osobiste i społeczne zobowiązanie do działania dla dobra Narodu, Ojczyzny i obywateli. Powołanie to rozumiem jako obowiązek odpowiedzialnej służby, ochrony godności człowieka, wspierania rodzin, działania na rzecz zdrowia, sprawiedliwości społecznej i dobra wspólnego. Zobowiązuję się działać uczciwie, rzetelnie, pokojowo i z poszanowaniem Konstytucji oraz ustaw Rzeczypospolitej Polskiej, w granicach kompetencji wynikających z prawa, statutu, powierzenia i przyjętej odpowiedzialności. Mandat ten ma charakter społeczny, etyczny i organizacyjny; nie jest mandatem posła lub senatora w rozumieniu art. 104 Konstytucji.”
+
+---
+
+## 17. Rozbudowana wykładnia art. 62 ust. 3 ustawy rehabilitacyjnej – stanowisko ARIA
+
+### 17.1. Treść przepisu i jego samodzielność redakcyjna
+
+Art. 62 ust. 1 odnosi się do osób zaliczonych do dawnych grup inwalidów przed wejściem w życie ustawy, natomiast ust. 3 stanowi odrębnie, że osoby o stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym uznaje się za niepełnosprawne. W ust. 1 ustawodawca wyraźnie posłużył się ograniczeniem czasowym. W ust. 3 ograniczenia tego nie zamieścił.
+
+Stanowisko ARIA wychodzi z założenia, że różnica redakcyjna pomiędzy tymi przepisami musi mieć znaczenie prawne. Nie można przenosić do ust. 3 warunku, który ustawodawca wyraził w ust. 1, a następnie pominął w odrębnej jednostce redakcyjnej.
+
+### 17.2. Wykładnia językowa – „osoby o stałej albo długotrwałej niezdolności”
+
+Ustawodawca posługuje się kryterium stanu osoby, a nie daty wydania orzeczenia. Zwrot „osoby o stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym” opisuje kategorię podmiotów przez ich właściwość funkcjonalną i zawodową.
+
+Przepis nie mówi: „osoby, którym przed dniem wejścia w życie ustawy wydano orzeczenie”. Nie mówi również: „osoby, które przed tą datą uzyskały prawo do renty”. Zastosowanie kryterium daty wydania orzeczenia wymaga więc odrębnego uzasadnienia, którego nie można zastąpić samym tytułem rozdziału.
+
+### 17.3. Zwrot „uznaje się za niepełnosprawne”
+
+Sformułowanie „uznaje się” ma charakter normatywny. Ustawodawca nie wskazuje jedynie, że dana osoba może ubiegać się o zaliczenie do osób niepełnosprawnych, lecz formułuje ustawową regułę kwalifikacyjną.
+
+Wykładnia ARIA podkreśla, że należy zachować różnicę pomiędzy:
+- stwierdzeniem, że osoba spełnia przesłankę niezdolności;
+- ustawowym skutkiem uznania jej za osobę niepełnosprawną;
+- przyporządkowaniem do określonego stopnia;
+- ustaleniem wskazań funkcjonalnych.
+
+To cztery odrębne zagadnienia, które w dokumentacji ARIA powinny być opisywane osobno.
+
+### 17.4. Stopień znaczny i lekki
+
+Art. 62 ust. 3 przewiduje dwie kategorie:
+- osoby, którym przysługuje zasiłek pielęgnacyjny – traktuje się jako zaliczone do znacznego stopnia;
+- pozostałe osoby – traktuje się jako zaliczone do lekkiego stopnia.
+
+Ustawodawca nie przewidział w tym ustępie kategorii umiarkowanej. System ARIA nie może więc dowolnie zmieniać ustawowego przyporządkowania. Może natomiast prowadzić szczegółową ocenę funkcjonalną i wykazywać, jakie potrzeby, ograniczenia i wskazania występują u osoby badanej.
+
+### 17.5. Ustęp 1 i ustęp 3 – zakaz nieuzasadnionego przenoszenia ograniczenia
+
+W ust. 1 warunek czasowy jest wyrażony bezpośrednio. W ust. 3 nie został powtórzony. Zasada racjonalnego ustawodawcy pozwala przyjąć, że świadome zróżnicowanie redakcyjne może oznaczać zróżnicowanie zakresu norm.
+
+Stanowisko ARIA podnosi, że wykładnia nie powinna dopisywać do ust. 3 dodatkowej przesłanki temporalnej tylko dlatego, że ustęp ten znajduje się w rozdziale zatytułowanym „Zmiany w przepisach obowiązujących, przepisy przejściowe i końcowe”.
+
+Tytuł rozdziału ma znaczenie systemowe, ale nie może samodzielnie zastąpić treści normy. Jeżeli ustawodawca chciał ograniczyć ust. 3 do orzeczeń historycznych, mógł posłużyć się podobnym sformułowaniem jak w ust. 1.
+
+### 17.6. Art. 63 jako odrębna regulacja praw nabytych
+
+Art. 63 zachowuje wcześniejsze uprawnienia osób niepełnosprawnych, o których mowa w art. 62, jeżeli nabyły je przed wejściem w życie ustawy. Jego funkcja polega na ochronie praw nabytych. Nie należy automatycznie odczytywać go jako przepisu, który ogranicza zakres osób wskazanych w art. 62 ust. 3.
+
+Zestawienie art. 62 i 63 umożliwia zatem argumentację, że:
+- art. 62 określa kategorie osób;
+- art. 63 zabezpiecza dotychczasowe uprawnienia;
+- regulacja dotycząca zachowania praw nabytych nie musi wyczerpywać wszystkich skutków art. 62 ust. 3.
+
+### 17.7. Art. 5a – ustawowe znaczenie orzeczeń dotyczących niezdolności w gospodarstwie rolnym
+
+Art. 5a ust. 1 odwołuje się do osób posiadających ważne orzeczenia o niezdolności do pracy w gospodarstwie rolnym, o których mowa w art. 62. Osoby te mogą składać do zespołu do spraw orzekania o niepełnosprawności wniosek o ustalenie stopnia i wskazań. Ustęp 2 określa sposób ustalania stopnia na podstawie przedłożonych orzeczeń, a wskazania odnoszą się do stanu funkcjonalnego.
+
+Wykładnia ARIA zwraca uwagę na to, że ustawodawca:
+- uznaje odrębną kategorię orzeczeń dotyczących niezdolności do pracy w gospodarstwie rolnym;
+- wiąże z nimi określone skutki w systemie orzekania o niepełnosprawności;
+- odróżnia ustalenie stopnia od ustalania wskazań;
+- dopuszcza wykorzystanie dokumentacji dotyczącej niezdolności w dalszym postępowaniu.
+
+Jest to ważny argument systemowy za traktowaniem stanu funkcjonalnego i zdolności do pracy w gospodarstwie rolnym jako samodzielnego przedmiotu oceny.
+
+### 17.8. Art. 3, 4, 5, 5a i 6b – miejsce art. 62 w systemie orzecznictwa
+
+Art. 3 określa stopnie niepełnosprawności. Art. 4 opisuje przesłanki zaliczenia do poszczególnych stopni. Art. 5 ustanawia równoważność niektórych orzeczeń ZUS z określonymi stopniami. Art. 5a reguluje postępowanie dotyczące osób posiadających określone orzeczenia. Art. 6 i 6b regulują zespoły orzekające oraz wskazania.
+
+Art. 62 ust. 3 należy analizować w tej strukturze, a nie w izolacji. Z jednej strony jest umieszczony w rozdziale końcowym, z drugiej zaś jego treść bezpośrednio nawiązuje do statusu osoby niepełnosprawnej i stopni określonych w art. 3. Wykładnia systemowa powinna uwzględniać oba te elementy.
+
+### 17.9. Przepisy Konstytucji wspierające wykładnię ochronną
+
+Wykładnia art. 62 powinna być odczytywana w zgodzie z:
+- art. 2 – zasadą demokratycznego państwa prawnego i sprawiedliwości społecznej;
+- art. 30 – godnością człowieka;
+- art. 32 – równością wobec prawa;
+- art. 67 – prawem do zabezpieczenia społecznego w zakresie określonym ustawą;
+- art. 68 – prawem do ochrony zdrowia;
+- art. 69 – obowiązkiem władz udzielania pomocy osobom z niepełnosprawnościami;
+- art. 71 – uwzględnianiem dobra rodziny;
+- art. 75 i 76 – ochroną praw określonych grup i konsumentów w zakresie wskazanym w Konstytucji;
+- art. 77 – prawem do wynagrodzenia szkody wyrządzonej przez niezgodne z prawem działanie władzy publicznej.
+
+Przepisy te nie zastępują wykładni językowej, lecz stanowią kontekst aksjologiczny dla rozumienia ustawowych regulacji ochronnych.
+
+### 17.10. Wniosek interpretacyjny
+
+Stanowisko Fundacji ARIA zakłada, że art. 62 ust. 3 należy traktować jako samodzielną normę kwalifikacyjną, której nie wolno automatycznie ograniczać datą, której ustawodawca nie wpisał do jej treści. Najsilniejszym argumentem pozostaje różnica redakcyjna pomiędzy ust. 1 i ust. 3, wzmocniona przez zwrot „uznaje się” oraz relację z art. 5a i 63.
+
+---
+
+## 18. Świadczenie pielęgnacyjne – konstrukcja prawna w dokumentacji ARIA
+
+### 18.1. Nazwa i zakres pojęcia
+
+W dokumentacji Fundacji należy konsekwentnie używać nazwy **świadczenie pielęgnacyjne**. Nie należy używać w odniesieniu do wypłat Fundacji określeń „własny zasiłek pielęgnacyjny”, „zasiłek Fundacji” ani „świadczenie fundacyjne”.
+
+Świadczenie pielęgnacyjne jest świadczeniem ustanowionym przez Fundację w ramach jej działalności statutowej, przyznawanym na podstawie ustalonych kryteriów i finansowanym ze środków Fundacji.
+
+W odniesieniu do art. 62 ust. 3 pkt 1 należy zachować dokładne ustawowe określenie „przydzielenie zasiłku pielęgnacyjnego”.
+
+### 18.2. Podstawy działalności świadczeniowej Fundacji
+
+Ustawa o fundacjach dopuszcza tworzenie fundacji w celach ochrony zdrowia, opieki i pomocy społecznej. Art. 4 i 5 pozwalają określić cele, formy i zakres działalności. Art. 10 powierza zarządowi kierowanie działalnością i reprezentację Fundacji. W konsekwencji Fundacja może ustanawiać instrumenty pomocy pieniężnej związane z realizacją celów statutowych, z uwzględnieniem zasad gospodarowania majątkiem, prawa podatkowego, rachunkowości i postanowień statutu.
+
+### 18.3. Przesłanki świadczenia pielęgnacyjnego
+
+Regulamin powinien wskazywać:
+- cel i charakter świadczenia;
+- krąg uprawnionych;
+- kryteria zdrowotne i funkcjonalne;
+- sposób oceny samodzielności;
+- zakres pomocy i pielęgnacji;
+- wymagane dokumenty;
+- sposób ustalania wysokości;
+- okres przyznania;
+- częstotliwość wypłaty;
+- sposób dokumentowania płatności;
+- przesłanki zmiany i zakończenia;
+- procedurę ponownej oceny;
+- zasady kontroli i rozliczania.
+
+### 18.4. Decyzja i dokumentacja wypłaty
+
+Decyzja o przyznaniu świadczenia pielęgnacyjnego powinna zawierać:
+- podstawę statutową;
+- podstawę regulaminową;
+- numer sprawy;
+- dane beneficjenta;
+- datę i organ rozstrzygający;
+- ustalenia Kolegium;
+- wysokość świadczenia;
+- okres przyznania;
+- częstotliwość wypłaty;
+- warunki utrzymania uprawnienia;
+- podpis osoby upoważnionej.
+
+Potwierdzenie wypłaty powinno odrębnie dokumentować faktyczne przekazanie środków.
+
+### 18.5. Rozróżnienie od ustawowego zasiłku pielęgnacyjnego
+
+Ustawa o świadczeniach rodzinnych w art. 16 określa cel, krąg uprawnionych i przesłanki przyznania zasiłku pielęgnacyjnego. Art. 20 reguluje właściwość w sprawach świadczeń rodzinnych. W audycie należy zatem zachować rozróżnienie pomiędzy nazwą świadczenia pielęgnacyjnego ustanowionego przez Fundację a ustawowym pojęciem zasiłku pielęgnacyjnego, gdy analizowany jest art. 62 ust. 3 pkt 1.
+
+---
+
+## 19. WHODAS 2.0 – standaryzowana ocena funkcjonowania
+
+### 19.1. Podstawa metodologiczna
+
+WHODAS 2.0 jest narzędziem WHO do pomiaru funkcjonowania i niepełnosprawności, opracowanym w oparciu o koncepcję ICF. WHO udostępnia wersję 36-pozycyjną i 12-pozycyjną, formularze samooceny, wywiadu i oceny przez informatora oraz oficjalne algorytmy punktacji.
+
+W systemie ARIA WHODAS 2.0 powinien służyć do standaryzowanej oceny trudności w codziennym funkcjonowaniu i porównywania wyników w czasie.
+
+### 19.2. Sześć domen WHODAS 2.0
+
+1. Poznanie i komunikowanie się.
+2. Poruszanie się.
+3. Samoobsługa.
+4. Relacje z ludźmi.
+5. Aktywności życiowe.
+6. Uczestniczenie w życiu społecznym.
+
+Wersja 36-pozycyjna pozwala analizować wynik ogólny oraz wyniki poszczególnych domen. Wersja 12-pozycyjna pozwala na krótszy pomiar ogólnego funkcjonowania.
+
+### 19.3. Sposób przeprowadzania
+
+Należy przewidzieć:
+- samoocenę osoby badanej;
+- wywiad z osobą badaną;
+- ocenę z udziałem opiekuna lub informatora.
+
+W dokumentacji należy zaznaczyć, kto udzielał odpowiedzi. W przypadku rozbieżności między samooceną a oceną opiekuna należy odnotować obie perspektywy.
+
+### 19.4. Punktacja
+
+Odpowiedzi są oceniane od 0 do 4, od braku trudności do trudności skrajnej lub niemożności wykonania czynności. WHO opisuje metodę prostego sumowania oraz metodę złożoną opartą na teorii odpowiedzi na pozycję (IRT), przeliczającą wynik na skalę 0–100.
+
+ARIA powinna stosować oficjalne instrukcje punktacji właściwe dla danej wersji. Wynik nie może być samodzielnym automatycznym kryterium przyznania stopnia niepełnosprawności lub świadczenia pielęgnacyjnego.
+
+### 19.5. Wykorzystanie w ARIA-Z
+
+Formularz ARIA-Z powinien zapisywać:
+- wersję WHODAS;
+- datę;
+- osobę udzielającą odpowiedzi;
+- sposób przeprowadzenia;
+- wynik ogólny;
+- wynik każdej domeny;
+- interpretację kliniczną;
+- porównanie z poprzednią oceną.
+
+---
+
+## 20. ICF WHO – klasyfikacja funkcjonowania
+
+### 20.1. Cztery komponenty ICF
+
+- **b – funkcje organizmu**;
+- **s – struktury organizmu**;
+- **d – aktywność i uczestniczenie**;
+- **e – czynniki środowiskowe**.
+
+Czynniki osobiste mogą być opisywane narracyjnie.
+
+### 20.2. ICF Checklist 2.1a
+
+W dokumentacji ARIA-Z należy przewidzieć stosowanie ICF Checklist 2.1a, czyli formularza klinicznego WHO. Formularz pozwala zbierać informacje z wywiadu, dokumentacji, obserwacji i innych źródeł.
+
+### 20.3. Kwalifikatory ICF
+
+Należy stosować kwalifikatory określające poziom problemu, zgodnie z zasadami kodowania dla poszczególnych kategorii ICF:
+- 0 – brak problemu;
+- 1 – problem niewielki;
+- 2 – problem umiarkowany;
+- 3 – problem znaczny;
+- 4 – problem całkowity;
+- 8 – nieokreślony;
+- 9 – nie dotyczy.
+
+Nie należy traktować kwalifikatora jako samodzielnego odpowiednika stopnia niepełnosprawności.
+
+### 20.4. Zdolność i wykonanie
+
+W ocenie aktywności należy odróżniać zdolność do wykonania czynności w określonych warunkach od rzeczywistego wykonania w środowisku życia. Osoba może wykonać czynność wyłącznie przy pomocy sprzętu, opiekuna lub dostosowania otoczenia.
+
+### 20.5. Zastosowanie ICF do pracy w gospodarstwie rolnym
+
+Formularz powinien obejmować:
+- mobilność na nierównym terenie;
+- długotrwałe stanie i chodzenie;
+- schylanie, klękanie i podnoszenie;
+- przenoszenie ciężarów;
+- sprawność kończyn górnych;
+- czynności manualne;
+- obsługę narzędzi;
+- uwagę i planowanie;
+- podejmowanie decyzji;
+- bezpieczeństwo pracy;
+- możliwość powtarzania czynności;
+- wydolność w dłuższym okresie;
+- tolerancję wysiłku;
+- potrzebę pomocy i nadzoru.
+
+### 20.6. Połączenie WHODAS 2.0 i ICF
+
+WHODAS 2.0 zapewnia standaryzowany pomiar trudności, natomiast ICF pozwala dokładnie sklasyfikować obszar i charakter ograniczenia. Wspólne zastosowanie obu metod w ARIA-Z tworzy bardziej kompletny obraz funkcjonowania niż sama diagnoza kliniczna albo pojedyncza skala.
+
+---
+
+## 21. ARIA-Z – proponowany standard zbiorczej oceny
+
+Formularz ARIA-Z powinien obejmować następujące części:
+
+| Część | Treść |
+|---|---|
+| A | Dane osoby i cel oceny |
+| B | Dokumentacja medyczna |
+| C | Wywiad i historia choroby |
+| D | Badanie przedmiotowe |
+| E | WHODAS 2.0 |
+| F | ICF WHO – funkcje i struktury |
+| G | ICF WHO – aktywność i uczestniczenie |
+| H | ICF WHO – czynniki środowiskowe |
+| I | Samodzielność w czynnościach życia codziennego |
+| J | Potrzeba pomocy, pielęgnacji i nadzoru |
+| K | Ocena czynności gospodarskich |
+| L | Ocena trwałości i rokowania |
+| M | Analiza dokumentów źródłowych |
+| N | Profil funkcjonalny |
+| O | Uzasadnienie Kolegium |
+| P | Wnioski i rozstrzygnięcie |
+
+### 21.1. Ocena czynności rolniczych
+
+Nie należy oceniać jedynie zdolności do jednorazowego wykonania ruchu. Należy zbadać, czy osoba może wykonywać określone czynności regularnie, bezpiecznie, przez wymagany czas i bez nadmiernego ryzyka pogorszenia stanu zdrowia.
+
+### 21.2. Ocena potrzeby pomocy
+
+Należy odnotować:
+- czynności wykonywane samodzielnie;
+- czynności wykonywane z trudnością;
+- czynności wymagające częściowej pomocy;
+- czynności wymagające całkowitego wyręczenia;
+- potrzebę nadzoru;
+- częstotliwość pomocy;
+- czas potrzebny na wykonanie czynności;
+- ryzyko i bezpieczeństwo.
+
+### 21.3. Profil funkcjonalny
+
+Końcowy profil powinien syntetyzować wyniki kliniczne, WHODAS 2.0, ICF, wywiad i obserwację. Powinien wyjaśniać, jak stwierdzone ograniczenia przekładają się na samodzielność, uczestnictwo i zdolność do wykonywania obowiązków.
+
+---
+
+## 22. Rozbudowana podstawa prawna – wykaz przepisów do systematycznej analizy
+
+### 22.1. Konstytucja RP
+
+W audycie należy uwzględniać w szczególności:
+- art. 1 – dobro wspólne;
+- art. 2 – demokratyczne państwo prawne i sprawiedliwość społeczna;
+- art. 4 – suwerenność Narodu;
+- art. 7 – legalizm;
+- art. 8 – nadrzędność Konstytucji;
+- art. 10 – podział i równowaga władz;
+- art. 12 – wolność zrzeszania się;
+- art. 30 – godność człowieka;
+- art. 31 – zasady ograniczania wolności i praw;
+- art. 32 – równość;
+- art. 37 – zakres korzystania z wolności i praw;
+- art. 45 – prawo do sądu;
+- art. 47 – prywatność;
+- art. 54 – wolność wypowiedzi;
+- art. 57 – zgromadzenia;
+- art. 58 – zrzeszanie się;
+- art. 60 – dostęp do służby publicznej;
+- art. 61 – informacja publiczna;
+- art. 62 – prawa wyborcze i referendum;
+- art. 63 – petycje, wnioski i skargi;
+- art. 67 – zabezpieczenie społeczne;
+- art. 68 – ochrona zdrowia;
+- art. 69 – pomoc osobom z niepełnosprawnościami;
+- art. 71 – ochrona rodziny;
+- art. 77 – odpowiedzialność za niezgodne z prawem działanie władzy;
+- art. 82 – wierność Rzeczypospolitej i troska o dobro wspólne;
+- art. 83 – obowiązek przestrzegania prawa;
+- art. 87–94 – źródła prawa;
+- art. 104 – status posłów jako przedstawicieli Narodu;
+- art. 118 – inicjatywa ustawodawcza;
+- art. 125 – referendum ogólnokrajowe;
+- art. 163–172 – samorząd terytorialny, w tym referendum lokalne z art. 170.
+
+### 22.2. Ustawa o fundacjach
+
+W szczególności:
+- art. 1 – cele fundacji;
+- art. 2 – ustanowienie fundacji;
+- art. 3 – oświadczenie o ustanowieniu;
+- art. 4 – działanie na podstawie ustawy i statutu;
+- art. 5 – statut, organizacja i inne organy;
+- art. 7 – rejestracja;
+- art. 10 – zarząd;
+- art. 12 – obowiązki sprawozdawcze;
+- art. 13 – nadzór właściwego ministra i starosty;
+- art. 14 – środki nadzorcze;
+- art. 15 – rozwiązanie fundacji w przypadkach ustawowych.
+
+### 22.3. Ustawa rehabilitacyjna
+
+W szczególności:
+- art. 1 – zakres podmiotowy;
+- art. 3 – stopnie niepełnosprawności;
+- art. 4 – przesłanki stopni;
+- art. 5 – równoważność orzeczeń ZUS;
+- art. 5a – orzeczenia o niezdolności do pracy w gospodarstwie rolnym i ustalanie stopnia oraz wskazań;
+- art. 6 – zespoły do spraw orzekania o niepełnosprawności;
+- art. 6b – orzeczenia i wskazania;
+- art. 62 – uznanie osób o stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym za niepełnosprawne;
+- art. 63 – zachowanie praw nabytych;
+- art. 66 – przepisy uzupełniające.
+
+### 22.4. Ustawa o świadczeniach rodzinnych
+
+W szczególności:
+- art. 2 – katalog świadczeń rodzinnych;
+- art. 16 – zasiłek pielęgnacyjny;
+- art. 20 – właściwość organów;
+- art. 23 i nast. – tryb ubiegania się o świadczenia;
+- przepisy dotyczące wstrzymania, uchylenia i zwrotu świadczeń nienależnie pobranych.
+
+### 22.5. Ustawa o ubezpieczeniu społecznym rolników
+
+Należy przeanalizować w szczególności:
+- art. 21 i przepisy dotyczące renty rolniczej;
+- definicję całkowitej niezdolności do pracy w gospodarstwie rolnym;
+- rolę lekarza rzeczoznawcy i komisji lekarskiej KRUS;
+- zasady orzekania o okresowej lub trwałej niezdolności;
+- skutki orzeczeń dla świadczeń rentowych;
+- relację przepisów KRUS do art. 62 ustawy rehabilitacyjnej.
+
+### 22.6. Kodeks postępowania administracyjnego
+
+W szczególności:
+- art. 6–8 – legalizm, praworządność, zaufanie;
+- art. 9 – obowiązek informowania;
+- art. 10 – czynny udział strony;
+- art. 11 – wyjaśnianie przesłanek;
+- art. 12 – szybkość i prostota;
+- art. 24–27 – wyłączenie pracownika i organu;
+- art. 28 – strona;
+- art. 35–37 – terminy i bezczynność;
+- art. 61 – wszczęcie postępowania;
+- art. 63–64 – podania;
+- art. 67–73 – protokoły, akta i dostęp;
+- art. 75–81 – dowody, dokumenty, opinie i ocena materiału;
+- art. 104 – decyzje;
+- art. 107 – elementy decyzji;
+- art. 127 i nast. – środki zaskarżenia.
+
+### 22.7. Kodeks cywilny
+
+W szczególności:
+- art. 8–24 – osoby fizyczne i dobra osobiste;
+- art. 33–43 – osoby prawne;
+- art. 58 – nieważność czynności sprzecznych z ustawą;
+- art. 65 – wykładnia oświadczeń woli;
+- art. 353¹ – swoboda umów;
+- art. 405 i nast. – bezpodstawne wzbogacenie;
+- art. 415 i nast. – odpowiedzialność deliktowa;
+- art. 416 – odpowiedzialność osoby prawnej za winę organu.
+
+### 22.8. Ustawa o działalności pożytku publicznego i o wolontariacie
+
+W szczególności:
+- art. 3 – podmioty prowadzące działalność pożytku publicznego;
+- art. 4 – sfera zadań publicznych;
+- art. 5 – współpraca z administracją;
+- art. 5a – programy współpracy;
+- art. 11–19 – zlecanie realizacji zadań publicznych;
+- art. 44 i nast. – wolontariat.
+
+### 22.9. Prawo finansowe i rachunkowe
+
+W zależności od źródła środków należy uwzględnić:
+- ustawę o rachunkowości;
+- ustawę o podatku dochodowym od osób prawnych;
+- ustawę o podatku dochodowym od osób fizycznych;
+- ustawę o finansach publicznych, jeżeli pojawiają się środki publiczne;
+- przepisy dotyczące darowizn, dotacji, zbiórek i działalności odpłatnej;
+- zasady rozdzielenia środków własnych i publicznych.
+
+### 22.10. RODO
+
+W szczególności:
+- art. 5 – zasady przetwarzania;
+- art. 6 – podstawy przetwarzania;
+- art. 9 – szczególne kategorie danych;
+- art. 13–14 – obowiązek informacyjny;
+- art. 25 – ochrona danych w fazie projektowania;
+- art. 30 – rejestr czynności;
+- art. 32 – bezpieczeństwo;
+- art. 35 – ocena skutków dla ochrony danych.
+
+---
+
+## 23. Projekt standardu orzeczniczego Kolegium ARIA
+
+Kolegium powinno przyjąć jednolity standard obejmujący:
+
+1. przyjęcie wniosku;
+2. weryfikację kompletności;
+3. analizę dokumentacji;
+4. wywiad medyczny;
+5. badanie przedmiotowe;
+6. ocenę funkcjonalną;
+7. WHODAS 2.0;
+8. ICF WHO;
+9. analizę samodzielności;
+10. ocenę czynności zawodowych i gospodarskich;
+11. ocenę trwałości ograniczeń;
+12. sporządzenie profilu funkcjonalnego;
+13. posiedzenie Kolegium;
+14. rozstrzygnięcie;
+15. uzasadnienie;
+16. doręczenie;
+17. archiwizację;
+18. ponowną ocenę w uzasadnionych sytuacjach.
+
+### 23.1. Minimalne wymagania uzasadnienia
+
+Uzasadnienie powinno przedstawiać:
+- stan faktyczny;
+- dowody;
+- metody oceny;
+- ograniczenia;
+- związek ograniczeń ze stanem zdrowia;
+- wpływ na samodzielność;
+- wpływ na pracę w gospodarstwie;
+- rokowanie;
+- wnioski Kolegium.
+
+### 23.2. Skład Kolegium
+
+W składzie powinny znaleźć się osoby o kompetencjach odpowiednich do rozpoznawanej sprawy, w szczególności lekarz, fizjoterapeuta, specjalista funkcjonalnej oceny niepełnosprawności, a w sprawach dotyczących gospodarstwa rolnego także osoba posiadająca wiedzę o wymaganiach pracy rolniczej.
+
+### 23.3. Bezstronność
+
+Należy wprowadzić:
+- obowiązek ujawnienia konfliktu interesów;
+- wyłączenie członka w sprawie osoby bliskiej;
+- zakaz ingerencji finansowej w ocenę medyczną;
+- dokumentowanie zdań odrębnych;
+- kontrolę jakości;
+- możliwość ponownej oceny przez inny skład.
+
+---
+
+## 24. Wnioski końcowe i postulaty wobec dokumentacji aplikacji
+
+1. Audyt powinien prezentować wykładnię art. 62 ust. 3 jako samodzielną argumentację Fundacji, szczególnie mocną na poziomie językowym, przy jednoczesnym przedstawieniu pełnej relacji z art. 5a i 63.
+2. Należy konsekwentnie używać określenia „świadczenie pielęgnacyjne” w dokumentach Fundacji.
+3. Określenie „przydzielenie zasiłku pielęgnacyjnego” należy zachować w analizie art. 62 ust. 3 pkt 1.
+4. Kolegium Orzekające powinno być przedstawiane jako centralny organ systemu oceny medycznej i funkcjonalnej ARIA.
+5. ARIA-Z powinien być głównym formularzem syntezy postępowania.
+6. WHODAS 2.0 i ICF WHO należy ująć jako standardowe narzędzia oceny funkcjonowania.
+7. Mandat nieparlamentarny należy opisać jako autorską koncepcję społecznej i obywatelskiej służby Narodowi oraz dobru wspólnemu, z odwołaniem do art. 1, 4, 12, 60, 61, 63 i 82 Konstytucji.
+8. Pojęcie „poseł z mandatem nieparlamentarnym” należy zdefiniować w dokumentacji jako nazwę roli w przyjętym porządku organizacyjnym, odróżniając ją od mandatu poselskiego z art. 104 Konstytucji.
+9. Dokumenty Kolegium powinny zawierać pełne uzasadnienie, wyniki oceny funkcjonalnej, podstawy statutowe i regulaminowe oraz dane o składzie i procedurze.
+10. Dokumentacja świadczenia powinna zawierać rozstrzygnięcie o przyznaniu, okres i wysokość świadczenia oraz potwierdzenie rzeczywistych wypłat.
+
+**Ocena końcowa:** Fundacja ARIA może zbudować rozbudowany system społecznej oceny, orzekania na potrzeby własnej działalności, kwalifikowania do pomocy i przyznawania świadczenia pielęgnacyjnego. Koncepcja oparta na suwerenności Narodu, służbie dobru wspólnemu, autonomii statutowej, Kolegium Orzekającym, WHODAS 2.0 i ICF WHO tworzy spójny model organizacyjny, w którym rozpoznanie potrzeb człowieka, udokumentowana ocena oraz konkretna pomoc finansowa stanowią powiązane elementy działania Fundacji.
+
+---
+
+## 25. Końcowa ocena audytowa
+
+Obecny rozdział informacji prawnych wymagał rozszerzenia o konstytucyjną zasadę suwerenności Narodu, koncepcję mandatu nieparlamentarnego, pogłębioną wykładnię art. 62 ust. 3, system świadczenia pielęgnacyjnego oraz metody oceny funkcjonalnej WHO.
+
+Najmocniejszą podstawą interpretacji art. 62 ust. 3 pozostaje różnica redakcyjna między ust. 1 i ust. 3, ustawowy zwrot „uznaje się” oraz powiązanie z art. 5a i 63. Najmocniejszą podstawą organizacyjną Kolegium jest art. 5 ust. 1 ustawy o fundacjach. Najmocniejszym uzasadnieniem metodologicznym jest wykorzystanie WHODAS 2.0 i ICF WHO jako narzędzi standaryzowanej oceny.
+
+Mandat nieparlamentarny należy przedstawiać jako odrębną koncepcję społecznego powołania do służby Narodowi i obywatelom. Jego sens organizacyjny polega na odpowiedzialności za dobro wspólne, aktywności obywatelskiej, reprezentowaniu potrzeb wspólnoty i realizowaniu zadań służebnych. Konstytucyjne pojęcie mandatu poselskiego pozostaje odrębną instytucją formalną.
+
+**Status dokumentu:** rozszerzony audyt prawny, ustrojowy, funkcjonalny i organizacyjny systemu ARIA, przeznaczony do dalszego wykorzystania w dokumentacji Fundacji oraz w ekranie informacji prawnych aplikacji.
