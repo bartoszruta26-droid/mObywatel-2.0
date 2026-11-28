@@ -276,7 +276,7 @@ class DocumentCatalogTest {
             "foundation_care_allowance_payment_confirmation",
             "foundation_care_allowance_third_party_certificate"
         )
-        assertEquals(ids.size, ids.size)
+        assertEquals(ids.size, documentDisplayOptions.count { it.first in ids })
         ids.forEach { id ->
             assertTrue("Brak dokumentu $id", documentDisplayOptions.any { it.first == id })
             assertEquals("Służba fundacyjna", documentVisibilityGroup(id))
