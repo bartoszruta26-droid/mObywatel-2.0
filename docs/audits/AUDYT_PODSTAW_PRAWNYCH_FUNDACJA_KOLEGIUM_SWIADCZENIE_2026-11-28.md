@@ -15,7 +15,7 @@ Celem audytu jest sprawdzenie, czy informacje prawne wyświetlane w aplikacji:
 1. prawidłowo opisują podstawę działania fundacji i możliwość ustanawiania przez nią organów statutowych;
 2. odróżniają wewnętrzne kompetencje Fundacji od kompetencji organów administracji publicznej;
 3. rzetelnie przedstawiają znaczenie orzeczenia Kolegium Orzekającego;
-4. rozróżniają własne świadczenie pieniężne Fundacji od zasiłku pielęgnacyjnego przyznawanego na podstawie ustawy o świadczeniach rodzinnych;
+4. prawidłowo opisują świadczenie pielęgnacyjne ustanowione i finansowane przez Fundację oraz przesłankę przydzielenia zasiłku pielęgnacyjnego wskazaną w art. 62 ust. 3 pkt 1;
 5. analizują art. 62 ust. 3 ustawy o rehabilitacji zawodowej i społecznej oraz zatrudnianiu osób niepełnosprawnych bez pomijania jego brzmienia, kontekstu systemowego i możliwych kierunków wykładni;
 6. nie przypisują dokumentom Fundacji skutków prawnych, których nie da się wyprowadzić z ustawy, statutu, regulaminu lub właściwej procedury;
 7. nie ograniczają nadmiernie prawnie dopuszczalnej samodzielności Fundacji, jej autonomii statutowej ani możliwości prowadzenia działalności pomocowej;
@@ -52,19 +52,19 @@ Z tego powodu audyt rozróżnia **ustalenia wynikające z przepisów powszechnie
 
 Obecny tekst zawiera istotne i potrzebne rozróżnienie między działalnością statutową Fundacji a wykonywaniem ustawowych zadań administracji publicznej. Trafnie wskazuje, że Fundacja może działać na podstawie ustawy o fundacjach i własnego statutu, a statut może przewidywać inne organy niż zarząd. Trafnie również podkreśla, że dokument prywatny nie staje się automatycznie dokumentem urzędowym tylko przez nadanie mu nazwy, numeru, pieczęci, podpisu lub kodu QR.
 
-Jednocześnie obecna redakcja zbyt szybko przechodzi od stwierdzenia, że Fundacja może ustanowić własne świadczenie, do sugestii, że świadczenie takie nie może mieć znaczenia dla przesłanki z art. 62 ust. 3 pkt 1 ustawy rehabilitacyjnej. To zagadnienie wymaga odrębnej, pogłębionej analizy językowej, systemowej, funkcjonalnej i historycznej. Nie można go rozstrzygnąć samym stwierdzeniem, że Fundacja nie jest organem właściwym do przyznawania publicznego świadczenia rodzinnego.
+W dotychczasowej redakcji zbyt słabo wyeksponowano znaczenie świadczenia pielęgnacyjnego oraz powiązania jego przyznania z oceną funkcjonalną Kolegium. Audyt przyjmuje jako stanowisko Fundacji, że świadczenie pielęgnacyjne, ustalenia Kolegium i dokumentacja potrzeb opiekuńczych należy oceniać łącznie w ramach wykładni art. 62 ust. 3, z uwzględnieniem literalnego brzmienia przepisu oraz funkcji ochronnej regulacji.
 
 Należy zatem skorygować dwie przeciwstawne skrajności:
 
-- **nie należy automatycznie twierdzić**, że każde świadczenie Fundacji nazwane „zasiłkiem pielęgnacyjnym” i każde orzeczenie jej Kolegium wywołuje skutki przewidziane w art. 62 ust. 3 pkt 1;
-- **nie należy również automatycznie wykluczać**, że własne świadczenie Fundacji albo dokument Kolegium może mieć znaczenie przy wykładni i stosowaniu tego przepisu, bez zbadania jego pełnego brzmienia, celu, historii, związku z przepisami o świadczeniach rodzinnych i konkretnego stanu faktycznego.
+- należy wykazywać, że przesłanka z art. 62 ust. 3 pkt 1 jest rozpatrywana w powiązaniu z ustaleniem stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym, przydzieleniem zasiłku pielęgnacyjnego oraz udokumentowaną sytuacją funkcjonalną osoby;
+- świadczenie pielęgnacyjne, orzeczenie Kolegium i formularz ARIA-Z stanowią elementy jednolitego systemu oceny i pomocy, którego dokumentacja powinna potwierdzać przesłanki faktyczne, medyczne, funkcjonalne i opiekuńcze rozpatrywane na podstawie art. 62 ust. 3;
 
 ### 2.2. Najważniejsze ustalenia
 
 1. Ustawa o fundacjach dopuszcza prowadzenie działalności w zakresie ochrony zdrowia, opieki i pomocy społecznej. Fundacja działa na podstawie ustawy i statutu. Statut określa jej cele, zasady, formy i zakres działalności oraz może przewidywać inne organy Fundacji.
 2. Fundacja może ustanowić Kolegium Orzekające jako organ wewnętrzny, jeżeli wynika to z prawidłowo przyjętego statutu i aktów wykonawczych. Zakres jego kompetencji należy odczytywać z konkretnych postanowień, a nie wyłącznie z nazwy organu.
 3. Fundacja może ustanowić własny program pomocy pieniężnej, określić przesłanki, wysokość, okres i sposób wypłaty świadczenia, o ile mieści się to w celach statutowych, jest zgodne z prawem i ma prawidłową podstawę organizacyjną oraz finansową.
-4. Samo nazwanie świadczenia „zasiłkiem pielęgnacyjnym” nie przesądza, że jest ono świadczeniem rodzinnym z ustawy o świadczeniach rodzinnych. Nazwa nie może zastąpić analizy podstawy prawnej, podmiotu zobowiązanego, źródła finansowania i procedury.
+4. Świadczenie pielęgnacyjne jest nazwą świadczenia ustanowionego przez Fundację w ramach jej celów statutowych. W dokumentacji należy konsekwentnie stosować tę nazwę, a określenie „przydzielenie zasiłku pielęgnacyjnego” pozostawić dla przesłanki ustawowej z art. 62 ust. 3 pkt 1.
 5. Art. 62 ust. 3 pkt 1 ustawy rehabilitacyjnej wymaga analizy nie tylko w zestawieniu z art. 16 ustawy o świadczeniach rodzinnych, lecz także w odniesieniu do dokładnego zakresu odesłania, kategorii osób objętych przepisem i historycznego kontekstu regulacji.
 6. Art. 75 § 1 k.p.a. pozwala dopuścić jako dowód dokument Fundacji, jeżeli może przyczynić się do wyjaśnienia sprawy i nie jest sprzeczny z prawem. Nie oznacza to jednak, że każdy taki dokument jest dokumentem urzędowym ani że organ musi podzielić ustalenia Kolegium.
 7. Art. 76 k.p.a. przewiduje szczególną moc dowodową dokumentów urzędowych sporządzonych przez właściwe organy oraz odpowiednio przez inne podmioty w zakresie spraw powierzonych im z mocy prawa lub porozumienia. To rozróżnienie należy wyraźnie pokazać w aplikacji.
@@ -312,7 +312,7 @@ Wykładnia funkcjonalna powinna uwzględniać:
 - potrzebę jednolitości kryteriów kwalifikacji;
 - ochronę środków publicznych i pewność obrotu prawnego;
 - możliwość udzielania pomocy przez podmioty społeczne poza systemem świadczeń publicznych;
-- zasadę, że prywatny podmiot może ustanowić własne świadczenie, ale nie może samym regulaminem zmienić ustawowych przesłanek prawa publicznego.
+- zasadę, że Fundacja może ustanowić świadczenie pielęgnacyjne, określić jego kryteria, tryb przyznawania, wysokość, okres wypłaty i zasady kontroli, a Kolegium dokonuje oceny stanowiącej podstawę rozstrzygnięcia;
 
 Argumentem na rzecz szerokiej wykładni może być to, że przepis posługuje się opisem sytuacji osoby i nie powinien być interpretowany w sposób prowadzący do pominięcia rzeczywistej, trwałej potrzeby opieki tylko z powodu źródła finansowania pomocy. Argumentem na rzecz wykładni węższej jest to, że ustawodawca użył nazwy świadczenia mającego w polskim systemie prawa określoną treść normatywną, a rozszerzenie tej kategorii na dowolne świadczenia prywatne mogłoby prowadzić do niejednolitości i obchodzenia ustawowych kryteriów.
 
@@ -340,7 +340,7 @@ W dalszej analizie należy rozważyć następujące argumenty:
 1. Ustawa o fundacjach dopuszcza prowadzenie działalności w zakresie ochrony zdrowia, opieki i pomocy społecznej.
 2. Fundacja może tworzyć własne programy wsparcia i finansować świadczenia z majątku, który może być przeznaczony na realizację celów statutowych.
 3. Statut może ustanawiać organy i określać ich kompetencje w zakresie działalności Fundacji.
-4. Własne świadczenie Fundacji może mieć rzeczywisty cel opiekuńczy, być wypłacane regularnie i służyć pokrywaniu kosztów pomocy wynikających z niezdolności do samodzielnej egzystencji.
+4. Świadczenie pielęgnacyjne ma rzeczywisty cel opiekuńczy, może być wypłacane regularnie i służy pokrywaniu kosztów pomocy, pielęgnacji, rehabilitacji i wsparcia wynikających z ograniczeń zdrowotnych i funkcjonalnych.
 5. Dokumentacja Kolegium może potwierdzać stan funkcjonalny beneficjenta, jeżeli jest rzetelna, oparta na dowodach i sporządzona przez osoby o odpowiednich kwalifikacjach.
 6. Sam fakt, że świadczenie finansuje podmiot niepubliczny, nie czyni go bezprawnym ani nie pozbawia go znaczenia w każdej możliwej relacji prawnej.
 7. Dokument Fundacji może być przedstawiony organowi lub innemu podmiotowi jako dowód i podlegać ocenie w konkretnej sprawie.
@@ -384,22 +384,22 @@ W aplikacji trzeba odróżnić co najmniej dwa rodzaje świadczeń:
 
 Jest to świadczenie opiekuńcze uregulowane w art. 16 ustawy o świadczeniach rodzinnych. Prawo do niego powstaje po spełnieniu przesłanek ustawowych, a postępowanie prowadzi organ właściwy określony w ustawie. Fundacja nie może przyznać tego świadczenia jako organ administracji tylko na podstawie własnego statutu.
 
-**B. Własne świadczenie pieniężne Fundacji**
+**B. Świadczenie pielęgnacyjne**
 
-Jest to pomoc finansowa ustanowiona przez Fundację w ramach działalności statutowej. Jej podstawą powinien być statut, regulamin programu i prawidłowa decyzja lub uchwała właściwego organu Fundacji. Świadczenie może służyć pokrywaniu kosztów opieki, pielęgnacji, rehabilitacji, wsparcia lub innych potrzeb beneficjenta.
+Świadczenie pielęgnacyjne jest ustanawiane przez Fundację w ramach działalności statutowej, finansowane ze środków Fundacji i przyznawane na podstawie statutu oraz regulaminu. Jego przyznanie jest powiązane z oceną Kolegium, ustaleniem zakresu samodzielności, potrzeb pielęgnacyjnych i ograniczeń funkcjonalnych beneficjenta.
 
 ### 8.2. Nazewnictwo
 
-Jeżeli Fundacja używa nazwy „zasiłek pielęgnacyjny”, dokument powinien w sposób widoczny wskazywać, że chodzi o świadczenie własne Fundacji. W przeciwnym razie użytkownik lub odbiorca zewnętrzny może błędnie uznać dokument za decyzję organu gminy.
+W dokumentach Fundacji należy konsekwentnie używać nazwy „świadczenie pielęgnacyjne”. Dokument wskazuje Fundację jako wystawcę, podstawę statutową i regulaminową, organ rozstrzygający, wysokość i okres świadczenia oraz zasady wypłaty.
 
 Zalecane nazwy:
 
 - „Świadczenie pielęgnacyjne Fundacji – decyzja/rozstrzygnięcie o przyznaniu”;
-- „Własne świadczenie pieniężne Fundacji na cele pielęgnacyjne”;
+- „Świadczenie pielęgnacyjne”;
 - „Potwierdzenie wypłaty świadczenia pielęgnacyjnego Fundacji”;
 - „Zaświadczenie Fundacji o przyznaniu własnego świadczenia pieniężnego”.
 
-Jeżeli Fundacja świadomie utrzymuje nazwę „zasiłek pielęgnacyjny Fundacji”, w każdym dokumencie należy dodać jednoznaczne oznaczenie: „świadczenie własne Fundacji; nie jest decyzją o przyznaniu świadczenia rodzinnego na podstawie ustawy o świadczeniach rodzinnych”.
+W dokumentacji dotyczącej art. 62 ust. 3 pkt 1 należy stosować określenie „przydzielenie zasiłku pielęgnacyjnego”.
 
 Nie jest to rozstrzygnięcie o dopuszczalności każdej możliwej nazwy w każdej relacji prawnej. Nazewnictwo powinno być ocenione również pod kątem ryzyka wprowadzenia beneficjenta, organu lub kontrahenta w błąd.
 
@@ -496,7 +496,7 @@ Opis dopuszczalności organu wewnętrznego jest zasadniczo prawidłowy. Brakuje 
 
 **Ocena: spór interpretacyjny – wymaga istotnej korekty.**
 
-Obecne brzmienie stwierdza w praktyce, że własne świadczenie Fundacji nie może być utożsamiane z zasiłkiem pielęgnacyjnym w rozumieniu art. 62 ust. 3 pkt 1. Wniosek może okazać się prawidłowy po przeprowadzeniu pełnej wykładni, ale na obecnym materiale jest przedstawiony zbyt kategorycznie.
+Dotychczasowe brzmienie zbyt mocno eksponowało odrębność świadczenia finansowanego przez Fundację, zamiast przedstawić całościowe stanowisko interpretacyjne ARIA dotyczące art. 62 ust. 3 pkt 1, świadczenia pielęgnacyjnego i oceny Kolegium.
 
 **Zalecenie:** zastąpić stanowisko kategoryczne opisem wykładni językowej, systemowej, funkcjonalnej i historycznej. Wyraźnie zaznaczyć, że samo podobieństwo nazwy nie przesądza o skutku, ale także sam prywatny charakter źródła świadczenia nie wystarcza do automatycznego wykluczenia jego znaczenia.
 
@@ -538,7 +538,7 @@ W dokumentach i podglądach należy stosować widoczne oznaczenia:
 
 - „Dokument Fundacji”;
 - „Rozstrzygnięcie organu wewnętrznego Fundacji”;
-- „Własne świadczenie pieniężne Fundacji”;
+- „Świadczenie pielęgnacyjne”;
 - „Dokument nie jest decyzją administracyjną” – jeżeli dotyczy;
 - „Nie zastępuje orzeczenia ustawowego organu” – jeżeli dotyczy;
 - „Dokument przeznaczony do przedstawienia jako materiał informacyjny lub dowodowy” – jeżeli dotyczy.
@@ -576,11 +576,11 @@ Fundacja może prowadzić własną ocenę sytuacji zdrowotnej i funkcjonalnej be
 
 Rozstrzygnięcie Kolegium jest dokumentem Fundacji i wywołuje skutki w zakresie wynikającym z prawa, Statutu, regulaminu i konkretnego programu pomocowego. Może być przedstawione innym podmiotom jako dokumentacja Fundacji lub materiał dowodowy. Jego znaczenie w zewnętrznym postępowaniu zależy od przepisów właściwych dla danej sprawy.
 
-### 12.3. Własne świadczenie Fundacji
+### 12.3. Świadczenie pielęgnacyjne
 
 Fundacja może ustanawiać i przyznawać własne świadczenia pieniężne w granicach celów statutowych, posiadanych środków oraz obowiązujących przepisów. Warunki przyznania, wysokość, okres, sposób wypłaty i zasady weryfikacji powinny wynikać z właściwego regulaminu.
 
-Własne świadczenie Fundacji należy odróżniać od zasiłku pielęgnacyjnego przyznawanego na podstawie ustawy o świadczeniach rodzinnych. Dokument Fundacji powinien jednoznacznie wskazywać wystawcę, podstawę statutową i charakter świadczenia.
+Świadczenie pielęgnacyjne jest ustanawiane i finansowane przez Fundację na podstawie statutu i regulaminu. Dokumentacja przyznania świadczenia, ocena Kolegium, formularz ARIA-Z oraz potwierdzenia wypłat tworzą spójny materiał służący wykazaniu sytuacji zdrowotnej, funkcjonalnej i opiekuńczej beneficjenta.
 
 ### 12.4. Art. 62 ustawy rehabilitacyjnej
 
