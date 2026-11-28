@@ -161,4 +161,39 @@ class DocumentGroupCatalogTest {
         assertTrue(keys.all { it.startsWith("doc_") })
         assertTrue(keys.all { it.length <= 96 && it.matches(Regex("[A-Za-z0-9_-]+")) })
     }
+
+    @Test
+        fun selfDeterminationDocumentsAreRoutedToTheCommonRightsGroup() {
+            val ids = listOf("common_rights_self_determination_declaration", "common_rights_self_limitation", "common_rights_third_party_safeguards", "common_rights_accessibility_needs", "common_rights_faith_conscience_declaration", "common_rights_declaration_of_will", "common_rights_nonparliamentary_mandate", "common_rights_civil_service_legitimacy", "common_rights_personal_integrity_certificate")
+            ids.forEach { id ->
+                assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+                assertTrue(documentDisplayOptions.any { it.first == id })
+                assertTrue(officialGraphicDocumentFields(id).isNotEmpty())
+                assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+            }
+        }
+    
+    
+
+    @Test
+    fun integratedDeclarationOfWillHasAVisibleDocumentRouteInTheCommonRightsGroup() {
+        val id = "common_rights_integrated_declaration_of_will"
+        assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+        assertTrue(documentDisplayOptions.any { it.first == id })
+        assertTrue(officialGraphicDocumentFields(id).size >= 30)
+        assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+    }
+
+
+
+    @Test
+    fun unifiedFamilyAndCivicDeclarationHasOneVisibleCommonRightsDocumentRoute() {
+        val id = "common_rights_unified_family_and_civic_declaration"
+        assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+        assertTrue(documentDisplayOptions.any { it.first == id })
+        assertTrue(officialGraphicDocumentFields(id).size >= 50)
+        assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+    }
+
+
 }

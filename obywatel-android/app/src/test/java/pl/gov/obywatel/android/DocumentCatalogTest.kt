@@ -198,7 +198,7 @@ class DocumentCatalogTest {
             assertTrue("Brak pól wystawcy, organu, procedury lub wzoru dla $id",
                 schema.map { it.key }.containsAll(workflowKeys))
         }
-        assertEquals(14, existingGroups.size)
+        assertEquals(15, existingGroups.size)
         val passportFields = documentEditorFieldDefinitions("holy_see_passport_service").map { it.key }.toSet()
         assertTrue(passportFields.containsAll(setOf("passportTypeCode", "passportTypeDescription", "issuingEntity")))
         val passportCodes = documentEditorFieldDefinitions("vatican_passport_ordinary").associate { it.key to it.placeholder }
@@ -297,5 +297,67 @@ class DocumentCatalogTest {
             assertTrue(documentDisplayOptions.any { it.first == id })
         }
     }
+
+
+    @Test
+        fun selfDeterminationDocumentsHaveSafetyBoundariesAndEditablePreviewFields() {
+            val expected = setOf("common_rights_self_determination_declaration", "common_rights_self_limitation", "common_rights_third_party_safeguards", "common_rights_accessibility_needs", "common_rights_faith_conscience_declaration", "common_rights_declaration_of_will", "common_rights_nonparliamentary_mandate", "common_rights_civil_service_legitimacy", "common_rights_personal_integrity_certificate")
+            expected.forEach { id ->
+                assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+                assertTrue("Missing tile: $id", documentDisplayOptions.any { it.first == id })
+                val fields = officialGraphicDocumentFields(id)
+                assertTrue("Missing form fields: $id", fields.isNotEmpty())
+                val previewFields = credentialFieldOptions(id).toMap()
+                fields.forEach { (key, label) -> assertEquals(label, previewFields[key]) }
+            }
+            val statement = officialDocTypes.first { it.id == "common_rights_declaration_of_will" }
+            assertTrue(statement.note.contains("art. 233"))
+            assertTrue(statement.note.contains("przepis szczególny"))
+            assertTrue(officialDocTypes.first { it.id == "common_rights_third_party_safeguards" }.fields.any { it.contains("osoby trzecie") })
+            assertTrue(officialDocTypes.first { it.id == "common_rights_accessibility_needs" }.fields.any { it.contains("znaczny") })
+        }
+    
+    
+
+    @Test
+    fun integratedDeclarationOfWillCombinesAllCommonRightsThemesWithExplicitLegalBoundaries() {
+        val id = "common_rights_integrated_declaration_of_will"
+        assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+        assertTrue(documentDisplayOptions.any { it.first == id })
+        val fields = officialGraphicDocumentFields(id)
+        assertTrue(fields.size >= 30)
+        val labels = fields.map { it.second }.joinToString(" ")
+        listOf("samostanowienia", "samoograniczenia", "religijnej", "niepełnosprawności", "mandat", "osób trzecich", "odpowiedzialności karnej").forEach {
+            assertTrue("Missing integrated topic: $it", labels.contains(it, ignoreCase = true))
+        }
+        val note = officialDocTypes.first { it.id == id }.note
+        assertTrue(note.contains("art. 233"))
+        assertTrue(note.contains("nie nadaje mandatu publicznego"))
+        assertTrue(note.contains("praw osób trzecich"))
+        val preview = credentialFieldOptions(id).toMap()
+        fields.forEach { (key, label) -> assertEquals(label, preview[key]) }
+    }
+
+
+
+    @Test
+    fun unifiedFamilyAndCivicDeclarationCombinesPersonalCivicAndGenealogicalEvidence() {
+        val id = "common_rights_unified_family_and_civic_declaration"
+        assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+        assertTrue(documentDisplayOptions.any { it.first == id })
+        val fields = officialGraphicDocumentFields(id)
+        assertTrue("The unified declaration must expose a broad editable schema", fields.size >= 50)
+        val labels = fields.joinToString(" ") { it.second }
+        listOf("samostanowienia", "religijnej", "mandat", "genealogiczna", "sukcesji", "herb", "tytuł", "źródła", "osób trzecich").forEach {
+            assertTrue("Missing unified declaration topic: $it", labels.contains(it, ignoreCase = true))
+        }
+        val note = officialDocTypes.first { it.id == id }.note
+        assertTrue(note.contains("nie nadaje tytułów"))
+        assertTrue(note.contains("nie nadaje mandatu publicznego"))
+        assertTrue(note.contains("art. 233"))
+        val preview = credentialFieldOptions(id).toMap()
+        fields.forEach { (key, label) -> assertEquals(label, preview[key]) }
+    }
+
 
 }

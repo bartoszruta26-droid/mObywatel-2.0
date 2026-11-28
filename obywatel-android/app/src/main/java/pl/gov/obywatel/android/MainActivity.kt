@@ -710,6 +710,23 @@ internal val documentDisplayOptions = (listOf(
     Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
     Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
     Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document),
+    Triple("common_rights_statement", "Oświadczenie o korzystaniu ze wspólnych praw i wolności", R.drawable.lib_ic_document),
+    Triple("common_rights_petition", "Petycja, wniosek lub skarga", R.drawable.lib_ic_document),
+    Triple("common_rights_public_information", "Wniosek o udostępnienie informacji publicznej", R.drawable.lib_ic_document),
+    Triple("common_rights_social_initiative", "Dokumentacja inicjatywy obywatelskiej lub społecznej", R.drawable.lib_ic_document),
+    Triple("common_rights_cooperation", "Porozumienie lub deklaracja współpracy", R.drawable.lib_ic_document),
+    Triple("common_rights_notice", "Zawiadomienie lub zgłoszenie", R.drawable.lib_ic_document),
+    Triple("common_rights_self_determination_declaration", "Oświadczenie o samostanowieniu i odpowiedzialności cywilnej", R.drawable.lib_ic_document),
+    Triple("common_rights_self_limitation", "Deklaracja dobrowolnego samoograniczenia", R.drawable.lib_ic_document),
+    Triple("common_rights_third_party_safeguards", "Oświadczenie o poszanowaniu praw osób trzecich i bezpieczeństwa publicznego", R.drawable.lib_ic_document),
+    Triple("common_rights_accessibility_needs", "Oświadczenie o szczególnych potrzebach i racjonalnych usprawnieniach", R.drawable.lib_ic_document),
+    Triple("common_rights_faith_conscience_declaration", "Oświadczenie woli, sumienia i motywacji religijnej", R.drawable.lib_ic_document),
+    Triple("common_rights_declaration_of_will", "Oświadczenie woli z klauzulą prawdziwości i odpowiedzialności", R.drawable.lib_ic_document),
+    Triple("common_rights_nonparliamentary_mandate", "Zaświadczenie ewidencyjne o deklarowanym mandacie nieparlamentarnym", R.drawable.lib_ic_document),
+    Triple("common_rights_civil_service_legitimacy", "Legitymacja uczestnika dobrowolnej służby cywilnej lub społecznej", R.drawable.lib_ic_document),
+    Triple("common_rights_personal_integrity_certificate", "Zaświadczenie o przyjętych zasadach osobistej odpowiedzialności", R.drawable.lib_ic_document),
+    Triple("common_rights_integrated_declaration_of_will", "Zintegrowane oświadczenie woli i odpowiedzialności cywilnej", R.drawable.lib_ic_document),
+    Triple("common_rights_unified_family_and_civic_declaration", "Całościowe oświadczenie woli, tożsamości osobistej i rodowej oraz odpowiedzialności cywilnej", R.drawable.lib_ic_document),
     Triple("military_book", "Książeczka wojskowa", R.drawable.tile_ic_armed_service_outline),
     Triple("martial_arts", "Legitymacja sztuk walki", R.drawable.tile_ic_armed_service_outline),
     Triple("shooting_sport", "Legitymacja strzelecka i sportowa", R.drawable.tile_ic_armed_service_outline),
@@ -753,6 +770,7 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    id.startsWith("common_rights_") -> "Bez szczególnej formy prawnej"
     id == "fund_purpose_disposition" -> "Służba państwowa"
     id == "financial_service" || DonationLedgerCatalog.find(id) != null -> "Służba finansowa"
     id == "payment_account_foundation" -> "Służba fundacyjna"
@@ -859,12 +877,13 @@ internal fun documentVisibilityGroup(id: String): String = when {
     else -> "Służba osobista"
 }
 internal val documentVisibilityGroupOrder = listOf(
-    "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
+    "Bez szczególnej formy prawnej", "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
     "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
     "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
+    "Bez szczególnej formy prawnej" -> R.drawable.lib_ic_document
     "Służba osobista" -> R.drawable.lib_ic_account
     "Służba rodowa" -> R.drawable.lib_ic_group
     "Służba cywilna", "Służba państwowa" -> R.drawable.tile_ic_civil_outline
