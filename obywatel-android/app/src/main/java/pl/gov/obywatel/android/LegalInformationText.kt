@@ -181,6 +181,86 @@ W szczególności:
 • Dane z rejestrów publicznych wymagają weryfikacji w źródle właściwym dla danego rejestru.
 • Projekt nie sugeruje afiliacji z administracją państwową ani upoważnienia do wydawania dokumentów urzędowych.
 
+PODSTAWA PRAWNA DZIAŁANIA FUNDACJI, KOLEGIUM ORZEKAJĄCEGO I ŚWIADCZEŃ PIELĘGNACYJNYCH
+
+1. Podstawa ustrojowa działania Fundacji i jej organów
+
+Fundacja Wspierania Rodzin „Aria” jako fundacja wpisana do Krajowego Rejestru Sądowego działa na podstawie ustawy z dnia 6 kwietnia 1984 r. o fundacjach oraz własnego statutu. Ustawa o fundacjach:
+• art. 1 dopuszcza ustanawianie fundacji dla społecznie lub gospodarczo użytecznych celów, wprost wymieniając między innymi ochronę zdrowia, opiekę i pomoc społeczną;
+• art. 4 stanowi, że fundacja działa na podstawie ustawy i statutu;
+• art. 5 ust. 1 pozwala statutowi określić cele, zasady, formy i zakres działalności Fundacji, organizację zarządu oraz przewidywać tworzenie obok zarządu innych organów Fundacji;
+• art. 7 ust. 2 wiąże uzyskanie osobowości prawnej z wpisem Fundacji do KRS;
+• art. 10 określa zarząd jako organ kierujący działalnością Fundacji i reprezentujący ją na zewnątrz.
+
+W konsekwencji statut może ustanowić Kolegium Orzekające jako organ wewnętrzny Fundacji oraz określić jego skład, sposób powołania, zakres zadań, tryb posiedzeń, quorum, głosowanie, dokumentowanie ustaleń i tryb ponownej weryfikacji. Jeżeli aktualny statut Fundacji rzeczywiście przyznaje Kolegium kompetencję do oceny stanu funkcjonalnego, ustalania wewnętrznej kategorii niezdolności do wykonywania określonych czynności lub wydawania rozstrzygnięć na potrzeby działalności Fundacji, a organ został prawidłowo powołany i działa zgodnie ze statutem oraz regulaminem, Kolegium może wydawać takie wewnętrzne rozstrzygnięcia w granicach tych kompetencji.
+
+Jest to kompetencja organizacyjna i statutowa Fundacji, a nie przejęcie ustawowych kompetencji powiatowego lub wojewódzkiego zespołu do spraw orzekania o niepełnosprawności, lekarza orzecznika ZUS ani KRUS. Orzeczenie Kolegium może wiążąco porządkować relację wewnętrzną Fundacji z beneficjentem, w zakresie dopuszczonym prawem, statutem, regulaminem i przyjętymi zasadami świadczenia pomocy. Nie staje się przez to orzeczeniem administracyjnym ani dokumentem, któremu ustawa automatycznie przypisuje skutki orzeczenia o stopniu niepełnosprawności.
+
+2. Ocena niezdolności do pracy w gospodarstwie rolnym
+
+Fundacja może przeprowadzać na potrzeby własnych zadań ocenę dokumentacji medycznej i funkcjonalnej oraz ustalać, czy stan danej osoby ogranicza albo uniemożliwia wykonywanie wskazanych prac w gospodarstwie rolnym — o ile taka czynność mieści się w celach Fundacji i została powierzona Kolegium w prawidłowym akcie wewnętrznym. Ocena powinna być oparta na rzeczywistych dowodach, opisie czynności rolniczych, ograniczeń funkcjonalnych, czasie ich trwania oraz uzasadnieniu. Kolegium nie może przypisywać sobie uprawnień lekarza orzecznika, organu rentowego ani państwowego zespołu orzekającego.
+
+Ustawa z 27 sierpnia 1997 r. o rehabilitacji zawodowej i społecznej oraz zatrudnianiu osób niepełnosprawnych:
+• art. 1 pkt 1–3 określa, jakie kategorie orzeczeń stanowią ustawową podstawę objęcia regulacją tej ustawy;
+• art. 3 ust. 1 określa trzy stopnie niepełnosprawności: znaczny, umiarkowany i lekki;
+• art. 5 wskazuje ustawowo określone orzeczenia lekarza orzecznika ZUS, które są traktowane na równi z odpowiednimi stopniami niepełnosprawności;
+• art. 5a przewiduje procedurę wystąpienia do zespołu do spraw orzekania o niepełnosprawności przez osoby posiadające wskazane w tym przepisie orzeczenia, w tym orzeczenia dotyczące niezdolności do pracy w gospodarstwie rolnym, o których mowa w art. 62;
+• art. 6 określa powiatowe i wojewódzkie zespoły do spraw orzekania o niepełnosprawności jako ustawowe organy orzekające w sprawach stopnia niepełnosprawności.
+
+Szczególne znaczenie ma art. 62 ust. 3 ustawy rehabilitacyjnej. Przepis ten stanowi, że osoby o stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym uznaje się za osoby niepełnosprawne, przy czym:
+• zgodnie z art. 62 ust. 3 pkt 1 osoby, którym przysługuje zasiłek pielęgnacyjny, traktuje się jako zaliczone do znacznego stopnia niepełnosprawności;
+• zgodnie z art. 62 ust. 3 pkt 2 pozostałe osoby z tej kategorii traktuje się jako zaliczone do lekkiego stopnia niepełnosprawności.
+
+Należy jednak zachować pełną treść przesłanki ustawowej: art. 62 ust. 3 pkt 1 nie stanowi, że dowolna decyzja dowolnego podmiotu o przyznaniu świadczenia nazwanego „zasiłkiem pielęgnacyjnym” automatycznie wywołuje skutek równoważności ze znacznym stopniem niepełnosprawności. Przepis odwołuje się do osób o stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym, którym przysługuje zasiłek pielęgnacyjny w rozumieniu właściwych przepisów. W połączeniu z art. 5a i art. 62 oznacza to, że ustawowy skutek zależy od spełnienia przesłanek i posiadania dokumentu należącego do kategorii przewidzianej w przepisach, a nie wyłącznie od nazwy nadanej dokumentowi przez Fundację.
+
+Dlatego rozstrzygnięcie Kolegium Fundacji może dokumentować własną ocenę i stanowić podstawę decyzji Fundacji o przyznaniu jej własnego świadczenia lub pomocy, jeżeli statut i regulamin na to pozwalają. Nie wolno jednak w samym orzeczeniu ani w kafelku aplikacji deklarować, że orzeczenie Fundacji samo w sobie jest orzeczeniem, o którym mowa w art. 62, lub że automatycznie zrównuje beneficjenta ze znacznym stopniem niepełnosprawności w rozumieniu prawa powszechnie obowiązującego. Taką równoważność można stwierdzić wyłącznie wtedy, gdy konkretny dokument i sytuacja osoby spełniają ustawowe przesłanki.
+
+3. Zasiłek pielęgnacyjny — świadczenie ustawowe a świadczenie własne Fundacji
+
+Ustawa z dnia 28 listopada 2003 r. o świadczeniach rodzinnych:
+• art. 2 pkt 2 zalicza zasiłek pielęgnacyjny do świadczeń opiekuńczych;
+• art. 16 ust. 1 określa ustawowy cel zasiłku pielęgnacyjnego jako częściowe pokrycie wydatków wynikających z konieczności zapewnienia opieki i pomocy innej osoby w związku z niezdolnością do samodzielnej egzystencji;
+• art. 16 ust. 2–3 określa ustawowe kategorie osób uprawnionych, w tym osoby powyżej 16. roku życia ze znacznym stopniem niepełnosprawności oraz — w określonym przypadku — z umiarkowanym stopniem niepełnosprawności;
+• art. 20 określa właściwość organu w sprawach świadczeń rodzinnych, w tym zasiłku pielęgnacyjnego.
+
+Fundacja nie staje się organem właściwym do przyznawania ustawowego zasiłku pielęgnacyjnego na podstawie ustawy o świadczeniach rodzinnych tylko dlatego, że jej statut przewiduje przyznawanie pomocy pieniężnej. Może natomiast, w granicach celów statutowych, posiadanych środków i obowiązujących przepisów, ustanowić i przyznawać własne świadczenie pieniężne na potrzeby beneficjentów. Jeżeli Fundacja posługuje się wobec takiego świadczenia nazwą „zasiłek pielęgnacyjny”, dokument powinien jednoznacznie wskazywać, że jest to świadczenie przyznane przez Fundację na podstawie jej statutu i regulaminu, a nie świadczenie rodzinne przyznane przez organ gminy na podstawie ustawy o świadczeniach rodzinnych.
+
+Samo przyznanie własnego świadczenia przez Fundację nie dowodzi automatycznie, że beneficjentowi przysługuje ustawowy zasiłek pielęgnacyjny z art. 16 ustawy o świadczeniach rodzinnych. Nie powoduje też samoistnie skutku z art. 62 ust. 3 pkt 1 ustawy rehabilitacyjnej. Do zastosowania tych przepisów konieczne jest wykazanie spełnienia przesłanek ustawowych, w tym właściwego statusu osoby i rodzaju dokumentu potwierdzającego niezdolność.
+
+4. Zakres prawnego skutku orzeczenia Kolegium Fundacji
+
+W dokumentach Fundacji należy rozróżnić trzy poziomy skutków:
+A. Skutek wewnętrzny — rozstrzygnięcie Kolegium może stanowić podstawę do przyznania, odmowy, zmiany lub zakończenia świadczenia Fundacji, jeśli właściwe postanowienia statutu i regulaminu rzeczywiście przyznają taką kompetencję i zachowano procedurę.
+B. Skutek dowodowy — orzeczenie, uzasadnienie, dokumentacja medyczna i funkcjonalna oraz potwierdzenie wypłat mogą być przedstawiane innym podmiotom jako dokumenty prywatne lub dokumentacja Fundacji. Ich wiarygodność i znaczenie dowodowe ocenia adresat w granicach właściwej procedury.
+C. Skutek ustawowy — równoważność z określonym stopniem niepełnosprawności, prawo do ustawowego świadczenia lub uznanie dokumentu przez organ publiczny występują tylko wtedy, gdy właściwy przepis wyraźnie wiąże taki skutek z danym rodzajem orzeczenia i spełnione są wszystkie przesłanki tego przepisu.
+
+Art. 75 § 1 Kodeksu postępowania administracyjnego ustanawia szeroką zasadę dopuszczalności dowodów w postępowaniu administracyjnym: dowodem może być wszystko, co może przyczynić się do wyjaśnienia sprawy i nie jest sprzeczne z prawem. Oznacza to, że dokument Fundacji może zostać przedłożony jako materiał dowodowy, jeżeli jest istotny dla sprawy. Nie oznacza to jednak obowiązku uznania go za orzeczenie równoważne z dokumentem ustawowo wymaganym ani związania organu jego treścią.
+
+5. Warunki prawidłowego wydawania orzeczeń przez Kolegium
+
+Przed wydaniem pierwszego orzeczenia należy sprawdzić i udokumentować:
+• dokładny paragraf aktualnego statutu ustanawiający Kolegium Orzekające oraz wskazujący jego kompetencje;
+• dokładne paragrafy statutu określające cele i formy pomocy osobom chorym, starszym i z niepełnosprawnościami;
+• regulamin Kolegium, w szczególności zasady powołania, skład, kadencję, bezstronność, wyłączenie członka, quorum, głosowanie, protokół i podpisy;
+• regulamin świadczeń określający przesłanki przyznawania własnego świadczenia Fundacji, sposób finansowania, wysokość, okres, zmianę, wstrzymanie, zakończenie i tryb ponownego rozpatrzenia;
+• kwalifikacje osób dokonujących oceny medycznej i funkcjonalnej oraz granice ich kompetencji zawodowych;
+• sposób gromadzenia, udostępniania i przechowywania danych o zdrowiu, z uwzględnieniem art. 9 RODO oraz zasad minimalizacji danych;
+• sposób odróżniania orzeczenia wewnętrznego Fundacji od orzeczeń organów publicznych.
+
+W każdym orzeczeniu Kolegium należy podać: nazwę i podstawę działania Fundacji, podstawę statutową i regulaminową kompetencji Kolegium z dokładnymi paragrafami, skład Kolegium, datę i numer posiedzenia, sposób głosowania, ustalony stan faktyczny, wykorzystane dowody, opis ograniczeń funkcjonalnych, sentencję, uzasadnienie, okres obowiązywania ustalenia, tryb weryfikacji oraz podpisy wymagane regulaminem. Nie należy wpisywać, że Kolegium „nadaje znaczny stopień niepełnosprawności”, jeżeli nie jest ustawowym organem orzekającym.
+
+6. Zasada redakcyjna dla aplikacji
+
+Prawidłowa formuła dla dokumentu Fundacji:
+
+„Kolegium Orzekające Fundacji Wspierania Rodzin „Aria”, działając jako organ wewnętrzny Fundacji na podstawie art. 4 i art. 5 ust. 1 ustawy z dnia 6 kwietnia 1984 r. o fundacjach oraz § [wskazać] Statutu Fundacji i § [wskazać] Regulaminu Kolegium, po rozpatrzeniu dokumentacji i przeprowadzeniu oceny w zakresie określonym w tych aktach, stwierdza na potrzeby działalności statutowej Fundacji [ustalony zakres niezdolności / ograniczeń funkcjonalnych]. Rozstrzygnięcie stanowi podstawę do rozpatrzenia uprawnienia do świadczenia własnego Fundacji, zgodnie z właściwym regulaminem. Dokument nie jest orzeczeniem powiatowego ani wojewódzkiego zespołu do spraw orzekania o niepełnosprawności, ZUS ani KRUS i nie przesądza samodzielnie o ustawowej równoważności ze znacznym stopniem niepełnosprawności.”
+
+Prawidłowa formuła dla dokumentu o świadczeniu:
+
+„Fundacja Wspierania Rodzin „Aria”, działając w granicach celów statutowych i na podstawie § [wskazać] Statutu oraz § [wskazać] Regulaminu świadczeń, przyznaje [dane beneficjenta] własne świadczenie pieniężne Fundacji określone w regulaminie jako [nazwa świadczenia], na warunkach wskazanych w niniejszym rozstrzygnięciu. Jest to świadczenie Fundacji, a nie zasiłek pielęgnacyjny przyznany przez organ gminy na podstawie ustawy o świadczeniach rodzinnych.”
+
+Powyższe formuły nie przesądzają, że konkretne postanowienia statutu Fundacji już przyznają wszystkie opisane kompetencje. Przed publikacją treści w aplikacji należy wstawić rzeczywiste numery paragrafów i sprawdzić zgodność z aktualnym statutem oraz regulaminami Fundacji.
+
 PODSTAWOWE ŹRÓDŁA PRAWNE
 
 • Konstytucja Rzeczypospolitej Polskiej — https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU19970780483 — w szczególności art. 30, 32, 37, 47, 53 i 54.
