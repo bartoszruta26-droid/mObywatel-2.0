@@ -710,6 +710,12 @@ internal val documentDisplayOptions = (listOf(
     Triple("organization_association", "Dokumenty stowarzyszenia", R.drawable.lib_ic_building),
     Triple("entity", "Dokumenty organizacji i podmiotów", R.drawable.lib_ic_building),
     Triple("official", "Pozostałe dokumenty urzędowe", R.drawable.lib_ic_document),
+    Triple("common_rights_statement", "Oświadczenie o korzystaniu ze wspólnych praw i wolności", R.drawable.lib_ic_document),
+    Triple("common_rights_petition", "Petycja, wniosek lub skarga", R.drawable.lib_ic_document),
+    Triple("common_rights_public_information", "Wniosek o udostępnienie informacji publicznej", R.drawable.lib_ic_document),
+    Triple("common_rights_social_initiative", "Dokumentacja inicjatywy obywatelskiej lub społecznej", R.drawable.lib_ic_document),
+    Triple("common_rights_cooperation", "Porozumienie lub deklaracja współpracy", R.drawable.lib_ic_document),
+    Triple("common_rights_notice", "Zawiadomienie lub zgłoszenie", R.drawable.lib_ic_document),
     Triple("military_book", "Książeczka wojskowa", R.drawable.tile_ic_armed_service_outline),
     Triple("martial_arts", "Legitymacja sztuk walki", R.drawable.tile_ic_armed_service_outline),
     Triple("shooting_sport", "Legitymacja strzelecka i sportowa", R.drawable.tile_ic_armed_service_outline),
@@ -753,6 +759,7 @@ internal val documentDisplayOptions = (listOf(
 ).distinctBy { it.first }
 
 internal fun documentVisibilityGroup(id: String): String = when {
+    id.startsWith("common_rights_") -> "Bez szczególnej formy prawnej"
     id == "fund_purpose_disposition" -> "Służba państwowa"
     id == "financial_service" || DonationLedgerCatalog.find(id) != null -> "Służba finansowa"
     id == "payment_account_foundation" -> "Służba fundacyjna"
@@ -859,6 +866,7 @@ internal fun documentVisibilityGroup(id: String): String = when {
     else -> "Służba osobista"
 }
 internal val documentVisibilityGroupOrder = listOf(
+    "Bez szczególnej formy prawnej",
     "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
     "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
     "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna",
@@ -874,6 +882,7 @@ private fun documentGroupIconResource(group: String): Int = when (group) {
     "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna" -> R.drawable.tile_ic_business_outline
     "Służba finansowa" -> R.drawable.lib_ic_wallet
     "Służba zdrowotna" -> R.drawable.tile_ic_disability_outline
+    "Bez szczególnej formy prawnej" -> R.drawable.lib_ic_document
     "Zasoby i dokumenty własne" -> R.drawable.lib_ic_folder
     else -> R.drawable.lib_ic_document
 }
