@@ -49,16 +49,19 @@ fun LegalInformationScreen(onBack: () -> Unit) {
     var showDetailedPfcModel by rememberSaveable { mutableStateOf(false) }
     var showEntrustmentDocument by rememberSaveable { mutableStateOf(false) }
     var showCompanyFinancingAgreement by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement) {
+    var showNonParliamentaryMandate by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement || showNonParliamentaryMandate) {
         showFundRegulation = false
         showDetailedPfcModel = false
         showEntrustmentDocument = false
         showCompanyFinancingAgreement = false
+        showNonParliamentaryMandate = false
     }
-    BackHandler(enabled = !showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement) { onBack() }
+    BackHandler(enabled = !showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement && !showNonParliamentaryMandate) { onBack() }
 
     val displayedText = when {
         showCompanyFinancingAgreement -> markdownToDisplayText(COMPANY_FINANCING_AGREEMENT_TEXT)
+        showNonParliamentaryMandate -> NON_PARLIAMENTARY_MANDATE_INTERPRETATION
         showEntrustmentDocument -> markdownToDisplayText(ENTRUSTMENT_DOCUMENT_TEXT)
         showDetailedPfcModel -> DETAILED_PFC_MODEL_TEXT
         showFundRegulation -> markdownToDisplayText(FUND_REGULATION_MARKDOWN)
@@ -66,6 +69,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
     }
     val pageTitle = when {
         showCompanyFinancingAgreement -> "Umowa odpłatnego współfinansowania Celu"
+        showNonParliamentaryMandate -> "Interpretacja prawna mandatu nieparlamentarnego"
         showEntrustmentDocument -> "Powierzenie środków Dyspozytorowi Celu"
         showDetailedPfcModel -> "Szczegółowy model prawny Celu"
         showFundRegulation -> "Regulamin dotacji celowych państwowego funduszu celowego"
@@ -87,11 +91,12 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(onClick = {
-                    if (showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement) {
+                    if (showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement || showNonParliamentaryMandate) {
                         showFundRegulation = false
                         showDetailedPfcModel = false
                         showEntrustmentDocument = false
                         showCompanyFinancingAgreement = false
+                        showNonParliamentaryMandate = false
                     } else onBack()
                 }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
@@ -103,7 +108,25 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                     modifier = Modifier.weight(1f).semantics { heading() }
                 )
             }
-            if (!showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement) {
+            if (!showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement && !showNonParliamentaryMandate) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable { showNonParliamentaryMandate = true },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(Icons.Filled.AccountBalance, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Column(Modifier.weight(1f)) {
+                            Text("Mandat Posła z Powołania — mandat nieparlamentarny", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text("Powołanie do służby Narodowi, publiczne ślubowanie i bezpośrednie sprawowanie władzy suwerena", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                        Icon(Icons.Filled.Description, contentDescription = "Otwórz interpretację")
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { showFundRegulation = true },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
