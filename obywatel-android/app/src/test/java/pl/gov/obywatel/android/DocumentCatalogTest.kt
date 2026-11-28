@@ -339,4 +339,25 @@ class DocumentCatalogTest {
     }
 
 
+
+    @Test
+    fun unifiedFamilyAndCivicDeclarationCombinesPersonalCivicAndGenealogicalEvidence() {
+        val id = "common_rights_unified_family_and_civic_declaration"
+        assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+        assertTrue(documentDisplayOptions.any { it.first == id })
+        val fields = officialGraphicDocumentFields(id)
+        assertTrue("The unified declaration must expose a broad editable schema", fields.size >= 50)
+        val labels = fields.joinToString(" ") { it.second }
+        listOf("samostanowienia", "religijnej", "mandat", "genealogiczna", "sukcesji", "herb", "tytuł", "źródła", "osób trzecich").forEach {
+            assertTrue("Missing unified declaration topic: $it", labels.contains(it, ignoreCase = true))
+        }
+        val note = officialDocTypes.first { it.id == id }.note
+        assertTrue(note.contains("nie nadaje tytułów"))
+        assertTrue(note.contains("nie nadaje mandatu publicznego"))
+        assertTrue(note.contains("art. 233"))
+        val preview = credentialFieldOptions(id).toMap()
+        fields.forEach { (key, label) -> assertEquals(label, preview[key]) }
+    }
+
+
 }
