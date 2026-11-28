@@ -29,6 +29,38 @@ class DocumentCatalogTest {
         assertTrue(stateIds.all { id -> documentDisplayOptions.any { it.first == id } })
     }
 
+
+    @Test
+    fun nobleTitleCertificatesAndLegitimaciesHaveGenealogicalEvidenceFieldsAndFamilyRoutes() {
+        val expectedTitles = setOf(
+            "Zaświadczenie o udokumentowanym tytule szlacheckim",
+            "Zaświadczenie o pochodzeniu szlacheckim",
+            "Świadectwo genealogiczne rodu szlacheckiego",
+            "Zaświadczenie o linii sukcesji i następstwie tytułu",
+            "Zaświadczenie o herbie i tradycji heraldycznej Rodu",
+            "Legitymacja szlachecka",
+            "Legitymacja tytułu książęcego",
+            "Legitymacja tytułu hrabiowskiego",
+            "Legitymacja tytułu wicehrabiowskiego",
+            "Legitymacja tytułu baronowskiego",
+            "Legitymacja tytułu baronetowskiego",
+            "Legitymacja tytułu rycerskiego",
+            "Legitymacja szlachcica / szlachcianki",
+            "Rejestr tytułów, linii sukcesji i dokumentów heraldycznych"
+        )
+        val nobleDocuments = familyEntityGraphicDocumentTargets().filter { (_, title) -> title in expectedTitles }
+        assertEquals(expectedTitles, nobleDocuments.map { it.second }.toSet())
+        nobleDocuments.forEach { (id, title) ->
+            assertTrue("Brak kafelka dla $title", documentDisplayOptions.any { it.first == id })
+            assertEquals("Dokument $title musi należeć do grupy rodowej", "Służba rodowa", documentVisibilityGroup(id))
+            assertEquals("Brak trasy dla $title", DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+            val labels = familyEntityGraphicDocumentFields(id).map { it.second }
+            assertTrue("Brak pól edycyjnych dla $title", labels.isNotEmpty())
+            assertTrue("Brak identyfikacji tytułu dla $title", labels.any { it.contains("tytuł", ignoreCase = true) || it.contains("stopień", ignoreCase = true) })
+            assertTrue("Brak źródła lub podstawy dla $title", labels.any { it.contains("źródł", ignoreCase = true) || it.contains("podstaw", ignoreCase = true) })
+        }
+    }
+
     @Test
     fun groupOrderDoesNotContainDuplicates() {
         assertEquals(documentVisibilityGroupOrder.size, documentVisibilityGroupOrder.toSet().size)
