@@ -394,7 +394,7 @@ internal val officialDocTypes = listOf(
         "Zasady dobrowolności, świadomej zgody, równego traktowania i możliwości wycofania udziału",
         "Zobowiązanie do pokojowego działania oraz powstrzymania się od przemocy, gróźb, nękania, przymusu i samowoli",
         "Zasady współpracy, konsultacji, mediacji, rozpatrywania skarg i rozwiązywania sporów",
-        "Deklarowana przynależność rodowa, nazwa Rodu, gałąź/l linia genealogiczna i relacja do przodków — jako twierdzenia składającego",
+        "Deklarowana przynależność rodowa, nazwa Rodu, gałąź / linia genealogiczna i relacja do przodków — jako twierdzenia składającego",
         "Imiona i nazwiska przodków, stopnie pokrewieństwa, daty i miejsca zdarzeń genealogicznych oraz źródła każdej relacji",
         "Linia pochodzenia i następstwa: osoba poprzedzająca, ogniwa pokrewieństwa, sposób wywodzenia i ewentualne luki dowodowe",
         "Deklarowany tytuł lub godność rodowa: rodzaj (szlachecki, książęcy, hrabiowski, wicehrabiowski, baronowski, baronetowski, rycerski lub inny), brzmienie i forma żeńska/męska",
