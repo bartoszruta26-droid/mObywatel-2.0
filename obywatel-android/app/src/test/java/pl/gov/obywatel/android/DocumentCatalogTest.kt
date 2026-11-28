@@ -287,10 +287,10 @@ class DocumentCatalogTest {
             assertEquals("Powtórzone pola dla $id", keys.size, keys.toSet().size)
         }
         val farmNotice = officialDocTypes.single { it.id == "foundation_farm_work_incapacity_certificate" }.note
-        assertTrue(farmNotice.contains("nie jest orzeczeniem KRUS ani ZUS"))
+        assertTrue(farmNotice.contains("Kolegium Orzekającego Fundacji"))
         val allowanceNotice = officialDocTypes.single { it.id == "foundation_care_allowance_award" }.note
-        assertTrue(allowanceNotice.contains("zasiłku pielęgnacyjnego"))
-        assertTrue(allowanceNotice.contains("nie jest decyzją administracyjną"))
+        assertTrue(allowanceNotice.contains("świadczenia pielęgnacyjnego"))
+        assertTrue(allowanceNotice.contains("właściwy organ Fundacji"))
     }
 
 }
