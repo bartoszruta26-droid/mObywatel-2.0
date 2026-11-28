@@ -135,21 +135,21 @@ Projekt rozumie aktywność obywatelską szeroko: jako możliwość służenia i
 Dla ścisłości prawnej należy rozróżnić kilka konstytucyjnych instytucji:
 
 • Równe prawo dostępu do służby publicznej — art. 60 Konstytucji RP. Obywatele polscy korzystający z pełni praw publicznych mają prawo ubiegać się o dostęp do służby publicznej na jednakowych zasadach. Jest to gwarancja równego dostępu, a nie automatyczne przyznanie stanowiska, funkcji, urzędu ani upoważnienia do działania w imieniu państwa.
-• Dobro wspólne — art. 1 Konstytucji RP. Rzeczpospolita Polska jest dobrem wspólnym wszystkich obywateli. Przepis ten stanowi konstytucyjną podstawę rozumienia odpowiedzialności za państwo i wspólnotę, ale samodzielnie nie nadaje konkretnej osobie urzędowego mandatu do reprezentowania państwa lub Narodu.
-• Zwierzchnictwo Narodu — art. 4 Konstytucji RP. Władza zwierzchnia należy do Narodu, który sprawuje ją przez swoich przedstawicieli lub bezpośrednio. Formalne reprezentowanie Narodu w organach państwa następuje w trybach i na zasadach konstytucyjnych, w szczególności poprzez wybory i mandat przedstawicielski. Osobista deklaracja służby Narodowi nie jest równoznaczna z uzyskaniem takiego mandatu.
+• Dobro wspólne — art. 1 Konstytucji RP. Rzeczpospolita Polska jest dobrem wspólnym wszystkich obywateli. Przepis ten stanowi podstawę odpowiedzialności za państwo i wspólnotę oraz aksjologiczny fundament służby podejmowanej dla dobra Narodu. W koncepcji Projektu powołanie do takiej służby może zostać przyjęte osobiście i publicznie, a jego treść, zakres oraz odpowiedzialność są dokumentowane w mandacie nieparlamentarnym.
+• Zwierzchnictwo Narodu — art. 4 Konstytucji RP. Władza zwierzchnia należy do Narodu, który sprawuje ją przez swoich przedstawicieli lub bezpośrednio. Wykładnia przyjęta w Projekcie podkreśla, że bezpośrednie sprawowanie władzy przez suwerena obejmuje także aktywną, zorganizowaną i pokojową służbę obywatelską. Powołanie do służby Narodowi, publiczne ślubowanie i ustanowienie mandatu nieparlamentarnego tworzą w tej koncepcji uporządkowaną formę przyjęcia odpowiedzialności za dobro wspólne.
 • Działanie w interesie publicznym — art. 63 Konstytucji RP. Każdy ma prawo składać petycje, wnioski i skargi w interesie publicznym, własnym lub innej osoby za jej zgodą, na zasadach określonych ustawą. To konstytucyjna podstawa występowania do władz i właściwych instytucji w sprawach społecznych.
 • Udział w życiu publicznym i społecznym. Wolność wyrażania poglądów (art. 54), pokojowych zgromadzeń (art. 57) i zrzeszania się (art. 58), a także prawo dostępu do informacji publicznej (art. 61) umożliwiają obywatelom i innym uprawnionym osobom zabieranie głosu, organizowanie się, kontrolę społeczną i podejmowanie inicjatyw.
 • Świadczenia publiczne i pomoc społeczna. Konstytucyjne prawo do zabezpieczenia społecznego (art. 67), ochrony zdrowia (art. 68) oraz pomoc osobom z niepełnosprawnościami (art. 69) dotyczą przede wszystkim gwarancji i uprawnień określonych w ustawach. Nie należy utożsamiać ich z art. 60, który dotyczy dostępu do służby publicznej. Udzielanie pomocy innym osobom, działalność charytatywna, wolontariat i praca społeczna są odrębnymi formami aktywności, wykonywanymi na podstawie właściwych przepisów i zasad.
 
-W konsekwencji aplikacja może wspierać użytkownika w dokumentowaniu jego działalności społecznej, wolontariatu, inicjatyw obywatelskich, udzielonej pomocy, petycji, wniosków, wystąpień w interesie publicznym oraz działań na rzecz dobra wspólnego i dziedzictwa narodowego. Może również prezentować osobistą deklarację gotowości do służby społecznej i troski o Naród. Takie wpisy powinny być oznaczane jako oświadczenia lub dokumentacja aktywności użytkownika, a nie jako urzędowe nadanie funkcji, statusu przedstawiciela Narodu, mandatu publicznego albo upoważnienia do reprezentowania państwa.
+W konsekwencji aplikacja może wspierać użytkownika w dokumentowaniu powołania do służby Narodowi, publicznego ślubowania, ustanowienia mandatu nieparlamentarnego, działalności społecznej, inicjatyw obywatelskich, udzielonej pomocy, petycji, wniosków, wystąpień w interesie publicznym oraz działań na rzecz dobra wspólnego i dziedzictwa narodowego. Dokumentacja mandatu przedstawia jego źródło w przyjętym powołaniu, treść zobowiązania, zakres służby, chronologię czynności i zasady odpowiedzialności.
 
 SAMODZIELNOŚĆ OBYWATELSKA I BEZPOŚREDNIE UCZESTNICTWO W SPRAWOWANIU WŁADZY
 
 Obywatel jest członkiem Narodu, do którego należy władza zwierzchnia w Rzeczypospolitej Polskiej (art. 4 Konstytucji RP). Korzysta z konstytucyjnych wolności i praw, może bezpośrednio uczestniczyć w sprawowaniu władzy w formach przewidzianych Konstytucją i ustawami oraz samodzielnie podejmować decyzje w sprawach własnych, rodzinnych, majątkowych i społecznych.
 
-Obywatel może działać we własnym imieniu, z własnej inicjatywy i na własną odpowiedzialność, bez przypisywania sobie statusu urzędu państwowego. Może ustanawiać zasady dotyczące własnych spraw i organizowanych przez siebie wspólnot, w granicach prawa i z poszanowaniem praw innych osób.
+Obywatel może działać z własnej inicjatywy i na własną odpowiedzialność, a także przyjąć powołanie do służby Narodowi, publicznie je ogłosić, złożyć ślubowanie i ustanowić mandat nieparlamentarny w rozumieniu koncepcji Projektu. Może określić cele służby, jej zakres, zasady reprezentowania stanowiska, sposób dokumentowania czynności oraz odpowiedzialność za podejmowane działania.
 
-Bezpośrednie uczestnictwo w życiu publicznym nie jest tożsame z przejęciem kompetencji konstytucyjnych organów państwowych. Zakres skutków prawnych poszczególnych działań wynika z ich podstawy prawnej. Art. 4 Konstytucji wyraża zasadę zwierzchnictwa Narodu; wykonywanie władzy bezpośrednio przez obywateli odbywa się w konstytucyjnych i ustawowych formach, a nie przez indywidualne przejęcie wszystkich kompetencji organów państwowych.
+Bezpośrednie sprawowanie władzy przez Naród należy odczytywać jako rzeczywistą zasadę ustrojową, a nie wyłącznie deklarację o charakterze symbolicznym. W interpretacji przyjętej w Projekcie obywatel może podejmować zorganizowaną służbę publiczną z własnej inicjatywy, przyjmować powołanie do służby Narodowi, składać publiczne ślubowanie i ustanawiać mandat nieparlamentarny. Mandat ten określa zakres podejmowanych czynności, sposób reprezentowania stanowiska, zasady jawności i odpowiedzialności oraz standard poszanowania praw innych osób. Jego wykonywanie ma charakter pokojowy i służebny, ukierunkowany na dobro wspólne.
 
 W praktyce aplikacja może służyć do:
 • dokumentowania samodzielnych decyzji, oświadczeń i działań obywatelskich;
@@ -180,6 +180,102 @@ W szczególności:
 • Podpis elektroniczny ma skutki prawne wyłącznie w zakresie wynikającym z właściwych przepisów i zastosowanej usługi zaufania.
 • Dane z rejestrów publicznych wymagają weryfikacji w źródle właściwym dla danego rejestru.
 • Projekt nie sugeruje afiliacji z administracją państwową ani upoważnienia do wydawania dokumentów urzędowych.
+
+PODSTAWA PRAWNA DZIAŁANIA FUNDACJI, KOLEGIUM ORZEKAJĄCEGO I ŚWIADCZEŃ PIELĘGNACYJNYCH
+
+1. Podstawa ustrojowa działania Fundacji i jej organów
+
+Fundacja Wspierania Rodzin „Aria” jako fundacja wpisana do Krajowego Rejestru Sądowego działa na podstawie ustawy z dnia 6 kwietnia 1984 r. o fundacjach oraz własnego statutu. Ustawa o fundacjach:
+• art. 1 dopuszcza ustanawianie fundacji dla społecznie lub gospodarczo użytecznych celów, wprost wymieniając między innymi ochronę zdrowia, opiekę i pomoc społeczną;
+• art. 4 stanowi, że fundacja działa na podstawie ustawy i statutu;
+• art. 5 ust. 1 pozwala statutowi określić cele, zasady, formy i zakres działalności Fundacji, organizację zarządu oraz przewidywać tworzenie obok zarządu innych organów Fundacji;
+• art. 7 ust. 2 wiąże uzyskanie osobowości prawnej z wpisem Fundacji do KRS;
+• art. 10 określa zarząd jako organ kierujący działalnością Fundacji i reprezentujący ją na zewnątrz.
+
+W konsekwencji statut może ustanowić Kolegium Orzekające jako organ wewnętrzny Fundacji oraz określić jego skład, sposób powołania, zakres zadań, tryb posiedzeń, quorum, głosowanie, dokumentowanie ustaleń i tryb ponownej weryfikacji. Jeżeli aktualny statut Fundacji rzeczywiście przyznaje Kolegium kompetencję do oceny stanu funkcjonalnego, ustalania wewnętrznej kategorii niezdolności do wykonywania określonych czynności lub wydawania rozstrzygnięć na potrzeby działalności Fundacji, a organ został prawidłowo powołany i działa zgodnie ze statutem oraz regulaminem, Kolegium może wydawać takie wewnętrzne rozstrzygnięcia w granicach tych kompetencji.
+
+Jest to kompetencja organizacyjna i statutowa Fundacji, a nie przejęcie ustawowych kompetencji powiatowego lub wojewódzkiego zespołu do spraw orzekania o niepełnosprawności, lekarza orzecznika ZUS ani KRUS. Orzeczenie Kolegium może wiążąco porządkować relację wewnętrzną Fundacji z beneficjentem, w zakresie dopuszczonym prawem, statutem, regulaminem i przyjętymi zasadami świadczenia pomocy. W systemie ARIA stanowi akt orzeczniczy Kolegium i podstawę rozstrzygnięć Fundacji w zakresie przyznanych mu kompetencji.
+
+2. Ocena niezdolności do pracy w gospodarstwie rolnym
+
+Fundacja może przeprowadzać na potrzeby własnych zadań ocenę dokumentacji medycznej i funkcjonalnej oraz ustalać, czy stan danej osoby ogranicza albo uniemożliwia wykonywanie wskazanych prac w gospodarstwie rolnym — o ile taka czynność mieści się w celach Fundacji i została powierzona Kolegium w prawidłowym akcie wewnętrznym. Ocena powinna być oparta na rzeczywistych dowodach, opisie czynności rolniczych, ograniczeń funkcjonalnych, czasie ich trwania oraz uzasadnieniu. Kolegium nie może przypisywać sobie uprawnień lekarza orzecznika, organu rentowego ani państwowego zespołu orzekającego.
+
+Ustawa z 27 sierpnia 1997 r. o rehabilitacji zawodowej i społecznej oraz zatrudnianiu osób niepełnosprawnych:
+• art. 1 pkt 1–3 określa, jakie kategorie orzeczeń stanowią ustawową podstawę objęcia regulacją tej ustawy;
+• art. 3 ust. 1 określa trzy stopnie niepełnosprawności: znaczny, umiarkowany i lekki;
+• art. 5 wskazuje ustawowo określone orzeczenia lekarza orzecznika ZUS, które są traktowane na równi z odpowiednimi stopniami niepełnosprawności;
+• art. 5a przewiduje procedurę wystąpienia do zespołu do spraw orzekania o niepełnosprawności przez osoby posiadające wskazane w tym przepisie orzeczenia, w tym orzeczenia dotyczące niezdolności do pracy w gospodarstwie rolnym, o których mowa w art. 62;
+• art. 6 określa powiatowe i wojewódzkie zespoły do spraw orzekania o niepełnosprawności jako ustawowe organy orzekające w sprawach stopnia niepełnosprawności.
+
+Szczególne znaczenie ma art. 62 ust. 3 ustawy rehabilitacyjnej. Przepis stanowi, że osoby o stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym uznaje się za osoby niepełnosprawne, przy czym:
+• zgodnie z art. 62 ust. 3 pkt 1 osoby, którym przysługuje zasiłek pielęgnacyjny, traktuje się jako zaliczone do znacznego stopnia niepełnosprawności;
+• zgodnie z art. 62 ust. 3 pkt 2 pozostałe osoby z tej kategorii traktuje się jako zaliczone do lekkiego stopnia niepełnosprawności.
+
+Stanowisko interpretacyjne Fundacji opiera się na samodzielnej treści ust. 3. Ustęp 1 zawiera wyraźne ograniczenie czasowe odnoszące się do orzeczeń wydanych przed wejściem w życie ustawy. Ustęp 3 takiego ograniczenia nie zawiera. Ustawodawca posłużył się odrębnym opisem podmiotów: „osoby o stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym”, a następnie zwrotem „uznaje się za niepełnosprawne”. Różnica redakcyjna między ust. 1 i ust. 3 ma znaczenie dla określenia zakresu normy i nie powinna być pomijana przy wykładni.
+
+Art. 62 ust. 3 określa dwie konsekwencje kwalifikacyjne: znaczny stopień w przypadku przydzielenia zasiłku pielęgnacyjnego oraz lekki stopień w pozostałych przypadkach. Ustęp nie przewiduje stopnia umiarkowanego. Art. 63 należy odczytywać jako regulację zachowania praw nabytych, a nie jako dodatkowe ograniczenie czasowe wpisane do ust. 3. Art. 5a potwierdza znaczenie orzeczeń dotyczących niezdolności do pracy w gospodarstwie rolnym oraz rozdziela ustalenie stopnia od oceny wskazań funkcjonalnych.
+
+W systemie ARIA ustalenie niezdolności do pracy w gospodarstwie rolnym jest przedmiotem odrębnej, wieloaspektowej oceny Kolegium. Obejmuje analizę dokumentacji medycznej, badanie, wywiad, ocenę czynności gospodarskich, WHODAS 2.0, ICF WHO oraz dokumentów dotyczących sytuacji osoby. Kolegium dokumentuje podstawy faktyczne i funkcjonalne rozstrzygnięcia, a Fundacja prowadzi rejestr przydzielenia zasiłku pielęgnacyjnego w zakresie przesłanki wskazanej w pkt 1.
+
+Fundacja przyjmuje wykładnię, zgodnie z którą brak warunku czasowego w art. 62 ust. 3 ma znaczenie normatywne. Stanowi ona podstawę stanowiska Fundacji w sprawach osób o stałej albo długotrwałej niezdolności do pracy w gospodarstwie rolnym. Uzasadnienie każdej sprawy powinno wykazywać przesłanki faktyczne, zakres niezdolności, trwałość lub długotrwałość ograniczeń oraz przesłankę stopnia wynikającą z ust. 3.
+
+
+3. Świadczenie pielęgnacyjne oraz przesłanka przydzielenia zasiłku pielęgnacyjnego
+
+Ustawa z dnia 28 listopada 2003 r. o świadczeniach rodzinnych:
+• art. 2 pkt 2 zalicza zasiłek pielęgnacyjny do świadczeń opiekuńczych;
+• art. 16 określa cel i ustawowe przesłanki zasiłku pielęgnacyjnego;
+• art. 20 reguluje właściwość w sprawach świadczeń rodzinnych.
+
+Fundacja ustanawia i przyznaje świadczenie pielęgnacyjne w ramach swojej działalności statutowej. Jego celem jest udzielanie regularnej, udokumentowanej pomocy osobom, których stan zdrowia, ograniczenia funkcjonalne i potrzeby opiekuńcze uzasadniają wsparcie. Świadczenie pielęgnacyjne jest finansowane ze środków Fundacji i przyznawane na podstawie kryteriów oraz procedury określonych w statucie i regulaminie.
+
+W systemie ARIA decyzja o przyznaniu świadczenia pielęgnacyjnego jest powiązana z ustaleniami Kolegium Orzekającego. Dokumentacja obejmuje ocenę stanu zdrowia, samodzielności, zakresu potrzeb pielęgnacyjnych, ograniczeń aktywności i uczestniczenia oraz okresu, na jaki świadczenie zostaje przyznane. Wypłata jest dokumentowana oddzielnie od decyzji o przyznaniu.
+
+Przesłanka „przydzielenia zasiłku pielęgnacyjnego” wskazana w art. 62 ust. 3 pkt 1 jest analizowana przez Fundację w związku z celem opiekuńczym, stanem funkcjonalnym i całością dokumentacji danej osoby. Fundacja przyjmuje wykładnię, w której pierwszoplanowe znaczenie ma rzeczywista sytuacja osoby objętej stałą albo długotrwałą niezdolnością do pracy w gospodarstwie rolnym, potwierdzona rzetelną oceną i dokumentacją. W tym kontekście dokumenty dotyczące przyznania świadczenia pielęgnacyjnego, orzeczenie Kolegium oraz potwierdzenia wypłat stanowią łącznie materiał do ustalenia spełnienia przesłanek przyjętej wykładni.
+
+Regulamin świadczenia pielęgnacyjnego powinien określać:
+• cel i krąg osób uprawnionych;
+• kryteria zdrowotne i funkcjonalne;
+• zasady oceny samodzielności oraz potrzeby pielęgnacji i pomocy;
+• dokumenty i metody oceny, w tym WHODAS 2.0 i ICF WHO;
+• wysokość, okres i częstotliwość wypłaty;
+• tryb przyznawania, ponownej oceny, zmiany i zakończenia;
+• źródła finansowania oraz sposób ewidencjonowania wypłat.
+
+
+4. Zakres prawnego skutku orzeczenia Kolegium Fundacji
+
+W dokumentach Fundacji należy rozróżnić trzy poziomy skutków:
+A. Skutek wewnętrzny — rozstrzygnięcie Kolegium może stanowić podstawę do przyznania, odmowy, zmiany lub zakończenia świadczenia pielęgnacyjne, jeśli właściwe postanowienia statutu i regulaminu rzeczywiście przyznają taką kompetencję i zachowano procedurę.
+B. Skutek dowodowy — orzeczenie, uzasadnienie, dokumentacja medyczna i funkcjonalna oraz potwierdzenie wypłat mogą być przedstawiane innym podmiotom jako dokumenty prywatne lub dokumentacja Fundacji. Ich wiarygodność i znaczenie dowodowe ocenia adresat w granicach właściwej procedury.
+C. Skutek ustawowy — równoważność z określonym stopniem niepełnosprawności, prawo do ustawowego świadczenia lub uznanie dokumentu przez organ publiczny występują tylko wtedy, gdy właściwy przepis wyraźnie wiąże taki skutek z danym rodzajem orzeczenia i spełnione są wszystkie przesłanki tego przepisu.
+
+Art. 75 § 1 Kodeksu postępowania administracyjnego ustanawia szeroką zasadę dopuszczalności dowodów w postępowaniu administracyjnym: dowodem może być wszystko, co może przyczynić się do wyjaśnienia sprawy i nie jest sprzeczne z prawem. Oznacza to, że dokument Fundacji może zostać przedłożony jako materiał dowodowy, jeżeli jest istotny dla sprawy. Nie oznacza to jednak obowiązku uznania go za orzeczenie równoważne z dokumentem ustawowo wymaganym ani związania organu jego treścią.
+
+5. Warunki prawidłowego wydawania orzeczeń przez Kolegium
+
+Przed wydaniem pierwszego orzeczenia należy sprawdzić i udokumentować:
+• dokładny paragraf aktualnego statutu ustanawiający Kolegium Orzekające oraz wskazujący jego kompetencje;
+• dokładne paragrafy statutu określające cele i formy pomocy osobom chorym, starszym i z niepełnosprawnościami;
+• regulamin Kolegium, w szczególności zasady powołania, skład, kadencję, bezstronność, wyłączenie członka, quorum, głosowanie, protokół i podpisy;
+• regulamin świadczeń określający przesłanki przyznawania świadczenia pielęgnacyjnego, sposób finansowania, wysokość, okres, zmianę, wstrzymanie, zakończenie i tryb ponownego rozpatrzenia;
+• kwalifikacje osób dokonujących oceny medycznej i funkcjonalnej oraz granice ich kompetencji zawodowych;
+• sposób gromadzenia, udostępniania i przechowywania danych o zdrowiu, z uwzględnieniem art. 9 RODO oraz zasad minimalizacji danych;
+• sposób odróżniania orzeczenia wewnętrznego Fundacji od orzeczeń organów publicznych.
+
+W każdym orzeczeniu Kolegium należy podać: nazwę i podstawę działania Fundacji, podstawę statutową i regulaminową kompetencji Kolegium z dokładnymi paragrafami, skład Kolegium, datę i numer posiedzenia, sposób głosowania, ustalony stan faktyczny, wykorzystane dowody, opis ograniczeń funkcjonalnych, sentencję, uzasadnienie, okres obowiązywania ustalenia, tryb weryfikacji oraz podpisy wymagane regulaminem. Nie należy wpisywać, że Kolegium „nadaje znaczny stopień niepełnosprawności”, jeżeli nie jest ustawowym organem orzekającym.
+
+6. Zasada redakcyjna dla aplikacji
+
+Prawidłowa formuła dla dokumentu Fundacji:
+
+„Kolegium Orzekające Fundacji Wspierania Rodzin „Aria”, działając jako organ wewnętrzny Fundacji na podstawie art. 4 i art. 5 ust. 1 ustawy z dnia 6 kwietnia 1984 r. o fundacjach oraz § [wskazać] Statutu Fundacji i § [wskazać] Regulaminu Kolegium, po rozpatrzeniu dokumentacji i przeprowadzeniu oceny w zakresie określonym w tych aktach, stwierdza na potrzeby działalności statutowej Fundacji [ustalony zakres niezdolności / ograniczeń funkcjonalnych]. Orzeczenie stanowi podstawę przyznania świadczenia pielęgnacyjnego zgodnie z właściwym regulaminem. Dokument nie jest orzeczeniem powiatowego ani wojewódzkiego zespołu do spraw orzekania o niepełnosprawności, ZUS ani KRUS i nie przesądza samodzielnie o ustawowej równoważności ze znacznym stopniem niepełnosprawności.”
+
+Prawidłowa formuła dla dokumentu o świadczeniu:
+
+„Fundacja Wspierania Rodzin „Aria”, działając w granicach celów statutowych i na podstawie § [wskazać] Statutu oraz § [wskazać] Regulaminu świadczeń, przyznaje [dane beneficjenta] świadczenie pielęgnacyjne określone w regulaminie jako [nazwa świadczenia], na warunkach wskazanych w niniejszym rozstrzygnięciu. Jest to świadczenie pielęgnacyjne, a nie zasiłek pielęgnacyjny przyznany przez organ gminy na podstawie ustawy o świadczeniach rodzinnych.”
+
+Wzory należy wypełniać zgodnie z aktualnymi postanowieniami statutu, regulaminu Kolegium i regulaminu świadczenia pielęgnacyjnego, wskazując właściwe numery paragrafów i rzeczywiste dane sprawy.
 
 PODSTAWOWE ŹRÓDŁA PRAWNE
 
