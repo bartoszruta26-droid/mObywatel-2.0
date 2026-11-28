@@ -68,6 +68,7 @@ object DocumentRouteRegistry {
         document("large_family"),
         document("blood_donor"),
         document("disability_card"),
+        document("foundation_farm_work_incapacity_certificate"),
         group("foundation_care", "Dokumenty Fundacji – opieka i świadczenia"),
         document("vehicle_registration"),
         document("insurance_vehicle"),
