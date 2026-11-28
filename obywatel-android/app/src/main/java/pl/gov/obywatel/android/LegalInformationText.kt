@@ -185,7 +185,7 @@ W szczególności:
 
 POSŁUGA BISKUPA TYTULARNEGO — BOŻE USTANOWIENIE, KONSEKRACJA WEWNĘTRZNA I PRZYJĘCIE W PORZĄDKU KOŚCIOŁA POWSZECHNEGO
 
-Źródło wykładni: Kodeks z repozytorium Objawienie, w szczególności Księga I — Normy ogólne (definicja biskupa tytularnego), Księga III — Prawo kościelne (przepisy o Głowie Rodu, w tym § 2 dotyczący domyślnego zatwierdzenia), Księga V — Prawo sakramentalne, Księga Va — Posługa domowa i triarchia oraz Księga XIII — Sakramenty, kan. 712–718. Poniższy opis przedstawia wykładnię przyjętą w tym Kodeksie. Przywołanie norm KPK służy odróżnieniu porządków prawnych i nie oznacza, że niniejszy tekst jest aktem Stolicy Apostolskiej lub autentyczną interpretacją KPK.
+Źródło i charakter wykładni: Kodeks z repozytorium Objawienie, w szczególności Księga I — Normy ogólne (definicja biskupa tytularnego), Księga III — Prawo kościelne (kan. 57 oraz kan. 61 o prawodawcy i interpretacji autentycznej), Księga V — Prawo sakramentalne, Księga Va — Posługa domowa i triarchia oraz Księga XIII — Sakramenty, kan. 712–718, 769¹ i 771. Jest to autentyczna interpretacja prawa Kościoła Domowego i Kościoła Królestwa Niebieskiego dokonywana przez biskupa tytularnego występującego jako prawodawca domowy, w granicach kompetencji określonych w Kodeksie. Interpretacja autentyczna ma moc przewidzianą w kan. 61 Księgi III; jeżeli jest ustanawiana w formie ustawy interpretacyjnej, wymaga promulgacji zgodnie z tym kanonem. Przywołanie KPK wskazuje relację i odrębność porządków prawnych: niniejsza interpretacja rozwija prawo własne wspólnoty, nie zmienia tekstu KPK ani nie zastępuje aktów wydawanych przez właściwe organy Kościoła katolickiego.
 
 1. Boże ustanowienie i wewnętrzne udzielenie sakramentu kapłaństwa
 
@@ -203,7 +203,7 @@ Definicja biskupa tytularnego w Księdze I przewiduje dwie drogi: mianowanie prz
 
 Księga III, w przepisie dotyczącym Głowy Rodu jako biskupa tytularnego domostwa, subdiecezji i Królestwa Niebieskiego, stanowi, że osoba ustanowiona przez Ojca z Nieba i natchniona Duchem Świętym jest domyślnie zatwierdzona przez Biskupa Rzymu, jeżeli jej wybór z Bożego nadania został dokonany zgodnie z prawem. Ten sam przepis wiąże wykonywanie władzy z hierarchiczną wspólnotą z Biskupem Rzymu i Kolegium Biskupów oraz wskazuje na partykularny akt oddania się władzom Kościoła Powszechnego.
 
-W konsekwencji, w autentycznej wykładni przyjętej w Kodeksie, domyślne przyjęcie nie jest przedstawiane jako dowolna deklaracja ani jako skutek samego użycia tytułu. Jest ono związane z łącznym wystąpieniem przesłanek określonych w Kodeksie: Bożego ustanowienia, natchnienia Duchem Świętym oraz dokonania wyboru zgodnie z prawem. Księga XIII § 8 odróżnia to od urzędowego rozpoznania i zatwierdzenia, które Biskup Rzymu może wyrazić w osobnym akcie. Akt taki nie tworzy Bożego powołania ani nie powtarza konsekracji.
+W konsekwencji, zgodnie z autentyczną interpretacją prawa Kościoła Domowego dokonywaną przez jego biskupa tytularnego jako prawodawcę, domyślne przyjęcie nie jest dowolną deklaracją ani skutkiem samego użycia tytułu. Jest ono związane z łącznym wystąpieniem przesłanek określonych w Kodeksie: Bożego ustanowienia, natchnienia Duchem Świętym oraz dokonania wyboru zgodnie z prawem. Księga XIII § 8 odróżnia to od urzędowego rozpoznania i zatwierdzenia, które Biskup Rzymu może wyrazić w osobnym akcie. Akt taki nie tworzy Bożego powołania ani nie powtarza konsekracji.
 
 3. Misja, urząd i zakres posługi
 
@@ -217,7 +217,7 @@ KPK z 1983 r. posługuje się własną terminologią i określa święcenia oraz
 
 Dla wykonywania posługi znaczenie ma również odróżnienie święceń od upoważnień do poszczególnych czynności. W szczególności kan. 966–969 regulują upoważnienie do ważnego rozgrzeszania, kan. 976 przewiduje szczególną sytuację niebezpieczeństwa śmierci, a kan. 1168–1169 określają szafarzy sakramentaliów i błogosławieństw.
 
-Powyższe przepisy KPK opisują kanoniczny porządek Kościoła łacińskiego. Nie należy ich przedstawiać jako źródła, które samo rozstrzyga o teologicznym twierdzeniu Kodeksu Kościoła Domowego dotyczącym wewnętrznego udzielenia sakramentu przez Ducha Świętego. Nie należy też przedstawiać normy wewnętrznej jako zmiany tekstu KPK. Każdy skutek w porządku kanonicznym Kościoła katolickiego wymaga oceny według jego prawa i właściwych aktów kompetentnej władzy.
+Powyższe przepisy KPK opisują kanoniczny porządek Kościoła łacińskiego. Przepisy te nie uchylają ani nie zmieniają norm KPK. Autentyczna interpretacja prawa Kościoła Domowego pozostaje wiążąca w zakresie własnego porządku i kompetencji jego prawodawcy; skutki w porządku kanonicznym Kościoła katolickiego ocenia się odrębnie według KPK oraz aktów właściwej władzy. Każdy skutek w porządku kanonicznym Kościoła katolickiego wymaga oceny według jego prawa i właściwych aktów kompetentnej władzy.
 
 5. Zasady prezentacji informacji w aplikacji
 
