@@ -289,7 +289,7 @@ class DocumentCatalogTest {
         val farmNotice = officialDocTypes.single { it.id == "foundation_farm_work_incapacity_certificate" }.note
         assertTrue(farmNotice.contains("nie jest orzeczeniem KRUS ani ZUS"))
         val allowanceNotice = officialDocTypes.single { it.id == "foundation_care_allowance_award" }.note
-        assertTrue(allowanceNotice.contains("własne świadczenie Fundacji"))
+        assertTrue(allowanceNotice.contains("zasiłku pielęgnacyjnego"))
         assertTrue(allowanceNotice.contains("nie jest decyzją administracyjną"))
     }
 
