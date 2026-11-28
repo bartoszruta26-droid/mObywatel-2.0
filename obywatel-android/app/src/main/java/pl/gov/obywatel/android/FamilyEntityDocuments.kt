@@ -33,12 +33,75 @@ private val rodDocs = listOf(
     "Władze i decyzje Rodowe" to listOf("Akt powołania Ojca Rodu","Akt powołania Matki Rodu","Akt ustanowienia Potomka","Uchwała Rady Rodowej","Protokół posiedzenia Rady Rodowej","Rejestr decyzji Rodowych","Pełnomocnictwo Rodowe","Upoważnienie do reprezentowania Rodu","Oświadczenie członka Rodu","Akt przekazania funkcji"),
     "Majątek i gospodarka Rodu" to listOf("Rejestr majątku Rodowego","Ewidencja nieruchomości Rodowych","Ewidencja pojazdów Rodowych","Umowa użyczenia rodzinna","Umowa najmu rodzinna","Umowa darowizny","Umowa pożyczki rodzinnej","Rejestr zobowiązań i należności","Ewidencja wspólnych wydatków","Protokół przekazania majątku","Dokumentacja spadkowa i testamentowa","Rejestr posiadanych rachunków bankowych (PLN i waluty obce)"),
     "Dokumenty społeczne, edukacyjne i religijne" to listOf("Legitymacja członka Rodu","Zaświadczenie o przynależności Rodowej","Świadectwo / dyplom","Akt nadania tytułu lub wyróżnienia","Dokument chrztu","Dokument bierzmowania","Dokument ślubu kościelnego","Zaświadczenie o funkcji religijnej","Dokument misji i posługi","Księga zasług i działalności społecznej"),
+    "Tytuły szlacheckie i dokumentacja heraldyczna" to listOf(
+        "Zaświadczenie o udokumentowanym tytule szlacheckim",
+        "Zaświadczenie o pochodzeniu szlacheckim",
+        "Świadectwo genealogiczne rodu szlacheckiego",
+        "Zaświadczenie o linii sukcesji i następstwie tytułu",
+        "Zaświadczenie o herbie i tradycji heraldycznej Rodu",
+        "Legitymacja szlachecka",
+        "Legitymacja tytułu książęcego",
+        "Legitymacja tytułu hrabiowskiego",
+        "Legitymacja tytułu wicehrabiowskiego",
+        "Legitymacja tytułu baronowskiego",
+        "Legitymacja tytułu baronetowskiego",
+        "Legitymacja tytułu rycerskiego",
+        "Legitymacja szlachcica / szlachcianki",
+        "Rejestr tytułów, linii sukcesji i dokumentów heraldycznych"
+    ),
     "Odpisy Rodowe" to listOf("Odpis rodowy aktu urodzenia","Odpis rodowy aktu małżeństwa","Odpis rodowy aktu zgonu"),
     "Dokumentacja medyczna członków Rodu" to listOf("Dane medyczne małżonka","Dane medyczne ojca","Dane medyczne matki","Dane medyczne dziadka","Dane medyczne babci","Dane medyczne członka Rodu — pierwsza linia","Dane medyczne członka Rodu — druga linia","Dane medyczne innego członka Rodu")
 ).flatMap { (section, titles) -> titles.mapIndexed { index, title ->
     val medicalFields = listOf("Imię i nazwisko","Data urodzenia","Relacja Rodowa / stopień pokrewieństwa lub powinowactwa","Linia Rodowa (pierwsza / druga / inna)","Dane kontaktowe","Osoba do kontaktu w nagłym przypadku","Telefon alarmowy / ICE","Grupa krwi (jeśli potwierdzona)","Alergie i reakcje niepożądane","Choroby przewlekłe i rozpoznania (z datą i źródłem)","Przebyte choroby, operacje i hospitalizacje","Leki stosowane obecnie (nazwa, dawka, pora, od kiedy)","Leki stosowane okresowo i doraźnie","Wyroby medyczne i implanty","Szczepienia (nazwa, dawka, data)","Niepełnosprawność / ograniczenia funkcjonalne","Ważne wyniki badań (data, jednostka, zakres referencyjny)","Lekarz / placówka prowadząca — dane przekazane dobrowolnie","Zalecenia i plan opieki uzgodniony z pacjentem","Preferencje i potrzeby opiekuńcze","Źródło informacji / dokumentacja źródłowa","Data ostatniej aktualizacji","Osoba wprowadzająca dane","Zgoda / podstawa upoważnienia do przetwarzania danych","Zakres udzielonego upoważnienia i okres jego obowiązywania","Ograniczenia dostępu / osoby upoważnione","Uwagi")
     val odpisFields = listOf("Numer odpisu","Numer aktu źródłowego","Księga Rodowa / tom / strona / pozycja","Imiona i nazwisko osoby, której dotyczy akt","Data i miejsce zdarzenia","Data i miejsce sporządzenia aktu źródłowego","Data wydania odpisu","Miejsce wydania odpisu","Wnioskodawca","Cel wydania odpisu","Zakres odpisu (pełny / skrócony)","Treść odpisu / wierne odwzorowanie wpisu","Klauzula: potwierdzenie zgodności z wpisem w Księdze Rodowej","Imię i nazwisko Starosty Rodowego","Podstawa pełnienia funkcji Starosty Rodowego","Podpis Starosty Rodowego (do złożenia przy wydaniu)","Rodzaj podpisu (własnoręczny / graficzny / elektroniczny)","Pieczęć / znak Rodu","Data i miejsce podpisania","Osoba sporządzająca projekt odpisu","Załączniki i dokumenty porównawcze","Status odpisu (projekt / wydany / anulowany)","Uwagi") + rodBase
     val fields = when {
+        title.contains("tytuł") || title.contains("szlacheck") || title.contains("heraldycz") ||
+            title.contains("Legitymacja szlachcica") || title.contains("Legitymacja szlachcianki") ->
+            if (title.startsWith("Legitymacja")) {
+                listOf(
+                    "Rodzaj legitymacji / tytułu",
+                    "Tytuł / stopień: książę / księżna, hrabia / hrabina, wicehrabia / wicehrabina, baron / baronowa, baronet / baronetka, rycerz / dama, szlachcic / szlachcianka — lub inny",
+                    "Imię i nazwisko posiadacza",
+                    "Nazwisko rodowe i używane warianty nazwiska",
+                    "Nazwa Rodu / dynastii / domu",
+                    "Linia Rodowa: ojcowska / matczyna / adopcyjna / inna — z opisem podstawy",
+                    "Przodek, od którego wywodzony jest tytuł",
+                    "Stopień pokrewieństwa z przodkiem",
+                    "Podstawa tytułu: dokument historyczny / akt nadania / sukcesja / statut Rodu / tradycja rodzinna / inna",
+                    "Numer, data i miejsce dokumentu źródłowego",
+                    "Wystawca / archiwum / instytucja przechowująca źródło",
+                    "Herb / opis heraldyczny / barwy i klejnot",
+                    "Numer wpisu w rejestrze Rodu lub rejestrze heraldycznym",
+                    "Data wydania legitymacji",
+                    "Okres ważności / status legitymacji",
+                    "Organ / osoba wystawiająca w ramach właściwej ewidencji",
+                    "Podpis i pieczęć Rodu",
+                    "Zastrzeżenia, ograniczenia i uwagi"
+                ) + rodBase
+            } else {
+                listOf(
+                    "Rodzaj zaświadczenia / świadectwa",
+                    "Imię i nazwisko osoby, której dotyczy dokument",
+                    "Nazwisko rodowe i warianty historyczne",
+                    "Nazwa Rodu / domu / dynastii",
+                    "Tytuł lub godność, której dotyczy zaświadczenie",
+                    "Forma tytułu i rodzaj: dziedziczny / dożywotni / honorowy / historyczny / wewnątrzrodowy / inny",
+                    "Przodek, od którego wywodzone jest pochodzenie lub następstwo",
+                    "Linia pochodzenia: ojcowska / matczyna / adopcyjna / inna — z opisem",
+                    "Kolejne ogniwa genealogiczne i stopnie pokrewieństwa",
+                    "Podstawa twierdzenia: akt nadania / dokument historyczny / wpis archiwalny / testament / sukcesja / statut Rodu / tradycja rodzinna / inna",
+                    "Numer, data, miejsce i wystawca dokumentu źródłowego",
+                    "Archiwum / sygnatura / link lub oznaczenie zasobu źródłowego",
+                    "Herb / opis heraldyczny / blazonowanie / klejnot / dewiza",
+                    "Numer wpisu w księdze Rodu / rejestrze heraldycznym",
+                    "Zakres i cel zaświadczenia",
+                    "Data sporządzenia i stan wiedzy na ten dzień",
+                    "Osoba / organ sporządzający oraz podstawa umocowania",
+                    "Wykaz załączników i materiałów dowodowych",
+                    "Podpisy / pieczęć / sposób weryfikacji",
+                    "Zastrzeżenia dotyczące sporności, nieciągłości lub niepotwierdzonych ogniw"
+                ) + rodBase
+            }
         title.startsWith("Dane medyczne") -> medicalFields
         title.startsWith("Odpis rodowy aktu") -> odpisFields
         title.contains("urodzenia") -> listOf("Imiona i nazwisko potomka","Data i miejsce urodzenia","Rodzice / opiekunowie","Miejsce w strukturze Rodu","Osoba zgłaszająca","Świadkowie / potwierdzający") + rodBase
@@ -51,6 +114,9 @@ private val rodDocs = listOf(
         else -> rodBase
     }
     val note = when {
+        title.contains("tytuł") || title.contains("szlacheck") || title.contains("heraldycz") ||
+            title.contains("Legitymacja szlachcica") || title.contains("Legitymacja szlachcianki") ->
+            "Dokument ewidencyjny lub świadectwo sporządzone w ramach ewidencji Rodu. Należy wskazać rodzaj tytułu, jego źródło, linię genealogiczną i materiały dowodowe; oddzielić udokumentowany fakt od tradycji rodzinnej, hipotezy lub deklaracji. Legitymacja jest dokumentem identyfikacyjnym w ramach wskazanej ewidencji i sama nie ustanawia tytułu, nie potwierdza urzędowo szlachectwa, nie nadaje przywilejów ani praw publicznych. Wpis nie zastępuje dokumentów archiwalnych, orzeczenia właściwego organu ani wymaganej formy czynności."
         title.startsWith("Dane medyczne") -> "Zawiera szczególne kategorie danych osobowych dotyczących zdrowia. Wprowadzaj wyłącznie dane niezbędne, zgodnie z prawem i na podstawie właściwej zgody lub innej podstawy prawnej; osoba, której dane dotyczą, powinna znać cel i zakres przetwarzania. Nie wpisuj haseł ani danych dostępowych. Rejestr lokalny nie zastępuje dokumentacji medycznej prowadzonej przez uprawniony podmiot."
         title.startsWith("Odpis rodowy") -> "Odpis z ewidencji Rodowej. Podpis Starosty Rodowego należy złożyć dopiero po weryfikacji wpisu i umocowania. Formularz nie tworzy podpisu ani pieczęci i nie jest urzędowym odpisem aktu stanu cywilnego."
         else -> "Dokument ewidencji Rodowej. Jego skutki prawne zależą od treści, formy i właściwych przepisów; sam wpis w aplikacji nie zastępuje aktu notarialnego, wpisu urzędowego ani wymaganej formy czynności."
