@@ -50,18 +50,21 @@ fun LegalInformationScreen(onBack: () -> Unit) {
     var showEntrustmentDocument by rememberSaveable { mutableStateOf(false) }
     var showCompanyFinancingAgreement by rememberSaveable { mutableStateOf(false) }
     var showNonParliamentaryMandate by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement || showNonParliamentaryMandate) {
+    var showPublicAuthorityPfc by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement || showNonParliamentaryMandate || showPublicAuthorityPfc) {
         showFundRegulation = false
         showDetailedPfcModel = false
         showEntrustmentDocument = false
         showCompanyFinancingAgreement = false
         showNonParliamentaryMandate = false
+        showPublicAuthorityPfc = false
     }
     BackHandler(enabled = !showFundRegulation && !showDetailedPfcModel && !showEntrustmentDocument && !showCompanyFinancingAgreement && !showNonParliamentaryMandate) { onBack() }
 
     val displayedText = when {
         showCompanyFinancingAgreement -> markdownToDisplayText(COMPANY_FINANCING_AGREEMENT_TEXT)
         showNonParliamentaryMandate -> NON_PARLIAMENTARY_MANDATE_INTERPRETATION
+        showPublicAuthorityPfc -> PUBLIC_AUTHORITY_PFC_INTERPRETATION
         showEntrustmentDocument -> markdownToDisplayText(ENTRUSTMENT_DOCUMENT_TEXT)
         showDetailedPfcModel -> DETAILED_PFC_MODEL_TEXT
         showFundRegulation -> markdownToDisplayText(FUND_REGULATION_MARKDOWN)
@@ -70,6 +73,7 @@ fun LegalInformationScreen(onBack: () -> Unit) {
     val pageTitle = when {
         showCompanyFinancingAgreement -> "Umowa odpłatnego współfinansowania Celu"
         showNonParliamentaryMandate -> "Interpretacja prawna mandatu nieparlamentarnego"
+        showPublicAuthorityPfc -> "Piastowanie organu władzy publicznej i Cel PFC"
         showEntrustmentDocument -> "Powierzenie środków Dyspozytorowi Celu"
         showDetailedPfcModel -> "Szczegółowy model prawny Celu"
         showFundRegulation -> "Regulamin dotacji celowych państwowego funduszu celowego"
@@ -91,12 +95,13 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(onClick = {
-                    if (showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement || showNonParliamentaryMandate) {
+                    if (showFundRegulation || showDetailedPfcModel || showEntrustmentDocument || showCompanyFinancingAgreement || showNonParliamentaryMandate || showPublicAuthorityPfc) {
                         showFundRegulation = false
                         showDetailedPfcModel = false
                         showEntrustmentDocument = false
                         showCompanyFinancingAgreement = false
                         showNonParliamentaryMandate = false
+                        showPublicAuthorityPfc = false
                     } else onBack()
                 }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
@@ -122,6 +127,24 @@ fun LegalInformationScreen(onBack: () -> Unit) {
                         Column(Modifier.weight(1f)) {
                             Text("Mandat Posła z Powołania — mandat nieparlamentarny", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                             Text("Powołanie do służby Narodowi, publiczne ślubowanie i bezpośrednie sprawowanie władzy suwerena", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                        Icon(Icons.Filled.Description, contentDescription = "Otwórz interpretację")
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable { showPublicAuthorityPfc = true },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    androidx.compose.foundation.layout.Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(Icons.Filled.AccountBalance, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Column(Modifier.weight(1f)) {
+                            Text("Piastowanie organu władzy publicznej i ustanowienie Celu PFC", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                            Text("Poseł z Powołania jako inicjator Celu, Dyspozytor i wnioskodawca finansowania", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
                         }
                         Icon(Icons.Filled.Description, contentDescription = "Otwórz interpretację")
                     }
