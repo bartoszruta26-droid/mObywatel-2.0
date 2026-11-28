@@ -266,4 +266,31 @@ class DocumentCatalogTest {
         }
     }
 
+
+    @Test
+    fun foundationCareDocumentsHaveUniqueFormsRoutesAndFoundationGroup() {
+        val ids = setOf(
+            "foundation_care_member_card",
+            "foundation_farm_work_incapacity_certificate",
+            "foundation_care_allowance_award",
+            "foundation_care_allowance_payment_confirmation",
+            "foundation_care_allowance_third_party_certificate"
+        )
+        assertEquals(ids.size, documentDisplayOptions.count { it.first in ids })
+        ids.forEach { id ->
+            assertTrue("Brak dokumentu $id", documentDisplayOptions.any { it.first == id })
+            assertEquals("Służba fundacyjna", documentVisibilityGroup(id))
+            assertTrue("Brak pól edycyjnych dla $id", officialGraphicDocumentFields(id).isNotEmpty())
+            assertTrue("Brak trasy dla $id", DocumentRouteRegistry.find(id) != null)
+            assertTrue("Brak schematu dla $id", documentEditorFieldDefinitions(id).isNotEmpty())
+            val keys = documentEditorFieldDefinitions(id).map { it.key }
+            assertEquals("Powtórzone pola dla $id", keys.size, keys.toSet().size)
+        }
+        val farmNotice = officialDocTypes.single { it.id == "foundation_farm_work_incapacity_certificate" }.note
+        assertTrue(farmNotice.contains("Kolegium Orzekającego Fundacji"))
+        val allowanceNotice = officialDocTypes.single { it.id == "foundation_care_allowance_award" }.note
+        assertTrue(allowanceNotice.contains("świadczenia pielęgnacyjnego"))
+        assertTrue(allowanceNotice.contains("właściwy organ Fundacji"))
+    }
+
 }
