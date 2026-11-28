@@ -261,21 +261,21 @@ internal val officialDocTypes = listOf(
     OfficialDocType("large_family","Karta Dużej Rodziny", listOf("Imię i nazwisko","PESEL / data urodzenia","Numer karty","Typ: tradycyjna / elektroniczna","Data wydania","Ważna do","Organ wydający","Status")),
     OfficialDocType("blood_donor","Legitymacja / karta Honorowego Dawcy Krwi", listOf("Imię i nazwisko","Numer legitymacji","Stopień / tytuł","Liczba oddanych litrów (jeśli wpisana)","Data przyznania","Organ / jednostka wydająca","Status")),
 
-    OfficialDocType("foundation_care_member_card","Legitymacja osoby uprawnionej do zasiłku pielęgnacyjnego przyznanego przez Fundację", listOf(
+    OfficialDocType("foundation_care_member_card","Legitymacja osoby uprawnionej do świadczenia pielęgnacyjnego", listOf(
         "Pełna nazwa wystawcy: Fundacja Wspierania Rodzin „Aria”",
         "Imię i nazwisko beneficjenta",
         "Fotografia / identyfikator beneficjenta",
         "Numer legitymacji",
         "Numer sprawy / numer ewidencyjny Fundacji",
         "Podstawa wydania: statut i regulamin Fundacji – wskazać paragrafy",
-        "Zakres potwierdzenia: uprawnienie do zasiłku pielęgnacyjnego przyznanego przez Fundację",
-        "Data przyznania zasiłku pielęgnacyjnego",
-        "Okres uprawnienia do zasiłku pielęgnacyjnego",
+        "Zakres potwierdzenia: uprawnienie do świadczenia pielęgnacyjnego",
+        "Data przyznania świadczenia pielęgnacyjnego",
+        "Okres uprawnienia do świadczenia pielęgnacyjnego",
         "Jednostka Fundacji prowadząca dokumentację",
         "Telefon / adres / kanał weryfikacji wystawcy",
         "Podpis osoby upoważnionej",
         "Data wydania"
-    ), "Legitymacja Fundacji potwierdzająca uprawnienie do zasiłku pielęgnacyjnego przyznanego przez Fundację. Nie zastępuje dokumentu tożsamości ani orzeczenia wydanego przez właściwy organ publiczny."),
+    ), "Legitymacja Fundacji potwierdzająca uprawnienie do świadczenia pielęgnacyjnego. Nie zastępuje dokumentu tożsamości ani orzeczenia wydanego przez właściwy organ publiczny."),
     OfficialDocType("foundation_farm_work_incapacity_certificate","Orzeczenie Kolegium Orzekającego Fundacji o niezdolności do pracy w gospodarstwie rolnym", listOf(
         "Pełna nazwa i dane Fundacji",
         "Numer orzeczenia / znak sprawy",
@@ -300,14 +300,14 @@ internal val officialDocTypes = listOf(
         "Podpisy członków zespołu i osoby upoważnionej",
         "Data wydania"
     ), "Orzeczenie własnego Kolegium Orzekającego Fundacji. Wskazać skład, tryb działania, podstawę statutową i regulaminową, materiał dowodowy, uzasadnienie oraz tryb weryfikacji przewidziany w regulaminie. Dokument nie może być przedstawiany jako orzeczenie KRUS lub ZUS. Jego skutki wobec podmiotów trzecich zależą od właściwych przepisów i podstawy prawnej uznania."),
-    OfficialDocType("foundation_care_allowance_award","Rozstrzygnięcie Fundacji o przyznaniu zasiłku pielęgnacyjnego", listOf(
+    OfficialDocType("foundation_care_allowance_award","Decyzja o przyznaniu świadczenia pielęgnacyjnego", listOf(
         "Pełna nazwa Fundacji i dane rejestrowe",
         "Numer i data rozstrzygnięcia",
         "Organ Fundacji / osoba upoważniona do przyznania świadczenia",
         "Imię i nazwisko beneficjenta",
         "Numer ewidencyjny beneficjenta",
         "Podstawa statutowa i regulaminowa – konkretne paragrafy",
-        "Rodzaj świadczenia: zasiłek pielęgnacyjny przyznawany przez Fundację na podstawie statutu i regulaminu",
+        "Rodzaj świadczenia: świadczenie pielęgnacyjne na podstawie statutu i regulaminu Fundacji",
         "Cel świadczenia i uzasadnienie przyznania",
         "Kwota świadczenia i waluta",
         "Częstotliwość wypłaty",
@@ -318,8 +318,8 @@ internal val officialDocTypes = listOf(
         "Data doręczenia beneficjentowi",
         "Podpis osoby / osób upoważnionych",
         "Potwierdzenie odbioru / doręczenia"
-    ), "Rozstrzygnięcie organu Fundacji o przyznaniu zasiłku pielęgnacyjnego na podstawie wskazanych postanowień statutu i regulaminu. W dokumencie należy wyraźnie wskazać, że jest to rozstrzygnięcie Fundacji, a nie decyzja administracyjna organu gminy."),
-    OfficialDocType("foundation_care_allowance_payment_confirmation","Potwierdzenie wypłaty zasiłku pielęgnacyjnego przez Fundację", listOf(
+    ), "Decyzja o przyznaniu świadczenia pielęgnacyjnego na podstawie wskazanych postanowień statutu i regulaminu. W dokumencie należy wyraźnie wskazać, że jest to rozstrzygnięcie Fundacji, a nie decyzja administracyjna organu gminy."),
+    OfficialDocType("foundation_care_allowance_payment_confirmation","Potwierdzenie wypłaty świadczenia pielęgnacyjnego", listOf(
         "Pełna nazwa Fundacji i dane rejestrowe",
         "Numer potwierdzenia",
         "Numer i data rozstrzygnięcia o przyznaniu świadczenia",
@@ -334,8 +334,8 @@ internal val officialDocTypes = listOf(
         "Osoba sporządzająca potwierdzenie",
         "Podpis / pieczęć Fundacji",
         "Data wystawienia"
-    ), "Potwierdza wypłatę zasiłku pielęgnacyjnego przyznanego przez Fundację na podstawie jej statutu i regulaminu; wskazuje datę, kwotę, okres i dowód wypłaty."),
-    OfficialDocType("foundation_care_allowance_third_party_certificate","Zaświadczenie dla podmiotu trzeciego o przyznaniu zasiłku pielęgnacyjnego przez Fundację", listOf(
+    ), "Potwierdza wypłatę świadczenia pielęgnacyjnego przyznanego na podstawie statutu i regulaminu Fundacji; wskazuje datę, kwotę, okres i dowód wypłaty."),
+    OfficialDocType("foundation_care_allowance_third_party_certificate","Zaświadczenie dla podmiotu trzeciego o przyznaniu świadczenia pielęgnacyjnego", listOf(
         "Pełna nazwa Fundacji, adres, KRS, NIP i dane kontaktowe",
         "Numer zaświadczenia",
         "Data wystawienia",
@@ -345,7 +345,7 @@ internal val officialDocTypes = listOf(
         "Numer i data rozstrzygnięcia Fundacji",
         "Organ Fundacji / osoba upoważniona, która przyznała świadczenie",
         "Podstawa statutowa i regulaminowa – konkretne paragrafy",
-        "Nazwa świadczenia: zasiłek pielęgnacyjny przyznany przez Fundację",
+        "Nazwa świadczenia: świadczenie pielęgnacyjne",
         "Data przyznania świadczenia",
         "Okres, na jaki świadczenie przyznano",
         "Wysokość i częstotliwość świadczenia – jeżeli beneficjent wyraża zgodę na ujawnienie",
@@ -355,7 +355,7 @@ internal val officialDocTypes = listOf(
         "Osoba upoważniona do potwierdzenia autentyczności dokumentu",
         "Sposób weryfikacji: numer referencyjny / telefon / adres elektroniczny",
         "Podpis osoby upoważnionej i pieczęć Fundacji"
-    ), "Zaświadczenie potwierdza fakty wynikające z dokumentacji Fundacji: wydanie rozstrzygnięcia o przyznaniu zasiłku pielęgnacyjnego przez Fundację oraz jego wypłatę, jeżeli miała miejsce. Wskazać organ Fundacji, podstawę statutową i regulaminową oraz zakres potwierdzanych faktów. Nie przedstawiać go jako zaświadczenia organu administracji publicznej. Dane o zdrowiu i niepełnosprawności ujawniać wyłącznie w niezbędnym zakresie i na właściwej podstawie prawnej."),
+    ), "Zaświadczenie potwierdza fakty wynikające z dokumentacji Fundacji: wydanie decyzji o przyznaniu świadczenia pielęgnacyjnego oraz jego wypłatę, jeżeli miała miejsce. Wskazać organ Fundacji, podstawę statutową i regulaminową oraz zakres potwierdzanych faktów. Nie przedstawiać go jako zaświadczenia organu administracji publicznej. Dane o zdrowiu i niepełnosprawności ujawniać wyłącznie w niezbędnym zakresie i na właściwej podstawie prawnej."),
     OfficialDocType("disability_card","Legitymacja osoby z niepełnosprawnością", listOf("Imię i nazwisko","Numer legitymacji","Data wydania","Data ważności","Organ wydający","Numer orzeczenia / podstawa","Stopień / wskazanie","Status"), "Legitymacja i orzeczenie to odrębne dokumenty; wpis nie zastępuje dokumentu źródłowego."),
     OfficialDocType("vehicle_registration","Dowód rejestracyjny pojazdu", listOf("Numer rejestracyjny","VIN","Marka i model","Numer dowodu rejestracyjnego","Właściciel / współwłaściciel","Data pierwszej rejestracji","Organ rejestrujący","Termin badania technicznego","Adnotacje / ograniczenia","Status")),
     OfficialDocType("insurance_vehicle","Ubezpieczenie OC pojazdu", listOf("Ubezpieczyciel","Numer polisy","Pojazd / numer rejestracyjny","Okres ochrony od","Okres ochrony do","Data opłacenia składki","Zakres / uwagi","Status")),
