@@ -21,6 +21,7 @@ private val legacyDocumentGroupNames = mapOf(
     "Dokumenty publiczne i obywatelskie" to "Służba państwowa",
     "Dokumenty firmowe i podmiotowe" to "Służba gospodarcza",
     "Dokumenty fundacji" to "Służba fundacyjna",
+    "Dokumenty Fundacji – opieka i świadczenia" to "Służba fundacyjna",
     "Dokumenty przedsiębiorstwa" to "Służba gospodarcza",
     "Dokumenty stowarzyszenia" to "Służba stowarzyszeniowa",
     "Dokumenty zawodowe i edukacyjne" to "Służba zawodowa",
