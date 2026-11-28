@@ -318,7 +318,7 @@ internal val officialDocTypes = listOf(
         "Data doręczenia beneficjentowi",
         "Podpis osoby / osób upoważnionych",
         "Potwierdzenie odbioru / doręczenia"
-    ), "Decyzja o przyznaniu świadczenia pielęgnacyjnego na podstawie wskazanych postanowień statutu i regulaminu. W dokumencie należy wyraźnie wskazać, że jest to rozstrzygnięcie Fundacji, a nie decyzja administracyjna organu gminy."),
+    ), "Decyzja potwierdza przyznanie świadczenia pielęgnacyjnego przez właściwy organ Fundacji na podstawie statutu i regulaminu, ze wskazaniem wysokości, okresu, warunków oraz źródła finansowania."),
     OfficialDocType("foundation_care_allowance_payment_confirmation","Potwierdzenie wypłaty świadczenia pielęgnacyjnego", listOf(
         "Pełna nazwa Fundacji i dane rejestrowe",
         "Numer potwierdzenia",
