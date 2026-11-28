@@ -37,6 +37,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -322,6 +323,7 @@ internal object DocumentBrandStore {
         "file_00000000c0f081f5990d08be15bbf139",
         "file_00000000e92482108cb3b56796451794",
         "file_00000000f5b0820a9499b70ab02da04b",
+        "file_00000000d588820a9b141a8f2f8df7c5",
         "tlo_pionowe_oryginal",
         "tlo_poziome_oryginal",
         "tlo_znak_wodny_pionowe",
@@ -342,6 +344,7 @@ internal object DocumentBrandStore {
     )
     private val opaqueBackgroundLabels = mapOf(
         "file_00000000f5b0820a9499b70ab02da04b" to "Tło dowodu tożsamości",
+        "file_00000000d588820a9b141a8f2f8df7c5" to "Tło legitymacji kościelnej — godło biskupie",
         "tlo_pionowe_oryginal" to "Tło dokumentu — układ pionowy",
         "tlo_poziome_oryginal" to "Tło dokumentu — układ poziomy",
         "tlo_znak_wodny_pionowe" to "Tło dokumentu — znak wodny pionowy",
@@ -476,11 +479,15 @@ internal object DocumentBrandStore {
                 } }
             }
         }.getOrDefault(emptyList())
-        return builtInAssets + generatedDrawableAssets + stored
+        val remoteNames = RemoteGraphicRepository.remoteResourceNames(context)
+        return builtInAssets + generatedDrawableAssets.map { asset ->
+            val name = asset.file.removePrefix("resource:")
+            if (asset.file.startsWith("resource:") && name in remoteNames) asset.copy(file = "remote:$name") else asset
+        } + stored
     }
     private fun save(context: Context, assets: List<BrandAsset>) {
         val a = JSONArray()
-        assets.filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") }
+        assets.filterNot { it.file.startsWith("builtin:") || it.file.startsWith("resource:") || it.file.startsWith("remote:") }
             .forEach { x -> a.put(JSONObject().apply { put("id",x.id); put("owner",x.owner); put("kind",x.kind); put("label",x.label); put("file",x.file); put("rights",x.rights); put("version",x.version); put("createdAt",x.createdAt); put("mimeType",x.mimeType) }) }
         atomicWrite(File(dir(context), INDEX), crypt(a.toString().toByteArray(Charsets.UTF_8), true))
     }
@@ -511,6 +518,11 @@ internal object DocumentBrandStore {
     }
     private fun imageById(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? = runCatching {
         val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
+        if (asset.file.startsWith("remote:")) {
+            val name = asset.file.removePrefix("remote:")
+            RemoteGraphicRepository.cachedGraphicBitmap(context, name)
+                ?: RemoteGraphicRepository.thumbnailBitmap(context, name)
+        }
         if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
             val resourceId = context.resources.getIdentifier(name, "drawable", context.packageName)
@@ -554,7 +566,7 @@ internal object DocumentBrandStore {
             else -> ""
         }
         val fallback = when {
-            documentType.startsWith("church_") || documentType.startsWith("ecumenical_") || documentType.startsWith("missionary_") -> "church"
+            (documentType == "church" || documentType.startsWith("church_") || documentType.startsWith("ecumenical_") || documentType.startsWith("missionary_")) || documentType.startsWith("ecumenical_") || documentType.startsWith("missionary_") -> "church"
             documentType.startsWith("organization_") -> "entity"
             else -> ""
         }
@@ -569,7 +581,10 @@ internal object DocumentBrandStore {
             all.lastOrNull { it.documentType == key && it.kind == kind }
         }
         return assigned?.let { imageById(context, it.assetId) }
-            ?: if (documentType == "identity" && kind == "Tło dokumentu") {
+            ?: if (kind == "Tło dokumentu" && documentType.startsWith("church_")) {
+                imageById(context, "builtin_drawable_file_00000000d588820a9b141a8f2f8df7c5")
+                    ?: image(context, owner, kind)
+            } else if (documentType == "identity" && kind == "Tło dokumentu") {
                 imageById(context, "builtin_drawable_file_00000000f5b0820a9499b70ab02da04b")
                     ?: image(context, owner, kind)
             } else image(context, owner, kind)
@@ -607,11 +622,31 @@ internal object DocumentBrandStore {
         if (!InstitutionalAssetPolicy.mayRender(kind, authorizationFor(asset))) return null
         return imageById(context, asset.id)
     }
+    suspend fun ensureFullGraphicsForPdf(context: Context, documentType: String, owner: String) {
+        val assets = list(context)
+        val assignedIds = assignments(context)
+            .filter { it.documentType in assignmentKeys(documentType, owner).toSet() }
+            .map { it.assetId }
+            .toSet()
+        val assignedRemoteNames = assets.filter { it.id in assignedIds }
+            .mapNotNull { it.file.takeIf { file -> file.startsWith("remote:") }?.removePrefix("remote:") }
+        val ownerFallbackNames = assets.filter {
+            it.owner.equals(owner, ignoreCase = true) &&
+                it.kind in setOf("Flaga", "Logo", "Herb", "Godło", "Tło dokumentu", "Znak wodny", "Pieczęć") &&
+                it.file.startsWith("remote:")
+        }.map { it.file.removePrefix("remote:") }
+        (assignedRemoteNames + ownerFallbackNames).distinct()
+            .forEach { name -> RemoteGraphicRepository.fullGraphicFile(context, name) }
+    }
     fun preview(context: Context, assetId: String, knownAsset: BrandAsset? = null): android.graphics.Bitmap? =
         imageById(context, assetId, knownAsset)
     fun fileBytes(context: Context, assetId: String, knownAsset: BrandAsset? = null): ByteArray? = runCatching {
         val asset = knownAsset?.takeIf { it.id == assetId } ?: list(context).firstOrNull { it.id == assetId } ?: return null
-        if (asset.file.startsWith("resource:")) {
+        if (asset.file.startsWith("remote:")) {
+            val name = asset.file.removePrefix("remote:")
+            val cached = RemoteGraphicRepository.cachedGraphicFile(context, name) ?: return null
+            return cached.readBytes()
+        } else if (asset.file.startsWith("resource:")) {
             val name = asset.file.removePrefix("resource:")
             val id = context.resources.getIdentifier(name, "drawable", context.packageName)
             if (id == 0) return null
@@ -627,7 +662,7 @@ internal object DocumentBrandStore {
     fun exportArchive(context: Context): String {
         val root = JSONObject().put("version", 1)
         val assets = JSONArray()
-        list(context).filter { !it.file.startsWith("builtin:") && !it.file.startsWith("resource:") }.forEach { asset ->
+        list(context).filter { !it.file.startsWith("builtin:") && !it.file.startsWith("resource:") && !it.file.startsWith("remote:") }.forEach { asset ->
             val file = File(dir(context), asset.file)
             require(file.isFile) { "Brak pliku zasobu: ${asset.label}" }
             val bytes = crypt(atomicRead(file), false)
@@ -841,6 +876,11 @@ internal object DocumentBrandStore {
     }
     fun image(context: Context, owner: String, kind: String) : android.graphics.Bitmap? = runCatching {
         val asset=list(context).lastOrNull { it.owner.equals(owner,true) && it.kind==kind } ?: return null
+        if (asset.file.startsWith("remote:")) {
+            val name = asset.file.removePrefix("remote:")
+            return RemoteGraphicRepository.cachedGraphicBitmap(context, name)
+                ?: RemoteGraphicRepository.thumbnailBitmap(context, name)
+        }
         if (asset.file.startsWith("resource:")) {
             val resourceId = context.resources.getIdentifier(asset.file.removePrefix("resource:"), "drawable", context.packageName)
             if (resourceId == 0) return null
@@ -864,7 +904,7 @@ internal object DocumentBrandStore {
     @Synchronized fun delete(context: Context, id: String) {
         val old=list(context)
         val selected=old.firstOrNull { it.id==id } ?: return
-        if (selected.file.startsWith("builtin:")) return
+        if (selected.file.startsWith("builtin:") || selected.file.startsWith("remote:")) return
         File(dir(context),selected.file).delete()
         save(context,old.filterNot { it.id==id || it.file.startsWith("builtin:") })
         val retained = assignments(context).filterNot { it.assetId == id }
@@ -1012,6 +1052,9 @@ internal fun defaultDocumentBackgroundResourceId(title: String): Int {
             normalized.contains("tożsamo") || normalized.contains("tozsamos") ||
             normalized.contains("profil") || normalized.contains("obywatel") ->
             R.drawable.doc_01_dowod_tozsamosci_obywatelski
+
+        // Domyślne poziome tło legitymacji pozostaje w pełnej rozdzielczości w APK.
+        normalized.contains("legitymacj") -> R.drawable.tlo_poziome_oryginal
 
         // Dokumenty służby zbrojnej — legitymacje i certyfikaty otrzymują
         // tła odpowiadające rodzajowi dokumentu zamiast ogólnego baneru.
@@ -1362,6 +1405,7 @@ internal fun DocumentIdentityTemplate(
 @Composable
 internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? = null, readOnly: Boolean = false) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var assignments by remember { mutableStateOf(DocumentBrandStore.assignments(context)) }
     var owner by remember(fixedTarget) {
         mutableStateOf(if (fixedTarget == null) "Biblioteka użytkownika" else "legitymacja:$fixedTarget")
@@ -1628,19 +1672,35 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     if (fixedTarget != null && !readOnly) {
                                         TextButton(onClick = {
-                                            runCatching { DocumentBrandStore.assign(context, fixedTarget, asset.kind, asset.id) }
-                                                .onSuccess {
+                                            scope.launch {
+                                                status = if (asset.file.startsWith("remote:")) "Pobieranie pełnej grafiki i weryfikacja pliku…" else "Przypisywanie zasobu…"
+                                                runCatching {
+                                                    if (asset.file.startsWith("remote:")) {
+                                                        RemoteGraphicRepository.fullGraphicFile(context, asset.file.removePrefix("remote:"))
+                                                    }
+                                                    DocumentBrandStore.assign(context, fixedTarget, asset.kind, asset.id)
+                                                }.onSuccess {
                                                     assignments = DocumentBrandStore.assignments(context)
                                                     assetRevision++
-                                                    status = "Przypisano zasób do dokumentu."
+                                                    assets = DocumentBrandStore.list(context)
+                                                    status = "Przypisano zasób. Pełna grafika jest dostępna także offline."
+                                                }.onFailure {
+                                                    status = "Nie udało się przypisać zasobu: ${it.message ?: "błąd"}"
                                                 }
-                                                .onFailure { status = "Nie udało się przypisać zasobu: ${it.message ?: "błąd"}" }
+                                            }
                                         }) { Text("Przypisz") }
                                     }
                                     if (asset.file.startsWith("builtin:")) {
                                         Text("Wbudowany", color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             style = MaterialTheme.typography.labelSmall,
                                             modifier = Modifier.padding(top = 10.dp))
+                                    } else if (asset.file.startsWith("remote:")) {
+                                        Text(
+                                            if (RemoteGraphicRepository.cachedGraphicFile(context, asset.file.removePrefix("remote:")) != null) "Pełny plik pobrany — dostępny offline" else "Miniatura lokalna — pełny plik pobierany przy użyciu",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            modifier = Modifier.padding(top = 10.dp)
+                                        )
                                     } else if (!readOnly) {
                                         TextButton(onClick = {
                                             DocumentBrandStore.delete(context, asset.id)
@@ -1668,15 +1728,29 @@ internal fun DocumentBrandAssetsScreen(onBack: () -> Unit, fixedTarget: String? 
 @Composable
 internal fun DocumentPdfExportButton(title: String, values: Map<String,String>, modifier: Modifier = Modifier, documentType: String = "official", ownerDefault: String = "") {
     val context= LocalContext.current
+    val scope = rememberCoroutineScope()
     var owner by remember(title, ownerDefault) { mutableStateOf(ownerDefault) }
     var status by remember { mutableStateOf("") }
+    var exporting by remember { mutableStateOf(false) }
     val create= rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         if(uri!=null) runCatching { DocumentPdfRenderer.write(context,uri,title,owner,documentType,values) }
             .onSuccess { status="Utworzono PDF. Plik można teraz podpisać obsługiwanym podpisem elektronicznym." }
             .onFailure { status="Eksport PDF nie powiódł się: "+(it.message ?: "błąd") }
     }
     OutlinedTextField(owner,{owner=it},label={Text("Zestaw identyfikacji podmiotu (nazwa)")},modifier=Modifier.fillMaxWidth())
-    Button(onClick={create.launch(title.replace(Regex("[^A-Za-z0-9_-]"),"_").take(50).ifBlank { "dokument" }+".pdf")},modifier=modifier.fillMaxWidth()) { Text("Eksportuj dokument do PDF") }
+    Button(onClick={
+        scope.launch {
+            exporting = true
+            status = "Sprawdzanie przypisanych grafik i pobieranie pełnych plików…"
+            runCatching { DocumentBrandStore.ensureFullGraphicsForPdf(context, documentType, owner) }
+                .onSuccess {
+                    status = "Grafiki gotowe. Wybierz miejsce zapisu PDF."
+                    create.launch(title.replace(Regex("[^A-Za-z0-9_-]"),"_").take(50).ifBlank { "dokument" }+".pdf")
+                }
+                .onFailure { status = "Nie można przygotować grafik do PDF: "+(it.message ?: "błąd") }
+            exporting = false
+        }
+    },modifier=modifier.fillMaxWidth(), enabled=!exporting) { Text(if(exporting) "Przygotowywanie…" else "Eksportuj dokument do PDF") }
     if(status.isNotBlank()) Text(status,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.primary)
 }
 
