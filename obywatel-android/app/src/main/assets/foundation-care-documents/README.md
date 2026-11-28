@@ -4,11 +4,11 @@ Pakiet dokumentów własnych Fundacji do ewidencji beneficjentów, dokumentowani
 
 ## Rodzaje dokumentów w katalogu aplikacji
 
-- Legitymacja beneficjenta Fundacji – potwierdza wyłącznie status beneficjenta w systemie Fundacji.
-- Zaświadczenie Fundacji o ocenie niezdolności do pracy w gospodarstwie rolnym – dokumentuje wynik oceny medyczno-funkcjonalnej dokonanej przez zespół Fundacji.
-- Rozstrzygnięcie Fundacji o przyznaniu własnego świadczenia pieniężnego – dokumentuje przyznanie pomocy przez uprawniony organ Fundacji na podstawie statutu i regulaminu.
-- Potwierdzenie wypłaty – potwierdza konkretną transakcję albo wypłatę gotówkową.
-- Zaświadczenie dla podmiotu trzeciego – potwierdza fakty wynikające z dokumentacji Fundacji, z uwzględnieniem zgody lub innej właściwej podstawy udostępnienia danych.
+- Legitymacja osoby uprawnionej do zasiłku pielęgnacyjnego przyznanego przez Fundację – potwierdza uprawnienie i okres jego obowiązywania w dokumentacji Fundacji.
+- Orzeczenie Kolegium Orzekającego Fundacji o niezdolności do pracy w gospodarstwie rolnym – dokumentuje rozstrzygnięcie kolegialnego organu Fundacji.
+- Rozstrzygnięcie Fundacji o przyznaniu zasiłku pielęgnacyjnego – dokumentuje przyznanie świadczenia przez właściwy organ Fundacji na podstawie statutu i regulaminu.
+- Potwierdzenie wypłaty zasiłku pielęgnacyjnego przez Fundację – potwierdza konkretną transakcję albo wypłatę gotówkową.
+- Zaświadczenie dla podmiotu trzeciego o przyznaniu zasiłku pielęgnacyjnego przez Fundację – potwierdza treść rozstrzygnięcia i stan wypłat wynikające z dokumentacji Fundacji.
 
 ## Warunki wypełniania
 
@@ -16,10 +16,10 @@ Pakiet dokumentów własnych Fundacji do ewidencji beneficjentów, dokumentowani
 2. Podstawę statutową i regulaminową uzupełniać konkretnymi paragrafami aktualnych aktów Fundacji; nie wpisywać ogólnikowego „na podstawie statutu”.
 3. W każdym dokumencie wskazywać rzeczywisty organ lub osobę upoważnioną do jego wystawienia i podpisania.
 4. Nie wpisywać fikcyjnych numerów spraw, dat, kwalifikacji, wyników badań ani wypłat.
-5. W zaświadczeniach o ocenie niezdolności opisywać metodę, materiał dowodowy, ograniczenia funkcjonalne i zakres wnioskowania. Rozdzielać obserwacje medyczne, ocenę funkcjonalną i konkluzję zespołu.
+5. Orzeczenie sporządzać jako akt Kolegium Orzekającego: podać podstawę powołania i umocowania Kolegium, skład, quorum, tryb głosowania, materiał dowodowy, ustalenia, sentencję, uzasadnienie oraz regulaminowy tryb weryfikacji.
 6. Dla świadczeń dokumentować oddzielnie akt przyznania, okres należności i każdą rzeczywistą wypłatę.
 7. W zaświadczeniu dla podmiotu trzeciego ujawniać tylko dane potrzebne adresatowi i objęte właściwą podstawą prawną.
-8. Własne świadczenie Fundacji opisywać jednoznacznie jako świadczenie Fundacji. Nie utożsamiać go automatycznie z ustawowym zasiłkiem pielęgnacyjnym, decyzją administracyjną ani świadczeniem z systemu publicznego.
+8. W dokumentach konsekwentnie wskazywać, że zasiłek pielęgnacyjny został przyznany przez Fundację, podać właściwy organ Fundacji oraz konkretne podstawy statutowe i regulaminowe. Nie sugerować, że dokument jest decyzją administracyjną organu gminy, jeżeli nią nie jest.
 
 ## Kontrola przed podpisaniem
 
