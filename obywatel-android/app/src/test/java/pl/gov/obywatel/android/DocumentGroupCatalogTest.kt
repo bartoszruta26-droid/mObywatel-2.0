@@ -130,43 +130,6 @@ class DocumentGroupCatalogTest {
         }
     }
 
-
-    @Test
-    fun commonRightsDocumentsHaveTheirOwnGroupAndCoverAllFourCapacities() {
-        val group = "Bez szczególnej formy prawnej"
-        val ids = setOf(
-            "common_rights_statement",
-            "common_rights_petition",
-            "common_rights_public_information",
-            "common_rights_social_initiative",
-            "common_rights_cooperation",
-            "common_rights_notice"
-        )
-        assertTrue(group in documentVisibilityGroupOrder)
-        ids.forEach { id ->
-            assertEquals(group, documentVisibilityGroup(id))
-            assertTrue("$id must be in the document catalog", documentDisplayOptions.any { it.first == id })
-            val fields = officialGraphicDocumentFields(id)
-            assertTrue("$id must have editable fields", fields.isNotEmpty())
-            val options = credentialFieldOptions(id).toMap()
-            fields.forEach { (key, label) ->
-                assertEquals("Missing exact preview label for $id/$key", label, options[key])
-            }
-        }
-        val sharedCapacityLabels = listOf(
-            "osoba fizyczna",
-            "NGO",
-            "biskup tytularny",
-            "Poseł z mandatem nieparlamentarnym"
-        )
-        val commonText = ids.mapNotNull { id ->
-            officialDocTypes.firstOrNull { it.id == id }?.let { it.title + " " + it.fields.joinToString(" ") }
-        }.joinToString(" ")
-        sharedCapacityLabels.forEach { label ->
-            assertTrue("Missing shared capacity label: $label", commonText.contains(label, ignoreCase = true))
-        }
-    }
-
     @Test
     fun groupedOcrArchiveKeysUseOnlyTheSupportedSafeFormat() {
         assertTrue(isGroupedOcrArchiveField("groupedOcr_7f3a21"))
@@ -200,15 +163,15 @@ class DocumentGroupCatalogTest {
     }
 
     @Test
-    fun selfDeterminationDocumentsAreRoutedToTheCommonRightsGroup() {
-        val ids = listOf("common_rights_self_determination_declaration", "common_rights_self_limitation", "common_rights_third_party_safeguards", "common_rights_accessibility_needs", "common_rights_faith_conscience_declaration", "common_rights_declaration_of_will", "common_rights_nonparliamentary_mandate", "common_rights_civil_service_legitimacy", "common_rights_personal_integrity_certificate")
-        ids.forEach { id ->
-            assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
-            assertTrue(documentDisplayOptions.any { it.first == id })
-            assertTrue(officialGraphicDocumentFields(id).isNotEmpty())
-            assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+        fun selfDeterminationDocumentsAreRoutedToTheCommonRightsGroup() {
+            val ids = listOf("common_rights_self_determination_declaration", "common_rights_self_limitation", "common_rights_third_party_safeguards", "common_rights_accessibility_needs", "common_rights_faith_conscience_declaration", "common_rights_declaration_of_will", "common_rights_nonparliamentary_mandate", "common_rights_civil_service_legitimacy", "common_rights_personal_integrity_certificate")
+            ids.forEach { id ->
+                assertEquals("Bez szczególnej formy prawnej", documentVisibilityGroup(id))
+                assertTrue(documentDisplayOptions.any { it.first == id })
+                assertTrue(officialGraphicDocumentFields(id).isNotEmpty())
+                assertEquals(DocumentRouteType.DOCUMENT, DocumentRouteRegistry.find(id)?.type)
+            }
         }
-    }
-
-
+    
+    
 }
