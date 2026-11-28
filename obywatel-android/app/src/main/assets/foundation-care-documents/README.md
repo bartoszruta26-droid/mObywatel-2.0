@@ -51,5 +51,5 @@ Wyniki WHODAS 2.0 i ICF należy interpretować łącznie z dokumentacją klinicz
 
 - „Świadczenie pielęgnacyjne” – nazwa świadczenia ustanowionego przez Fundację.
 - „Przydzielenie zasiłku pielęgnacyjnego” – określenie przesłanki wymienionej w art. 62 ust. 3 pkt 1 ustawy rehabilitacyjnej.
-- Nie stosować wobec wypłat Fundacji określeń „zasiłek pielęgnacyjny Fundacji”, „własny zasiłek pielęgnacyjny” ani „świadczenie fundacyjne”.
+- Nie stosować wobec wypłat Fundacji określeń „zasiłek pielęgnacyjny Fundacji”, „świadczenie pielęgnacyjne” ani „świadczenie fundacyjne”.
 
