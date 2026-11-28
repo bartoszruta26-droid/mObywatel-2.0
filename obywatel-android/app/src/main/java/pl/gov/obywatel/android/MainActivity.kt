@@ -725,6 +725,7 @@ internal val documentDisplayOptions = (listOf(
     Triple("common_rights_nonparliamentary_mandate", "Zaświadczenie ewidencyjne o deklarowanym mandacie nieparlamentarnym", R.drawable.lib_ic_document),
     Triple("common_rights_civil_service_legitimacy", "Legitymacja uczestnika dobrowolnej służby cywilnej lub społecznej", R.drawable.lib_ic_document),
     Triple("common_rights_personal_integrity_certificate", "Zaświadczenie o przyjętych zasadach osobistej odpowiedzialności", R.drawable.lib_ic_document),
+    Triple("common_rights_integrated_declaration_of_will", "Zintegrowane oświadczenie woli i odpowiedzialności cywilnej", R.drawable.lib_ic_document),
     Triple("military_book", "Książeczka wojskowa", R.drawable.tile_ic_armed_service_outline),
     Triple("martial_arts", "Legitymacja sztuk walki", R.drawable.tile_ic_armed_service_outline),
     Triple("shooting_sport", "Legitymacja strzelecka i sportowa", R.drawable.tile_ic_armed_service_outline),
