@@ -62,7 +62,8 @@ internal fun documentEditorFieldDefinitions(documentId: String): List<DocumentEd
         else -> when {
             churchGraphicDocumentTargets().any { it.first == documentId } ||
                 familyEntityGraphicDocumentTargets().any { it.first == documentId } ||
-                officialGraphicDocumentTargets().any { it.first == documentId } -> emptyList()
+                (officialGraphicDocumentTargets().any { it.first == documentId } &&
+                    !documentId.startsWith("foundation_care_")) -> emptyList()
             else -> documentEditorFieldDefinitionsForCatalog(documentId)
         }
     }
