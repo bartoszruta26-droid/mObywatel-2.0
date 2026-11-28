@@ -33,9 +33,13 @@ internal class DocumentUriImageDecoder(
         }
 
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        contentResolver.openInputStream(uri)?.use { input ->
+        val boundsStream = contentResolver.openInputStream(uri)
+            ?: error("Nie można otworzyć obrazu.")
+        // decodeStream intentionally returns null in inJustDecodeBounds mode;
+        // the dimensions are written to Options, so only the stream itself is nullable.
+        boundsStream.use { input ->
             BitmapFactory.decodeStream(input, null, bounds)
-        } ?: error("Nie można otworzyć obrazu.")
+        }
 
         val width = bounds.outWidth
         val height = bounds.outHeight
