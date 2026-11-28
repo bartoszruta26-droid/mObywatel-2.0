@@ -875,13 +875,13 @@ internal fun documentVisibilityGroup(id: String): String = when {
     else -> "Służba osobista"
 }
 internal val documentVisibilityGroupOrder = listOf(
-    "Bez szczególnej formy prawnej",
     "Służba osobista", "Służba rodowa", "Służba cywilna", "Służba państwowa",
     "Służba kościelna", "Służba zbrojna", "Służba zawodowa",
     "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna",
     "Służba finansowa", "Służba zdrowotna", "Zasoby i dokumenty własne"
 )
 private fun documentGroupIconResource(group: String): Int = when (group) {
+    "Bez szczególnej formy prawnej" -> R.drawable.lib_ic_document
     "Służba osobista" -> R.drawable.lib_ic_account
     "Służba rodowa" -> R.drawable.lib_ic_group
     "Służba cywilna", "Służba państwowa" -> R.drawable.tile_ic_civil_outline
@@ -891,7 +891,6 @@ private fun documentGroupIconResource(group: String): Int = when (group) {
     "Służba fundacyjna", "Służba gospodarcza", "Służba stowarzyszeniowa", "Służba społeczna" -> R.drawable.tile_ic_business_outline
     "Służba finansowa" -> R.drawable.lib_ic_wallet
     "Służba zdrowotna" -> R.drawable.tile_ic_disability_outline
-    "Bez szczególnej formy prawnej" -> R.drawable.lib_ic_document
     "Zasoby i dokumenty własne" -> R.drawable.lib_ic_folder
     else -> R.drawable.lib_ic_document
 }
