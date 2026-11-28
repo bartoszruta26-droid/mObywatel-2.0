@@ -36,6 +36,15 @@ class DocumentUriImageDecoderInstrumentedTest {
                 file
             )
             assertEquals("content", uri.scheme)
+            context.grantUriPermission(
+                context.packageName,
+                uri,
+                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            // Verify the provider grants an actual readable stream before testing the decoder.
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                assertTrue(input.read() >= 0)
+            } ?: throw AssertionError("FileProvider nie udostępnił strumienia obrazu.")
 
             val source = DocumentSourceDescriptor(
                 id = "test-image",
