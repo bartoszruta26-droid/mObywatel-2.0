@@ -13,7 +13,7 @@ import android.net.Uri
 /**
  * Bounded decoder for image documents selected through the existing SAF import flow.
  *
- * The resolver is opened twice: once for metadata and once for the sampled decode.
+ * The resolver is opened three times: for image bounds, EXIF metadata and sampled decoding.
  * The caller owns the returned bitmap and must recycle it after all processing ends.
  */
 internal class DocumentUriImageDecoder(
@@ -28,8 +28,8 @@ internal class DocumentUriImageDecoder(
         require(source.mimeType.lowercase() in SUPPORTED_IMAGE_MIME_TYPES) {
             "To źródło nie jest obsługiwanym obrazem rastrowym."
         }
-        require(uri.scheme == "content" || uri.scheme == "file") {
-            "Obraz musi pochodzić z lokalnego URI dostawcy plików."
+        require(uri.scheme == "content") {
+            "Obraz musi pochodzić z URI content:// dostawcy plików."
         }
 
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
